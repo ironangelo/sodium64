@@ -8,10 +8,10 @@
     by the Free Software Foundation, either version 3 of the License,
     or (at your option) any later version.
 
-    sodium64 is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    General Public License for more details.
+    sodium64 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
     along with sodium64. If not, see <https://www.gnu.org/licenses/>.
@@ -158,10 +158,20 @@ pi_wait1:
     li a0, 0x0000 // DMEM address
     sw zero, 0xA4080000 // SP_PC
 
+#ifdef SODIUM64_PROFILE
+    // Arm CP0 Compare before enabling the timer interrupt mask.
+    jal profile_init
+    nop
+#endif
+
     // Enable VI interrupts and start execution
     li t0, 0x00000595 // Set VI mask
     sw t0, 0xA430000C // MI_MASK
+#ifdef SODIUM64_PROFILE
+    li t0, 0x00008401 // Enable interrupts, VI (IP2), and CP0 timer (IP7)
+#else
     li t0, 0x00000401 // Enable interrupts
+#endif
     j cpu_execute
     mtc0 t0, $12 // Status
 
@@ -211,6 +221,12 @@ exception_handler:
 
     // Jump to the appropriate handler for supported interrupts
     mfc0 k0, $13 // Cause
+#ifdef SODIUM64_PROFILE
+    // CP0 Compare raises IP7. profile_interrupt only clobbers k0/k1 and erets.
+    andi k1, k0, 0x8000
+    bnez k1, profile_interrupt
+    nop
+#endif
     andi k1, k0, 0x1000
     bnez k1, reset_interrupt
     andi k1, k0, 0x400

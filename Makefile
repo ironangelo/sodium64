@@ -3,6 +3,7 @@
 PROJ_NAME := sodium64
 BUILD_DIR := build
 SRC_DIRS := src
+PROFILE ?= 0
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
@@ -46,6 +47,10 @@ N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
 N64_LDFLAGS = -L$(N64_LIBDIR) -Tn64.ld --gc-sections
 N64_TOOLFLAGS = --title $(N64_ROM_TITLE)
 N64_ED64ROMCONFIGFLAGS = --savetype $(N64_ROM_SAVETYPE) --regionfree
+
+ifeq ($(PROFILE),1)
+N64_ASFLAGS += -DSODIUM64_PROFILE=1
+endif
 
 COMMA := ,
 

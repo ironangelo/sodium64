@@ -1,6 +1,8 @@
 # sodium64
 A SNES emulator for the N64, written in assembly.
 
+> **This fork:** `ironangelo/sodium64` is an experimental continuation focused on pushing Sodium64 toward higher fidelity, native-frame performance, and broader enhancement-chip support. The engineering roadmap is in [`docs/ROADMAP.md`](docs/ROADMAP.md) and the validation strategy is in [`docs/VALIDATION.md`](docs/VALIDATION.md).
+
 ### Overview
 The goal of sodium64 is to be fast and accurate enough to at least make some SNES games playable on the N64. It handles
 rendering entirely on the RSP in order to reduce load on the main CPU. I thought it would be fun to write something
@@ -28,11 +30,10 @@ Alternatively, some flashcarts support loading ROMs directly with a supplied emu
 |    A/B    | Start/Select |
 |   Start   |   Settings   |
 
-### Contributing
-This is a personal project, and I've decided to not review or accept pull requests for it. If you want to help, you can
-test things and report issues or provide feedback. If you can afford it, you can also donate to motivate me and allow me
-to spend more time on things like this. Nothing is mandatory, and I appreciate any interest in my projects, even if
-you're just a user!
+### Contributing to this fork
+This fork uses branches and pull requests as its normal development workflow. Risky architecture experiments should stay isolated until automated validation supports merging them. Real Nintendo 64 testing is reserved for milestone gates rather than required for every small change; see [`docs/VALIDATION.md`](docs/VALIDATION.md).
+
+The upstream project is maintained independently by Hydr8gon and has its own contribution policy.
 
 ### Building
 Although sodium64 is written in assembly, it relies on [libdragon](https://github.com/DragonMinded/libdragon.git) for

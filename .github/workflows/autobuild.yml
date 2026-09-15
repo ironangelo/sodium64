@@ -97,6 +97,10 @@ jobs:
           root="$RUNNER_TEMP/ares-src"
           git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
           git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          sed -i \
+            's/constexpr bool GDB_LOG_MESSAGES = false;/constexpr bool GDB_LOG_MESSAGES = true;/' \
+            "$root/nall/nall/gdb/server.cpp"
+          grep -q 'constexpr bool GDB_LOG_MESSAGES = true;' "$root/nall/nall/gdb/server.cpp"
           cd "$root"
           .github/scripts/build_sdl.sh
           cmake --preset ubuntu-ci -DARES_CORES=n64
@@ -147,7 +151,7 @@ jobs:
           export SDL_AUDIODRIVER=dummy
           export LIBGL_ALWAYS_SOFTWARE=1
 
-          xvfb-run -a "$ARES_BIN" \
+          xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
             --no-file-prompt \
             --system "Nintendo 64" \
             --settings-file "$RUNNER_TEMP/ares-settings.bml" \

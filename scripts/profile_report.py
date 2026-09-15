@@ -4,6 +4,10 @@
 The snapshot is expected to begin at the `profile_magic` address and extend
 through `profile_sample_buffer_end`. It can come from an emulator memory dump
 or, later, a hardware extraction path.
+
+Some N64 emulators expose RDRAM through their debugger in host-word order,
+which reverses the bytes inside every 32-bit word relative to the canonical
+big-endian N64 byte stream. The decoder auto-detects and normalizes that format.
 """
 
 from __future__ import annotations
@@ -28,10 +32,6 @@ JIT_END = 0x80200000
 class Symbol:
     address: int
     name: str
-
-
-def parse_int(value: str) -> int:
-    return int(value, 0)
 
 
 def load_symbols(elf: Path, nm_command: str) -> tuple[list[int], list[Symbol], dict[str, int]]:
@@ -83,6 +83,38 @@ def base_symbol_name(symbolicated: str) -> str:
     return symbolicated.split("+", 1)[0]
 
 
+def normalize_snapshot(blob: bytes) -> tuple[bytes, str]:
+    """Return canonical big-endian profiler bytes plus a format description."""
+    if len(blob) < 4:
+        raise ValueError("snapshot is too short to contain profiler magic")
+
+    magic_be = struct.unpack_from(">I", blob, 0)[0]
+    if magic_be == MAGIC:
+        return blob, "canonical big-endian"
+
+    if len(blob) % 4:
+        raise ValueError(
+            "snapshot magic is not canonical and byte length is not divisible by 4; "
+            "cannot test 32-bit word-swapped format"
+        )
+
+    # Mupen64Plus' debugger exposes the same 32-bit RDRAM word with the four
+    # bytes reversed on little-endian hosts. Normalize every word, not just the
+    # header, because pointers and sampled EPC values are affected too.
+    swapped_magic = struct.unpack_from("<I", blob, 0)[0]
+    if swapped_magic == MAGIC:
+        normalized = b"".join(
+            blob[offset : offset + 4][::-1]
+            for offset in range(0, len(blob), 4)
+        )
+        return normalized, "32-bit word-swapped"
+
+    raise ValueError(
+        f"bad profiler magic 0x{magic_be:08X}; expected 0x{MAGIC:08X} "
+        "in canonical or 32-bit word-swapped form"
+    )
+
+
 def read_u32_be(blob: bytes, offset: int) -> int:
     if offset < 0 or offset + 4 > len(blob):
         raise ValueError(f"snapshot is too short for 32-bit read at offset 0x{offset:X}")
@@ -94,10 +126,11 @@ def reconstruct_samples(
     magic_address: int,
     buffer_address: int,
     buffer_end_address: int,
-) -> tuple[dict[str, int], list[int]]:
+) -> tuple[dict[str, int | str], list[int]]:
     if len(blob) < HEADER_SIZE:
         raise ValueError("snapshot is shorter than the profiling header")
 
+    blob, snapshot_format = normalize_snapshot(blob)
     header = struct.unpack_from(">8I", blob, 0)
     magic, version, interval, capacity, write_ptr, sample_count, last_epc, reserved = header
     if magic != MAGIC:
@@ -141,7 +174,8 @@ def reconstruct_samples(
     else:
         samples = []
 
-    meta = {
+    meta: dict[str, int | str] = {
+        "snapshot_format": snapshot_format,
         "version": version,
         "interval": interval,
         "capacity": capacity,
@@ -156,7 +190,11 @@ def reconstruct_samples(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("snapshot", type=Path, help="raw big-endian profiler memory snapshot")
+    parser.add_argument(
+        "snapshot",
+        type=Path,
+        help="raw profiler memory snapshot (canonical N64 or supported emulator word order)",
+    )
     parser.add_argument("elf", type=Path, help="matching PROFILE=1 sodium64 ELF")
     parser.add_argument(
         "--nm",
@@ -186,11 +224,12 @@ def main() -> int:
     )
 
     print("Sodium64 statistical profile")
-    print(f"  version:       {meta['version']}")
-    print(f"  interval:      {meta['interval']} Count ticks")
-    print(f"  total samples: {meta['sample_count']}")
-    print(f"  valid samples: {meta['valid_samples']}")
-    print(f"  last EPC:      0x{meta['last_epc']:08X}")
+    print(f"  snapshot format: {meta['snapshot_format']}")
+    print(f"  version:         {meta['version']}")
+    print(f"  interval:        {meta['interval']} Count ticks")
+    print(f"  total samples:   {meta['sample_count']}")
+    print(f"  valid samples:   {meta['valid_samples']}")
+    print(f"  last EPC:        0x{int(meta['last_epc']):08X}")
 
     if not samples:
         print("\nNo samples available.")

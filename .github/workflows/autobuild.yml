@@ -27,6 +27,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Run host profiler decoder tests
+        run: python3 scripts/test_profile_report.py
+
       - name: Compile
         shell: bash
         run: |

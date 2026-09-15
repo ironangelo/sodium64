@@ -1,7 +1,7 @@
 # sodium64
 A SNES emulator for the N64, written in assembly.
 
-> **This fork:** `ironangelo/sodium64` is an experimental continuation focused on pushing Sodium64 toward higher fidelity, native-frame performance, and broader enhancement-chip support. Start with [`docs/CONTINUITY.md`](docs/CONTINUITY.md) for the current handoff/state; the engineering roadmap is in [`docs/ROADMAP.md`](docs/ROADMAP.md) and the validation strategy is in [`docs/VALIDATION.md`](docs/VALIDATION.md).
+> **This fork:** `ironangelo/sodium64` is an experimental continuation focused on pushing Sodium64 toward higher fidelity, native-frame performance, and broader enhancement-chip support. The live project handoff is maintained on the dedicated [`continuity` branch](https://github.com/ironangelo/sodium64/blob/continuity/docs/CONTINUITY.md); the engineering roadmap is in [`docs/ROADMAP.md`](docs/ROADMAP.md) and the validation strategy is in [`docs/VALIDATION.md`](docs/VALIDATION.md).
 
 ### Overview
 The goal of sodium64 is to be fast and accurate enough to at least make some SNES games playable on the N64. It handles

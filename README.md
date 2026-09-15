@@ -1,7 +1,7 @@
 # sodium64
 A SNES emulator for the N64, written in assembly.
 
-> **This fork:** `ironangelo/sodium64` is an experimental continuation focused on pushing Sodium64 toward higher fidelity, native-frame performance, and broader enhancement-chip support. The engineering roadmap is in [`docs/ROADMAP.md`](docs/ROADMAP.md) and the validation strategy is in [`docs/VALIDATION.md`](docs/VALIDATION.md).
+> **This fork:** `ironangelo/sodium64` is an experimental continuation focused on pushing Sodium64 toward higher fidelity, native-frame performance, and broader enhancement-chip support. The live project handoff is maintained on the dedicated [`continuity` branch](https://github.com/ironangelo/sodium64/blob/continuity/docs/CONTINUITY.md); the engineering roadmap is in [`docs/ROADMAP.md`](docs/ROADMAP.md) and the validation strategy is in [`docs/VALIDATION.md`](docs/VALIDATION.md).
 
 ### Overview
 The goal of sodium64 is to be fast and accurate enough to at least make some SNES games playable on the N64. It handles
@@ -9,8 +9,8 @@ rendering entirely on the RSP in order to reduce load on the main CPU. I thought
 specifically for older hardware in assembly, so sodium64 was born!
 
 ### Downloads
-The latest build of sodium64 is automatically provided via GitHub Actions, and can be downloaded from the
-[releases page](https://github.com/Hydr8gon/sodium64/releases).
+The latest build of this fork is automatically provided via GitHub Actions after successful updates to `master`, and can be downloaded from the
+[releases page](https://github.com/ironangelo/sodium64/releases).
 
 ### Usage
 Place SNES ROMs with extension `.sfc`/`.smc` in the same folder as `sodium64.z64` and `rom-converter.py`. Run

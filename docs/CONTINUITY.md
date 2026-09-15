@@ -99,27 +99,28 @@ On 15 Sep 2026 Iron manually enabled GitHub Actions for the fork.
 
 ### PR #2 — Phase 1: record baseline measurement map
 
-Status at this update: **open**.
+Status: **merged** into `master` as squash commit `1cb72a06a9c5ce5e4abb5cdd5c10f01a92ebeffd`.
 
-Branch: `phase1/baseline-map`
+Validation result:
 
-Purpose:
+- `Build and Validate` completed successfully on PR head `07cd9bda5be0684cab09715ed62af6c825d73ef6`.
+- Compile, build metrics, and artifact upload all succeeded.
+- The PR produced the expected `sodium64-build` artifact (ROM, ELF/maps/log/metrics bundle).
+- The release job correctly skipped on the pull-request event.
+- No real N64 hardware validation was required because runtime code was unchanged.
 
-- define exactly what Phase 1 must measure before architectural changes;
-- document the current execution/budget model in `docs/BASELINE.md`;
-- serve as the first PR to exercise the newly enabled PR build gate;
-- correct the fork README so its release link points to `ironangelo/sodium64`, not upstream;
-- point the README to this dedicated `continuity` branch for future handoffs.
+Purpose/results:
 
-The first post-activation `Build and Validate` workflow run for PR #2 was successfully created by GitHub Actions; validation is now expected to be part of normal PR flow.
+- `master:docs/BASELINE.md` now defines what Phase 1 must measure before architectural changes;
+- the README points releases to `ironangelo/sodium64` rather than upstream;
+- the README points future project handoffs to this dedicated `continuity` branch;
+- normal PR validation is now proven operational.
 
-## Immediate next steps
+## Current phase
 
-1. Inspect PR #2 CI result and artifacts.
-2. Fix the workflow if needed.
-3. Merge PR #2 only after the automated build gate works.
-4. Begin Phase 1 runtime instrumentation on a new branch/PR.
-5. Measure per-frame cost/headroom before beginning the 65C816 dynarec proof of concept.
+**Phase 1 — baseline and bottleneck map.**
+
+The next runtime work is low-overhead instrumentation. Do not begin the 65C816 dynarec proof of concept until the current frame budget has been measured well enough to rank the main costs.
 
 Phase 1 should quantify at least:
 
@@ -132,6 +133,15 @@ Phase 1 should quantify at least:
 - frame queue pressure / missed native-frame deadlines.
 
 Instrumentation must be low-overhead, attributable, and removable/disableable so the profiler does not become the bottleneck being measured.
+
+## Immediate next steps
+
+1. Inspect the source for existing R4300 CP0 Count/timing instrumentation or reusable counters.
+2. Design the smallest useful per-frame profiler, preferably based on CP0 Count deltas and aggregated counters rather than logging.
+3. Create a new Phase 1 instrumentation branch/PR from current `master`.
+4. Compile and validate it through CI before any emulator or hardware run.
+5. Add automated N64-emulator execution only when it can produce deterministic telemetry that host/static validation cannot.
+6. Request a real N64 session only when a milestone build can answer several unresolved timing/performance questions at once.
 
 ## Hardware-test policy for Iron
 
@@ -163,7 +173,7 @@ Read these in order:
 1. `continuity:docs/CONTINUITY.md` — canonical current handoff/state.
 2. `master:docs/ROADMAP.md` — long-term phase plan.
 3. `master:docs/VALIDATION.md` — testing and merge policy.
-4. `master:docs/BASELINE.md` — once PR #2 is merged.
+4. `master:docs/BASELINE.md` — Phase 1 measurement model.
 5. Active PR description/diff and CI results.
 
 If those sources disagree, prefer the most recent concrete repository/PR state, then update this continuity file to remove the inconsistency.

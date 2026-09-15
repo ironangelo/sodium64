@@ -23,6 +23,9 @@ class RSPClient:
     def __init__(self, host: str, port: int, timeout: float = 10.0) -> None:
         self.sock = socket.create_connection((host, port), timeout=timeout)
         self.sock.settimeout(timeout)
+        # ares' TCPText GDB server uses an initial '+' as a lightweight
+        # anti-browser handshake before it will accept the first RSP packet.
+        self.sock.sendall(b"+")
 
     def close(self) -> None:
         try:

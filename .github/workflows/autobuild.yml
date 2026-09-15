@@ -176,7 +176,7 @@ jobs:
             --address "0x$ARES_PROFILE_ADDR" \
             --size "$ARES_PROFILE_SIZE" \
             --output ares-profile-snapshot.bin \
-            | tee ares-gdb.log
+            2>&1 | tee ares-gdb.log
 
           test -s ares-profile-snapshot.bin
           test "$(stat -c %s ares-profile-snapshot.bin)" -eq "$ARES_PROFILE_SIZE"

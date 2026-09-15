@@ -18,6 +18,7 @@ This branch is the canonical handoff point for continuing the project across Cha
 - The assistant acts as technical lead/captain: architecture, implementation strategy, profiling, validation, Git workflow, and deciding when real-hardware testing is worth requesting.
 - Development PRs stay entirely inside `ironangelo/sodium64`. Do not open PRs against `Hydr8gon/sodium64` unless Iron explicitly asks for it.
 - Real Nintendo 64 testing should be rare milestone validation, not part of every iteration.
+- Preferred working cadence: **technical batch -> continuity checkpoint -> technical batch -> continuity checkpoint**. Each checkpoint should record the useful engineering rationale, evidence, discarded interpretations, risks, and next action rather than relying on chat history or hidden reasoning.
 
 ## North star
 
@@ -116,13 +117,67 @@ Purpose/results:
 - the README points future project handoffs to this dedicated `continuity` branch;
 - normal PR validation is now proven operational.
 
+### PR #4 — CI: validate development branch pushes
+
+Status: **merged** into `master` as commit `58f2061cc22206c3b6fdf08845d7ea7b478f05d6`.
+
+Purpose/result:
+
+- `Build and Validate` now runs on pushes to development branches inside the fork, except `continuity`;
+- this avoids workflow bootstrap deadlocks when a feature PR changes its own validation workflow;
+- rolling releases remain restricted to `master`;
+- runtime behavior is untouched.
+
+### PR #3 — Phase 1: low-overhead statistical R4300 profiler
+
+Status: **merged** into `master` as squash commit `6e002dc1e3387916013b994f3a62a0620b73aef8`.
+
+What was implemented:
+
+- compile-time opt-in profiling through `PROFILE=1`; normal builds do not enable profiler runtime behavior;
+- periodic R4300 sampling driven by CP0 Count/Compare and IP7 timer interrupts;
+- CP0 EPC captured into a 4,096-entry ring buffer;
+- exception-time implementation intentionally restricted to `k0`/`k1` before `eret` to avoid clobbering interrupted emulator/JIT state;
+- raw EPCs are kept for host-side symbolication against the exact matching ELF rather than hard-coding subsystem categories;
+- separate `sodium64-profile-build` CI artifact;
+- `scripts/profile_report.py` reconstructs wrapped ring buffers and symbolicates samples;
+- decoder automatically accepts the natural big-endian layout and Mupen64Plus `dumpmem`'s observed per-word byte-swapped layout;
+- deterministic host tests cover endian handling and ring-buffer reconstruction;
+- an original synthetic 32 KiB SNES LoROM is generated in CI, so automated smoke testing requires no commercial game ROM.
+
+Validation result:
+
+- final PR head `e0a66f18dad18124e9c3b61ee2e3b20ab5d9140f` passed the complete `Build and Validate` workflow;
+- host decoder tests passed;
+- normal Sodium64 build passed and produced metrics/artifact;
+- `PROFILE=1` build passed and produced metrics/artifact;
+- pinned Mupen64Plus debugger + RSP-CXD4 LLE built successfully in CI;
+- the normal synthetic-SNES Sodium64 ROM executed headlessly;
+- the profiling build executed, was paused through the debugger, and its profiler RDRAM region was dumped successfully;
+- the dumped snapshot decoded successfully against the matching profiling ELF.
+
+Important observed evidence:
+
+- an earlier successful runtime capture accumulated **4,769 total samples** in roughly three seconds;
+- because capacity is 4,096, that capture proved the ring buffer wrapped and reconstruction still recovered the latest 4,096 valid EPC samples;
+- all 4,096 retained samples from that synthetic/Mupen run symbolicated to `rsp_wait`.
+
+Interpretation and limitation:
+
+- the `rsp_wait` result is **not** accepted as the real Sodium64 gameplay bottleneck;
+- Mupen64Plus emitted repeated `Unknown SI DMA PIF address: 000007c0` errors and `RSP Error: unknown task type: 0x00080010` during this smoke environment;
+- therefore Mupen is currently trusted as a runtime/sampler integration gate, not yet as a decision-grade performance model for Sodium64;
+- what PR #3 does prove is that the sampling mechanism, CP0 timer path, ring buffer, wraparound, RDRAM extraction, endian normalization, and symbolication pipeline all work end-to-end.
+
 ## Current phase
 
 **Phase 1 — baseline and bottleneck map.**
 
-The next runtime work is low-overhead instrumentation. Do not begin the 65C816 dynarec proof of concept until the current frame budget has been measured well enough to rank the main costs.
+Low-overhead runtime instrumentation now exists and is merged. The remaining Phase 1 job is to obtain a **representative, decision-grade workload profile** before selecting the first major optimization architecture.
 
-Phase 1 should quantify at least:
+Do not begin the 65C816 dynarec proof of concept merely because it remains the leading architectural hypothesis. First establish whether S-CPU execution is actually a dominant R4300 cost under representative gameplay and how much time is instead spent in APU/DSP/PPU/event work or waiting for RSP rendering.
+
+Phase 1 should still quantify at least:
 
 - S-CPU execution cost;
 - APU/SPC700 work;
@@ -132,16 +187,22 @@ Phase 1 should quantify at least:
 - memory/cache/TLB-sensitive paths where practical;
 - frame queue pressure / missed native-frame deadlines.
 
-Instrumentation must be low-overhead, attributable, and removable/disableable so the profiler does not become the bottleneck being measured.
+## Current engineering reasoning
 
-## Immediate next steps
+- Statistical EPC sampling was chosen over per-opcode or per-JIT-block timing hooks because the latter would heavily perturb the very hot paths being measured.
+- The profiler is intentionally a separate build mode so release performance/fidelity stays untouched.
+- Automated emulator execution is valuable for proving integration, extraction, and tooling, but a profiler is only as useful as the workload and machine model feeding it.
+- The present synthetic SNES ROM is excellent for deterministic CI smoke testing but deliberately poor as a gameplay-performance workload.
+- Because Mupen currently reports Sodium64-specific PIF/RSP incompatibilities, its `rsp_wait` distribution must not drive optimization priorities.
+- The next batch should therefore improve the **quality of the measurement environment/workload**, not prematurely optimize the first function that appeared hot in a compromised smoke run.
 
-1. Inspect the source for existing R4300 CP0 Count/timing instrumentation or reusable counters.
-2. Design the smallest useful per-frame profiler, preferably based on CP0 Count deltas and aggregated counters rather than logging.
-3. Create a new Phase 1 instrumentation branch/PR from current `master`.
-4. Compile and validate it through CI before any emulator or hardware run.
-5. Add automated N64-emulator execution only when it can produce deterministic telemetry that host/static validation cannot.
-6. Request a real N64 session only when a milestone build can answer several unresolved timing/performance questions at once.
+## Immediate next batch
+
+1. Audit available N64 emulators and test modes for better compatibility with Sodium64's custom RSP microcode, prioritizing deterministic/headless automation and memory extraction where possible.
+2. In parallel, inspect Sodium64's own runtime boundaries to identify a minimal set of coarse counters/markers that can complement EPC sampling without high observer overhead, especially RSP submit/wait and per-frame deadline information.
+3. Build a more representative original SNES workload ROM that exercises S-CPU, PPU/event processing and APU deterministically without commercial game data, so CI can distinguish a trivial idle/wait loop from actual emulator work.
+4. Only if emulator limitations still prevent trustworthy profiling, prepare one milestone `PROFILE=1` hardware package that can answer several Phase 1 questions in a single real-N64 session.
+5. After that batch, update `continuity` before opening the first optimization architecture PR.
 
 ## Hardware-test policy for Iron
 
@@ -165,6 +226,7 @@ A hardware request should say exactly:
 - Prefer measurable architecture changes over accumulating hacks.
 - Keep `master` as the best-known stable state.
 - Keep this `continuity` branch as the freshest project handoff, even when active work has not yet merged to `master`.
+- Preserve engineering rationale in repository docs at each checkpoint; do not make future sessions reconstruct key decisions from chat alone.
 
 ## Resume protocol for a future chat
 

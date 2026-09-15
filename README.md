@@ -9,8 +9,8 @@ rendering entirely on the RSP in order to reduce load on the main CPU. I thought
 specifically for older hardware in assembly, so sodium64 was born!
 
 ### Downloads
-The latest build of sodium64 is automatically provided via GitHub Actions, and can be downloaded from the
-[releases page](https://github.com/Hydr8gon/sodium64/releases).
+The latest build of this fork is automatically provided via GitHub Actions after successful updates to `master`, and can be downloaded from the
+[releases page](https://github.com/ironangelo/sodium64/releases).
 
 ### Usage
 Place SNES ROMs with extension `.sfc`/`.smc` in the same folder as `sodium64.z64` and `rom-converter.py`. Run

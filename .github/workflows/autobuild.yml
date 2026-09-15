@@ -1,59 +1,93 @@
-name: Automatic Builds
+name: Build and Validate
 
 on:
   push:
     branches:
-    - master
+      - master
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: latest
-    - name: Install libdragon
-      run: npm install -g libdragon
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Compile
-      run: |
-        libdragon init
-        libdragon make -j$(nproc)
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: sodium64
-        path: |
-          sodium64.z64
-          rom-converter.py
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon init
+          libdragon make -j$(nproc) 2>&1 | tee build.log
+
+      - name: Record build metrics
+        run: |
+          python3 scripts/build_metrics.py \
+            --rom sodium64.z64 \
+            --elf build/sodium64.elf \
+            --build-dir build \
+            --output build-metrics.txt
+
+      - name: Upload validation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-build
+          retention-days: 14
+          path: |
+            sodium64.z64
+            rom-converter.py
+            build/sodium64.elf
+            build/*.map
+            build.log
+            build-metrics.txt
 
   update-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: write
 
     steps:
-    - name: Delete old release
-      uses: dev-drprasad/delete-tag-and-release@v0.2.1
-      with:
-        delete_release: true
-        tag_name: release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Get artifacts
-      uses: actions/download-artifact@v4
-    - name: Package artifacts
-      run: |
-        mv sodium64/sodium64.z64 .
-        mv sodium64/rom-converter.py .
-        zip -r sodium64.zip sodium64.z64 rom-converter.py
-    - name: Create new release
-      uses: ncipollo/release-action@v1
-      with:
-        name: Rolling Release
-        body: These are automatically updated builds of the latest commit.
-        artifacts: sodium64.zip
-        tag: release
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Delete old release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.1
+        with:
+          delete_release: true
+          tag_name: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sodium64-build
+          path: sodium64
+
+      - name: Package artifacts
+        run: |
+          cp sodium64/sodium64.z64 .
+          cp sodium64/rom-converter.py .
+          zip -r sodium64.zip sodium64.z64 rom-converter.py
+
+      - name: Create new release
+        uses: ncipollo/release-action@v1
+        with:
+          name: Rolling Release
+          body: These are automatically updated builds of the latest commit on master.
+          artifacts: sodium64.zip
+          tag: release
+          token: ${{ secrets.GITHUB_TOKEN }}

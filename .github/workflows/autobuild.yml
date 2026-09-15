@@ -3,8 +3,8 @@ name: Build and Validate
 on:
   push:
     branches:
-      - master
-  pull_request:
+      - '**'
+      - '!continuity'
   workflow_dispatch:
 
 concurrency:
@@ -55,8 +55,51 @@ jobs:
             build.log
             build-metrics.txt
 
+  profile-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile profiling build
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon init
+          libdragon make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+
+      - name: Record profiling build metrics
+        run: |
+          python3 scripts/build_metrics.py \
+            --rom sodium64.z64 \
+            --elf build/sodium64.elf \
+            --build-dir build \
+            --output profile-build-metrics.txt
+
+      - name: Upload profiling artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-profile-build
+          retention-days: 14
+          path: |
+            sodium64.z64
+            rom-converter.py
+            build/sodium64.elf
+            build/*.map
+            profile-build.log
+            profile-build-metrics.txt
+
   update-release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     needs: build
     permissions:

@@ -302,6 +302,155 @@ jobs:
             profile-snapshot.bin
             profile-report.txt
 
+  ares-smoke:
+    if: github.ref == 'refs/heads/phase1/ares-profiler-harness'
+    runs-on: ubuntu-24.04
+    needs:
+      - profile-build
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Download profiling build
+        uses: actions/download-artifact@v4
+        with:
+          name: sodium64-profile-build
+          path: artifacts/profile
+
+      - name: Install ares build and virtual-display dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            git \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            qt6-base-dev \
+            xauth \
+            xvfb
+
+      - name: Build pinned ares
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          .github/scripts/build_sdl.sh
+          TARGET_PRESET=ubuntu-ci .github/scripts/build_ubuntu.sh
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Generate profiling N64 smoke ROM
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p smoke/ares
+          cp artifacts/profile/sodium64.z64 smoke/ares/sodium64.z64
+          cp artifacts/profile/rom-converter.py smoke/ares/rom-converter.py
+          python3 scripts/make_smoke_snes.py smoke/ares/smoke.smc
+          (
+            cd smoke/ares
+            python3 rom-converter.py </dev/null
+          )
+          test -f smoke/ares/out/smoke.z64
+
+      - name: Locate profiling snapshot region
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf="artifacts/profile/build/sodium64.elf"
+          magic=$(nm -n "$elf" | awk '$3 == "profile_magic" { print $1; exit }')
+          end=$(nm -n "$elf" | awk '$3 == "profile_sample_buffer_end" { print $1; exit }')
+          test -n "$magic"
+          test -n "$end"
+          size=$((0x$end - 0x$magic))
+          test "$size" -gt 16384
+          {
+            echo "ARES_PROFILE_ADDR=$magic"
+            echo "ARES_PROFILE_SIZE=$size"
+          } >> "$GITHUB_ENV"
+          echo "ares profiler snapshot: 0x$magic + $size bytes"
+
+      - name: Run ares and capture profiler through GDB RSP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ares-home"
+          export HOME="$RUNNER_TEMP/ares-home"
+          export SDL_AUDIODRIVER=dummy
+          export LIBGL_ALWAYS_SOFTWARE=1
+
+          xvfb-run -a "$ARES_BIN" \
+            --no-file-prompt \
+            --system "[Nintendo] Nintendo 64 (NTSC)" \
+            --settings-file "$RUNNER_TEMP/ares-settings.bml" \
+            --setting "Developer/DebugServerEnabled=true" \
+            --setting "Developer/DebugServerUseIPv4=true" \
+            --setting "Developer/DebugServerPort=9123" \
+            --setting "Developer/HomebrewMode=true" \
+            --setting "Developer/DeterministicEntropy=true" \
+            --setting "Developer/ForceInterpreter=true" \
+            --setting "Boot/AwaitGDBClient=true" \
+            smoke/ares/out/smoke.z64 \
+            > ares-emulator.log 2>&1 &
+          ares_pid=$!
+          echo "$ares_pid" > ares.pid
+
+          cleanup() {
+            kill "$ares_pid" 2>/dev/null || true
+            wait "$ares_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          python3 scripts/gdb_rsp_dump.py \
+            --port 9123 \
+            --connect-timeout 45 \
+            --run-seconds 3 \
+            --address "0x$ARES_PROFILE_ADDR" \
+            --size "$ARES_PROFILE_SIZE" \
+            --output ares-profile-snapshot.bin \
+            | tee ares-gdb.log
+
+          test -s ares-profile-snapshot.bin
+          test "$(stat -c %s ares-profile-snapshot.bin)" -eq "$ARES_PROFILE_SIZE"
+
+      - name: Decode ares statistical profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/profile_report.py \
+            ares-profile-snapshot.bin \
+            artifacts/profile/build/sodium64.elf \
+            --nm nm | tee ares-profile-report.txt
+          samples=$(awk '/total samples:/ { print $3 }' ares-profile-report.txt)
+          test -n "$samples"
+          test "$samples" -gt 0
+
+      - name: Upload ares smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-ares-smoke
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            ares-version.txt
+            ares-emulator.log
+            ares-gdb.log
+            ares-profile-snapshot.bin
+            ares-profile-report.txt
+
   update-release:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest

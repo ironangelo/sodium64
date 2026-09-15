@@ -45,10 +45,11 @@ def build_rom() -> bytes:
     for offset in (0x7FF4, 0x7FF6, 0x7FF8, 0x7FFA, 0x7FFC, 0x7FFE):
         write_vector(rom, offset, 0x8000)
 
-    # Populate a valid complement/checksum pair. Sodium64 only needs the pair to
-    # XOR to 0xFFFF, but a real checksum makes the test ROM well-formed.
+    # Populate a valid complement/checksum pair. With the four checksum bytes
+    # temporarily zero, the final checksum+complement pair contributes 0x1FE to
+    # the byte sum because the two 16-bit values XOR to 0xFFFF.
     rom[0x7FDC:0x7FE0] = b"\x00\x00\x00\x00"
-    checksum = sum(rom) & 0xFFFF
+    checksum = (sum(rom) + 0x1FE) & 0xFFFF
     complement = checksum ^ 0xFFFF
     rom[0x7FDC:0x7FDE] = complement.to_bytes(2, "little")
     rom[0x7FDE:0x7FE0] = checksum.to_bytes(2, "little")

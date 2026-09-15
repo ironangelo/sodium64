@@ -18,7 +18,7 @@ make PROFILE=1
 
 `PROFILE=1` defines `SODIUM64_PROFILE` only for the R4300 assembly build. The normal release build does not enable CP0 timer sampling or include active profiler state in runtime behavior.
 
-CI compiles both configurations. Profiling artifacts are uploaded separately as `sodium64-profile-build` and are never used for the rolling release.
+CI compiles both configurations on development-branch pushes. Profiling artifacts are uploaded separately as `sodium64-profile-build` and are never used for the rolling release; only the normal `master` build feeds the rolling release.
 
 ## Sampling method
 
@@ -85,6 +85,12 @@ Statistical sampling is intentionally approximate. Before using it to justify a 
 
 The profiler is a decision tool, not a cycle-accurate oracle.
 
+## Host-side report tool
+
+`scripts/profile_report.py` consumes a raw big-endian dump beginning at `profile_magic` plus the exact matching profiling ELF. It reconstructs the ring buffer using the profiler symbols, handles wraparound, recognizes the generated APU JIT range, and reports the hottest sampled symbols/regions.
+
+The extraction mechanism that produces that raw dump is intentionally separate. Emulator automation can provide it first; a hardware extraction path can be added later without changing the on-console profiler format.
+
 ## Next tooling step
 
-The next layer is automated extraction/symbolication of the ring buffer from an N64 emulator run. That tooling should consume the profiling build's ELF/map rather than hard-coding static text addresses. Real-hardware extraction can be added later when it becomes useful for a milestone gate.
+The next layer is automated extraction of the profiler memory region from an N64 emulator run. That tooling should consume the profiling build's ELF/map rather than hard-coding static text addresses. Real-hardware extraction can be added later when it becomes useful for a milestone gate.

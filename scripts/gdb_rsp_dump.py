@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""Run a remote target through GDB RSP and capture profiling state.
+"""Run a remote N64 target through GDB RSP and capture profiling state.
 
-This intentionally implements only the small subset needed by Sodium64 CI:
-connect to a GDB server, optionally warm the target up, patch/zero known memory,
-run one or more measured windows, interrupt, capture a profiling memory region,
-read small labeled runtime observations, and detach. Keeping the client here
-avoids depending on a particular host GDB build or interactive command timing.
+The client deliberately implements only the subset Sodium64 CI needs: connect,
+warm up, prepare diagnostic state, optionally let that state settle, reset
+measurement state, run one or more windows, capture labeled runtime values and
+a profiler memory region, then detach.
 """
 
 from __future__ import annotations
@@ -17,11 +16,9 @@ import time
 from pathlib import Path
 
 
-# ares maps normal emulated N64 CPU exceptions onto GDB signals. For profiling
-# those exceptions must remain guest-visible instead of stopping the debugger;
-# the target's own exception handler should see exactly what hardware would.
-# Ctrl-C still halts through ares' explicit debugger halt path, so it is not
-# affected by this pass list.
+# ares maps emulated N64 CPU exceptions onto GDB signals. These exceptions must
+# remain guest-visible during profiling; Ctrl-C still uses ares' debugger halt
+# path and is not affected by the pass list.
 ARES_N64_GUEST_SIGNALS = "04;05;06;08;0a;0b;0c;10;11;1d"
 
 
@@ -33,8 +30,7 @@ class RSPClient:
     def __init__(self, host: str, port: int, timeout: float = 30.0) -> None:
         self.sock = socket.create_connection((host, port), timeout=timeout)
         self.sock.settimeout(timeout)
-        # ares' TCPText GDB server uses an initial '+' as a lightweight
-        # anti-browser handshake before it will accept the first RSP packet.
+        # ares' TCPText GDB server rejects clients whose first byte is not '+'.
         self.sock.sendall(b"+")
 
     def close(self) -> None:
@@ -68,8 +64,7 @@ class RSPClient:
             received_sum = self.sock.recv(2)
             if len(received_sum) != 2:
                 raise ConnectionError("GDB RSP connection closed during checksum")
-            expected = checksum(bytes(payload))
-            if received_sum.lower() != expected:
+            if received_sum.lower() != checksum(bytes(payload)):
                 self.sock.sendall(b"-")
                 continue
             self.sock.sendall(b"+")
@@ -81,23 +76,16 @@ class RSPClient:
 
     def continue_then_interrupt(self, seconds: float) -> bytes:
         self._send_packet_bytes(b"c")
-
-        # A target may stop on its own before the requested sampling window
-        # expires. Listen for that stop while the window is open. Sending
-        # Ctrl-C after an already-pending stop would queue a second stop packet
-        # and shift every following request/reply pair out of sync.
         previous_timeout = self.sock.gettimeout()
         try:
+            # Consume a spontaneous stop if one arrives during the requested
+            # window. Otherwise interrupt only after the window has elapsed.
             self.sock.settimeout(seconds)
             try:
                 return self._read_packet()
             except socket.timeout:
                 pass
 
-            # No spontaneous stop arrived in the requested window. Halt the
-            # target explicitly. Heavy PPU/RDP workloads can leave ares busy in
-            # host shader work for several seconds, so use the normal response
-            # timeout here rather than the short sampling-window timeout.
             self.sock.settimeout(previous_timeout)
             self.sock.sendall(b"\x03")
             return self._read_packet()
@@ -148,9 +136,6 @@ class RSPClient:
             length = min(chunk_size, size - offset)
             self.write_memory(address + offset, bytes(length))
             offset += length
-
-        # Verify the complete range. This happens while the target is stopped,
-        # so correctness matters more than a small amount of host-side traffic.
         verify = self.read_memory(address, size, chunk_size)
         if any(verify):
             raise RuntimeError(
@@ -197,7 +182,7 @@ def parse_write(text: str) -> tuple[int, bytes]:
 
 
 def parse_range(text: str) -> tuple[int, int]:
-    """Parse ADDRESS:SIZE, with both values accepting Python integer syntax."""
+    """Parse ADDRESS:SIZE, accepting Python integer syntax for both values."""
     try:
         address_text, size_text = text.split(":", 1)
         address = int(address_text, 0)
@@ -235,6 +220,18 @@ def validate_stop(reply: bytes, stage: str) -> None:
         raise RuntimeError(f"unexpected {stage.lower()} stop reply: {reply!r}")
 
 
+def apply_writes(client: RSPClient, writes: list[tuple[int, bytes]], stage: str) -> None:
+    for address, data in writes:
+        client.write_memory(address, data)
+        verify = client.read_memory(address, len(data), len(data))
+        if verify != data:
+            raise RuntimeError(
+                f"{stage} write verification failed at 0x{address:08X}: "
+                f"wrote {data.hex()}, read {verify.hex()}"
+            )
+        print(f"{stage} patched {len(data)} byte(s) at 0x{address:08X}: {data.hex()}")
+
+
 def read_be_u32(client: RSPClient, address: int) -> int:
     return int.from_bytes(client.read_memory(address, 4, 4), "big")
 
@@ -254,7 +251,13 @@ def main() -> int:
         "--warmup-seconds",
         type=float,
         default=0.0,
-        help="run once before applying memory patches and starting measurement",
+        help="run before applying preparation patches",
+    )
+    parser.add_argument(
+        "--settle-seconds",
+        type=float,
+        default=0.0,
+        help="run after preparation patches but before measurement-state reset",
     )
     parser.add_argument(
         "--run-seconds",
@@ -271,7 +274,7 @@ def main() -> int:
         "--min-samples",
         type=int,
         default=0,
-        help="continue additional measured windows until this many samples exist",
+        help="continue measured windows until this many samples exist",
     )
     parser.add_argument(
         "--sample-count-address",
@@ -287,7 +290,15 @@ def main() -> int:
         type=parse_write,
         default=[],
         metavar="ADDRESS:HEXBYTES",
-        help="patch target memory after warmup and before measurement (repeatable)",
+        help="pre-settle memory patch after warmup (repeatable)",
+    )
+    parser.add_argument(
+        "--after-settle-write",
+        action="append",
+        type=parse_write,
+        default=[],
+        metavar="ADDRESS:HEXBYTES",
+        help="measurement-state patch after settling and immediately before measurement",
     )
     parser.add_argument(
         "--zero",
@@ -295,7 +306,7 @@ def main() -> int:
         type=parse_range,
         default=[],
         metavar="ADDRESS:SIZE",
-        help="zero a target memory range after warmup and before measurement",
+        help="zero a target range after warmup and before settling (repeatable)",
     )
     parser.add_argument(
         "--observe",
@@ -308,15 +319,20 @@ def main() -> int:
     parser.add_argument(
         "--state-output",
         type=Path,
-        help="optional JSON file containing measured duration and --observe values",
+        help="optional JSON file containing measured duration and observations",
     )
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
 
     if args.size <= 0 or args.chunk_size <= 0:
         parser.error("--size and --chunk-size must be positive")
-    if args.warmup_seconds < 0 or args.run_seconds <= 0 or args.response_timeout <= 0:
-        parser.error("warmup must be >= 0; run/response timeouts must be > 0")
+    if (
+        args.warmup_seconds < 0
+        or args.settle_seconds < 0
+        or args.run_seconds <= 0
+        or args.response_timeout <= 0
+    ):
+        parser.error("warmup/settle must be >= 0; run/response timeouts must be > 0")
     if args.min_samples < 0:
         parser.error("--min-samples must be >= 0")
     if args.min_samples and args.sample_count_address is None:
@@ -324,6 +340,10 @@ def main() -> int:
     max_run_seconds = args.max_run_seconds or args.run_seconds
     if max_run_seconds < args.run_seconds:
         parser.error("--max-run-seconds cannot be shorter than --run-seconds")
+
+    labels = [label for label, _, _ in args.observe]
+    if len(labels) != len(set(labels)):
+        parser.error("--observe labels must be unique")
 
     client = connect_with_retry(
         args.host,
@@ -346,27 +366,20 @@ def main() -> int:
             raise RuntimeError(f"target rejected QPassSignals: {pass_reply!r}")
 
         if args.warmup_seconds:
-            validate_stop(
-                client.continue_then_interrupt(args.warmup_seconds),
-                "Warmup stop",
-            )
+            validate_stop(client.continue_then_interrupt(args.warmup_seconds), "Warmup stop")
 
-        for zero_address, zero_size in args.zero:
-            client.zero_memory(zero_address, zero_size, args.chunk_size)
-            print(f"Zeroed {zero_size} byte(s) at 0x{zero_address:08X}")
+        for address, size in args.zero:
+            client.zero_memory(address, size, args.chunk_size)
+            print(f"Zeroed {size} byte(s) at 0x{address:08X}")
 
-        for write_address, write_data in args.write:
-            client.write_memory(write_address, write_data)
-            verify = client.read_memory(write_address, len(write_data), len(write_data))
-            if verify != write_data:
-                raise RuntimeError(
-                    f"memory write verification failed at 0x{write_address:08X}: "
-                    f"wrote {write_data.hex()}, read {verify.hex()}"
-                )
-            print(
-                f"Patched {len(write_data)} byte(s) at 0x{write_address:08X}: "
-                f"{write_data.hex()}"
-            )
+        apply_writes(client, args.write, "Preparation")
+
+        if args.settle_seconds:
+            validate_stop(client.continue_then_interrupt(args.settle_seconds), "Settle stop")
+
+        # Reset counters/ring state only after the diagnostic configuration has
+        # settled so the measured interval excludes setup/JIT-recompile transients.
+        apply_writes(client, args.after_settle_write, "Measurement reset")
 
         measured_seconds = 0.0
         window = 0
@@ -394,14 +407,11 @@ def main() -> int:
                 break
 
         observations: dict[str, int] = {}
-        for label, observe_address, observe_size in args.observe:
-            raw = client.read_memory(observe_address, observe_size, observe_size)
+        for label, address, size in args.observe:
+            raw = client.read_memory(address, size, size)
             value = int.from_bytes(raw, "big")
             observations[label] = value
-            print(
-                f"Observed {label}: {value} "
-                f"(0x{observe_address:08X}, {observe_size} byte(s))"
-            )
+            print(f"Observed {label}: {value} (0x{address:08X}, {size} byte(s))")
 
         if args.state_output:
             args.state_output.parent.mkdir(parents=True, exist_ok=True)
@@ -426,7 +436,6 @@ def main() -> int:
             f"to {args.output} after {measured_seconds:g}s measured wall time"
         )
 
-        # Detach is best-effort; CI terminates the emulator process afterwards.
         try:
             reply = client.request("D")
             print(f"Detach reply: {reply.decode('ascii', errors='replace')}")

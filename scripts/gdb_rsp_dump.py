@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Run a remote target through GDB RSP and capture a profiling memory region.
+"""Run a remote target through GDB RSP and capture profiling state.
 
 This intentionally implements only the small subset needed by Sodium64 CI:
 connect to a GDB server, optionally warm the target up, patch/zero known memory,
-run one or more measured windows, interrupt, read memory in bounded chunks, and
-detach. Keeping the client here avoids depending on a particular host GDB build
-or interactive command timing.
+run one or more measured windows, interrupt, capture a profiling memory region,
+read small labeled runtime observations, and detach. Keeping the client here
+avoids depending on a particular host GDB build or interactive command timing.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import socket
 import time
 from pathlib import Path
@@ -210,6 +211,23 @@ def parse_range(text: str) -> tuple[int, int]:
     return address, size
 
 
+def parse_observation(text: str) -> tuple[str, int, int]:
+    """Parse LABEL:ADDRESS:SIZE for a small big-endian runtime observation."""
+    try:
+        label, address_text, size_text = text.split(":", 2)
+        address = int(address_text, 0)
+        size = int(size_text, 0)
+    except (ValueError, TypeError) as exc:
+        raise argparse.ArgumentTypeError(
+            "observations must use LABEL:ADDRESS:SIZE, e.g. fps:0x80001234:1"
+        ) from exc
+    if not label:
+        raise argparse.ArgumentTypeError("observation label cannot be empty")
+    if size not in (1, 2, 4, 8):
+        raise argparse.ArgumentTypeError("observation size must be 1, 2, 4, or 8 bytes")
+    return label, address, size
+
+
 def validate_stop(reply: bytes, stage: str) -> None:
     text = reply.decode("ascii", errors="replace")
     print(f"{stage} target state: {text}")
@@ -278,6 +296,19 @@ def main() -> int:
         default=[],
         metavar="ADDRESS:SIZE",
         help="zero a target memory range after warmup and before measurement",
+    )
+    parser.add_argument(
+        "--observe",
+        action="append",
+        type=parse_observation,
+        default=[],
+        metavar="LABEL:ADDRESS:SIZE",
+        help="read a small big-endian runtime value after measurement (repeatable)",
+    )
+    parser.add_argument(
+        "--state-output",
+        type=Path,
+        help="optional JSON file containing measured duration and --observe values",
     )
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
@@ -361,6 +392,31 @@ def main() -> int:
             )
             if sample_count >= args.min_samples:
                 break
+
+        observations: dict[str, int] = {}
+        for label, observe_address, observe_size in args.observe:
+            raw = client.read_memory(observe_address, observe_size, observe_size)
+            value = int.from_bytes(raw, "big")
+            observations[label] = value
+            print(
+                f"Observed {label}: {value} "
+                f"(0x{observe_address:08X}, {observe_size} byte(s))"
+            )
+
+        if args.state_output:
+            args.state_output.parent.mkdir(parents=True, exist_ok=True)
+            args.state_output.write_text(
+                json.dumps(
+                    {
+                        "measured_wall_seconds": measured_seconds,
+                        "observations": observations,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
 
         data = client.read_memory(args.address, args.size, args.chunk_size)
         args.output.parent.mkdir(parents=True, exist_ok=True)

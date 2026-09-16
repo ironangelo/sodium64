@@ -4,41 +4,39 @@ This branch is the canonical handoff point for continuing the project across Cha
 
 ## Branch role
 
-- Canonical handoff branch: `continuity`
-- Stable integration branch: `master`
+- Canonical handoff branch: `continuity`.
+- Stable integration branch: `master`.
 - Feature/phase work happens on branches and PRs targeting `master`.
 - `continuity` is not a feature branch and should not normally be merged into `master`.
 - Preferred cadence: **technical batch -> continuity checkpoint -> technical batch -> continuity checkpoint**.
-- Each checkpoint should preserve useful engineering rationale, evidence, rejected interpretations, risks, and the next action rather than relying on chat history or hidden reasoning.
+- Checkpoints preserve engineering rationale, evidence, rejected interpretations, risks, and the next action instead of relying on chat history or hidden reasoning.
 
 ## Project hierarchy
 
-Read the project at three levels:
-
-1. `master:docs/ROAD_TO_1_0.md` — **destination / contract**. Defines what success means and the cumulative release gates.
-2. `master:docs/ROADMAP.md` — **current route**. May change when evidence shows a better way to reach the destination.
-3. `continuity:docs/CONTINUITY.md` — **current position**. Records where the project actually is today.
+1. `master:docs/ROAD_TO_1_0.md` — **destination / contract**.
+2. `master:docs/ROADMAP.md` — **current technical route**.
+3. `continuity:docs/CONTINUITY.md` — **current position**.
 
 A hard technical problem may change the route. It should not silently weaken the destination.
 
 ## Ownership and working model
 
-- Repository: `ironangelo/sodium64`
-- Upstream: `Hydr8gon/sodium64`
-- Iron owns the project and the north star.
+- Repository: `ironangelo/sodium64`.
+- Upstream: `Hydr8gon/sodium64`.
+- Iron owns the project and sets the north star.
 - The assistant acts as technical lead/captain: architecture, implementation strategy, profiling, validation, Git workflow, and deciding when real-hardware testing is worth requesting.
-- Development stays inside `ironangelo/sodium64`; do not send PRs upstream unless Iron explicitly asks.
+- Do not send PRs upstream unless Iron explicitly asks.
 - Real Nintendo 64 testing is a milestone gate, not a per-commit ritual.
 
 ## Road-to-1.0 north star
 
 The stable definition lives in `master:docs/ROAD_TO_1_0.md`.
 
-The Perfect target requires Sodium64 on real N64 hardware with:
+The Perfect target is Sodium64 on real N64 hardware with:
 
 - correct native temporal cadence rather than an FPS-counter illusion;
 - no required frame skipping or frame generation;
-- full-rate SPC700/APU and synchronized DSP/audio, without the inherited APU underclock compromise;
+- full-rate SPC700/APU and synchronized DSP/audio without the inherited APU underclock compromise;
 - high CPU/PPU/audio/DMA/HDMA/timing fidelity;
 - broad base-system compatibility rather than a hand-picked easy-game list;
 - enhancement chips modeled as first-class timed cartridge devices rather than per-game modes;
@@ -63,7 +61,7 @@ N64-alone is the primary target. Cartridge-side acceleration may be considered o
 
 Current position: **M0 / ROADMAP Phase 1**.
 
-## Starting architecture and leading hypothesis
+## Starting architecture and leading hypotheses
 
 Fork starting point: upstream commit `a4c75d3819691f5fdb6de49712090c643f17abea` (11 Jul 2025).
 
@@ -91,13 +89,13 @@ Use the cheapest reliable layer first:
 4. milestone emulator compatibility/performance runs;
 5. real N64 as final authority.
 
-Do not use an N64 emulator's host wall-clock throughput as real-N64 FPS. Automated emulators are laboratories for correctness, execution and causal workload profiling, not substitutes for the hardware performance result.
+Do not use an N64 emulator's host wall-clock throughput as real-N64 FPS. Automated emulators are laboratories for correctness, execution and causal workload profiling, not substitutes for hardware performance results.
 
-## Integrated milestones so far
+## Integrated milestones
 
 ### PR #1 — project foundation
 
-Merged. Established branch/PR workflow, automated build validation, artifacts, metrics, validation policy and the engineering PR template.
+Merged. Established branch/PR workflow, automated build validation, artifacts, metrics, validation policy and engineering PR template.
 
 ### PR #2 — baseline measurement map
 
@@ -115,66 +113,27 @@ Development-branch pushes validate automatically while rolling releases remain r
 
 Merged as `6e002dc1e3387916013b994f3a62a0620b73aef8`.
 
-Key results:
-
-- optional `PROFILE=1` mode; normal release runtime stays uninstrumented;
-- CP0 Count/Compare IP7 statistical EPC sampling;
-- 4,096-entry ring buffer with wrap reconstruction;
-- exact-ELF host symbolication;
-- canonical and Mupen word-swapped dump support;
-- deterministic host decoder tests;
-- original synthetic SNES smoke ROM;
-- automated Mupen runtime extraction.
-
-Mupen proved the profiler plumbing but produced Sodium64-specific PIF/RSP errors and a 100% `rsp_wait` retained distribution. That distribution is explicitly **not** accepted as the real gameplay bottleneck.
+Implemented optional `PROFILE=1`, CP0 Count/Compare EPC sampling, a 4,096-entry ring, exact-ELF symbolication, endian normalization, deterministic decoder tests and automated Mupen extraction. Mupen proved the profiler plumbing but produced PIF/RSP incompatibilities and a misleading 100% `rsp_wait` distribution; that distribution is not accepted as the real bottleneck.
 
 ### PR #5 — ares profiling path
 
 Merged as `c0334377f8c473e3b8168649eaf08d26e68bf19d`.
 
-Key results:
-
-- pinned N64-only ares build;
-- custom minimal GDB RSP client;
-- ares-required initial `+` handshake;
-- `QPassSignals` so normal guest MIPS/TLB exceptions reach Sodium64 instead of stopping the debugger;
-- RDRAM profile extraction and decoding without replacing the existing normal/Mupen validation path.
-
-The initial short ares run demonstrated real S-CPU/APU samples instead of Mupen's 100% `rsp_wait`, but only eight samples were collected and no bottleneck conclusion was drawn.
+Added pinned N64-only ares, a minimal GDB RSP client, the ares-required initial `+` handshake, guest MIPS/TLB exception pass-through via `QPassSignals`, and RDRAM profile extraction without replacing the normal/Mupen validation path.
 
 ### PR #7 — Road to 1.0
 
 Merged as `7fc7e21f9f674466680d0db73e16cf29dbb5878a`.
 
-Added `docs/ROAD_TO_1_0.md` and made the project hierarchy explicit:
-
-- Road to 1.0 = destination;
-- ROADMAP = route;
-- continuity = current position.
-
-The Road explicitly keeps full-rate audio, no frameskip cheats, Super FX / Super FX 2, SA-1, real-hardware validation, and evidence-based hardware-ceiling decisions in the Perfect target.
+Added `docs/ROAD_TO_1_0.md` and froze the destination/route/current-position hierarchy. The Road explicitly keeps full-rate audio, no frameskip cheats, Super FX / Super FX 2, SA-1, real-hardware validation, and evidence-based hardware-ceiling decisions in the Perfect target.
 
 ### PR #6 — deterministic workload bottleneck map
 
 Merged as `2f6d1a446ba81662a6079d94c6d7dfb5f00a9aac`.
 
-This is the first successful causal profiling suite rather than a single smoke loop.
+Added five original deterministic SNES workloads (`idle`, `cpu-alu`, `wram`, `ppu-registers`, `dma-vram`), exact-linker-map subsystem classification, JSON/Markdown matrices, ares recompiler runs, full-rate APU profiling, APU JIT invalidation before measurement, adaptive sample windows and robust debugger stopping.
 
-Implemented:
-
-- original deterministic SNES workloads: `idle`, `cpu-alu`, `wram`, `ppu-registers`, `dma-vram`;
-- workload generation/checksum/vector tests;
-- exact-linker-map subsystem classification on the host;
-- JSON + Markdown profile matrices;
-- one interpreter control plus ares N64 recompiler measurement runs;
-- warm-up before diagnostic patches;
-- full-rate APU measurement at `apu_clock = 21`;
-- APU JIT lookup invalidation + `jit_pointer` reset before measurement so old underclock timing is not retained;
-- profiler-ring reset after preparation so the preparation cost is excluded;
-- longer debugger stop timeout for graphics-heavy workloads;
-- adaptive repeated measured windows until a minimum sample density is reached.
-
-#### Final validated synthetic matrix
+Final synthetic causal profile matrix from the validated run:
 
 | workload | samples | S-CPU | APU JIT | APU static | DSP | PPU/frame prep | DMA/HDMA | frame/VI wait |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -184,69 +143,89 @@ Implemented:
 | ppu-registers | 1,030 | 52.3% | 3.7% | 24.9% | 0.6% | 18.4% | 0.1% | 0.0% |
 | dma-vram | 948 | 0.1% | 0.3% | 0.7% | 0.0% | 96.7% | 2.1% | 0.0% |
 
-PPU-register and DMA-VRAM needed two three-second windows; the others reached density in one. The ares recompiler produced orders of magnitude more samples per CI wall-clock second than the interpreter control, making the laboratory practical.
+Interpretation: the profiler responds causally to deliberately different guest activity. These numbers validate the laboratory, not a commercial-game bottleneck claim.
 
-#### What this evidence means
+### PR #8 — correlate profiles with virtual N64 frame budget
 
-The profiler/classifier reacts causally and in the expected direction:
+Merged as `798ebcb9969d94eda3eba4592eae2792d6304cb5`.
 
-- deliberately CPU-heavy guest work shifts samples toward S-CPU paths;
-- PPU-register churn raises PPU/frame-preparation representation;
-- DMA-to-VRAM drives samples overwhelmingly into the VRAM/PPU path.
+Purpose: connect the statistical profile to Sodium64's own frame-progress signal without adding runtime instrumentation.
 
-This validates the **measurement harness**.
+Key design decisions:
 
-#### What this evidence does NOT mean
+- Reuse existing Sodium64 `fps_display`, `fps_native`, `fps_emulate`, and `frame_count` state instead of adding new per-frame counters.
+- `fps_display` is updated by Sodium64 every 60 N64 VI interrupts from the guest-frame progress counter; with frameskip forced off it is an in-N64-model measure of completed SNES frames per 60 VIs.
+- Do **not** treat ares/CI host wall-clock throughput as N64 performance.
+- Measurement sequence is: normal warm-up -> apply full-rate/no-frameskip/audio-on settings and invalidate APU JIT -> short settle period -> reset profiler/FPS state -> measured interval.
+- `fps_display` is seeded to `0xFF` before measurement so a valid report proves that at least one complete post-configuration 60-VI window occurred.
+- Recompiler workloads require at least 800 statistical samples; below-60 frame results are reported as evidence rather than failing CI.
+- The run verifies `skipped_set=0`, `apu_clock=21`, and audio enabled.
 
-- `61.3% S-CPU` in the CPU-ALU control does not prove commercial games spend 61.3% there.
-- `96.7% PPU` in DMA-VRAM does not mean ordinary gameplay spends 96.7% there.
-- ares recompiler wall-clock speed is not N64 speed.
-- PR #6 by itself does not justify starting the 65C816 dynarec.
+#### Final validated frame-budget evidence
 
-Synthetic ROMs are controlled stress tests. They establish measurement sensitivity; they do not replace representative gameplay and hardware frame-budget evidence.
+| workload | completed guest frames / 60 VI | virtual budget | dominant sampled cost |
+| --- | ---: | ---: | --- |
+| idle | **60/60** | **100.0%** | S-CPU + APU, with some frame/VI wait |
+| cpu-alu | **42/60** | **70.0%** | S-CPU interpreter (~60.9%) |
+| wram | **47/60** | **78.3%** | S-CPU (~56.6%) + APU static (~36.9%) |
+| ppu-registers | **34/60** | **56.7%** | S-CPU (~51.1%) + PPU/frame prep (~19.2%) + APU |
+| dma-vram | **1/60** | **1.7%** | PPU/frame prep (~98.3%) |
+
+Observed settings for all recompiler measurements:
+
+- `apu_clock = 21`;
+- `skipped_set = 0`;
+- `audio_set = 4` (enabled);
+- `precision_set = 8` was recorded rather than silently changed.
+
+Important interpretation:
+
+- The same measurement window now answers both **where the R4300 spends time** and **whether that workload meets the 60-VI virtual frame budget**.
+- CPU/ALU stress reduces throughput and concentrates samples in S-CPU code.
+- PPU-register stress increases PPU/frame-preparation cost and reduces throughput further.
+- Extreme DMA-to-VRAM collapses throughput while concentrating almost all sampled R4300 time in PPU/frame preparation.
+- This is coherent causal evidence, but still synthetic and emulator-lab based.
+- It does **not** mean an ordinary commercial game runs at 42/60, 34/60 or 1/60; those ROMs were deliberately constructed stress controls.
+- It does **not** yet prove that the 65C816 dynarec is the first M1 architecture.
+
+The stable Build and Validate pipeline and the ares/frame-budget workflow both passed on PR #8 before merge.
 
 ## Current phase
 
 **M0 / ROADMAP Phase 1 — baseline and bottleneck map.**
 
-The profiler, extraction paths and causal synthetic workload suite are now integrated infrastructure. The next job is no longer to build more profiler plumbing unless a specific measurement gap requires it.
+The profiling infrastructure is now mature enough. Do not keep expanding profiler plumbing unless a specific new measurement requires it.
 
-Phase 1 still needs representative evidence for:
+We now know:
 
-- S-CPU share during actual game-like workloads;
-- APU/SPC700 + DSP share at full-rate audio;
-- PPU/event/HDMA/frame-preparation cost in representative frames;
-- RSP wait and framebuffer/VI back-pressure;
-- memory/cache/TLB-sensitive paths where material;
-- native-frame deadline/headroom under no-frameskip/full-rate-audio conditions.
+- the sampler/extraction/symbolication path works;
+- subsystem classification responds causally;
+- ares recompiler provides adequate sample density;
+- the lab can enforce full-rate APU and no frameskip;
+- the lab can correlate a profile with Sodium64's own completed-frames-per-60-VI signal.
 
-## Next batch — representative gameplay / frame budget
+What remains before choosing the first M1 optimization architecture is **representative mixed/gameplay-like evidence**, followed by a real-hardware milestone when emulator evidence has done all it reasonably can.
 
-Goal: move from controlled synthetic causality to evidence sufficient to choose the first M1 architecture.
+## Immediate next batch — deterministic gameplay-like workload
+
+Goal: stop measuring isolated single-subsystem stress loops and profile a workload that behaves more like an actual SNES game frame.
 
 Planned direction:
 
-1. Define a small representative base-SNES profiling corpus/workload set that exercises different real game patterns without turning CI into a commercial-ROM repository.
-2. Prefer legal/open test/homebrew workloads in automated CI; commercial titles, where necessary for compatibility/performance decisions, remain local/milestone inputs rather than committed assets.
-3. Add or derive frame-progress/deadline measurements so Phase 1 can distinguish “where the R4300 was sampled” from “did this workload actually meet native cadence and how much headroom remained?”.
-4. Keep full-rate APU and no required frameskip as the Road-to-1.0 measurement condition.
-5. Compare repeated representative profiles for stability; do not select architecture from a single short run.
-6. If emulator laboratories cannot provide credible frame-budget evidence, package one efficient real-N64 milestone session that answers several questions at once.
-7. Use that evidence to decide whether Phase 2 opens with the 65C816 dynarec POC or whether another subsystem has a stronger measured claim on the first optimization batch.
-8. Checkpoint continuity before beginning that major architecture branch.
+1. Build an original source-generated SNES workload that combines normal CPU game logic, WRAM state updates, VBlank/NMI-driven frame pacing, realistic PPU register changes, OAM/sprite work and bounded per-frame VRAM/CGRAM DMA rather than saturating one unit continuously.
+2. Keep it deterministic and legally commit-able so CI always has the exact same workload.
+3. Prefer one balanced mixed workload first; add variants only if a concrete question requires them.
+4. Run it through the existing full-rate/no-frameskip frame-budget + statistical profile harness.
+5. Measure repeated runs for stability and inspect both `fps_display` and subsystem share.
+6. Use this mixed result to decide what additional representative workload is needed before the first real-N64 M0 milestone package.
+7. Do not begin the 65C816 dynarec branch merely because CPU-heavy synthetic controls were CPU-heavy.
+8. Checkpoint continuity again after the mixed-workload result.
 
 ## Hardware-test policy for Iron
 
 Do not ask Iron to copy a build to real N64 after every change. Request a hardware session only when one milestone package can answer several concrete questions or a hardware-specific uncertainty cannot be resolved at a cheaper layer.
 
-A hardware request must specify:
-
-- exact build/artifact;
-- exact ROMs/tests;
-- settings;
-- observations/metrics needed;
-- decision the answers unlock;
-- why host/emulator validation is insufficient.
+A hardware request must specify exact build/artifact, ROMs/tests, settings, observations/metrics, the decision unlocked, and why emulator/host validation is insufficient.
 
 ## Guardrails
 

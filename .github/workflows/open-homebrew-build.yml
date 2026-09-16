@@ -245,7 +245,7 @@ jobs:
     needs:
       - gothicvania-build
     env:
-      GOTHICVANIA_ROM_SHA256: 634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff
+      GOTHICVANIA_ROM_SHA256: 5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519
 
     steps:
       - name: Setup Node.js

@@ -64,37 +64,38 @@ Do not modify physics, enemies, renderer, HDMA, streaming, audio, collision, tim
 
 `240pTestSNES` remains useful later for fidelity/PPU validation but was not selected first because default flow is menu/static patterns rather than sustained gameplay.
 
-## RESUME HERE — SOURCE BUILD FIX
-Active branch: **`phase1/open-homebrew-workload`** from master `ee86d339...`.
-Current HEAD before fix: **`e72566dd5af1739ef3a1257a1ffb12fe3f985a98`**.
-
-Workflow: `.github/workflows/open-homebrew-build.yml`.
+## SOURCE BUILD HISTORY
+First branch HEAD: `e72566dd5af1739ef3a1257a1ffb12fe3f985a98`.
 First source-build run: **`35119197827` — FAILURE**.
-Normal branch validation run: `35119197754`.
 
-What passed before failure:
-- exact PVSnesLib archive download and SHA-256 verification;
-- exact Gothicvania SHA checkout;
-- both deterministic source replacements and diff checks.
+Passed: PVSnesLib checksum; Gothicvania SHA checkout; two benchmark patches.
+Failure: clean Git mtimes caused upstream **FROZEN ART** converters to run; `adapt_hero.py` / `adapt_enemy.py` hit missing `numpy`.
 
-Failure occurred only at `make`:
-- `make` unexpectedly ran `tools/adapt_hero.py` / `tools/adapt_enemy.py`;
-- those scripts failed first with `ModuleNotFoundError: numpy`.
+**SOURCE FACT:** upstream Makefile says those converters are intentionally no longer runnable because original art inputs were removed; committed outputs are source of truth.
+**CAUSE:** Git clone loses intended mtime ordering.
+**REJECTED:** installing numpy/chasing frozen converters.
+Correct fix: refresh only committed frozen-output mtimes, without changing bytes.
 
-**SUPPORTED INTERPRETATION / SOURCE FACT:** this is not a valid missing dependency of the intended Gothicvania build. Upstream Makefile explicitly marks these art converters as **FROZEN ART** and says their original source inputs were removed; committed `res/*.png`, `res/*.bin`, level outputs and generated animation headers are the source of truth and the converters are intentionally not supposed to run.
+## RESUME HERE — LIVE SOURCE-BUILD RETRY
+Active branch: **`phase1/open-homebrew-workload`**.
+Current HEAD: **`c7d60a98ea7ebcfa4a22cb78810472c2cc55e7e2`**.
 
-**CAUSE:** clean Git checkout does not preserve upstream file mtimes, so Make can see frozen converter scripts as new enough to regenerate committed outputs despite upstream's intended timestamp ordering.
+Workflow now:
+- verifies exact SDK/upstream pins;
+- applies only the two C source benchmark changes;
+- refreshes mtimes of committed `res/**` and generated animation/sky headers to honor upstream frozen-art model;
+- asserts tracked Git diff is still exactly `gothicvania/src/main.c` + `gothicvania/src/play.c` before and after `make`;
+- builds and uploads ROM + patch + SHA256 + provenance if successful.
 
-**REJECTED NEXT ACTION:** do not install numpy and chase the frozen converters. That would move away from the documented upstream build model and may hit intentionally missing source-art inputs.
+Live CI:
+- `Open Homebrew Workload Build` run **`35119454457`** — IN PROGRESS at checkpoint.
+- normal `Build and Validate` run **`35119454462`** — IN PROGRESS at checkpoint.
 
-Correct next experiment:
-- after checkout/patch, refresh **only mtimes** of committed frozen outputs (`gothicvania/res/**` plus generated animation headers as needed) so they are newer than converter scripts;
-- bytes remain untouched; Git diff must still contain only the two intentional C-source benchmark changes;
-- rerun the clean source build.
+Question: does restoring only upstream's intended mtime ordering produce a clean reproducible ROM without invoking frozen converters or mutating other tracked source/assets?
 
-Question remains: can the benchmark ROM be reproduced from pinned open source + pinned SDK while respecting upstream's frozen-art build model?
-
-If green: inspect ROM/provenance artifact, checkpoint, then profile this exact build using existing ares machinery. If red: inspect the next actual build dependency before adding ares.
+Decision:
+- green -> inspect artifact/provenance, checkpoint reproducibility, then add existing ares profiling around this exact ROM;
+- red -> inspect next actual dependency/failure; do not add ares yet.
 
 ## Hardware status
 **No real-N64 request yet.** Gothicvania is the final cheap representativeness step currently preferred before deciding whether next authority should be focused M0 hardware validation.
@@ -105,7 +106,6 @@ No game-specific emulator modes. No frameskip/APU underclock/audio omission coun
 ## Resume protocol
 1. Read this file.
 2. Verify master at/after `ee86d339...`.
-3. Inspect branch `phase1/open-homebrew-workload` and run `35119197827`.
-4. Fix frozen-output mtimes only; do not add converter dependencies.
-5. Resolve source build before adding ares profiling.
-6. Maintain batch -> checkpoint cadence.
+3. Inspect branch HEAD `c7d60a98...` and runs `35119454457` / `35119454462`.
+4. Resolve source build before adding ares profiling.
+5. Maintain batch -> checkpoint cadence.

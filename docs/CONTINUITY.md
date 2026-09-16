@@ -36,19 +36,23 @@ PR: `#9 Phase 1: add balanced gameplay-like profiling workload`
 
 - branch: `phase1/gameplay-mixed-workload`
 - base: master `798ebcb9969d94eda3eba4592eae2792d6304cb5`
-- current HEAD: `2fbd83d6a2491e2a663b21f545fff5b8323aa50f`
-- state: **OPEN / mergeable / NOT MERGED**
-- do **not** merge this HEAD: it contains temporary diagnostic workflow `.github/workflows/ares-recompiler-isolation.yml`.
+- current HEAD: **`5a1c0cd4759482ae913a20e6f14491cb456f2b53`**
+- state: **OPEN / NOT MERGED**
+- temporary isolation workflow has been **removed** from the branch after producing its evidence.
+- normal `Build and Validate` for current HEAD: run **`35114858150`**, pending/in progress at checkpoint.
+- replacement `Ares Profile Validation` for current HEAD: run **`35114866448`**, pending/in progress at checkpoint.
+
+Current branch now changes the normal ares lab so the pinned ares build keeps **R4300 recompiler ON** for decision-lab runs but forces **RSP recompiler OFF / RSP interpreter ON**. This is a laboratory workaround only; Sodium64 runtime is not altered by it.
 
 `gameplay-balanced` is a cleaned deterministic game-shaped workload: `WAI`/NMI pacing, bounded CPU/WRAM logic, bounded OAM/VRAM/CGRAM work, BG1+OBJ enabled, one visible sprite, remaining sprites hidden, frameskip 0, full-rate APU (21) with JIT invalidation, audio enabled.
 
 ## MEASUREMENT PROOF — ares CPU/RSP JIT isolation
 
-Diagnostic run: **`35113184294`** on HEAD `2fbd83d6a2491e2a663b21f545fff5b8323aa50f`.
+Diagnostic run: **`35113184294`** on old diagnostic HEAD `2fbd83d6a2491e2a663b21f545fff5b8323aa50f`.
 
 Artifact: **`sodium64-ares-recompiler-isolation`**, artifact ID **`10453682432`**.
 
-Same Sodium64 profiling build, same cleaned `gameplay-balanced` ROM, same settings for all modes.
+Same Sodium64 build/workload/settings for all four modes:
 
 | ares mode | samples | frames / 60 VI | SP_STATUS | DMA busy/full | SP_PC | result |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
@@ -57,19 +61,19 @@ Same Sodium64 profiling build, same cleaned `gameplay-balanced` ROM, same settin
 | CPU JIT ON / RSP JIT OFF | 2477 | **60/60** | 1 | 0 / 0 | `0x0D98` | good |
 | CPU JIT OFF / RSP JIT ON | 1872 | **0/60** | 1 | 0 / 0 | `0x0D90` | collapsed |
 
-Both modes with **RSP JIT ON** sampled **100% in `write_vmdatal` -> RSP/VRAM semaphore wait**. Both modes with **RSP JIT OFF** progressed normally.
+Both modes with **RSP JIT ON** sampled 100% in `write_vmdatal` -> RSP/VRAM semaphore wait. Both modes with **RSP JIT OFF** progressed normally.
 
 ### Interpretation
 
-**MEASURED:** the catastrophic gameplay collapse follows the **ares RSP recompiler** independently of the R4300 recompiler.
+**MEASURED:** collapse follows the **ares RSP recompiler** independently of the R4300 recompiler.
 
-**REJECTED:** R4300 JIT as the cause of this collapse. CPU JIT ON + RSP interpreter reaches 60/60.
+**REJECTED:** R4300 JIT as cause. CPU JIT ON + RSP interpreter reaches 60/60.
 
-**LAB LIMITATION:** the pinned ares RSP recompiler is not valid as a performance/synchronization laboratory for Sodium64's custom RSP microcode under this workload.
+**LAB LIMITATION:** pinned ares RSP recompiler is not a valid performance/synchronization laboratory for Sodium64 custom RSP microcode under this workload.
 
-Do **not** attribute the previous 0/60 or 1/60 recompiler gameplay result to Sodium64 or real N64 hardware.
+Do not attribute old 0/60 or 1/60 recompiler gameplay results to Sodium64 or real N64 hardware.
 
-The useful ares profiling configuration going forward is therefore **R4300 recompiler ON + RSP interpreter OFF/JIT disabled**. This mode retained high sample density (2477 samples in the diagnostic run) while producing 60/60.
+Validated high-density lab mode: **R4300 JIT + RSP interpreter**.
 
 ## SP_PC / semaphore finding
 
@@ -79,37 +83,52 @@ Exact profiling ELF disassembly maps `SP_PC=0x0D90` to Sodium64 RSP label `next_
 - `mtc0 t0, SP_STATUS` — intentional self-halt;
 - branch back toward `draw_frame` after restart.
 
-Therefore **REJECTED:** “RSP is stuck in DMA wait.” At bad capture the RSP has reached intentional end-of-frame halt; DMA is idle while R4300 spins on VRAM semaphore.
+Therefore **REJECTED:** “RSP is stuck in DMA wait.” At bad capture RSP has reached intentional end-of-frame halt; DMA is idle while R4300 spins on VRAM semaphore.
 
-This interleaving is produced by the ares RSP JIT path; interpreter RSP does not reproduce the collapse.
-
-## Other rejected / superseded explanations
+## Rejected / superseded explanations
 
 Do not rediscover these:
 
-- **REJECTED:** ares lacks SP semaphore semantics. It implements them.
-- **REJECTED:** ares RSP JIT simply drops semaphore-clearing `MTC0`; its emitted MTC0 calls the same `RSP::MTC0` helper as interpreter.
+- **REJECTED:** ares lacks SP semaphore semantics.
+- **REJECTED:** RSP JIT simply drops semaphore-clearing `MTC0`; JIT calls same helper path as interpreter.
 - **REJECTED as simple explanation:** CPU polling trivially starves RSP; `CPU::synchronize()` explicitly advances `rsp.main()`.
-- **REJECTED:** accidental OAM/sprite wall as primary cause; clean OAM did not remove JIT collapse.
-- **SUPERSEDED:** old `dma-vram ~=98% PPU` interpretation. Most samples were actually `write_vmdatal` semaphore wait; profiler now classifies `RSP/VRAM semaphore wait` separately.
+- **REJECTED:** accidental OAM/sprite wall as primary cause.
+- **REJECTED:** R4300 JIT as source of the gameplay collapse.
+- **SUPERSEDED:** old `dma-vram ~=98% PPU` interpretation. Most samples were semaphore wait, now classified separately.
 - **SOURCE FACT:** Sodium64 RSP copies 64 KiB VRAM in synchronous 1 KiB DMA blocks at frame start, then clears semaphore.
 - **SOURCE FACT:** `fps_display` represents completed SNES frames over a complete 60-VI interval.
 
-## Immediate next batch
+## LIVE EXPERIMENT — rebuild valid Phase 1 matrix
 
-1. Remove temporary `.github/workflows/ares-recompiler-isolation.yml` from PR #9 before merge.
-2. Adjust the normal ares profiling laboratory minimally so the pinned ares build uses **R4300 JIT + RSP interpreter** rather than the known-bad RSP JIT. Keep this explicitly documented as a lab workaround, not a Sodium64 change.
-3. Re-run the existing workload matrix + cleaned `gameplay-balanced` under that configuration.
-4. Verify `gameplay-balanced` remains ~60/60 and collect its representative subsystem distribution at useful sample density.
-5. Re-evaluate earlier PPU/DMA synthetic numbers under the valid RSP-interpreter lab configuration; supersede any numbers materially changed by the old RSP-JIT limitation.
-6. Update `PROFILING.md` with the ares RSP-JIT `LAB LIMITATION` only after the replacement run is validated.
-7. Then decide whether Phase 1 has enough representative emulator evidence for a real-N64 M0 milestone package or needs one more workload.
+Status: **IN PROGRESS** at checkpoint.
 
-Do not spend another branch debugging ares RSP JIT internals unless it becomes necessary for a Road gate. The 2x2 already answered the Sodium64 decision question.
+Current HEAD `5a1c0cd4759482ae913a20e6f14491cb456f2b53` modifies the existing `Ares Profile Validation` build only:
+
+- pinned ares source remains `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`;
+- a one-line diagnostic lab patch forces `rsp.recompiler.enabled = false`;
+- R4300 recompiler still follows the normal `ForceInterpreter` switch;
+- ordinary decision runs therefore use **CPU JIT + RSP interpreter**;
+- interpreter controls use **CPU interpreter + RSP interpreter**.
+
+Question answered by run `35114866448`:
+
+1. Do all existing synthetic workloads still produce coherent distributions without the invalid RSP JIT path?
+2. Does cleaned `gameplay-balanced` reproduce ~60/60 at high sample density?
+3. How much do old PPU/DMA percentages change once semaphore/JIT contamination is removed?
+
+After run completion:
+
+- download `sodium64-ares-profile-matrix` artifact;
+- inspect frame-budget + subsystem matrix, not merely CI status;
+- supersede contaminated historical numbers where necessary;
+- update `PROFILING.md` with the demonstrated ares RSP-JIT `LAB LIMITATION` and valid lab mode;
+- if both stable CI and replacement ares evidence are good, prepare PR #9 for merge.
+
+Do not debug ares RSP JIT further unless a Road gate later requires it. The 2x2 already answered the Sodium64 decision question.
 
 ## Hardware status
 
-**No real-N64 request yet.** First rebuild the emulator-lab evidence using the valid CPU-JIT/RSP-interpreter configuration. Then decide whether hardware is the next authority needed.
+**No real-N64 request yet.** First finish the replacement emulator-lab matrix. Then decide whether Phase 1 needs one more representative workload or whether the next authority should be a real-N64 M0 milestone package.
 
 ## Guardrails
 
@@ -123,8 +142,8 @@ Do not spend another branch debugging ares RSP JIT internals unless it becomes n
 ## Resume protocol
 
 1. Read this file.
-2. Inspect PR #9 and current HEAD.
-3. If temporary isolation workflow still exists, remove it only after preserving run `35113184294` result.
-4. Continue with valid-lab R4300-JIT + RSP-interpreter matrix.
-5. Read Road/Roadmap and Profiling/Validation before architecture decisions.
+2. Inspect PR #9 HEAD `5a1c0cd...`.
+3. Inspect runs `35114858150` and especially `35114866448`.
+4. Interpret replacement matrix artifact before any architecture decision.
+5. Read Road/Roadmap and Profiling/Validation before M1 work.
 6. Repair this file immediately if repo/CI evidence is newer.

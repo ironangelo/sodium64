@@ -83,75 +83,91 @@ Independent repeat source build run **`35122086605` SUCCESS**, artifact `1045827
 
 **VALIDATED / MEASUREMENT PROOF:** benchmark ROM is deterministic and reproducible from explicit pinned provenance.
 
-## MEASURED — first real open-game ares profile
-Temporary workflow `.github/workflows/open-homebrew-profile.yml` reuses existing sampler/reporters and is not intended to merge merely because it produced knowledge.
+## MEASURED — stable open-game ares profile
+Temporary workflow `.github/workflows/open-homebrew-profile.yml` reuses existing sampler/reporters and is diagnostic-only; remove before merge.
 
-First profile run **`35122086545` SUCCESS**, artifact **`10457627853`**.
-Input artifact/hash verified: Gothicvania source artifact `10458190844`, ROM SHA `634fe02f...c17a5fff`.
+### Run 1
+Run **`35122086545` SUCCESS**, artifact **`10457627853`**.
+Input artifact/hash verified: source artifact `10458190844`, ROM SHA `634fe02f...c17a5fff`.
 
-Verified measurement state:
-- **1,312 samples**;
-- frameskip 0;
-- APU clock 21;
-- audio 4;
-- precision 8;
-- R4300 JIT + RSP interpreter;
-- `SP_PC=0x0D98`, SP status 1, DMA busy/full 0/0 — valid non-collapsed RSP state.
+State: 1,312 samples; frameskip 0; APU 21; audio 4; precision 8; R4300 JIT + RSP interpreter; RSP halted at capture (`SP_STATUS=1`, `SP_PC=0x0D98`), DMA idle.
 
-R4300 profile:
-| major group | share |
-| --- | ---: |
-| APU static + APU JIT + DSP/audio | **52.7%** |
-| S-CPU interpreter | **30.4%** |
-| PPU + DMA + VRAM/RSP semaphore wait | **16.3%** |
-| frame/VI wait | **0.5%** |
+Primary shares:
+- APU static 35.4%;
+- S-CPU 30.4%;
+- DSP 13.6%;
+- PPU 8.1%;
+- DMA 5.0%;
+- APU JIT 3.7%;
+- VRAM/RSP wait 3.2%;
+- VI wait 0.5%.
 
-Primary buckets: APU static 35.4%, S-CPU 30.4%, DSP 13.6%, PPU 8.1%, DMA 5.0%, APU JIT 3.7%, VRAM/RSP wait 3.2%, VI wait 0.5%.
+Major groups: audio/APU **52.7%**, S-CPU **30.4%**, PPU+DMA+VRAM sync **16.3%**, VI wait **0.5%**.
+Virtual frame budget: **48/60**.
 
-Hottest symbols: `cpu_execute` 15.6%, `apu_execute` 11.6%, `read_unk` 7.5%, `io_read8` 4.1%, APU JIT 3.7%, `cpu_io` 3.2%, `skip_sample` 3.2%, `write_vmdatah` 3.0%, `set_nz16` 2.7%, `apu_read8` 2.2%, `read_apuio1` 2.1%, `write_vmdatal` 2.0%, `mix_sample` 2.0%.
+### Stability repeat
+Repeat HEAD **`1568a8c6ab2f4d655094fcefe5c40aaba4464844`** only added inert trigger `.github/phase1-gothicvania-repeat-trigger.txt`; no Sodium64/workload/profiler changes.
 
-Virtual frame budget: **48/60** in last complete 60-VI window = 80.0% of target. Partial at capture: native VI count 51/60, 37 guest frames, queue/frame_count 0. Host wall 6s is not real-N64 FPS.
+Run **`35122958028` SUCCESS**, artifact **`10457874257`**.
+Normal `Build and Validate` run **`35122957981` SUCCESS** including build, profile-build and Mupen smoke.
+
+State: **1,320 samples**; frameskip 0; APU 21; audio 4; precision 8; R4300 JIT + RSP interpreter; DMA idle.
+
+Primary shares:
+- APU static **36.2%**;
+- S-CPU **30.3%**;
+- DSP **12.4%**;
+- PPU **8.0%**;
+- DMA **5.5%**;
+- APU JIT **4.2%**;
+- VRAM/RSP wait **2.9%**;
+- VI wait **0.45%**.
+
+Major groups: audio/APU **52.9%**, S-CPU **30.3%**, PPU+DMA+VRAM sync **16.3%**, VI wait **0.45%**.
+Virtual frame budget: **48/60** again. Partial capture: 52/60 VI, 38 guest frames, queue 0.
+
+At repeat capture `SP_STATUS=0`; pinned ares `ares/n64/rsp/io.cpp` intentionally returns **random data for SP_PC while the RSP is running**. Therefore observed `SP_PC=0x020F` is non-interpretable by design and is **not** evidence of a new RSP anomaly. The first halted-capture `0x0D98` remains valid; repeat DMA idle + stable frame/profile data support a normal running capture.
+
+**VALIDATED / MEASUREMENT PROOF:** the Gothicvania ares result is stable across two independent runs. Exact frame budget repeated 48/60 and major-group shares changed by at most ~0.2 percentage points for the headline groups.
 
 ### Interpretation
-**MEASURED:** unlike synthetic `gameplay-balanced`, real open-game Gothicvania exposes material base-system pressure and almost no VI-wait headroom in valid ares lab.
+**MEASURED:** unlike synthetic `gameplay-balanced`, representative open-game Gothicvania exposes material base-system pressure and almost no VI-wait headroom in the valid ares lab.
 
-**SUPPORTED INTERPRETATION:** cost ranking is not “S-CPU alone.” Audio/APU-related R4300 work is largest aggregate (~52.7%), S-CPU remains a large second (~30.4%), graphics/DMA/synchronization is meaningful but smaller (~16.3%).
+**SUPPORTED INTERPRETATION:** representative cost is not “S-CPU alone.” Audio/APU-related R4300 work is the largest aggregate (~53%), S-CPU is a large second (~30%), graphics/DMA/synchronization is meaningful (~16%).
 
-**IMPORTANT:** ares proportions are not real-N64 proportions. “APU static” includes APU support/I-O/synchronization around existing JIT and must not be called simple SPC700 interpreter cost.
+**IMPORTANT:** ares proportions are not real-N64 proportions. `APU static` includes APU support/I-O/synchronization around the existing JIT; do not describe it as simple SPC700 interpreter cost.
 
-**SUPPORTED FALSIFICATION:** a 65C816 dynarec is no longer justified as an automatic sole first architecture merely from prior synthetic evidence. It remains a candidate because 30.4% is substantial, but APU/DSP now has co-equal architecture evidence.
+**SUPPORTED FALSIFICATION:** a 65C816 dynarec is not justified as an automatic sole first M1 architecture from synthetic evidence. It remains a strong candidate because ~30% is substantial and has SA-1 leverage, but APU/DSP now has equally important architecture evidence that must be checked on hardware.
 
-## RESUME HERE — LIVE STABILITY REPEAT
-Active branch: **`phase1/open-homebrew-workload`**.
-Current HEAD: **`1568a8c6ab2f4d655094fcefe5c40aaba4464844`**.
+## RESUME HERE — REAL-N64 M0 MILESTONE PACKAGE
+Active experimental branch: **`phase1/open-homebrew-workload`** at/after `1568a8c6...`.
+Integrated master remains `ee86d339...` until a reviewed/cleaned PR is merged.
 
-This HEAD differs from first profile HEAD only by temporary inert file `.github/phase1-gothicvania-repeat-trigger.txt`, created solely to start a new independent workflow run. It changes no Sodium64 source, workload bytes, profiler settings, or report tooling. Remove before merge.
+**Cheap M0 representativeness work is complete.** Do not add more synthetic/profile metrics merely because possible.
 
-Second Open Homebrew Ares Profile run: **`35122958028` — QUEUED at checkpoint**.
-Normal Build and Validate on same inert-trigger HEAD: `35122957981`.
+Immediate technical batch:
+1. clean diagnostic-only branch files before merge (`open-homebrew-profile.yml`, inert repeat trigger); preserve reproducible Gothicvania workload builder/provenance and durable findings in docs/continuity;
+2. prepare one focused real-N64 M0 build/package using the exact Gothicvania ROM/hash and full-rate settings;
+3. the hardware session must answer whether ares ranking/deficit transfers to real N64 strongly enough to select the first M1 architecture;
+4. collect only decision-relevant signals: native cadence/frame budget, audio behavior, visual/gameplay sanity, and low-overhead cost evidence feasible on hardware without turning instrumentation into the project.
 
-Stability questions:
-- does frame budget remain materially below 60, near first 48/60 rather than reverting to synthetic-like headroom?
-- does subsystem ordering remain roughly audio/APU > S-CPU > PPU/DMA/sync?
-- are frameskip/APU/audio/precision exact and RSP still `0x0D98` / DMA idle?
+Decision after hardware:
+- if real N64 confirms substantial S-CPU share and enough recoverable budget, proceed to a bounded 65C816 dynarec POC;
+- if audio/APU/DSP is clearly the larger actionable real-hardware cost, prioritize that architecture batch first or in tandem;
+- if graphics/RSP/DMA/sync materially differs from ares, investigate that measured gap before choosing dynarec;
+- if hardware evidence is ambiguous, design one discriminating experiment, not another broad tooling phase.
 
-After repeat:
-- inspect artifact, not status alone;
-- compare bucket percentages and frame budget quantitatively;
-- checkpoint result;
-- if stable, cheap M0 representativeness work is complete and next step is a focused **real-N64 M0 milestone package** before selecting M1 architecture.
-
-Do not start 65C816 dynarec yet.
+Do **not** start 65C816 dynarec before this milestone measurement.
 
 ## Hardware status
-**No user hardware action requested yet.** Stability repeat is the last cheap lab check before designing the decision-dense hardware package.
+**Hardware milestone is now justified**, but no test should be requested until the exact build, ROM/hash, settings, procedure, observables and decision table are packaged so Iron can perform one concise session.
 
 ## Guardrails
 No game-specific emulator modes. No frameskip/APU underclock/audio omission counted as performance. No endless profiler/tooling expansion. No diagnostic code merged merely because it produced knowledge. `master` remains best integrated state. Preserve rejected explanations.
 
 ## Resume protocol
-1. Read this file.
-2. Verify master `ee86d339...`, branch HEAD `1568a8c6...`.
-3. Inspect repeat run `35122958028` first.
-4. Compare repeat to first profile run `35122086545`.
-5. Checkpoint before hardware package/M1 decision.
+1. Read this file and Road/Profiling/Validation.
+2. Verify master and active branch/HEAD/CI.
+3. Clean the experimental branch and persist durable profiling findings.
+4. Build the real-N64 M0 package before asking Iron to test anything.
+5. Maintain batch -> checkpoint cadence.

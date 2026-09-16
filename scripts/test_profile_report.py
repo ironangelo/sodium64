@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import struct
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -108,6 +109,50 @@ class SnapshotDecoderTests(unittest.TestCase):
         blob[0:4] = b"NOPE"
         with self.assertRaisesRegex(ValueError, "bad profiler magic"):
             self.decode(bytes(blob))
+
+
+class LinkerMapClassificationTests(unittest.TestCase):
+    def make_map(self) -> Path:
+        text = """
+Discarded input sections
+ .text          0x00000000      0x100 build/src/cpu.o
+
+Linker script and memory map
+ .boot          0x80000400       0x10 build/src/main.o
+ .text          0x80000420      0x200 build/src/apu.o
+ .text          0x80001000      0x300 build/src/cpu.o
+ .text          0x80002000      0x100 build/src/ppu.o
+ .text          0x80003000       0x80 build/src/dma.o
+"""
+        handle = tempfile.NamedTemporaryFile("w", delete=False, encoding="utf-8")
+        handle.write(text)
+        handle.close()
+        self.addCleanup(lambda: Path(handle.name).unlink(missing_ok=True))
+        return Path(handle.name)
+
+    def test_map_parser_ignores_discarded_zero_address_ranges(self) -> None:
+        starts, ranges = profile_report.load_text_ranges(self.make_map())
+        self.assertEqual(starts, [0x80000400, 0x80000420, 0x80001000, 0x80002000, 0x80003000])
+        self.assertEqual(profile_report.object_for_pc(0x80001020, starts, ranges), "cpu.o")
+        self.assertIsNone(profile_report.object_for_pc(0x80004000, starts, ranges))
+
+    def test_subsystem_classification_prioritizes_waits_and_jit(self) -> None:
+        self.assertEqual(
+            profile_report.subsystem_for_sample(0x80002020, "rsp_wait+0x4", "ppu.o"),
+            "RSP wait",
+        )
+        self.assertEqual(
+            profile_report.subsystem_for_sample(0x801C0100, "[APU JIT generated code]", None),
+            "APU JIT generated",
+        )
+        self.assertEqual(
+            profile_report.subsystem_for_sample(0x80001020, "cpu_execute+0x20", "cpu.o"),
+            "S-CPU interpreter",
+        )
+        self.assertEqual(
+            profile_report.subsystem_for_sample(0x80003020, "trigger_dma+0x20", "dma.o"),
+            "DMA/HDMA",
+        )
 
 
 if __name__ == "__main__":

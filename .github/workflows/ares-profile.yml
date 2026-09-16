@@ -292,6 +292,10 @@ jobs:
               --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
               --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
               --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+              --observe "sp_status:0xA4040010:4" \
+              --observe "sp_dma_full:0xA4040014:4" \
+              --observe "sp_dma_busy:0xA4040018:4" \
+              --observe "sp_pc:0xA4080000:4" \
               --state-output "$state" \
               --address "0x$ARES_PROFILE_ADDR" \
               --size "$ARES_PROFILE_SIZE" \
@@ -321,13 +325,18 @@ jobs:
             echo "$label: $samples total samples"
           }
 
-          # Keep the original short interpreter path as a profiler-throughput
-          # control. Frame-budget validity is evaluated only on recompiler runs,
-          # which advance enough virtual N64 time to span complete VI windows.
+          # Keep the original short idle interpreter path as a profiler-throughput
+          # control, and add one gameplay interpreter run to discriminate an ares
+          # recompiler-specific RSP stall from behavior common to both engines.
           run_profile \
             interpreter-idle \
             workloads/ares/out/profile-idle.z64 \
             true 3 9123 0 3
+
+          run_profile \
+            interpreter-gameplay \
+            workloads/ares/out/profile-gameplay-balanced.z64 \
+            true 5 9124 20 30
 
           # 800 samples corresponds to more than roughly one second of R4300
           # CP0 Count at the current 65,521-tick interval, ensuring the virtual
@@ -365,14 +374,17 @@ jobs:
             --output profiles/frame-budget.md
 
           interpreter_samples=$(python3 -c 'import json; print(json.load(open("profiles/interpreter-idle.json"))["meta"]["sample_count"])')
+          interpreter_gameplay_samples=$(python3 -c 'import json; print(json.load(open("profiles/interpreter-gameplay.json"))["meta"]["sample_count"])')
           recompiler_samples=$(python3 -c 'import json; print(json.load(open("profiles/recompiler-idle.json"))["meta"]["sample_count"])')
           interpreter_wall=$(awk '/Captured .* after .*s measured wall time/ { for (i=1; i<=NF; i++) if ($i == "after") { gsub("s", "", $(i+1)); print $(i+1) } }' profiles/interpreter-idle-gdb.log | tail -n1)
+          interpreter_gameplay_wall=$(awk '/Captured .* after .*s measured wall time/ { for (i=1; i<=NF; i++) if ($i == "after") { gsub("s", "", $(i+1)); print $(i+1) } }' profiles/interpreter-gameplay-gdb.log | tail -n1)
           recompiler_wall=$(awk '/Captured .* after .*s measured wall time/ { for (i=1; i<=NF; i++) if ($i == "after") { gsub("s", "", $(i+1)); print $(i+1) } }' profiles/recompiler-idle-gdb.log | tail -n1)
 
           {
             echo '### ares profiling throughput'
             echo
             echo "- interpreter idle: $interpreter_samples samples / ${interpreter_wall}s measured wall time"
+            echo "- interpreter gameplay diagnostic: $interpreter_gameplay_samples samples / ${interpreter_gameplay_wall}s measured wall time"
             echo "- recompiler idle: $recompiler_samples samples / ${recompiler_wall}s measured wall time"
             echo
             echo '### Recompiler workload bottleneck matrix'

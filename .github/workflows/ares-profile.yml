@@ -135,7 +135,7 @@ jobs:
             test -f "workloads/ares/out/profile-$workload.z64"
           done
 
-      - name: Locate profiling state and runtime controls
+      - name: Locate profiling and frame-budget runtime state
         shell: bash
         run: |
           set -euo pipefail
@@ -153,10 +153,19 @@ jobs:
           apu_clock=$(symbol apu_clock)
           jit_lookup=$(symbol jit_lookup)
           jit_pointer=$(symbol jit_pointer)
+          fps_native=$(symbol fps_native)
+          fps_emulate=$(symbol fps_emulate)
+          fps_display=$(symbol fps_display)
+          frame_count=$(symbol frame_count)
+          skipped_set=$(symbol skipped_set)
+          precision_set=$(symbol precision_set)
+          audio_set=$(symbol audio_set)
 
           for value in \
             "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
-            "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer"; do
+            "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer" \
+            "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
+            "$skipped_set" "$precision_set" "$audio_set"; do
             test -n "$value"
           done
 
@@ -184,6 +193,13 @@ jobs:
             echo "ARES_JIT_LOOKUP_SIZE=$jit_lookup_size"
             echo "ARES_JIT_POINTER_ADDR=$jit_pointer"
             echo "ARES_JIT_BUFFER_HEX=$jit_buffer_hex"
+            echo "ARES_FPS_NATIVE_ADDR=$fps_native"
+            echo "ARES_FPS_EMULATE_ADDR=$fps_emulate"
+            echo "ARES_FPS_DISPLAY_ADDR=$fps_display"
+            echo "ARES_FRAME_COUNT_ADDR=$frame_count"
+            echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
+            echo "ARES_PRECISION_SET_ADDR=$precision_set"
+            echo "ARES_AUDIO_SET_ADDR=$audio_set"
           } >> "$GITHUB_ENV"
 
           echo "profiler snapshot:  0x$magic + $size bytes"
@@ -191,6 +207,8 @@ jobs:
           echo "apu_clock:          0x$apu_clock (measurement value: 0x15 / 21 cycles)"
           echo "APU JIT lookup:     0x$jit_lookup + $jit_lookup_size bytes"
           echo "APU JIT reset ptr:  0x$jit_buffer_hex"
+          echo "fps_display:        0x$fps_display"
+          echo "frameskip setting:  0x$skipped_set (measurement value: 0x00)"
 
       - name: Run interpreter control and recompiler workload matrix
         shell: bash
@@ -214,6 +232,7 @@ jobs:
             snapshot="profiles/$label.bin"
             report="profiles/$label.txt"
             json="profiles/$label.json"
+            state="profiles/$label-state.json"
             mkdir -p "$home"
 
             HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
@@ -251,14 +270,29 @@ jobs:
               --connect-timeout 45 \
               --response-timeout 60 \
               --warmup-seconds 1 \
-              --run-seconds "$run_seconds" \
               --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
               --write "0x$ARES_APU_CLOCK_ADDR:15" \
               --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
-              --write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
-              --write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
-              --write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+              --write "0x$ARES_SKIPPED_SET_ADDR:00" \
+              --write "0x$ARES_AUDIO_SET_ADDR:04" \
+              --settle-seconds 1 \
+              --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
+              --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
+              --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+              --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
+              --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
+              --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
+              --run-seconds "$run_seconds" \
               "${extra_sampling_args[@]}" \
+              --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
+              --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
+              --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
+              --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
+              --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
+              --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
+              --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
+              --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+              --state-output "$state" \
               --address "0x$ARES_PROFILE_ADDR" \
               --size "$ARES_PROFILE_SIZE" \
               --output "$snapshot" \
@@ -287,25 +321,27 @@ jobs:
             echo "$label: $samples total samples"
           }
 
-          # Keep one fixed three-second interpreter run as a throughput control.
+          # Keep the original short interpreter path as a profiler-throughput
+          # control. Frame-budget validity is evaluated only on recompiler runs,
+          # which advance enough virtual N64 time to span complete VI windows.
           run_profile \
             interpreter-idle \
             workloads/ares/out/profile-idle.z64 \
             true 3 9123 0 3
 
-          # Recompiler profiles accumulate at least 200 statistical samples.
-          # Fast workloads satisfy this in the first 3-second window; slow ones
-          # may receive additional windows, capped at 60 measured wall seconds.
+          # 800 samples corresponds to more than roughly one second of R4300
+          # CP0 Count at the current 65,521-tick interval, ensuring the virtual
+          # frame-budget observation includes at least one complete 60-VI window.
           port=9130
           for workload in idle cpu-alu wram ppu-registers dma-vram; do
             run_profile \
               "recompiler-$workload" \
               "workloads/ares/out/profile-$workload.z64" \
-              false 3 "$port" 200 60
+              false 3 "$port" 800 60
             port=$((port + 1))
           done
 
-      - name: Build workload bottleneck matrix
+      - name: Build workload and frame-budget reports
         shell: bash
         run: |
           set -euo pipefail
@@ -316,6 +352,15 @@ jobs:
             profiles/recompiler-ppu-registers.json \
             profiles/recompiler-dma-vram.json \
             --output profiles/workload-matrix.md
+
+          python3 scripts/frame_budget_report.py \
+            profiles/recompiler-idle-state.json \
+            profiles/recompiler-cpu-alu-state.json \
+            profiles/recompiler-wram-state.json \
+            profiles/recompiler-ppu-registers-state.json \
+            profiles/recompiler-dma-vram-state.json \
+            --target-fps 60 \
+            --output profiles/frame-budget.md
 
           interpreter_samples=$(python3 -c 'import json; print(json.load(open("profiles/interpreter-idle.json"))["meta"]["sample_count"])')
           recompiler_samples=$(python3 -c 'import json; print(json.load(open("profiles/recompiler-idle.json"))["meta"]["sample_count"])')
@@ -331,6 +376,10 @@ jobs:
             echo '### Recompiler workload bottleneck matrix'
             echo
             cat profiles/workload-matrix.md
+            echo
+            echo '### Virtual N64 frame budget'
+            echo
+            cat profiles/frame-budget.md
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload ares profiling diagnostics

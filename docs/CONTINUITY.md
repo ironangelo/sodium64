@@ -80,7 +80,7 @@ Upstream `968b61874c5c39e43679b4f3977de73f279cb192` explicitly says the CC0 pack
 Audio converter has a host-specific ffmpeg path; tracked `.it` intermediates are retained/freshened rather than patching audio. `adapt_title.py` expects a host-local Kenney Pixel font; CI recreates that path using pinned CC0 font bytes without changing upstream tool source.
 
 ## MEASUREMENT PROOF — reproducible Gothicvania benchmark
-Validated source-build HEAD: **`0e5c53846e67c192b75d58f236126a458e8d53b9`**.
+Initial validated source-build HEAD: **`0e5c53846e67c192b75d58f236126a458e8d53b9`**.
 Run **`35121473665` — SUCCESS**.
 Artifact **`gothicvania-benchmark-source-build`**, ID **`10458190844`**.
 
@@ -92,46 +92,50 @@ Downloaded artifact verification:
 - provenance records final game SHA, source-pack SHA, PVSnesLib version/checksum, Kenney font repo/commit/blob and ROM size;
 - exact patch contains only `main.c: ST_TITLE -> ST_PLAY` and `play.c: padsCurrent(0) -> KEY_RIGHT`.
 
-**VALIDATED:** final Gothicvania workload is reproducible from explicit pinned provenance on clean Ubuntu with only the two declared benchmark-control runtime edits.
+Independent repeat build on later branch HEAD: run **`35122086605` — SUCCESS**, artifact ID **`10458276218`**.
+Downloaded repeat artifact produced the **same ROM SHA-256** and **same patch SHA-256**. Direct `cmp` confirms both ROM and patch are **byte-identical** to the first validated artifact.
+
+**VALIDATED / MEASUREMENT PROOF:** final Gothicvania benchmark is deterministic and reproducible from explicit pinned provenance across two independent clean CI builds, with only the two declared benchmark-control runtime edits.
 
 **NOT YET PROVEN:** Sodium64 can run it correctly; ares bottleneck/frame budget; real-N64 performance; final visual/audio fidelity.
 
-Normal Sodium64 run for source-build HEAD: `35121473585`; normal + PROFILE builds passed, Mupen smoke was still running at prior checkpoint.
+Normal Sodium64 run for the initial source-build HEAD: `35121473585`; normal + PROFILE builds passed, Mupen smoke was still running at prior checkpoint.
 
 ## RESUME HERE — LIVE GOTHICVANIA ARES PROFILE
 Active branch: **`phase1/open-homebrew-workload`**.
 Current HEAD: **`0b6fc0d110428ed6136f56e6d60c0601a011d9e8`**.
 
-Temporary diagnostic workflow added: `.github/workflows/open-homebrew-profile.yml`.
+Temporary diagnostic workflow: `.github/workflows/open-homebrew-profile.yml`.
 **Do not merge this orchestration merely because it produces knowledge; remove it before merge unless it earns a durable CI role.**
 
 Live run: **Open Homebrew Ares Profile `35122086545` — IN PROGRESS at checkpoint.**
-A new source-build validation also launched on the same HEAD: `35122086605`.
+- `profile-build` job has completed SUCCESS on this run.
+- `ares-gothicvania` is building pinned ares at checkpoint.
 
-The profiling workflow deliberately adds **no new profiler machinery**. It reuses:
+The profiling workflow adds **no new profiler machinery**. It reuses:
 - PROFILE=1 Sodium64 build;
 - pinned ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`;
-- demonstrated valid lab mode: R4300 JIT + forced RSP interpreter;
+- valid lab mode: R4300 JIT + forced RSP interpreter;
 - existing `gdb_rsp_dump.py`, `profile_report.py`, `profile_matrix.py`, `frame_budget_report.py`;
 - frameskip 0;
-- full-rate APU 21 + lookup invalidation/JIT pointer reset;
-- audio setting 4;
-- precision setting expected/asserted 8;
+- full-rate APU 21 + lookup invalidation/JIT reset;
+- audio 4;
+- precision asserted 8;
 - minimum 800 samples, max 60 measured host seconds.
 
-Input is not rebuilt inside the profiler. The workflow downloads exact validated Gothicvania artifact **ID `10458190844`**, verifies ROM SHA-256 **`634fe02f...c17a5fff`**, copies identical bytes under `.smc` extension only to avoid the legacy converter's interactive `.sfc` prompt, then uses existing `rom-converter.py` to produce the N64 test ROM.
+Input is not rebuilt in profiler. It downloads validated artifact **ID `10458190844`**, verifies ROM SHA-256 **`634fe02f...c17a5fff`**, renames identical headerless bytes to `.smc` only to avoid the legacy converter's interactive `.sfc` prompt, then uses existing `rom-converter.py`.
 
-Measurement timing: 1 host-second warm-up + 1 host-second settle before clean reset, then bounded sampling. Because player starts near the first skeleton trigger and spikes are far later, this should capture scrolling + enemy/sprite streaming + SNESMod activity without requiring an elaborate input bot.
+Measurement timing: 1 host-second warm-up + 1 host-second settle before clean reset, then bounded sampling. Player begins near first skeleton trigger and spikes are much later, so this should capture scrolling + enemy/sprite streaming + SNESMod activity without a complex input bot.
 
 Question answered by run `35122086545`:
 **under the real open-game workload, which R4300 cost buckets dominate, and is the last complete 60-VI frame-budget window at target or below it?**
 
 Decision after run:
 - inspect artifact/profile/state, not just status;
-- verify >=800 samples and measurement settings exactly;
-- distinguish boot/compatibility failure from throughput pressure if red or anomalous;
+- verify >=800 samples and exact settings;
+- distinguish boot/compatibility failure from throughput pressure if red/anomalous;
 - checkpoint profile + frame budget + limitations;
-- then decide whether M0 now needs a focused real-N64 milestone package before any M1 architecture selection.
+- then decide whether M0 needs a focused real-N64 milestone package before any M1 architecture selection.
 
 Do not start 65C816 dynarec based only on synthetic controls.
 
@@ -144,6 +148,6 @@ No game-specific emulator modes. No frameskip/APU underclock/audio omission coun
 ## Resume protocol
 1. Read this file.
 2. Verify master at/after `ee86d339...` and branch HEAD `0b6fc0d1...`.
-3. Inspect run `35122086545` and its artifact first; also check source revalidation `35122086605`.
+3. Inspect run `35122086545` and its artifact first.
 4. Interpret Gothicvania evidence before any architecture decision.
 5. Maintain batch -> checkpoint cadence.

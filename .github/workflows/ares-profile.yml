@@ -30,8 +30,8 @@ jobs:
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
-      - name: Run host profiler decoder tests
-        run: python3 scripts/test_profile_report.py
+      - name: Run host profiling tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
 
       - name: Compile profiling build
         shell: bash
@@ -63,7 +63,7 @@ jobs:
 
   ares-smoke:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     needs:
       - profile-build
 
@@ -119,108 +119,227 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Generate profiling N64 smoke ROM
+      - name: Generate deterministic profiling workload ROMs
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p smoke/ares
-          cp artifacts/profile/sodium64.z64 smoke/ares/sodium64.z64
-          cp artifacts/profile/rom-converter.py smoke/ares/rom-converter.py
-          python3 scripts/make_smoke_snes.py smoke/ares/smoke.smc
+          mkdir -p workloads/ares
+          cp artifacts/profile/sodium64.z64 workloads/ares/sodium64.z64
+          cp artifacts/profile/rom-converter.py workloads/ares/rom-converter.py
+          python3 scripts/make_profile_workloads.py workloads/ares
           (
-            cd smoke/ares
+            cd workloads/ares
             python3 rom-converter.py </dev/null
           )
-          test -f smoke/ares/out/smoke.z64
+          for workload in idle cpu-alu wram ppu-registers dma-vram; do
+            test -f "workloads/ares/out/profile-$workload.z64"
+          done
 
-      - name: Locate profiling snapshot region
+      - name: Locate profiling state and runtime controls
         shell: bash
         run: |
           set -euo pipefail
           elf="artifacts/profile/build/sodium64.elf"
-          magic=$(nm -n "$elf" | awk '$3 == "profile_magic" { print $1; exit }')
-          end=$(nm -n "$elf" | awk '$3 == "profile_sample_buffer_end" { print $1; exit }')
-          test -n "$magic"
-          test -n "$end"
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          magic=$(symbol profile_magic)
+          end=$(symbol profile_sample_buffer_end)
+          buffer=$(symbol profile_sample_buffer)
+          write_ptr=$(symbol profile_write_ptr)
+          sample_count=$(symbol profile_sample_count)
+          last_epc=$(symbol profile_last_epc)
+          apu_clock=$(symbol apu_clock)
+          jit_lookup=$(symbol jit_lookup)
+          jit_pointer=$(symbol jit_pointer)
+
+          for value in \
+            "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
+            "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer"; do
+            test -n "$value"
+          done
+
           size=$((0x$end - 0x$magic))
+          jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
           test "$size" -gt 16384
+          test "$jit_lookup_size" -eq 262144
+
+          buffer_hex=$(printf '%08x' "$((0x$buffer))")
+          rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
+          test -n "$rom_buffer"
+          jit_buffer=$((rom_buffer - 0x40000))
+          jit_buffer_hex=$(printf '%08x' "$jit_buffer")
+
           {
             echo "ARES_PROFILE_ADDR=$magic"
             echo "ARES_PROFILE_SIZE=$size"
+            echo "ARES_PROFILE_BUFFER_ADDR=$buffer"
+            echo "ARES_PROFILE_BUFFER_HEX=$buffer_hex"
+            echo "ARES_PROFILE_WRITE_PTR_ADDR=$write_ptr"
+            echo "ARES_PROFILE_SAMPLE_COUNT_ADDR=$sample_count"
+            echo "ARES_PROFILE_LAST_EPC_ADDR=$last_epc"
+            echo "ARES_APU_CLOCK_ADDR=$apu_clock"
+            echo "ARES_JIT_LOOKUP_ADDR=$jit_lookup"
+            echo "ARES_JIT_LOOKUP_SIZE=$jit_lookup_size"
+            echo "ARES_JIT_POINTER_ADDR=$jit_pointer"
+            echo "ARES_JIT_BUFFER_HEX=$jit_buffer_hex"
           } >> "$GITHUB_ENV"
-          echo "ares profiler snapshot: 0x$magic + $size bytes"
 
-      - name: Run ares and capture profiler through GDB RSP
+          echo "profiler snapshot:  0x$magic + $size bytes"
+          echo "profile buffer:     0x$buffer"
+          echo "apu_clock:          0x$apu_clock (measurement value: 0x15 / 21 cycles)"
+          echo "APU JIT lookup:     0x$jit_lookup + $jit_lookup_size bytes"
+          echo "APU JIT reset ptr:  0x$jit_buffer_hex"
+
+      - name: Run interpreter control and recompiler workload matrix
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/ares-home"
-          export HOME="$RUNNER_TEMP/ares-home"
-          export SDL_AUDIODRIVER=dummy
-          export LIBGL_ALWAYS_SOFTWARE=1
+          mkdir -p profiles
 
-          xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
-            --no-file-prompt \
-            --system "Nintendo 64" \
-            --settings-file "$RUNNER_TEMP/ares-settings.bml" \
-            --setting "Developer/DebugServerEnabled=true" \
-            --setting "Developer/DebugServerUseIPv4=true" \
-            --setting "Developer/DebugServerPort=9123" \
-            --setting "Developer/HomebrewMode=true" \
-            --setting "Developer/DeterministicEntropy=true" \
-            --setting "Developer/ForceInterpreter=true" \
-            --setting "Boot/AwaitGDBClient=true" \
-            smoke/ares/out/smoke.z64 \
-            > ares-emulator.log 2>&1 &
-          ares_pid=$!
-          echo "$ares_pid" > ares.pid
+          run_profile() {
+            label="$1"
+            rom="$2"
+            force_interpreter="$3"
+            run_seconds="$4"
+            port="$5"
+            min_samples="$6"
+            max_run_seconds="$7"
 
-          cleanup() {
-            kill "$ares_pid" 2>/dev/null || true
-            wait "$ares_pid" 2>/dev/null || true
+            home="$RUNNER_TEMP/ares-home-$label"
+            settings="$RUNNER_TEMP/ares-settings-$label.bml"
+            emulator_log="profiles/$label-emulator.log"
+            gdb_log="profiles/$label-gdb.log"
+            snapshot="profiles/$label.bin"
+            report="profiles/$label.txt"
+            json="profiles/$label.json"
+            mkdir -p "$home"
+
+            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+                --no-file-prompt \
+                --system "Nintendo 64" \
+                --settings-file "$settings" \
+                --setting "Developer/DebugServerEnabled=true" \
+                --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" \
+                --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" \
+                --setting "Developer/ForceInterpreter=$force_interpreter" \
+                --setting "Boot/AwaitGDBClient=true" \
+                "$rom" \
+                > "$emulator_log" 2>&1 &
+            ares_pid=$!
+
+            cleanup_run() {
+              kill "$ares_pid" 2>/dev/null || true
+              wait "$ares_pid" 2>/dev/null || true
+            }
+
+            extra_sampling_args=()
+            if [ "$min_samples" -gt 0 ]; then
+              extra_sampling_args=(
+                --sample-count-address "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR"
+                --min-samples "$min_samples"
+                --max-run-seconds "$max_run_seconds"
+              )
+            fi
+
+            if ! python3 scripts/gdb_rsp_dump.py \
+              --port "$port" \
+              --connect-timeout 45 \
+              --response-timeout 60 \
+              --warmup-seconds 1 \
+              --run-seconds "$run_seconds" \
+              --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
+              --write "0x$ARES_APU_CLOCK_ADDR:15" \
+              --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
+              --write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
+              --write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
+              --write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+              "${extra_sampling_args[@]}" \
+              --address "0x$ARES_PROFILE_ADDR" \
+              --size "$ARES_PROFILE_SIZE" \
+              --output "$snapshot" \
+              > "$gdb_log" 2>&1; then
+              cat "$gdb_log"
+              tail -200 "$emulator_log" || true
+              cleanup_run
+              return 1
+            fi
+            cat "$gdb_log"
+            cleanup_run
+
+            python3 scripts/profile_report.py \
+              "$snapshot" \
+              artifacts/profile/build/sodium64.elf \
+              --nm nm \
+              --map artifacts/profile/build/sodium64.map \
+              --json-output "$json" | tee "$report"
+
+            samples=$(awk '/total samples:/ { print $3 }' "$report")
+            test -n "$samples"
+            test "$samples" -gt 0
+            if [ "$min_samples" -gt 0 ]; then
+              test "$samples" -ge "$min_samples"
+            fi
+            echo "$label: $samples total samples"
           }
-          trap cleanup EXIT
 
-          python3 scripts/gdb_rsp_dump.py \
-            --port 9123 \
-            --connect-timeout 45 \
-            --run-seconds 3 \
-            --address "0x$ARES_PROFILE_ADDR" \
-            --size "$ARES_PROFILE_SIZE" \
-            --output ares-profile-snapshot.bin \
-            2>&1 | tee ares-gdb.log
+          # Keep one fixed three-second interpreter run as a throughput control.
+          run_profile \
+            interpreter-idle \
+            workloads/ares/out/profile-idle.z64 \
+            true 3 9123 0 3
 
-          test -s ares-profile-snapshot.bin
-          test "$(stat -c %s ares-profile-snapshot.bin)" -eq "$ARES_PROFILE_SIZE"
+          # Recompiler profiles accumulate at least 200 statistical samples.
+          # Fast workloads satisfy this in the first 3-second window; slow ones
+          # may receive additional windows, capped at 60 measured wall seconds.
+          port=9130
+          for workload in idle cpu-alu wram ppu-registers dma-vram; do
+            run_profile \
+              "recompiler-$workload" \
+              "workloads/ares/out/profile-$workload.z64" \
+              false 3 "$port" 200 60
+            port=$((port + 1))
+          done
 
-      - name: Decode ares statistical profile
+      - name: Build workload bottleneck matrix
         shell: bash
         run: |
           set -euo pipefail
-          python3 scripts/profile_report.py \
-            ares-profile-snapshot.bin \
-            artifacts/profile/build/sodium64.elf \
-            --nm nm | tee ares-profile-report.txt
-          samples=$(awk '/total samples:/ { print $3 }' ares-profile-report.txt)
-          test -n "$samples"
-          test "$samples" -gt 0
+          python3 scripts/profile_matrix.py \
+            profiles/recompiler-idle.json \
+            profiles/recompiler-cpu-alu.json \
+            profiles/recompiler-wram.json \
+            profiles/recompiler-ppu-registers.json \
+            profiles/recompiler-dma-vram.json \
+            --output profiles/workload-matrix.md
+
+          interpreter_samples=$(python3 -c 'import json; print(json.load(open("profiles/interpreter-idle.json"))["meta"]["sample_count"])')
+          recompiler_samples=$(python3 -c 'import json; print(json.load(open("profiles/recompiler-idle.json"))["meta"]["sample_count"])')
+          interpreter_wall=$(awk '/Captured .* after .*s measured wall time/ { for (i=1; i<=NF; i++) if ($i == "after") { gsub("s", "", $(i+1)); print $(i+1) } }' profiles/interpreter-idle-gdb.log | tail -n1)
+          recompiler_wall=$(awk '/Captured .* after .*s measured wall time/ { for (i=1; i<=NF; i++) if ($i == "after") { gsub("s", "", $(i+1)); print $(i+1) } }' profiles/recompiler-idle-gdb.log | tail -n1)
+
           {
-            echo '### ares statistical profile'
-            echo '```text'
-            cat ares-profile-report.txt
-            echo '```'
+            echo '### ares profiling throughput'
+            echo
+            echo "- interpreter idle: $interpreter_samples samples / ${interpreter_wall}s measured wall time"
+            echo "- recompiler idle: $recompiler_samples samples / ${recompiler_wall}s measured wall time"
+            echo
+            echo '### Recompiler workload bottleneck matrix'
+            echo
+            cat profiles/workload-matrix.md
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload ares smoke diagnostics
+      - name: Upload ares profiling diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sodium64-ares-smoke
+          name: sodium64-ares-profile-matrix
           retention-days: 14
           if-no-files-found: ignore
           path: |
             ares-version.txt
-            ares-emulator.log
-            ares-gdb.log
-            ares-profile-snapshot.bin
-            ares-profile-report.txt
+            profiles/

@@ -1,0 +1,292 @@
+name: Ares Recompiler Isolation
+
+on:
+  push:
+    branches:
+      - phase1/gameplay-mixed-workload
+
+concurrency:
+  group: sodium64-ares-recompiler-isolation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Run host profiling tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
+      - name: Build Sodium64 profiling image
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make PROFILE=1 -j"$(nproc)"
+
+      - name: Install ares build and virtual-display dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev xauth xvfb
+
+      - name: Restore ares compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ares-n64-recompiler-isolation-${{ runner.os }}-${{ runner.arch }}-17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+
+      - name: Build pinned ares recompiler variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          ccache --zero-stats
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          cp "$ares_bin" "$ares_bin.both"
+
+          # Diagnostic variant: CPU recompiler follows the normal switch,
+          # RSP is always interpreted.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert old in s
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          cmake --build build --parallel "$(nproc)"
+          cp "$ares_bin" "$ares_bin.cpu-only"
+
+          git checkout -- ares/n64/system/system.cpp
+
+          # Diagnostic variant: RSP recompiler follows the normal switch,
+          # CPU is always interpreted.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'cpu.recompiler.enabled = value.boolean();'
+          assert old in s
+          p.write_text(s.replace(old, 'cpu.recompiler.enabled = false;', 1))
+          PY
+          cmake --build build --parallel "$(nproc)"
+          cp "$ares_bin" "$ares_bin.rsp-only"
+          git checkout -- ares/n64/system/system.cpp
+
+          for variant in "$ares_bin.both" "$ares_bin.cpu-only" "$ares_bin.rsp-only"; do
+            test -x "$variant"
+          done
+          echo "ARES_BIN_BOTH=$ares_bin.both" >> "$GITHUB_ENV"
+          echo "ARES_BIN_CPU_ONLY=$ares_bin.cpu-only" >> "$GITHUB_ENV"
+          echo "ARES_BIN_RSP_ONLY=$ares_bin.rsp-only" >> "$GITHUB_ENV"
+          ccache --show-stats
+
+      - name: Generate gameplay workload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workloads/isolation
+          cp sodium64.z64 workloads/isolation/sodium64.z64
+          cp rom-converter.py workloads/isolation/rom-converter.py
+          python3 scripts/make_profile_workloads.py workloads/isolation
+          (
+            cd workloads/isolation
+            python3 rom-converter.py </dev/null
+          )
+          test -f workloads/isolation/out/profile-gameplay-balanced.z64
+
+      - name: Locate Sodium64 profiling state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf="build/sodium64.elf"
+          symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
+          magic=$(symbol profile_magic)
+          end=$(symbol profile_sample_buffer_end)
+          buffer=$(symbol profile_sample_buffer)
+          write_ptr=$(symbol profile_write_ptr)
+          sample_count=$(symbol profile_sample_count)
+          last_epc=$(symbol profile_last_epc)
+          apu_clock=$(symbol apu_clock)
+          jit_lookup=$(symbol jit_lookup)
+          jit_pointer=$(symbol jit_pointer)
+          fps_native=$(symbol fps_native)
+          fps_emulate=$(symbol fps_emulate)
+          fps_display=$(symbol fps_display)
+          frame_count=$(symbol frame_count)
+          skipped_set=$(symbol skipped_set)
+          precision_set=$(symbol precision_set)
+          audio_set=$(symbol audio_set)
+          for v in "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" "$last_epc" \
+                   "$apu_clock" "$jit_lookup" "$jit_pointer" "$fps_native" "$fps_emulate" \
+                   "$fps_display" "$frame_count" "$skipped_set" "$precision_set" "$audio_set"; do
+            test -n "$v"
+          done
+          size=$((0x$end - 0x$magic))
+          jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
+          rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
+          jit_buffer=$((rom_buffer - 0x40000))
+          {
+            echo "P_ADDR=$magic"
+            echo "P_SIZE=$size"
+            echo "P_BUFFER=$buffer"
+            echo "P_WRITE_PTR=$write_ptr"
+            echo "P_SAMPLE_COUNT=$sample_count"
+            echo "P_LAST_EPC=$last_epc"
+            echo "APU_CLOCK=$apu_clock"
+            echo "JIT_LOOKUP=$jit_lookup"
+            echo "JIT_LOOKUP_SIZE=$jit_lookup_size"
+            echo "JIT_POINTER=$jit_pointer"
+            printf 'JIT_BUFFER=%08x\n' "$jit_buffer"
+            echo "FPS_NATIVE=$fps_native"
+            echo "FPS_EMULATE=$fps_emulate"
+            echo "FPS_DISPLAY=$fps_display"
+            echo "FRAME_COUNT=$frame_count"
+            echo "SKIPPED_SET=$skipped_set"
+            echo "PRECISION_SET=$precision_set"
+            echo "AUDIO_SET=$audio_set"
+          } >> "$GITHUB_ENV"
+
+      - name: Run four-way recompiler isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p isolation
+
+          run_mode() {
+            label="$1"
+            bin="$2"
+            force_interpreter="$3"
+            port="$4"
+            home="$RUNNER_TEMP/ares-home-$label"
+            settings="$RUNNER_TEMP/ares-settings-$label.bml"
+            mkdir -p "$home"
+
+            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$bin" \
+                --no-file-prompt \
+                --system "Nintendo 64" \
+                --settings-file "$settings" \
+                --setting "Developer/DebugServerEnabled=true" \
+                --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" \
+                --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" \
+                --setting "Developer/ForceInterpreter=$force_interpreter" \
+                --setting "Boot/AwaitGDBClient=true" \
+                workloads/isolation/out/profile-gameplay-balanced.z64 \
+                > "isolation/$label-emulator.log" 2>&1 &
+            pid=$!
+
+            cleanup() {
+              kill "$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+            }
+
+            if ! python3 scripts/gdb_rsp_dump.py \
+              --port "$port" \
+              --connect-timeout 45 \
+              --response-timeout 60 \
+              --warmup-seconds 1 \
+              --zero "0x$JIT_LOOKUP:$JIT_LOOKUP_SIZE" \
+              --write "0x$APU_CLOCK:15" \
+              --write "0x$JIT_POINTER:$JIT_BUFFER" \
+              --write "0x$SKIPPED_SET:00" \
+              --write "0x$AUDIO_SET:04" \
+              --settle-seconds 1 \
+              --after-settle-write "0x$P_SAMPLE_COUNT:00000000" \
+              --after-settle-write "0x$P_WRITE_PTR:$P_BUFFER" \
+              --after-settle-write "0x$P_LAST_EPC:00000000" \
+              --after-settle-write "0x$FPS_NATIVE:00" \
+              --after-settle-write "0x$FPS_EMULATE:00" \
+              --after-settle-write "0x$FPS_DISPLAY:ff" \
+              --run-seconds 5 \
+              --sample-count-address "0x$P_SAMPLE_COUNT" \
+              --min-samples 800 \
+              --max-run-seconds 30 \
+              --observe "fps_display:0x$FPS_DISPLAY:1" \
+              --observe "fps_native:0x$FPS_NATIVE:1" \
+              --observe "fps_emulate:0x$FPS_EMULATE:1" \
+              --observe "frame_count:0x$FRAME_COUNT:1" \
+              --observe "skipped_set:0x$SKIPPED_SET:1" \
+              --observe "apu_clock:0x$APU_CLOCK:1" \
+              --observe "audio_set:0x$AUDIO_SET:1" \
+              --observe "precision_set:0x$PRECISION_SET:1" \
+              --observe "sp_status:0xA4040010:4" \
+              --observe "sp_dma_full:0xA4040014:4" \
+              --observe "sp_dma_busy:0xA4040018:4" \
+              --observe "sp_pc:0xA4080000:4" \
+              --state-output "isolation/$label-state.json" \
+              --address "0x$P_ADDR" \
+              --size "$P_SIZE" \
+              --output "isolation/$label.bin" \
+              > "isolation/$label-gdb.log" 2>&1; then
+              cat "isolation/$label-gdb.log"
+              tail -200 "isolation/$label-emulator.log" || true
+              cleanup
+              return 1
+            fi
+            cat "isolation/$label-gdb.log"
+            cleanup
+
+            python3 scripts/profile_report.py \
+              "isolation/$label.bin" build/sodium64.elf \
+              --nm nm --map build/sodium64.map \
+              --json-output "isolation/$label.json" \
+              | tee "isolation/$label.txt"
+          }
+
+          run_mode both-jit      "$ARES_BIN_BOTH"     false 9200
+          run_mode neither-jit   "$ARES_BIN_BOTH"     true  9201
+          run_mode cpu-jit-only  "$ARES_BIN_CPU_ONLY" false 9202
+          run_mode rsp-jit-only  "$ARES_BIN_RSP_ONLY" false 9203
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          rows = []
+          for label in ('both-jit','neither-jit','cpu-jit-only','rsp-jit-only'):
+              state = json.loads(Path(f'isolation/{label}-state.json').read_text())
+              prof = json.loads(Path(f'isolation/{label}.json').read_text())
+              obs = state['observations']
+              rows.append((label, prof['meta']['sample_count'], obs['fps_display'], obs['sp_status'], obs['sp_dma_busy'], obs['sp_dma_full'], obs['sp_pc']))
+          out = [
+              '# ares CPU/RSP recompiler isolation', '',
+              '| mode | samples | frames/60 VI | SP_STATUS | DMA_BUSY | DMA_FULL | SP_PC |',
+              '| --- | ---: | ---: | ---: | ---: | ---: | ---: |',
+          ]
+          for row in rows:
+              out.append(f'| {row[0]} | {row[1]} | {row[2]} | {row[3]} | {row[4]} | {row[5]} | 0x{row[6]:04X} |')
+          Path('isolation/summary.md').write_text('\n'.join(out) + '\n')
+          print('\n'.join(out))
+          PY
+
+      - name: Upload isolation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-ares-recompiler-isolation
+          retention-days: 14
+          if-no-files-found: ignore
+          path: isolation/

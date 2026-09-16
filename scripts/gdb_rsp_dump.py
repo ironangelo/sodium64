@@ -2,7 +2,7 @@
 """Run a remote target briefly through GDB RSP and capture a memory region.
 
 This intentionally implements only the small subset needed by Sodium64 CI:
-connect to a GDB server, optionally patch a few known bytes before execution,
+connect to a GDB server, optionally warm the target up, patch a few known bytes,
 continue, interrupt, read memory in bounded chunks, and detach. Keeping the
 client here avoids depending on a particular host GDB build or interactive
 command timing.
@@ -77,10 +77,6 @@ class RSPClient:
     def request(self, payload: str) -> bytes:
         encoded = payload.encode("ascii")
         self._send_packet_bytes(encoded)
-
-        # In ACK mode, the server first acknowledges our packet. Some servers
-        # can reply immediately without an explicit '+'; _read_packet handles
-        # either form by skipping acknowledgements until '$'.
         return self._read_packet()
 
     def continue_then_interrupt(self, seconds: float) -> bytes:
@@ -98,7 +94,7 @@ class RSPClient:
             except socket.timeout:
                 pass
 
-            # No spontaneous stop arrived in the sampling window. Halt the
+            # No spontaneous stop arrived in the requested window. Halt the
             # target explicitly and wait using the normal socket timeout.
             self.sock.settimeout(previous_timeout)
             self.sock.sendall(b"\x03")
@@ -176,11 +172,24 @@ def parse_write(text: str) -> tuple[int, bytes]:
     return address, data
 
 
+def validate_stop(reply: bytes, stage: str) -> None:
+    text = reply.decode("ascii", errors="replace")
+    print(f"{stage} target state: {text}")
+    if not reply.startswith((b"S", b"T")):
+        raise RuntimeError(f"unexpected {stage.lower()} stop reply: {reply!r}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=9123)
     parser.add_argument("--connect-timeout", type=float, default=30.0)
+    parser.add_argument(
+        "--warmup-seconds",
+        type=float,
+        default=0.0,
+        help="run once before applying --write patches and starting the measured window",
+    )
     parser.add_argument("--run-seconds", type=float, default=3.0)
     parser.add_argument("--address", required=True, type=parse_int)
     parser.add_argument("--size", required=True, type=parse_int)
@@ -191,13 +200,15 @@ def main() -> int:
         type=parse_write,
         default=[],
         metavar="ADDRESS:HEXBYTES",
-        help="patch target memory before execution (repeatable)",
+        help="patch target memory after warmup and before measured execution (repeatable)",
     )
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
 
     if args.size <= 0 or args.chunk_size <= 0:
         parser.error("--size and --chunk-size must be positive")
+    if args.warmup_seconds < 0 or args.run_seconds <= 0:
+        parser.error("--warmup-seconds must be >= 0 and --run-seconds must be > 0")
 
     client = connect_with_retry(args.host, args.port, args.connect_timeout)
     try:
@@ -214,6 +225,12 @@ def main() -> int:
         if pass_reply != b"OK":
             raise RuntimeError(f"target rejected QPassSignals: {pass_reply!r}")
 
+        if args.warmup_seconds:
+            validate_stop(
+                client.continue_then_interrupt(args.warmup_seconds),
+                "Warmup stop",
+            )
+
         for write_address, write_data in args.write:
             client.write_memory(write_address, write_data)
             verify = client.read_memory(write_address, len(write_data), len(write_data))
@@ -227,10 +244,7 @@ def main() -> int:
                 f"{write_data.hex()}"
             )
 
-        stopped = client.continue_then_interrupt(args.run_seconds)
-        print(f"Stopped target state: {stopped.decode('ascii', errors='replace')}")
-        if not stopped.startswith((b"S", b"T")):
-            raise RuntimeError(f"unexpected stop reply: {stopped!r}")
+        validate_stop(client.continue_then_interrupt(args.run_seconds), "Measured stop")
 
         data = client.read_memory(args.address, args.size, args.chunk_size)
         args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -100,16 +100,19 @@ Final survivability package verification:
 
 **STATUS: VALIDATED / READY FOR ONE REAL-N64 SURVIVABILITY RERUN.** This candidate is not an optimization; it is the controlled repeat needed to remove the known GAME OVER contaminant from M0.
 
-## Immediate next action
-Run the exact survivability `.z64` from artifact `10467585906` on real N64/SummerCart64. Do not press controls. Expected sequence: Gothicvania stays in active gameplay for the entire measurement, then solid red. **GAME OVER must not appear before red.** Because the prior session proved SRAM was already persisted even when power-off was required, if reset again cannot return from red, wait several seconds on red before power-off, then recover the new 32 KiB `.sav`.
+## LIVE — survivability real-N64 rerun visual observation
+**2026-09-16 / exact survivability ROM on real N64 + SummerCart64.** User completed the rerun and supplied a 22.6 s phone video recorded at ~59.94 fps. Visual inspection confirms Gothicvania remains in active gameplay through the measurement segment and then reaches the intentional solid-red terminal screen; **no GAME OVER is visible before red**. Therefore the survivability control appears to have removed the known representativeness contaminant from the first run.
 
-Decode the returned save using the exact matching ELF/map/reporters from artifact `10467585906`. If all five windows are active gameplay and sample density is sufficient, close representative M0 and choose the first M1 architecture/optimization experiment from real-hardware evidence.
+User qualitative hardware observation across both the first run and this survivability rerun: gameplay is visibly a little slower than native cadence and audio is slightly intermittent/choppy. Treat this as **MEASURED USER OBSERVATION**, not a quantified frame-rate result. The phone/TV capture chain is not timing authority and must not be used to derive exact FPS; the returned SRAM frame windows/profile remain authoritative for M0.
+
+## Immediate next action
+Receive the new `.sav` from the survivability run and decode it using the exact matching ELF/map/reporters from artifact `10467585906`. Verify 32 KiB size/hash, valid `S64H`/`S64P`, settings, sample density and all five frame windows. Because the video confirms active gameplay survives until red, a valid five-window capture should be representative enough to close M0 and select the first M1 architecture/optimization experiment from real-hardware evidence.
 
 Falsifiers:
-- GAME OVER before red -> survivability control failed; inspect death path and do not interpret profile.
-- no red / invalid save -> isolate regression before performance interpretation.
-- five active gameplay windows + valid capture -> **M0 real-N64 bottleneck map achieved**; choose M1 from hardware.
-- Do **not** start M1 dynarec before this representative hardware evidence chooses the first wall.
+- invalid/incomplete save -> isolate persistence/capture regression before performance interpretation.
+- five valid active-gameplay windows + sufficient samples -> **M0 real-N64 bottleneck map achieved**; choose M1 from hardware.
+- unexpected 60/60 windows despite active gameplay -> inspect classifier/timing semantics before claiming native cadence.
+- Do **not** start M1 dynarec before the representative hardware profile chooses the first wall.
 
 ## Resume protocol
-Read this file + Road/Profiling/Validation; verify master/branch/CI state. Resume from survivability candidate `89df6419...`, artifact `10467585906`, ready for the one repeat hardware session. Decode the returned save with the exact package, checkpoint the result, then choose the first M1 experiment from representative real-N64 evidence.
+Read this file + Road/Profiling/Validation; verify master/branch/CI state. Resume from survivability candidate `89df6419...`, artifact `10467585906`, with the real-N64 video already confirming no GAME OVER before red and the user reporting slight gameplay slowdown/audio choppiness. Next evidence is the returned `.sav`; decode it with the exact package, checkpoint the result, then choose the first M1 experiment from representative real-N64 evidence.

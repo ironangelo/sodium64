@@ -78,10 +78,12 @@ PR: `#9 Phase 1: add balanced gameplay-like profiling workload`
 
 - branch: `phase1/gameplay-mixed-workload`
 - base: `master` at `798ebcb9969d94eda3eba4592eae2792d6304cb5`
-- current HEAD: `40f0f8616ed0bfbd7c28f38af5b72914a647ac27`
+- current HEAD: `2fbd83d6a2491e2a663b21f545fff5b8323aa50f`
 - PR remains **open, mergeable, not merged**.
-- latest ares diagnostic workflow: run `35109280375`, **success**.
-- latest diagnostic artifact: `sodium64-ares-profile-matrix`, artifact ID `10451624678`.
+- prior ares diagnostic workflow: run `35109280375`, success.
+- prior diagnostic artifact: `sodium64-ares-profile-matrix`, artifact ID `10451624678`.
+- current 2x2 isolation workflow: `Ares Recompiler Isolation`, run `35113184294`, **IN PROGRESS** when this checkpoint was written.
+- normal Ares Profile Validation for the same HEAD: run `35113187984`, **IN PROGRESS** when this checkpoint was written.
 
 Do **not** merge PR #9 yet. The workload itself now looks valid, but the ares recompiler laboratory has exposed a recompiler-specific RSP/VRAM synchronization pathology that must be isolated before using its recompiler result as representative Phase 1 evidence.
 
@@ -98,11 +100,11 @@ The workload was cleaned so it is no longer accidentally pathological:
 - all other 127 OAM entries are explicitly hidden/off-screen;
 - no release-runtime Sodium64 core behavior is changed by the workload itself.
 
-Host tests, normal build, `PROFILE=1`, Mupen smoke and ares workflow all remain green.
+Host tests, normal build, `PROFILE=1`, Mupen smoke and ares workflow all remain green on the previous diagnostic HEAD.
 
 ## Critical finding — recompiler-only gameplay collapse
 
-The cleaned workload still collapses under the normal ares recompiler configuration, but **does not collapse when ares is forced to interpreter mode**.
+The cleaned workload collapses under the normal ares recompiler configuration, but **does not collapse when ares is forced to interpreter mode**.
 
 ### Recompiler result — failing laboratory path
 
@@ -169,56 +171,69 @@ RSP state at capture:
 
 ### Interpretation of the A/B result
 
-This is currently the most important Phase 1 finding:
+**MEASURED:** the catastrophic 1/60 gameplay result is not intrinsic to the cleaned SNES workload. It appears only when ares recompilers are enabled.
 
-**The catastrophic 1/60 gameplay result is not intrinsic to the cleaned SNES workload. It appears only on an ares recompiler path.**
-
-However, `ForceInterpreter=true` disables **both** the ares R4300 CPU recompiler and the ares RSP recompiler, so this A/B test does **not yet identify which recompiler is responsible**.
+**OPEN QUESTION:** `ForceInterpreter=true` disables both the ares R4300 CPU recompiler and the ares RSP recompiler, so the A/B test does not identify which recompiler is responsible.
 
 Do not claim yet that the RSP JIT alone is broken, nor that Sodium64 itself would show this behavior on real hardware.
 
 ## Source-level facts already checked during this investigation
 
-These simple explanations have been investigated and should **not** be rediscovered from scratch:
+These explanations have been investigated and should **not** be rediscovered from scratch:
 
-1. **Ares implements the SP semaphore semantics.** Reading the semaphore returns state / sets it; writing clears it.
-2. **Ares RSP JIT does not optimize away `MTC0` semaphore writes.** Its `MTC0` emission calls the same `RSP::MTC0` helper path used by the interpreter, which reaches `ioWrite`.
-3. **CPU polling should not trivially starve the RSP in ares.** `cpu.forceSynchronize()` forces the CPU JIT out to `CPU::synchronize()`, which explicitly advances `rsp.main()`.
-4. **Sodium64 intentionally uses this semaphore as VRAM protection.** R4300-side `write_vmdatal` waits while the RSP protects/copies VRAM.
-5. **At frame start the Sodium64 RSP copies the full 64 KiB VRAM snapshot in synchronous 1 KiB DMA blocks, then clears/releases the semaphore.** That should not reasonably consume dozens of N64 VI periods on real hardware.
-6. The earlier `dma-vram` profile classification was misleading: most of what had been called `PPU/frame prep` was actually this same `write_vmdatal` semaphore spin. The profiler now classifies it separately as **`RSP/VRAM semaphore wait`**.
-7. Cleaning accidental OAM state did **not** remove the recompiler collapse. The clean recompiler run still sampled essentially all time in the semaphore wait.
-8. `fps_display` semantics were verified in Sodium64 source: after each complete 60-VI interval it receives the completed emulated-frame count. The observed 0/60 or 1/60 results are therefore real virtual-N64 frame-budget observations, not uninitialized values.
+1. **REJECTED:** “ares does not implement the SP semaphore.” It does.
+2. **REJECTED:** “ares RSP JIT optimizes away the semaphore-clearing `MTC0`.” Its JIT calls the same `RSP::MTC0` helper path as the interpreter.
+3. **REJECTED as simple explanation:** “CPU polling trivially starves the RSP.” `cpu.forceSynchronize()` forces CPU JIT exit to `CPU::synchronize()`, which explicitly advances `rsp.main()`.
+4. **MEASURED/SOURCE FACT:** Sodium64 intentionally uses this semaphore as VRAM protection. R4300-side `write_vmdatal` waits while the RSP protects/copies VRAM.
+5. **SOURCE FACT:** at frame start the Sodium64 RSP copies the full 64 KiB VRAM snapshot in synchronous 1 KiB DMA blocks, then clears/releases the semaphore. That should not reasonably consume dozens of N64 VI periods on real hardware.
+6. **SUPERSEDED INTERPRETATION:** the earlier `dma-vram` profile classification was misleading. Most samples called `PPU/frame prep` were the same `write_vmdatal` semaphore spin. The profiler now classifies this separately as `RSP/VRAM semaphore wait`.
+7. **REJECTED:** accidental OAM state as the primary cause. Cleaning OAM and enabling a legitimate BG1+OBJ scene did not remove the recompiler collapse.
+8. **SOURCE FACT:** `fps_display` is updated after each complete 60-VI interval with the completed emulated-frame count; 0/60 or 1/60 observations are therefore real virtual-N64 frame-budget observations, not uninitialized values.
 
-## Immediate next experiment — isolate CPU JIT vs RSP JIT
+## LIVE EXPERIMENT — isolate CPU JIT vs RSP JIT
 
-This is the next action. Do not branch off into unrelated optimization work first.
+Status: **IN PROGRESS** at checkpoint.
 
-Ares currently exposes one `Recompiler` / `ForceInterpreter` switch that toggles both CPU and RSP recompilers together. Create a **diagnostic-only pinned ares variant in CI** that can independently enable/disable the R4300 recompiler and RSP recompiler, then run the same cleaned `gameplay-balanced` workload in four modes:
+Diagnostic-only workflow added on PR #9 HEAD `2fbd83d6a2491e2a663b21f545fff5b8323aa50f`:
 
-1. CPU JIT ON / RSP JIT ON — known bad reference (~1/60, semaphore spin).
-2. CPU JIT OFF / RSP JIT OFF — known good reference (~59/60).
-3. CPU JIT ON / RSP JIT OFF — isolates R4300 JIT with interpreted RSP.
-4. CPU JIT OFF / RSP JIT ON — isolates RSP JIT with interpreted R4300.
+- `.github/workflows/ares-recompiler-isolation.yml`
+- run ID: `35113184294`
+- pinned ares remains `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`.
 
-Keep the Sodium64 ROM/workload/settings identical. Capture the same profiler data and `SP_STATUS`, `SP_DMA_BUSY`, `SP_DMA_FULL`, `SP_PC` for all four modes.
+The workflow builds three binaries from that exact ares source using ccache:
 
-Decision tree:
+1. original ares binary: normal switch controls both CPU and RSP recompilers;
+2. CPU-only diagnostic binary: CPU recompiler follows the normal switch, RSP recompiler is forced OFF;
+3. RSP-only diagnostic binary: RSP recompiler follows the normal switch, CPU recompiler is forced OFF.
 
-- If only modes with **RSP JIT ON** collapse, investigate ares RSP recompiler execution/halt/PC/DMA/semaphore behavior around the observed stop state.
-- If only modes with **CPU JIT ON** collapse, investigate R4300 JIT synchronization / memory-mapped SP I/O semantics around semaphore polling.
-- If only the **combination** of both JITs collapses, investigate cross-thread synchronization/interleaving.
-- If the supposedly isolated modes contradict this matrix, preserve the data and inspect exact SP PC/state before changing Sodium64.
+It then runs the **same cleaned `gameplay-balanced` ROM and identical Sodium64 settings** in four modes:
 
-This ares modification is a **laboratory diagnostic only**. Do not vendor it into Sodium64 or turn it into a second emulator project.
+1. `both-jit` = CPU JIT ON / RSP JIT ON;
+2. `neither-jit` = CPU JIT OFF / RSP JIT OFF;
+3. `cpu-jit-only` = CPU JIT ON / RSP JIT OFF;
+4. `rsp-jit-only` = CPU JIT OFF / RSP JIT ON.
+
+Every mode captures:
+
+- statistical profile;
+- `fps_display`, `fps_native`, `fps_emulate`, `frame_count`;
+- frameskip/APU/audio/precision settings;
+- `SP_STATUS`, `SP_DMA_BUSY`, `SP_DMA_FULL`, `SP_PC`.
+
+Decision tree after run `35113184294` completes:
+
+- collapse follows **RSP JIT ON** -> treat ares RSP recompiler as leading LAB LIMITATION; inspect exact PC/halt transition only as needed, then stop expanding ares tooling.
+- collapse follows **CPU JIT ON** -> inspect R4300 JIT synchronization / MMIO semaphore polling path.
+- only **both JITs ON** collapse -> investigate cross-recompiler synchronization/interleaving.
+- neither isolated pattern matches -> preserve exact state and inspect before touching Sodium64.
+
+This ares source modification is **diagnostic-only**. Do not vendor it into Sodium64 and do not merge the temporary isolation workflow after the question is answered unless a continuing measurement need is demonstrated.
 
 ## Hardware-test status
 
 **No real-N64 test requested yet.**
 
-The current uncertainty is still cheaper to isolate in the automated lab. Once CPU-JIT-vs-RSP-JIT is separated, decide whether a real-N64 milestone run is the correct authority for the remaining synchronization question.
-
-When hardware is requested, provide Iron with one exact milestone package, exact ROMs/settings, observations to report, and the decision that the test unlocks.
+The current uncertainty is still cheaper to isolate in the automated lab. After CPU-JIT-vs-RSP-JIT is separated, decide whether the remaining synchronization question is a `LAB LIMITATION` that should stop influencing architecture decisions or whether a real-N64 milestone is needed.
 
 ## Guardrails
 

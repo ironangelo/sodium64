@@ -41,7 +41,7 @@ Repeat `SP_PC=0x020F` was non-interpretable because pinned ares returns random S
 
 ## LIVE — real-N64 M0 package
 Temporary ares workflow/repeat trigger were removed. Active branch: **`phase1/open-homebrew-workload`**.
-Current HEAD: **`2cd2245acfecf8cf051eeb3a8d2851716015d453`**.
+Current HEAD: **`81a3fe5bdd49f845c362bb00c96aedaee2b48c42`**.
 
 Hardware design:
 - `HW_PROFILE=1` implies current statistical `PROFILE=1`; normal builds unchanged.
@@ -52,27 +52,42 @@ Hardware design:
 - After measurement only, cache is written back and snapshot/header are sent through standard N64 PI cartridge SRAM at `0x08000000`.
 - After both writes complete, RSP halts, framebuffer becomes solid red and diagnostic intentionally freezes. **RED = capture written.**
 - `scripts/hw_profile_report.py` validates/extracts; six host tests cover canonical/word-swapped saves, incomplete capture, underclock and low density.
-- source-builder CI rebuilds exact Gothicvania and packages a self-contained `.z64` plus exact ELF/map/decoder/manifest.
+- Source-builder CI rebuilds exact Gothicvania and packages a self-contained `.z64` plus exact ELF/map/decoder/manifest.
 
-### First HW package build
+### HW package build history
 HEAD `d3fa62dce67d273a02814e8b80ba4470bdc9d650`:
-- `Build and Validate` run **`35125720591` SUCCESS**, including normal, PROFILE and Mupen smoke: no normal-path regression.
+- `Build and Validate` run **`35125720591` SUCCESS**, including normal, PROFILE and Mupen smoke.
 - Open Homebrew run **`35125720562`** rebuilt Gothicvania successfully; `hw-profile-package` failed only at link.
-- All 29 host tests passed.
-- `profile.S` assembled successfully, including new header/cache/PI/red-screen paths.
-- Link error: undefined external `fps_native` from `profile.o`.
+- All 29 host tests passed; `profile.S` assembled successfully.
+- Link error was undefined external `fps_native` from `profile.o`.
 
-**CAUSE:** `fps_native` already exists in `main.S` but upstream had never exported it.
-**REJECTED:** hardware-profiler assembly syntax, PI path and decoder as cause of this red.
-Controlled fix `2cd2245a...`: add only `.globl fps_native`; no counter logic changed.
+**CAUSE:** `fps_native` already existed in `main.S` but upstream had never exported it.
+**REJECTED:** hardware-profiler assembly syntax, PI path and decoder as cause.
+Controlled fix `2cd2245acfecf8cf051eeb3a8d2851716015d453`: add only `.globl fps_native`; no counter logic changed.
 
-Retry runs:
-- **Open Homebrew Workload Build `35126221276` — IN PROGRESS at checkpoint.**
-- **Build and Validate `35126221380` — IN PROGRESS at checkpoint.**
+At `2cd2245a...`:
+- `Build and Validate` run **`35126221380` SUCCESS**.
+- Open Homebrew run **`35126221276`**: Gothicvania source build SUCCESS; HW profiler compile/link SUCCESS. This proves the symbol export fixed the sole linker blocker.
+- Packaging then failed in `Verify workload and build self-contained hardware ROM` after the compile/link. The source workload artifact exists as `10458823883`.
 
-Question: does the single symbol export resolve the sole link failure and produce a package with exact embedded guest SHA `634fe02f...c17a5fff`?
+**CAUSE:** package hashing used `sha256sum package/*`, which also matched the `package/wrap` directory. This was a packaging-only hygiene failure, not an emulator/runtime failure.
+Controlled fix `81a3fe5bdd49f845c362bb00c96aedaee2b48c42`: hash only regular package files and exclude `SHA256SUMS.txt` itself.
 
-Decision: green -> inspect artifact/hashes/ELF/procedure, then request one focused real-N64 session; red -> inspect the next concrete failure only. Do **not** start M1 dynarec before hardware evidence.
+At `81a3fe5...`:
+- `Build and Validate` run **`35126591157` SUCCESS**.
+- Open Homebrew run **`35126591058` FAILED** before HW packaging because Gothicvania's pinned source build nondeterministically reran `tools/adapt_moon.py`.
+- The linker completed and printed `Build finished successfully!`; the workflow failed immediately afterward when the tracked-source cleanliness assertion detected an unexpected rewrite.
+
+**HYGIENE-BLOCKER / CAUSE:** the workload workflow currently tries to preserve upstream frozen conversion outputs with bulk `touch` calls. Upstream explicitly treats committed converted outputs as source-of-truth, but Git checkout mtimes are not historical and bulk touching can make one frozen generated input newer than another in the same dependency chain. In this run `res/level/sky_coldata.bin` became newer than tracked `res/moon.png`, so `adapt_moon.py` ran; in the prior green source build it did not. This is source-build mtime nondeterminism, not a Sodium64 emulation regression.
+
+**REJECTED:** `fps_native` export, HW profile link, Gothicvania guest logic, N64 runtime, and representative profile result as causes of run `35126591058`.
+
+### Immediate controlled experiment
+Replace mtime-based suppression with explicit GNU make `-o/--old-file` treatment for pinned committed Gothicvania conversion outputs, while still letting missing ignored PVSnesLib products (`.pic/.pal/.map` etc.) build normally. Add diagnostics for any unexpected tracked rewrite. Expected result: Gothicvania remains byte-identical at SHA-256 `634fe02f...c17a5fff`, Open Homebrew reaches the already-green HW compile/link stage, package hashing succeeds, and artifact `sodium64-real-n64-m0-gothicvania` is emitted.
+
+Falsifier: guest SHA changes, frozen converter still executes, tracked files outside the two benchmark-control edits change, or HW/package stage exposes a new concrete failure.
+
+Do **not** start M1 dynarec before the real-hardware M0 evidence chooses the first wall.
 
 ## Resume protocol
-Read this file + Road/Profiling/Validation; inspect runs `35126221276` and `35126221380`; verify artifact before asking Iron to test; checkpoint after material result.
+Read this file + Road/Profiling/Validation; inspect branch HEAD and CI. Implement the explicit frozen-output make treatment, verify exact Gothicvania SHA and package artifact, checkpoint again, then request one focused real-N64 session only after artifact verification.

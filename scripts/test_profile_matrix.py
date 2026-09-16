@@ -40,6 +40,16 @@ class ProfileMatrixTests(unittest.TestCase):
         self.assertIn("60.0%", text)
         self.assertIn("20.0%", text)
 
+    def test_vram_rsp_wait_is_a_first_class_column(self) -> None:
+        path = self.write_summary(
+            "dma-vram",
+            10,
+            {"RSP/VRAM semaphore wait": 9, "DMA/HDMA": 1},
+        )
+        text = profile_matrix.render_matrix([path])
+        self.assertIn("VRAM/RSP wait", text)
+        self.assertIn("90.0%", text)
+
     def test_zero_sample_summary_renders_without_division(self) -> None:
         path = self.write_summary("empty", 0, {})
         text = profile_matrix.render_matrix([path])

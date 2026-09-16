@@ -18,8 +18,12 @@ jobs:
     env:
       GOTHICVANIA_REPO: https://github.com/donth77/snes-homebrew.git
       GOTHICVANIA_SHA: 119496e6a2f1e53b7704712fef8cb81814f1698a
+      GOTHICVANIA_ASSET_SHA: 913ea78a3b35d3dfb62d7b76a33598b02107a2e7
       PVSNESLIB_URL: https://github.com/alekmaul/pvsneslib/releases/download/4.5.0/pvsneslib_450_64b_linux.zip
       PVSNESLIB_SHA256: b69ff32ada19895b7ebfe02a1e3c08a44c80bd9c8132de05f5c356f86264ce32
+      KENNEY_FONT_REPO: https://github.com/ereborstudios/kenney-fonts.git
+      KENNEY_FONT_SHA: 9d94d3b50c68036a740115c577598fa1a02723f0
+      KENNEY_PIXEL_BLOB: e6978d7d6f6a91ca8cdd5515e338110d9977fe69
 
     steps:
       - name: Checkout Sodium64
@@ -28,7 +32,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl git make unzip
+          sudo apt-get install -y curl git make unzip python3-numpy python3-pil
 
       - name: Install pinned PVSnesLib 4.5.0
         shell: bash
@@ -48,7 +52,7 @@ jobs:
           echo "PVSNESLIB_HOME=$pvsneslib_home" >> "$GITHUB_ENV"
           echo "PVSnesLib home: $pvsneslib_home"
 
-      - name: Checkout pinned Gothicvania source
+      - name: Checkout pinned final Gothicvania source
         shell: bash
         run: |
           set -euo pipefail
@@ -57,6 +61,46 @@ jobs:
           git -C "$root" checkout --detach "$GOTHICVANIA_SHA"
           test "$(git -C "$root" rev-parse HEAD)" = "$GOTHICVANIA_SHA"
           echo "GOTHICVANIA_ROOT=$root" >> "$GITHUB_ENV"
+
+      - name: Restore upstream source-art pack from history
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$GOTHICVANIA_ROOT"
+          historical_path="gothicvania/assets/gothicvania-cemetery-files"
+
+          # The final upstream commit intentionally removed this CC0 conversion-input
+          # pack and explicitly documents that it is recoverable from Git history.
+          # Restore it to the worktree only; do not alter the final commit's index.
+          git -C "$root" fetch --no-tags origin "$GOTHICVANIA_ASSET_SHA"
+          git -C "$root" restore --source="$GOTHICVANIA_ASSET_SHA" --worktree -- "$historical_path"
+
+          test -f "$root/$historical_path/Assets/Environment/background.png"
+          test -f "$root/$historical_path/Assets/Phaser Demo/assets/environment/bg-mountains.png"
+          test -f "$root/$historical_path/Assets/Phaser Demo/assets/sprites/title-screen.png"
+          test -f "$root/$historical_path/public-license.pdf"
+
+          # The recovered pack must be temporary/untracked relative to final source.
+          test -z "$(git -C "$root" diff --name-only)"
+          git -C "$root" status --porcelain --untracked-files=normal | grep -F "?? $historical_path/"
+
+      - name: Install pinned Kenney Pixel build font
+        shell: bash
+        run: |
+          set -euo pipefail
+          font_root="$RUNNER_TEMP/kenney-fonts"
+          git clone --filter=blob:none "$KENNEY_FONT_REPO" "$font_root"
+          git -C "$font_root" checkout --detach "$KENNEY_FONT_SHA"
+          test "$(git -C "$font_root" rev-parse HEAD)" = "$KENNEY_FONT_SHA"
+          test "$(git -C "$font_root" hash-object 'Kenney Pixel.ttf')" = "$KENNEY_PIXEL_BLOB"
+
+          # adapt_title.py names this exact path from the author's build host.
+          # Recreate the expected build input rather than modifying upstream code.
+          target="/Users/tomdonohue/Documents/gameassets/Kenney Game Assets All-in-1 3.5.0/Other/Fonts/Kenney Pixel.ttf"
+          sudo mkdir -p "$(dirname "$target")"
+          sudo cp "$font_root/Kenney Pixel.ttf" "$target"
+          sudo chmod 0644 "$target"
+          test -s "$target"
 
       - name: Apply deterministic benchmark input patch
         shell: bash
@@ -89,16 +133,17 @@ jobs:
           changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
           test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
 
-      - name: Honor upstream frozen-art build model
+      - name: Prepare upstream generated intermediates
         shell: bash
         run: |
           set -euo pipefail
           game="$GOTHICVANIA_ROOT/gothicvania"
 
-          # Upstream documents committed res/* outputs as the source of truth and
-          # intentionally keeps the now-non-runnable source-art converters older.
-          # Git does not preserve those mtimes, so restore only the ordering here;
-          # no tracked file bytes are changed.
+          # Final upstream deliberately keeps committed conversion intermediates as
+          # source-of-truth. Refresh their mtimes so the removed high-level artwork
+          # conversion steps and host-specific audio conversion do not rerun.
+          # Missing ignored PVSnesLib products (.pic/.pal/.map) are still generated
+          # normally from these intermediates during the clean build.
           find "$game/res" -type f -exec touch {} +
           for generated in \
             "$game/src/hero_anim.h" \
@@ -117,20 +162,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          make -C "$GOTHICVANIA_ROOT/gothicvania" -j"$(nproc)"
+
+          # Upstream documents plain `make`. Its hand-written data.asm dependencies
+          # are not complete enough for a parallel build, so do not use -j here.
+          make -C "$GOTHICVANIA_ROOT/gothicvania"
+
           rom="$GOTHICVANIA_ROOT/gothicvania/gothicvania.sfc"
           test -s "$rom"
           size=$(stat -c '%s' "$rom")
           test "$size" -le $((512 * 1024))
 
-          # Building may create untracked products, but it must not rewrite any
-          # additional tracked upstream source/assets.
+          # Building may create untracked products and consume the restored historical
+          # asset pack, but it must not rewrite tracked final upstream code/assets
+          # beyond the two deliberate benchmark-control changes.
           changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
           test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
 
           sha256sum "$rom" | tee gothicvania-rom.sha256
-          printf 'upstream_repo=%s\nupstream_sha=%s\npvsneslib_version=4.5.0\npvsneslib_sha256=%s\nrom_size=%s\n' \
-            "$GOTHICVANIA_REPO" "$GOTHICVANIA_SHA" "$PVSNESLIB_SHA256" "$size" \
+          sha256sum gothicvania-benchmark.patch | tee gothicvania-patch.sha256
+          printf 'upstream_repo=%s\nupstream_sha=%s\nsource_pack_sha=%s\npvsneslib_version=4.5.0\npvsneslib_sha256=%s\nkenney_font_repo=%s\nkenney_font_sha=%s\nkenney_pixel_blob=%s\nrom_size=%s\n' \
+            "$GOTHICVANIA_REPO" "$GOTHICVANIA_SHA" "$GOTHICVANIA_ASSET_SHA" \
+            "$PVSNESLIB_SHA256" "$KENNEY_FONT_REPO" "$KENNEY_FONT_SHA" \
+            "$KENNEY_PIXEL_BLOB" "$size" \
             | tee gothicvania-provenance.txt
           cp "$rom" gothicvania-benchmark.sfc
 
@@ -143,4 +196,5 @@ jobs:
             gothicvania-benchmark.sfc
             gothicvania-benchmark.patch
             gothicvania-rom.sha256
+            gothicvania-patch.sha256
             gothicvania-provenance.txt

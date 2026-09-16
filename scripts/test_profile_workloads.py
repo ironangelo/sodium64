@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""Host-side tests for deterministic SNES profiling workload ROMs."""
+
+from __future__ import annotations
+
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import make_profile_workloads as workloads  # noqa: E402
+
+
+class ProfileWorkloadTests(unittest.TestCase):
+    def test_every_workload_builds_as_valid_32k_lorom(self) -> None:
+        for name in workloads.WORKLOADS:
+            with self.subTest(name=name):
+                rom = workloads.build_rom(name)
+                self.assertEqual(len(rom), workloads.ROM_SIZE)
+                self.assertEqual(rom[0x7FD5], 0x20)
+                self.assertEqual(rom[0x7FD6], 0x00)
+                self.assertEqual(rom[0x7FD7], 0x05)
+                self.assertEqual(int.from_bytes(rom[0x7FFC:0x7FFE], "little"), 0x8000)
+
+                complement = int.from_bytes(rom[0x7FDC:0x7FDE], "little")
+                checksum = int.from_bytes(rom[0x7FDE:0x7FE0], "little")
+                self.assertEqual(complement ^ checksum, 0xFFFF)
+                self.assertEqual(sum(rom) & 0xFFFF, checksum)
+
+    def test_workloads_are_distinct(self) -> None:
+        programs = {name: workloads.WORKLOADS[name]() for name in workloads.WORKLOADS}
+        self.assertEqual(len(set(programs.values())), len(programs))
+
+    def test_all_relative_branches_resolve(self) -> None:
+        # Calling every builder exercises Assembler.finish(), which raises if a
+        # label is missing or a branch displacement falls outside rel8 range.
+        for name, builder in workloads.WORKLOADS.items():
+            with self.subTest(name=name):
+                self.assertGreater(len(builder()), 0)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

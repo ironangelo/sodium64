@@ -1,5 +1,0 @@
-Temporary Phase 1 CI trigger only.
-
-This file changes no Sodium64 source, workload bytes, profiling settings, or report tooling.
-It exists only to start an independent second Open Homebrew Ares Profile run for stability comparison.
-Remove before merge.

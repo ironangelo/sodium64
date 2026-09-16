@@ -6,13 +6,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 Cadence: **technical batch -> continuity checkpoint -> technical batch -> continuity checkpoint**. Preserve material measurements, hypotheses, rejections, lab limitations, exact SHA/run/artifact identity and next action. Continue from repo/artifact evidence, not chat memory.
 
 ## Gate / authority
-Current milestone: **M0 ACHIEVED / entering M1 — faster base core**.
+Current milestone: **M0 ACHIEVED / M1 — faster base core**.
 Canonical hierarchy: `master:docs/ROAD_TO_1_0.md` -> `ROADMAP.md` -> `PROFILING.md` / `VALIDATION.md` -> this live handoff.
 Perfect target remains real-N64 native cadence, no required frameskip/frame generation, full-rate APU/audio, high base-system fidelity, broad compatibility, DSP-1 family, Super FX/2 and SA-1. N64-alone first.
 
 Integrated master: **`ee86d3391f9ef7f407b9b3f683b145253ff1ef3f`**; PR #9 is **MERGED-CONSUMED**.
 Completed measurement branch: **`phase1/open-homebrew-workload`**.
 Phase-1 HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928efe6`** (`m0: pin survivability workload hash`).
+Active M1 branch: **`phase2/apu-audio-first`**.
+M1 baseline HEAD: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`ci: restore representative Gothicvania ares lab for M1`).
 No open PR exists for the measurement branch. Diagnostic work is not implicitly integrated merely because it produced knowledge.
 
 ## Valid ares lab
@@ -39,7 +41,7 @@ Source-build hygiene knowledge to preserve:
 - Root cause was checkout-mtime interaction with upstream committed/frozen conversion outputs. Freeze only high-level committed source-of-truth outputs; let low-level products/companions rebuild.
 - Package scratch/checksum-path leaks were packaging-only hygiene and did not change ROM/runtime.
 
-## Stable representative ares result
+## Stable representative ares result from M0
 Run `35122086545`, artifact `10457627853`: 1312 samples, **48/60**, APU/audio 52.7%, S-CPU 30.4%, graphics/DMA/sync 16.3%, VI wait 0.5%.
 Repeat `35122958028`, artifact `10457874257`: 1320 samples, **48/60**, APU/audio 52.9%, S-CPU 30.3%, graphics/sync 16.3%, VI wait 0.45%. Normal run `35122957981` green including Mupen.
 
@@ -100,21 +102,38 @@ Hottest sampled regions include: APU JIT generated 19.18%, `apu_execute` 11.56%,
 
 **SUPPORTED INTERPRETATION:** current M1 priority changes. At 49/60, reaching 60/60 requires roughly **18.3% less total host time per frame** if workload cost scales approximately linearly. APU/audio owns 61.83% of sampled R4300 time, so recovering that gap solely from APU/audio would require about **29.7% reduction of the APU/audio aggregate**. By contrast, S-CPU's 22.12% bucket would require about **82.9% reduction of that entire bucket** to close the same gap alone. Therefore the hardware evidence does **not** support beginning M1 with the 65C816 dynarec as the first attack. Dynarec remains strategically valuable for later base-core work and SA-1 leverage, but it is no longer the first measured wall.
 
-The ares representative result was directionally correct that APU/audio was largest and that the workload was near 48/60, but its proportions differed (about 53% APU/audio, 30% S-CPU). Do not promote ares to hardware authority; use it as the controlled iteration lab, with real N64 as milestone authority.
+The ares representative result was directionally correct that APU/audio was largest and that the workload was near the hardware baseline, but its proportions differ. Do not promote ares to hardware authority; use it as the controlled iteration lab, with real N64 as milestone authority.
 
 ## M1 first architecture question
 **GATE DRIVER / ARCHITECTURE PROOF:** reduce APU/audio scheduling/JIT/memory-access overhead first without lowering APU rate, muting/stretches, frameskip, or dropping DSP work.
 
-The first bounded experiment should target APU JIT block-boundary/dispatch overhead because hardware samples show `apu_execute` alone at 11.56% and current JIT blocks are capped at only 16 guest opcode bytes. Generated block tails spill state and return through the central CPU scheduler; the dispatcher then validates JIT tags before re-entering generated code. This is a plausible large overhead source, but changing block granularity can alter CPU/APU/DSP interleave, so a naive larger `BLOCK_SIZE` is an **experiment**, not a merge-ready optimization.
+The first bounded experiment targets APU JIT block-boundary/dispatch overhead because hardware samples show `apu_execute` alone at 11.56% and current JIT blocks are capped at only 16 guest opcode bytes. Generated block tails spill state and return through the central CPU scheduler; the dispatcher then validates JIT tags before re-entering generated code. This is a plausible large overhead source, but changing block granularity can alter CPU/APU/DSP interleave, so a naive larger `BLOCK_SIZE` is an **experiment**, not a merge-ready optimization.
 
 Experiment falsifier: if increasing/reshaping APU block granularity in the valid ares representative lab does not materially improve frame budget and/or causes audio/timing/profile regressions, reject block-boundary work and move to the next measured APU/DSP hot path (`apu_read8`/`apu_write8` specialization or DSP inner-loop restructuring). Do not turn this into unbounded JIT tooling.
 
+## M1 representative ares baseline restored
+**MEASURED / MEASUREMENT PROOF:** branch `phase2/apu-audio-first` at **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** restores the exact survivability Gothicvania input and valid ares mode for paired M1 experiments.
+
+- Build and Validate run **`35148379354` SUCCESS**.
+- Open Homebrew Ares Profile run **`35148379400` SUCCESS**.
+- profiling artifact **`10467972587`**, SHA-256 digest `5471854958404c63bba8ee70ae5ead236f02b220881a4b8dfeaee60cdcd559a4`.
+- exact guest input SHA-256 **`5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`**.
+- settings: frameskip 0, APU clock 21, audio 4, precision 8; pinned ares R4300 JIT + RSP interpreter.
+- profile: **2000 valid samples**.
+- last complete virtual frame-budget window: **44/60**; current partial runtime state reported `fps_native=48`, `fps_emulate=39`, `fps_display=44`, frame queue 1. Lab host wall time is not N64 FPS.
+- APU/SPC700 static **36.60%**, APU JIT generated **3.30%**, DSP/audio **14.50%** => combined APU/audio **54.40%**.
+- S-CPU interpreter **30.85%**, PPU/events **7.45%**, DMA/HDMA **4.40%**, RSP/VRAM semaphore wait **2.55%**, frame/VI wait **0.35%**.
+- hottest symbols: `cpu_execute` **15.85%**, `apu_execute` **13.10%**, `read_unk` **7.75%**, `io_read8` **3.90%**, `cpu_io` **3.45%**, APU JIT generated **3.30%**, `skip_sample` **3.20%**, `apu_read8` **2.90%**, `mix_sample` **2.85%**.
+
+**SUPPORTED INTERPRETATION:** this run is the experiment-local ares baseline, not a replacement for real-N64 authority. Its exact absolute split differs from the real N64 M0 capture, but it reproduces the same qualitative pressure: no meaningful VI idle and APU/audio is the largest aggregate. The next comparison must use this exact harness/workload/settings so the block-size experiment is paired against the correct baseline.
+
 ## Immediate next action
-1. Preserve the completed M0 branch and hardware artifacts as evidence; do not merge diagnostic code merely because it worked.
-2. Update the technical route so M1 begins with the measured APU/audio wall and the 65C816 dynarec moves behind that first proof.
-3. Create a temporary M1 branch from the exact measured state for a controlled APU JIT block-boundary experiment.
-4. Use the valid ares R4300-JIT + RSP-interpreter representative workload for rapid baseline/change measurement. Compare exact frame budget, samples, APU/audio distribution and any timing/audio symptoms. One variable first.
-5. Only request another real-N64 session after a lab candidate demonstrates a meaningful M1 movement and passes lower-level validation.
+1. On `phase2/apu-audio-first`, change only APU JIT `BLOCK_SIZE` from 16 to 32 guest opcode bytes as the first bounded block-boundary experiment.
+2. Let Build and Validate + Open Homebrew Ares Profile run on the exact same workload/settings.
+3. Compare virtual frame budget, sample density, `apu_execute`, APU JIT/static/DSP aggregate, S-CPU/PPU/DMA shares and any runtime/timing anomalies against `c55b6b...`.
+4. **Keep only if materially positive without lower-level regression.** If neutral/negative or semantically suspicious, mark 32-byte granularity **REJECTED**, restore 16 and move to `apu_read8`/`apu_write8` specialization as the next bounded APU experiment.
+5. Only request another real-N64 session after an ares candidate demonstrates meaningful M1 movement and passes lower-level validation.
+6. Repair `master` Road/Roadmap after the experiment checkpoint so the canonical technical route reflects M0 closure and APU/audio-first M1; do not weaken the destination.
 
 ## Resume protocol
-Read this file + Road/Roadmap/Profiling/Validation; verify master/active M1 branch/CI. M0 is closed by save SHA `3316bd99...` from exact artifact `10467585906`: 48/49/48/50/50, 3581 samples, APU/audio 61.83%, S-CPU 22.12%, no VI wait. Resume by executing the bounded APU JIT block-boundary experiment in the valid ares lab, checkpointing the result, then keep/reject it and continue M1 from measured evidence.
+Read this file + Road/Roadmap/Profiling/Validation; verify master/active M1 branch/CI. M0 is closed by save SHA `3316bd99...` from exact artifact `10467585906`: 48/49/48/50/50, 3581 samples, APU/audio 61.83%, S-CPU 22.12%, no VI wait. Active M1 branch baseline is `c55b6b...`, ares run `35148379400`, artifact `10467972587`: 44/60 local baseline, 2000 samples, APU/audio 54.40%, `apu_execute` 13.10%. Resume by executing the controlled 16->32 APU JIT block-size experiment, checkpointing the result, then keep/reject it and continue M1 from measured evidence.

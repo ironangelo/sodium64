@@ -39,6 +39,24 @@ class ProfileWorkloadTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertGreater(len(builder()), 0)
 
+    def test_gameplay_balanced_has_fixed_native_nmi_vector(self) -> None:
+        rom = workloads.build_rom("gameplay-balanced")
+        native_nmi = int.from_bytes(rom[0x7FEA:0x7FEC], "little")
+        emulation_nmi = int.from_bytes(rom[0x7FFA:0x7FFC], "little")
+        self.assertEqual(native_nmi, workloads.GAMEPLAY_NMI_ADDRESS)
+        self.assertEqual(emulation_nmi, workloads.GAMEPLAY_NMI_ADDRESS)
+
+        handler_offset = workloads.GAMEPLAY_NMI_ADDRESS - workloads.LOAD_ADDRESS
+        self.assertEqual(rom[handler_offset : handler_offset + 3], bytes([0x48, 0xDA, 0x5A]))
+
+    def test_gameplay_balanced_uses_wait_for_interrupt_frame_pacing(self) -> None:
+        program = workloads.workload_gameplay_balanced()
+        # The measured loop should sleep between frames instead of continuously
+        # burning S-CPU time like the synthetic cpu-alu/wram stress controls.
+        self.assertIn(0xCB, program[: workloads.GAMEPLAY_NMI_OFFSET])  # WAI
+        # NMI handler returns with RTI.
+        self.assertEqual(program[-1], 0x40)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

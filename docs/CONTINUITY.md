@@ -12,8 +12,8 @@ Perfect target remains real-N64 native cadence, no required frameskip/frame gene
 
 Integrated master: **`ee86d3391f9ef7f407b9b3f683b145253ff1ef3f`**; PR #9 is **MERGED-CONSUMED**.
 Active branch: **`phase1/open-homebrew-workload`**.
-Previous validated hardware-package HEAD: **`26545b209c7657c98ffc22cdd7a954e688ac8c07`**.
-Current candidate HEAD: **`0430c8c2be6f6f35119cc299ec0f07eaf3da1150`** (`m0: keep Gothicvania alive through hardware profile`).
+Current candidate HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928efe6`** (`m0: pin survivability workload hash`).
+Previous real-hardware package HEAD: `26545b209c7657c98ffc22cdd7a954e688ac8c07`.
 
 ## Valid ares lab
 Isolation run `35113184294`, artifact `10453682432` proved pinned ares RSP JIT is a **LAB LIMITATION**: every RSP-JIT mode collapsed while RSP-interpreter modes progressed. Valid high-density lab is **R4300 JIT + RSP interpreter**.
@@ -26,16 +26,18 @@ Valid synthetic run `35114866448`, artifact `10454678803`: idle 60/60; cpu-alu 4
 Open workload: `donth77/snes-homebrew:gothicvania`.
 Pins: final source `119496e6a2f1e53b7704712fef8cb81814f1698a`; source-art history `913ea78a3b35d3dfb62d7b76a33598b02107a2e7`; PVSnesLib 4.5.0 SHA-256 `b69ff32ada19895b7ebfe02a1e3c08a44c80bd9c8132de05f5c356f86264ce32`; Kenney font commit `9d94d3b50c68036a740115c577598fa1a02723f0`, blob `e6978d7d6f6a91ca8cdd5515e338110d9977fe69`.
 
-Original deterministic benchmark edits at validated package HEAD `26545b...`: `ST_TITLE -> ST_PLAY` and `padsCurrent(0) -> KEY_RIGHT`; no physics/render/audio/timing simplification.
+Base deterministic benchmark controls: `ST_TITLE -> ST_PLAY`; `padsCurrent(0) -> KEY_RIGHT`. The survivability rerun additionally changes local `playState` health initialization from `PLAYER_HP` to `255`. Enemy/spike collision, HP decrement, hurt state/knockback, SFX, rendering, physics, streaming and audio remain active; only death is made unreachable during the ~7 s measurement. No Sodium64 core code is changed by the survivability control.
 
-Validated source run `35121473665`, artifact `10458190844`: 524288-byte ROM SHA-256 **`634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff`**. Independent run `35122086605`, artifact `10458276218`, produced byte-identical ROM and patch. **VALIDATED / MEASUREMENT PROOF:** reproducible workload.
+Original benchmark SHA (before survivability): `634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff`.
+Current survivability benchmark SHA: **`5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`**.
+Current benchmark patch SHA: **`ab1ec83925571e916be9ae0a3abf3d2bb84b5f9efb1aae9fd2ac608ecc0f0bc9`**.
 
 Source-build hygiene knowledge to preserve:
 - **REJECTED:** parallel make/PVSnesLib as root cause of frozen-source failures.
 - **REJECTED:** parallax generation itself as a problem.
 - **REJECTED:** gfx4snes/PVSnesLib as broken.
 - Root cause was checkout-mtime interaction with upstream committed/frozen conversion outputs. Final policy freezes only high-level committed source-of-truth outputs and lets low-level products/companions rebuild.
-- Final package scratch/checksum-path leaks were packaging-only hygiene and did not change ROM bytes/runtime.
+- Earlier package scratch/checksum-path leaks were packaging-only hygiene and did not change ROM bytes/runtime.
 
 ## Stable representative ares result
 Run `35122086545`, artifact `10457627853`: 1312 samples, **48/60**, APU/audio 52.7%, S-CPU 30.4%, graphics/DMA/sync 16.3%, VI wait 0.5%.
@@ -54,85 +56,60 @@ No flashcart-specific runtime register or USB telemetry access. Historical SC64 
 
 Timer sampler observes 60-VI `fps_native` wraps: 2 full seconds warmup, reset sampler, then five complete measured 60-VI windows. `S64H` records five frame-budget windows/settings/sample count/RSP context; canonical `S64P` snapshot is stored at save offset 0x100. After measurement only, cache is written back and snapshot/header are sent through standard N64 PI cartridge SRAM at `0x08000000`. After both writes complete, RSP halts, framebuffer becomes solid red and diagnostic intentionally freezes. **RED = capture written.**
 
-`scripts/hw_profile_report.py` validates/extracts; host tests cover canonical/word-swapped saves, incomplete capture, underclock/low-density and RSP context. CI rebuilds exact Gothicvania and packages `.z64` + exact ELF/map/reporters/manifest.
+`scripts/hw_profile_report.py` validates/extracts; host tests cover canonical/word-swapped saves, incomplete capture, underclock/low-density and RSP context.
 
-## Validated first hardware package
-Package source HEAD **`26545b209c7657c98ffc22cdd7a954e688ac8c07`**.
-- `Build and Validate` run **`35136729624` SUCCESS**.
-- Open Homebrew run **`35136729628` SUCCESS**.
-- Gothicvania job **`104930862059` SUCCESS**; exact guest SHA **`634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff`**.
-- Source artifact **`10463845969`**.
-- HW package job **`104931318025` SUCCESS**: 29 host tests, HW_PROFILE compile/link, exact workload/embedded guest verification, checksum self-check.
-- Final hardware package artifact **`10463541468`**.
-- Artifact ZIP SHA-256 **`fa39d94499156a206983ffd4dc3c0771c5a6641c350c34776c5e3843dc3a9a92`**.
-- Wrapped N64 ROM SHA-256 **`081c23df1d41101abad373aa1e53b30a34287a049640bd4f349546fd6920425d`**.
-- Emulator base ROM SHA-256 `54039dca813356bd8976aa2761214520ef6460b157ada27e05ff055c126496a9`.
-- Independent extraction contained exactly 11 intended files, `sha256sum -c` passed, and embedded 512 KiB guest at offset `0x104000` rehashed exactly to `634fe02f...c17a5fff`.
+## MEASURED — first real-N64 capture
+**2026-09-16 / real N64 + SummerCart64.** Exact prior M0 ROM booted, entered Gothicvania, showed `GAME OVER`, then reached solid red. SummerCart recognized `SRAM 256kbit`. User had to power off because reset did not return from the intentional terminal state, but the save had already persisted.
 
-## MEASURED — first real-N64 execution and persisted capture
-**2026-09-16 / real N64 + SummerCart64.** User loaded the exact packaged `sodium64-m0-gothicvania.z64` as an ordinary N64 ROM. N64FlashcartMenu identified it as `sodium64`, game code `NED`, big-endian and **SRAM 256kbit**. The ROM booted, entered Gothicvania, showed `GAME OVER`, then reached the intentional solid-red completion screen.
+Returned save:
+- filename `sodium64-m0-gothicvania.sav`
+- size **32768 bytes**
+- SHA-256 **`c9862cc3ec821a783e2a79f38f01b4e4fd5377d9f8683a05eb429122a1bdaf2a`**
+- canonical big-endian, valid `S64H` v1 complete=1 + valid `S64P`
+- settings: frameskip 0, APU clock 21, audio 4, precision 8
+- sample interval 65521; **3580** valid samples
+- SP DMA busy 0, DMA full 0; raw SP_PC `0x0B80` non-meaningful for this capture
+- five frame budgets: **48/60, 49/60, 52/60, 60/60, 60/60**
 
-The user had to power the console off because normal reset did not return from the intentional terminal state. Despite that, the SummerCart had already persisted the save correctly.
+**VALIDATED / MEASUREMENT PROOF:** real-N64 boot, profiler sampling, completion marker, standard PI SRAM write, SummerCart persistence, save normalization and host decoder all work end-to-end. Gate A evidence materially advanced.
 
-Returned SRAM/save:
-- filename: `sodium64-m0-gothicvania.sav`
-- size: **32768 bytes** (exact SRAM 256 kbit)
-- SHA-256: **`c9862cc3ec821a783e2a79f38f01b4e4fd5377d9f8683a05eb429122a1bdaf2a`**
-- capture format: canonical big-endian
-- `S64H`: valid, version 1, complete=1
-- `S64P`: valid
-- warmup: 2 s; measured: 5 x 60-VI windows
-- settings verified: frameskip **0**, APU clock **21**, audio **4**, precision **8**
-- sample interval: 65521; sample count / valid samples: **3580**
-- RSP context: SP DMA busy 0, DMA full 0; raw SP_PC `0x0B80`, marked non-meaningful for this capture
-- frame budgets: **48/60, 49/60, 52/60, 60/60, 60/60**
+Aggregate first capture: APU JIT 21.54%, APU static 23.16%, DSP/audio 10.84% (APU/audio aggregate **55.53%**); S-CPU **12.99%**; PPU/events **7.04%**; DMA/HDMA **3.83%**; RSP/VRAM semaphore wait **1.20%**; frame/VI wait **19.39%**.
 
-**VALIDATED / MEASUREMENT PROOF:** real-N64 boot, profiler sampling, completion marker, standard PI SRAM write, SummerCart persistence, save-format normalization and host-side decoder all work end-to-end. Gate A evidence materially advanced.
+**SUPERSEDED FOR ARCHITECTURE DECISION:** this full five-window aggregate. Video + rising frame budgets prove the guest entered `GAME OVER`; final 60/60 windows are cheaper post-death state, not native-frame gameplay. The first two hardware windows align with stable ares 48/60, which is interesting but insufficient to claim quantitative hardware accuracy.
 
-Aggregate 3580-sample profile from this capture:
-- APU JIT generated: 771 (21.54%)
-- APU/SPC700 static: 829 (23.16%)
-- DSP/audio: 388 (10.84%)
-- combined APU/audio aggregate: **1988 / 3580 = 55.53%**
-- S-CPU interpreter: **465 / 3580 = 12.99%**
-- PPU/events/frame prep: **252 / 3580 = 7.04%**
-- DMA/HDMA: **137 / 3580 = 3.83%**
-- RSP/VRAM semaphore wait: **43 / 3580 = 1.20%**
-- frame/VI wait: **694 / 3580 = 19.39%**
-- input: 1 sample
+## VALIDATED / READY — survivability hardware rerun
+Candidate HEAD **`89df64192d622bfa12e4bb53e0f41ceab928efe6`** pins the new deterministic guest SHA and contains only the controlled benchmark survivability change described above relative to the prior profiling package path.
 
-These aggregate proportions are **NOT architecture-driving yet** because the supplied video and the rising frame budgets prove the workload transitions into `GAME OVER` during the measured interval. In particular, the final 60/60 windows are cheaper post-death state, not proof of native-frame gameplay. The first two windows (48/60, 49/60) align strikingly with the stable ares 48/60 result, but one hardware run is not enough to claim ares is quantitatively hardware-accurate.
+CI:
+- Open Homebrew Workload Build run **`35145447113` SUCCESS**.
+  - `gothicvania-build` job `104960146459` SUCCESS.
+  - `hw-profile-package` job `104960440607` SUCCESS.
+  - source artifact **`10466504920`**.
+  - hardware package artifact **`10467585906`**.
+- Build and Validate run **`35145447039` SUCCESS**: normal build, PROFILE build and Mupen emulator smoke all green; update-release correctly skipped on phase branch.
 
-**SUPERSEDED FOR ARCHITECTURE DECISION:** the full five-window aggregate from this first hardware capture. It validates transport/profiling, but not a representative all-gameplay subsystem distribution.
+Final survivability package verification:
+- artifact ZIP SHA-256 **`db187230e8728c22b5acebbeabd99489af538994c79eece0a6d4f2a054415086`** (matches GitHub artifact digest).
+- package contains exactly 11 intended top-level files; no staging directories.
+- `sha256sum -c SHA256SUMS.txt` passes every file after independent download/extraction.
+- manifest records exact HEAD `89df6419...`, frameskip 0, APU 21, audio 4, precision 8.
+- guest SHA **`5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`**.
+- wrapped N64 ROM SHA-256 **`7bb79d25168a73a9e539a1ced17c0e4073f3c8fb321ed7552db7a48a64ed217f`**.
+- emulator base ROM SHA remains `54039dca813356bd8976aa2761214520ef6460b157ada27e05ff055c126496a9`.
+- independent extraction of 512 KiB guest at wrapped-ROM offset `0x104000` rehashes exactly to `5519d51f...ee519`.
 
-## LIVE — controlled survivability rerun
-Goal: change only benchmark survivability so all five measured windows remain active gameplay; do not change Sodium64 core or remove collision/hurt/audio work.
-
-Candidate commit **`0430c8c2be6f6f35119cc299ec0f07eaf3da1150`** modifies only the deterministic Gothicvania build patch in `.github/workflows/open-homebrew-build.yml`:
-- keeps existing auto-enter gameplay and held Right;
-- changes local gameplay `health` initialization from `PLAYER_HP` to `255`;
-- enemy/spike collision checks, HP decrement, hurt knockback, SFX, rendering, physics, streaming and audio remain active;
-- death is simply unreachable within the ~7 s M0 session.
-
-This deliberately changes the guest ROM, so the previous pinned guest SHA is expected to fail until the new deterministic ROM SHA is measured and pinned. That failure is a controlled checksum gate, not a runtime regression.
-
-Current CI launched from `0430c8c2...`:
-- Open Homebrew run **`35145140673`** — in progress at checkpoint.
-- Build and Validate run **`35145140752`** — queued/in progress at checkpoint.
+**STATUS: VALIDATED / READY FOR ONE REAL-N64 SURVIVABILITY RERUN.** This candidate is not an optimization; it is the controlled repeat needed to remove the known GAME OVER contaminant from M0.
 
 ## Immediate next action
-1. Let run `35145140673` finish source build; obtain the new deterministic Gothicvania SHA. A package-stage failure against old `634fe02f...` is expected and should be interpreted only as the checksum pin doing its job.
-2. Pin the new guest SHA in the workflow, rerun CI, require source build + HW_PROFILE compile/link + embedded-payload verification + package checksum self-check to pass.
-3. Independently inspect/download the resulting hardware package and verify ZIP/file checksums and embedded guest bytes.
-4. Update this continuity checkpoint with final candidate SHA/run/artifact/ROM SHA.
-5. Hand Iron only the new `.z64` for one repeat N64 session. Expected behavior: gameplay remains alive for all five windows, then solid red. Return the new 32 KiB `.sav`.
-6. Decode with exact matching reporter/ELF/map. If all five windows are gameplay and sample density is sufficient, close representative M0 and choose the first M1 bottleneck from hardware evidence.
+Run the exact survivability `.z64` from artifact `10467585906` on real N64/SummerCart64. Do not press controls. Expected sequence: Gothicvania stays in active gameplay for the entire measurement, then solid red. **GAME OVER must not appear before red.** Because the prior session proved SRAM was already persisted even when power-off was required, if reset again cannot return from red, wait several seconds on red before power-off, then recover the new 32 KiB `.sav`.
 
-Falsifiers/branches:
-- Still reaches GAME OVER before red -> survivability control failed; inspect exact damage/death path before using profile.
-- No red / invalid save -> new guest change unexpectedly altered test path; isolate before performance interpretation.
-- Five active gameplay windows + valid capture -> **M0 real-N64 bottleneck map achieved**; choose M1 from hardware.
+Decode the returned save using the exact matching ELF/map/reporters from artifact `10467585906`. If all five windows are active gameplay and sample density is sufficient, close representative M0 and choose the first M1 architecture/optimization experiment from real-hardware evidence.
+
+Falsifiers:
+- GAME OVER before red -> survivability control failed; inspect death path and do not interpret profile.
+- no red / invalid save -> isolate regression before performance interpretation.
+- five active gameplay windows + valid capture -> **M0 real-N64 bottleneck map achieved**; choose M1 from hardware.
 - Do **not** start M1 dynarec before this representative hardware evidence chooses the first wall.
 
 ## Resume protocol
-Read this file + Road/Profiling/Validation; verify master/branch/CI state. Current resume point is candidate `0430c8c2...` running CI after the first real-N64 capture validated the end-to-end profiler but exposed GAME OVER contamination. Finish checksum pin/package validation, hand off the survivability `.z64`, decode the repeat save, checkpoint, then choose the first M1 architecture experiment from representative hardware evidence.
+Read this file + Road/Profiling/Validation; verify master/branch/CI state. Resume from survivability candidate `89df6419...`, artifact `10467585906`, ready for the one repeat hardware session. Decode the returned save with the exact package, checkpoint the result, then choose the first M1 experiment from representative real-N64 evidence.

@@ -63,7 +63,7 @@ jobs:
 
   ares-smoke:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     needs:
       - profile-build
 
@@ -151,14 +151,25 @@ jobs:
           sample_count=$(symbol profile_sample_count)
           last_epc=$(symbol profile_last_epc)
           apu_clock=$(symbol apu_clock)
+          jit_lookup=$(symbol jit_lookup)
+          jit_pointer=$(symbol jit_pointer)
 
-          for value in "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" "$last_epc" "$apu_clock"; do
+          for value in \
+            "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
+            "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer"; do
             test -n "$value"
           done
 
           size=$((0x$end - 0x$magic))
+          jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
           test "$size" -gt 16384
+          test "$jit_lookup_size" -eq 262144
+
           buffer_hex=$(printf '%08x' "$((0x$buffer))")
+          rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
+          test -n "$rom_buffer"
+          jit_buffer=$((rom_buffer - 0x40000))
+          jit_buffer_hex=$(printf '%08x' "$jit_buffer")
 
           {
             echo "ARES_PROFILE_ADDR=$magic"
@@ -169,11 +180,17 @@ jobs:
             echo "ARES_PROFILE_SAMPLE_COUNT_ADDR=$sample_count"
             echo "ARES_PROFILE_LAST_EPC_ADDR=$last_epc"
             echo "ARES_APU_CLOCK_ADDR=$apu_clock"
+            echo "ARES_JIT_LOOKUP_ADDR=$jit_lookup"
+            echo "ARES_JIT_LOOKUP_SIZE=$jit_lookup_size"
+            echo "ARES_JIT_POINTER_ADDR=$jit_pointer"
+            echo "ARES_JIT_BUFFER_HEX=$jit_buffer_hex"
           } >> "$GITHUB_ENV"
 
-          echo "profiler snapshot: 0x$magic + $size bytes"
-          echo "profile buffer:    0x$buffer"
-          echo "apu_clock:         0x$apu_clock (measurement value: 0x15 / 21 cycles)"
+          echo "profiler snapshot:  0x$magic + $size bytes"
+          echo "profile buffer:     0x$buffer"
+          echo "apu_clock:          0x$apu_clock (measurement value: 0x15 / 21 cycles)"
+          echo "APU JIT lookup:     0x$jit_lookup + $jit_lookup_size bytes"
+          echo "APU JIT reset ptr:  0x$jit_buffer_hex"
 
       - name: Run interpreter control and recompiler workload matrix
         shell: bash
@@ -187,6 +204,8 @@ jobs:
             force_interpreter="$3"
             run_seconds="$4"
             port="$5"
+            min_samples="$6"
+            max_run_seconds="$7"
 
             home="$RUNNER_TEMP/ares-home-$label"
             settings="$RUNNER_TEMP/ares-settings-$label.bml"
@@ -218,15 +237,28 @@ jobs:
               wait "$ares_pid" 2>/dev/null || true
             }
 
+            extra_sampling_args=()
+            if [ "$min_samples" -gt 0 ]; then
+              extra_sampling_args=(
+                --sample-count-address "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR"
+                --min-samples "$min_samples"
+                --max-run-seconds "$max_run_seconds"
+              )
+            fi
+
             if ! python3 scripts/gdb_rsp_dump.py \
               --port "$port" \
               --connect-timeout 45 \
+              --response-timeout 60 \
               --warmup-seconds 1 \
               --run-seconds "$run_seconds" \
+              --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
               --write "0x$ARES_APU_CLOCK_ADDR:15" \
+              --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
               --write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
               --write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
               --write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+              "${extra_sampling_args[@]}" \
               --address "0x$ARES_PROFILE_ADDR" \
               --size "$ARES_PROFILE_SIZE" \
               --output "$snapshot" \
@@ -249,24 +281,27 @@ jobs:
             samples=$(awk '/total samples:/ { print $3 }' "$report")
             test -n "$samples"
             test "$samples" -gt 0
+            if [ "$min_samples" -gt 0 ]; then
+              test "$samples" -ge "$min_samples"
+            fi
             echo "$label: $samples total samples"
           }
 
-          # Keep one interpreter run as a control for the already validated path.
+          # Keep one fixed three-second interpreter run as a throughput control.
           run_profile \
             interpreter-idle \
             workloads/ares/out/profile-idle.z64 \
-            true 3 9123
+            true 3 9123 0 3
 
-          # Decision-grade profiles use ares' N64 recompiler if GDB remains
-          # compatible. This should greatly increase emulated N64 time per CI
-          # wall-clock second compared with ForceInterpreter=true.
+          # Recompiler profiles accumulate at least 200 statistical samples.
+          # Fast workloads satisfy this in the first 3-second window; slow ones
+          # may receive additional windows, capped at 60 measured wall seconds.
           port=9130
           for workload in idle cpu-alu wram ppu-registers dma-vram; do
             run_profile \
               "recompiler-$workload" \
               "workloads/ares/out/profile-$workload.z64" \
-              false 3 "$port"
+              false 3 "$port" 200 60
             port=$((port + 1))
           done
 
@@ -284,12 +319,14 @@ jobs:
 
           interpreter_samples=$(python3 -c 'import json; print(json.load(open("profiles/interpreter-idle.json"))["meta"]["sample_count"])')
           recompiler_samples=$(python3 -c 'import json; print(json.load(open("profiles/recompiler-idle.json"))["meta"]["sample_count"])')
+          interpreter_wall=$(awk '/Captured .* after .*s measured wall time/ { for (i=1; i<=NF; i++) if ($i == "after") { gsub("s", "", $(i+1)); print $(i+1) } }' profiles/interpreter-idle-gdb.log | tail -n1)
+          recompiler_wall=$(awk '/Captured .* after .*s measured wall time/ { for (i=1; i<=NF; i++) if ($i == "after") { gsub("s", "", $(i+1)); print $(i+1) } }' profiles/recompiler-idle-gdb.log | tail -n1)
 
           {
             echo '### ares profiling throughput'
             echo
-            echo "- interpreter idle: $interpreter_samples samples / 3 measured seconds"
-            echo "- recompiler idle: $recompiler_samples samples / 3 measured seconds"
+            echo "- interpreter idle: $interpreter_samples samples / ${interpreter_wall}s measured wall time"
+            echo "- recompiler idle: $recompiler_samples samples / ${recompiler_wall}s measured wall time"
             echo
             echo '### Recompiler workload bottleneck matrix'
             echo

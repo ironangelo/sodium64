@@ -98,7 +98,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: ares-n64-ccache-${{ runner.os }}-${{ runner.arch }}-17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          key: ares-n64-ccache-${{ runner.os }}-${{ runner.arch }}-17813a3ccda21ab9bd45f09bfc2f91196dbf50ff-rsp-interpreter-v1
 
       - name: Build pinned N64-only ares
         shell: bash
@@ -108,6 +108,21 @@ jobs:
           git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
           git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
           cd "$root"
+
+          # LAB LIMITATION: the pinned ares RSP recompiler deadlocks Sodium64's
+          # VRAM semaphore path under gameplay-balanced. The controlled 2x2 run
+          # 35113184294 proved that CPU-JIT + RSP-interpreter is good (60/60),
+          # while every mode with RSP JIT enabled collapses. Keep the R4300 JIT
+          # for profiling density but force only the RSP to its interpreter.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert old in s
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
           ccache --zero-stats
           .github/scripts/build_sdl.sh
           cmake --preset ubuntu-ci -DARES_CORES=n64
@@ -210,7 +225,7 @@ jobs:
           echo "fps_display:        0x$fps_display"
           echo "frameskip setting:  0x$skipped_set (measurement value: 0x00)"
 
-      - name: Run interpreter control and recompiler workload matrix
+      - name: Run interpreter control and CPU-JIT workload matrix
         shell: bash
         run: |
           set -euo pipefail
@@ -325,9 +340,8 @@ jobs:
             echo "$label: $samples total samples"
           }
 
-          # Keep the original short idle interpreter path as a profiler-throughput
-          # control, and add one gameplay interpreter run to discriminate an ares
-          # recompiler-specific RSP stall from behavior common to both engines.
+          # The build always uses the RSP interpreter. ForceInterpreter therefore
+          # only distinguishes R4300 interpreter (true) from R4300 JIT (false).
           run_profile \
             interpreter-idle \
             workloads/ares/out/profile-idle.z64 \
@@ -338,9 +352,8 @@ jobs:
             workloads/ares/out/profile-gameplay-balanced.z64 \
             true 5 9124 20 30
 
-          # 800 samples corresponds to more than roughly one second of R4300
-          # CP0 Count at the current 65,521-tick interval, ensuring the virtual
-          # frame-budget observation includes at least one complete 60-VI window.
+          # R4300-JIT + RSP-interpreter is the validated high-density lab mode.
+          # 800 samples spans enough virtual Count time to include >= one 60-VI window.
           port=9130
           for workload in idle cpu-alu wram ppu-registers dma-vram gameplay-balanced; do
             run_profile \
@@ -381,13 +394,18 @@ jobs:
           recompiler_wall=$(awk '/Captured .* after .*s measured wall time/ { for (i=1; i<=NF; i++) if ($i == "after") { gsub("s", "", $(i+1)); print $(i+1) } }' profiles/recompiler-idle-gdb.log | tail -n1)
 
           {
+            echo '### ares profiling laboratory mode'
+            echo
+            echo '- R4300 recompiler enabled for recompiler-* workloads.'
+            echo '- RSP interpreter forced for all workloads because ares RSP JIT is a demonstrated LAB LIMITATION for Sodium64 custom microcode (isolation run 35113184294).'
+            echo
             echo '### ares profiling throughput'
             echo
             echo "- interpreter idle: $interpreter_samples samples / ${interpreter_wall}s measured wall time"
             echo "- interpreter gameplay diagnostic: $interpreter_gameplay_samples samples / ${interpreter_gameplay_wall}s measured wall time"
-            echo "- recompiler idle: $recompiler_samples samples / ${recompiler_wall}s measured wall time"
+            echo "- CPU-JIT idle: $recompiler_samples samples / ${recompiler_wall}s measured wall time"
             echo
-            echo '### Recompiler workload bottleneck matrix'
+            echo '### CPU-JIT + RSP-interpreter workload bottleneck matrix'
             echo
             cat profiles/workload-matrix.md
             echo

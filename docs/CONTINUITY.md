@@ -41,7 +41,7 @@ Repeat `SP_PC=0x020F` was non-interpretable because pinned ares returns random S
 
 ## LIVE — real-N64 M0 package
 Temporary ares workflow/repeat trigger were removed. Active branch: **`phase1/open-homebrew-workload`**.
-Current HEAD: **`1a505fafd48a01e55904f0ce8420a977b3a9dbd4`**.
+Current HEAD: **`26545b209c7657c98ffc22cdd7a954e688ac8c07`**.
 
 Hardware design:
 - `HW_PROFILE=1` implies current statistical `PROFILE=1`; normal builds unchanged.
@@ -87,29 +87,40 @@ Commit `f545cd5c9b34b70c23002488936fdbc0df78434c` replaced bulk mtimes with expl
 
 Commit `8fb23e7c2c48bab8a907e293e9feb3ae15f39e32` removed that generated product from the freeze set. Run `35136010741` passed frozen-output preflight but failed assembling `data.asm`: over-freezing `res/hero_a.bin` skipped the recipe that also creates required ignored companion `res/hero.pal`. **REJECTED:** PVSnesLib/gfx4snes as broken. Lesson: freeze only high-level committed source-of-truth outputs, never derived leaf products whose recipes create required companions.
 
-Commit **`1a505fafd48a01e55904f0ce8420a977b3a9dbd4`** applies that narrower policy: high-level committed outputs are explicit old-files; `.pic/.pal`, split `.bin`, stream and other low-level products rebuild normally.
+Commit `1a505fafd48a01e55904f0ce8420a977b3a9dbd4` applies that narrower policy: high-level committed outputs are explicit old-files; `.pic/.pal`, split `.bin`, stream and other low-level products rebuild normally.
 
-**VALIDATED:** Open Homebrew run **`35136266948`** is fully green.
-- Gothicvania job `104929303313` SUCCESS.
-- Exact guest SHA remains **`634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff`**; patch SHA remains `c2317550ee3a1654095b462e20553432918e7d6ee85caf30efaf11ba81e3842a`.
-- Source artifact: **`10462359490`**.
-- HW job `104929641790` SUCCESS: all 29 host tests, HW_PROFILE compile/link, exact guest verification, self-contained wrapping, embedded guest re-extraction/hash verification, package upload.
-- Hardware package artifact: **`10463745031`**, artifact ZIP SHA-256 `857c9fb0e8be88583d168c32cbe9fae5e3f1a784f536174222c488a6711b5a9f`.
-- Wrapped hardware ROM SHA-256: **`081c23df1d41101abad373aa1e53b30a34287a049640bd4f349546fd6920425d`**.
-- `Build and Validate` run **`35136266981` SUCCESS**.
+Open Homebrew run `35136266948` was fully green and produced hardware package artifact `10463745031`, but independent package inspection found two user-facing hygiene problems: checksum paths included stripped `package/` prefixes and temporary `wrap/` staging files leaked into the artifact. Both were packaging-only; ROM/content verification itself was green.
 
-**PACKAGE INSPECTION:** downloaded artifact contains the expected ROM/ELF/map/reporters/manifest/test instructions, and the embedded Gothicvania payload re-verifies exactly. However, two user-facing hygiene issues remain before asking Iron to test:
-1. `SHA256SUMS.txt` records paths as `package/<file>` even though GitHub strips the `package/` root inside the artifact, so `sha256sum -c SHA256SUMS.txt` from the extracted artifact root fails path lookup despite correct hashes.
-2. The artifact also includes temporary `wrap/` staging files because wrapping currently happens under `package/wrap`.
+### READY FOR HARDWARE — validated package
+Commit **`26545b209c7657c98ffc22cdd7a954e688ac8c07`** moves wrap scratch space to `$RUNNER_TEMP`, emits only intended deliverables, writes artifact-root-relative checksums, and self-runs `sha256sum --check SHA256SUMS.txt` before upload.
 
-These are **HYGIENE-BLOCKER** only; they do not invalidate the green compile/link or ROM-content verification. Do not hand this artifact to hardware yet.
+**VALIDATED:** all gates for the M0 hardware handoff are green.
+- `Build and Validate` run **`35136729624` SUCCESS**.
+- Open Homebrew run **`35136729628` SUCCESS**.
+- Gothicvania job **`104930862059` SUCCESS**; exact guest SHA remains **`634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff`**.
+- Source artifact: **`10463845969`**.
+- HW package job **`104931318025` SUCCESS**: all 29 host tests, HW_PROFILE compile/link, exact workload verification, embedded guest verification, artifact-root checksum self-check and upload.
+- Final hardware package artifact: **`10463541468`**.
+- GitHub artifact ZIP SHA-256: **`fa39d94499156a206983ffd4dc3c0771c5a6641c350c34776c5e3843dc3a9a92`**; local downloaded ZIP independently hashes identically.
+- Wrapped N64 ROM SHA-256: **`081c23df1d41101abad373aa1e53b30a34287a049640bd4f349546fd6920425d`**, byte-identical to the prior green candidate because only packaging hygiene changed.
+- Emulator base ROM SHA-256 recorded by manifest: `54039dca813356bd8976aa2761214520ef6460b157ada27e05ff055c126496a9`.
+- Independent post-download extraction contains exactly 11 intended top-level files and **no directories/staging files**.
+- Independent `sha256sum -c SHA256SUMS.txt` passes for every file after extraction.
+- Independent re-extraction of the 512 KiB embedded SNES guest from offset `0x104000` hashes exactly to **`634fe02f...c17a5fff`**.
 
-### Immediate controlled experiment
-Move wrapping scratch space to `$RUNNER_TEMP` outside `package/`, generate `SHA256SUMS.txt` from inside the final artifact root using relative filenames, rerun CI, download the emitted package, and require `sha256sum -c SHA256SUMS.txt` to pass directly after extraction. Expected package should contain only intended deliverables and the same exact guest SHA; wrapped ROM may remain byte-identical if no build content changes.
+**STATUS: VALIDATED / READY FOR REAL-N64 M0 SESSION.** This does not yet validate profiler capture transport or performance on hardware; those are exactly what the next session tests.
 
-Falsifier: exact guest SHA changes, HW build/package verification regresses, extracted checksums still fail, or any new runtime-related failure appears.
+### Immediate next action — one focused real-N64 session
+Run only `sodium64-m0-gothicvania.z64` from artifact `10463541468` on the real N64/SummerCart64. Do not press controls or enter settings. Benchmark auto-enters gameplay and holds SNES Right. It performs 2 seconds warmup plus five complete 60-VI measurement windows. **Solid red screen = capture written.** After red, wait ~2 seconds, then use the normal reset/return-to-cart-menu flow so SRAM can persist; do not power off first. Recover the SRAM/save associated with this ROM and return it with a short observation of whether gameplay/video/audio looked sane before red.
+
+Expected evidence: valid `S64H` + `S64P`, five frame-budget windows, full-rate settings, sufficient sample density and a real-N64 subsystem profile. This will decide which M1 optimization/architecture experiment moves the gate first.
+
+Falsifiers/branches:
+- No red / hang before red -> diagnose hardware-only runtime or measurement path before trusting profile.
+- Red but no/invalid save -> isolate standard PI SRAM persistence/capture transport; performance remains unknown.
+- Valid capture -> decode first real-N64 bottleneck map and choose M1 work from evidence.
 
 Do **not** start M1 dynarec before the real-hardware M0 evidence chooses the first wall.
 
 ## Resume protocol
-Read this file + Road/Profiling/Validation; inspect branch HEAD and CI. Clean the package staging/checksum paths, independently verify downloaded artifact, checkpoint again, then request one focused real-N64 session only after that verification passes.
+Read this file + Road/Profiling/Validation; verify master/branch/CI state. Current resume point is the single real-N64 M0 Gothicvania session using exact SHA/artifact above. Decode the returned save with the packaged `hw_profile_report.py` + exact ELF/map, checkpoint result, then choose the first M1 architecture experiment from hardware evidence.

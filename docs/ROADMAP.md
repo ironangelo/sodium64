@@ -1,5 +1,11 @@
 # Sodium64 fork roadmap
 
+## Relationship to the Road to 1.0
+
+[`ROAD_TO_1_0.md`](ROAD_TO_1_0.md) defines the stable destination and release gates. This roadmap defines the current engineering route toward those gates.
+
+The route may change when profiling, experiments, compatibility work, or real-hardware evidence show a better path. A roadmap change should not silently weaken the 1.0 target; if the destination itself ever needs revision, that decision belongs in `ROAD_TO_1_0.md` and should be justified explicitly.
+
 ## North star
 
 Push Sodium64 toward a high-fidelity, full-speed SNES implementation on real Nintendo 64 hardware, while progressively adding enhancement-chip support. The stretch targets include Super FX / Super FX 2 and SA-1 at real gameplay speed without relying on frame skipping or audio underclocking.

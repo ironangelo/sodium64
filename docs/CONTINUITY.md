@@ -64,30 +64,37 @@ Do not modify physics, enemies, renderer, HDMA, streaming, audio, collision, tim
 
 `240pTestSNES` remains useful later for fidelity/PPU validation but was not selected first because default flow is menu/static patterns rather than sustained gameplay.
 
-## RESUME HERE — LIVE SOURCE-BUILD EXPERIMENT
+## RESUME HERE — SOURCE BUILD FIX
 Active branch: **`phase1/open-homebrew-workload`** from master `ee86d339...`.
-Current HEAD: **`e72566dd5af1739ef3a1257a1ffb12fe3f985a98`**.
+Current HEAD before fix: **`e72566dd5af1739ef3a1257a1ffb12fe3f985a98`**.
 
-Added temporary branch workflow: `.github/workflows/open-homebrew-build.yml`.
-It does **only reproducibility/provenance**, not profiling yet:
-- clean Ubuntu runner;
-- downloads PVSnesLib 4.5.0 Linux asset and verifies exact SHA-256;
-- checks out exact Gothicvania upstream SHA;
-- applies the two source replacements above with count/assert guards;
-- compiles `gothicvania.sfc` from source;
-- verifies nonempty ROM <=512 KiB;
-- uploads ROM SHA256, provenance, exact patch and built ROM.
+Workflow: `.github/workflows/open-homebrew-build.yml`.
+First source-build run: **`35119197827` — FAILURE**.
+Normal branch validation run: `35119197754`.
 
-Live CI:
-- `Open Homebrew Workload Build` run **`35119197827`** — IN PROGRESS at checkpoint.
-- normal `Build and Validate` run **`35119197754`** — IN PROGRESS at checkpoint.
+What passed before failure:
+- exact PVSnesLib archive download and SHA-256 verification;
+- exact Gothicvania SHA checkout;
+- both deterministic source replacements and diff checks.
 
-Question for this batch: can the representative benchmark ROM be reproduced from pinned open source + pinned SDK on a clean Linux runner with only the two audited automation changes?
+Failure occurred only at `make`:
+- `make` unexpectedly ran `tools/adapt_hero.py` / `tools/adapt_enemy.py`;
+- those scripts failed first with `ModuleNotFoundError: numpy`.
 
-Decision:
-- if source build passes: inspect artifact/provenance, checkpoint success, then extend existing Phase 1 lab to profile this exact built ROM;
-- if it fails: fix only reproducibility/build cause before involving ares;
-- do not weaken or prebuild around failures merely to get a ROM.
+**SUPPORTED INTERPRETATION / SOURCE FACT:** this is not a valid missing dependency of the intended Gothicvania build. Upstream Makefile explicitly marks these art converters as **FROZEN ART** and says their original source inputs were removed; committed `res/*.png`, `res/*.bin`, level outputs and generated animation headers are the source of truth and the converters are intentionally not supposed to run.
+
+**CAUSE:** clean Git checkout does not preserve upstream file mtimes, so Make can see frozen converter scripts as new enough to regenerate committed outputs despite upstream's intended timestamp ordering.
+
+**REJECTED NEXT ACTION:** do not install numpy and chase the frozen converters. That would move away from the documented upstream build model and may hit intentionally missing source-art inputs.
+
+Correct next experiment:
+- after checkout/patch, refresh **only mtimes** of committed frozen outputs (`gothicvania/res/**` plus generated animation headers as needed) so they are newer than converter scripts;
+- bytes remain untouched; Git diff must still contain only the two intentional C-source benchmark changes;
+- rerun the clean source build.
+
+Question remains: can the benchmark ROM be reproduced from pinned open source + pinned SDK while respecting upstream's frozen-art build model?
+
+If green: inspect ROM/provenance artifact, checkpoint, then profile this exact build using existing ares machinery. If red: inspect the next actual build dependency before adding ares.
 
 ## Hardware status
 **No real-N64 request yet.** Gothicvania is the final cheap representativeness step currently preferred before deciding whether next authority should be focused M0 hardware validation.
@@ -98,6 +105,7 @@ No game-specific emulator modes. No frameskip/APU underclock/audio omission coun
 ## Resume protocol
 1. Read this file.
 2. Verify master at/after `ee86d339...`.
-3. Inspect branch HEAD `e72566dd...` and runs `35119197827` / `35119197754`.
-4. Resolve source build before adding ares profiling.
-5. Maintain batch -> checkpoint cadence.
+3. Inspect branch `phase1/open-homebrew-workload` and run `35119197827`.
+4. Fix frozen-output mtimes only; do not add converter dependencies.
+5. Resolve source build before adding ares profiling.
+6. Maintain batch -> checkpoint cadence.

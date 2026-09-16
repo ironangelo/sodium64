@@ -15,6 +15,14 @@ import time
 from pathlib import Path
 
 
+# ares maps normal emulated N64 CPU exceptions onto GDB signals. For profiling
+# those exceptions must remain guest-visible instead of stopping the debugger;
+# the target's own exception handler should see exactly what hardware would.
+# Ctrl-C still halts through ares' explicit debugger halt path, so it is not
+# affected by this pass list.
+ARES_N64_GUEST_SIGNALS = "04;05;06;08;0a;0b;0c;10;11;1d"
+
+
 def checksum(payload: bytes) -> bytes:
     return f"{sum(payload) & 0xFF:02x}".encode("ascii")
 
@@ -78,10 +86,9 @@ class RSPClient:
         self._send_packet_bytes(b"c")
 
         # A target may stop on its own before the requested sampling window
-        # expires (for example because ares reports an emulated CPU signal).
-        # Listen for that stop while the window is open. Sending Ctrl-C after
-        # an already-pending stop would queue a second stop packet and shift
-        # every following request/reply pair out of sync.
+        # expires. Listen for that stop while the window is open. Sending
+        # Ctrl-C after an already-pending stop would queue a second stop packet
+        # and shift every following request/reply pair out of sync.
         previous_timeout = self.sock.gettimeout()
         try:
             self.sock.settimeout(seconds)
@@ -165,6 +172,13 @@ def main() -> int:
 
         initial = client.request("?")
         print(f"Initial target state: {initial.decode('ascii', errors='replace')}")
+
+        if b"QPassSignals+" not in supported:
+            raise RuntimeError("GDB server does not advertise QPassSignals support")
+        pass_reply = client.request(f"QPassSignals:{ARES_N64_GUEST_SIGNALS}")
+        print(f"Guest exception pass-through: {pass_reply.decode('ascii', errors='replace')}")
+        if pass_reply != b"OK":
+            raise RuntimeError(f"target rejected QPassSignals: {pass_reply!r}")
 
         stopped = client.continue_then_interrupt(args.run_seconds)
         print(f"Stopped target state: {stopped.decode('ascii', errors='replace')}")

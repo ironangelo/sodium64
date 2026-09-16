@@ -134,6 +134,18 @@ def base_symbol_name(symbolicated: str) -> str:
     return symbolicated.split("+", 1)[0]
 
 
+def symbol_offset(symbolicated: str) -> int | None:
+    """Return the +0xNN offset from a symbolicated name, or zero at its entry."""
+    if symbolicated.startswith("["):
+        return None
+    if "+0x" not in symbolicated:
+        return 0
+    try:
+        return int(symbolicated.rsplit("+0x", 1)[1], 16)
+    except ValueError:
+        return None
+
+
 def subsystem_for_sample(pc: int, symbolicated: str, object_name: str | None) -> str:
     """Classify one sampled EPC into a stable Phase 1 subsystem bucket."""
     base = base_symbol_name(symbolicated)
@@ -144,6 +156,15 @@ def subsystem_for_sample(pc: int, symbolicated: str, object_name: str | None) ->
         return "RSP wait"
     if base == "frame_wait":
         return "frame/VI wait"
+
+    # The first four instructions of write_vmdatal/write_vmdatah are not PPU
+    # work: they spin on SP_SEMAPHORE until the RSP finishes copying the frame's
+    # VRAM snapshot. Keep only that 0x00..0x0C guard in a distinct wait bucket;
+    # the rest of each function remains genuine PPU/VRAM work.
+    offset = symbol_offset(symbolicated)
+    if base in {"write_vmdatal", "write_vmdatah"} and offset is not None and offset < 0x10:
+        return "RSP/VRAM semaphore wait"
+
     if JIT_START <= pc < JIT_END:
         return "APU JIT generated"
 

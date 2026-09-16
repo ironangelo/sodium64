@@ -154,6 +154,31 @@ Linker script and memory map
             "DMA/HDMA",
         )
 
+    def test_vram_semaphore_guard_is_not_mislabeled_as_ppu_work(self) -> None:
+        for symbolicated in (
+            "write_vmdatal",
+            "write_vmdatal+0x4",
+            "write_vmdatal+0xC",
+            "write_vmdatah",
+            "write_vmdatah+0x8",
+        ):
+            with self.subTest(symbolicated=symbolicated):
+                self.assertEqual(
+                    profile_report.subsystem_for_sample(0x80002000, symbolicated, "ppu.o"),
+                    "RSP/VRAM semaphore wait",
+                )
+
+        # Once the four-instruction spin guard has been passed, these routines
+        # are performing actual PPU/VRAM work and should stay in the PPU bucket.
+        self.assertEqual(
+            profile_report.subsystem_for_sample(0x80002010, "write_vmdatal+0x10", "ppu.o"),
+            "PPU/events/frame prep",
+        )
+        self.assertEqual(
+            profile_report.subsystem_for_sample(0x80002014, "write_vmdatah+0x14", "ppu.o"),
+            "PPU/events/frame prep",
+        )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

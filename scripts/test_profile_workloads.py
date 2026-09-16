@@ -39,6 +39,38 @@ class ProfileWorkloadTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertGreater(len(builder()), 0)
 
+    def test_gameplay_balanced_has_fixed_native_nmi_vector(self) -> None:
+        rom = workloads.build_rom("gameplay-balanced")
+        native_nmi = int.from_bytes(rom[0x7FEA:0x7FEC], "little")
+        emulation_nmi = int.from_bytes(rom[0x7FFA:0x7FFC], "little")
+        self.assertEqual(native_nmi, workloads.GAMEPLAY_NMI_ADDRESS)
+        self.assertEqual(emulation_nmi, workloads.GAMEPLAY_NMI_ADDRESS)
+
+        handler_offset = workloads.GAMEPLAY_NMI_ADDRESS - workloads.LOAD_ADDRESS
+        self.assertEqual(rom[handler_offset : handler_offset + 3], bytes([0x48, 0xDA, 0x5A]))
+
+    def test_gameplay_balanced_uses_wait_for_interrupt_frame_pacing(self) -> None:
+        program = workloads.workload_gameplay_balanced()
+        # The measured loop should sleep between frames instead of continuously
+        # burning S-CPU time like the synthetic cpu-alu/wram stress controls.
+        self.assertIn(0xCB, program[: workloads.GAMEPLAY_NMI_OFFSET])  # WAI
+        # NMI handler returns with RTI.
+        self.assertEqual(program[-1], 0x40)
+
+    def test_gameplay_balanced_enables_bg1_and_obj(self) -> None:
+        program = workloads.workload_gameplay_balanced()
+        # LDA #$11; STA $212C (TM): BG1 and OBJ are the only main-screen layers.
+        self.assertIn(bytes([0xA9, 0x11, 0x8D, 0x2C, 0x21]), program)
+
+    def test_gameplay_balanced_initializes_and_hides_unused_oam(self) -> None:
+        program = workloads.workload_gameplay_balanced()
+        # The startup code clears the full 544-byte OAM shadow.
+        self.assertIn(bytes([0xE0, 0x20, 0x02]), program)  # CPX #$0220
+        # It then writes Y=$F0 to each low-table sprite entry before overriding
+        # sprite 0 with its one visible Y coordinate.
+        self.assertIn(bytes([0xA9, 0xF0, 0xA2, 0x01, 0x00]), program)
+        self.assertIn(bytes([0xA9, 0x70, 0x8F, 0x01, 0x20, 0x7E]), program)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

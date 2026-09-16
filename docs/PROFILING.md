@@ -1,183 +1,226 @@
 # Statistical profiling
 
-Phase 1 needs to identify where the R4300 spends host time without perturbing the hot paths enough to invalidate the measurement. The first profiler therefore uses **statistical PC sampling** instead of timing every opcode, JIT block, or scanline.
+Phase 1 uses statistical R4300 PC sampling to identify where Sodium64 spends host CPU time without instrumenting every opcode, scanline, or hot memory path.
+
+This document defines what the profiler measures, how CI captures it, and which conclusions are currently valid.
 
 ## Build mode
 
-Normal builds remain unchanged:
+Normal release/runtime behavior remains unchanged:
 
 ```sh
 make
 ```
 
-A profiling build is enabled explicitly:
+Profiling is opt-in:
 
 ```sh
 make PROFILE=1
 ```
 
-`PROFILE=1` defines `SODIUM64_PROFILE` only for the R4300 assembly build. The normal release build does not enable CP0 timer sampling or include active profiler state in runtime behavior.
-
-The main CI workflow compiles both configurations on development-branch pushes. Profiling artifacts are uploaded separately as `sodium64-profile-build` and are never used for the rolling release; only the normal `master` build feeds the rolling release.
-
-A separate **Ares Profile Validation** workflow runs for pull requests targeting `master`, pushes to `master`, and manual dispatches. It builds its own `PROFILE=1` artifact so the existing build/release workflow remains independent.
+`PROFILE=1` defines `SODIUM64_PROFILE` only for the R4300 assembly build. Normal `master` release artifacts do not enable the CP0 sampling path.
 
 ## Sampling method
 
-The R4300 CP0 Count/Compare timer generates an IP7 interrupt at an interval of **65,521 Count ticks**. The interval is deliberately not a power of two to reduce phase-locking with regular emulator and frame loops.
+The profiling build programs CP0 Count/Compare at an interval of **65,521 Count ticks**, deliberately not a power of two to reduce phase-locking with regular emulator loops.
 
-On each profiling interrupt, the handler:
+Each profiling interrupt:
 
-1. reads CP0 EPC, which identifies the interrupted R4300 instruction stream;
-2. stores that EPC in a fixed-size ring buffer;
-3. increments a total sample count;
-4. schedules the next Compare interrupt relative to the current Count;
+1. reads CP0 EPC;
+2. stores the interrupted address in a fixed-size ring;
+3. increments the total sample count;
+4. schedules the next Compare event;
 5. returns with `eret`.
 
-The exception-time path only clobbers `k0` and `k1`, matching the MIPS convention for registers reserved to exception handlers. It does not call normal subroutines or touch `ra`, `at`, emulator state registers, or JIT state.
+The exception path only uses `k0`/`k1` and does not call normal subroutines or mutate emulator/JIT state.
 
-## Profiler state
+The initial ring holds 4,096 EPCs (16 KiB). After wraparound, newer samples overwrite older entries while the monotonically increasing sample count continues.
 
-`src/profile.S` exposes these ELF symbols in profiling builds:
+## Host-side interpretation
 
-- `profile_magic` — `0x53363450` (`S64P`);
-- `profile_version` — currently `1`;
-- `profile_interval` — Count ticks between requested samples;
-- `profile_capacity` — number of EPC entries in the ring;
-- `profile_write_ptr` — address of the next ring entry;
-- `profile_sample_count` — monotonically increasing total number of samples;
-- `profile_last_epc` — most recently sampled EPC;
-- `profile_sample_buffer` / `profile_sample_buffer_end` — ring-buffer bounds.
+`scripts/profile_report.py` combines the raw snapshot with the **exact matching ELF/linker map**. Classification stays host-side so the runtime sampling path remains cheap and future regrouping does not require rerunning the ROM.
 
-The initial capacity is 4,096 EPC samples (16 KiB). Once full, the newest samples overwrite the oldest while `profile_sample_count` continues increasing.
+Important buckets include:
 
-## Why raw EPC samples instead of runtime categories?
-
-Categorizing samples inside the N64 runtime would require maintaining fragile address ranges for CPU/APU/PPU/DSP modules and would make every future code-layout change part of the profiler implementation.
-
-Raw EPC samples are more useful. Host-side tooling can symbolicate them against the exact profiling ELF/linker map that produced the run. It can also classify generated APU JIT addresses specially, identify wait loops such as `rsp_wait` and `frame_wait`, and regroup symbols later without rerunning the N64 workload.
-
-This makes profiling data forward-compatible with architecture changes.
-
-## Intended interpretation
-
-Over a sufficiently long representative run, the proportion of PC samples approximates the proportion of R4300 execution time spent in each code region. Examples of useful buckets include:
-
-- S-CPU interpreter and addressing/ALU/control paths;
-- SNES memory read/write paths;
+- S-CPU interpreter;
+- SNES memory/I-O;
 - SPC700/APU static code;
-- generated APU JIT buffer;
-- DSP/audio work;
-- PPU/HDMA/frame construction;
-- `rsp_wait` (R4300 blocked waiting for the RSP);
-- `frame_wait` (framebuffer/VI back-pressure);
-- menu/input/interrupt/miscellaneous work.
+- generated APU JIT code;
+- DSP/audio;
+- PPU/events/frame preparation;
+- DMA/HDMA;
+- `RSP/VRAM semaphore wait`;
+- `rsp_wait`;
+- `frame_wait` / VI back-pressure.
 
-This does **not** directly measure RSP instruction-level cost. RSP pressure appears indirectly as R4300 samples in synchronization/wait paths; RSP-specific profiling can be added separately if Phase 1 measurements show it is necessary.
+The first `0x10` bytes of `write_vmdatal` / `write_vmdatah` are classified separately as **RSP/VRAM semaphore wait** because those four instructions spin on `SP_SEMAPHORE`. From `+0x10` onward the functions remain classified as actual PPU/VRAM work.
 
-## Bias and validation
+This profiler measures where the **R4300** is sampled. It does not directly provide instruction-level RSP cost.
 
-Statistical sampling is intentionally approximate. Before using it to justify a major rewrite we should validate that:
+## Interpretation limits
 
-- normal and profiling builds show no semantic/gameplay differences;
-- profiling overhead is small enough that FPS/frame behavior is not materially changed;
-- results are stable across repeated runs of the same workload;
-- sample distributions change sensibly when settings such as APU underclock or frame precision change;
-- obvious synthetic workloads produce obvious sample distributions.
+Statistical samples approximate R4300 execution-time share only for the exact workload/settings/environment measured. They are not a cycle-accurate oracle.
 
-The profiler is a decision tool, not a cycle-accurate oracle.
+Before using a result for an architecture decision, verify:
 
-## Host-side report tool
+- exact SHA / ELF / map / artifact;
+- workload and sample density;
+- frameskip setting;
+- APU clock and JIT reset state;
+- audio setting;
+- precision setting;
+- emulator/hardware environment;
+- virtual frame-budget signal.
 
-`scripts/profile_report.py` consumes a raw dump beginning at `profile_magic` plus the exact matching profiling ELF. It reconstructs the ring buffer using the profiler symbols, handles wraparound, recognizes the generated APU JIT range, and reports the hottest sampled symbols/regions.
-
-The decoder accepts canonical big-endian N64 memory and the 32-bit word-swapped representation exposed by some debuggers. Extraction remains separate from the on-console profiler format, so emulator and future hardware paths can share the same report tooling.
-
-When supplied with the exact GNU linker map, the reporter also classifies static sampled addresses by the object that owns them. `scripts/profile_matrix.py` then groups those objects into broad Phase 1 buckets such as S-CPU, APU, DSP, PPU/frame preparation, DMA/HDMA and wait states. Classification stays host-side; it adds no work to the emulated N64 hot paths.
-
-## Automated extraction paths
-
-### Mupen64Plus smoke
-
-The main validation workflow builds a pinned Mupen64Plus debugger with an LLE RSP plugin, runs both normal and profiling Sodium64 builds, dumps the profiler memory region resolved from the matching ELF, and decodes it host-side.
-
-This is useful as an independent boot/runtime check, but its timing distribution is not treated as an N64 performance oracle. The original tiny synthetic workload exposed emulator-specific behavior, including repeated SI/PIF DMA warnings and a profile dominated by `rsp_wait`.
-
-### ares profiling
-
-The separate Ares Profile Validation workflow builds a pinned N64-only ares revision and launches the profiling Sodium64 ROM under its GDB remote server. `scripts/gdb_rsp_dump.py` performs the minimal RSP sequence needed by CI:
-
-1. send the initial acknowledgement required by ares' TCPText GDB guard;
-2. negotiate `qSupported` and query the initial stop state;
-3. use `QPassSignals` so normal emulated N64 CPU exceptions, including Sodium64's intentional TLB handling, continue to the guest instead of stopping the debugger;
-4. warm the target before any measurement-only patches are applied;
-5. continue execution for one or more measured sampling windows;
-6. halt explicitly with Ctrl-C when needed, with a longer stop-response timeout for graphics-heavy workloads;
-7. read the ELF-resolved profiler region in bounded chunks;
-8. detach and decode the snapshot with the matching profiling ELF.
-
-The first successful short ares validation produced only eight samples distributed across `cpu_execute`, `apu_read8`, and `cpu_bra`. That run proved the end-to-end capture path but was deliberately not treated as enough evidence for a bottleneck ranking.
+Synthetic stress ROMs are **causal controls**, not commercial-game representatives. A CPU-heavy control being CPU-heavy does not by itself justify a dynarec, and a DMA stress result does not describe ordinary gameplay.
 
 ## Full-rate APU preparation
 
-Sodium64 inherits an APU-underclock setting whose default `apu_clock` is twice `APU_CYCLE`. Phase 1 performance decisions must not rely on that concession.
+Sodium64 inherits an APU-underclock mode. Phase 1 decision measurements must not rely on it.
 
-The ares profiling harness therefore prepares a full-rate measurement only **after warm-up**:
+After warm-up the ares harness therefore:
 
-1. patch `apu_clock` to `APU_CYCLE` (`21` master cycles);
-2. invalidate the existing APU block lookup table;
-3. reset `jit_pointer` to `JIT_BUFFER`, matching the semantic requirement that SPC700 blocks be recompiled for the new timing;
-4. reset `profile_sample_count`, `profile_write_ptr`, and `profile_last_epc`;
-5. begin the measured interval.
+1. patches `apu_clock` to `APU_CYCLE` (`21`);
+2. invalidates the APU JIT lookup table;
+3. resets `jit_pointer` to `JIT_BUFFER`;
+4. forces frameskip setting `0`;
+5. keeps audio enabled;
+6. resets profiler and frame-budget state;
+7. starts the measured interval.
 
-The profiler ring is reset after the preparation work, so the cost of changing the diagnostic condition itself is not counted in the workload profile. These patches exist only in the profiling session; they do not change normal Sodium64 defaults or release runtime behavior.
+Preparation cost is excluded from the measured profile.
+
+## Automated laboratories
+
+### Mupen64Plus
+
+The main validation workflow builds a pinned Mupen64Plus debugger with an LLE RSP plugin and runs normal + profiling Sodium64 builds.
+
+This is useful as an independent boot/runtime smoke path, but its timing distribution is **not** an N64 performance oracle.
+
+### ares
+
+`Ares Profile Validation` builds pinned N64-only ares at:
+
+`17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`
+
+The GDB harness warms the target, applies profiling-only settings, accumulates a bounded sample window, captures profiler memory plus selected runtime state, and decodes everything against the matching ELF.
+
+### LAB LIMITATION — ares RSP recompiler
+
+A controlled 2x2 experiment demonstrated that the pinned ares **RSP recompiler is not valid for Sodium64 custom RSP microcode under the gameplay workload**.
+
+Run: `35113184294`
+
+Artifact: `sodium64-ares-recompiler-isolation`, ID `10453682432`.
+
+Same Sodium64 build/workload/settings:
+
+| CPU engine | RSP engine | completed guest frames / 60 VI |
+| --- | --- | ---: |
+| JIT | JIT | **0/60** |
+| interpreter | interpreter | **60/60** |
+| JIT | interpreter | **60/60** |
+| interpreter | JIT | **0/60** |
+
+Both modes with RSP JIT enabled sampled essentially all R4300 time in `write_vmdatal` semaphore wait. With RSP JIT disabled the workload progressed normally, independently of whether the R4300 used JIT or interpreter.
+
+At the collapsed capture the RSP was not DMA-busy. `SP_PC=0x0D90` maps to Sodium64 RSP `next_frame`, the intentional end-of-frame self-halt path. The exact defect inside ares is not currently relevant to a Road-to-1.0 gate and should not become a side project.
+
+**Valid high-density ares decision-lab mode:**
+
+- R4300 recompiler **ON**;
+- RSP recompiler **OFF** / RSP interpreter **ON**.
+
+Interpreter controls use both interpreters.
+
+Old results collected with the ares RSP JIT are retained only as historical evidence of this laboratory limitation and must not be interpreted as Sodium64 or real-N64 performance.
 
 ## Deterministic workload matrix
 
-`scripts/make_profile_workloads.py` generates five original SNES LoROM workloads without commercial ROM data:
+`scripts/make_profile_workloads.py` currently generates six original SNES LoROM workloads:
 
-- `idle` — minimal guest loop plus normal surrounding emulator activity;
-- `cpu-alu` — deliberately CPU/ALU-heavy 65C816 work;
-- `wram` — repeated guest WRAM-oriented load/store work;
-- `ppu-registers` — repeated PPU register activity;
-- `dma-vram` — DMA-driven VRAM traffic.
+- `idle` — minimal guest work;
+- `cpu-alu` — continuous arithmetic/branch pressure;
+- `wram` — continuous WRAM load/store pressure;
+- `ppu-registers` — repeated PPU-register activity;
+- `dma-vram` — deliberately heavy DMA-to-VRAM stress;
+- `gameplay-balanced` — frame-paced `WAI`/NMI workload with bounded CPU/WRAM work, scroll, one visible OBJ, OAM DMA, modest VRAM DMA and small CGRAM DMA once per frame.
 
-The ares N64 recompiler is used for decision-lab runs because it advances the emulated N64 far more quickly per CI wall-clock second than `ForceInterpreter=true`. One interpreter idle run remains as a control.
+All are original deterministic diagnostics and contain no commercial ROM data.
 
-Profiles are not accepted merely because they are non-zero. Recompiler workloads accumulate repeated measured windows until they reach a minimum useful sample count (currently 200) or a bounded maximum measurement duration. This avoids comparing a dense profile against a twelve-sample accident.
+Profiles are required to reach useful sample density rather than merely be nonzero. Current decision runs target at least 800 samples, bounded by maximum measurement duration.
 
-### First successful matrix
+## Superseded first matrix
 
-The first fully green full-rate matrix produced:
+The original full-rate matrix was useful for validating that controlled workloads changed the profiler in expected directions, but its PPU/DMA interpretation is now **SUPERSEDED** because the ares RSP JIT pathology and coarse symbol classification contaminated VRAM results.
 
-| workload | samples | S-CPU | APU JIT | APU static | DSP | PPU/frame prep | DMA/HDMA | frame/VI wait |
+In particular, the old statement that `dma-vram` spent about **96.7% in PPU/frame prep** is no longer valid. Most of those samples were the semaphore guard at the start of `write_vmdatal`.
+
+Do not use the old matrix for architecture decisions.
+
+## Current valid matrix — CPU JIT + RSP interpreter
+
+Replacement run: `35114866448`
+
+Artifact: `sodium64-ares-profile-matrix`, ID `10454678803`.
+
+Road-to-1.0 measurement conditions include frameskip `0`, APU clock `21`, audio enabled, and precision setting `8`.
+
+| workload | samples | S-CPU | APU JIT | APU static | DSP | PPU | DMA | VRAM/RSP wait | VI wait |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| idle | 2,138 | 49.2% | 4.1% | 33.6% | 1.4% | 2.0% | 0.1% | 9.5% |
-| cpu-alu | 1,923 | 61.3% | 1.7% | 35.1% | 0.5% | 1.1% | 0.3% | 0.0% |
-| wram | 1,594 | 59.2% | 2.9% | 35.1% | 0.8% | 1.9% | 0.1% | 0.0% |
-| ppu-registers | 1,030 | 52.3% | 3.7% | 24.9% | 0.6% | 18.4% | 0.1% | 0.0% |
-| dma-vram | 948 | 0.1% | 0.3% | 0.7% | 0.0% | 96.7% | 2.1% | 0.0% |
+| idle | 1,303 | 49.8% | 5.1% | 31.5% | 1.4% | 2.3% | 0.2% | 0.0% | 9.7% |
+| cpu-alu | 1,055 | 59.0% | 2.0% | 36.2% | 0.9% | 1.6% | 0.3% | 0.0% | 0.0% |
+| wram | 1,474 | 56.7% | 3.3% | 36.8% | 0.5% | 2.3% | 0.4% | 0.0% | 0.0% |
+| ppu-registers | 1,123 | 42.7% | 4.0% | 31.3% | 0.6% | 21.2% | 0.1% | 0.0% | 0.0% |
+| dma-vram | 878 | 1.1% | 1.5% | 7.7% | 0.1% | 31.2% | 30.5% | 27.8% | 0.0% |
+| gameplay-balanced | 930 | 6.3% | 7.5% | 27.3% | 0.6% | 4.3% | 2.0% | 0.3% | 51.5% |
 
-The PPU-register and DMA-VRAM profiles required two three-second measured windows to reach sufficient density; the other recompiler workloads reached it in one.
+The replacement matrix behaves causally as expected:
 
-These distributions are useful because they move in the expected direction when the guest workload changes: CPU-heavy code increases S-CPU representation, PPU-register churn substantially increases PPU/frame-preparation samples, and DMA-to-VRAM drives the profile overwhelmingly into the corresponding PPU/VRAM path.
+- CPU controls remain S-CPU-heavy;
+- PPU-register churn raises PPU share;
+- the DMA stress now separates actual PPU work, DMA execution and VRAM/RSP synchronization instead of collapsing them into one false PPU bucket;
+- `gameplay-balanced` spends over half its sampled R4300 time in `frame_wait`, showing substantial virtual headroom under this synthetic game-shaped workload.
 
-This validates the **measurement harness and classification sensitivity**. It does not prove that a commercial game spends these percentages in the same places.
+## Virtual frame budget
 
-## Synthetic workload limitations
+`frame_budget_report.py` reads Sodium64's own internal completed-frame count over a complete 60-VI interval. CI host wall-clock time is reported separately and **must never be interpreted as N64 FPS**.
 
-Synthetic workloads are causal controls, not representative gameplay benchmarks.
+Current valid run:
 
-A deliberately CPU-heavy ROM producing an S-CPU-heavy profile does not by itself justify a 65C816 dynarec. Likewise, the DMA-VRAM control being dominated by `write_vmdatal` does not mean ordinary games spend 96% of their time there.
+| workload | completed frames / 60 VI | interpretation |
+| --- | ---: | --- |
+| idle | 60/60 | at virtual target |
+| cpu-alu | 41/60 | synthetic CPU stress below target |
+| wram | 47/60 | synthetic WRAM stress below target |
+| ppu-registers | 38/60 | synthetic PPU-register stress below target |
+| dma-vram | 16/60 | heavy DMA/VRAM stress below target |
+| gameplay-balanced | **61/60** | throughput is not limiting under this workload |
 
-The ares recompiler is also a laboratory accelerator, not the performance model of a real 93.75 MHz R4300. Sample proportions can be useful for identifying which Sodium64 code is active under controlled guest workloads, but wall-clock throughput inside ares must never be reported as real-N64 FPS or headroom.
+`61/60` must **not** be described as “better than perfect” or proof of correct cadence. It establishes that this synthetic workload is not throughput-bound in the valid ares lab. Exact temporal cadence remains a separate correctness question and ultimately requires appropriate emulator/hardware validation.
 
-Commercial-game profiles and real-hardware measurements remain required before a major architecture is accepted as the answer to the Road-to-1.0 performance problem.
+## What this currently proves
 
-## Next Phase 1 measurement step
+**MEASUREMENT PROOF:**
 
-The synthetic workload matrix establishes that the profiler can distinguish controlled S-CPU, PPU and DMA pressure at useful sample density with full-rate APU timing.
+- the profiler distinguishes controlled CPU, PPU, DMA and wait-state pressure;
+- the virtual frame-budget signal correlates with workload pressure;
+- `gameplay-balanced` is not bottlenecked by the R4300/RSP path in the valid ares lab;
+- the catastrophic prior gameplay collapse was an ares RSP-JIT laboratory artifact.
 
-The next step is no longer more synthetic-profiler plumbing. Phase 1 should now obtain representative gameplay-oriented profiles and quantify frame-budget/deadline behavior under the Road-to-1.0 conditions: no required frameskip and full-rate audio.
+It does **not** prove:
 
-Those measurements should determine whether the proposed 65C816 dynarec enters Phase 2, or whether PPU/RSP, APU, memory, synchronization or another measured subsystem deserves the first major architecture batch.
+- commercial-game performance;
+- real-N64 frame rate;
+- that S-CPU is the dominant bottleneck in representative software;
+- that a 65C816 dynarec is already justified;
+- exact SNES/N64 cadence correctness.
+
+## Next Phase 1 step
+
+Do not expand profiling infrastructure merely because more metrics are possible.
+
+The synthetic controls and mixed workload have now done their main job. The next evidence should increase **representativeness or authority**: a more complex open/homebrew test workload and/or a focused real-N64 M0 milestone measurement package, chosen to answer whether the first major M1 architecture should target S-CPU, APU, PPU/RSP, memory/synchronization, or another measured cost.
+
+Commercial ROMs may later be used locally for representativeness but must not be committed or distributed as project artifacts.

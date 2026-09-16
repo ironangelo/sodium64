@@ -41,7 +41,7 @@ Repeat `SP_PC=0x020F` was non-interpretable because pinned ares returns random S
 
 ## LIVE — real-N64 M0 package
 Temporary ares workflow/repeat trigger were removed. Active branch: **`phase1/open-homebrew-workload`**.
-Current HEAD: **`81a3fe5bdd49f845c362bb00c96aedaee2b48c42`**.
+Current HEAD: **`1a505fafd48a01e55904f0ce8420a977b3a9dbd4`**.
 
 Hardware design:
 - `HW_PROFILE=1` implies current statistical `PROFILE=1`; normal builds unchanged.
@@ -78,16 +78,38 @@ At `81a3fe5...`:
 - Open Homebrew run **`35126591058` FAILED** before HW packaging because Gothicvania's pinned source build nondeterministically reran `tools/adapt_moon.py`.
 - The linker completed and printed `Build finished successfully!`; the workflow failed immediately afterward when the tracked-source cleanliness assertion detected an unexpected rewrite.
 
-**HYGIENE-BLOCKER / CAUSE:** the workload workflow currently tries to preserve upstream frozen conversion outputs with bulk `touch` calls. Upstream explicitly treats committed converted outputs as source-of-truth, but Git checkout mtimes are not historical and bulk touching can make one frozen generated input newer than another in the same dependency chain. In this run `res/level/sky_coldata.bin` became newer than tracked `res/moon.png`, so `adapt_moon.py` ran; in the prior green source build it did not. This is source-build mtime nondeterminism, not a Sodium64 emulation regression.
+**HYGIENE-BLOCKER / CAUSE:** the workload workflow tried to preserve upstream frozen conversion outputs with bulk `touch` calls. Upstream explicitly treats committed converted outputs as source-of-truth, but Git checkout mtimes are not historical and bulk touching can make one frozen generated input newer than another in the same dependency chain. In that run `res/level/sky_coldata.bin` became newer than tracked `res/moon.png`, so `adapt_moon.py` ran; in the prior green source build it did not. This is source-build mtime nondeterminism, not a Sodium64 emulation regression.
 
 **REJECTED:** `fps_native` export, HW profile link, Gothicvania guest logic, N64 runtime, and representative profile result as causes of run `35126591058`.
 
-### Immediate controlled experiment
-Replace mtime-based suppression with explicit GNU make `-o/--old-file` treatment for pinned committed Gothicvania conversion outputs, while still letting missing ignored PVSnesLib products (`.pic/.pal/.map` etc.) build normally. Add diagnostics for any unexpected tracked rewrite. Expected result: Gothicvania remains byte-identical at SHA-256 `634fe02f...c17a5fff`, Open Homebrew reaches the already-green HW compile/link stage, package hashing succeeds, and artifact `sodium64-real-n64-m0-gothicvania` is emitted.
+### Frozen-output experiment history
+Commit `f545cd5c9b34b70c23002488936fdbc0df78434c` replaced bulk mtimes with explicit GNU make `-o/--old-file` handling. Run `35135773394` failed in the new preflight because `res/level/parallax_tiles.pic` was incorrectly treated as a tracked frozen output; it is an absent/generated product. **REJECTED:** parallax generation itself as a problem.
 
-Falsifier: guest SHA changes, frozen converter still executes, tracked files outside the two benchmark-control edits change, or HW/package stage exposes a new concrete failure.
+Commit `8fb23e7c2c48bab8a907e293e9feb3ae15f39e32` removed that generated product from the freeze set. Run `35136010741` passed frozen-output preflight but failed assembling `data.asm`: over-freezing `res/hero_a.bin` skipped the recipe that also creates required ignored companion `res/hero.pal`. **REJECTED:** PVSnesLib/gfx4snes as broken. Lesson: freeze only high-level committed source-of-truth outputs, never derived leaf products whose recipes create required companions.
+
+Commit **`1a505fafd48a01e55904f0ce8420a977b3a9dbd4`** applies that narrower policy: high-level committed outputs are explicit old-files; `.pic/.pal`, split `.bin`, stream and other low-level products rebuild normally.
+
+**VALIDATED:** Open Homebrew run **`35136266948`** is fully green.
+- Gothicvania job `104929303313` SUCCESS.
+- Exact guest SHA remains **`634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff`**; patch SHA remains `c2317550ee3a1654095b462e20553432918e7d6ee85caf30efaf11ba81e3842a`.
+- Source artifact: **`10462359490`**.
+- HW job `104929641790` SUCCESS: all 29 host tests, HW_PROFILE compile/link, exact guest verification, self-contained wrapping, embedded guest re-extraction/hash verification, package upload.
+- Hardware package artifact: **`10463745031`**, artifact ZIP SHA-256 `857c9fb0e8be88583d168c32cbe9fae5e3f1a784f536174222c488a6711b5a9f`.
+- Wrapped hardware ROM SHA-256: **`081c23df1d41101abad373aa1e53b30a34287a049640bd4f349546fd6920425d`**.
+- `Build and Validate` run **`35136266981` SUCCESS**.
+
+**PACKAGE INSPECTION:** downloaded artifact contains the expected ROM/ELF/map/reporters/manifest/test instructions, and the embedded Gothicvania payload re-verifies exactly. However, two user-facing hygiene issues remain before asking Iron to test:
+1. `SHA256SUMS.txt` records paths as `package/<file>` even though GitHub strips the `package/` root inside the artifact, so `sha256sum -c SHA256SUMS.txt` from the extracted artifact root fails path lookup despite correct hashes.
+2. The artifact also includes temporary `wrap/` staging files because wrapping currently happens under `package/wrap`.
+
+These are **HYGIENE-BLOCKER** only; they do not invalidate the green compile/link or ROM-content verification. Do not hand this artifact to hardware yet.
+
+### Immediate controlled experiment
+Move wrapping scratch space to `$RUNNER_TEMP` outside `package/`, generate `SHA256SUMS.txt` from inside the final artifact root using relative filenames, rerun CI, download the emitted package, and require `sha256sum -c SHA256SUMS.txt` to pass directly after extraction. Expected package should contain only intended deliverables and the same exact guest SHA; wrapped ROM may remain byte-identical if no build content changes.
+
+Falsifier: exact guest SHA changes, HW build/package verification regresses, extracted checksums still fail, or any new runtime-related failure appears.
 
 Do **not** start M1 dynarec before the real-hardware M0 evidence chooses the first wall.
 
 ## Resume protocol
-Read this file + Road/Profiling/Validation; inspect branch HEAD and CI. Implement the explicit frozen-output make treatment, verify exact Gothicvania SHA and package artifact, checkpoint again, then request one focused real-N64 session only after artifact verification.
+Read this file + Road/Profiling/Validation; inspect branch HEAD and CI. Clean the package staging/checksum paths, independently verify downloaded artifact, checkpoint again, then request one focused real-N64 session only after that verification passes.

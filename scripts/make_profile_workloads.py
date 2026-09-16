@@ -190,17 +190,19 @@ def workload_gameplay_balanced() -> bytes:
     asm.emit(0x8D, 0x03, 0x21)              # OAMADDH = 0
 
     # Seed a small deterministic staging region used by the per-frame VRAM and
-    # CGRAM DMAs. This is startup-only work and is excluded by profiler warm-up.
+    # CGRAM DMAs. Keep it entirely separate from the 544-byte OAM shadow at
+    # $7E2000-$7E221F so sprite metadata and tile/palette staging cannot alias.
+    # This is startup-only work and is excluded by profiler warm-up.
     asm.emit(0xA2, 0x00, 0x00)              # LDX #0
     asm.label("seed_loop")
     asm.emit(0x8A)                          # TXA
-    asm.emit(0x9F, 0x00, 0x22, 0x7E)        # STA $7E2200,X
+    asm.emit(0x9F, 0x00, 0x24, 0x7E)        # STA $7E2400,X
     asm.emit(0xE8)                          # INX
     asm.emit(0xE0, 0x00, 0x01)              # CPX #$0100
     asm.branch(0xD0, "seed_loop")           # BNE seed_loop
 
     # Camera/animation state and the first OAM entry start from deterministic
-    # values. The rest of the OAM shadow may remain zero for this workload.
+    # values. The rest of the OAM shadow remains zero for this workload.
     asm.emit(0xA9, 0x00)
     asm.emit(0x8F, 0x00, 0x00, 0x7E)        # camera low
     asm.emit(0x8F, 0x01, 0x00, 0x7E)        # camera high
@@ -268,25 +270,25 @@ def workload_gameplay_balanced() -> bytes:
     asm.emit(0xA9, 0x02, 0x8D, 0x06, 0x43)  # DAS0H = $02 (544 bytes)
     asm.emit(0xA9, 0x01, 0x8D, 0x0B, 0x42)  # MDMAEN = channel 0
 
-    # Modest dynamic VRAM update: 128 bytes from $7E2200 through channel 1.
+    # Modest dynamic VRAM update: 128 bytes from $7E2400 through channel 1.
     asm.emit(0xAF, 0x00, 0x00, 0x7E)        # animate VRAM destination with camera
     asm.emit(0x8D, 0x16, 0x21)              # VMADDL
     asm.emit(0xA9, 0x00, 0x8D, 0x17, 0x21)  # VMADDH
     asm.emit(0xA9, 0x01, 0x8D, 0x10, 0x43)  # DMAP1 = mode 1
     asm.emit(0xA9, 0x18, 0x8D, 0x11, 0x43)  # BBAD1 = $2118
     asm.emit(0xA9, 0x00, 0x8D, 0x12, 0x43)  # A1T1L = $00
-    asm.emit(0xA9, 0x22, 0x8D, 0x13, 0x43)  # A1T1H = $22
+    asm.emit(0xA9, 0x24, 0x8D, 0x13, 0x43)  # A1T1H = $24
     asm.emit(0xA9, 0x7E, 0x8D, 0x14, 0x43)  # A1B1 = $7E
     asm.emit(0xA9, 0x80, 0x8D, 0x15, 0x43)  # DAS1L = $80
     asm.emit(0xA9, 0x00, 0x8D, 0x16, 0x43)  # DAS1H = 0
     asm.emit(0xA9, 0x02, 0x8D, 0x0B, 0x42)  # MDMAEN = channel 1
 
-    # Small palette refresh: 32 bytes from $7E2280 to CGRAM via channel 2.
+    # Small palette refresh: 32 bytes from $7E2480 to CGRAM via channel 2.
     asm.emit(0xA9, 0x00, 0x8D, 0x21, 0x21)  # CGADD = 0
     asm.emit(0x8D, 0x20, 0x43)              # DMAP2 = mode 0
     asm.emit(0xA9, 0x22, 0x8D, 0x21, 0x43)  # BBAD2 = $2122
     asm.emit(0xA9, 0x80, 0x8D, 0x22, 0x43)  # A1T2L = $80
-    asm.emit(0xA9, 0x22, 0x8D, 0x23, 0x43)  # A1T2H = $22
+    asm.emit(0xA9, 0x24, 0x8D, 0x23, 0x43)  # A1T2H = $24
     asm.emit(0xA9, 0x7E, 0x8D, 0x24, 0x43)  # A1B2 = $7E
     asm.emit(0xA9, 0x20, 0x8D, 0x25, 0x43)  # DAS2L = 32
     asm.emit(0xA9, 0x00, 0x8D, 0x26, 0x43)  # DAS2H = 0

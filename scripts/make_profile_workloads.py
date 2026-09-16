@@ -11,7 +11,8 @@ frame-paced shape closer to an ordinary SNES game:
 - ppu-registers: repeated CGRAM/scroll register updates;
 - dma-vram: repeated 4 KiB DMA transfers from WRAM to VRAM;
 - gameplay-balanced: WAI/NMI frame pacing, bounded game logic/WRAM updates,
-  scrolling, OAM DMA, modest VRAM DMA, and a small CGRAM DMA once per frame.
+  scrolling, one visible OBJ, OAM DMA, modest VRAM DMA, and a small CGRAM DMA
+  once per frame.
 
 These are diagnostic workloads, not substitutes for commercial-game milestone
 validation. Their value is that differences between profiles are attributable to
@@ -177,12 +178,13 @@ def workload_gameplay_balanced() -> bytes:
     native_prefix(asm, accumulator_8bit=True)
 
     # Begin under forced blank, configure a simple Mode-1/BG1 layout, normal
-    # VRAM increment behavior and the OAM base. Visual content is intentionally
-    # simple; the profiling value is the cadence and bounded mix of work.
+    # VRAM increment behavior and the OAM base. BG1 + OBJ are the only visible
+    # layers so the RSP receives a small but genuine frame-rendering workload.
     asm.emit(0xA9, 0x80, 0x8D, 0x00, 0x21)  # INIDISP = forced blank
     asm.emit(0xA9, 0x01, 0x8D, 0x05, 0x21)  # BGMODE = mode 1
     asm.emit(0xA9, 0x04, 0x8D, 0x07, 0x21)  # BG1SC = tilemap at $0800
     asm.emit(0xA9, 0x01, 0x8D, 0x0B, 0x21)  # BG12NBA = BG1 tiles at $1000
+    asm.emit(0xA9, 0x11, 0x8D, 0x2C, 0x21)  # TM = BG1 + OBJ on main screen
     asm.emit(0xA9, 0x80, 0x8D, 0x15, 0x21)  # VMAIN = increment after high byte
     asm.emit(0xA9, 0x00, 0x8D, 0x16, 0x21)  # VMADDL = 0
     asm.emit(0x8D, 0x17, 0x21)              # VMADDH = 0
@@ -201,15 +203,33 @@ def workload_gameplay_balanced() -> bytes:
     asm.emit(0xE0, 0x00, 0x01)              # CPX #$0100
     asm.branch(0xD0, "seed_loop")           # BNE seed_loop
 
-    # Camera/animation state and the first OAM entry start from deterministic
-    # values. The rest of the OAM shadow remains zero for this workload.
+    # Initialize the full 544-byte OAM shadow explicitly instead of depending on
+    # WRAM power-on contents. Then put every sprite below the visible 224-line
+    # field; sprite 0 is overridden below as the one deliberately visible OBJ.
+    asm.emit(0xA9, 0x00)                    # LDA #0
+    asm.emit(0xA2, 0x00, 0x00)              # LDX #0
+    asm.label("clear_oam")
+    asm.emit(0x9F, 0x00, 0x20, 0x7E)        # STA $7E2000,X
+    asm.emit(0xE8)                          # INX
+    asm.emit(0xE0, 0x20, 0x02)              # CPX #$0220
+    asm.branch(0xD0, "clear_oam")           # BNE clear_oam
+
+    asm.emit(0xA9, 0xF0)                    # Y=$F0: outside visible 224-line field
+    asm.emit(0xA2, 0x01, 0x00)              # first Y byte in low OAM table
+    asm.label("hide_oam")
+    asm.emit(0x9F, 0x00, 0x20, 0x7E)        # STA $7E2000,X
+    asm.emit(0xE8, 0xE8, 0xE8, 0xE8)        # next sprite's Y byte
+    asm.emit(0xE0, 0x00, 0x02)              # CPX #$0200
+    asm.branch(0x90, "hide_oam")             # BCC while still in low OAM table
+
+    # Camera/animation state and sprite 0 start from deterministic values.
     asm.emit(0xA9, 0x00)
     asm.emit(0x8F, 0x00, 0x00, 0x7E)        # camera low
     asm.emit(0x8F, 0x01, 0x00, 0x7E)        # camera high
-    asm.emit(0x8F, 0x00, 0x20, 0x7E)        # sprite X
-    asm.emit(0xA9, 0x70, 0x8F, 0x01, 0x20, 0x7E)  # sprite Y
-    asm.emit(0xA9, 0x00, 0x8F, 0x02, 0x20, 0x7E)  # sprite tile
-    asm.emit(0x8F, 0x03, 0x20, 0x7E)              # sprite attributes
+    asm.emit(0x8F, 0x00, 0x20, 0x7E)        # sprite 0 X
+    asm.emit(0xA9, 0x70, 0x8F, 0x01, 0x20, 0x7E)  # sprite 0 Y
+    asm.emit(0xA9, 0x00, 0x8F, 0x02, 0x20, 0x7E)  # sprite 0 tile
+    asm.emit(0x8F, 0x03, 0x20, 0x7E)              # sprite 0 attributes
 
     # Enable display and NMI. IRQs remain masked; frame cadence comes from NMI.
     asm.emit(0xA9, 0x0F, 0x8D, 0x00, 0x21)  # brightness 15
@@ -231,13 +251,13 @@ def workload_gameplay_balanced() -> bytes:
     asm.emit(0xE0, 0x40, 0x00)              # CPX #$0040
     asm.branch(0xD0, "entity_loop")         # BNE entity_loop
 
-    # Advance a 16-bit camera value and mirror its low byte into the first OAM
-    # shadow entry so the per-frame OAM DMA carries changing game state.
+    # Advance a 16-bit camera value and mirror its low byte into sprite 0 so the
+    # per-frame OAM DMA carries changing game state.
     asm.emit(0xAF, 0x00, 0x00, 0x7E)        # LDA camera low
     asm.emit(0x18)                           # CLC
     asm.emit(0x69, 0x01)                     # ADC #1
     asm.emit(0x8F, 0x00, 0x00, 0x7E)        # store camera low
-    asm.emit(0x8F, 0x00, 0x20, 0x7E)        # sprite X = camera low
+    asm.emit(0x8F, 0x00, 0x20, 0x7E)        # sprite 0 X = camera low
     asm.emit(0xAF, 0x01, 0x00, 0x7E)        # LDA camera high
     asm.emit(0x69, 0x00)                     # ADC #0 + carry
     asm.emit(0x8F, 0x01, 0x00, 0x7E)        # store camera high

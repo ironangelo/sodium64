@@ -1,0 +1,386 @@
+name: Open Homebrew Ares Profile
+
+on:
+  push:
+    branches:
+      - phase1/open-homebrew-workload
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: sodium64-open-homebrew-profile-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GOTHICVANIA_SOURCE_RUN: 35121473665
+  GOTHICVANIA_ARTIFACT_ID: 10458190844
+  GOTHICVANIA_ROM_SHA256: 634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff
+
+jobs:
+  profile-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Run host profiling tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
+      - name: Compile profiling build
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon init
+          libdragon make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+
+      - name: Upload profiling artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-open-homebrew-profile-build
+          retention-days: 14
+          path: |
+            sodium64.z64
+            rom-converter.py
+            build/sodium64.elf
+            build/*.map
+            profile-build.log
+
+  ares-gothicvania:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs:
+      - profile-build
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Download profiling build
+        uses: actions/download-artifact@v4
+        with:
+          name: sodium64-open-homebrew-profile-build
+          path: artifacts/profile
+
+      - name: Install ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            curl \
+            git \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Restore ares compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ares-n64-ccache-${{ runner.os }}-${{ runner.arch }}-17813a3ccda21ab9bd45f09bfc2f91196dbf50ff-rsp-interpreter-v1
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+
+          # LAB LIMITATION: isolation run 35113184294 demonstrated that the
+          # pinned ares RSP recompiler collapses Sodium64's VRAM semaphore path.
+          # Keep the R4300 JIT for sampling density and force only RSP interpreter.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
+          ccache --zero-stats
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ccache --show-stats
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Download exact validated Gothicvania source-build artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p workload/source workloads/ares
+          zip="$RUNNER_TEMP/gothicvania-source-build.zip"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$GOTHICVANIA_ARTIFACT_ID/zip" \
+            -o "$zip"
+          unzip -q "$zip" -d workload/source
+
+          test -s workload/source/gothicvania-benchmark.sfc
+          echo "$GOTHICVANIA_ROM_SHA256  workload/source/gothicvania-benchmark.sfc" | sha256sum --check
+          test -s workload/source/gothicvania-provenance.txt
+          test -s workload/source/gothicvania-benchmark.patch
+
+          cp artifacts/profile/sodium64.z64 workloads/ares/sodium64.z64
+          cp artifacts/profile/rom-converter.py workloads/ares/rom-converter.py
+
+          # The source artifact is a headerless .sfc. Rename only the extension to
+          # .smc so the legacy converter does not enter its interactive .sfc prompt;
+          # bytes remain exactly the validated ROM hash above.
+          cp workload/source/gothicvania-benchmark.sfc workloads/ares/profile-gothicvania.smc
+          (
+            cd workloads/ares
+            python3 rom-converter.py </dev/null
+          )
+          test -s workloads/ares/out/profile-gothicvania.z64
+
+          {
+            echo "validated source-build run: $GOTHICVANIA_SOURCE_RUN"
+            echo "validated source artifact: $GOTHICVANIA_ARTIFACT_ID"
+            echo "validated SNES ROM sha256: $GOTHICVANIA_ROM_SHA256"
+          } | tee workload/profile-input.txt
+
+      - name: Locate profiling and frame-budget runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf="artifacts/profile/build/sodium64.elf"
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          magic=$(symbol profile_magic)
+          end=$(symbol profile_sample_buffer_end)
+          buffer=$(symbol profile_sample_buffer)
+          write_ptr=$(symbol profile_write_ptr)
+          sample_count=$(symbol profile_sample_count)
+          last_epc=$(symbol profile_last_epc)
+          apu_clock=$(symbol apu_clock)
+          jit_lookup=$(symbol jit_lookup)
+          jit_pointer=$(symbol jit_pointer)
+          fps_native=$(symbol fps_native)
+          fps_emulate=$(symbol fps_emulate)
+          fps_display=$(symbol fps_display)
+          frame_count=$(symbol frame_count)
+          skipped_set=$(symbol skipped_set)
+          precision_set=$(symbol precision_set)
+          audio_set=$(symbol audio_set)
+
+          for value in \
+            "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
+            "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer" \
+            "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
+            "$skipped_set" "$precision_set" "$audio_set"; do
+            test -n "$value"
+          done
+
+          size=$((0x$end - 0x$magic))
+          jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
+          test "$size" -gt 16384
+          test "$jit_lookup_size" -eq 262144
+
+          buffer_hex=$(printf '%08x' "$((0x$buffer))")
+          rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
+          test -n "$rom_buffer"
+          jit_buffer=$((rom_buffer - 0x40000))
+          jit_buffer_hex=$(printf '%08x' "$jit_buffer")
+
+          {
+            echo "ARES_PROFILE_ADDR=$magic"
+            echo "ARES_PROFILE_SIZE=$size"
+            echo "ARES_PROFILE_BUFFER_HEX=$buffer_hex"
+            echo "ARES_PROFILE_WRITE_PTR_ADDR=$write_ptr"
+            echo "ARES_PROFILE_SAMPLE_COUNT_ADDR=$sample_count"
+            echo "ARES_PROFILE_LAST_EPC_ADDR=$last_epc"
+            echo "ARES_APU_CLOCK_ADDR=$apu_clock"
+            echo "ARES_JIT_LOOKUP_ADDR=$jit_lookup"
+            echo "ARES_JIT_LOOKUP_SIZE=$jit_lookup_size"
+            echo "ARES_JIT_POINTER_ADDR=$jit_pointer"
+            echo "ARES_JIT_BUFFER_HEX=$jit_buffer_hex"
+            echo "ARES_FPS_NATIVE_ADDR=$fps_native"
+            echo "ARES_FPS_EMULATE_ADDR=$fps_emulate"
+            echo "ARES_FPS_DISPLAY_ADDR=$fps_display"
+            echo "ARES_FRAME_COUNT_ADDR=$frame_count"
+            echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
+            echo "ARES_PRECISION_SET_ADDR=$precision_set"
+            echo "ARES_AUDIO_SET_ADDR=$audio_set"
+          } >> "$GITHUB_ENV"
+
+      - name: Profile Gothicvania with existing Sodium64 harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p profiles
+
+          label="recompiler-gothicvania"
+          rom="workloads/ares/out/profile-gothicvania.z64"
+          home="$RUNNER_TEMP/ares-home-$label"
+          settings="$RUNNER_TEMP/ares-settings-$label.bml"
+          emulator_log="profiles/$label-emulator.log"
+          gdb_log="profiles/$label-gdb.log"
+          snapshot="profiles/$label.bin"
+          report="profiles/$label.txt"
+          json="profiles/$label.json"
+          state="profiles/$label-state.json"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9140" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              "$rom" \
+              > "$emulator_log" 2>&1 &
+          ares_pid=$!
+
+          cleanup_run() {
+            kill "$ares_pid" 2>/dev/null || true
+            wait "$ares_pid" 2>/dev/null || true
+          }
+          trap cleanup_run EXIT
+
+          if ! python3 scripts/gdb_rsp_dump.py \
+            --port 9140 \
+            --connect-timeout 45 \
+            --response-timeout 60 \
+            --warmup-seconds 1 \
+            --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
+            --write "0x$ARES_APU_CLOCK_ADDR:15" \
+            --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
+            --write "0x$ARES_SKIPPED_SET_ADDR:00" \
+            --write "0x$ARES_AUDIO_SET_ADDR:04" \
+            --settle-seconds 1 \
+            --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
+            --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
+            --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+            --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
+            --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
+            --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
+            --run-seconds 3 \
+            --sample-count-address "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR" \
+            --min-samples 800 \
+            --max-run-seconds 60 \
+            --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
+            --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
+            --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
+            --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
+            --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
+            --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
+            --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
+            --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+            --observe "sp_status:0xA4040010:4" \
+            --observe "sp_dma_full:0xA4040014:4" \
+            --observe "sp_dma_busy:0xA4040018:4" \
+            --observe "sp_pc:0xA4080000:4" \
+            --state-output "$state" \
+            --address "0x$ARES_PROFILE_ADDR" \
+            --size "$ARES_PROFILE_SIZE" \
+            --output "$snapshot" \
+            > "$gdb_log" 2>&1; then
+            cat "$gdb_log"
+            tail -200 "$emulator_log" || true
+            exit 1
+          fi
+          cat "$gdb_log"
+          cleanup_run
+          trap - EXIT
+
+          python3 scripts/profile_report.py \
+            "$snapshot" \
+            artifacts/profile/build/sodium64.elf \
+            --nm nm \
+            --map artifacts/profile/build/sodium64.map \
+            --json-output "$json" | tee "$report"
+
+          samples=$(awk '/total samples:/ { print $3 }' "$report")
+          test -n "$samples"
+          test "$samples" -ge 800
+
+          python3 - <<'PY'
+          import json
+          state = json.load(open('profiles/recompiler-gothicvania-state.json'))
+          obs = state['observations']
+          assert int(obs['skipped_set']) == 0, obs
+          assert int(obs['apu_clock']) == 21, obs
+          assert int(obs['audio_set']) == 4, obs
+          assert int(obs['precision_set']) == 8, obs
+          PY
+
+      - name: Build Gothicvania profile and frame-budget reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/profile_matrix.py \
+            profiles/recompiler-gothicvania.json \
+            --output profiles/gothicvania-profile.md
+
+          python3 scripts/frame_budget_report.py \
+            profiles/recompiler-gothicvania-state.json \
+            --target-fps 60 \
+            --output profiles/gothicvania-frame-budget.md
+
+          {
+            echo '### Gothicvania open-game profile'
+            echo
+            echo '- Input ROM is the exact validated source-build artifact/hash recorded by this workflow.'
+            echo '- R4300 recompiler ON; RSP interpreter forced due the documented ares RSP-JIT LAB LIMITATION.'
+            echo '- Frameskip 0; APU clock 21; audio 4; precision 8.'
+            echo
+            cat profiles/gothicvania-profile.md
+            echo
+            echo '### Gothicvania virtual frame budget'
+            echo
+            cat profiles/gothicvania-frame-budget.md
+            echo
+            echo '> ares host wall-clock is laboratory throughput only, not real-N64 FPS.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Gothicvania profiling diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-open-homebrew-ares-profile
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            ares-version.txt
+            workload/
+            profiles/

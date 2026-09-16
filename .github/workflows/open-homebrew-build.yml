@@ -133,26 +133,39 @@ jobs:
           changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
           test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
 
-      - name: Prepare upstream generated intermediates
+      - name: Verify pinned frozen Gothicvania outputs
         shell: bash
         run: |
           set -euo pipefail
           game="$GOTHICVANIA_ROOT/gothicvania"
 
-          # Final upstream deliberately keeps committed conversion intermediates as
-          # source-of-truth. Refresh their mtimes so the removed high-level artwork
-          # conversion steps and host-specific audio conversion do not rerun.
-          # Missing ignored PVSnesLib products (.pic/.pal/.map) are still generated
-          # normally from these intermediates during the clean build.
-          find "$game/res" -type f -exec touch {} +
-          for generated in \
-            "$game/src/hero_anim.h" \
-            "$game/src/skeleton_anim.h" \
-            "$game/src/gato_anim.h" \
-            "$game/src/ghost_anim.h" \
-            "$game/src/sky_params.h"; do
-            test -f "$generated"
-            touch "$generated"
+          # Final upstream explicitly declares committed converted art/data as the
+          # source of truth. Git does not preserve historical mtimes, so do not try
+          # to reproduce that policy with touch ordering. The next make invocation
+          # marks these exact committed outputs as old-files instead.
+          for frozen in \
+            res/effectssfx.it \
+            res/title.it \
+            res/baroque.it \
+            res/level/.stamp \
+            res/level/deco_pt0.bin \
+            res/level/parallax_tiles.pic \
+            res/level/sky_coldata.bin \
+            res/moon.png \
+            res/hero.png \
+            res/hero_a.bin \
+            res/skeleton.png \
+            res/skel_a.bin \
+            res/gato.png \
+            res/gato.bin \
+            res/ghost.png \
+            res/ghost.bin \
+            src/hero_anim.h \
+            src/skeleton_anim.h \
+            src/gato_anim.h \
+            src/ghost_anim.h \
+            src/sky_params.h; do
+            test -f "$game/$frozen"
           done
 
           changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
@@ -162,21 +175,51 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          game="$GOTHICVANIA_ROOT/gothicvania"
 
-          # Upstream documents plain `make`. Its hand-written data.asm dependencies
-          # are not complete enough for a parallel build, so do not use -j here.
-          make -C "$GOTHICVANIA_ROOT/gothicvania"
+          # Upstream documents plain `make`; do not use -j because data.asm has
+          # hand-written dependencies. The pinned final source also documents its
+          # committed converted outputs as frozen source-of-truth. `-o` expresses
+          # that policy explicitly and deterministically instead of relying on Git
+          # checkout mtimes. Missing ignored PVSnesLib products still build normally.
+          make -C "$game" \
+            -o res/effectssfx.it \
+            -o res/title.it \
+            -o res/baroque.it \
+            -o res/level/.stamp \
+            -o res/level/deco_pt0.bin \
+            -o res/level/parallax_tiles.pic \
+            -o res/level/sky_coldata.bin \
+            -o res/moon.png \
+            -o res/hero.png \
+            -o res/hero_a.bin \
+            -o res/skeleton.png \
+            -o res/skel_a.bin \
+            -o res/gato.png \
+            -o res/gato.bin \
+            -o res/ghost.png \
+            -o res/ghost.bin \
+            -o src/hero_anim.h \
+            -o src/skeleton_anim.h \
+            -o src/gato_anim.h \
+            -o src/ghost_anim.h \
+            -o src/sky_params.h
 
-          rom="$GOTHICVANIA_ROOT/gothicvania/gothicvania.sfc"
+          rom="$game/gothicvania.sfc"
           test -s "$rom"
           size=$(stat -c '%s' "$rom")
           test "$size" -le $((512 * 1024))
 
-          # Building may create untracked products and consume the restored historical
-          # asset pack, but it must not rewrite tracked final upstream code/assets
-          # beyond the two deliberate benchmark-control changes.
+          # No tracked upstream file may change except the two deliberate benchmark
+          # controls. If that invariant fails, print the exact offender before exit.
           changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
-          test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
+          expected=$'gothicvania/src/main.c\ngothicvania/src/play.c'
+          if [ "$changed" != "$expected" ]; then
+            echo "Unexpected tracked changes after Gothicvania build:"
+            printf '%s\n' "$changed"
+            git -C "$GOTHICVANIA_ROOT" diff --stat
+            exit 1
+          fi
 
           sha256sum "$rom" | tee gothicvania-rom.sha256
           sha256sum gothicvania-benchmark.patch | tee gothicvania-patch.sha256

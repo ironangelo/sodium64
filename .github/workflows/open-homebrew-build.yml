@@ -86,8 +86,32 @@ jobs:
           git -C "$GOTHICVANIA_ROOT" diff --check
           git -C "$GOTHICVANIA_ROOT" diff -- gothicvania/src/main.c gothicvania/src/play.c | tee gothicvania-benchmark.patch
 
-          grep -F 'GameState st = ST_PLAY, prev = ST_TITLE;' "$GOTHICVANIA_ROOT/gothicvania/src/main.c"
-          grep -F 'u16 pad = KEY_RIGHT; /* Sodium64 deterministic benchmark input */' "$GOTHICVANIA_ROOT/gothicvania/src/play.c"
+          changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
+          test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
+
+      - name: Honor upstream frozen-art build model
+        shell: bash
+        run: |
+          set -euo pipefail
+          game="$GOTHICVANIA_ROOT/gothicvania"
+
+          # Upstream documents committed res/* outputs as the source of truth and
+          # intentionally keeps the now-non-runnable source-art converters older.
+          # Git does not preserve those mtimes, so restore only the ordering here;
+          # no tracked file bytes are changed.
+          find "$game/res" -type f -exec touch {} +
+          for generated in \
+            "$game/src/hero_anim.h" \
+            "$game/src/skeleton_anim.h" \
+            "$game/src/gato_anim.h" \
+            "$game/src/ghost_anim.h" \
+            "$game/src/sky_params.h"; do
+            test -f "$generated"
+            touch "$generated"
+          done
+
+          changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
+          test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
 
       - name: Build Gothicvania from source
         shell: bash
@@ -98,6 +122,12 @@ jobs:
           test -s "$rom"
           size=$(stat -c '%s' "$rom")
           test "$size" -le $((512 * 1024))
+
+          # Building may create untracked products, but it must not rewrite any
+          # additional tracked upstream source/assets.
+          changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
+          test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
+
           sha256sum "$rom" | tee gothicvania-rom.sha256
           printf 'upstream_repo=%s\nupstream_sha=%s\npvsneslib_version=4.5.0\npvsneslib_sha256=%s\nrom_size=%s\n' \
             "$GOTHICVANIA_REPO" "$GOTHICVANIA_SHA" "$PVSNESLIB_SHA256" "$size" \

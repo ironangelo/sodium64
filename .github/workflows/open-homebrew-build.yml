@@ -1,0 +1,116 @@
+name: Open Homebrew Workload Build
+
+on:
+  push:
+    branches:
+      - phase1/open-homebrew-workload
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-open-homebrew-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gothicvania-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    env:
+      GOTHICVANIA_REPO: https://github.com/donth77/snes-homebrew.git
+      GOTHICVANIA_SHA: 119496e6a2f1e53b7704712fef8cb81814f1698a
+      PVSNESLIB_URL: https://github.com/alekmaul/pvsneslib/releases/download/4.5.0/pvsneslib_450_64b_linux.zip
+      PVSNESLIB_SHA256: b69ff32ada19895b7ebfe02a1e3c08a44c80bd9c8132de05f5c356f86264ce32
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git make unzip
+
+      - name: Install pinned PVSnesLib 4.5.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk_zip="$RUNNER_TEMP/pvsneslib.zip"
+          sdk_root="$RUNNER_TEMP/pvsneslib"
+          curl --fail --location --retry 3 "$PVSNESLIB_URL" -o "$sdk_zip"
+          echo "$PVSNESLIB_SHA256  $sdk_zip" | sha256sum --check
+          mkdir -p "$sdk_root"
+          unzip -q "$sdk_zip" -d "$sdk_root"
+
+          rules=$(find "$sdk_root" -type f -path '*/devkitsnes/snes_rules' -print -quit)
+          test -n "$rules"
+          pvsneslib_home=$(dirname "$(dirname "$rules")")
+          test -f "$pvsneslib_home/devkitsnes/snes_rules"
+          echo "PVSNESLIB_HOME=$pvsneslib_home" >> "$GITHUB_ENV"
+          echo "PVSnesLib home: $pvsneslib_home"
+
+      - name: Checkout pinned Gothicvania source
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/snes-homebrew"
+          git clone --filter=blob:none "$GOTHICVANIA_REPO" "$root"
+          git -C "$root" checkout --detach "$GOTHICVANIA_SHA"
+          test "$(git -C "$root" rev-parse HEAD)" = "$GOTHICVANIA_SHA"
+          echo "GOTHICVANIA_ROOT=$root" >> "$GITHUB_ENV"
+
+      - name: Apply deterministic benchmark input patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ['GOTHICVANIA_ROOT']) / 'gothicvania' / 'src'
+          main = root / 'main.c'
+          play = root / 'play.c'
+
+          main_text = main.read_text()
+          old_main = 'GameState st = ST_TITLE, prev = ST_TITLE;'
+          new_main = 'GameState st = ST_PLAY, prev = ST_TITLE;'
+          assert main_text.count(old_main) == 1, 'unexpected Gothicvania initial-state source'
+          main.write_text(main_text.replace(old_main, new_main, 1))
+
+          play_text = play.read_text()
+          old_play = 'u16 pad = padsCurrent(0);'
+          new_play = 'u16 pad = KEY_RIGHT; /* Sodium64 deterministic benchmark input */'
+          assert play_text.count(old_play) == 1, 'unexpected Gothicvania gameplay input source'
+          play.write_text(play_text.replace(old_play, new_play, 1))
+          PY
+
+          git -C "$GOTHICVANIA_ROOT" diff --check
+          git -C "$GOTHICVANIA_ROOT" diff -- gothicvania/src/main.c gothicvania/src/play.c | tee gothicvania-benchmark.patch
+
+          grep -F 'GameState st = ST_PLAY, prev = ST_TITLE;' "$GOTHICVANIA_ROOT/gothicvania/src/main.c"
+          grep -F 'u16 pad = KEY_RIGHT; /* Sodium64 deterministic benchmark input */' "$GOTHICVANIA_ROOT/gothicvania/src/play.c"
+
+      - name: Build Gothicvania from source
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -C "$GOTHICVANIA_ROOT/gothicvania" -j"$(nproc)"
+          rom="$GOTHICVANIA_ROOT/gothicvania/gothicvania.sfc"
+          test -s "$rom"
+          size=$(stat -c '%s' "$rom")
+          test "$size" -le $((512 * 1024))
+          sha256sum "$rom" | tee gothicvania-rom.sha256
+          printf 'upstream_repo=%s\nupstream_sha=%s\npvsneslib_version=4.5.0\npvsneslib_sha256=%s\nrom_size=%s\n' \
+            "$GOTHICVANIA_REPO" "$GOTHICVANIA_SHA" "$PVSNESLIB_SHA256" "$size" \
+            | tee gothicvania-provenance.txt
+          cp "$rom" gothicvania-benchmark.sfc
+
+      - name: Upload deterministic Gothicvania workload
+        uses: actions/upload-artifact@v4
+        with:
+          name: gothicvania-benchmark-source-build
+          retention-days: 14
+          path: |
+            gothicvania-benchmark.sfc
+            gothicvania-benchmark.patch
+            gothicvania-rom.sha256
+            gothicvania-provenance.txt

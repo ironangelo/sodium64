@@ -142,14 +142,14 @@ jobs:
           # Final upstream explicitly declares committed converted art/data as the
           # source of truth. Git does not preserve historical mtimes, so do not try
           # to reproduce that policy with touch ordering. The next make invocation
-          # marks these exact committed outputs as old-files instead.
+          # marks these exact committed outputs as old-files instead. Directly
+          # generated ignored products such as parallax_tiles.pic remain rebuildable.
           for frozen in \
             res/effectssfx.it \
             res/title.it \
             res/baroque.it \
             res/level/.stamp \
             res/level/deco_pt0.bin \
-            res/level/parallax_tiles.pic \
             res/level/sky_coldata.bin \
             res/moon.png \
             res/hero.png \
@@ -188,7 +188,6 @@ jobs:
             -o res/baroque.it \
             -o res/level/.stamp \
             -o res/level/deco_pt0.bin \
-            -o res/level/parallax_tiles.pic \
             -o res/level/sky_coldata.bin \
             -o res/moon.png \
             -o res/hero.png \

@@ -2,9 +2,10 @@
 """Run a remote target briefly through GDB RSP and capture a memory region.
 
 This intentionally implements only the small subset needed by Sodium64 CI:
-connect to a GDB server, continue execution, interrupt it, read memory in
-bounded chunks, and detach. Keeping the client here avoids depending on a
-particular host GDB build or interactive command timing.
+connect to a GDB server, optionally patch a few known bytes before execution,
+continue, interrupt, read memory in bounded chunks, and detach. Keeping the
+client here avoids depending on a particular host GDB build or interactive
+command timing.
 """
 
 from __future__ import annotations
@@ -131,6 +132,16 @@ class RSPClient:
             offset += length
         return bytes(result)
 
+    def write_memory(self, address: int, data: bytes) -> None:
+        if not data:
+            raise ValueError("cannot write an empty memory payload")
+        reply = self.request(f"M{address:x},{len(data):x}:{data.hex()}")
+        if reply != b"OK":
+            raise RuntimeError(
+                f"target rejected memory write at 0x{address:08X}: "
+                f"{reply.decode('ascii', errors='replace')}"
+            )
+
 
 def connect_with_retry(host: str, port: int, deadline: float) -> RSPClient:
     end = time.monotonic() + deadline
@@ -150,6 +161,21 @@ def parse_int(text: str) -> int:
     return int(text, 0)
 
 
+def parse_write(text: str) -> tuple[int, bytes]:
+    """Parse ADDRESS:HEXBYTES, e.g. 0x80001234:15."""
+    try:
+        address_text, data_text = text.split(":", 1)
+        address = int(address_text, 0)
+        data = bytes.fromhex(data_text)
+    except (ValueError, TypeError) as exc:
+        raise argparse.ArgumentTypeError(
+            "memory writes must use ADDRESS:HEXBYTES, e.g. 0x80001234:15"
+        ) from exc
+    if not data:
+        raise argparse.ArgumentTypeError("memory write payload cannot be empty")
+    return address, data
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1")
@@ -159,6 +185,14 @@ def main() -> int:
     parser.add_argument("--address", required=True, type=parse_int)
     parser.add_argument("--size", required=True, type=parse_int)
     parser.add_argument("--chunk-size", type=parse_int, default=0x400)
+    parser.add_argument(
+        "--write",
+        action="append",
+        type=parse_write,
+        default=[],
+        metavar="ADDRESS:HEXBYTES",
+        help="patch target memory before execution (repeatable)",
+    )
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
 
@@ -179,6 +213,19 @@ def main() -> int:
         print(f"Guest exception pass-through: {pass_reply.decode('ascii', errors='replace')}")
         if pass_reply != b"OK":
             raise RuntimeError(f"target rejected QPassSignals: {pass_reply!r}")
+
+        for write_address, write_data in args.write:
+            client.write_memory(write_address, write_data)
+            verify = client.read_memory(write_address, len(write_data), len(write_data))
+            if verify != write_data:
+                raise RuntimeError(
+                    f"memory write verification failed at 0x{write_address:08X}: "
+                    f"wrote {write_data.hex()}, read {verify.hex()}"
+                )
+            print(
+                f"Patched {len(write_data)} byte(s) at 0x{write_address:08X}: "
+                f"{write_data.hex()}"
+            )
 
         stopped = client.continue_then_interrupt(args.run_seconds)
         print(f"Stopped target state: {stopped.decode('ascii', errors='replace')}")

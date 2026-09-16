@@ -139,27 +139,22 @@ jobs:
           set -euo pipefail
           game="$GOTHICVANIA_ROOT/gothicvania"
 
-          # Final upstream explicitly declares committed converted art/data as the
-          # source of truth. Git does not preserve historical mtimes, so do not try
-          # to reproduce that policy with touch ordering. The next make invocation
-          # marks these exact committed outputs as old-files instead. Directly
-          # generated ignored products such as parallax_tiles.pic remain rebuildable.
+          # Final upstream explicitly declares these committed conversion outputs as
+          # source-of-truth. Git does not preserve historical mtimes, so the build
+          # marks only those high-level outputs as old-files. Derived leaf products
+          # (.pic/.pal/split .bin/stream outputs) remain rebuildable so their recipes
+          # can create every required companion file.
           for frozen in \
             res/effectssfx.it \
             res/title.it \
             res/baroque.it \
             res/level/.stamp \
-            res/level/deco_pt0.bin \
             res/level/sky_coldata.bin \
             res/moon.png \
             res/hero.png \
-            res/hero_a.bin \
             res/skeleton.png \
-            res/skel_a.bin \
             res/gato.png \
-            res/gato.bin \
             res/ghost.png \
-            res/ghost.bin \
             src/hero_anim.h \
             src/skeleton_anim.h \
             src/gato_anim.h \
@@ -178,26 +173,20 @@ jobs:
           game="$GOTHICVANIA_ROOT/gothicvania"
 
           # Upstream documents plain `make`; do not use -j because data.asm has
-          # hand-written dependencies. The pinned final source also documents its
-          # committed converted outputs as frozen source-of-truth. `-o` expresses
-          # that policy explicitly and deterministically instead of relying on Git
-          # checkout mtimes. Missing ignored PVSnesLib products still build normally.
+          # hand-written dependencies. `-o` expresses upstream's frozen-source
+          # policy explicitly instead of relying on checkout mtimes. Low-level
+          # generated products still rebuild exactly as they did in validated runs.
           make -C "$game" \
             -o res/effectssfx.it \
             -o res/title.it \
             -o res/baroque.it \
             -o res/level/.stamp \
-            -o res/level/deco_pt0.bin \
             -o res/level/sky_coldata.bin \
             -o res/moon.png \
             -o res/hero.png \
-            -o res/hero_a.bin \
             -o res/skeleton.png \
-            -o res/skel_a.bin \
             -o res/gato.png \
-            -o res/gato.bin \
             -o res/ghost.png \
-            -o res/ghost.bin \
             -o src/hero_anim.h \
             -o src/skeleton_anim.h \
             -o src/gato_anim.h \

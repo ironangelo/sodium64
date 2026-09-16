@@ -51,7 +51,7 @@ Replacement run `35114866448`, artifact `10454678803`, frameskip 0 / APU 21 / au
 **DECIDED / MEASUREMENT PROOF:** `donth77/snes-homebrew` -> `gothicvania`.
 
 Final game code pin: **`119496e6a2f1e53b7704712fef8cb81814f1698a`**.
-Historical source-pack pin: **`913ea78a3b35d3dfb62d7b76a33598b02107a2e7`** (last feature-complete state before source-art removal).
+Historical source-pack pin: **`913ea78a3b35d3dfb62d7b76a33598b02107a2e7`**.
 Repo license: **MIT**; source art is upstream-credited CC0.
 Toolchain: **PVSnesLib 4.5.0** Linux archive, SHA-256 **`b69ff32ada19895b7ebfe02a1e3c08a44c80bd9c8132de05f5c356f86264ce32`**.
 
@@ -72,60 +72,68 @@ PVSnesLib checksum, final Gothicvania checkout and both benchmark patches passed
 ### Attempt 2 — `c7d60a98...`, run `35119454457` — FAILURE
 Refreshing committed generated-output mtimes correctly prevented hero/enemy frozen converters from running. Two deeper causes were exposed:
 
-1. **BUILD SYSTEM:** CI incorrectly used `make -j`. Gothicvania's Makefile does not express all `data.asm` dependencies; assembly raced `parallax_tiles.pic`. Upstream documents plain `make`. **REJECTED:** parallel build as valid reproducibility test.
-2. **SOURCE PACK:** ignored `.pic/.pal/.map` products still need `adapt_parallax.py` / `adapt_title.py`; final commit no longer contains `assets/gothicvania-cemetery-files/`.
+1. **BUILD SYSTEM:** `make -j` raced incomplete hand-written dependencies. **REJECTED:** parallel build as a valid Gothicvania reproducibility test; upstream documents plain `make`.
+2. **SOURCE PACK:** final commit intentionally removed `assets/gothicvania-cemetery-files/`, while ignored `.pic/.pal/.map` products still need it on a clean build.
 
-**SOURCE FACT:** upstream `968b61874c5c39e43679b4f3977de73f279cb192` intentionally removed the CC0 source-art pack after feature completion and explicitly says it is **recoverable from Git history if needed**.
+Upstream `968b61874c5c39e43679b4f3977de73f279cb192` explicitly says the CC0 source pack was removed after feature completion and is **recoverable from Git history if needed**. `913ea78...` is the last feature-complete state before removal. Later `ec9a3d3...` states converter consolidation left the ROM byte-identical.
 
-**SOURCE FACT:** `913ea78a3b35d3dfb62d7b76a33598b02107a2e7` is the last feature-complete state before pack removal. Later `ec9a3d30e3643ec6f33581377f0542ed5fdd1a0e` says converter consolidation kept the ROM byte-identical.
+Audio converter has a host-specific ffmpeg path; tracked `.it` intermediates are retained/freshened instead of modifying audio tooling. `adapt_title.py` likewise expects a host-local Kenney Pixel font; CI recreates that expected input path using a pinned CC0 Kenney font, without editing upstream converter source.
 
-**SUPPORTED INTERPRETATION:** retain final game code `119496e6...`; restore only the historical CC0 source pack from `913ea78...` as temporary/untracked build input. Do not roll gameplay back.
-
-Audio caveat: `adapt_sfx.py` hardcodes the author's macOS ffmpeg path. Tracked `res/effectssfx.it`, `res/title.it`, and `res/baroque.it` are valid committed intermediates; keep them newer than converter scripts so host-specific audio conversion does not rerun.
-
-Title caveat discovered before attempt 3: `adapt_title.py` hardcodes the author's local `Kenney Pixel.ttf` path. Do not patch or replace title assets with placeholders because that would alter ROM layout. Recreate the expected host path using a pinned Kenney Pixel font instead.
-
-Kenney font provenance for attempt 3:
-- official Kenney Fonts pack is CC0;
-- mirror repo: `ereborstudios/kenney-fonts`;
-- pinned commit: **`9d94d3b50c68036a740115c577598fa1a02723f0`**;
-- `Kenney Pixel.ttf` Git blob: **`e6978d7d6f6a91ca8cdd5515e338110d9977fe69`**;
-- mirror `License.txt` identifies the package as Kenney and CC0.
-
-## RESUME HERE — THIRD SOURCE-BUILD EXPERIMENT
+## MEASUREMENT PROOF — reproducible Gothicvania benchmark
 Active branch: **`phase1/open-homebrew-workload`**.
-Current HEAD: **`0e5c53846e67c192b75d58f236126a458e8d53b9`**.
+Validated source-build HEAD: **`0e5c53846e67c192b75d58f236126a458e8d53b9`**.
 
-Workflow `.github/workflows/open-homebrew-build.yml` now:
-- pins final game code `119496e6...`;
-- restores only `gothicvania/assets/gothicvania-cemetery-files/` from historical `913ea78...` into worktree without altering final index;
-- installs Ubuntu `python3-numpy` + `python3-pil` for legitimate art generators;
-- pins Kenney font repo/commit/blob and recreates the exact absolute font path expected by `adapt_title.py` without modifying upstream source;
-- applies only the two C benchmark-control changes;
-- refreshes tracked generated intermediates so removed high-level art conversion and host-specific audio conversion do not rerun;
-- uses upstream-documented **sequential `make`**, no `-j`;
-- requires tracked diff to remain exactly `gothicvania/src/main.c` + `gothicvania/src/play.c` before/after build;
-- records ROM SHA256, patch SHA256, final source SHA, historical source-pack SHA, SDK checksum, Kenney font commit/blob and ROM size.
+Open Homebrew Workload Build run **`35121473665` — SUCCESS**.
+Artifact: **`gothicvania-benchmark-source-build`**, ID **`10458190844`**.
 
-Live CI for this exact HEAD:
-- **Open Homebrew Workload Build run `35121473665` — IN PROGRESS at checkpoint.**
-- **Build and Validate run `35121473585` — IN PROGRESS at checkpoint.**
+Artifact verified after download:
+- `gothicvania-benchmark.sfc`: **524,288 bytes** (exactly 512 KiB; allowed upper bound);
+- ROM SHA-256: **`634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff`**;
+- benchmark patch SHA-256: **`c2317550ee3a1654095b462e20553432918e7d6ee85caf30efaf11ba81e3842a`**;
+- artifact hashes exactly match their recorded `.sha256` files;
+- provenance records final game SHA, historical source-pack SHA, PVSnesLib version/checksum, Kenney font repo/commit/blob and ROM size.
 
-Question: can final Gothicvania be rebuilt reproducibly on a clean Linux runner when the exact historical build inputs documented by upstream are restored, while gameplay/runtime code differs only by the two benchmark controls?
+Exact patch inspection confirms only two runtime-source edits:
+- `gothicvania/src/main.c`: `ST_TITLE -> ST_PLAY` initial state;
+- `gothicvania/src/play.c`: `padsCurrent(0) -> KEY_RIGHT` deterministic input.
 
-Decision:
-- green -> inspect artifact/provenance and ROM hash, checkpoint reproducibility, then integrate this exact built ROM with the existing ares profiler/frame-budget harness;
-- red -> inspect only the next concrete build failure; no ares yet.
+No other tracked upstream source/assets were modified by the build. Historical source-art is temporary/untracked build input only.
+
+**VALIDATED:** final Gothicvania workload can be reproduced from explicit pinned provenance on a clean Ubuntu runner while game/runtime logic differs only by the two declared benchmark controls.
+
+**NOT YET PROVEN:** Sodium64 can boot/run this ROM; its ares profile/frame budget; real-N64 performance; exact visual/audio correctness under Sodium64.
+
+Normal Sodium64 `Build and Validate` for the same HEAD: run **`35121473585`**. Normal build + PROFILE build are SUCCESS; Mupen emulator-smoke was still in progress at this checkpoint. This run is not the Gothicvania decision result but must remain green before PR merge.
+
+## RESUME HERE — PROFILE THE OPEN GAME, NO NEW PROFILER
+Source reproducibility gate is closed. The next technical batch may now connect **this exact Gothicvania build** to the existing ares profiling/frame-budget lab.
+
+Before editing, reread `master:docs/ROADMAP.md`, `PROFILING.md`, and `VALIDATION.md`, then inspect current `.github/workflows/ares-profile.yml` and existing workload-generation/injection scripts.
+
+Requirements for the next batch:
+- reuse the exact existing statistical PC sampler and frame-budget capture; **no new profiling machinery**;
+- valid ares mode remains **R4300 JIT + RSP interpreter**;
+- frameskip `0`, full-rate APU `21` with JIT invalidation, audio enabled, precision `8`;
+- build Gothicvania from the same pinned provenance or consume a same-workflow build step whose ROM hash is checked against expected provenance;
+- measure a short deterministic PLAY window long enough to reach early scroll + first skeleton/enemy sprite streaming + SNESMod activity, but before distant spike hazards dominate;
+- retain minimum sample-density discipline;
+- report profile buckets + complete 60-VI frame-budget windows;
+- do not interpret ares wall-clock as real-N64 FPS.
+
+Question: **under this real open game workload, which major R4300 costs dominate, and does the virtual frame budget still show headroom or expose a base-system pressure point?**
+
+After the result: checkpoint evidence first, then decide whether M0 now needs a focused real-N64 milestone package before selecting any M1 architecture. Do not start 65C816 dynarec merely from prior synthetic results.
 
 ## Hardware status
-**No real-N64 request yet.** Gothicvania remains the final cheap representativeness step before deciding whether next authority should be focused M0 hardware validation.
+**No real-N64 request yet.** Gothicvania profiling is the final cheap representativeness step currently preferred before deciding whether next authority should be a focused M0 hardware session.
 
 ## Guardrails
 No game-specific emulator modes. No frameskip/APU underclock/audio omission counted as performance. No endless profiler/tooling expansion. No diagnostic code merged merely because it produced knowledge. `master` remains best integrated state. Important rejected explanations survive here.
 
 ## Resume protocol
 1. Read this file.
-2. Verify master at/after `ee86d339...`.
-3. Inspect branch HEAD `0e5c5384...`, run `35121473665`, and normal run `35121473585`.
-4. Resolve source-build reproducibility before adding ares profiling.
-5. Maintain batch -> checkpoint cadence.
+2. Verify master at/after `ee86d339...` and branch HEAD `0e5c5384...`.
+3. Check final state of normal run `35121473585`.
+4. Reread Roadmap/Profiling/Validation and inspect current ares workflow before integrating Gothicvania.
+5. Use existing profiler/frame-budget machinery; no new instrumentation unless a specific blocker appears.
+6. Maintain batch -> checkpoint cadence.

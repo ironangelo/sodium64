@@ -76,10 +76,27 @@ class RSPClient:
 
     def continue_then_interrupt(self, seconds: float) -> bytes:
         self._send_packet_bytes(b"c")
-        time.sleep(seconds)
-        # Raw 0x03 is the GDB remote asynchronous interrupt character.
-        self.sock.sendall(b"\x03")
-        return self._read_packet()
+
+        # A target may stop on its own before the requested sampling window
+        # expires (for example because ares reports an emulated CPU signal).
+        # Listen for that stop while the window is open. Sending Ctrl-C after
+        # an already-pending stop would queue a second stop packet and shift
+        # every following request/reply pair out of sync.
+        previous_timeout = self.sock.gettimeout()
+        try:
+            self.sock.settimeout(seconds)
+            try:
+                return self._read_packet()
+            except socket.timeout:
+                pass
+
+            # No spontaneous stop arrived in the sampling window. Halt the
+            # target explicitly and wait using the normal socket timeout.
+            self.sock.settimeout(previous_timeout)
+            self.sock.sendall(b"\x03")
+            return self._read_packet()
+        finally:
+            self.sock.settimeout(previous_timeout)
 
     def read_memory(self, address: int, size: int, chunk_size: int) -> bytes:
         result = bytearray()

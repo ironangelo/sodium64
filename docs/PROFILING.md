@@ -18,7 +18,9 @@ make PROFILE=1
 
 `PROFILE=1` defines `SODIUM64_PROFILE` only for the R4300 assembly build. The normal release build does not enable CP0 timer sampling or include active profiler state in runtime behavior.
 
-CI compiles both configurations on development-branch pushes. Profiling artifacts are uploaded separately as `sodium64-profile-build` and are never used for the rolling release; only the normal `master` build feeds the rolling release.
+The main CI workflow compiles both configurations on development-branch pushes. Profiling artifacts are uploaded separately as `sodium64-profile-build` and are never used for the rolling release; only the normal `master` build feeds the rolling release.
+
+A separate **Ares Profile Validation** workflow runs for pull requests targeting `master`, pushes to `master`, and manual dispatches. It builds its own `PROFILE=1` artifact so the existing build/release workflow remains independent.
 
 ## Sampling method
 
@@ -87,10 +89,40 @@ The profiler is a decision tool, not a cycle-accurate oracle.
 
 ## Host-side report tool
 
-`scripts/profile_report.py` consumes a raw big-endian dump beginning at `profile_magic` plus the exact matching profiling ELF. It reconstructs the ring buffer using the profiler symbols, handles wraparound, recognizes the generated APU JIT range, and reports the hottest sampled symbols/regions.
+`scripts/profile_report.py` consumes a raw dump beginning at `profile_magic` plus the exact matching profiling ELF. It reconstructs the ring buffer using the profiler symbols, handles wraparound, recognizes the generated APU JIT range, and reports the hottest sampled symbols/regions.
 
-The extraction mechanism that produces that raw dump is intentionally separate. Emulator automation can provide it first; a hardware extraction path can be added later without changing the on-console profiler format.
+The decoder accepts canonical big-endian N64 memory and the 32-bit word-swapped representation exposed by some debuggers. Extraction remains separate from the on-console profiler format, so emulator and future hardware paths can share the same report tooling.
 
-## Next tooling step
+## Automated extraction paths
 
-The next layer is automated extraction of the profiler memory region from an N64 emulator run. That tooling should consume the profiling build's ELF/map rather than hard-coding static text addresses. Real-hardware extraction can be added later when it becomes useful for a milestone gate.
+### Mupen64Plus smoke
+
+The main validation workflow builds a pinned Mupen64Plus debugger with an LLE RSP plugin, runs both normal and profiling Sodium64 builds, dumps the profiler memory region resolved from the matching ELF, and decodes it host-side.
+
+This is useful as an independent boot/runtime check, but its timing distribution is not treated as an N64 performance oracle. The current tiny synthetic workload has exposed emulator-specific behavior, including repeated SI/PIF DMA warnings and a profile dominated by `rsp_wait`.
+
+### ares smoke
+
+The separate Ares Profile Validation workflow builds a pinned N64-only ares revision and launches the profiling Sodium64 ROM under its GDB remote server. `scripts/gdb_rsp_dump.py` performs the minimal RSP sequence needed by CI:
+
+1. send the initial acknowledgement required by ares' TCPText GDB guard;
+2. negotiate `qSupported` and query the initial stop state;
+3. use `QPassSignals` so normal emulated N64 CPU exceptions, including Sodium64's intentional TLB handling, continue to the guest instead of stopping the debugger;
+4. continue execution for the sampling window;
+5. halt explicitly with Ctrl-C if the target has not already stopped;
+6. read the ELF-resolved profiler region in bounded chunks;
+7. detach and decode the snapshot with the matching profiling ELF.
+
+The ares gate fails if capture is incomplete or `profile_sample_count` is zero. Its first successful three-second validation run produced eight samples distributed across `cpu_execute`, `apu_read8`, and `cpu_bra`, demonstrating that the end-to-end sampling/capture path works. Eight samples are deliberately **not** considered sufficient evidence for a bottleneck ranking.
+
+## Synthetic smoke limitations
+
+`scripts/make_smoke_snes.py` generates an original 32 KiB LoROM whose 65C816 payload enters a tight branch loop after deterministic reset setup. It exercises Sodium64 startup and its surrounding CPU/APU/PPU/RSP machinery without distributing commercial ROM data.
+
+That workload is ideal for validating the profiler pipeline, but it is not representative gameplay. In particular, a short ares run and the Mupen64Plus run of the same smoke have produced very different sample distributions. The disagreement is useful evidence that emulator-smoke results must not be promoted directly into architecture decisions.
+
+## Next Phase 1 measurement step
+
+With automatic extraction working, the next step is a reproducible workload suite and bottleneck map rather than more profiler instrumentation. Useful original workloads should isolate CPU execution, memory access, PPU/Mode 7, DMA/HDMA, and APU behavior. Longer representative runs should then aggregate symbols into the major Phase 1 cost buckets and compare settings such as frame skipping disabled and full-rate APU execution.
+
+Commercial-game and real-hardware measurements remain milestone gates. Phase 1 is complete only when the major costs and remaining native-frame headroom can be quantified well enough to justify or reject the proposed 65C816 dynarec path.

@@ -102,7 +102,7 @@ jobs:
           sudo chmod 0644 "$target"
           test -s "$target"
 
-      - name: Apply deterministic benchmark input patch
+      - name: Apply deterministic benchmark patch
         shell: bash
         run: |
           set -euo pipefail
@@ -124,7 +124,16 @@ jobs:
           old_play = 'u16 pad = padsCurrent(0);'
           new_play = 'u16 pad = KEY_RIGHT; /* Sodium64 deterministic benchmark input */'
           assert play_text.count(old_play) == 1, 'unexpected Gothicvania gameplay input source'
-          play.write_text(play_text.replace(old_play, new_play, 1))
+          play_text = play_text.replace(old_play, new_play, 1)
+
+          # The first real-N64 capture proved the transport/profile path but the hero
+          # died during the five measured windows. Preserve enemy/spike collision,
+          # hurt knockback and SFX while making death unreachable in this short M0 run.
+          old_health = 'u8  health = PLAYER_HP;'
+          new_health = 'u8  health = 255; /* Sodium64 benchmark: survive full M0 measurement */'
+          assert play_text.count(old_health) == 1, 'unexpected Gothicvania health source'
+          play_text = play_text.replace(old_health, new_health, 1)
+          play.write_text(play_text)
           PY
 
           git -C "$GOTHICVANIA_ROOT" diff --check
@@ -198,8 +207,8 @@ jobs:
           size=$(stat -c '%s' "$rom")
           test "$size" -le $((512 * 1024))
 
-          # No tracked upstream file may change except the two deliberate benchmark
-          # controls. If that invariant fails, print the exact offender before exit.
+          # No tracked upstream file may change except the deliberate benchmark
+          # controls in main.c/play.c. If that invariant fails, print the offender.
           changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
           expected=$'gothicvania/src/main.c\ngothicvania/src/play.c'
           if [ "$changed" != "$expected" ]; then

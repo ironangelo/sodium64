@@ -57,6 +57,20 @@ class ProfileWorkloadTests(unittest.TestCase):
         # NMI handler returns with RTI.
         self.assertEqual(program[-1], 0x40)
 
+    def test_gameplay_balanced_enables_bg1_and_obj(self) -> None:
+        program = workloads.workload_gameplay_balanced()
+        # LDA #$11; STA $212C (TM): BG1 and OBJ are the only main-screen layers.
+        self.assertIn(bytes([0xA9, 0x11, 0x8D, 0x2C, 0x21]), program)
+
+    def test_gameplay_balanced_initializes_and_hides_unused_oam(self) -> None:
+        program = workloads.workload_gameplay_balanced()
+        # The startup code clears the full 544-byte OAM shadow.
+        self.assertIn(bytes([0xE0, 0x20, 0x02]), program)  # CPX #$0220
+        # It then writes Y=$F0 to each low-table sprite entry before overriding
+        # sprite 0 with its one visible Y coordinate.
+        self.assertIn(bytes([0xA9, 0xF0, 0xA2, 0x01, 0x00]), program)
+        self.assertIn(bytes([0xA9, 0x70, 0x8F, 0x01, 0x20, 0x7E]), program)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

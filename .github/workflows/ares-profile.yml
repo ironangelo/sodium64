@@ -131,7 +131,7 @@ jobs:
             cd workloads/ares
             python3 rom-converter.py </dev/null
           )
-          for workload in idle cpu-alu wram ppu-registers dma-vram; do
+          for workload in idle cpu-alu wram ppu-registers dma-vram gameplay-balanced; do
             test -f "workloads/ares/out/profile-$workload.z64"
           done
 
@@ -333,7 +333,7 @@ jobs:
           # CP0 Count at the current 65,521-tick interval, ensuring the virtual
           # frame-budget observation includes at least one complete 60-VI window.
           port=9130
-          for workload in idle cpu-alu wram ppu-registers dma-vram; do
+          for workload in idle cpu-alu wram ppu-registers dma-vram gameplay-balanced; do
             run_profile \
               "recompiler-$workload" \
               "workloads/ares/out/profile-$workload.z64" \
@@ -351,6 +351,7 @@ jobs:
             profiles/recompiler-wram.json \
             profiles/recompiler-ppu-registers.json \
             profiles/recompiler-dma-vram.json \
+            profiles/recompiler-gameplay-balanced.json \
             --output profiles/workload-matrix.md
 
           python3 scripts/frame_budget_report.py \
@@ -359,6 +360,7 @@ jobs:
             profiles/recompiler-wram-state.json \
             profiles/recompiler-ppu-registers-state.json \
             profiles/recompiler-dma-vram-state.json \
+            profiles/recompiler-gameplay-balanced-state.json \
             --target-fps 60 \
             --output profiles/frame-budget.md
 

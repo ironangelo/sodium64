@@ -19,6 +19,7 @@
 
 #include "macros.h"
 
+.globl apu_nop
 .globl apu_bpl
 .globl apu_bmi
 .globl apu_bvc
@@ -48,6 +49,16 @@
 
 .text
 .set noreorder
+
+.align 5
+apu_nop: // NOP
+    // Layer-1 timing proof: charge the one missing guest cycle.
+    // The hardware's dummy read(PC) bus semantics are a separate Layer-2 task.
+    li t0, 1
+    jal jit_debit_cycles
+    nop
+    j finish_opcode
+    nop
 
 .align 5
 apu_bpl: // BPL dest
@@ -379,6 +390,11 @@ apu_bra: // BRA dest
     sll t2, v0, 24
     sra t2, t2, 24
     add t2, t2, a0
+
+    // BRA is always taken: two internal guest cycles beyond opcode+operand.
+    li t0, 2
+    jal jit_debit_cycles
+    nop
 
     // Emit code to branch unconditionally
     li t0, ORI(S0, ZERO, 0)

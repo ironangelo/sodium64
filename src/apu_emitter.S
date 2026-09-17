@@ -172,6 +172,31 @@ finish_opcode:
     nop
 
 finish_block:
+#ifdef SODIUM64_PROFILE
+    // Temporary M1 diagnostic: capture the compiler's original block accounting
+    // only for the explicitly selected SPC700 PC. This observes s2/a0 before
+    // any block-finalization work and does not change guest semantics.
+    la t0, apu_cycle_diag_target
+    lhu t1, 0(t0)
+    bne s0, t1, 1f
+    nop
+
+    sh s0, apu_cycle_diag_last_start
+    sh a0, apu_cycle_diag_last_end
+    sub t1, zero, s2
+    sw t1, apu_cycle_diag_static_cycles
+    sub t1, a0, s0
+    andi t1, t1, 0xFFFF
+    sw t1, apu_cycle_diag_span
+    srl t1, s0, 6
+    srl t2, a0, 6
+    sub t2, t2, t1
+    sw t2, apu_cycle_diag_region_delta
+    lw t1, apu_cycle_diag_sequence
+    addi t1, t1, 1
+    sw t1, apu_cycle_diag_sequence
+1:
+#endif
     // Update NZ flags at the end of a block
     jal update_nz
     nop

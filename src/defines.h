@@ -8,10 +8,10 @@
     by the Free Software Foundation, either version 3 of the License,
     or (at your option) any later version.
 
-    sodium64 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+    sodium64 is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    General Public License for more details.
 
     You should have received a copy of the GNU General Public License
     along with sodium64. If not, see <https://www.gnu.org/licenses/>.
@@ -189,11 +189,11 @@
 #define RDP_WINDOW (RDP_FILL + 0x38)
 #define RDP_TILE (RDP_WINDOW + 0x10)
 #define RDP_TILE7 (RDP_TILE + 0x28)
-#define TILE_PARAMS (RDP_TILE7 + 0x78)
-#define LAYER_CHART (TILE_PARAMS + 0x20)
-#define OBJ_SIZES (LAYER_CHART + 0x90)
-#define FILL_JUMPS (OBJ_SIZES + 0x20)
-#define TILE_JUMPS (FILL_JUMPS + 0x10)
+#define TILE_PARAMS (RDP_TILE7 + 0x20)
+#define LAYER_CHART (TILE_PARAMS + 0x90)
+#define OBJ_SIZES (LAYER_CHART + 0x20)
+#define FILL_JUMPS (OBJ_SIZES + 0x10)
+#define TILE_JUMPS (FILL_JUMPS + 0xC)
 #define SHARED_JUMPS (TILE_JUMPS + 0xC)
 #define CACHE_RETS (SHARED_JUMPS + 0xC)
 #define CACHE_PTRS (CACHE_RETS + 0x8)

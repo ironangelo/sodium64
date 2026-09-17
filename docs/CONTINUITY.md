@@ -781,3 +781,58 @@ Readings:
 - smoke/proof regression => reject candidate.
 
 Do not interpret performance from this run. E1 matched-window measurement repair remains required for later throughput comparison.
+
+
+## SPC700 missing-cycle mechanism — VALIDATED for audited fixed-cycle cases 2026-09-17
+
+Exact diagnostic SHA: **`842a14127669ce176c808ddcd718d0987d351223`**.
+
+**Build and Validate `35288358663` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+
+Dynamic authority: **APU Cycle And Span Proof `35288358655` SUCCESS**, cycle-proof job **`105425907529`**.
+- proof result artifact **`10525930543`**, digest `sha256:93adfb95e6ea06efa38d5ed2723f562b229544ec47d8d62e17930528b0a78832`;
+- exact proof-build artifact **`10524814779`**, digest `sha256:48d4ac8e9d9a85b99aaa8a7478b9b2397b325f4fc8ec7b4066aa63eed11f022c`.
+
+Measured generated JIT debit at `apu_clock=21`:
+- BRA: **`-84` = 4 guest cycles**, reference 4;
+- NOP+BRA: **`-126` = 6**, reference 6;
+- MUL+BRA: **`-273` = 13**, reference 13;
+- DIV+BRA: **`-336` = 16**, reference 16;
+- 16 compiled NOPs from the 128-byte source probe: **`-672` = 32 guest cycles**, PC `0x0200 -> 0x0210`, header 8->8.
+
+All static debit expectations and all span expectations passed. Middle-region stale-code probe remained not applicable because the block stayed within one tag region.
+
+**VALIDATED scope:** the shared compile-time `jit_charge_cycles` mechanism can add missing fixed guest cycles without disturbing the demonstrated JIT block bound for these audited cases.
+
+**NOT YET PROVEN:** complete SPC700 cycle coverage, taken/not-taken conditional timing, exact intra-instruction I/O/timer bus timing, or performance impact. Do not merge a four-opcode-only timing correction as if it were complete.
+
+### Decision
+Proceed with timing coverage by **shared addressing families first**, using the same mechanism and preserving existing runtime `apu_read8/apu_write8` data-access debits. For that batch, measure the actual R4300 `s3` delta from `compile_block` entry to the first `cpu_execute` return, so reference totals include both compile-time debit and runtime memory-helper debit.
+
+Representative matrix should cover at least:
+- direct read vs direct write;
+- direct indexed read vs write;
+- (X) read vs write;
+- (X)+ read/write;
+- absolute read vs write;
+- absolute indexed read vs write;
+- indexed-indirect read vs write;
+- indirect-indexed read vs write.
+
+Expected missing-cycle rule from pinned ares reference:
+- unindexed direct/absolute read: +0; write: +1 dummy read;
+- indexed read: +1; indexed write: +2;
+- (X) read: +1; (X) write: +2;
+- (X)+ read/write: +2;
+- indexed/indirect read: +1; write: +2.
+
+Keep branch conditional +2 timing as a separate later batch.
+
+## RESUME HERE — mechanism validated; addressing-family timing next
+
+1. `master` remains `a2270699...`. Clean block-bound candidate `phase2/apu-block-bound-fix@7e48bcc9...` remains VALIDATED and unmerged.
+2. Missing-cycle mechanism proof `842a1412...`, run `35288358655` is **VALIDATED for NOP/BRA/MUL/DIV only**; exact cycle totals match pinned independent reference.
+3. Next batch on diagnostic branch: extend proof harness to read GDB R4300 register **s3 = GPR19 / RSP packet `p13`** at `compile_block` and first `cpu_execute` return. Pinned ares N64 hook returns each GPR as a 16-hex-digit u64, so this can measure total master-cycle debit including runtime memory helpers.
+4. Apply one controlled class of timing corrections: addressing-family missing cycles only. Validate representative read/write pairs against reference totals and semantics. Do not include conditional branch timing in this batch.
+5. If addressing-family proof passes, checkpoint and recreate timing mechanism + validated addressing rules cleanly from `7e48bcc9...`; then proceed to conditional branches as a separate variable.
+6. E1 matched-window repair remains required before performance ranking. E3/E4/E5 remain DEFERRED until timing baseline is meaningfully corrected.

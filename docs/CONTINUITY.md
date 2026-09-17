@@ -2,157 +2,105 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
-## Operating rule
-Cadence: **technical batch -> continuity checkpoint -> technical batch -> continuity checkpoint**. Preserve material measurements, hypotheses, rejections, lab limitations, exact SHA/run/artifact identity and next action. Continue from repo/artifact evidence, not chat memory.
+## Operating protocol
+Authority: **current Iron instruction > repo/artifact evidence > canonical docs > continuity > chats/memory/inference**. `master` is integrated truth; phase branches are candidates only.
 
-Authority: current Iron instruction > repo/artifact evidence > canonical docs > continuity > chats/memory/inference. `master` is integrated truth; a phase branch is only a candidate until merged.
+Cadence is mandatory: **technical batch -> continuity checkpoint -> technical batch -> continuity checkpoint**. Continuity is a live scientific log: after every material result, changed hypothesis, falsification, risk, lab limitation, meaningful CI/artifact result, branch/HEAD transition or next-action change, checkpoint here before advancing. For long experiments record exact SHA/run/question/possible readings before leaving them running.
 
-## Captain / live lab-notebook protocol
-Iron delegates technical direction of Sodium64 toward the Road to 1.0 to the assistant, within Iron's current goals and constraints. The assistant should choose architecture, experiment order, implementation detail, profiling strategy, Git/CI flow and validation without asking Iron for low-level technical decisions unless a choice materially changes product scope, hardware requirements, risk or the stated destination.
+Iron delegates technical direction toward Road to 1.0 to the assistant. Choose architecture, experiments, implementation, profiling, Git/CI and validation without pushing low-level choices to Iron unless they change scope, hardware requirements, material risk or the target.
 
-**Continuity is a live scientific log, not an end-of-batch summary.** After every material result, discovery, changed hypothesis, falsification, new risk, lab limitation, meaningful CI/artifact result, branch/HEAD transition or next-action change, update this file immediately before moving on to the next technical step. Do not allow material knowledge to live only in chat until a large execution finishes. For long-running experiments, checkpoint the exact SHA/run/question and result branches before leaving the experiment running.
+Transparency in chat: expose hypothesis, evidence, what it demonstrates / does not demonstrate, rejections, next controlled change, expected result and falsifier. Do not expose private chain-of-thought verbatim.
 
-Transparency to Iron should expose useful technical reasoning continuously: current hypothesis; evidence; what the evidence demonstrates; what it does **not** demonstrate; rejected explanations and why; next controlled change; expected result; falsifier; and why other subsystems are not being touched yet. Do not expose or reconstruct private chain-of-thought verbatim; provide the decision-relevant reasoning and evidence instead.
-
-Every technical batch must reduce a concrete Road-to-1.0 uncertainty. If new evidence contradicts continuity or canonical docs, repair the stale documentation rather than rationalizing around it.
-
-## Gate / current refs
+## Target / gate
 Current milestone: **M0 ACHIEVED / M1 — faster base core, APU/audio first**.
-Perfect target remains real-N64 native cadence, one required SNES frame per corresponding native frame, no required frameskip/frame generation, full-rate SPC700/APU and correct audio, high CPU/PPU/DMA/HDMA/timing fidelity, broad compatibility, no per-game manual modes, DSP-1 family, Super FX/2 and SA-1. N64-alone first.
+
+Perfect target remains real N64 with correct native cadence; one required SNES frame per corresponding native frame; no required frameskip/frame generation; full-rate SPC700/APU and correct audio; high CPU/PPU/DMA/HDMA/timing fidelity; broad compatibility; no per-game modes; DSP-1 family, SuperFX/2 and SA-1. N64-alone first; cartridge assistance only after a quantified N64 ceiling.
 
 Integrated `master`: **`ee86d3391f9ef7f407b9b3f683b145253ff1ef3f`**.
-Completed M0 measurement branch: `phase1/open-homebrew-workload`; representative M0 HEAD **`89df64192d622bfa12e4bb53e0f41ceab928efe6`**.
+Completed M0 measurement branch: `phase1/open-homebrew-workload`; representative HEAD **`89df64192d622bfa12e4bb53e0f41ceab928efe6`**.
 Active M1 branch: **`phase2/apu-audio-first`**.
-M1 paired ares baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
-Current M1 branch HEAD: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`m1: isolate 32-byte APU JIT block experiment`).
-Open PRs: **none** as of this checkpoint. Diagnostic/candidate work is not implicitly integrated.
+M1 paired baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
+Current M1 HEAD: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`, controlled candidate).
+Open PRs: none at last checkpoint.
 
-**DOC DRIFT / TODO:** `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` still carry the older pre-M0/dynarec-first framing. Newer hardware/artifact evidence below supersedes that framing. Repair those canonical docs after the current controlled APU block experiment is cleanly resolved; do not weaken the 1.0 destination.
+**DOC DRIFT / TODO:** `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` still contain older pre-M0 / dynarec-first framing. Repair after the current controlled APU experiment is resolved; do not weaken the 1.0 target.
 
-## Valid ares decision lab
-Isolation run **`35113184294`**, artifact **`10453682432`** proved pinned ares RSP JIT is a **LAB LIMITATION**: every RSP-JIT mode collapsed while RSP-interpreter modes progressed. Valid high-density lab is **R4300 JIT + RSP interpreter**.
+## Ares laboratory authority
+Isolation run **`35113184294`**, artifact **`10453682432`** proved pinned ares RSP JIT is a **LAB LIMITATION**: RSP-JIT modes collapse while RSP-interpreter modes progress. Valid high-density lab is **R4300 JIT + RSP interpreter**.
 
-**REJECTED:** R4300 JIT as the cause; missing semaphore semantics; dropped semaphore `MTC0`; RSP DMA-busy explanation; accidental OAM wall as primary cause. Old RSP-JIT profiling must not drive architecture.
+**REJECTED:** R4300 JIT as cause; missing semaphore semantics; dropped semaphore `MTC0`; RSP DMA-busy explanation; accidental OAM wall as primary cause. Old RSP-JIT profiles must not drive architecture. `SP_PC=0x020F` while RSP runs is non-interpretable in this lab.
 
-Valid synthetic control run **`35114866448`**, artifact **`10454678803`**: idle 60/60; cpu-alu 41/60; wram 47/60; ppu-registers 38/60; dma-vram 16/60; gameplay-balanced 61/60 with 51.5% VI wait. Synthetic results are causal controls, not real-game/N64 authority.
+Synthetic control run **`35114866448`**, artifact **`10454678803`**: idle 60/60; cpu-alu 41/60; wram 47/60; ppu-registers 38/60; dma-vram 16/60; gameplay-balanced 61/60 with 51.5% VI wait. Synthetic workloads are causal controls, not real-game/N64 authority.
 
-Stable representative ares M0 repeats were **48/60**: run `35122086545` artifact `10457627853` and run `35122958028` artifact `10457874257`. `SP_PC=0x020F` observations from pinned ares are non-interpretable while RSP is running and are **not** evidence of a real RSP anomaly.
-
-## Gothicvania representative workload
-Open workload: `donth77/snes-homebrew:gothicvania`.
-Final source pin: `119496e6a2f1e53b7704712fef8cb81814f1698a`; source-art history `913ea78a3b35d3dfb62d7b76a33598b02107a2e7`; PVSnesLib 4.5.0 SHA-256 `b69ff32ada19895b7ebfe02a1e3c08a44c80bd9c8132de05f5c356f86264ce32`; Kenney font commit `9d94d3b50c68036a740115c577598fa1a02723f0`, blob `e6978d7d6f6a91ca8cdd5515e338110d9977fe69`.
-
-Deterministic controls: `ST_TITLE -> ST_PLAY`; `padsCurrent(0) -> KEY_RIGHT`. Survivability variant additionally initializes local `playState` health to `255`; enemy/spike collision, damage, hurt/knockback, SFX, rendering, physics, streaming and audio remain active. Only death is made unreachable during the short profiling window. No Sodium64 core code is changed for survivability.
-
-Original benchmark SHA-256: `634fe02f981880ccea7b46bdaae7191264c724e86a492f9a85dfdb60c17a5fff`.
-Survivability benchmark SHA-256: **`5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`**.
+## Representative workload — Gothicvania
+Open workload: `donth77/snes-homebrew:gothicvania`; final source pin `119496e6a2f1e53b7704712fef8cb81814f1698a`.
+Survivability ROM SHA-256: **`5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`**.
 Benchmark patch SHA-256: **`ab1ec83925571e916be9ae0a3abf3d2bb84b5f9efb1aae9fd2ac608ecc0f0bc9`**.
+Deterministic controls: `ST_TITLE -> ST_PLAY`, `padsCurrent(0) -> KEY_RIGHT`; survivability initializes local health to 255 only so death is unreachable during the short capture. Collisions, damage path, SFX, rendering, physics, streaming and audio remain active. Sodium64 core is unchanged by survivability.
 
-Source-build hygiene knowledge:
-- **REJECTED:** parallel make/PVSnesLib as root cause of frozen-source failures.
-- **REJECTED:** parallax generation itself as a problem.
-- **REJECTED:** gfx4snes/PVSnesLib as broken.
-- Actual cause: checkout-mtime interaction with upstream committed/frozen conversion outputs. Freeze only high-level committed source-of-truth outputs; let low-level products/companions rebuild.
-- Package scratch/checksum-path leaks were packaging-only hygiene and did not change ROM/runtime.
+Source-build hygiene knowledge: **REJECTED** parallel make/PVSnesLib, parallax generation, and broken gfx4snes as root causes. Actual failure was checkout-mtime interaction with committed/frozen conversion products. Freeze only high-level source-of-truth outputs and let low-level products rebuild.
 
-## Real-N64 M0 measurement proof
-`HW_PROFILE=1` implies `PROFILE=1`; normal builds unchanged. Diagnostic forces frameskip 0, APU clock 21, audio 4, precision 8. Sampler uses 2 complete 60-VI warmup seconds, then five complete measured 60-VI windows. `S64H` stores frame budgets/settings/sample count/RSP context and canonical `S64P` lives at save offset 0x100; after measurement, data is persisted through standard N64 PI SRAM. Historical SummerCart runtime-register telemetry that froze hardware is **REJECTED**.
+## M0 real-N64 closure
+Representative exact candidate HEAD **`89df64192d622bfa12e4bb53e0f41ceab928efe6`**. Open Homebrew run **`35145447113` SUCCESS**, source artifact `10466504920`, hardware package **`10467585906`**; Build and Validate **`35145447039` SUCCESS**.
 
-First hardware capture proved transport/profiler end-to-end but its aggregate is **SUPERSEDED FOR ARCHITECTURE DECISION** because later windows occurred after `GAME OVER`. Preserve it as transport proof only: save `sodium64-m0-gothicvania.sav`, SHA-256 `c9862cc3ec821a783e2a79f38f01b4e4fd5377d9f8683a05eb429122a1bdaf2a`, 3580 samples, frame windows 48/60, 49/60, 52/60, 60/60, 60/60.
+Returned real-N64 save SHA-256 **`3316bd99dc26224050153c5a10c167b0e0b520aa9e4b85699b8ab45911f1f395`**, 32768 bytes, complete `S64H/S64P`, frameskip 0, APU clock 21, audio 4, precision 8, 3581 valid samples, queue 0, SP DMA full/busy 0/0. Complete frame windows **48/60, 49/60, 48/60, 50/60, 50/60**, mean **49.0/60**. Video shows active gameplay through measurement; no GAME OVER before completion marker.
 
-### M0 closure — representative real-N64 survivability capture
-Exact candidate:
-- HEAD **`89df64192d622bfa12e4bb53e0f41ceab928efe6`**.
-- Open Homebrew run **`35145447113` SUCCESS**; source artifact `10466504920`; hardware package artifact **`10467585906`**.
-- Build and Validate run **`35145447039` SUCCESS**.
-- artifact ZIP SHA-256 `db187230e8728c22b5acebbeabd99489af538994c79eece0a6d4f2a054415086`.
-- wrapped N64 ROM SHA-256 `7bb79d25168a73a9e539a1ced17c0e4073f3c8fb321ed7552db7a48a64ed217f`.
-- emulator base ROM SHA-256 `54039dca813356bd8976aa2761214520ef6460b157ada27e05ff055c126496a9`.
+Real-N64 sample split: APU static 24.91%; APU JIT generated 19.18%; DSP/audio 17.73%; **combined APU/audio 61.83%**; S-CPU 22.12%; PPU/events 7.99%; DMA/HDMA 6.67%; RSP/VRAM wait 1.31%; VI wait 0. Hot regions include generated JIT 19.18%, `apu_execute` 11.56%, `cpu_execute` 8.99%, `apu_read8` 6.03%, `skip_sample` 4.05%, `get_pitch` 3.52%, `apu_write8` 2.88%, `load_sample` 2.40%.
 
-Returned save `sodium64-m0-gothicvania-survivability.sav`: 32768 bytes, SHA-256 **`3316bd99dc26224050153c5a10c167b0e0b520aa9e4b85699b8ab45911f1f395`**. Complete canonical `S64H`/`S64P`; settings frameskip 0, APU clock 21, audio 4, precision 8; 3581 valid samples; queue 0; SP DMA full/busy 0/0; frame windows **48/60, 49/60, 48/60, 50/60, 50/60**, mean **49.0/60**. Hardware video confirms active gameplay through measurement with no GAME OVER before the solid-red completion marker.
+**MEASURED / M0 ACHIEVED:** representative N64 is throughput-bound near 49 completed SNES frames per 60 VI with no frameskip, full-rate APU, active audio and essentially no VI headroom.
 
-Representative R4300 sample split:
-- APU/SPC700 static 24.91%
-- APU JIT generated 19.18%
-- DSP/audio 17.73%
-- **combined APU/audio 61.83%**
-- S-CPU interpreter 22.12%
-- PPU/events/frame prep 7.99%
-- DMA/HDMA 6.67%
-- RSP/VRAM semaphore wait 1.31%
-- frame/VI wait 0 samples
+**SUPPORTED INTERPRETATION:** 49->60 requires roughly 18.3% less total host time/frame if approximately linear. Closing only from the measured APU/audio 61.83% would require ~29.7% reduction of that aggregate; closing only from S-CPU 22.12% would require ~82.9% reduction of that bucket. Hardware evidence therefore rejects a 65C816 dynarec as the **first** M1 attack. Dynarec remains strategically valuable later and for SA-1 leverage.
 
-Hot regions include APU JIT generated 19.18%, `apu_execute` 11.56%, `cpu_execute` 8.99%, `apu_read8` 6.03%, `skip_sample` 4.05%, `get_pitch` 3.52%, `apu_write8` 2.88%, `load_sample` 2.40%.
+Earlier real-N64 save SHA `c9862cc...` is **SUPERSEDED FOR ARCHITECTURE DECISION** because later windows were post-GAME OVER; preserve as profiler transport proof only.
 
-**MEASURED / M0 ACHIEVED:** representative real N64 is stably throughput-bound near 49 completed SNES frames per 60 VI with no frameskip, full-rate APU and active audio, essentially no VI idle headroom.
+## M1 baseline — 16-byte APU JIT blocks
+Baseline SHA **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`**. Build/Validate run **`35148379354` SUCCESS**; ares run **`35148379400` SUCCESS**; artifact **`10467972587`**, digest `5471854958404c63bba8ee70ae5ead236f02b220881a4b8dfeaee60cdcd559a4`.
 
-**SUPPORTED INTERPRETATION:** from 49/60 to 60/60 requires roughly 18.3% less total host time/frame if cost scales approximately linearly. APU/audio owns 61.83%, so closing the whole gap only there would require roughly 29.7% reduction of that aggregate. S-CPU owns 22.12%, so closing it only there would require roughly 82.9% reduction of the whole S-CPU bucket. Therefore hardware evidence rejects a 65C816 dynarec as the *first* M1 attack. Dynarec remains strategically valuable later, especially for base-core work and SA-1 leverage.
+Exact workload/settings: Gothicvania survivability SHA above; frameskip 0, APU clock 21, audio 4, precision 8; valid ares mode. **2000 samples**. Last complete virtual budget **44/60**; partial state `fps_native=48`, `fps_emulate=39`, queue1. APU static36.60 + JIT3.30 + DSP14.50 = **54.40%**; S-CPU30.85; PPU7.45; DMA4.40; RSP wait2.55; VI0.35. `apu_execute`13.10; `cpu_execute`15.85; `apu_read8`2.90.
 
-## M1 paired ares baseline — 16-byte APU JIT blocks
-**MEASURED / MEASUREMENT PROOF:** `phase2/apu-audio-first` at **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** restores the exact survivability input and valid ares lab.
+This is local comparison baseline only; real N64 remains performance authority.
 
-- Build and Validate run **`35148379354` SUCCESS**.
-- Open Homebrew Ares Profile run **`35148379400` SUCCESS**.
-- profiling artifact **`10467972587`**, digest `5471854958404c63bba8ee70ae5ead236f02b220881a4b8dfeaee60cdcd559a4`.
-- exact guest input SHA-256 **`5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`**.
-- settings: frameskip 0, APU clock 21, audio 4, precision 8; pinned ares R4300 JIT + RSP interpreter.
-- **2000 valid samples**.
-- last complete virtual frame budget: **44/60**; partial state `fps_native=48`, `fps_emulate=39`, queue 1.
-- APU static 36.60%, APU JIT 3.30%, DSP 14.50% => combined APU/audio **54.40%**.
-- S-CPU 30.85%, PPU/events 7.45%, DMA/HDMA 4.40%, RSP/VRAM wait 2.55%, VI wait 0.35%.
-- `apu_execute` 13.10%; `cpu_execute` 15.85%; `apu_read8` 2.90%.
+## M1 experiment 1 — confounded 32-byte SHA
+SHA **`3b39523c637ac5d076ddfb3714c6023e8d1106f4`** produced repeated **48/60** in ares (1183 and 915 samples) but changed more than `BLOCK_SIZE`: license text plus `TEXREC_OFS SHIFT_TABLE+0x8 -> +0x4` and `PRIO_CHECKS MODE7_MASK+0x4 -> +0x8`, shifting intermediate runtime layout offsets.
 
-This is the local comparison baseline only; real N64 remains performance authority.
-
-## M1 experiment 1 — original 32-byte candidate was confounded
-Branch SHA **`3b39523c637ac5d076ddfb3714c6023e8d1106f4`** was intended to test `BLOCK_SIZE 16 -> 32`.
-
-CI/artifacts:
-- Build and Validate run **`35152788659` SUCCESS**: normal build, profiling build and Mupen emulator smoke all passed.
-- Open Homebrew Ares Profile run **`35152788588` SUCCESS** (latest successful attempt 3).
-- latest profile artifact **`10470457219`**, digest `d23787bf0dc60de8ce8718b824f83dc38e69d0b1939a47152b6089ab1c8577f0`.
-- preceding same-SHA profile artifact **`10470355647`**, digest `4a98d90f9ebcbb213db7804dd48027a40d9de51894d17740b56bbc759dcad1b8`.
-
-Observed same-SHA candidate results:
-- repeat A: **48/60**, 1183 valid samples; APU static 32.54%, JIT 4.14%, DSP 12.93% => APU/audio 49.61%; `apu_execute` 11.07%; VI wait 0.34%.
-- repeat B: **48/60**, 915 valid samples; APU static 34.86%, JIT 5.57%, DSP 13.22% => APU/audio 53.65%; `apu_execute` 11.91%; VI wait 0%.
-- both retain frameskip 0, APU clock 21, audio 4, precision 8 and queue 0 at capture.
-
-**MEASURED:** this SHA repeatedly reports a 48/60 complete virtual window versus the 16-byte baseline's 44/60. That is a promising signal, but it is **not causal evidence for 32-byte blocks**.
-
-**EXPERIMENTAL CONFOUND / SUPERSEDED CANDIDATE:** compared directly with `c55b6b...`, commit `3b395...` changes `BLOCK_SIZE`, reformats license text and materially changes runtime layout macros in `src/defines.h`: `TEXREC_OFS` moves from `SHIFT_TABLE+0x8` to `+0x4`, shifting `FILLREC_MASK`, `LDBLK_BITS`, and `MODE7_MASK` four bytes earlier; `PRIO_CHECKS` changes from `MODE7_MASK+0x4` to `+0x8`. Therefore its 44->48 movement cannot be attributed to APU block size. This candidate is retained only as historical evidence and must not drive architecture or hardware testing.
-
-The lower sample counts (915/1183 versus baseline 2000) also make percentage composition noisier. Frame-budget repetition is stronger evidence than the exact subsystem-share deltas, but ares remains only a lab.
+**SUPERSEDED AS CAUSAL CANDIDATE:** its 44->48 movement cannot be attributed to block size. Do not merge or hardware-test this SHA for the optimization claim.
 
 ## M1 experiment 1b — clean 32-byte candidate
-**IMPLEMENTED / CONTROLLED EXPERIMENT:** active branch HEAD **`a758629014d0ecada6358c57eaf77c60afc80cad`** restores `src/defines.h` to the exact `c55b6b...` baseline content except for `#define BLOCK_SIZE 16 -> 32`.
+Active HEAD **`a758629014d0ecada6358c57eaf77c60afc80cad`** restores exact baseline `src/defines.h` except `#define BLOCK_SIZE 16 -> 32`.
 
-Direct compare `c55b6b... -> a758629...` reports exactly **one modified file (`src/defines.h`), 1 addition, 1 deletion**. The license text and all runtime layout macros/offsets are restored to baseline. This removes the known confound before performance interpretation.
+Direct compare `c55b6b... -> a758629...`: exactly one modified file, **1 addition / 1 deletion**. Known source confound removed.
 
-**MEASURED / HYGIENE:** Build and Validate run **`35174886449` SUCCESS** and Open Homebrew Ares Profile run **`35174886403` SUCCESS** for exact clean SHA `a758629...`.
+CI: Build and Validate **`35174886449` SUCCESS**; Open Homebrew Ares Profile **`35174886403` SUCCESS**.
+First clean profile artifact **`10477834229`**, digest **`faf8ec269072824613d9b9297c0f700cfd418ad6883f69097907c48c56b004b0`**.
 
-Clean profile artifact **`10477834229`**, digest **`faf8ec269072824613d9b9297c0f700cfd418ad6883f69097907c48c56b004b0`**, is tied to head SHA `a758629...` and exact Gothicvania survivability input SHA-256 `5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`.
+**MEASURED / first clean run:** last complete virtual budget **48/60** versus baseline 44/60; 957 samples. Runtime: frameskip0, APU clock21, audio4, precision8, queue0, SP DMA full/busy0/0. APU static33.33 + JIT5.64 + DSP12.02 = **50.99%**; S-CPU30.93; PPU9.61; DMA5.54; RSP wait2.51; VI0.42. `apu_execute`11.39; `cpu_execute`15.15; `apu_read8`1.57; `apu_write8`0.94.
 
-**MEASURED / first clean run:** last complete virtual frame budget **48/60** (80.0%), versus baseline **44/60**. 957 valid samples. Runtime state: frameskip 0, APU clock 21, audio 4, precision 8, queue 0; SP DMA full/busy 0/0. Partial window 21/60 VI with 15 guest frames.
+**SUPPORTED:** the one-variable clean candidate reproduces 44->48/60. The known layout confound is not required to explain the gain. +4 frames is about +9.1% completed frames/window relative to 44, but is not a direct real-N64 speedup percentage. Exact subsystem deltas are noisy because 957 vs 2000 samples; frame budget is stronger evidence.
 
-Sample split: APU static **33.33%**, generated JIT **5.64%**, DSP/audio **12.02%** => combined APU/audio **50.99%**; S-CPU **30.93%**; PPU/events **9.61%**; DMA/HDMA **5.54%**; RSP/VRAM wait **2.51%**; VI wait **0.42%**. `apu_execute` **11.39%**, `cpu_execute` **15.15%**, `apu_read8` **1.57%**, `apu_write8` **0.94%**.
+**NOT VALIDATED:** one clean ares run does not establish reproducibility, real-N64 speed, SPC700/DSP timing, audio correctness or broad compatibility.
 
-**SUPPORTED INTERPRETATION:** the clean one-variable 32-byte candidate reproduces the material **44 -> 48/60** frame-budget movement previously seen only in the confounded SHA. Therefore the known layout confound is no longer required to explain the gain, and larger APU JIT blocks are now supported as the causal source-level change in this ares lab. The four-frame change is about +9.1% completed frames per 60-VI window relative to 44/60, but this is a discrete lab budget, not a direct real-N64 speedup percentage.
+### Code-level semantic review of BLOCK_SIZE=32
+**SUPPORTED / lower risk:** `compile_block` sets its linear byte limit as `PC + BLOCK_SIZE`; normal `finish_opcode` continues only below that limit. SPC700 branches/jumps/calls explicitly terminate through `finish_block` / PC handling, so increasing the limit does not simply compile through control-flow boundaries.
 
-The subsystem-share direction is compatible with reduced APU overhead (`apu_execute` 13.10% -> 11.39%; combined APU/audio 54.40% -> 50.99%), but **957 vs 2000 samples** makes exact percentage deltas noisy. Treat complete frame budget as the stronger signal.
+**SUPPORTED / lower risk:** JIT invalidation tags are indexed at 64-byte APU-memory granularity (`address >> 6`); cached blocks store/check start and end tag regions. A 32-byte linear block is still shorter than 64 bytes, so it can intersect at most two 64-byte regions and start/end tags cover those extrema. This reduces the self-modifying-code invalidation concern for 32; it is not broad correctness validation.
 
-**NOT YET VALIDATED:** one clean ares run does not establish reproducibility, real-N64 speed, SPC700 timing/audio correctness or broad compatibility. Do not merge or request hardware solely from this first run.
+**OPEN QUESTION / MATERIAL CORRECTNESS RISK:** `apu_execute` checks whether DSP work is due **before** entering a cached/compiled JIT block. Generated blocks accumulate SPC700 cycles and return to `cpu_execute` only at `finish_block`; `cpu_execute` then gates APU/PPU events by cycle counters. Doubling maximum block length can therefore increase CPU↔APU/DSP scheduling latency even when opcode semantics are correct. `dsp_sample` advances the DSP schedule by `DSP_SAMPLE` and runs only when control returns through the scheduler path. A performance gain must not be accepted if it comes from materially coarser DSP/APU interleave.
 
-**HYPOTHESIS STATUS: SUPPORTED.** A same-SHA repeat is now the highest-value next experiment.
+**SUPPORTED clarification:** APU timer state is largely updated lazily on relevant timer I/O reads/writes (`read_t*out`, control/divider writes invoke `update_timers`), so do not conflate the new concern with proof of a timer bug. The immediate risk to isolate is block-cycle overshoot / DSP and CPU↔APU interleave granularity.
 
-**EXPERIMENT IN PROGRESS / continuity checkpoint:** GitHub Actions job **`105054539199`** (`ares-gothicvania`) from run **`35174886403`** was re-run directly with no source change, preserving exact head SHA **`a758629...`** and the same built/profile input. Question: does the same binary reproduce a materially-above-baseline complete frame budget near 48/60? Interpretations: repeat near 48 with unchanged runtime strengthens reproducibility; collapse toward 44 indicates run noise; semantic/timing/runtime anomaly blocks acceptance even if throughput is high.
+**Decision consequence:** even if same-SHA 32-byte throughput reproduces, do **not** merge yet. Next controlled correctness experiment must quantify scheduler/DSP overshoot or otherwise demonstrate that 32 preserves required timing/interleave semantics before hardware acceptance.
 
-## Immediate next action / RESUME HERE
-1. Read completion state and new artifact from the direct rerun of job **`105054539199`** / run **`35174886403`**; verify it remains exact SHA `a758629...` and unchanged guest/settings.
-2. Compare repeat complete frame budget and runtime/settings first; then sample density and APU/S-CPU/PPU/DMA proportions. Do not over-read percentage changes from low sample count.
-3. If repeat remains materially above 44/60 without runtime anomaly, mark clean32 **CANDIDATE / locally reproduced**, checkpoint, then explicitly assess APU JIT block-boundary semantics and audio/SPC700 timing risk before merge or hardware session.
-4. If repeat collapses to baseline or shows semantic/timing suspicion, keep 32 **OPEN QUESTION** or **REJECTED** as evidence warrants and move to the next bounded APU path.
-5. Once experiment 1b is resolved, repair `master` Road/Roadmap to reflect M0 closure and evidence-driven APU/audio-first M1. Hardware remains final performance/timing authority.
+### Reproducibility experiment in progress
+Run **`35174886403`**, direct job rerun, **attempt 2**, exact same head SHA **`a758629...`** with no source change. Attempt-2 ares job id **`105062197629`**; profile-build id `105062224398` completed SUCCESS. At last observation ares job was building pinned ares.
+
+Question: does exact same binary reproduce materially-above-baseline throughput near 48/60? Readings: repeat near48 with unchanged state strengthens local reproducibility; collapse near44 indicates run noise; runtime/timing anomaly blocks acceptance regardless of throughput.
+
+## RESUME HERE / immediate action
+1. Read completion/artifact of run **`35174886403` attempt 2**, verify exact SHA/workload/settings, then compare complete frame budget first and sample split second.
+2. **If repeat remains materially >44/60:** mark clean32 **CANDIDATE / LOCALLY REPRODUCED**, checkpoint immediately. Do not merge. Next isolate maximum/observed JIT-block cycle overshoot versus DSP scheduling/interleave; prefer profile-only or host-side evidence before invasive runtime instrumentation.
+3. **If repeat collapses near44 or shows anomaly:** keep 32 **OPEN QUESTION** or **REJECTED** as evidence warrants; checkpoint before next path.
+4. After timing/interleave question is bounded, decide whether 32 proceeds to real-N64 hardware validation or is rejected. Hardware remains final performance/timing authority.
+5. Once experiment 1b materially resolves, repair `master` Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
 6. No second emulator or unbounded JIT/tooling project. Every batch reduces a concrete Road-to-1.0 uncertainty.
 
-Resume summary: M0 is closed by real-hardware save SHA `3316bd99...` at 48/49/48/50/50 with 3581 samples, APU/audio 61.83%, S-CPU 22.12%, no VI wait. M1 baseline `c55b6b...` is 44/60 in the valid ares lab. Original `3b395...` repeated 48/60 but is **SUPERSEDED as a causal candidate** because of unrelated layout changes. Clean candidate `a758629...` differs from baseline only by `BLOCK_SIZE 16->32` and its first clean run measured **48/60**. **A no-source-change same-SHA repeat is in progress; read that result next.**
+Resume summary: M0 real-N64 = 48/49/48/50/50, mean49, APU/audio61.83%, no VI wait. M1 baseline16 =44/60 ares. Confounded32=48/60 but superseded causally. Clean32 `a758629...` differs only by BLOCK_SIZE and first clean run=48/60. Same-SHA repeat is running. New material risk: verify DSP/CPU↔APU scheduler granularity before any merge.

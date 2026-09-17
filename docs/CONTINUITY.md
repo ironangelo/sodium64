@@ -79,7 +79,7 @@ Historical diagnostic commit **`6921055...`** added useful lateness logic but al
 
 Direct compare `a758629... -> 7f8faeff...` is clean and limited to exactly three files: `.github/workflows/open-homebrew-profile.yml` (**51+/1-**), `src/apu.S` (**38+/1-**), `src/profile.S` (**23+/0-**). No unrelated core-semantic or S64P-layout changes remain.
 
-**EXPERIMENT STARTED:** push of `7f8faeff...` triggers the BLOCK32 ares diagnostic. Question: under the exact Gothicvania/settings lab, what are DSP due-event average/max lateness and frequency of lateness >=672 cycles? This is a correctness/interleave measurement, not a throughput run.
+**EXPERIMENT IN PROGRESS:** exact SHA **`7f8faeff...`**. Open Homebrew Ares Profile run **`35183376105`** and Build and Validate run **`35183376137`** were both started by this push. Question: under the exact Gothicvania/settings lab, what are DSP due-event average/max lateness and frequency of lateness >=672 cycles? Possible readings: materially high >=672 frequency or much larger average/max than BLOCK16 would threaten 32-byte correctness; low/bounded values still require paired BLOCK16 comparison before acceptance. This is a correctness/interleave measurement, not a throughput run.
 
 ## RESUME HERE
 1. Read CI/run state for exact SHA `7f8faeff...`. If build/profile fails, diagnose tooling/instrumentation only; do not alter emulated behavior to make the test pass.
@@ -89,4 +89,4 @@ Direct compare `a758629... -> 7f8faeff...` is clean and limited to exactly three
 5. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
 6. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic is now running at exact SHA `7f8faeff...`; read that result next.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic is in progress at exact SHA `7f8faeff...`, runs `35183376105` / `35183376137`; read that result next.

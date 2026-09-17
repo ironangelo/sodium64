@@ -380,3 +380,29 @@ After mutating the tracked end region 9, the same run measured:
 - JIT pointer advanced `2686189620 -> 2686319648`.
 
 Those measurements are consistent with successful invalidation/recompilation. The run failed only because the invalid `sig==5` criterion marked the timed debugger stop as old-block re-entry. **HYPOTHESIS:** `fe5fcc0c...` fixes the NOP-bound/invalidation defect as intended. Rerun with a first-`cpu_execute` boundary before promoting to VALIDATED.
+
+
+## Deterministic invalidation reruns running — checkpoint 2026-09-17
+
+The ambiguous timed-SIGTRAP criterion has been removed from both directed probes.
+
+### NOP-bound candidate rerun
+Diagnostic child HEAD: **`phase2/apu-nop-bound-proof@200aef5e9d90d739dc00f9250678eb31919a3512`**.
+Clean runtime candidate remains unchanged: **`phase2/apu-nop-bound-fix@fe5fcc0ca7b817a99095dcde40dc9d37d54d4a18`**.
+
+Current runs:
+- APU NOP Bound Proof **`35283857525`** IN PROGRESS;
+- Build and Validate **`35283857526`** IN PROGRESS.
+
+New invalidation method: mutate the tracked end-tag at a safe `apu_execute` boundary, then continue to the **first `cpu_execute` return**. At that boundary exactly one APU block has completed. Lookup/JIT-pointer changed = recompilation before execution return; unchanged = cached block reused. No wall-time/SIGTRAP identity is used.
+
+### Original E2 middle-tag rerun
+Corrected diagnostic HEAD: **`phase2/apu-cycle-proof@30be54899133f518b52ca3ba1ddce00070ac812f`**.
+
+Current runs:
+- APU Cycle And Span Proof **`35283897586`** QUEUED;
+- Build and Validate **`35283897497`** QUEUED.
+
+It repeats the inherited 128-byte long-NOP case, mutates only middle tag region 9 while endpoint tags 8/10 remain untouched, then continues to the first `cpu_execute` return. Unchanged lookup/JIT pointer at that deterministic boundary dynamically confirms stale reuse; changed values falsify the prior dynamic interpretation.
+
+Do not promote/reject the NOP candidate or restate dynamic stale re-entry as VALIDATED until these corrected runs finish.

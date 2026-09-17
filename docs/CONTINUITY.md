@@ -209,3 +209,39 @@ Master canonical docs still contain the stronger “44->48 proves overhead” in
 6. Graduate retained candidates to one real-N64 milestone session with exact build/ROM/settings, frame windows, audio/cadence and decision criteria. No scope reduction, cartridge assistance, second emulator or unbounded tooling.
 
 Resume summary: **M0 remains achieved as a measurement milestone; M1 remains APU/audio-first.** This audit changes the immediate order because previously unrecorded A/A variation and source-backed guest-cycle/block-span gaps undermine blind optimization of the inherited baseline. Current APU full-rate setting and BLOCK16 are diagnostic configurations, not universal timing/fidelity proofs.
+
+## E1 execution checkpoint / E2 setup — 2026-09-17
+
+### E1 — MEASUREMENT PROOF / current harness limitation confirmed
+The rerun of `Open Homebrew Ares Profile` run **`35227136832`** reused the exact profile-build artifact rather than rebuilding it. Shared build artifact **`10499232867`**, digest **`dac80a1f3911e30e53a7e56e116916977540969035cc8530400776c089996668`**, exact source SHA **`989e1f5ba8d592f6efb8e593d7a83fc5b51f3f89`**.
+
+- attempt1 job **`105221944468`**, result artifact `10499991568`: final state `vi_count=52`, `guest_frame_count=52`, `sample_count=1092`, partial VI `32/60`, partial guest `27`, `frame_wait_count=4`, `queue_count=1`.
+- rerun attempt2 job **`105254633842`**, result artifact **`10503143461`**: final state `vi_count=63`, `guest_frame_count=61`, `sample_count=2100`, partial VI `9/60`, partial guest `8`, `frame_wait_count=0`, `queue_count=0`. Settings remain APU21/frameskip0/audio4/precision8.
+
+**SUPPORTED INTERPRETATION:** this is a cleaner binary A/A than previously known because ROM/ELF/map build input is identical, but it is NOT a matched guest-window performance comparison. The two attempts stop at different VI/guest phases and radically different sample counts. The apparent 52-vs-61 totals therefore cannot be interpreted as performance drift or layout gain. It demonstrates that the current wall-time/sample-target stop condition is insufficient authority for ranking small 4–8-frame changes.
+
+**REJECTED inference:** do not call the 2A `52/60` an optimization result; do not use attempt1-vs-attempt2 totals as a measured nine-frame A/A spread; and do not resurrect the historical BLOCK32 causal gain from these numbers. BLOCK32 remains independently REJECTED by paired DSP-lateness.
+
+**Immediate measurement requirement:** before E3/E4/E5 performance ranking, repair or add the smallest possible matched-window boundary: same binary identity, same proven guest checkpoint, several complete sequential VI windows and comparable Count/sample windows. This is a bounded Gate-A measurement repair, not a profiling subproject.
+
+### E2 — cycle-accounting/block-span proof in progress
+Branch **`phase2/apu-cycle-proof`** starts from safe tree `225859b1d8fc0eb477a624ac76f8237667379f59`. Current HEAD **`f0159bf9fe6583b106798f2ce4a04708bd6930d2`**, commit `diag: add APU cycle proof capture state`; Build and Validate **`35237136742` SUCCESS**. The commit only adds PROFILE-only diagnostic state and changes no production behavior.
+
+Source inspection sharpened the E2 hypothesis:
+- `jit_read8` subtracts one `apu_clock` from compile-time `s2` for each opcode/operand byte; runtime memory accesses debit separately through `apu_read8`/`apu_write8`.
+- `apu_alu.S` contains no additional `s2` debit for MUL/DIV internal cycles.
+- opcode `0x00` NOP dispatches directly to `next_opcode`, bypassing `finish_opcode`; therefore a sufficiently long NOP run can ignore the nominal `BLOCK_SIZE=16` check until a later opcode reaches `finish_opcode`.
+- cache validation records/checks endpoint 64-byte tags. If a generated block can span three or more regions through the NOP bypass, an intermediate-region mutation may be missed. This is **source-supported risk, not yet dynamic proof**.
+
+Pinned ares SPC700 reference at `17813a3c...` independently models total NOP/MUL/DIV/taken-BRA timing as 2/9/12/4 SPC cycles. Sodium64 source currently appears to account isolated fetch units as 1/1/1/2 respectively before data accesses. **HYPOTHESIS:** inherited APU timing undercharges internal instruction cycles, potentially executing excess SPC700 work per emulated time. Magnitude and representative frequency remain UNKNOWN.
+
+The dynamic E2 test must now prove or falsify two things separately: (1) actual generated static debit for BRA-only, NOP+BRA, MUL+BRA and DIV+BRA snippets; (2) actual long-NOP generated span/header behavior, including a middle-region mutation check. No timing fix or optimization is authorized until observation is complete.
+
+## RESUME HERE — E1/E2 checkpoint 2026-09-17
+
+1. Integrated `master` is still `a2270699...`; 2A remains `989e1f5b...`; diagnostic BLOCK16 remains `8805fd61...`; E2 branch is `phase2/apu-cycle-proof@f0159bf9...` and Build/Validate `35237136742` is green.
+2. E1 has established a **LAB LIMITATION in the current stopping/measurement boundary**, not a quantified A/A slowdown: exact build artifact `10499232867` was reused, but attempt1 stopped at 52 VI/1092 samples and attempt2 at 63 VI/2100 samples. Small frame-total differences are not causal evidence until matched guest windows exist.
+3. Continue E2 with a bounded dynamic proof script/workflow. Observe original JIT only; test BRA, NOP+BRA, MUL+BRA, DIV+BRA and a >128-byte NOP span. Decode generated block static debit and start/end tag regions; then mutate a middle region and test cache re-entry.
+4. Falsifiers: any hidden debit that restores reference cycle totals rejects the under-accounting hypothesis; an observed enforced stop before crossing the nominal span rejects the NOP-span hypothesis; a middle-region change that invalidates/recompiles through another mechanism rejects the missed-intermediate-tag hypothesis.
+5. If E2 confirms timing under-accounting, make the correction a separate correctness candidate and establish a fresh baseline before optimizing. If E2 falsifies it, return to E3/E4/E5 selection. Separately make the minimal matched-window E1 harness repair before using small ares throughput deltas to rank candidates.
+6. 2B remains **DEFERRED, not REJECTED**. Do not merge diagnostic code, reopen BLOCK32, start 65C816 dynarec, move work to RSP, reduce fidelity, or build a second emulator to bypass these questions.

@@ -427,3 +427,33 @@ This is the immediate correction target. Sodium64 currently charges instruction/
 This is a separate accuracy problem. Sodium64 batches `jit_read8` fetch-cycle debt into the generated block-end `ADDI s3,s3,imm`, while runtime data accesses debit `s3` at the access point. Timer reads `read_t0out/read_t1out/read_t2out` compare overflow timestamps directly against current `s3`. Therefore even correct *total* instruction cycles do not automatically prove exact timer/I/O timing inside a multi-instruction JIT block. Dummy reads also need semantic treatment when they can touch I/O.
 
 **Decision:** implement/validate total-cycle correctness first and measure its effect, but label it honestly. Do not claim full SPC700 cycle-accurate I/O until Layer 2 has its own directed tests and solution. This is accuracy debt within Sodium64, not a reason to build a second emulator.
+
+
+## Layer-1 total-cycle architecture proof running — checkpoint 2026-09-17
+
+Separate experimental runtime branch **`phase2/apu-total-cycle-proof@b268b98b9cf83a9d13a5c59c49c0bd4c585caef8`** was created from the clean NOP-bound candidate `fe5fcc0c...`. It is contingent on the corrected NOP-bound proof and must not be promoted if that parent is falsified.
+
+Runtime changes are deliberately limited to the four already-measured E2 paths:
+- compiler-side primitive `jit_debit_cycles` subtracts `apu_clock` from compile-time block debt `s2` once per requested extra guest cycle;
+- NOP charges +1 extra cycle;
+- BRA charges +2 extra cycles;
+- MUL charges +8 extra cycles beyond opcode fetch;
+- DIV charges +11 extra cycles beyond opcode fetch.
+
+This is **Layer-1 total-cycle accounting only**. It deliberately does not model NOP/MUL/DIV dummy `read(PC)` bus activity or exact intra-block timer/I/O ordering.
+
+Diagnostic child branch **`phase2/apu-total-cycle-validate@215dc67722462f1fd768e58471ca599cdaf699cf`** adds only the directed GDB proof/workflow.
+
+Current runs:
+- APU Total Cycle Proof **`35284371466`** QUEUED;
+- child Build and Validate **`35284371446`** PENDING.
+(The intermediate child Build/Validate `35284345625` may be superseded/cancelled by the final workflow commit.)
+
+Acceptance is exact and inherited from E2:
+- BRA must debit **4** guest cycle units;
+- NOP+BRA must debit **6**;
+- MUL+BRA must debit **13**;
+- DIV+BRA must debit **16**;
+- all four must be observed from the exact generated JIT block at the first `cpu_execute` return.
+
+Falsifier: any total differs, generated block lacks a unique `ADDI s3,s3,imm` debit, or Build/Validate fails. A pass validates only the debit primitive and these four paths, not the remaining 252 opcodes and not Layer-2 bus/I/O timing.

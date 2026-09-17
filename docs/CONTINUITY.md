@@ -20,7 +20,7 @@ Completed M0 branch representative HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928
 Clean M1 candidate / measurement authority: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`).
 M1 paired baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
 `phase2/apu-audio-first` current HEAD **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**, tree-equivalent to `a758629...` after hygiene correction.
-**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`7f8faeff6efa1d94c421ad0369938d8c0d077195`** pending the paired BLOCK16 commit.
+**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** (`BLOCK_SIZE=16` paired lateness control).
 Open PRs: none at last checkpoint.
 
 **HYGIENE NOTE / CORRECTED:** accidental temporary root file `noop` was created at `2fbff6e9...` while invoking the wrong Git action, then immediately removed by `255b7a3...`. Direct compare `a758629... -> 255b7a3...` has zero changed files. Do not use those hygiene commits as measurement identity. No history was rewritten.
@@ -29,7 +29,7 @@ Open PRs: none at last checkpoint.
 
 ## Ares laboratory authority
 Isolation run **`35113184294`**, artifact **`10453682432`** proved pinned ares RSP JIT is a **LAB LIMITATION**. Valid high-density lab = **R4300 JIT + RSP interpreter**.
-**REJECTED:** R4300 JIT as cause; missing semaphore semantics; dropped semaphore `MTC0`; RSP DMA-busy; accidental OAM wall as primary cause. Old RSP-JIT profiles must not drive architecture. `SP_PC=0x020F` while RSP runs is non-interpretable.
+**REJECTED:** R4300 JIT as cause; missing semaphore semantics; dropped semaphore `MTC0`; RSP DMA-busy; accidental OAM wall as primary cause. Old RSP-JIT profiling must not drive architecture. `SP_PC=0x020F` while RSP runs is non-interpretable.
 Synthetic run **`35114866448`**, artifact **`10454678803`**: idle60/60; cpu-alu41; wram47; ppu-registers38; dma-vram16; gameplay-balanced61 with51.5% VI wait. Synthetic = causal controls only.
 
 ## Representative workload — Gothicvania
@@ -81,13 +81,17 @@ Open Homebrew Ares Profile run **`35183376105` SUCCESS**, artifact **`1048126757
 
 BLOCK32 lateness result over the post-settle measured interval: **35,965 DSP-due events**, late sum **4,615,674 cycles**, average lateness **128.338 cycles**, maximum **1,218 cycles**, and **377 / 35,965 = 1.048241%** of due events were at least one full DSP period late (`>=672` cycles). Instrumented frame-budget remained 48/60 but is non-authoritative by design.
 
-**MEASURED, NOT YET INTERPRETABLE AS A 32-BYTE REGRESSION:** BLOCK32 definitely exhibits occasional >1-period scheduling lateness. This alone does not prove 32 worsens correctness because the baseline16 scheduler can also overshoot due to instruction/data-access cycle costs. The paired BLOCK16 diagnostic is mandatory before deciding.
+**MEASURED, NOT YET INTERPRETABLE AS A 32-BYTE REGRESSION:** BLOCK32 definitely exhibits occasional >1-period scheduling lateness. This alone does not prove 32 worsens correctness because baseline16 can also overshoot due to instruction/data-access cycle costs. Paired BLOCK16 is mandatory.
+
+**BLOCK16 CONTROL HYGIENE:** commits `7715da11951f57db81fed37453802f5033d91095` and `f81370b22e5c410a3cd5e78248191bab79872538` are **SUPERSEDED / DO NOT INTERPRET**. They attempted the 32->16 control but also introduced formatting/layout differences while reconstructing `defines.h`; no results from those SHAs may be used.
+
+**BLOCK16 CONTROL — CLEAN MEASUREMENT CANDIDATE:** SHA **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** restores `src/defines.h` from exact BLOCK32 measurement source and changes only `#define BLOCK_SIZE 32 -> 16`. Direct compare **`7f8faeff... -> 8805fd61...`** reports exactly one modified file, **1 addition / 1 deletion**. Therefore this is the valid paired control and any following CI/artifact must be tied to this exact SHA.
 
 ## RESUME HERE
-1. Create the paired BLOCK16 diagnostic from current diagnostic branch by changing **only** `#define BLOCK_SIZE 32 -> 16`; verify compare against `7f8faeff...` is one file,1+/1- and no other changes.
-2. Run the identical ares diagnostic and record exact SHA/run/artifact/result immediately.
-3. Compare average/max lateness and >=672 frequency directly. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of clean candidate `a758629...`.
+1. Read CI/run state for exact BLOCK16 control SHA **`8805fd6128a183ce2259dd4d85ef146f42f00d47`**. Ignore any runs from superseded hygiene SHAs `7715da...` or `f81370...`.
+2. If successful, record exact ares run/artifact and BLOCK16 average/max lateness plus >=672 frequency immediately.
+3. Compare BLOCK32 vs BLOCK16 directly. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of clean candidate `a758629...`.
 4. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
 5. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic `7f8faeff...` measured avg128.338, max1218, >=672 in1.048241% of due events; paired BLOCK16 measurement is next and required for interpretation.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic `7f8faeff...` measured avg128.338, max1218, >=672 in1.048241% of due events. Clean paired BLOCK16 control is now exact SHA `8805fd61...`, differing only by BLOCK_SIZE32->16; read that run next.

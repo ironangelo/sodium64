@@ -24,6 +24,7 @@
 .globl jit_pointer
 
 .globl jit_read8
+.globl jit_debit_cycles
 .globl compile_block
 .globl finish_opcode
 .globl finish_block
@@ -47,7 +48,7 @@ jit_pointer: .word JIT_BUFFER
 
 .align 4
 jit_opcodes: // Lookup table for addressing and operation functions
-    .word finish_opcode, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x00-0x03
+    .word apu_nop, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x00-0x03
     .word apu_dirr, apu_ora,  apu_absr, apu_ora,  apu_brxr, apu_ora,  apu_idxr, apu_ora // 0x04-0x07
     .word apu_imm, apu_ora,  apu_dr2, apu_orm,  apu_drb, apu_or1a,  apu_dirr, apu_aslm // 0x08-0x0B
     .word apu_absr, apu_aslm,  apu_php, 0,  apu_absr, apu_tset1,  apu_brk, 0 // 0x0C-0x0F
@@ -114,6 +115,17 @@ jit_opcodes: // Lookup table for addressing and operation functions
 
 .text
 .set noreorder
+
+.align 5
+jit_debit_cycles: // t0: extra guest cycles; compiler-side total-cycle debt only
+    lbu t1, apu_clock
+jit_debit_loop:
+    sub s2, s2, t1
+    addi t0, t0, -1
+    bgtz t0, jit_debit_loop
+    nop
+    jr ra
+    nop
 
 .align 5
 jit_read8: // a0: address - v0: value

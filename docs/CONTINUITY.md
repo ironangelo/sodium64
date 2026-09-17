@@ -20,7 +20,7 @@ Completed M0 branch representative HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928
 Clean M1 candidate / measurement authority: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`).
 M1 paired baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
 `phase2/apu-audio-first` current HEAD **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**, tree-equivalent to `a758629...` after hygiene correction.
-**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`6921055dfb180503f5e05cc04d70d53f3eccc578`**, parent exactly **`a758629...`**.
+**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`8bebdd9dd81574e3ad50cb6d16e0e0ba3234e65b`**.
 Open PRs: none at last checkpoint.
 
 **HYGIENE NOTE / CORRECTED:** accidental temporary root file `noop` was created at `2fbff6e9...` while invoking the wrong Git action, then immediately removed by `255b7a3...`. Direct compare `a758629... -> 255b7a3...` has zero changed files. Do not use those hygiene commits as measurement identity. No history was rewritten.
@@ -71,23 +71,20 @@ APU timers are mostly lazily updated on relevant I/O; this is not proof of timer
 ## Paired DSP-lateness diagnostic
 Goal: profile-only counters at DSP-due entry for max `a3-s3`, sum/average lateness, due-event count, and count with lateness >= `DSP_SAMPLE` (672). Instrumentation must not alter emulated cycle counters. Run BLOCK32 instrumented first, then change only BLOCK_SIZE32->16 under identical instrumentation/workload/settings. Interpret lateness metrics, **not instrumented FPS**.
 
-**IMPLEMENTED BUT NOT INTERPRETABLE / EXPERIMENTAL CONFOUND:** diagnostic HEAD **`6921055dfb180503f5e05cc04d70d53f3eccc578`** is a direct child of clean32 `a758629...` and adds the DSP-due lateness logic inside `src/apu.S`, guarded by `SODIUM64_PROFILE`. However the same commit also changes unrelated timer-2 code in `stamp_timer2`: baseline `sub t1,t1,t2; sw t1,apu_ocycles+8` becomes `sub t0,t0,t2; sw t0,apu_ocycles+8`.
+Historical diagnostic commit **`6921055...`** added useful lateness logic but also an unrelated `stamp_timer2` t1->t0 change. **SUPERSEDED AS MEASUREMENT CANDIDATE**; preserve the timer issue for separate investigation.
 
-That timer-2 change may be a real correctness fix, but it is **not allowed inside the paired interleave experiment**. Any diagnostic result from `6921055...` would mix DSP-lateness instrumentation with altered timer semantics and must not be interpreted causally.
+**IMPLEMENTED / ISOLATED CORE INSTRUMENTATION:** HEAD **`8bebdd9dd81574e3ad50cb6d16e0e0ba3234e65b`** restores `stamp_timer2` exactly to parent `a758629...` while retaining the profile-only DSP lateness logic. Direct compare `a758629... -> 8bebdd9...` now reports only `src/apu.S`, **38 additions / 1 deletion**: the original single `ble s3,a3,dsp_sample` scheduler check is replaced by instrumentation with equivalent due/not-due branching. No unrelated timer/core-semantic change remains in `apu.S`.
 
-**INCOMPLETE PLUMBING / VERIFIED:** current `src/profile.S` on the diagnostic branch contains none of `profile_apu_dsp_due_count`, `profile_apu_dsp_late_sum`, `profile_apu_dsp_late_max`, or `profile_apu_dsp_multi_due_count`. Therefore `6921055...` references diagnostic symbols that are not yet defined/reset there; the commit is not a complete runnable measurement implementation. Workflow observation/reset plumbing is likewise still to be added and verified.
-
-**DECISION:** isolate the diagnostic first. Restore `stamp_timer2` exactly to `a758629...`; then add only profile counter storage/reset and workflow readout. If the timer-2 correction is valid, preserve it as separate knowledge/work after the controlled experiment rather than losing it.
+**INCOMPLETE PLUMBING / VERIFIED:** `src/profile.S` still contains none of `profile_apu_dsp_due_count`, `profile_apu_dsp_late_sum`, `profile_apu_dsp_late_max`, or `profile_apu_dsp_multi_due_count`. Therefore current HEAD is intentionally not yet a runnable diagnostic. Workflow observation/reset plumbing is also still to be added. Diagnostic branch is not enabled in the workflow trigger yet, preventing partial CI from being interpreted.
 
 ## RESUME HERE
-1. On `phase2/apu-interleave-diagnostic`, restore the unrelated `stamp_timer2` lines to exact parent `a758629...`; preserve only diagnostic intent.
-2. Add profile-only definitions/reset for the four `profile_apu_dsp_*` counters in `src/profile.S`. Do not alter emulated cycle state.
-3. Add post-settle zeroing/observations/reporting in the ares workflow; enable the diagnostic-branch trigger only when implementation is complete so partial commits are not interpreted.
-4. Before interpreting CI, compare against `a758629...` and verify no unrelated core-semantic change remains.
-5. Run BLOCK32 diagnostic; checkpoint exact SHA/run/artifact/result immediately.
-6. Change only BLOCK_SIZE32->16 under identical instrumentation; run and checkpoint.
-7. Compare max/average lateness and >=672 frequency. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of **clean candidate `a758629...`**.
-8. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
-9. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
+1. Add profile-only definitions/reset for the four `profile_apu_dsp_*` counters in `src/profile.S`, preferably outside the canonical `S64P` snapshot range so the existing profile format remains unchanged. Do not alter emulated cycle state.
+2. Add post-settle zeroing/observations/reporting in the ares workflow; enable the diagnostic-branch trigger only when implementation is complete so partial commits are not interpreted.
+3. Before interpreting CI, compare against `a758629...` and verify only diagnostic files/logic differ; no unrelated core-semantic change.
+4. Run BLOCK32 diagnostic; checkpoint exact SHA/run/artifact/result immediately.
+5. Change only BLOCK_SIZE32->16 under identical instrumentation; run and checkpoint.
+6. Compare max/average lateness and >=672 frequency. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of **clean candidate `a758629...`**.
+7. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
+8. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**, blocked by paired interleave correctness diagnostic. Current diagnostic commit `6921055...` contains useful lateness instrumentation but is both **confounded by an unrelated timer-2 change and incomplete because its counter symbols are not yet defined/reset**. Isolate and complete the diagnostic before measurement.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**, blocked by paired interleave correctness diagnostic. Core lateness instrumentation is now isolated at `8bebdd9...`; next wire counters/reset without changing the canonical S64P snapshot layout.

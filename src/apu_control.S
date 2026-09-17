@@ -373,6 +373,10 @@ apu_dbnzm: // DBNZ op,dest
 
 .align 5
 apu_bra: // BRA dest
+    // BRA always spends two internal cycles after fetching displacement.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Sign-extend the offset value and add it to the PC
     jal jit_read8
     ori s1, s1, FLAG_PC // Update the JIT register state

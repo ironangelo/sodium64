@@ -287,8 +287,10 @@ jobs:
           lines += [
               '',
               f"- Middle tag region mutated: {re['middle_region']}.",
-              f"- Old generated block re-entered after mutation: **{re['old_block_reentered']}**.",
-              f"- JIT pointer unchanged across probe: **{re['jit_pointer_unchanged']}**.",
+              f"- Recompiled before first cpu_execute return: **{re['recompiled_before_first_cpu_return']}**.",
+              f"- Stale block reused without recompile: **{re['stale_block_reused_without_recompile']}**.",
+              f"- Lookup changed across probe: **{re['lookup_changed']}**.",
+              f"- JIT pointer changed across probe: **{re['jit_pointer_changed']}**.",
               '',
               '> Diagnostic only. This workflow does not apply a timing fix or performance optimization.',
           ]

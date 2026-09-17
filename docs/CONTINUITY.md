@@ -20,7 +20,7 @@ Completed M0 branch representative HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928
 Clean M1 candidate / measurement authority: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`).
 M1 paired baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
 `phase2/apu-audio-first` current HEAD **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**, tree-equivalent to `a758629...` after hygiene correction.
-**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`8bebdd9dd81574e3ad50cb6d16e0e0ba3234e65b`**.
+**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`cbe39be069dce2d848364ccd1ab31efffe6c7624`**.
 Open PRs: none at last checkpoint.
 
 **HYGIENE NOTE / CORRECTED:** accidental temporary root file `noop` was created at `2fbff6e9...` while invoking the wrong Git action, then immediately removed by `255b7a3...`. Direct compare `a758629... -> 255b7a3...` has zero changed files. Do not use those hygiene commits as measurement identity. No history was rewritten.
@@ -73,18 +73,19 @@ Goal: profile-only counters at DSP-due entry for max `a3-s3`, sum/average latene
 
 Historical diagnostic commit **`6921055...`** added useful lateness logic but also an unrelated `stamp_timer2` t1->t0 change. **SUPERSEDED AS MEASUREMENT CANDIDATE**; preserve the timer issue for separate investigation.
 
-**IMPLEMENTED / ISOLATED CORE INSTRUMENTATION:** HEAD **`8bebdd9dd81574e3ad50cb6d16e0e0ba3234e65b`** restores `stamp_timer2` exactly to parent `a758629...` while retaining the profile-only DSP lateness logic. Direct compare `a758629... -> 8bebdd9...` now reports only `src/apu.S`, **38 additions / 1 deletion**: the original single `ble s3,a3,dsp_sample` scheduler check is replaced by instrumentation with equivalent due/not-due branching. No unrelated timer/core-semantic change remains in `apu.S`.
+**IMPLEMENTED / ISOLATED CORE INSTRUMENTATION:** `8bebdd9...` restored `stamp_timer2` exactly to parent `a758629...` while retaining profile-only DSP lateness logic.
 
-**INCOMPLETE PLUMBING / VERIFIED:** `src/profile.S` still contains none of `profile_apu_dsp_due_count`, `profile_apu_dsp_late_sum`, `profile_apu_dsp_late_max`, or `profile_apu_dsp_multi_due_count`. Therefore current HEAD is intentionally not yet a runnable diagnostic. Workflow observation/reset plumbing is also still to be added. Diagnostic branch is not enabled in the workflow trigger yet, preventing partial CI from being interpreted.
+**IMPLEMENTED / COUNTERS WIRED:** current HEAD **`cbe39be069dce2d848364ccd1ab31efffe6c7624`** adds four profile-only counters in `src/profile.S` and resets them in `profile_init`. They live **after `profile_sample_buffer_end`**, outside the canonical `profile_magic .. profile_sample_buffer_end` S64P snapshot range, so existing S64P layout/size/decoder semantics remain unchanged.
+
+Direct compare `a758629... -> cbe39be...` contains only diagnostic changes: `src/apu.S` **38 additions / 1 deletion** and `src/profile.S` **23 additions / 0 deletions**. No unrelated timer/core-semantic/layout change remains. Current code still intentionally lacks workflow readout/reset, and diagnostic branch is not yet in the workflow trigger.
 
 ## RESUME HERE
-1. Add profile-only definitions/reset for the four `profile_apu_dsp_*` counters in `src/profile.S`, preferably outside the canonical `S64P` snapshot range so the existing profile format remains unchanged. Do not alter emulated cycle state.
-2. Add post-settle zeroing/observations/reporting in the ares workflow; enable the diagnostic-branch trigger only when implementation is complete so partial commits are not interpreted.
-3. Before interpreting CI, compare against `a758629...` and verify only diagnostic files/logic differ; no unrelated core-semantic change.
-4. Run BLOCK32 diagnostic; checkpoint exact SHA/run/artifact/result immediately.
-5. Change only BLOCK_SIZE32->16 under identical instrumentation; run and checkpoint.
-6. Compare max/average lateness and >=672 frequency. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of **clean candidate `a758629...`**.
-7. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
-8. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
+1. Add post-settle zeroing/observations/reporting for the four DSP-lateness counters in `.github/workflows/open-homebrew-profile.yml`; enable `phase2/apu-interleave-diagnostic` trigger only in that final workflow commit.
+2. Before interpreting CI, compare against `a758629...` and verify only `src/apu.S`, `src/profile.S`, and the diagnostic workflow plumbing differ; no unrelated core-semantic change.
+3. Run BLOCK32 diagnostic; checkpoint exact SHA/run/artifact/result immediately.
+4. Change only BLOCK_SIZE32->16 under identical instrumentation; run and checkpoint.
+5. Compare max/average lateness and >=672 frequency. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of **clean candidate `a758629...`**.
+6. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
+7. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**, blocked by paired interleave correctness diagnostic. Core lateness instrumentation is now isolated at `8bebdd9...`; next wire counters/reset without changing the canonical S64P snapshot layout.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**, blocked by paired interleave correctness diagnostic. Diagnostic source instrumentation/counters are now isolated and complete at `cbe39be...`; workflow readout is the final plumbing step before BLOCK32 measurement.

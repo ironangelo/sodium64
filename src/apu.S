@@ -99,8 +99,45 @@ write_iomap:
 apu_execute:
     // Compile a new JIT block if one doesn't exist for the current PC
     lhu s0, apu_count
+#ifdef SODIUM64_PROFILE
+    // Diagnostic only: measure how late the scheduler is when DSP work becomes
+    // due. Do not modify s3/a3; instrumented runs are for timing evidence, not
+    // throughput comparison.
+    bgt s3, a3, apu_profile_not_due
+    sll t0, s0, 2
+    subu t1, a3, s3
+
+    la t0, profile_apu_dsp_due_count
+    lw t2, (t0)
+    addiu t2, t2, 1
+    sw t2, (t0)
+
+    la t0, profile_apu_dsp_late_sum
+    lw t2, (t0)
+    addu t2, t2, t1
+    sw t2, (t0)
+
+    la t0, profile_apu_dsp_late_max
+    lw t2, (t0)
+    bgeu t2, t1, apu_profile_max_done
+    nop
+    sw t1, (t0)
+apu_profile_max_done:
+    sltiu t2, t1, DSP_SAMPLE
+    bnez t2, apu_profile_due_done
+    nop
+    la t0, profile_apu_dsp_multi_due_count
+    lw t2, (t0)
+    addiu t2, t2, 1
+    sw t2, (t0)
+apu_profile_due_done:
+    j dsp_sample
+    nop
+apu_profile_not_due:
+#else
     ble s3, a3, dsp_sample // Check if the DSP should run
     sll t0, s0, 2
+#endif
     lw t0, jit_lookup(t0)
     beqz t0, compile_block
 
@@ -244,8 +281,8 @@ stamp_timer2:
     mult t1, t2 // Cycles until overflow
     lw t1, apu_cycle2
     mflo t2
-    sub t1, t1, t2
-    sw t1, apu_ocycles + 8
+    sub t0, t0, t2
+    sw t0, apu_ocycles + 8
     jr ra
     nop
 

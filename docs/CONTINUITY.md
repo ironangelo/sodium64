@@ -520,3 +520,24 @@ After mutating an actually covered byte at `0x0240` in tracked end region 9 and 
 - Keep it separate from SPC700 timing corrections; do not bundle the correctness proof harness into the runtime commit.
 - The Layer-1 total-cycle architecture proof may now legitimately use `fe5fcc0c...` as its parent.
 - No throughput gain is claimed; E1 matched-window repair remains mandatory before performance ranking.
+
+
+## Integration hygiene correction — NOP fix rebased cleanly onto master (2026-09-17)
+
+Attempted integration PR **#11** from historical branch `phase2/apu-nop-bound-fix@fe5fcc0c...` exposed a Git-history problem before merge: GitHub reported **27 commits / 8 changed files / +1353 -1** versus current `master@a2270699...`. The runtime NOP change itself remained the validated one-line fix, but the historical safe-tree branch is not a clean integration base relative to current master.
+
+**PR #11 was CLOSED / SUPERSEDED without merge.** Nothing from it entered master.
+
+A new clean integration candidate was created directly from exact current master:
+- branch **`phase2/apu-nop-bound-master`**;
+- candidate SHA **`eaad08de0f0cc09bada7fe5093c9e8bd5fe3455b`**;
+- base **`master@a2270699e60cdf2b8b8303aaa5a1aa4a0e8dd89e`**.
+
+GitHub compare is exact:
+- ahead by **1**;
+- behind by **0**;
+- total commits **1**;
+- changed files **1**: `src/apu_emitter.S`;
+- diff **+1/-1** only: opcode 0x00 dispatch `next_opcode -> finish_opcode`.
+
+**State:** `fe5fcc0c...` remains the SHA on which the corrected directed proof established the behavior, but it is **SUPERSEDED FOR INTEGRATION** by `eaad08de...`. Because code layout/base changed, rerun the directed NOP proof on a diagnostic child of `eaad08de...` before opening the replacement PR. Do not merge based solely on equivalence of the one source line.

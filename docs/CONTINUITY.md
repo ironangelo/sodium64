@@ -143,14 +143,16 @@ The subsystem-share direction is compatible with reduced APU overhead (`apu_exec
 
 **NOT YET VALIDATED:** one clean ares run does not establish reproducibility, real-N64 speed, SPC700 timing/audio correctness or broad compatibility. Do not merge or request hardware solely from this first run.
 
-**HYPOTHESIS STATUS: SUPPORTED.** A same-SHA repeat is now the highest-value next experiment. A repeat near 48/60 with unchanged runtime state strengthens the signal; collapse toward 44/60 or anomalies would expose run noise/correctness risk and block acceptance.
+**HYPOTHESIS STATUS: SUPPORTED.** A same-SHA repeat is now the highest-value next experiment.
+
+**EXPERIMENT IN PROGRESS / continuity checkpoint:** GitHub Actions job **`105054539199`** (`ares-gothicvania`) from run **`35174886403`** was re-run directly with no source change, preserving exact head SHA **`a758629...`** and the same built/profile input. Question: does the same binary reproduce a materially-above-baseline complete frame budget near 48/60? Interpretations: repeat near 48 with unchanged runtime strengthens reproducibility; collapse toward 44 indicates run noise; semantic/timing/runtime anomaly blocks acceptance even if throughput is high.
 
 ## Immediate next action / RESUME HERE
-1. Repeat the Open Homebrew Ares Profile on exact same clean SHA **`a758629014d0ecada6358c57eaf77c60afc80cad`**, with no source change, to test reproducibility.
+1. Read completion state and new artifact from the direct rerun of job **`105054539199`** / run **`35174886403`**; verify it remains exact SHA `a758629...` and unchanged guest/settings.
 2. Compare repeat complete frame budget and runtime/settings first; then sample density and APU/S-CPU/PPU/DMA proportions. Do not over-read percentage changes from low sample count.
 3. If repeat remains materially above 44/60 without runtime anomaly, mark clean32 **CANDIDATE / locally reproduced**, checkpoint, then explicitly assess APU JIT block-boundary semantics and audio/SPC700 timing risk before merge or hardware session.
 4. If repeat collapses to baseline or shows semantic/timing suspicion, keep 32 **OPEN QUESTION** or **REJECTED** as evidence warrants and move to the next bounded APU path.
 5. Once experiment 1b is resolved, repair `master` Road/Roadmap to reflect M0 closure and evidence-driven APU/audio-first M1. Hardware remains final performance/timing authority.
 6. No second emulator or unbounded JIT/tooling project. Every batch reduces a concrete Road-to-1.0 uncertainty.
 
-Resume summary: M0 is closed by real-hardware save SHA `3316bd99...` at 48/49/48/50/50 with 3581 samples, APU/audio 61.83%, S-CPU 22.12%, no VI wait. M1 baseline `c55b6b...` is 44/60 in the valid ares lab. Original `3b395...` repeated 48/60 but is **SUPERSEDED as a causal candidate** because of unrelated layout changes. Clean candidate `a758629...` differs from baseline only by `BLOCK_SIZE 16->32` and its first clean run also measured **48/60**. **Next move is a same-SHA repeat before accepting the optimization.**
+Resume summary: M0 is closed by real-hardware save SHA `3316bd99...` at 48/49/48/50/50 with 3581 samples, APU/audio 61.83%, S-CPU 22.12%, no VI wait. M1 baseline `c55b6b...` is 44/60 in the valid ares lab. Original `3b395...` repeated 48/60 but is **SUPERSEDED as a causal candidate** because of unrelated layout changes. Clean candidate `a758629...` differs from baseline only by `BLOCK_SIZE 16->32` and its first clean run measured **48/60**. **A no-source-change same-SHA repeat is in progress; read that result next.**

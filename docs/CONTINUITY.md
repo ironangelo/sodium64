@@ -712,3 +712,38 @@ Source-wide search found no other opcode-table/generator path that directly jump
 5. Preferred timing direction: retain current data-access timing initially, add missing guest-cycle charges systematically by shared addressing/operation/control families, and emit conditional extra cycles for taken branches. Validate total cycles first, then refine I/O/timer cycle placement where needed.
 6. A pinned independent cycle table agrees with ares for audited NOP/BRA/MUL/DIV values and can serve as host-test oracle/supporting evidence; ares dynamic semantics remain the primary independent reference.
 7. E1 matched-window repair remains required before small performance ranking. E3/E4/E5 remain DEFERRED until timing contract is corrected enough to establish a new baseline.
+
+
+## Clean block-bound candidate — CI validated 2026-09-17
+
+Clean candidate branch **`phase2/apu-block-bound-fix@7e48bcc994483e7aaf7cc2793b03fe0ebf13ee84`** was recreated directly from safe tree `225859b1d8fc0eb477a624ac76f8237667379f59`.
+
+Direct compare is exactly one file, **`src/apu_emitter.S +1/-1`**: opcode `0x00` NOP maps from `next_opcode` to `finish_opcode`. No diagnostic source, workflow, profiler or other runtime code is present.
+
+**Build and Validate `35288085787` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+Normal build artifact ID `10524987296`; PROFILE build artifact ID `10524444940`.
+
+Combined with dynamic ares proof `35287658903`, this candidate is **VALIDATED** for the demonstrated block-bound/stale-middle-tag defect. It is not yet merged; keep it as the clean base for APU timing-correctness work so timing can be tested without reintroducing the NOP span bug.
+
+### Timing-model design constraint learned during the same batch
+
+Pinned ares reference confirms the missing timing is structurally regular, not just MUL/DIV special cases:
+- indexed addressing introduces idle cycles;
+- pure stores perform dummy/read-before-write cycles;
+- many implied/register operations perform a dummy `read(PC)`;
+- conditional taken branches add two cycles;
+- MUL/DIV/XCN and similar operations have internal cycles.
+
+Sodium64 currently batches opcode/operand fetch debits in compile-time `s2` and emits that debit at block end, while `apu_read8/apu_write8` debit data accesses at runtime. Timer/control paths observe `s3`; therefore the first correction should **preserve existing data-access debit placement** and add only missing guest cycles. This minimizes semantic movement while making total instruction timing correct. Exact intra-instruction bus-cycle placement remains a later fidelity refinement, not something to silently claim from the first timing candidate.
+
+## RESUME HERE — clean block fix validated; timing proof mechanism next
+
+1. `master` remains `a2270699...`. Clean block-bound candidate is **`phase2/apu-block-bound-fix@7e48bcc9...`**, one-line core diff, Build/Validate `35288085787` SUCCESS.
+2. Dynamic authority for the block fix remains diagnostic run `35287658903`: long probe bounded to 16 source bytes / one tag region.
+3. Next technical batch: on diagnostic `phase2/apu-cycle-proof`, introduce one shared compile-time mechanism for **missing guest cycles** and exercise it only on the already-audited NOP/BRA/MUL/DIV cases. Expected corrected sequence totals: BRA4, NOP+BRA6, MUL+BRA13, DIV+BRA16; 16 NOPs should debit32 cycles while still ending after16 source bytes.
+4. This four-opcode step is a **mechanism proof, not the permanent timing coverage**. If validated, recreate the mechanism cleanly from `7e48bcc9...` and expand systematically by shared addressing/operation/control families plus runtime conditional charges for taken branches.
+5. Do not remove `apu_read8/write8` timing debits yet. Do not globally scale `apu_clock`. Do not claim exact intra-instruction I/O timing until dedicated timer/port tests prove it.
+6. E1 matched-window repair remains necessary before ranking small performance changes. E3/E4/E5 remain DEFERRED.

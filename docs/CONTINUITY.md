@@ -600,3 +600,17 @@ Generalize Layer-1 timing by **semantic families**, not 256 ad-hoc fixes:
 5. validate against the complete 256-opcode Nintendo cycle table, with targeted dynamic proof before performance interpretation.
 
 Do not performance-rank until E1 matched-window measurement is repaired.
+
+
+## Compatibility finding from 256-opcode audit — 2026-09-17
+
+Crossing current `master`'s `jit_opcodes` table against the complete 256-opcode hardware table exposed a separate non-timing compatibility hole:
+
+- opcode **0xBE = DAS A** maps to `apu_unk`;
+- opcode **0xDF = DAA A** maps to `apu_unk`;
+- `apu_unk` explicitly emits code that leaves the SPC700 PC on the unimplemented opcode, effectively looping there.
+- opcodes **0xEF = SLEEP** and **0xFF = STOP** also map to `apu_unk`, but these are special control states and need their own semantics; do not conflate them with DAA/DAS.
+
+**VALIDATED / static source finding:** DAA and DAS are legal SPC700 instructions but are currently unimplemented in Sodium64. This is a **COMPATIBILITY PROOF / REQUIRED SUPPORT** issue for the 1.0 accuracy target, independent of the current Layer-1 timing correction.
+
+Do not bundle DAA/DAS implementation into the active NOP-bound integration or four-path total-cycle proof. Add directed semantic tests before implementation, using pinned ares plus an independent opcode semantic reference where licensing permits.

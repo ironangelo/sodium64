@@ -245,3 +245,71 @@ The dynamic E2 test must now prove or falsify two things separately: (1) actual 
 4. Falsifiers: any hidden debit that restores reference cycle totals rejects the under-accounting hypothesis; an observed enforced stop before crossing the nominal span rejects the NOP-span hypothesis; a middle-region change that invalidates/recompiles through another mechanism rejects the missed-intermediate-tag hypothesis.
 5. If E2 confirms timing under-accounting, make the correction a separate correctness candidate and establish a fresh baseline before optimizing. If E2 falsifies it, return to E3/E4/E5 selection. Separately make the minimal matched-window E1 harness repair before using small ares throughput deltas to rank candidates.
 6. 2B remains **DEFERRED, not REJECTED**. Do not merge diagnostic code, reopen BLOCK32, start 65C816 dynarec, move work to RSP, reduce fidelity, or build a second emulator to bypass these questions.
+
+## E2 dynamic proof — CONFIRMED 2026-09-17
+
+Diagnostic branch advanced from the setup checkpoint to **`phase2/apu-cycle-proof@e2ac0c29f5ca4d80b737f714d2d4ae30e91da897`**. Commit `c1e22e9e72dcb7d369113df6cb3ce0d07b04f97f` added the bounded GDB-RSP proof script; `e2ac0c29...` added the branch-only workflow. No production fix was applied.
+
+Exact CI:
+- **APU Cycle And Span Proof `35245970304` SUCCESS**, profile-build job `105286137431`, cycle-proof job `105286577504`.
+- **Build and Validate `35245970309` SUCCESS** on the same exact SHA.
+- proof artifact **`10508131011`**, digest **`sha256:3b6c2a6d1dcfba6f9bc5c89730b23b31a5c12bde366eb6671ae9ccf3bc2a61d0`**.
+- exact proof-build artifact **`10507975608`**, digest **`sha256:5bd82c795c02e089ba600f14df4d2bc9a5cc385a88487b30e079491a236ff49a`**.
+- pinned ares remains `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`, R4300 JIT + RSP interpreter; Gothicvania source/provenance/settings remain the validated diagnostic substrate.
+
+### E2A — MEASURED: inherited SPC700 cycle under-accounting is real
+
+The proof stops at a safe `apu_execute` scheduler boundary, injects isolated SPC700 snippets, forces a clean JIT lookup entry, stops at `compile_block`, then inspects the exact generated block and its unique emitted `ADDI s3,s3,imm` cycle debit.
+
+| case | source bytes | measured debit | measured source clock units | pinned-reference SPC cycles |
+| --- | ---: | ---: | ---: | ---: |
+| BRA | 2 | -42 | **2** | **4** |
+| NOP + BRA | 3 | -63 | **3** | **6** |
+| MUL + BRA | 3 | -63 | **3** | **13** |
+| DIV + BRA | 3 | -63 | **3** | **16** |
+
+All measured debits exactly match Sodium64 source prediction and materially disagree with the pinned independent SPC700 reference totals.
+
+**VALIDATED / correctness finding:** for these isolated instructions, Sodium64 is not merely configured with `apu_clock=21`; it actually undercharges guest instruction time. There is no hidden debit restoring NOP/MUL/DIV/BRA reference timing. The previous under-accounting hypothesis is therefore **CONFIRMED for the tested instruction classes**.
+
+**SUPPORTED INTERPRETATION:** inherited timing can execute excess SPC700 instruction work per emulated interval. Correcting timing may therefore improve both fidelity and host cost, but Gothicvania magnitude is still UNKNOWN and no speedup percentage is claimed. Do not globally rescale `apu_clock`: the missing amount is instruction/path dependent.
+
+### E2B — MEASURED: nominal BLOCK_SIZE and endpoint-only invalidation can fail
+
+A controlled `126×NOP + DBNZ Y,-128` source sequence compiled as **128 source bytes** from PC `0x0200` despite `BLOCK_SIZE=16`.
+
+Measured generated header:
+- start tag region **8**;
+- end tag region **10**;
+- source clock units **128**;
+- therefore the generated block spans at least **three 64-byte tag regions**.
+
+The proof then changed an actually covered byte in middle region **9** (`0x0240`) from NOP to CLRC and incremented that region's tag exactly as `apu_write8` would. Start/end tags were untouched.
+
+Measured re-entry:
+- middle tag **0 -> 1**;
+- lookup pointer before/after remained **`2149318676`**;
+- JIT pointer before/after remained **`2686189652`**;
+- breakpoint on the old generated-code entry was hit with SIGTRAP;
+- **`old_block_reentered = true`**.
+
+**VALIDATED / correctness finding:** NOP's direct dispatch to `next_opcode` can bypass the nominal block bound, and the current two-endpoint tag validation can then miss a mutation in an intermediate region and execute stale generated code. This is no longer a source-only risk.
+
+**What E2 does NOT prove:** prevalence in Gothicvania, magnitude of real-game performance impact, or that all SPC700 opcodes have the same timing error. It also does not authorize merging the diagnostic harness.
+
+### Decision after E2
+
+1. **Timing correctness now outranks E3/E4/E5 performance optimization.** Build a separate bounded timing-correction candidate; establish a fresh baseline after semantic validation before attributing any throughput change.
+2. Keep timing correction instruction/path-specific. First derive the minimum trustworthy cycle contract from the pinned reference and Sodium64's existing split: opcode/operand fetches are compile-time debits, runtime memory accesses already debit through `apu_read8/apu_write8`, and only the missing internal/taken-branch cycles should be added.
+3. Fix the independently confirmed NOP block-bound/invalidation defect as a separate one-variable correctness candidate. The smallest candidate is to route NOP through the normal `finish_opcode` boundary, then rerun the >128-byte span + middle-tag mutation proof. Do not bundle this with timing correction.
+4. E1 matched-window repair remains required before ranking small ares throughput deltas. Correctness tests can proceed independently.
+5. 2B low-read helper remains **DEFERRED**, not rejected. BLOCK32 remains **REJECTED**.
+
+## RESUME HERE — E2 confirmed 2026-09-17
+
+1. Integrated `master` remains `a2270699...`; active performance 2A remains `989e1f5b...`; E2 diagnostic HEAD is now **`e2ac0c29...`** with both Build/Validate and APU Cycle/Span Proof green. No open PR is implied.
+2. Treat E2 as two validated correctness findings: **instruction-cycle under-accounting for tested NOP/MUL/DIV/BRA paths**, and **NOP-driven overlong blocks that can miss intermediate tag invalidation and re-enter stale code**.
+3. Next technical batch: create a **separate NOP-bound correctness candidate** from the safe BLOCK16 tree, change only NOP dispatch to obey `finish_opcode`, rerun the long-NOP span/middle-tag proof, and reject if it alters unrelated semantics or still permits >2 tag regions.
+4. After that checkpoint, derive and implement the **smallest instruction/path-specific timing correction candidate** supported by the pinned SPC700 reference. Do not globally change `apu_clock`; do not combine timing correction with memory/JIT optimizations.
+5. Before performance-ranking any resulting candidate, add the minimal matched-window E1 measurement boundary and establish a fresh baseline. Fidelity/cycle equivalence is required before any speed claim.
+6. E3 low-read helper, E4 validation specialization and E5 DSP invariant hoist remain candidates only after timing semantics are on firmer ground. No second emulator, no RSP offload, no scope reduction, no cartridge-assistance pivot.

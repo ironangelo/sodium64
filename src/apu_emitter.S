@@ -47,7 +47,7 @@ jit_pointer: .word JIT_BUFFER
 
 .align 4
 jit_opcodes: // Lookup table for addressing and operation functions
-    .word next_opcode, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x00-0x03
+    .word finish_opcode, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x00-0x03
     .word apu_dirr, apu_ora,  apu_absr, apu_ora,  apu_brxr, apu_ora,  apu_idxr, apu_ora // 0x04-0x07
     .word apu_imm, apu_ora,  apu_dr2, apu_orm,  apu_drb, apu_or1a,  apu_dirr, apu_aslm // 0x08-0x0B
     .word apu_absr, apu_aslm,  apu_php, 0,  apu_absr, apu_tset1,  apu_brk, 0 // 0x0C-0x0F

@@ -336,3 +336,21 @@ Acceptance requires all three:
 Falsifier: any >16-byte compiled span, unexpected tag-region coverage, or re-entry into the old generated block after the covered end-region tag mutation. If falsified, do not broaden the fix until the exact mechanism is identified.
 
 Do not merge or performance-rank this candidate while the proof is running. Cycle-timing design may proceed from the already-confirmed E2 evidence but remains a separate future candidate.
+
+
+## SPC700 timing-contract design checkpoint — 2026-09-17
+
+Source audit after E2 establishes the implementation boundary for the future timing correction:
+
+- Across `apu_emitter.S`, `apu_address.S`, `apu_alu.S`, `apu_control.S` and `apu_transfer.S`, the inherited JIT has no general cycle debit beyond:
+  1. `jit_read8`: one `apu_clock` per opcode/operand byte fetched at compile time into `s2`;
+  2. runtime `apu_read8/apu_write8`: one `apu_clock` per emitted data access into `s3`.
+  This explains the E2 measurements structurally: internal/dummy cycles are not hidden elsewhere.
+
+- The pinned ares reference distinguishes several kinds of additional cycles. Many are `idle()`, but many are actual dummy `read(...)` operations (for example NOP performs `read(PC)`; multiple write/implied/control forms also issue reads). A cycle-only debit is therefore not automatically full bus/I/O fidelity. Future work must distinguish **fetch / real data read-write / dummy read / idle**, and preserve ordering when I/O can be touched.
+
+- Conditional branch timing cannot be represented solely by a compile-time fixed debit. In the pinned reference, generic Branch fetches displacement and adds two `idle()` only when taken. Any Sodium64 correction must therefore put taken-only cycles on the emitted taken path rather than charging both outcomes.
+
+- **OPEN QUESTION / source-supported risk:** `menu_close` changes `apu_clock` and sets `jit_pointer = ROM_BUFFER` but does not immediately clear `jit_lookup`. Existing generated blocks already embed their fetch-cycle debit, so a cached block may retain the prior clock value until a later JIT miss reaches `reset_buffer` and clears lookup. This predates the proposed timing work. Do not conflate it with the cycle correction; test/fix separately if the timing candidate depends on clock-setting transitions.
+
+**Architecture direction:** do not use a global `apu_clock` scale and do not add one fixed “cycles per opcode” table that erases bus semantics. Build the timing contract from the exact pinned reference and Sodium64's emitted-access behavior, with constant internal cycles and runtime-conditional cycles represented separately. Dummy reads that can have observable I/O effects require semantic treatment, not just time debit.

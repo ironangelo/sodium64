@@ -836,3 +836,44 @@ Keep branch conditional +2 timing as a separate later batch.
 4. Apply one controlled class of timing corrections: addressing-family missing cycles only. Validate representative read/write pairs against reference totals and semantics. Do not include conditional branch timing in this batch.
 5. If addressing-family proof passes, checkpoint and recreate timing mechanism + validated addressing rules cleanly from `7e48bcc9...`; then proceed to conditional branches as a separate variable.
 6. E1 matched-window repair remains required before performance ranking. E3/E4/E5 remain DEFERRED until timing baseline is meaningfully corrected.
+
+
+## Addressing-family timing proof in progress — checkpoint 2026-09-17
+
+Exact diagnostic SHA: **`19b3d6cfe7c042109fe08bc08e44eac0a9abb510`**, one commit ahead of validated mechanism SHA `842a1412...`.
+
+Controlled class under test: **SPC700 addressing-family missing guest cycles only**. No conditional branch timing changes are included.
+
+Core diagnostic changes:
+- direct pure-write address path: +1 dummy destination-read cycle;
+- direct X/Y indexed: +1 for reads/modifies, +2 for pure writes;
+- `(X)`: +1 for reads, +2 for pure writes;
+- `(X)+`: +2 for read and write directions;
+- absolute pure stores use a new `apu_absw` wrapper with +1, while CALL/JMP retain uncharged `apu_absa`;
+- absolute X/Y indexed: +1 read, +2 write;
+- `[dp+X]` and `[dp]+Y`: +1 read, +2 write.
+Existing runtime `apu_read8/apu_write8` data-access debits remain unchanged.
+
+The proof harness now reads ares R4300 **GPR19 / s3 using RSP `p13`** at `compile_block` and at the first `cpu_execute` return. Pinned ares N64 debug hook returns GPRs as 16-hex-digit u64 values, so the signed delta measures total generated-block master-cycle debit including runtime memory helpers.
+
+Representative matrix adds 16 cases:
+direct read/write; direct+X read/write; `(X)` read/write; `(X)+` read/write; absolute read/write; absolute+X read/write; `[dp+X]` read/write; `[dp]+Y` read/write. Each checks static debit, total `s3` debit vs independent reference cycles, PC/header span, and a semantic postcondition (A/X or written RAM).
+
+Direct compare `842a1412... -> 19b3d6cf...` is exactly:
+- `.github/workflows/apu-cycle-proof.yml` +16/-6;
+- `scripts/apu_cycle_proof.py` +179/-2;
+- `src/apu_address.S` +54/-0;
+- `src/apu_emitter.S` +3/-3.
+
+Runs launched for exact SHA:
+- **Build and Validate `35289165618`** — queued at checkpoint.
+- **APU Cycle And Span Proof `35289165637`** — queued at checkpoint.
+
+Acceptance requires ALL of:
+1. normal + PROFILE build + Mupen smoke green;
+2. existing BRA/NOP/MUL/DIV and NOP-span regressions remain green;
+3. all 16 addressing cases match exact static expected debit;
+4. measured total `s3` debit equals pinned independent reference cycle total ×21;
+5. semantic postconditions and one-region block bound remain correct.
+
+Any mismatch rejects or narrows the family rule; do not paper over a failure by adjusting the reference expectation without reconciling the pinned ares instruction sequence.

@@ -20,7 +20,7 @@ Completed M0 branch representative HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928
 Clean M1 candidate / measurement authority: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`).
 M1 paired baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
 `phase2/apu-audio-first` current HEAD **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**, tree-equivalent to `a758629...` after hygiene correction.
-**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`7f8faeff6efa1d94c421ad0369938d8c0d077195`**.
+**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`7f8faeff6efa1d94c421ad0369938d8c0d077195`** pending the paired BLOCK16 commit.
 Open PRs: none at last checkpoint.
 
 **HYGIENE NOTE / CORRECTED:** accidental temporary root file `noop` was created at `2fbff6e9...` while invoking the wrong Git action, then immediately removed by `255b7a3...`. Direct compare `a758629... -> 255b7a3...` has zero changed files. Do not use those hygiene commits as measurement identity. No history was rewritten.
@@ -75,18 +75,19 @@ Historical diagnostic commit **`6921055...`** added useful lateness logic but al
 
 `8bebdd9...` isolated `src/apu.S`; `cbe39be...` added counters/reset outside canonical S64P range.
 
-**MEASUREMENT CANDIDATE / BLOCK32:** current diagnostic HEAD **`7f8faeff6efa1d94c421ad0369938d8c0d077195`** completes workflow plumbing and enables the diagnostic branch trigger. Post-settle, the workflow zeros all four lateness counters at the same measurement boundary as sample metadata, observes them as 32-bit values, calculates average/max and >=672 count/fraction, and stores TXT/JSON in the profile artifact. Instrumented FPS is explicitly non-authoritative.
+**BLOCK32 DIAGNOSTIC — MEASURED:** SHA **`7f8faeff6efa1d94c421ad0369938d8c0d077195`**. Direct compare to clean candidate `a758629...` is limited to exactly three diagnostic files: `.github/workflows/open-homebrew-profile.yml` (51+/1-), `src/apu.S` (38+/1-), `src/profile.S` (23+/0-). No unrelated core-semantic or S64P-layout changes.
 
-Direct compare `a758629... -> 7f8faeff...` is clean and limited to exactly three files: `.github/workflows/open-homebrew-profile.yml` (**51+/1-**), `src/apu.S` (**38+/1-**), `src/profile.S` (**23+/0-**). No unrelated core-semantic or S64P-layout changes remain.
+Open Homebrew Ares Profile run **`35183376105` SUCCESS**, artifact **`10481267575`**, digest **`d1a8b2dcac54e00c3e3c8330501dc5eea0471b59bb40a490083868e1f3b7af7c`**. Build and Validate run **`35183376137` SUCCESS**; normal build, profile build and emulator smoke all passed. Exact settings remained frameskip0/APU21/audio4/precision8.
 
-**EXPERIMENT IN PROGRESS:** exact SHA **`7f8faeff...`**. Open Homebrew Ares Profile run **`35183376105`** and Build and Validate run **`35183376137`** were both started by this push. Question: under the exact Gothicvania/settings lab, what are DSP due-event average/max lateness and frequency of lateness >=672 cycles? Possible readings: materially high >=672 frequency or much larger average/max than BLOCK16 would threaten 32-byte correctness; low/bounded values still require paired BLOCK16 comparison before acceptance. This is a correctness/interleave measurement, not a throughput run.
+BLOCK32 lateness result over the post-settle measured interval: **35,965 DSP-due events**, late sum **4,615,674 cycles**, average lateness **128.338 cycles**, maximum **1,218 cycles**, and **377 / 35,965 = 1.048241%** of due events were at least one full DSP period late (`>=672` cycles). Instrumented frame-budget remained 48/60 but is non-authoritative by design.
+
+**MEASURED, NOT YET INTERPRETABLE AS A 32-BYTE REGRESSION:** BLOCK32 definitely exhibits occasional >1-period scheduling lateness. This alone does not prove 32 worsens correctness because the baseline16 scheduler can also overshoot due to instruction/data-access cycle costs. The paired BLOCK16 diagnostic is mandatory before deciding.
 
 ## RESUME HERE
-1. Read CI/run state for exact SHA `7f8faeff...`. If build/profile fails, diagnose tooling/instrumentation only; do not alter emulated behavior to make the test pass.
-2. If successful, record run/artifact and BLOCK32 lateness metrics immediately.
-3. Then change **only** `BLOCK_SIZE 32->16` under identical instrumentation/workflow; verify compare and run paired diagnostic.
-4. Compare max/average lateness and >=672 frequency. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of clean candidate `a758629...`.
-5. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
-6. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
+1. Create the paired BLOCK16 diagnostic from current diagnostic branch by changing **only** `#define BLOCK_SIZE 32 -> 16`; verify compare against `7f8faeff...` is one file,1+/1- and no other changes.
+2. Run the identical ares diagnostic and record exact SHA/run/artifact/result immediately.
+3. Compare average/max lateness and >=672 frequency directly. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of clean candidate `a758629...`.
+4. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
+5. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic is in progress at exact SHA `7f8faeff...`, runs `35183376105` / `35183376137`; read that result next.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic `7f8faeff...` measured avg128.338, max1218, >=672 in1.048241% of due events; paired BLOCK16 measurement is next and required for interpretation.

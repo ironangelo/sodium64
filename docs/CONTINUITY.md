@@ -457,3 +457,66 @@ Acceptance is exact and inherited from E2:
 - all four must be observed from the exact generated JIT block at the first `cpu_execute` return.
 
 Falsifier: any total differs, generated block lacks a unique `ADDI s3,s3,imm` debit, or Build/Validate fails. A pass validates only the debit primitive and these four paths, not the remaining 252 opcodes and not Layer-2 bus/I/O timing.
+
+
+## Deterministic invalidation proofs complete — VALIDATED 2026-09-17
+
+The corrected first-`cpu_execute` reruns removed the old timed-SIGTRAP ambiguity and now dynamically settle both sides of the NOP block-bound defect.
+
+### Inherited baseline defect — VALIDATED
+
+Exact diagnostic HEAD: **`phase2/apu-cycle-proof@30be54899133f518b52ca3ba1ddce00070ac812f`**.
+
+Exact CI:
+- **APU Cycle And Span Proof `35283897586` SUCCESS**;
+- **Build and Validate `35283897497` SUCCESS**.
+
+Inherited long-NOP block:
+- 128 source clock units;
+- header tag regions **8 -> 10**;
+- therefore exceeds nominal `BLOCK_SIZE=16` and spans three 64-byte tag regions.
+
+After changing an actually covered byte in middle region 9 and incrementing only tag 9, while endpoint tags 8/10 remained untouched, then continuing from a safe `apu_execute` boundary to the **first `cpu_execute` return**:
+- lookup before/after: **2149318676 -> 2149318676** (unchanged);
+- JIT pointer before/after: **2686189652 -> 2686189652** (unchanged);
+- `recompiled_before_first_cpu_return = false`;
+- `stale_block_reused_without_recompile = true`.
+
+**VALIDATED:** the inherited NOP path can exceed the nominal block bound; endpoint-only validation then misses a covered intermediate-tag mutation and executes the cached stale generated block.
+
+### One-line NOP-bound fix — VALIDATED
+
+Clean runtime candidate remains **`phase2/apu-nop-bound-fix@fe5fcc0ca7b817a99095dcde40dc9d37d54d4a18`**, based on safe `225859b1...`. Its sole runtime change is opcode 0x00 dispatch `next_opcode -> finish_opcode`.
+
+Exact corrected diagnostic HEAD: **`phase2/apu-nop-bound-proof@200aef5e9d90d739dc00f9250678eb31919a3512`**.
+
+Exact CI:
+- **APU NOP Bound Proof `35283857525` SUCCESS**;
+- child **Build and Validate `35283857526` SUCCESS**;
+- clean candidate Build/Validate had already passed on `fe5fcc0c...`.
+
+Measured:
+- test PC `0x0238`;
+- long source payload remains 128 bytes, but generated block debits exactly **16 source clock units**;
+- PC after block **0x0248**;
+- header regions **8 -> 9**;
+- `nop_bound_enforced = true`;
+- `bounded_block_tracks_only_two_regions = true`.
+
+After mutating an actually covered byte at `0x0240` in tracked end region 9 and incrementing tag 9, then continuing to the first `cpu_execute` return:
+- lookup **2149318676 -> 2149318708**;
+- JIT pointer **2686189620 -> 2686189672**;
+- `recompiled_before_first_cpu_return = true`;
+- `stale_block_reused_without_recompile = false`;
+- `covered_end_tag_prevents_stale_reentry = true`.
+
+**VALIDATED:** `fe5fcc0c...` fixes this specific internal JIT block-bound/invalidation defect with the intended one-line runtime change.
+
+**Scope:** this does not prove every possible generated block is limited to at most two tag regions; other opcode generators can still terminate/bypass differently and require separate reasoning if future evidence points there. It does prove the concrete NOP bypass defect found by E2 and its stale-invalidation consequence.
+
+### Decision
+
+- Promote `fe5fcc0c...` from HYPOTHESIS/CANDIDATE to **VALIDATED** for this defect.
+- Keep it separate from SPC700 timing corrections; do not bundle the correctness proof harness into the runtime commit.
+- The Layer-1 total-cycle architecture proof may now legitimately use `fe5fcc0c...` as its parent.
+- No throughput gain is claimed; E1 matched-window repair remains mandatory before performance ranking.

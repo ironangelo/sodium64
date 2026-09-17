@@ -565,3 +565,38 @@ Diagnostic child remains **`phase2/apu-total-cycle-validate@215dc67722462f1fd768
 - directed APU Total Cycle Proof **`35284371466` IN PROGRESS**.
 
 Do not generalize the timing mechanism until the directed totals are observed as exactly BRA=4, NOP+BRA=6, MUL+BRA=13, DIV+BRA=16.
+
+
+## Layer-1 total-cycle architecture proof — VALIDATED for four paths 2026-09-17
+
+Experimental runtime HEAD: **`phase2/apu-total-cycle-proof@b268b98b9cf83a9d13a5c59c49c0bd4c585caef8`**.
+Diagnostic child HEAD: **`phase2/apu-total-cycle-validate@215dc67722462f1fd768e58471ca599cdaf699cf`**.
+
+Exact CI:
+- runtime **Build and Validate `35284214442` SUCCESS**;
+- child **Build and Validate `35284371446` SUCCESS**;
+- **APU Total Cycle Proof `35284371466` SUCCESS**.
+
+Exact generated-block measurements at `apu_clock=21`:
+- BRA: debit **-84 = 4 guest cycle units**, expected 4;
+- NOP+BRA: debit **-126 = 6 units**, expected 6;
+- MUL+BRA: debit **-273 = 13 units**, expected 13;
+- DIV+BRA: debit **-336 = 16 units**, expected 16;
+- `all_total_cycle_cases_match = true`.
+
+**VALIDATED / ARCHITECTURE PROOF:** a compiler-side extra-cycle debit can represent the missing Layer-1 total guest cycles for the tested fixed/taken paths without changing memory fast paths. The four E2 mismatches are corrected exactly by this mechanism.
+
+**Not proven / scope:** this does not validate the remaining 252 opcodes, conditional branch taken/not-taken handling, dummy-read bus effects, timer/I/O ordering, or any performance gain. It is Layer-1 total-cycle accounting only.
+
+**Integration hygiene:** `b268b98b...` descends from the historical safe-tree NOP candidate `fe5fcc0c...`, whose Git history was later shown not to be a clean current-master integration base. Therefore `b268b98b...` is **VALIDATED AS AN ARCHITECTURE PROOF ONLY / NOT AN INTEGRATION CANDIDATE**. Reapply the mechanism on the clean current-master line after the clean NOP candidate `eaad08de...` is revalidated/merged, then rerun this proof before any PR.
+
+### Next timing batch
+
+Generalize Layer-1 timing by **semantic families**, not 256 ad-hoc fixes:
+1. preserve fixed-cycle totals with compiler-side debt;
+2. implement the 28 conditional opcode families with taken-path-only extra debit;
+3. keep existing runtime data-access debits intact;
+4. separately preserve/defer dummy-read and intra-block I/O semantics as Layer 2;
+5. validate against the complete 256-opcode Nintendo cycle table, with targeted dynamic proof before performance interpretation.
+
+Do not performance-rank until E1 matched-window measurement is repaired.

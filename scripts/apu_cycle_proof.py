@@ -321,14 +321,14 @@ def main() -> int:
     args = parser.parse_args()
 
     cases = [
-        ("bra", bytes.fromhex("2ffe"), -42, 4, 8, 0x5A),
-        ("nop_bra", bytes.fromhex("002ffd"), -63, 6, 8, 0x5A),
-        ("mul_bra", bytes.fromhex("cf2ffd"), -63, 13, 8, 0x5A),
-        ("div_bra", bytes.fromhex("9e2ffd"), -63, 16, 8, 0x5A),
+        ("bra", bytes.fromhex("2ffe"), -84, 4, 8, 0x5A),
+        ("nop_bra", bytes.fromhex("002ffd"), -126, 6, 8, 0x5A),
+        ("mul_bra", bytes.fromhex("cf2ffd"), -273, 13, 8, 0x5A),
+        ("div_bra", bytes.fromhex("9e2ffd"), -336, 16, 8, 0x5A),
         # Regression probe: source contains 126 NOPs + DBNZ Y,-128, but with
         # NOP routed through finish_opcode the compiler must stop after the
         # first 16 bytes at the existing BLOCK_SIZE boundary.
-        ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -336, None, 8, 0xFF),
+        ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -672, None, 8, 0xFF),
     ]
 
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
@@ -383,7 +383,7 @@ def main() -> int:
                 "compiled_long_probe_is_bounded_to_one_tag_region": (
                     int(long_result["header_end_region"])
                     == int(long_result["header_start_region"])
-                    and int(long_result["source_clock_units"]) == 16
+                    and int(long_result["source_clock_units"]) == 32
                 ),
                 "middle_region_probe_applicable": bool(reentry.get("applicable", True)),
                 "stale_block_reentered_after_middle_tag_mutation": (

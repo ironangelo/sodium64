@@ -281,8 +281,8 @@ stamp_timer2:
     mult t1, t2 // Cycles until overflow
     lw t1, apu_cycle2
     mflo t2
-    sub t0, t0, t2
-    sw t0, apu_ocycles + 8
+    sub t1, t1, t2
+    sw t1, apu_ocycles + 8
     jr ra
     nop
 

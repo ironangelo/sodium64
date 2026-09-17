@@ -8,10 +8,10 @@
     by the Free Software Foundation, either version 3 of the License,
     or (at your option) any later version.
 
-    sodium64 is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    General Public License for more details.
+    sodium64 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
     along with sodium64. If not, see <https://www.gnu.org/licenses/>.
@@ -32,7 +32,7 @@
 #define DSP_SAMPLE 672 // 21477000Hz / 32000Hz = 671.15625
 
 // Maximum opcode bytes that can be compiled in an APU JIT block
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 16
 
 // The frame section data structure's size in bytes
 #define SECTION_SIZE 0x40

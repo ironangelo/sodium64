@@ -125,26 +125,32 @@ Observed same-SHA candidate results:
 The lower sample counts (915/1183 versus baseline 2000) also make percentage composition noisier. Frame-budget repetition is stronger evidence than the exact subsystem-share deltas, but ares remains only a lab.
 
 ## M1 experiment 1b — clean 32-byte candidate
-**IMPLEMENTED / CONTROLLED EXPERIMENT READY:** active branch HEAD **`a758629014d0ecada6358c57eaf77c60afc80cad`** restores `src/defines.h` to the exact `c55b6b...` baseline content except for `#define BLOCK_SIZE 16 -> 32`.
+**IMPLEMENTED / CONTROLLED EXPERIMENT:** active branch HEAD **`a758629014d0ecada6358c57eaf77c60afc80cad`** restores `src/defines.h` to the exact `c55b6b...` baseline content except for `#define BLOCK_SIZE 16 -> 32`.
 
 Direct compare `c55b6b... -> a758629...` reports exactly **one modified file (`src/defines.h`), 1 addition, 1 deletion**. The license text and all runtime layout macros/offsets are restored to baseline. This removes the known confound before performance interpretation.
 
-**MEASURED / HYGIENE:** Build and Validate run **`35174886449` SUCCESS** and Open Homebrew Ares Profile run **`35174886403` SUCCESS** for exact clean SHA `a758629...`. This establishes that the isolated change compiles, passes the existing validation/smoke path and completes the profiling workflow. It does **not** yet establish a performance gain; artifact contents must be read next.
+**MEASURED / HYGIENE:** Build and Validate run **`35174886449` SUCCESS** and Open Homebrew Ares Profile run **`35174886403` SUCCESS** for exact clean SHA `a758629...`.
 
-**HYPOTHESIS:** increasing the maximum APU JIT block from 16 to 32 opcode bytes reduces block-boundary/dispatch overhead enough to produce a reproducible improvement on the representative workload.
+Clean profile artifact **`10477834229`**, digest **`faf8ec269072824613d9b9297c0f700cfd418ad6883f69097907c48c56b004b0`**, is tied to head SHA `a758629...` and exact Gothicvania survivability input SHA-256 `5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`.
 
-**What the clean diff proves:** any reproducible behavioral/performance delta against `c55b6b...` can now be attributed to the block-size change at source level, subject to the known ares lab limitations and run noise.
+**MEASURED / first clean run:** last complete virtual frame budget **48/60** (80.0%), versus baseline **44/60**. 957 valid samples. Runtime state: frameskip 0, APU clock 21, audio 4, precision 8, queue 0; SP DMA full/busy 0/0. Partial window 21/60 VI with 15 guest frames.
 
-**What it does not prove:** no performance gain has yet been established for this clean SHA; CI success does not establish real-N64 speed, audio correctness, SPC700 timing correctness or broad compatibility.
+Sample split: APU static **33.33%**, generated JIT **5.64%**, DSP/audio **12.02%** => combined APU/audio **50.99%**; S-CPU **30.93%**; PPU/events **9.61%**; DMA/HDMA **5.54%**; RSP/VRAM wait **2.51%**; VI wait **0.42%**. `apu_execute` **11.39%**, `cpu_execute` **15.15%**, `apu_read8` **1.57%**, `apu_write8` **0.94%**.
 
-**Falsifier:** if the clean candidate returns to baseline-like throughput, regresses, or shows runtime/timing/correctness anomalies, the earlier 48/60 signal was not safely attributable to 32-byte blocks and this path should be rejected or bounded further.
+**SUPPORTED INTERPRETATION:** the clean one-variable 32-byte candidate reproduces the material **44 -> 48/60** frame-budget movement previously seen only in the confounded SHA. Therefore the known layout confound is no longer required to explain the gain, and larger APU JIT blocks are now supported as the causal source-level change in this ares lab. The four-frame change is about +9.1% completed frames per 60-VI window relative to 44/60, but this is a discrete lab budget, not a direct real-N64 speedup percentage.
+
+The subsystem-share direction is compatible with reduced APU overhead (`apu_execute` 13.10% -> 11.39%; combined APU/audio 54.40% -> 50.99%), but **957 vs 2000 samples** makes exact percentage deltas noisy. Treat complete frame budget as the stronger signal.
+
+**NOT YET VALIDATED:** one clean ares run does not establish reproducibility, real-N64 speed, SPC700 timing/audio correctness or broad compatibility. Do not merge or request hardware solely from this first run.
+
+**HYPOTHESIS STATUS: SUPPORTED.** A same-SHA repeat is now the highest-value next experiment. A repeat near 48/60 with unchanged runtime state strengthens the signal; collapse toward 44/60 or anomalies would expose run noise/correctness risk and block acceptance.
 
 ## Immediate next action / RESUME HERE
-1. Read artifacts from Open Homebrew Ares Profile run **`35174886403`** for exact clean candidate `a758629...`; verify artifact identity, exact guest SHA/settings, sample density and runtime state before interpreting performance.
-2. Compare complete virtual frame budget first against baseline `c55b6b...` (44/60, 2000 samples), then compare `apu_execute`, generated-JIT/static/DSP aggregate, S-CPU/PPU/DMA and VI wait. Use `3b395...` only as historical/confounded context.
-3. If clean32 reproduces a material gain without lower-level/runtime regression, repeat the same-SHA profile to separate signal from run noise; then checkpoint. Do not request hardware or merge solely from one ares run.
-4. If clean32 is neutral/negative or semantically suspicious, mark 32-byte granularity **REJECTED**, restore 16 and move to the next bounded measured APU path (`apu_read8`/`apu_write8` specialization, then DSP inner-loop work if warranted).
-5. Once experiment 1b is cleanly resolved, repair `master` Road/Roadmap to reflect M0 closure and evidence-driven APU/audio-first M1. Before merge/hardware, explicitly assess APU/DSP interleave and audio-correctness risk.
+1. Repeat the Open Homebrew Ares Profile on exact same clean SHA **`a758629014d0ecada6358c57eaf77c60afc80cad`**, with no source change, to test reproducibility.
+2. Compare repeat complete frame budget and runtime/settings first; then sample density and APU/S-CPU/PPU/DMA proportions. Do not over-read percentage changes from low sample count.
+3. If repeat remains materially above 44/60 without runtime anomaly, mark clean32 **CANDIDATE / locally reproduced**, checkpoint, then explicitly assess APU JIT block-boundary semantics and audio/SPC700 timing risk before merge or hardware session.
+4. If repeat collapses to baseline or shows semantic/timing suspicion, keep 32 **OPEN QUESTION** or **REJECTED** as evidence warrants and move to the next bounded APU path.
+5. Once experiment 1b is resolved, repair `master` Road/Roadmap to reflect M0 closure and evidence-driven APU/audio-first M1. Hardware remains final performance/timing authority.
 6. No second emulator or unbounded JIT/tooling project. Every batch reduces a concrete Road-to-1.0 uncertainty.
 
-Resume summary: M0 is closed by real-hardware save SHA `3316bd99...` at 48/49/48/50/50 with 3581 samples, APU/audio 61.83%, S-CPU 22.12%, no VI wait. M1 baseline `c55b6b...` is 44/60 in the valid ares lab. Original `3b395...` repeated 48/60 but is **SUPERSEDED as a causal candidate** because of unrelated layout changes. Clean candidate `a758629...` now differs from baseline only by `BLOCK_SIZE 16->32`; both CI workflows are green. **Next move is artifact measurement on run 35174886403, then evidence-based accept/reject.**
+Resume summary: M0 is closed by real-hardware save SHA `3316bd99...` at 48/49/48/50/50 with 3581 samples, APU/audio 61.83%, S-CPU 22.12%, no VI wait. M1 baseline `c55b6b...` is 44/60 in the valid ares lab. Original `3b395...` repeated 48/60 but is **SUPERSEDED as a causal candidate** because of unrelated layout changes. Clean candidate `a758629...` differs from baseline only by `BLOCK_SIZE 16->32` and its first clean run also measured **48/60**. **Next move is a same-SHA repeat before accepting the optimization.**

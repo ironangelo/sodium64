@@ -22,11 +22,11 @@ Rejected clean32 throughput candidate: **`a758629014d0ecada6358c57eaf77c60afc80c
 **Active M1 branch:** `phase2/apu-audio-first`, current HEAD **`225859b1d8fc0eb477a624ac76f8237667379f59`**. Direct compare against `c55b6b...` has **zero changed files**: this is the restored safe BLOCK_SIZE16 tree after rejecting 32-byte blocks.
 Diagnostic branch `phase2/apu-interleave-diagnostic` current HEAD **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** (`BLOCK_SIZE=16` paired lateness control).
 **Canonical-doc sync candidate:** `docs/m0-m1-road-sync`, current HEAD **`90fafc89c1fc7c7a0bbe7ca19f4680a77af687f0`**. Direct compare against integrated `master` is clean and limited to exactly three documentation files: `docs/ROAD_TO_1_0.md`, `docs/ROADMAP.md`, and `docs/PROFILING.md`; zero code/workflow changes.
-**Open PR:** **#10** `Docs: sync Road to M0 closure and APU-first M1`, base `master`, head `90fafc89...`, 3 changed files, 102+/61-. Candidate only until CI + merge.
+**Open PR:** **#10** `Docs: sync Road to M0 closure and APU-first M1`, base `master`, head `90fafc89...`, 3 changed files, 102+/61-. `Build and Validate` run **`35225126989`** is green including emulator-smoke; `Ares Profile Validation` run **`35225221616`** remains in progress at the ares build stage. Candidate only until all required CI + merge.
 
 **HYGIENE NOTE / CORRECTED:** accidental temporary root file `noop` was created at `2fbff6e9...` while invoking the wrong Git action, then immediately removed by `255b7a3...`. Direct compare `a758629... -> 255b7a3...` has zero changed files. Do not use those hygiene commits as measurement identity. No history was rewritten.
 
-**DOC SYNC / PR OPEN:** PR #10 carries `docs/m0-m1-road-sync @ 90fafc89...` and reflects M0 closure, real-N64 49/60 evidence, APU/audio-first M1, conditional rather than assumed 65C816 dynarec, rejection of 32-byte APU blocks on timing evidence, and the current M1 role/limits of profiling. Full diff hygiene passed: `PROFILING.md` 9+/5-, `ROADMAP.md` 86+/53-, `ROAD_TO_1_0.md` 7+/3-, with no non-doc files. Next action: inspect CI for exact PR head; merge only if clean and unchanged, then verify `master`.
+**DOC SYNC / PR OPEN:** PR #10 carries `docs/m0-m1-road-sync @ 90fafc89...` and reflects M0 closure, real-N64 49/60 evidence, APU/audio-first M1, conditional rather than assumed 65C816 dynarec, rejection of 32-byte APU blocks on timing evidence, and the current M1 role/limits of profiling. Full diff hygiene passed: `PROFILING.md` 9+/5-, `ROADMAP.md` 86+/53-, `ROAD_TO_1_0.md` 7+/3-, with no non-doc files. Merge only after remaining CI is green and head/diff unchanged.
 
 ## Ares laboratory authority
 Isolation run **`35113184294`**, artifact **`10453682432`** proved pinned ares RSP JIT is a **LAB LIMITATION**. Valid high-density lab = **R4300 JIT + RSP interpreter**.
@@ -78,10 +78,20 @@ The superseded diagnostic commit `6921055...` changed `stamp_timer2` from baseli
 
 **REJECTED:** the `t1 -> t0` variant is not a bugfix; it is an erroneous diagnostic-side change. No source change is required. This explanation is preserved so it is not rediscovered later.
 
-## RESUME HERE
-1. Inspect CI/mergeability for **PR #10**, exact head **`90fafc89...`**. Merge only if checks are clean and the three-doc diff remains unchanged; verify integrated master and checkpoint continuity immediately.
-2. Start the next bounded APU optimization from safe HEAD **`225859b1...` / BLOCK_SIZE16**. Preferred next measured path: reduce `apu_read8`/`apu_write8` overhead without extending scheduler intervals; one important variable at a time. DSP inner-loop work follows if evidence warrants.
-3. Use the existing Gothicvania paired lab first; only retain a change if throughput improves without new timing/semantic regression. Hardware remains final authority for accepted candidates.
-4. No second emulator/unbounded JIT tooling. Every batch must reduce a Road-to-1.0 uncertainty.
+## M1 experiment 2 — low/direct-page APU read fast path
+**HYPOTHESIS / NOT IMPLEMENTED YET.** Real-N64 M0 sampled `apu_read8` at 6.03%; the valid ares baseline also places substantial time around the generic APU-read return path (`read_unk` 7.75% plus `apu_read8` 2.90%), so memory-read dispatch is a measured hotspot.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 improved to48/60 twice but paired DSP-lateness proved a timing regression: BLOCK16 avg119.073/max651/0 >=672 events vs BLOCK32 avg128.338/max1218/377 >=672 events. **BLOCK_SIZE32 REJECTED.** Active M1 HEAD `225859b1...` is tree-equivalent to safe baseline16. Timer2 t0 variant is **REJECTED** as an erroneous side change. PR #10 carries the clean three-doc canonical sync at `90fafc89...`; CI/merge is next.
+**STATIC EVIDENCE:** `apu_map` is a 64-byte-block offset table whose only nonzero runtime entry is the final index `0x3FF`; `write_control` updates only `apu_map + 0x3FF` to map/unmap the IPL ROM at **0xFFC0–0xFFFF**. Direct-page address generators form addresses in **0x0000–0x01FF** (with some pointer-second-byte cases just beyond the page boundary) and therefore cannot require IPL remapping. `apu_address.S` emits many calls to generic `apu_read8` from these low-address modes.
+
+**CONTROLLED CHANGE PROPOSED:** add a low/direct-page read helper with the same ABI and the same I/O dispatch, `apu_clock` load, and `s3` cycle decrement as `apu_read8`, but omit only the impossible `apu_map` lookup/address adjustment. Redirect only call sites statically guaranteed to be low/direct-page; keep absolute/dynamic reads on generic `apu_read8`. Do **not** change BLOCK_SIZE, scheduler return frequency, guest cycle accounting, or write paths in the same experiment.
+
+**EXPECTED RESULT:** lower sampled cost in the APU-read path and possibly a modest frame-budget gain. **FALSIFIER:** no reproducible movement, build/semantic regression, or any evidence that a redirected call site can reach IPL-mapped space / loses I/O semantics. If neutral, reject before broadening to write paths or more aggressive inlining.
+
+## RESUME HERE
+1. Finish **PR #10** exact head `90fafc89...`: remaining Ares Profile Validation run `35225221616` must finish green; verify head/diff unchanged, merge, verify integrated `master`, checkpoint continuity.
+2. Then implement M1 experiment 2 on `phase2/apu-audio-first` from safe HEAD **`225859b1...` / BLOCK_SIZE16**: low/direct-page `apu_read8` fast helper only, no write-path or scheduler changes. Verify diff/hygiene before CI.
+3. Run Build/Validate + representative Gothicvania ares lab. Compare complete virtual frame budget first, then sample density and generic-vs-fast read shares. If movement is small, repeat before interpreting. Reject on semantic/timing risk even if faster.
+4. Hardware remains final authority for candidates that survive the lab; no hardware session for a neutral/rejected micro-optimization.
+5. No second emulator/unbounded JIT tooling. Every batch must reduce a Road-to-1.0 uncertainty.
+
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. BLOCK_SIZE32 improved to48/60 twice but paired DSP-lateness proved a timing regression and is **REJECTED**. Active M1 HEAD `225859b1...` is tree-equivalent to safe baseline16. Timer2 t0 variant is **REJECTED**. PR #10 carries the clean canonical-doc sync; while its final ares check runs, M1 experiment 2 has been statically scoped to omit only impossible IPL-map work from guaranteed low/direct-page APU reads.

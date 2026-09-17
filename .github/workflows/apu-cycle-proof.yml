@@ -171,7 +171,10 @@ jobs:
           apu_ram=$(symbol apu_ram)
           apu_count=$(symbol apu_count)
           apu_clock=$(symbol apu_clock)
+          apu_reg_x=$(symbol apu_reg_x)
           apu_reg_y=$(symbol apu_reg_y)
+          apu_accum=$(symbol apu_accum)
+          apu_flags=$(symbol apu_flags)
           jit_tags=$(symbol jit_tags)
           jit_lookup=$(symbol jit_lookup)
           jit_pointer=$(symbol jit_pointer)
@@ -180,8 +183,8 @@ jobs:
           cpu_execute=$(symbol cpu_execute)
 
           for value in \
-            "$apu_ram" "$apu_count" "$apu_clock" "$apu_reg_y" \
-            "$jit_tags" "$jit_lookup" "$jit_pointer" \
+            "$apu_ram" "$apu_count" "$apu_clock" "$apu_reg_x" "$apu_reg_y" \
+            "$apu_accum" "$apu_flags" "$jit_tags" "$jit_lookup" "$jit_pointer" \
             "$apu_execute" "$compile_block" "$cpu_execute"; do
             test -n "$value"
           done
@@ -190,7 +193,10 @@ jobs:
             echo "APU_RAM_ADDR=$apu_ram"
             echo "APU_COUNT_ADDR=$apu_count"
             echo "APU_CLOCK_ADDR=$apu_clock"
+            echo "APU_REG_X_ADDR=$apu_reg_x"
             echo "APU_REG_Y_ADDR=$apu_reg_y"
+            echo "APU_ACCUM_ADDR=$apu_accum"
+            echo "APU_FLAGS_ADDR=$apu_flags"
             echo "JIT_TAGS_ADDR=$jit_tags"
             echo "JIT_LOOKUP_ADDR=$jit_lookup"
             echo "JIT_POINTER_ADDR=$jit_pointer"
@@ -241,7 +247,10 @@ jobs:
             --apu-ram "0x$APU_RAM_ADDR" \
             --apu-count "0x$APU_COUNT_ADDR" \
             --apu-clock "0x$APU_CLOCK_ADDR" \
+            --apu-reg-x "0x$APU_REG_X_ADDR" \
             --apu-reg-y "0x$APU_REG_Y_ADDR" \
+            --apu-accum "0x$APU_ACCUM_ADDR" \
+            --apu-flags "0x$APU_FLAGS_ADDR" \
             --jit-tags "0x$JIT_TAGS_ADDR" \
             --jit-lookup "0x$JIT_LOOKUP_ADDR" \
             --jit-pointer "0x$JIT_POINTER_ADDR" \
@@ -273,14 +282,15 @@ jobs:
           lines = [
               '### SPC700 cycle / block-span proof',
               '',
-              '| case | source bytes | debit | source units | reference cycles | tag regions |',
-              '|---|---:|---:|---:|---:|---|',
+              '| case | source bytes | static debit | static units | total debit | total units | reference cycles | tag regions |',
+              '|---|---:|---:|---:|---:|---:|---:|---|',
           ]
           for case in data['cases']:
               ref = case['reference_spc_cycles']
               lines.append(
                   f"| {case['name']} | {case['source_bytes']} | {case['cycle_debit']} | "
-                  f"{case['source_clock_units']} | {ref if ref is not None else 'n/a'} | "
+                  f"{case['source_clock_units']} | {case['total_cycle_debit']} | "
+                  f"{case['total_clock_units']} | {ref if ref is not None else 'n/a'} | "
                   f"{case['header_start_region']}→{case['header_end_region']} |"
               )
           re = data['middle_region_reentry']
@@ -300,7 +310,7 @@ jobs:
               ]
           lines += [
               '',
-              '> Diagnostic only. This workflow does not apply a timing fix or performance optimization.',
+              '> Diagnostic branch only. Passing this proof validates the audited timing families, not complete SPC700 timing or a performance improvement.',
           ]
           with open(Path(__import__('os').environ['GITHUB_STEP_SUMMARY']), 'a', encoding='utf-8') as f:
               f.write('\n'.join(lines) + '\n')

@@ -29,6 +29,7 @@ JIT_BUFFER = 0xA01C0000
 TEST_PC = 0x0200
 APU_CLOCK = 21
 BREAKPOINT_KIND = 4
+S3_GPR_INDEX = 19
 
 
 def parse_int(text: str) -> int:
@@ -49,6 +50,26 @@ def read_u16(client: RSPClient, address: int) -> int:
 
 def read_u32(client: RSPClient, address: int) -> int:
     return int.from_bytes(client.read_memory(address, 4, 4), "big")
+
+
+def read_gpr(client: RSPClient, index: int) -> int:
+    reply = client.request(f"p{index:x}")
+    if reply.startswith(b"E"):
+        raise RuntimeError(f"target rejected GPR read p{index:x}: {reply!r}")
+    text = reply.decode("ascii")
+    if len(text) != 16:
+        raise RuntimeError(f"unexpected 64-bit GPR reply for p{index:x}: {reply!r}")
+    try:
+        return int(text, 16)
+    except ValueError as exc:
+        raise RuntimeError(f"invalid GPR reply for p{index:x}: {reply!r}") from exc
+
+
+def signed_delta_u64(after: int, before: int) -> int:
+    delta = (after - before) & 0xFFFFFFFFFFFFFFFF
+    if delta & (1 << 63):
+        delta -= 1 << 64
+    return delta
 
 
 def cached(address: int) -> int:
@@ -115,16 +136,28 @@ def arm_case(
     apu_ram: int,
     apu_count: int,
     apu_clock: int,
+    apu_reg_x: int,
     apu_reg_y: int,
+    apu_accum: int,
+    apu_flags: int,
     jit_lookup: int,
     jit_pointer: int,
-    y_value: int = 0x5A,
+    x_value: int = 0x04,
+    y_value: int = 0x06,
+    a_value: int = 0x11,
+    flags_value: int = 0x00,
+    memory_writes: tuple[tuple[int, bytes], ...] = (),
 ) -> None:
     lookup_entry = jit_lookup + TEST_PC * 4
     client.write_memory(apu_ram + TEST_PC, code)
     client.write_memory(apu_count, be(TEST_PC, 2))
     client.write_memory(apu_clock, bytes([APU_CLOCK]))
+    client.write_memory(apu_reg_x, bytes([x_value & 0xFF]))
     client.write_memory(apu_reg_y, bytes([y_value & 0xFF]))
+    client.write_memory(apu_accum, bytes([a_value & 0xFF]))
+    client.write_memory(apu_flags, bytes([flags_value & 0xFF]))
+    for offset, data in memory_writes:
+        client.write_memory(apu_ram + offset, data)
     client.write_memory(lookup_entry, bytes(4))
     client.write_memory(jit_pointer, be(JIT_BUFFER, 4))
 
@@ -135,6 +168,17 @@ def arm_case(
         raise RuntimeError("apu_count verification failed")
     if read_u8(client, apu_clock) != APU_CLOCK:
         raise RuntimeError("apu_clock verification failed")
+    if read_u8(client, apu_reg_x) != (x_value & 0xFF):
+        raise RuntimeError("apu_reg_x verification failed")
+    if read_u8(client, apu_reg_y) != (y_value & 0xFF):
+        raise RuntimeError("apu_reg_y verification failed")
+    if read_u8(client, apu_accum) != (a_value & 0xFF):
+        raise RuntimeError("apu_accum verification failed")
+    if read_u8(client, apu_flags) != (flags_value & 0xFF):
+        raise RuntimeError("apu_flags verification failed")
+    for offset, data in memory_writes:
+        if client.read_memory(apu_ram + offset, len(data), len(data)) != data:
+            raise RuntimeError(f"APU data patch verification failed at 0x{offset:04X}")
     if read_u32(client, lookup_entry) != 0:
         raise RuntimeError("JIT lookup entry did not clear")
     if read_u32(client, jit_pointer) != JIT_BUFFER:
@@ -151,6 +195,13 @@ def compile_one_case(
     expected_end_region: int,
     y_value: int,
     addresses: argparse.Namespace,
+    x_value: int = 0x04,
+    a_value: int = 0x11,
+    flags_value: int = 0x00,
+    memory_writes: tuple[tuple[int, bytes], ...] = (),
+    expected_accum: int | None = None,
+    expected_x: int | None = None,
+    expected_memory: tuple[int, int] | None = None,
 ) -> dict[str, object]:
     # Arrive before apu_execute touches s0/lookup. This avoids changing apu_count
     # while an old generated block is still in flight.
@@ -162,18 +213,31 @@ def compile_one_case(
         apu_ram=addresses.apu_ram,
         apu_count=addresses.apu_count,
         apu_clock=addresses.apu_clock,
+        apu_reg_x=addresses.apu_reg_x,
         apu_reg_y=addresses.apu_reg_y,
+        apu_accum=addresses.apu_accum,
+        apu_flags=addresses.apu_flags,
         jit_lookup=addresses.jit_lookup,
         jit_pointer=addresses.jit_pointer,
+        x_value=x_value,
         y_value=y_value,
+        a_value=a_value,
+        flags_value=flags_value,
+        memory_writes=memory_writes,
     )
 
     # apu_execute can service DSP first depending on s3/a3. Waiting specifically
     # for compile_block makes the test independent of that scheduler phase.
     continue_to_breakpoint(client, addresses.compile_block, f"{name}: compile_block")
+    s3_before = read_gpr(client, S3_GPR_INDEX)
     # Starting at compile_block now guarantees the next return to cpu_execute is
     # the block we just compiled/executed.
     continue_to_breakpoint(client, addresses.cpu_execute, f"{name}: cpu_execute return")
+    s3_after = read_gpr(client, S3_GPR_INDEX)
+    total_cycle_debit = signed_delta_u64(s3_after, s3_before)
+    expected_total_debit = (
+        -reference_cycles * APU_CLOCK if reference_cycles is not None else None
+    )
 
     lookup_entry = addresses.jit_lookup + TEST_PC * 4
     block = read_u32(client, lookup_entry)
@@ -215,13 +279,48 @@ def compile_one_case(
         "cycle_debit_matches_expected": debit == expected_debit,
         "source_clock_units": (-debit // APU_CLOCK) if debit is not None and debit <= 0 else None,
         "reference_spc_cycles": reference_cycles,
+        "s3_before": s3_before,
+        "s3_after": s3_after,
+        "total_cycle_debit": total_cycle_debit,
+        "total_clock_units": (
+            -total_cycle_debit // APU_CLOCK if total_cycle_debit <= 0 else None
+        ),
+        "expected_total_cycle_debit": expected_total_debit,
+        "total_cycle_debit_matches_reference": (
+            expected_total_debit is None or total_cycle_debit == expected_total_debit
+        ),
         "expected_end_region": expected_end_region,
         "span_matches_expected": start_region == TEST_PC // 64 and end_region == expected_end_region,
         "apu_count_after_block": read_u16(client, addresses.apu_count),
+        "apu_reg_x_after_block": read_u8(client, addresses.apu_reg_x),
         "apu_reg_y_after_block": read_u8(client, addresses.apu_reg_y),
+        "apu_accum_after_block": read_u8(client, addresses.apu_accum),
         "jit_pointer_uncached": end_uncached,
     }
+
+    semantic_checks: list[bool] = [result["apu_count_after_block"] == TEST_PC]
+    if expected_accum is not None:
+        semantic_checks.append(result["apu_accum_after_block"] == expected_accum)
+    if expected_x is not None:
+        semantic_checks.append(result["apu_reg_x_after_block"] == expected_x)
+    if expected_memory is not None:
+        offset, value = expected_memory
+        observed = read_u8(client, addresses.apu_ram + offset)
+        result["expected_memory_offset"] = offset
+        result["expected_memory_value"] = value
+        result["observed_memory_value"] = observed
+        semantic_checks.append(observed == value)
+    result["semantics_match_expected"] = all(semantic_checks)
+
     print(json.dumps(result, sort_keys=True))
+    if not result["cycle_debit_matches_expected"]:
+        raise RuntimeError(f"{name}: static cycle debit mismatch")
+    if not result["total_cycle_debit_matches_reference"]:
+        raise RuntimeError(f"{name}: total s3 cycle debit mismatch")
+    if not result["span_matches_expected"]:
+        raise RuntimeError(f"{name}: JIT header span mismatch")
+    if not result["semantics_match_expected"]:
+        raise RuntimeError(f"{name}: semantic postcondition mismatch")
     return result
 
 
@@ -310,7 +409,10 @@ def main() -> int:
     parser.add_argument("--apu-ram", type=parse_int, required=True)
     parser.add_argument("--apu-count", type=parse_int, required=True)
     parser.add_argument("--apu-clock", type=parse_int, required=True)
+    parser.add_argument("--apu-reg-x", type=parse_int, required=True)
     parser.add_argument("--apu-reg-y", type=parse_int, required=True)
+    parser.add_argument("--apu-accum", type=parse_int, required=True)
+    parser.add_argument("--apu-flags", type=parse_int, required=True)
     parser.add_argument("--jit-tags", type=parse_int, required=True)
     parser.add_argument("--jit-lookup", type=parse_int, required=True)
     parser.add_argument("--jit-pointer", type=parse_int, required=True)
@@ -328,7 +430,63 @@ def main() -> int:
         # Regression probe: source contains 126 NOPs + DBNZ Y,-128, but with
         # NOP routed through finish_opcode the compiler must stop after the
         # first 16 bytes at the existing BLOCK_SIZE boundary.
-        ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -672, None, 8, 0xFF),
+        ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -672, 32, 8, 0xFF),
+    ]
+
+    address_cases = [
+        dict(name="direct_read", code=bytes.fromhex("04202ffc"), expected_debit=-126,
+             reference_cycles=7, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x22"),), expected_accum=0x33),
+        dict(name="direct_write", code=bytes.fromhex("c4202ffc"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x33"),), expected_memory=(0x0020, 0x11)),
+        dict(name="direct_x_read", code=bytes.fromhex("14202ffc"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0024, b"\x22"),), expected_accum=0x33),
+        dict(name="direct_x_write", code=bytes.fromhex("d4202ffc"), expected_debit=-168,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0024, b"\x33"),), expected_memory=(0x0024, 0x11)),
+        dict(name="indirect_x_read", code=bytes.fromhex("062ffd"), expected_debit=-126,
+             reference_cycles=7, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0004, b"\x22"),), expected_accum=0x33),
+        dict(name="indirect_x_write", code=bytes.fromhex("c62ffd"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0004, b"\x33"),), expected_memory=(0x0004, 0x11)),
+        dict(name="indirect_x_inc_read", code=bytes.fromhex("bf2ffd"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0004, b"\x22"),), expected_accum=0x22, expected_x=0x05),
+        dict(name="indirect_x_inc_write", code=bytes.fromhex("af2ffd"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0004, b"\x33"),), expected_x=0x05,
+             expected_memory=(0x0004, 0x11)),
+        dict(name="absolute_read", code=bytes.fromhex("0500042ffb"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0400, b"\x22"),), expected_accum=0x33),
+        dict(name="absolute_write", code=bytes.fromhex("c500042ffb"), expected_debit=-168,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0400, b"\x33"),), expected_memory=(0x0400, 0x11)),
+        dict(name="absolute_x_read", code=bytes.fromhex("1500042ffb"), expected_debit=-168,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0404, b"\x22"),), expected_accum=0x33),
+        dict(name="absolute_x_write", code=bytes.fromhex("d500042ffb"), expected_debit=-189,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0404, b"\x33"),), expected_memory=(0x0404, 0x11)),
+        dict(name="indexed_indirect_read", code=bytes.fromhex("07402ffc"), expected_debit=-147,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0044, b"\x00\x04"), (0x0400, b"\x22")),
+             expected_accum=0x33),
+        dict(name="indexed_indirect_write", code=bytes.fromhex("c7402ffc"), expected_debit=-168,
+             reference_cycles=11, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0044, b"\x00\x04"), (0x0400, b"\x33")),
+             expected_memory=(0x0400, 0x11)),
+        dict(name="indirect_indexed_read", code=bytes.fromhex("17502ffc"), expected_debit=-147,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0050, b"\x00\x04"), (0x0406, b"\x22")),
+             expected_accum=0x33),
+        dict(name="indirect_indexed_write", code=bytes.fromhex("d7502ffc"), expected_debit=-168,
+             reference_cycles=11, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0050, b"\x00\x04"), (0x0406, b"\x33")),
+             expected_memory=(0x0406, 0x11)),
     ]
 
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
@@ -363,6 +521,9 @@ def main() -> int:
             )
             results.append(result)
 
+        for case in address_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")
         reentry = middle_region_reentry(client, long_result=long_result, addresses=args)
 
@@ -378,6 +539,12 @@ def main() -> int:
                 ),
                 "all_header_spans_match_source_prediction": all(
                     bool(item["span_matches_expected"]) for item in results
+                ),
+                "all_total_debits_match_reference": all(
+                    bool(item["total_cycle_debit_matches_reference"]) for item in results
+                ),
+                "all_semantics_match_expected": all(
+                    bool(item["semantics_match_expected"]) for item in results
                 ),
                 "long_source_program_exceeds_block_size": int(long_result["source_bytes"]) > 16,
                 "compiled_long_probe_is_bounded_to_one_tag_region": (
@@ -395,6 +562,16 @@ def main() -> int:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print(json.dumps(report["summary"], indent=2, sort_keys=True))
+
+        required = (
+            report["summary"]["all_static_debits_match_source_prediction"]
+            and report["summary"]["all_header_spans_match_source_prediction"]
+            and report["summary"]["all_total_debits_match_reference"]
+            and report["summary"]["all_semantics_match_expected"]
+            and report["summary"]["compiled_long_probe_is_bounded_to_one_tag_region"]
+        )
+        if not required:
+            raise RuntimeError("SPC700 cycle/addressing proof failed required invariants")
 
         try:
             reply = client.request("D")

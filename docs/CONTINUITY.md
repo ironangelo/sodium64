@@ -18,10 +18,12 @@ Perfect target: real N64 with correct native cadence; one required SNES frame pe
 
 Integrated `master`: **`ee86d3391f9ef7f407b9b3f683b145253ff1ef3f`**.
 Completed M0 branch: `phase1/open-homebrew-workload`; representative HEAD **`89df64192d622bfa12e4bb53e0f41ceab928efe6`**.
-Active M1 branch: **`phase2/apu-audio-first`**.
-M1 baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
-Current M1 HEAD: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`, controlled candidate).
+Active M1 branch: **`phase2/apu-audio-first`**; current branch HEAD **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**, tree-equivalent to clean candidate after hygiene correction.
+Clean M1 candidate / measurement authority: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`).
+M1 paired baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
 Open PRs: none at last checkpoint.
+
+**HYGIENE NOTE / CORRECTED:** while attempting to create the diagnostic branch, an incorrect GitHub action created a temporary root file `noop` at commit **`2fbff6e9e5199459fc56c483345700b5e62e2e6e`**. It contained only `no`, touched no source/runtime code, and was immediately removed by **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**. Direct compare `a758629... -> 255b7a3...` reports **zero changed files**. Do not use either hygiene commit as measurement identity; `a758629...` remains the exact clean32 evidence SHA. No history was rewritten.
 
 **DOC DRIFT / TODO:** `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` still contain older pre-M0 / dynarec-first framing. Repair after the current controlled APU experiment materially resolves; do not weaken the 1.0 target.
 
@@ -61,7 +63,7 @@ Exact workload/settings as above; frameskip0/APU21/audio4/precision8; valid ares
 SHA **`3b39523c637ac5d076ddfb3714c6023e8d1106f4`** produced repeated **48/60** but changed `BLOCK_SIZE` plus license text and runtime layout (`TEXREC_OFS +0x8->+0x4`, `PRIO_CHECKS +0x4->+0x8`). **SUPERSEDED AS CAUSAL CANDIDATE.** Do not merge/hardware-test it for the optimization claim.
 
 ## M1 experiment 1b — clean 32-byte candidate
-Active HEAD **`a758629014d0ecada6358c57eaf77c60afc80cad`** restores exact baseline `src/defines.h` except `BLOCK_SIZE 16 -> 32`. Direct compare: one file, **1 addition / 1 deletion**. Known source confound removed.
+Measurement SHA **`a758629014d0ecada6358c57eaf77c60afc80cad`** restores exact baseline `src/defines.h` except `BLOCK_SIZE 16 -> 32`. Direct compare: one file, **1 addition / 1 deletion**. Known source confound removed.
 
 CI: Build and Validate **`35174886449` SUCCESS**; Open Homebrew Ares Profile run **`35174886403`**.
 
@@ -70,30 +72,42 @@ Artifact **`10477834229`**, digest **`faf8ec269072824613d9b9297c0f700cfd418ad688
 **MEASURED:** complete virtual budget **48/60**, 957 samples. Runtime frameskip0/APU21/audio4/precision8/queue0/SP DMA0/0. APU static33.33 + JIT5.64 + DSP12.02 = **50.99%**; S-CPU30.93; PPU9.61; DMA5.54; RSPwait2.51; VI0.42. `apu_execute`11.39; `cpu_execute`15.15.
 
 ### Clean run B — same-SHA attempt 2
-Direct rerun of the same workflow/job with **no source change**, same HEAD `a758629...`. Attempt-2 ares job **`105062197629` SUCCESS**. New artifact **`10478782129`**, digest **`f607a5f0d6aa19b1fc42206c5a7aa93c6ee3983a8895630aaf5a1ab4c679c33d`**; exact Gothicvania ROM SHA remains `5519d51...`.
+No source change, same HEAD `a758629...`. Attempt-2 ares job **`105062197629` SUCCESS**. Artifact **`10478782129`**, digest **`f607a5f0d6aa19b1fc42206c5a7aa93c6ee3983a8895630aaf5a1ab4c679c33d`**; exact ROM SHA unchanged.
 
-**MEASURED:** complete virtual budget **48/60** again; 1175 valid samples. Runtime frameskip0/APU21/audio4/precision8/queue0/SP DMA0/0; partial window40/60 with29 guest frames. APU static **35.83%**, JIT **4.43%**, DSP **12.43%** => combined APU/audio **52.69%**; S-CPU **28.77%**; PPU **9.19%**; DMA **6.55%**; RSP/VRAM wait **2.47%**; VI wait **0.34%**. `apu_execute` **12.77%**, `cpu_execute` **13.28%**, `apu_read8`1.70%, `apu_write8`1.19%.
+**MEASURED:** complete virtual budget **48/60** again; 1175 valid samples. Runtime frameskip0/APU21/audio4/precision8/queue0/SP DMA0/0. APU static35.83%, JIT4.43%, DSP12.43% => combined **52.69%**; S-CPU28.77; PPU9.19; DMA6.55; RSPwait2.47; VI0.34. `apu_execute`12.77; `cpu_execute`13.28.
 
-**MEASURED / LOCALLY REPRODUCED:** clean one-variable 32-byte candidate measures **48/60 in two independent runs** (957 and1175 samples) versus paired baseline **44/60**. The stable frame-budget separation is stronger than fluctuating subsystem percentages. No third throughput repeat is justified now; the main uncertainty has moved from performance reproducibility to timing correctness.
+**MEASURED / LOCALLY REPRODUCED:** clean32 is **48/60 in two independent runs** (957/1175 samples) versus baseline16 **44/60**. Stable frame-budget separation outweighs noisy subsystem percentages. No third throughput repeat is justified.
 
-**CANDIDATE, NOT VALIDATED:** `BLOCK_SIZE=32` is a locally reproduced performance candidate. It is not yet mergeable and does not establish real-N64 improvement or audio/SPC700 correctness.
+**CANDIDATE, NOT VALIDATED:** locally reproduced performance candidate; not yet mergeable and not proof of real-N64 speed/audio correctness.
 
 ## BLOCK_SIZE=32 semantic/timing review
-**SUPPORTED / lower risk:** `compile_block` uses linear limit `PC + BLOCK_SIZE`; SPC700 branches/jumps/calls terminate through `finish_block` / PC handling, so 32 does not simply compile through control-flow boundaries.
+**SUPPORTED / lower risk:** `compile_block` uses `PC + BLOCK_SIZE`; SPC700 branches/jumps/calls terminate through `finish_block`, so 32 does not compile through control-flow boundaries.
 
-**SUPPORTED / lower risk:** JIT invalidation tags use 64-byte APU-memory regions (`address >> 6`) and cached blocks check start/end tags. A 32-byte linear block is <64B, so it can intersect at most two tag regions and the extrema cover both. Self-modifying invalidation concern is therefore bounded for 32, not broadly validated.
+**SUPPORTED / lower risk:** JIT invalidation tags use 64-byte APU-memory regions (`address >> 6`) and cached blocks check start/end tags. A 32-byte linear block is <64B, so it can intersect at most two tag regions; start/end checks bound the self-modifying invalidation concern.
 
-**OPEN QUESTION / MATERIAL CORRECTNESS RISK:** `apu_execute` decides whether DSP work is due **before** entering the JIT block. Generated blocks accumulate SPC700 cycles and only at `finish_block` return through `cpu_execute`, which gates APU/PPU scheduling by cycle counters. Doubling maximum block length can increase CPU↔APU/DSP scheduler latency. `dsp_sample` advances the DSP schedule by `DSP_SAMPLE`; therefore a throughput gain must not be accepted if it results from materially coarser DSP/APU interleave.
+**OPEN QUESTION / MATERIAL CORRECTNESS RISK:** `apu_execute` decides whether DSP work is due **before** entering the JIT block. Generated blocks accumulate SPC700 cycles and return through `cpu_execute` only at `finish_block`. Doubling maximum block length can therefore increase CPU↔APU/DSP scheduler latency.
 
-**SUPPORTED clarification:** APU timer state is largely updated lazily on relevant timer I/O reads/writes (`read_t*out`, control/divider writes call `update_timers`), so this is not evidence of a timer bug. Immediate risk is JIT-block cycle overshoot / DSP and CPU↔APU interleave granularity.
+`dsp_sample` advances `a3` by `-DSP_SAMPLE` and returns to `apu_execute`; therefore overdue samples are caught up one by one rather than obviously dropped. The current correctness question is **lateness/bunching and interleave order**, not missing total DSP calls.
 
-**Decision:** do **not** merge clean32 yet. Throughput reproducibility is now sufficient locally; next experiment must quantify timing/scheduler effect rather than collect more FPS repeats.
+**STATIC BOUNDARY FINDING:** in the measured full-rate mode `apu_clock=21` and `DSP_SAMPLE=672`; **32 × 21 = 672 exactly**. A full 32-byte linear block consumes one DSP period from instruction-stream fetch accounting alone, before runtime data accesses (`apu_read8`/`apu_write8`) subtract further APU cycles. This does not prove incorrectness, but makes direct lateness measurement mandatory. Baseline16 can also overshoot through data-heavy instructions, so only a paired diagnostic can decide whether 32 materially worsens it.
+
+**SUPPORTED clarification:** APU timers are largely updated lazily on relevant timer I/O operations; this is not evidence of a timer bug. Immediate risk is JIT-block cycle overshoot / DSP and CPU↔APU interleave granularity.
+
+**Decision:** do **not** merge clean32 yet. Throughput reproducibility is locally sufficient; next experiment measures timing/scheduler effect.
+
+## Next controlled experiment — paired DSP lateness diagnostic
+Create temporary branch **`phase2/apu-interleave-diagnostic`** from exact clean candidate `a758629...`; do not use hygiene HEAD as measurement base.
+
+Profile-only instrumentation will record at DSP-due entry: maximum `a3-s3` lateness, sum/average lateness, due-event count, and count with `lateness >= DSP_SAMPLE (672)`. Instrumentation must not modify emulated cycle counters. Reset counters at the same post-settle boundary used for profiling.
+
+Run diagnostic first with BLOCK_SIZE32, then change only `BLOCK_SIZE 32->16` under identical instrumentation/workload/settings. Interpretation: compare lateness distribution/max and multi-due frequency, not instrumented FPS. If 32 materially worsens required interleave, reject it despite 48/60; if equivalent/safely bounded, candidate may proceed to real-N64 validation.
 
 ## RESUME HERE / immediate action
-1. Quantify the maximum and representative SPC700 cycle accumulation / scheduler overshoot caused by 16-byte versus 32-byte JIT blocks, specifically relative to DSP scheduling (`DSP_SAMPLE`) and CPU↔APU return points. Prefer source/static or profile-only measurement first; avoid perturbing the fast path unless needed.
-2. Establish a correctness acceptance criterion before interpreting any diagnostic: 32 must not skip required DSP samples/events; bounded lateness must be understood against existing Sodium64 timing semantics, not merely “sounds okay”.
-3. If timing risk is shown equivalent/safely bounded, checkpoint and decide whether clean32 merits exact real-N64 hardware validation. If 32 materially worsens required interleave, **REJECT** it despite 48/60 and seek a safer way to remove block-dispatch overhead.
-4. Once experiment 1b materially resolves, repair `master` Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
-5. No second emulator or unbounded JIT/tooling project. Every batch reduces a Road-to-1.0 uncertainty.
+1. Create `phase2/apu-interleave-diagnostic` from **`a758629...`**.
+2. Add profile-only lateness counters and workflow observations; compile/run BLOCK32 diagnostic; checkpoint exact SHA/run/artifact/result.
+3. Change only BLOCK_SIZE32->16 on the same diagnostic instrumentation; run identical lab; checkpoint.
+4. Compare max/average lateness and `>=672` frequency. Establish whether 32 changes interleave materially.
+5. If timing risk is safely bounded, decide real-N64 validation of clean candidate `a758629...`; if not, mark 32 **REJECTED** and seek safer dispatch-overhead reduction.
+6. Once experiment materially resolves, repair `master` Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. M1 baseline16=44/60 ares. Confounded32 superseded causally. Clean32 `a758629...` differs only by BLOCK_SIZE and reproduces **48/60 twice**. Status: **CANDIDATE / LOCALLY REPRODUCED, blocked from merge by DSP/APU interleave correctness question**.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice and is **CANDIDATE / LOCALLY REPRODUCED**, blocked from merge by paired DSP/APU interleave diagnostic. Accidental `noop` branch disturbance was fully corrected with zero net tree diff and is recorded as hygiene only.

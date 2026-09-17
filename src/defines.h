@@ -32,7 +32,7 @@
 #define DSP_SAMPLE 672 // 21477000Hz / 32000Hz = 671.15625
 
 // Maximum opcode bytes that can be compiled in an APU JIT block
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 16
 
 // The frame section data structure's size in bytes
 #define SECTION_SIZE 0x40

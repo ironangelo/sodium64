@@ -87,11 +87,13 @@ BLOCK32 lateness result over the post-settle measured interval: **35,965 DSP-due
 
 **BLOCK16 CONTROL — CLEAN MEASUREMENT CANDIDATE:** SHA **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** restores `src/defines.h` from exact BLOCK32 measurement source and changes only `#define BLOCK_SIZE 32 -> 16`. Direct compare **`7f8faeff... -> 8805fd61...`** reports exactly one modified file, **1 addition / 1 deletion**. Therefore this is the valid paired control and any following CI/artifact must be tied to this exact SHA.
 
+**EXPERIMENT IN PROGRESS:** exact BLOCK16 SHA **`8805fd61...`** triggered Build and Validate run **`35190371186`** and Open Homebrew Ares Profile run **`35190371200`**. At checkpoint, Build/Validate profile-build had succeeded while normal build was still compiling; the ares workflow profile-build was compiling. Question: how do BLOCK16 average/max DSP lateness and `>=672` frequency compare with BLOCK32's 128.338 / 1218 / 1.048241%? Possible readings: materially lower BLOCK16 lateness means 32 trades timing quality for throughput; similar distributions weaken that concern and move 32 toward real-N64 validation. Do not interpret instrumented FPS as throughput evidence.
+
 ## RESUME HERE
-1. Read CI/run state for exact BLOCK16 control SHA **`8805fd6128a183ce2259dd4d85ef146f42f00d47`**. Ignore any runs from superseded hygiene SHAs `7715da...` or `f81370...`.
-2. If successful, record exact ares run/artifact and BLOCK16 average/max lateness plus >=672 frequency immediately.
+1. Read completion state for exact runs **`35190371186`** / **`35190371200`** on SHA `8805fd61...`. Ignore any runs from superseded hygiene SHAs `7715da...` or `f81370...`.
+2. If successful, record exact ares artifact and BLOCK16 average/max lateness plus >=672 frequency immediately.
 3. Compare BLOCK32 vs BLOCK16 directly. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of clean candidate `a758629...`.
 4. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
 5. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic `7f8faeff...` measured avg128.338, max1218, >=672 in1.048241% of due events. Clean paired BLOCK16 control is now exact SHA `8805fd61...`, differing only by BLOCK_SIZE32->16; read that run next.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic `7f8faeff...` measured avg128.338, max1218, >=672 in1.048241% of due events. Clean paired BLOCK16 control is exact SHA `8805fd61...`; runs `35190371186` / `35190371200` are in progress and are the next evidence authority.

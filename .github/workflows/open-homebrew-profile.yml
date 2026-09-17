@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - phase2/apu-audio-first
+      - phase2/apu-interleave-diagnostic
   workflow_dispatch:
 
 permissions:
@@ -184,6 +185,10 @@ jobs:
           write_ptr=$(symbol profile_write_ptr)
           sample_count=$(symbol profile_sample_count)
           last_epc=$(symbol profile_last_epc)
+          dsp_due_count=$(symbol profile_apu_dsp_due_count)
+          dsp_late_sum=$(symbol profile_apu_dsp_late_sum)
+          dsp_late_max=$(symbol profile_apu_dsp_late_max)
+          dsp_multi_due_count=$(symbol profile_apu_dsp_multi_due_count)
           apu_clock=$(symbol apu_clock)
           jit_lookup=$(symbol jit_lookup)
           jit_pointer=$(symbol jit_pointer)
@@ -197,7 +202,8 @@ jobs:
 
           for value in \
             "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
-            "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer" \
+            "$last_epc" "$dsp_due_count" "$dsp_late_sum" "$dsp_late_max" \
+            "$dsp_multi_due_count" "$apu_clock" "$jit_lookup" "$jit_pointer" \
             "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
             "$skipped_set" "$precision_set" "$audio_set"; do
             test -n "$value"
@@ -221,6 +227,10 @@ jobs:
             echo "ARES_PROFILE_WRITE_PTR_ADDR=$write_ptr"
             echo "ARES_PROFILE_SAMPLE_COUNT_ADDR=$sample_count"
             echo "ARES_PROFILE_LAST_EPC_ADDR=$last_epc"
+            echo "ARES_APU_DSP_DUE_COUNT_ADDR=$dsp_due_count"
+            echo "ARES_APU_DSP_LATE_SUM_ADDR=$dsp_late_sum"
+            echo "ARES_APU_DSP_LATE_MAX_ADDR=$dsp_late_max"
+            echo "ARES_APU_DSP_MULTI_DUE_COUNT_ADDR=$dsp_multi_due_count"
             echo "ARES_APU_CLOCK_ADDR=$apu_clock"
             echo "ARES_JIT_LOOKUP_ADDR=$jit_lookup"
             echo "ARES_JIT_LOOKUP_SIZE=$jit_lookup_size"
@@ -289,6 +299,10 @@ jobs:
             --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
             --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
             --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+            --after-settle-write "0x$ARES_APU_DSP_DUE_COUNT_ADDR:00000000" \
+            --after-settle-write "0x$ARES_APU_DSP_LATE_SUM_ADDR:00000000" \
+            --after-settle-write "0x$ARES_APU_DSP_LATE_MAX_ADDR:00000000" \
+            --after-settle-write "0x$ARES_APU_DSP_MULTI_DUE_COUNT_ADDR:00000000" \
             --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
             --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
             --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
@@ -304,6 +318,10 @@ jobs:
             --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
             --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
             --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+            --observe "apu_dsp_due_count:0x$ARES_APU_DSP_DUE_COUNT_ADDR:4" \
+            --observe "apu_dsp_late_sum:0x$ARES_APU_DSP_LATE_SUM_ADDR:4" \
+            --observe "apu_dsp_late_max:0x$ARES_APU_DSP_LATE_MAX_ADDR:4" \
+            --observe "apu_dsp_multi_due_count:0x$ARES_APU_DSP_MULTI_DUE_COUNT_ADDR:4" \
             --observe "sp_status:0xA4040010:4" \
             --observe "sp_dma_full:0xA4040014:4" \
             --observe "sp_dma_busy:0xA4040018:4" \
@@ -334,12 +352,39 @@ jobs:
 
           python3 - <<'PY'
           import json
+          from pathlib import Path
+
           state = json.load(open('profiles/recompiler-gothicvania-state.json'))
           obs = state['observations']
           assert int(obs['skipped_set']) == 0, obs
           assert int(obs['apu_clock']) == 21, obs
           assert int(obs['audio_set']) == 4, obs
           assert int(obs['precision_set']) == 8, obs
+
+          due = int(obs['apu_dsp_due_count'])
+          late_sum = int(obs['apu_dsp_late_sum'])
+          late_max = int(obs['apu_dsp_late_max'])
+          multi = int(obs['apu_dsp_multi_due_count'])
+          assert due > 0, obs
+          average = late_sum / due
+          result = {
+              'dsp_sample_cycles': 672,
+              'due_count': due,
+              'late_sum_cycles': late_sum,
+              'late_average_cycles': average,
+              'late_max_cycles': late_max,
+              'late_ge_one_dsp_period_count': multi,
+              'late_ge_one_dsp_period_fraction': multi / due,
+          }
+          Path('profiles/recompiler-gothicvania-dsp-lateness.json').write_text(
+              json.dumps(result, indent=2) + '\n'
+          )
+          Path('profiles/recompiler-gothicvania-dsp-lateness.txt').write_text(
+              f"DSP due events: {due}\n"
+              f"Average lateness: {average:.3f} cycles\n"
+              f"Maximum lateness: {late_max} cycles\n"
+              f"Lateness >= 672 cycles: {multi}/{due} ({multi / due:.6%})\n"
+          )
           PY
 
       - name: Build Gothicvania profile and frame-budget reports
@@ -368,6 +413,11 @@ jobs:
             echo
             cat profiles/gothicvania-frame-budget.md
             echo
+            echo '### APU/DSP scheduling lateness diagnostic'
+            echo
+            cat profiles/recompiler-gothicvania-dsp-lateness.txt
+            echo
+            echo '> Instrumented FPS is not used for throughput decisions; this run measures emulated-cycle scheduling lateness.'
             echo '> ares host wall-clock is laboratory throughput only, not real-N64 FPS.'
           } >> "$GITHUB_STEP_SUMMARY"
 

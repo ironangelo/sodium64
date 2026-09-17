@@ -32,6 +32,10 @@
 .globl profile_last_epc
 .globl profile_sample_buffer
 .globl profile_sample_buffer_end
+.globl profile_apu_dsp_due_count
+.globl profile_apu_dsp_late_sum
+.globl profile_apu_dsp_late_max
+.globl profile_apu_dsp_multi_due_count
 
 #ifdef SODIUM64_HW_PROFILE
 .globl hw_profile_phase
@@ -56,6 +60,14 @@ profile_reserved:     .word 0
 .align 5
 profile_sample_buffer: .word 0:PROFILE_SAMPLE_CAPACITY
 profile_sample_buffer_end:
+
+// Profile-only scheduling diagnostics live outside the canonical S64P snapshot
+// range so existing snapshot layout/decoders remain unchanged.
+.align 4
+profile_apu_dsp_due_count:       .word 0
+profile_apu_dsp_late_sum:        .word 0
+profile_apu_dsp_late_max:        .word 0
+profile_apu_dsp_multi_due_count: .word 0
 
 #ifdef SODIUM64_HW_PROFILE
 // Real-N64 M0 capture header. The payload written to cart SRAM is:
@@ -107,6 +119,17 @@ profile_init:
     la t1, profile_sample_count
     sw zero, (t1)
     la t1, profile_last_epc
+    sw zero, (t1)
+
+    // Reset profile-only DSP scheduling diagnostics without touching emulated
+    // cycle counters or guest-visible state.
+    la t1, profile_apu_dsp_due_count
+    sw zero, (t1)
+    la t1, profile_apu_dsp_late_sum
+    sw zero, (t1)
+    la t1, profile_apu_dsp_late_max
+    sw zero, (t1)
+    la t1, profile_apu_dsp_multi_due_count
     sw zero, (t1)
 
 #ifdef SODIUM64_HW_PROFILE

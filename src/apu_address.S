@@ -540,3 +540,13 @@ apu_bxy: // (X),(Y)
     li t0, OR(A0, S0, T9)
     j emit_op
     move ra, gp
+
+.align 5
+apu_read8_nomap: // a0: proven-low address - v0: value
+    // Preserve exact generic I/O behavior; only non-I/O low RAM skips IPL mapping.
+    andi t0, a0, 0xFFF0
+    beq t0, 0xF0, apu_read8
+    lbu v0, apu_ram(a0)
+    lbu t0, apu_clock
+    jr ra
+    sub s3, s3, t0

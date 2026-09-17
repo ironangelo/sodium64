@@ -541,3 +541,27 @@ GitHub compare is exact:
 - diff **+1/-1** only: opcode 0x00 dispatch `next_opcode -> finish_opcode`.
 
 **State:** `fe5fcc0c...` remains the SHA on which the corrected directed proof established the behavior, but it is **SUPERSEDED FOR INTEGRATION** by `eaad08de...`. Because code layout/base changed, rerun the directed NOP proof on a diagnostic child of `eaad08de...` before opening the replacement PR. Do not merge based solely on equivalence of the one source line.
+
+
+## Active reruns after clean-master integration correction — checkpoint 2026-09-17
+
+### Clean-master NOP fix
+Runtime candidate: **`phase2/apu-nop-bound-master@eaad08de0f0cc09bada7fe5093c9e8bd5fe3455b`** (exactly one +1/-1 source line over `master@a2270699...`).
+
+Diagnostic child: **`phase2/apu-nop-bound-master-proof@b89345498664f126049c482c5d54b49c3268bfdd`**.
+
+Current runs:
+- clean candidate Build and Validate **`35284543571`** IN PROGRESS;
+- directed APU NOP Bound Proof **`35284584269`** IN PROGRESS;
+- diagnostic-child Build and Validate **`35284584261`** pending/in progress as GitHub schedules it.
+
+Question/acceptance is unchanged from the already-validated historical-tree proof: exact 16-unit block from PC 0x0238, header 8->9, and tracked end-tag mutation must cause recompilation before first `cpu_execute`. Only after this passes should a replacement integration PR be opened.
+
+### Layer-1 total-cycle proof
+Runtime architecture candidate **`phase2/apu-total-cycle-proof@b268b98b9cf83a9d13a5c59c49c0bd4c585caef8`** has now passed **Build and Validate `35284214442` SUCCESS**.
+
+Diagnostic child remains **`phase2/apu-total-cycle-validate@215dc67722462f1fd768e58471ca599cdaf699cf`**:
+- child Build and Validate **`35284371446` SUCCESS**;
+- directed APU Total Cycle Proof **`35284371466` IN PROGRESS**.
+
+Do not generalize the timing mechanism until the directed totals are observed as exactly BRA=4, NOP+BRA=6, MUL+BRA=13, DIV+BRA=16.

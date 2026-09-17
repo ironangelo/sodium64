@@ -234,7 +234,17 @@ def middle_region_reentry(
     start_region = TEST_PC // 64
     middle_region = start_region + 1
     if int(long_result["header_end_region"]) <= middle_region:
-        raise RuntimeError("long block did not span far enough for a middle-region test")
+        result = {
+            "applicable": False,
+            "middle_region": middle_region,
+            "reason": "bounded block has no untracked intermediate tag region",
+            "lookup_changed": None,
+            "jit_pointer_changed": None,
+            "recompiled_before_first_cpu_return": None,
+            "stale_block_reused_without_recompile": None,
+        }
+        print(json.dumps(result, sort_keys=True))
+        return result
 
     lookup_entry = addresses.jit_lookup + TEST_PC * 4
 
@@ -315,9 +325,10 @@ def main() -> int:
         ("nop_bra", bytes.fromhex("002ffd"), -63, 6, 8, 0x5A),
         ("mul_bra", bytes.fromhex("cf2ffd"), -63, 13, 8, 0x5A),
         ("div_bra", bytes.fromhex("9e2ffd"), -63, 16, 8, 0x5A),
-        # 126 NOPs + DBNZ Y,-128 = exactly 128 source bytes. The branch target
-        # is 0x0200, while a0 after operand fetch is 0x0280 (region 10).
-        ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -2688, None, 10, 0xFF),
+        # Regression probe: source contains 126 NOPs + DBNZ Y,-128, but with
+        # NOP routed through finish_opcode the compiler must stop after the
+        # first 16 bytes at the existing BLOCK_SIZE boundary.
+        ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -336, None, 8, 0xFF),
     ]
 
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
@@ -368,14 +379,16 @@ def main() -> int:
                 "all_header_spans_match_source_prediction": all(
                     bool(item["span_matches_expected"]) for item in results
                 ),
-                "long_block_exceeds_block_size": int(long_result["source_bytes"]) > 16,
-                "long_block_spans_three_tag_indices": (
+                "long_source_program_exceeds_block_size": int(long_result["source_bytes"]) > 16,
+                "compiled_long_probe_is_bounded_to_one_tag_region": (
                     int(long_result["header_end_region"])
-                    - int(long_result["header_start_region"])
-                    >= 2
+                    == int(long_result["header_start_region"])
+                    and int(long_result["source_clock_units"]) == 16
                 ),
-                "stale_block_reentered_after_middle_tag_mutation": bool(
+                "middle_region_probe_applicable": bool(reentry.get("applicable", True)),
+                "stale_block_reentered_after_middle_tag_mutation": (
                     reentry["stale_block_reused_without_recompile"]
+                    if reentry.get("applicable", True) else None
                 ),
             },
         }

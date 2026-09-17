@@ -180,11 +180,15 @@ The milestone order may change if profiling reveals a better dependency order. T
 
 ## Current position
 
-The project is currently in the measurement/bottleneck-mapping stage corresponding to **M0** and Phase 1 of `docs/ROADMAP.md`.
+**M0 is achieved; M1 is active.** The project now has a representative real-N64 measurement rather than only emulator/synthetic inference.
 
-The statistical R4300 profiler, Mupen smoke path and ares GDB-based profiler are infrastructure toward that milestone. They are not the product goal themselves. Their purpose is to tell us which architectural change most efficiently moves the real N64 toward Gates B–F.
+The M0 Gothicvania survivability capture on real N64, with frameskip `0`, full-rate APU clock `21`, audio enabled and precision `8`, completed **48/60, 49/60, 48/60, 50/60 and 50/60** guest frames across five complete 60-VI windows (mean **49.0/60**). The R4300 profile contained 3,581 samples, essentially no VI idle headroom, and attributed about **61.83%** of sampled host time to SPC700/APU JIT/DSP/audio versus **22.12%** to the S-CPU interpreter. This establishes the current representative base workload as throughput-bound and makes APU/audio the first M1 gate driver.
 
-The current leading hypothesis is that a 65C816-to-MIPS dynarec could recover enough R4300 budget to improve the base system and later provide reusable machinery for SA-1. It remains a hypothesis until Phase 1 measurements and the Phase 2 proof of concept support it.
+The immediate M1 route is therefore **not** “build a 65C816 dynarec first.” A 65C816-to-MIPS dynarec remains strategically attractive, especially because mature machinery could later serve SA-1, but current hardware evidence does not justify it as the first attack. It should be revisited when re-profiling shows S-CPU cost has become a gate driver or a focused proof demonstrates enough leverage to justify integration.
+
+The first APU experiment also established a useful constraint. Increasing APU JIT `BLOCK_SIZE` from 16 to 32 bytes reproducibly moved the valid ares Gothicvania frame budget from **44/60 to 48/60**, proving block/dispatch overhead matters. However, a paired profile-only timing diagnostic found that 16-byte blocks had average DSP scheduling lateness **119.073 cycles**, maximum **651**, and **0/35,982** events at least one DSP period late, while 32-byte blocks had average **128.338**, maximum **1,218**, and **377/35,965 (1.048%)** events at least one DSP period late. The 32-byte change is therefore **rejected**: throughput gains that materially worsen required audio/timing interleave do not move the Road to 1.0.
+
+M1 continues from the safe 16-byte APU block configuration. Near-term work should reduce the measured APU/audio cost without extending scheduler return intervals or hiding required work; current priority is the hot APU memory/dispatch path, followed by DSP inner-loop work if measurement supports it. Accepted candidates graduate from paired emulator labs to milestone real-N64 validation when the result can answer a concrete gate question.
 
 ## Decision rule
 

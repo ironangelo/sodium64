@@ -679,3 +679,36 @@ The current diagnostic branch moved after the authority run for additional PROFI
 5. In parallel, map the complete SPC700 missing-cycle contract from the pinned independent reference before implementing timing correction. Prefer a systematic model of internal/conditional cycles over per-game or global-clock hacks.
 6. After correctness candidates, create a fresh matched-window baseline (E1 repair remains required) before ranking small throughput deltas.
 7. 2B/E3, E4, E5 are **DEFERRED**. BLOCK32 remains REJECTED. No 65C816 dynarec/RSP offload/second emulator/cartridge assist is justified by this evidence.
+
+
+## M1 block-bound correction — dynamic validation 2026-09-17
+
+**VALIDATED in diagnostic harness.** The one-variable core change maps SPC700 NOP opcode `0x00` from direct `next_opcode` dispatch to the existing `finish_opcode` path, so NOP now obeys the same `BLOCK_SIZE` check as every other ordinary opcode.
+
+Diagnostic branch HEAD for the proof: **`9880e2e146d3e48f9f7819654e792ae302bee275`**. The production-semantic change itself is commit **`31ad646a1221e7b55cc9a1efa4f2c74354049f73`**; later commits only adjust the proof expectations/reporting. Build and Validate **`35287658874` SUCCESS**.
+
+Dynamic authority: **APU Cycle And Span Proof `35287658903` SUCCESS**, cycle-proof job **`105423781476`**, result artifact **`10525480018`** digest `sha256:2d7d1d311cf38bd9b5a2d7e82a70ae4cca63ed07d9795d8c197b0170731a4c5c`; exact proof-build artifact **`10524349509`** digest `sha256:c185e321272c28dc2ded529863e6a1521c52ea3d2e07073e617d640a04ecafc2`.
+
+The same 128-byte source probe that previously compiled across regions 8->10 now produced:
+- `cycle_debit=-336` = **16 configured clock units**;
+- `apu_count_after_block=0x0210`, exactly 16 source bytes after `TEST_PC=0x0200`;
+- JIT header start/end region **8 -> 8**;
+- generated block 20 bytes;
+- `compiled_long_probe_is_bounded_to_one_tag_region=true`;
+- middle-region mutation probe **not applicable**, because the bounded block no longer contains an untracked intermediate tag region.
+
+BRA/NOP+BRA/MUL+BRA/DIV+BRA retained their previous under-accounted timing observations, proving the block-bound fix did not accidentally alter the separate timing defect.
+
+Source-wide search found no other opcode-table/generator path that directly jumps to `next_opcode`; NOP was the only opcode bypassing `finish_opcode`. Therefore the narrow fix closes the dynamically demonstrated multi-region endpoint-tag stale-code condition for the audited path without changing tag architecture.
+
+**Decision:** preserve this as a clean code-only candidate from safe tree `225859b1...`; do not carry PROFILE instrumentation/workflow changes into the candidate. Timing correctness remains the next gate driver.
+
+## RESUME HERE — block bound validated / timing contract next
+
+1. `master` remains `a2270699...`. E2 under-accounting authority remains `30be5489...` / run `35283897586`.
+2. NOP block-bound fix is **VALIDATED in diagnostic harness** by run `35287658903`: 128-byte source probe is now bounded to 16 bytes/one tag region; the previously reproduced middle-tag stale-code condition cannot arise in that probe.
+3. Create/verify a clean branch from `225859b1...` containing ONLY the NOP table mapping `next_opcode -> finish_opcode`; normal Build/Validate must pass. Keep diagnostic machinery out of the code candidate.
+4. Then continue timing correctness. Current evidence says the inherited timing model undercharges not only internal idles but also dummy bus cycles; a global `apu_clock` scale is REJECTED as architecture.
+5. Preferred timing direction: retain current data-access timing initially, add missing guest-cycle charges systematically by shared addressing/operation/control families, and emit conditional extra cycles for taken branches. Validate total cycles first, then refine I/O/timer cycle placement where needed.
+6. A pinned independent cycle table agrees with ares for audited NOP/BRA/MUL/DIV values and can serve as host-test oracle/supporting evidence; ares dynamic semantics remain the primary independent reference.
+7. E1 matched-window repair remains required before small performance ranking. E3/E4/E5 remain DEFERRED until timing contract is corrected enough to establish a new baseline.

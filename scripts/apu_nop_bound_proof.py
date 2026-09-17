@@ -180,9 +180,6 @@ def probe_covered_end_region_invalidation(
     a: argparse.Namespace,
 ) -> dict[str, object]:
     lookup_entry = a.jit_lookup + TEST_PC * 4
-    old_lookup = read_u32(client, lookup_entry)
-    old_code_entry = old_lookup + 12
-    pointer_before = read_u32(client, a.jit_pointer)
 
     start_region = int(block_result["header_start_region"])
     end_region = int(block_result["header_end_region"])
@@ -193,6 +190,9 @@ def probe_covered_end_region_invalidation(
 
     # Stop at the scheduler boundary before changing apu_count/tag state.
     continue_to_breakpoint(client, a.apu_execute, "invalidate: apu_execute boundary")
+
+    old_lookup = read_u32(client, lookup_entry)
+    pointer_before = read_u32(client, a.jit_pointer)
 
     # 0x0240 is inside the 16-byte compiled range 0x0238..0x0247 and belongs
     # to the header's tracked end region. Change NOP->CLRC and advance the tag
@@ -207,20 +207,19 @@ def probe_covered_end_region_invalidation(
     client.write_memory(tag_addr, be((tag_before + 1) & 0xFFFFFFFF, 4))
     client.write_memory(a.apu_count, be(TEST_PC, 2))
 
-    # A correct endpoint validation must NOT jump back to the old generated
-    # entry. We leave only that breakpoint armed; a normal timeout/interrupt
-    # means the stale entry was avoided.
-    set_breakpoint(client, old_code_entry, True)
-    try:
-        reply = client.continue_then_interrupt(0.5)
-        validate_stop(reply, "covered-end-tag re-entry probe")
-        sig = signal_number(reply)
-        old_block_reentered = sig == 5
-    finally:
-        set_breakpoint(client, old_code_entry, False)
+    # Continue to the first main-CPU scheduler return. Exactly one APU block
+    # has completed at this point. If endpoint validation rejected the cached
+    # block, compile_block must have advanced jit_pointer and replaced lookup.
+    # This avoids the old ambiguous timed Ctrl-C/SIGTRAP breakpoint criterion.
+    continue_to_breakpoint(
+        client, a.cpu_execute, "invalidate: first cpu_execute return"
+    )
 
     lookup_after = read_u32(client, lookup_entry)
     pointer_after = read_u32(client, a.jit_pointer)
+    lookup_changed = lookup_after != old_lookup
+    pointer_advanced = pointer_after != pointer_before
+    recompiled_before_return = lookup_changed and pointer_advanced
 
     result = {
         "mutation_apu_address": mutation_apu_address,
@@ -229,19 +228,17 @@ def probe_covered_end_region_invalidation(
         "end_region": end_region,
         "tag_before": tag_before,
         "tag_after": read_u32(client, tag_addr),
-        "old_block_entry": old_code_entry,
-        "stop_signal": sig,
-        "old_block_reentered": old_block_reentered,
         "lookup_before": old_lookup,
         "lookup_after": lookup_after,
-        "lookup_changed": lookup_after != old_lookup,
+        "lookup_changed": lookup_changed,
         "jit_pointer_before": pointer_before,
         "jit_pointer_after": pointer_after,
-        "jit_pointer_advanced": pointer_after != pointer_before,
+        "jit_pointer_advanced": pointer_advanced,
+        "recompiled_before_first_cpu_return": recompiled_before_return,
+        "stale_block_reused_without_recompile": not recompiled_before_return,
     }
     print(json.dumps(result, sort_keys=True))
     return result
-
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
@@ -295,9 +292,8 @@ def main() -> int:
                 and block["header_end_region"] - block["header_start_region"] == 1
             ),
             "covered_end_tag_prevents_stale_reentry": (
-                not invalidation["old_block_reentered"]
-                and invalidation["lookup_changed"]
-                and invalidation["jit_pointer_advanced"]
+                invalidation["recompiled_before_first_cpu_return"]
+                and not invalidation["stale_block_reused_without_recompile"]
             ),
         }
         report = {

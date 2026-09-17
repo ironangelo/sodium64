@@ -19,13 +19,13 @@ Integrated `master`: **`ee86d3391f9ef7f407b9b3f683b145253ff1ef3f`**.
 Completed M0 branch representative HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928efe6`**.
 M1 paired baseline / safe block-size authority: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
 Rejected clean32 throughput candidate: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`).
-`phase2/apu-audio-first` current HEAD **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**, tree-equivalent to rejected `a758629...`; must be restored to BLOCK_SIZE16 before new M1 optimization work.
+**Active M1 branch:** `phase2/apu-audio-first`, current HEAD **`225859b1d8fc0eb477a624ac76f8237667379f59`**. Direct compare against `c55b6b...` has **zero changed files**: this is the restored safe BLOCK_SIZE16 tree after rejecting 32-byte blocks.
 Diagnostic branch `phase2/apu-interleave-diagnostic` current HEAD **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** (`BLOCK_SIZE=16` paired lateness control).
 Open PRs: none at last checkpoint.
 
 **HYGIENE NOTE / CORRECTED:** accidental temporary root file `noop` was created at `2fbff6e9...` while invoking the wrong Git action, then immediately removed by `255b7a3...`. Direct compare `a758629... -> 255b7a3...` has zero changed files. Do not use those hygiene commits as measurement identity. No history was rewritten.
 
-**DOC DRIFT / TODO:** `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` retain older pre-M0 / dynarec-first framing. The 32-byte experiment is now resolved; repair these canonical docs before the next substantial M1 architecture batch. Do not weaken 1.0.
+**DOC DRIFT / TODO:** `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` retain older pre-M0 / dynarec-first framing. The 32-byte experiment is resolved and the safe M1 branch restored; repair these canonical docs before the next substantial M1 architecture batch. Do not weaken 1.0.
 
 ## Ares laboratory authority
 Isolation run **`35113184294`**, artifact **`10453682432`** proved pinned ares RSP JIT is a **LAB LIMITATION**. Valid high-density lab = **R4300 JIT + RSP interpreter**.
@@ -70,14 +70,17 @@ Historical diagnostic `6921055...` also changed `stamp_timer2` t1->t0 and is **S
 
 **REJECTED / ARCHITECTURE DECISION:** `BLOCK_SIZE=32` is rejected despite its reproducible 44->48/60 throughput gain. Sodium64 1.0 requires correct audio/timing; we will not buy speed by allowing materially worse DSP scheduling lateness. Do not merge or hardware-test `a758629...` as a performance candidate. Retain the result as knowledge: dispatch/block overhead is significant, but must be reduced without lengthening scheduler return intervals this way.
 
-## Discovered timer2 side issue
-The superseded diagnostic commit `6921055...` changed `stamp_timer2` from the baseline `sub t1,t1,t2; sw t1,apu_ocycles+8` to a `t0` variant. This was unrelated to the experiment and remains to be resolved explicitly before forgetting it. Static data-flow inspection is the next bounded correctness check; do not mix any timer change into APU performance experiments.
+## Timer2 side issue — closed
+The superseded diagnostic commit `6921055...` changed `stamp_timer2` from baseline `sub t1,t1,t2; sw t1,apu_ocycles+8` to a `t0` variant.
+
+**STATIC DATA-FLOW EVIDENCE:** `update_overflows` loads `t0 = apu_control` and preserves it to test timer enable bits. `stamp_timer0` and `stamp_timer1` compute timestamps from `apu_cycle1` in `t1`. `stamp_timer2` analogously loads `t1 = apu_cycle2`, then subtracts the computed cycles-to-overflow in `t2` and stores the result. Therefore the baseline `t1` path is internally consistent. The proposed `t0` path would subtract a cycle count from the APU control byte and store that as an overflow timestamp.
+
+**REJECTED:** the `t1 -> t0` variant is not a bugfix; it is an erroneous diagnostic-side change. No source change is required. This explanation is preserved so it is not rediscovered later.
 
 ## RESUME HERE
-1. On `phase2/apu-audio-first`, restore the rejected 32-byte candidate to **BLOCK_SIZE16** with a controlled one-line net diff and checkpoint the safe M1 HEAD. Do not merge diagnostic instrumentation.
-2. Resolve the `stamp_timer2` t1/t0 side issue separately by tracing register/data flow; record whether the proposed t0 variant is a real bugfix or **REJECTED**.
-3. Repair `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` for M0 closure, real-N64 49/60 evidence, APU/audio-first M1, and rejection of 32-byte blocks on timing evidence.
-4. Start the next bounded APU optimization from BLOCK_SIZE16. Preferred next measured path: reduce `apu_read8`/`apu_write8` overhead without extending scheduler intervals; one important variable at a time. DSP inner-loop work follows if evidence warrants.
-5. Real N64 remains final performance/timing authority; no hardware session is warranted for rejected32.
+1. Repair `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` for M0 closure, real-N64 49/60 evidence, APU/audio-first M1, and rejection of 32-byte blocks on timing evidence. This doc repair is now the immediate batch before more M1 architecture work.
+2. Start the next bounded APU optimization from safe HEAD **`225859b1...` / BLOCK_SIZE16**. Preferred next measured path: reduce `apu_read8`/`apu_write8` overhead without extending scheduler intervals; one important variable at a time. DSP inner-loop work follows if evidence warrants.
+3. Use the existing Gothicvania paired lab first; only retain a change if throughput improves without new timing/semantic regression. Hardware remains final authority for accepted candidates.
+4. No second emulator/unbounded JIT tooling. Every batch must reduce a Road-to-1.0 uncertainty.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 improved to48/60 twice but paired DSP-lateness proved a timing regression: BLOCK16 avg119.073/max651/0 >=672 events vs BLOCK32 avg128.338/max1218/377 >=672 events. **BLOCK_SIZE32 REJECTED.** Restore16, close timer2 side issue, repair canonical Road/Roadmap, then pursue safer APU dispatch/memory-path optimization.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 improved to48/60 twice but paired DSP-lateness proved a timing regression: BLOCK16 avg119.073/max651/0 >=672 events vs BLOCK32 avg128.338/max1218/377 >=672 events. **BLOCK_SIZE32 REJECTED.** Active M1 HEAD `225859b1...` is tree-equivalent to safe baseline16. Timer2 t0 variant is **REJECTED** as an erroneous side change. Repair canonical Road/Roadmap next, then pursue safer APU memory/dispatch optimization.

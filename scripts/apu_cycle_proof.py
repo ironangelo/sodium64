@@ -236,9 +236,14 @@ def middle_region_reentry(
     if int(long_result["header_end_region"]) <= middle_region:
         raise RuntimeError("long block did not span far enough for a middle-region test")
 
-    block = int(long_result["lookup_block"])
-    old_code_entry = block + 12
-    old_lookup = read_u32(client, addresses.jit_lookup + TEST_PC * 4)
+    lookup_entry = addresses.jit_lookup + TEST_PC * 4
+
+    # Arrive at a safe APU scheduler boundary before changing PC/tag state.
+    continue_to_breakpoint(
+        client, addresses.apu_execute, "middle-region: apu_execute boundary"
+    )
+
+    old_lookup = read_u32(client, lookup_entry)
     pointer_before = read_u32(client, addresses.jit_pointer)
     tag_addr = addresses.jit_tags + middle_region * 4
     tag_before = read_u32(client, tag_addr)
@@ -252,19 +257,21 @@ def middle_region_reentry(
     client.write_memory(tag_addr, be((tag_before + 1) & 0xFFFFFFFF, 4))
     client.write_memory(addresses.apu_count, be(TEST_PC, 2))
 
-    # If endpoint-only validation accepts the stale block, apu_execute will jump
-    # to this exact old generated-code entry and SIGTRAP before executing it.
-    set_breakpoint(client, old_code_entry, True)
-    try:
-        reply = client.continue_then_interrupt(0.5)
-        validate_stop(reply, "middle-region re-entry probe")
-        sig = signal_number(reply)
-        old_block_reentered = sig == 5
-    finally:
-        set_breakpoint(client, old_code_entry, False)
+    # Stop at the first scheduler return from this APU execution. If endpoint-
+    # only validation accepted the stale block, no compilation occurs and both
+    # lookup and jit_pointer remain unchanged. If validation rejected it,
+    # compile_block necessarily changes both before this return.
+    continue_to_breakpoint(
+        client, addresses.cpu_execute, "middle-region: first cpu_execute return"
+    )
 
     pointer_after = read_u32(client, addresses.jit_pointer)
-    lookup_after = read_u32(client, addresses.jit_lookup + TEST_PC * 4)
+    lookup_after = read_u32(client, lookup_entry)
+    lookup_changed = lookup_after != old_lookup
+    pointer_changed = pointer_after != pointer_before
+    recompiled_before_return = lookup_changed and pointer_changed
+    stale_reused = not recompiled_before_return
+
     result = {
         "middle_region": middle_region,
         "mutation_apu_address": middle_region * 64,
@@ -272,18 +279,17 @@ def middle_region_reentry(
         "mutation_byte_after": read_u8(client, mutation_addr),
         "tag_before": tag_before,
         "tag_after": read_u32(client, tag_addr),
-        "old_block_entry": old_code_entry,
-        "stop_signal": sig,
-        "old_block_reentered": old_block_reentered,
         "lookup_before": old_lookup,
         "lookup_after": lookup_after,
+        "lookup_changed": lookup_changed,
         "jit_pointer_before": pointer_before,
         "jit_pointer_after": pointer_after,
-        "jit_pointer_unchanged": pointer_before == pointer_after,
+        "jit_pointer_changed": pointer_changed,
+        "recompiled_before_first_cpu_return": recompiled_before_return,
+        "stale_block_reused_without_recompile": stale_reused,
     }
     print(json.dumps(result, sort_keys=True))
     return result
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -369,7 +375,7 @@ def main() -> int:
                     >= 2
                 ),
                 "stale_block_reentered_after_middle_tag_mutation": bool(
-                    reentry["old_block_reentered"]
+                    reentry["stale_block_reused_without_recompile"]
                 ),
             },
         }

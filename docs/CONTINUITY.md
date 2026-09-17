@@ -7,6 +7,15 @@ Cadence: **technical batch -> continuity checkpoint -> technical batch -> contin
 
 Authority: current Iron instruction > repo/artifact evidence > canonical docs > continuity > chats/memory/inference. `master` is integrated truth; a phase branch is only a candidate until merged.
 
+## Captain / live lab-notebook protocol
+Iron delegates technical direction of Sodium64 toward the Road to 1.0 to the assistant, within Iron's current goals and constraints. The assistant should choose architecture, experiment order, implementation detail, profiling strategy, Git/CI flow and validation without asking Iron for low-level technical decisions unless a choice materially changes product scope, hardware requirements, risk or the stated destination.
+
+**Continuity is a live scientific log, not an end-of-batch summary.** After every material result, discovery, changed hypothesis, falsification, new risk, lab limitation, meaningful CI/artifact result, branch/HEAD transition or next-action change, update this file immediately before moving on to the next technical step. Do not allow material knowledge to live only in chat until a large execution finishes. For long-running experiments, checkpoint the exact SHA/run/question and result branches before leaving the experiment running.
+
+Transparency to Iron should expose useful technical reasoning continuously: current hypothesis; evidence; what the evidence demonstrates; what it does **not** demonstrate; rejected explanations and why; next controlled change; expected result; falsifier; and why other subsystems are not being touched yet. Do not expose or reconstruct private chain-of-thought verbatim; provide the decision-relevant reasoning and evidence instead.
+
+Every technical batch must reduce a concrete Road-to-1.0 uncertainty. If new evidence contradicts continuity or canonical docs, repair the stale documentation rather than rationalizing around it.
+
 ## Gate / current refs
 Current milestone: **M0 ACHIEVED / M1 — faster base core, APU/audio first**.
 Perfect target remains real-N64 native cadence, one required SNES frame per corresponding native frame, no required frameskip/frame generation, full-rate SPC700/APU and correct audio, high CPU/PPU/DMA/HDMA/timing fidelity, broad compatibility, no per-game manual modes, DSP-1 family, Super FX/2 and SA-1. N64-alone first.

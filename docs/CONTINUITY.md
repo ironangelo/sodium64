@@ -614,3 +614,68 @@ Crossing current `master`'s `jit_opcodes` table against the complete 256-opcode 
 **VALIDATED / static source finding:** DAA and DAS are legal SPC700 instructions but are currently unimplemented in Sodium64. This is a **COMPATIBILITY PROOF / REQUIRED SUPPORT** issue for the 1.0 accuracy target, independent of the current Layer-1 timing correction.
 
 Do not bundle DAA/DAS implementation into the active NOP-bound integration or four-path total-cycle proof. Add directed semantic tests before implementation, using pinned ares plus an independent opcode semantic reference where licensing permits.
+
+
+## E2 dynamic proof — CONFIRMED 2026-09-17
+
+**MEASUREMENT PROOF / ARCHITECTURE PROOF.** The source-backed SPC700 timing and JIT-span risks were dynamically reproduced without modifying the APU core.
+
+Authority run: **APU Cycle And Span Proof `35283897586`**, exact diagnostic SHA **`30be54899133f518b52ca3ba1ddce00070ac812f`**, jobs `105411838100` + `105412186149`, result artifact **`10523267264`** (digest `sha256:cdd4f4f47d23a59c47b851ea520dc169d59610cd5cea2412805f85c344bcdc69`). Exact proof build artifact **`10523307069`** (digest `sha256:300306b450239f895f20fad59483b5be801cba5d1f0e57280eef7849a124699c`).
+
+Direct compare `225859b1... -> 30be5489...` is diagnostic-only: `.github/workflows/apu-cycle-proof.yml`, `scripts/apu_cycle_proof.py`, and `src/apu_cycle_diag.S`. **No APU/JIT production source is changed by the measured SHA.**
+
+### E2-A — MEASURED: inherited SPC700 instruction timing under-accounting is real
+
+Dynamic generated-code inspection reproduced the exact source-predicted debit at `apu_clock=21`:
+
+| snippet | Sodium64 charged clock units | independent SPC700 reference cycles |
+| --- | ---: | ---: |
+| BRA | 2 | 4 |
+| NOP + BRA | 3 | 6 |
+| MUL + BRA | 3 | 13 |
+| DIV + BRA | 3 | 16 |
+
+Exact emitted debits were BRA `-42`, NOP+BRA `-63`, MUL+BRA `-63`, DIV+BRA `-63`. The generated blocks returned to the expected PCs and the emitted `ADDI s3,s3,imm` matched the static accounting prediction in every case.
+
+**CONFIRMED:** configured `apu_clock=21` is NOT equivalent to instruction-accurate full-rate SPC700 timing. The inherited JIT omits instruction-internal/taken-branch timing work for the tested opcodes. This is a correctness defect, not merely a profiler attribution issue.
+
+**SUPPORTED INTERPRETATION:** correcting guest timing can plausibly reduce excess SPC700 host work while improving fidelity, because Sodium64 currently advances more SPC700 instructions per emulated-time budget than these reference timings permit. The magnitude on Gothicvania remains UNKNOWN until a correctness candidate exists and is measured. Do not apply a single global clock multiplier; the discrepancy is instruction-specific.
+
+### E2-B — MEASURED: BLOCK_SIZE=16 is not a universal generated-block bound
+
+The long diagnostic snippet `126*NOP + DBNZ Y,-128` compiled as one **128-source-byte** block. Header coverage was region **8 -> 10**, despite nominal `BLOCK_SIZE=16`. Emitted debit was `-2688` = 128 configured clock units.
+
+This dynamically confirms the NOP bypass: opcode `0x00` dispatches directly to `next_opcode` and therefore skips the `finish_opcode` limit check.
+
+### E2-C — MEASURED: endpoint-only tag validation can reuse stale generated code
+
+After compiling the three-region block, the proof mutated an actually covered byte in middle region **9** and incremented that region's JIT tag exactly as `apu_write8` would. Start/end region tags were left unchanged.
+
+On the next safe APU re-entry:
+- lookup pointer unchanged;
+- JIT pointer unchanged;
+- no recompile occurred before the first `cpu_execute` return;
+- **stale generated block was reused.**
+
+Therefore the inherited two-endpoint validation is insufficient whenever a generated block spans an untracked intermediate 64-byte region.
+
+### Decision
+
+**E2 is closed as CONFIRMED, not hypothesis.** The immediate M1 route changes again:
+
+1. First make a **minimal block-bound correctness candidate** so every ordinary NOP also passes the existing `finish_opcode` boundary check. Before accepting it, prove no other opcode path can similarly bypass the bound and rerun the long-span/middle-tag proof.
+2. Then design an instruction-accurate SPC700 timing model. Do not patch only NOP/MUL/DIV/BRA as a permanent architecture and do not globally scale `apu_clock`; derive/validate the missing internal and conditional cycles systematically against an independent reference.
+3. After timing correction, establish a fresh correctness/performance baseline; old 44/48/52/61 ares totals are not directly comparable as “full-rate” performance because the guest timing contract was wrong.
+4. E3 low-read, E4 validation specialization and E5 DSP invariant work remain **DEFERRED** until the corrected timing/block contract exists. A performance optimization of an over-executing guest is currently lower value than fixing the guest-time definition itself.
+
+The current diagnostic branch moved after the authority run for additional PROFILE-only cross-check instrumentation; do not confuse those later diagnostic commits with the measured authority SHA `30be5489...`.
+
+## RESUME HERE — E2 confirmed / correctness-first pivot 2026-09-17
+
+1. Integrated `master` remains **`a2270699...`**. Safe M1 tree remains **`225859b1...`**. E2 authority is diagnostic SHA **`30be5489...`**, run **`35283897586`**, not the later diagnostic HEAD.
+2. **CONFIRMED:** tested SPC700 opcodes are undercharged in guest cycles; `apu_clock=21` alone does not prove full-rate timing.
+3. **CONFIRMED:** long NOP sequences can bypass `BLOCK_SIZE=16`, span 3 tag regions, and a middle-region tag mutation can reuse stale generated code because cached validation checks only endpoint tags.
+4. Next controlled change: prove the NOP path is the only direct `next_opcode` bypass, then test a minimal NOP->`finish_opcode` block-bound fix on the diagnostic harness. If it restores <=16-byte span and removes the middle-region stale-reuse condition without semantic regression, recreate it as a clean code-only candidate from the safe tree.
+5. In parallel, map the complete SPC700 missing-cycle contract from the pinned independent reference before implementing timing correction. Prefer a systematic model of internal/conditional cycles over per-game or global-clock hacks.
+6. After correctness candidates, create a fresh matched-window baseline (E1 repair remains required) before ranking small throughput deltas.
+7. 2B/E3, E4, E5 are **DEFERRED**. BLOCK32 remains REJECTED. No 65C816 dynarec/RSP offload/second emulator/cartridge assist is justified by this evidence.

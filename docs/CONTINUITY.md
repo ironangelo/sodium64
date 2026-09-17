@@ -406,3 +406,24 @@ Current runs:
 It repeats the inherited 128-byte long-NOP case, mutates only middle tag region 9 while endpoint tags 8/10 remain untouched, then continues to the first `cpu_execute` return. Unchanged lookup/JIT pointer at that deterministic boundary dynamically confirms stale reuse; changed values falsify the prior dynamic interpretation.
 
 Do not promote/reject the NOP candidate or restate dynamic stale re-entry as VALIDATED until these corrected runs finish.
+
+
+## SPC700 timing scope sharpened — 2026-09-17
+
+Independent cycle-count cross-check:
+- pinned ares implementation remains the primary instruction/bus-sequence reference: `ares@17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`;
+- second source checked: `gufranco/sony-spc700-python@50fbd2fb8f4ad8743fc1bca090a7968e25d30a9e`, MIT, whose `conformance/hardware.json` transcribes the Nintendo development-manual Appendix C instruction tables.
+- machine check of that pinned hardware table: **17 tables, 256 rows, 256 unique opcode codes, zero duplicates, zero missing opcodes**.
+- **28 opcodes have conditional cycle totals**: the eight normal conditional branches, BBS/BBC families, CBNE forms and DBNZ forms. The other **228 opcodes have fixed total cycle counts** in the hardware table.
+- `gilyon/snes-tests@5ecdf555da920f0bd7b157542141965a8120186d` is MIT and comprehensive for SPC700 opcode/register/memory semantics, but its own README explicitly says it does **not** test cycle count, dummy reads, S-SMP I/O registers or DSP. Use it later as a semantic-regression guard, not as timing authority.
+- SingleStepTests/ProcessorTests contains cycle-by-cycle bus vectors but declares no repository license; do not vendor or make CI depend on its data without a licensing decision.
+
+### Two timing layers must not be conflated
+
+**Layer 1 — total instruction-cycle correctness.**
+This is the immediate correction target. Sodium64 currently charges instruction/operand fetch bytes at compile time plus emitted data reads/writes at runtime and omits other cycles. Fixed internal cycles can be represented by compiler-side debit; the 28 conditional branch families need taken-path runtime debit. Existing E2 snippets are an excellent architecture proof: after correction, BRA must be 4 units, NOP+BRA 6, MUL+BRA 13, DIV+BRA 16.
+
+**Layer 2 — intra-block bus/I/O temporal ordering.**
+This is a separate accuracy problem. Sodium64 batches `jit_read8` fetch-cycle debt into the generated block-end `ADDI s3,s3,imm`, while runtime data accesses debit `s3` at the access point. Timer reads `read_t0out/read_t1out/read_t2out` compare overflow timestamps directly against current `s3`. Therefore even correct *total* instruction cycles do not automatically prove exact timer/I/O timing inside a multi-instruction JIT block. Dummy reads also need semantic treatment when they can touch I/O.
+
+**Decision:** implement/validate total-cycle correctness first and measure its effect, but label it honestly. Do not claim full SPC700 cycle-accurate I/O until Layer 2 has its own directed tests and solution. This is accuracy debt within Sodium64, not a reason to build a second emulator.

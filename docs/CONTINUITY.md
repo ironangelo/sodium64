@@ -747,3 +747,37 @@ Sodium64 currently batches opcode/operand fetch debits in compile-time `s2` and 
 4. This four-opcode step is a **mechanism proof, not the permanent timing coverage**. If validated, recreate the mechanism cleanly from `7e48bcc9...` and expand systematically by shared addressing/operation/control families plus runtime conditional charges for taken branches.
 5. Do not remove `apu_read8/write8` timing debits yet. Do not globally scale `apu_clock`. Do not claim exact intra-instruction I/O timing until dedicated timer/port tests prove it.
 6. E1 matched-window repair remains necessary before ranking small performance changes. E3/E4/E5 remain DEFERRED.
+
+
+## Timing mechanism proof in progress — checkpoint 2026-09-17
+
+Diagnostic branch **`phase2/apu-cycle-proof@842a14127669ce176c808ddcd718d0987d351223`** now contains a bounded mechanism proof for missing SPC700 guest cycles. This is NOT full timing coverage and is not a merge candidate.
+
+Controlled semantic changes relative to the prior bounded-NOP diagnostic:
+- shared compile-time helper `jit_charge_cycles(t0)` converts a count of missing SPC700 cycles into `apu_clock` master-cycle debit accumulated in JIT compiler `s2`;
+- NOP charges +1 missing cycle then reaches `finish_opcode`;
+- BRA charges +2 missing cycles;
+- MUL charges +8 missing cycles;
+- DIV charges +11 missing cycles;
+- existing `apu_read8/apu_write8` runtime data-access debits are unchanged.
+
+Expected audited totals at `apu_clock=21`:
+- BRA: 4 guest cycles / debit `-84`;
+- NOP+BRA: 6 / `-126`;
+- MUL+BRA: 13 / `-273`;
+- DIV+BRA: 16 / `-336`;
+- 16 compiled NOPs from the 128-byte source probe: 32 guest cycles / `-672`, while source span must remain exactly 16 bytes and header region 8->8.
+
+**Build and Validate `35288358663` SUCCESS** for exact SHA `842a1412...`: normal build, PROFILE build and pinned Mupen emulator smoke all green.
+
+**Long experiment in progress:** APU Cycle And Span Proof **`35288358655`**, profile-build already SUCCESS; cycle-proof job **`105425907529`** is currently building pinned ares before executing the dynamic cases.
+
+Question: does one shared compile-time missing-cycle mechanism reproduce independent SPC700 total cycles for the four already-audited fixed-cycle cases without undoing the validated NOP block bound?
+
+Readings:
+- all exact debits + 16-byte bound pass => mechanism **VALIDATED only for these audited fixed-cycle cases**; proceed to one separate addressing-family timing batch;
+- debit mismatch => inspect helper/accounting composition, do not expand coverage;
+- PC/span/header mismatch => reject mechanism as semantically intrusive;
+- smoke/proof regression => reject candidate.
+
+Do not interpret performance from this run. E1 matched-window measurement repair remains required for later throughput comparison.

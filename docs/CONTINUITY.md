@@ -16,7 +16,7 @@ Perfect target: real N64, correct native cadence, no required frameskip/frame ge
 Integrated `master`: **`a2270699e60cdf2b8b8303aaa5a1aa4a0e8dd89e`**.
 Completed M0 representative HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928efe6`**.
 Safe M1 BLOCK16 authority: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`**; safe branch tree before experiment 2: **`225859b1d8fc0eb477a624ac76f8237667379f59`**, tree-equivalent to baseline.
-Active M1 branch `phase2/apu-audio-first`: **`e2b1979a4bda3cf853bd7c5c029dab4d0b9c481e`** = failed-to-build experiment 2A first attempt; do not measure/interpret this SHA.
+Active M1 branch `phase2/apu-audio-first`: **`989e1f5ba8d592f6efb8e593d7a83fc5b51f3f89`** = experiment 2A layout-control attempt 2, pending CI/profile.
 Diagnostic branch `phase2/apu-interleave-diagnostic`: **`8805fd6128a183ce2259dd4d85ef146f42f00d47`**.
 
 ### Canonical docs
@@ -57,18 +57,19 @@ Use paired layout control:
 2. **2B:** on exact 2A layout, redirect only proven-low call targets. Initial scope: direct, direct+X/Y, `(X)`, `(X)+`, the two low pointer-byte reads in `[dp+X]` and `[dp]+Y`, `dp,dp` low read, `(X),(Y)` low read. Leave final indirect/absolute reads, `apu_drb`13-bit, ALU operation-level reads, stack/transfer reads, writes and BLOCK_SIZE untouched.
 
 ### 2A attempt 1 — COMPILE FAILURE / NO PERFORMANCE EVIDENCE
-SHA **`e2b1979a4bda3cf853bd7c5c029dab4d0b9c481e`**, parent `225859b1...`. Net diff: one file `src/apu_address.S`, +10/-0; helper unreachable and no call target substitutions.
+SHA **`e2b1979a...`**. Build/Validate `35226731916` FAILED normal+PROFILE; Open Homebrew `35226731941` failed profile-build and skipped Gothicvania. Exact assembler cause: `lbu v0, apu_ram(a0)` pseudo-instruction expanded into multiple instructions in a branch delay slot; warnings-as-errors. This SHA has **no performance evidence**.
 
-Build/Validate run **`35226731916` FAILED**: both normal and PROFILE builds fail assembler. Open Homebrew run **`35226731941` FAILED** in profile-build; `ares-gothicvania` skipped, so **no performance result exists** for this SHA.
+### 2A attempt 2 — IMPLEMENTED / PENDING MEASUREMENT
+SHA **`989e1f5ba8d592f6efb8e593d7a83fc5b51f3f89`**. Minimal correction from attempt1 is exactly **+1/-0**: branch delay slot is `nop`, then the same `lbu` follows. Direct compare from safe `225859b1...` remains exactly one file `src/apu_address.S`, **+11/-0**. Helper is still unreachable; no existing read call target changed. Therefore this is a valid layout-control candidate if it builds.
 
-Exact cause from build job `105220124897`: assembler at `src/apu_address.S:549` warns `macro instruction expanded into multiple instructions in a branch delay slot`, fatal due warnings-as-errors. Cause is `lbu v0, apu_ram(a0)` pseudo-instruction placed in the `beq` delay slot. This is a tooling/assembly-shape error, not evidence against the semantic hypothesis.
+Question: does helper-only code/layout alter the Gothicvania baseline? Expected sane reading is ~44/60. Material movement means layout itself is a confound and this 2A SHA becomes the paired baseline for 2B rather than comparing 2B directly to old `c55b6b...`.
 
-**Next controlled correction:** change only the helper branch delay slot to `nop` and move the `lbu v0, apu_ram(a0)` immediately after it. Helper remains unreachable; no call sites change. Re-run 2A under a new SHA. If that compiles, its frame budget is the layout-control authority. Do not interpret `e2b1979a...` beyond the compile failure.
+If 2A is sane/equivalent, 2B keeps exact helper/layout and changes only the enumerated proven-low call targets. **Expected:** lower APU-read cost, possibly modest frame-budget gain. **Falsifier:** neutral result, semantic/build regression, or evidence any redirected call can reach IPL space / lose I/O semantics.
 
 ## RESUME HERE
-1. Correct 2A minimally on `phase2/apu-audio-first`: `beq ...; nop; lbu ...`; no other changes. Verify diff from `e2b1979a...` is exactly that assembly-shape fix and diff from safe `225859b1...` remains helper-only/unreachable. Checkpoint new SHA before CI interpretation.
-2. Run Build/Validate + Gothicvania ares. Record exact runs/artifact. If 2A is ~44/60/sane, proceed to 2B. Material 2A movement means layout confound and 2A becomes paired baseline.
-3. 2B changes only the enumerated proven-low call targets. Verify 2A->2B diff contains only target substitutions; profile same workload and compare complete virtual frame budget first, then sample shares. Repeat same SHA if ambiguous.
+1. Identify CI/profile runs for exact **`989e1f5b...`**, checkpoint IDs, then read Build/Validate + Gothicvania ares outcome. If successful, record artifact/frame budget immediately. Any material movement in 2A is layout-only by construction.
+2. If 2A is sane, implement 2B changing only enumerated call targets; verify 2A->2B diff is target substitutions only and checkpoint exact SHA before interpretation.
+3. Profile 2B on identical Gothicvania settings. Compare complete virtual frame budget first, then sampling shares; repeat same SHA if ambiguous.
 4. Reject any semantic/timing regression even if faster. Hardware is final authority only for candidates that survive lab validation.
 
-Resume summary: master `a2270699...`; M0 hardware mean49/60 with APU/audio61.83%. BLOCK32 local speedup was REJECTED by paired DSP-lateness. Experiment2 2A first attempt `e2b1979a...` produced **no measurement** because a pseudo-instruction in a branch delay slot failed assembly; minimal shape correction is next.
+Resume summary: master `a2270699...`; M0 hardware mean49/60 with APU/audio61.83%. BLOCK32 local speedup was REJECTED by paired DSP-lateness. Experiment2 2A attempt1 failed assembly with no measurement; corrected helper-only layout control is `989e1f5b...`, clean +11/-0 and still unreachable, pending CI/profile.

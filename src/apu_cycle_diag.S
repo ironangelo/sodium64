@@ -14,6 +14,8 @@
 .globl apu_cycle_diag_static_cycles
 .globl apu_cycle_diag_span
 .globl apu_cycle_diag_region_delta
+.globl apu_cycle_diag_target
+.globl apu_cycle_diag_sequence
 
 .data
 
@@ -23,5 +25,8 @@ apu_cycle_diag_last_end:      .hword 0
 apu_cycle_diag_static_cycles: .word 0
 apu_cycle_diag_span:          .word 0
 apu_cycle_diag_region_delta:  .word 0
+apu_cycle_diag_target:        .hword 0
+.align 4
+apu_cycle_diag_sequence:      .word 0
 
 #endif

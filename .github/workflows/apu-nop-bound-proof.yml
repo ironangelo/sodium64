@@ -227,7 +227,8 @@ jobs:
               f"- Compiled source clock units: **{b['source_clock_units']}** (target 16).",
               f"- PC after block: **0x{b['apu_count_after_block']:04X}**.",
               f"- Header tag regions: **{b['header_start_region']}→{b['header_end_region']}**.",
-              f"- Old block re-entered after covered end-tag mutation: **{inv['old_block_reentered']}**.",
+              f"- Recompiled before first cpu_execute return: **{inv['recompiled_before_first_cpu_return']}**.",
+              f"- Stale block reused without recompile: **{inv['stale_block_reused_without_recompile']}**.",
               f"- Lookup changed after mutation: **{inv['lookup_changed']}**.",
               f"- JIT pointer advanced after mutation: **{inv['jit_pointer_advanced']}**.",
           ]

@@ -1,6 +1,6 @@
 # Statistical profiling
 
-Phase 1 uses statistical R4300 PC sampling to identify where Sodium64 spends host CPU time without instrumenting every opcode, scanline, or hot memory path.
+Sodium64 uses statistical R4300 PC sampling to identify where host CPU time is spent without instrumenting every opcode, scanline, or hot memory path.
 
 This document defines what the profiler measures, how CI captures it, and which conclusions are currently valid.
 
@@ -76,7 +76,7 @@ Synthetic stress ROMs are **causal controls**, not commercial-game representativ
 
 ## Full-rate APU preparation
 
-Sodium64 inherits an APU-underclock mode. Phase 1 decision measurements must not rely on it.
+Sodium64 inherits an APU-underclock mode. Road-to-1.0 decision measurements must not rely on it.
 
 After warm-up the ares harness therefore:
 
@@ -217,10 +217,14 @@ It does **not** prove:
 - that a 65C816 dynarec is already justified;
 - exact SNES/N64 cadence correctness.
 
-## Next Phase 1 step
+## Current M1 profiling role
 
-Do not expand profiling infrastructure merely because more metrics are possible.
+M0 is closed. The representative real-N64 Gothicvania capture measured a mean **49/60** completed frames with frameskip `0`, full-rate APU, active audio and essentially no VI idle headroom; its profile placed **61.83%** of sampled R4300 time in APU/JIT/DSP-audio work. That evidence makes APU/audio the first M1 gate driver rather than an assumed 65C816 dynarec.
 
-The synthetic controls and mixed workload have now done their main job. The next evidence should increase **representativeness or authority**: a more complex open/homebrew test workload and/or a focused real-N64 M0 milestone measurement package, chosen to answer whether the first major M1 architecture should target S-CPU, APU, PPU/RSP, memory/synchronization, or another measured cost.
+Profiling in M1 is therefore a decision instrument, not a new infrastructure project. Use the exact representative Gothicvania workload and the valid ares lab for controlled candidate-vs-baseline comparisons, then use real N64 hardware as final performance/timing authority for candidates worth retaining.
+
+The rejected `BLOCK_SIZE 16 -> 32` experiment is the current model for interpretation discipline: it reproducibly improved the ares virtual frame budget from **44 -> 48/60**, but paired DSP-lateness instrumentation showed a material timing regression, so the optimization was rejected. Throughput movement alone is not sufficient.
+
+The next profiling target is bounded APU memory/dispatch work (`apu_read8` / `apu_write8` and closely related hot paths) while preserving scheduler return frequency. Add new instrumentation only when existing samples/state cannot distinguish the competing explanations.
 
 Commercial ROMs may later be used locally for representativeness but must not be committed or distributed as project artifacts.

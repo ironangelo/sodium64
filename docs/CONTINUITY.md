@@ -17,15 +17,15 @@ Perfect target: real N64 with correct native cadence; one required SNES frame pe
 
 Integrated `master`: **`ee86d3391f9ef7f407b9b3f683b145253ff1ef3f`**.
 Completed M0 branch representative HEAD: **`89df64192d622bfa12e4bb53e0f41ceab928efe6`**.
-Clean M1 candidate / measurement authority: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`).
-M1 paired baseline: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
-`phase2/apu-audio-first` current HEAD **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**, tree-equivalent to `a758629...` after hygiene correction.
-**Active diagnostic branch:** `phase2/apu-interleave-diagnostic`; current HEAD **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** (`BLOCK_SIZE=16` paired lateness control).
+M1 paired baseline / safe block-size authority: **`c55b6b44334fcaa22c59bf9d3bdac26dca38ed9c`** (`BLOCK_SIZE=16`).
+Rejected clean32 throughput candidate: **`a758629014d0ecada6358c57eaf77c60afc80cad`** (`BLOCK_SIZE=32`).
+`phase2/apu-audio-first` current HEAD **`255b7a3c4af9c4d6d76c2e5b1bca5ab40e1479ea`**, tree-equivalent to rejected `a758629...`; must be restored to BLOCK_SIZE16 before new M1 optimization work.
+Diagnostic branch `phase2/apu-interleave-diagnostic` current HEAD **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** (`BLOCK_SIZE=16` paired lateness control).
 Open PRs: none at last checkpoint.
 
 **HYGIENE NOTE / CORRECTED:** accidental temporary root file `noop` was created at `2fbff6e9...` while invoking the wrong Git action, then immediately removed by `255b7a3...`. Direct compare `a758629... -> 255b7a3...` has zero changed files. Do not use those hygiene commits as measurement identity. No history was rewritten.
 
-**DOC DRIFT / TODO:** `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` retain older pre-M0 / dynarec-first framing. Repair after the current APU experiment materially resolves; do not weaken 1.0.
+**DOC DRIFT / TODO:** `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` retain older pre-M0 / dynarec-first framing. The 32-byte experiment is now resolved; repair these canonical docs before the next substantial M1 architecture batch. Do not weaken 1.0.
 
 ## Ares laboratory authority
 Isolation run **`35113184294`**, artifact **`10453682432`** proved pinned ares RSP JIT is a **LAB LIMITATION**. Valid high-density lab = **R4300 JIT + RSP interpreter**.
@@ -48,52 +48,36 @@ Earlier save `c9862cc...` **SUPERSEDED FOR ARCHITECTURE DECISION** due post-GAME
 ## M1 baseline16
 SHA **`c55b6b...`**; ares run **`35148379400`**, artifact **`10467972587`**; 2000 samples; **44/60**. APU/audio54.40%; SCPU30.85; PPU7.45; DMA4.40; RSPwait2.55; VI0.35; `apu_execute`13.10.
 
-## M1 confounded32
-SHA **`3b39523...`** repeated48/60 but also changed license/runtime layout macros. **SUPERSEDED AS CAUSAL CANDIDATE.**
+## M1 experiment 1 — larger APU JIT blocks
+Confounded SHA **`3b39523...`** repeated48/60 but also changed license/runtime layout macros: **SUPERSEDED AS CAUSAL CANDIDATE**.
 
-## M1 clean32 — locally reproduced candidate
-SHA **`a758629...`** differs from baseline only by `BLOCK_SIZE 16->32` (one file,1+/1-). CI green.
-Run A artifact **`10477834229`**: **48/60**, 957 samples, APU/audio50.99%, `apu_execute`11.39.
-Same-SHA run B artifact **`10478782129`**, digest `f607a5f0...`: **48/60**, 1175 samples, APU/audio52.69%, `apu_execute`12.77. Both frameskip0/APU21/audio4/precision8/queue0/SP DMA0/0.
+Clean SHA **`a758629...`** differs from baseline only by `BLOCK_SIZE 16->32`. Uninstrumented ares run A artifact **`10477834229`** measured **48/60**, 957 samples, APU/audio50.99%, `apu_execute`11.39. Same-SHA run B artifact **`10478782129`** again measured **48/60**, 1175 samples, APU/audio52.69%, `apu_execute`12.77. Baseline16 was44/60.
 
-**MEASURED / LOCALLY REPRODUCED:** clean32 = **48/60 twice** vs baseline16=44/60. Stable frame budget is stronger than sampling-share variation. No third throughput repeat warranted.
-**CANDIDATE, NOT VALIDATED:** not mergeable until timing/interleave is bounded and later real-N64 authority confirms.
+**MEASURED / THROUGHPUT:** the one-variable 32-byte change reproducibly improves this ares lab frame budget from44->48/60. That performance finding is real local evidence, not a real-N64 percentage claim.
 
-## BLOCK_SIZE32 semantic/timing review
-**SUPPORTED / lower risk:** branches/jumps/calls terminate JIT block; 32 does not compile through control-flow boundaries.
-**SUPPORTED / lower risk:** invalidation tags are 64-byte regions and blocks check start/end tags; a <64B linear block intersects at most two tag regions.
+Static review lowered two risks: branches/jumps/calls terminate blocks; invalidation tags are64-byte regions and a <64B linear block intersects at most two tags. But DSP due-check occurs only at `apu_execute` entry, and a JIT block returns to scheduler at `finish_block`; larger blocks can therefore increase APU↔DSP lateness. At measured `apu_clock=21`, `32*21=672`, exactly one nominal DSP period before extra data-access costs.
 
-**OPEN QUESTION / MATERIAL CORRECTNESS RISK:** DSP due-check happens at `apu_execute` entry; JIT blocks return through scheduler only at `finish_block`. Larger block can increase DSP/APU/CPU interleave latency. `dsp_sample` returns to `apu_execute`, so overdue samples catch up one by one; concern is lateness/bunching/order, not obvious loss of sample count.
+### Paired DSP-lateness diagnostic
+Profile-only instrumentation records DSP-due count, lateness sum/max, and events with lateness >= `DSP_SAMPLE=672`, without changing emulated cycle counters. Instrumented FPS is non-authoritative.
 
-**STATIC BOUNDARY:** measured mode `apu_clock=21`, `DSP_SAMPLE=672`; **32*21=672 exactly**, one DSP period from instruction-stream fetch accounting alone before runtime data accesses. Baseline16 may also overshoot via data-heavy instructions, so paired measurement is required.
-APU timers are mostly lazily updated on relevant I/O; this is not proof of timer failure.
+Historical diagnostic `6921055...` also changed `stamp_timer2` t1->t0 and is **SUPERSEDED AS MEASUREMENT CANDIDATE**. `8bebdd9...` isolated `apu.S`; `cbe39be...` added counters outside canonical S64P range. Hygiene attempts `7715da...` and `f81370...` for the paired16 control are **SUPERSEDED / DO NOT INTERPRET** because reconstructed `defines.h` carried extra formatting/layout changes.
 
-## Paired DSP-lateness diagnostic
-Goal: profile-only counters at DSP-due entry for max `a3-s3`, sum/average lateness, due-event count, and count with lateness >= `DSP_SAMPLE` (672). Instrumentation must not alter emulated cycle counters. Run BLOCK32 instrumented first, then change only BLOCK_SIZE32->16 under identical instrumentation/workload/settings. Interpret lateness metrics, **not instrumented FPS**.
+**BLOCK32 MEASURED:** exact diagnostic SHA **`7f8faeff6efa1d94c421ad0369938d8c0d077195`**. Ares run **`35183376105` SUCCESS**, artifact **`10481267575`**, digest `d1a8b2dcac54e00c3e3c8330501dc5eea0471b59bb40a490083868e1f3b7af7c`; Build/Validate **`35183376137` SUCCESS**. 35,965 due events; late sum4,615,674; average **128.338 cycles**; max **1,218**; `>=672`: **377/35,965 = 1.048241%**.
 
-Historical diagnostic commit **`6921055...`** added useful lateness logic but also an unrelated `stamp_timer2` t1->t0 change. **SUPERSEDED AS MEASUREMENT CANDIDATE**; preserve the timer issue for separate investigation.
+**BLOCK16 MEASURED:** exact paired SHA **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** differs from BLOCK32 diagnostic by exactly one file,1+/1- (`BLOCK_SIZE 32->16`). Ares run **`35190371200` SUCCESS**, artifact **`10483348244`**, digest **`5178c3c5f67843f3b99bb0ab3693147619cc652c65c9daf277318aee1b96c590`**; Build/Validate **`35190371186` SUCCESS** including normal build, profile build and emulator smoke. Settings remained frameskip0/APU21/audio4/precision8. 35,982 due events; late sum4,284,483; average **119.073 cycles**; max **651**; `>=672`: **0/35,982 = 0%**.
 
-`8bebdd9...` isolated `src/apu.S`; `cbe39be...` added counters/reset outside canonical S64P range.
+**SUPPORTED COMPARISON:** event counts differ by only17 (~0.047%), while BLOCK32 raises average lateness about7.8%, raises max from651 to1218 (~87%), and introduces377 >=one-period late events where paired BLOCK16 had none. This is a material tail/interleave regression attributable to the one changed variable in this paired lab.
 
-**BLOCK32 DIAGNOSTIC — MEASURED:** SHA **`7f8faeff6efa1d94c421ad0369938d8c0d077195`**. Direct compare to clean candidate `a758629...` is limited to exactly three diagnostic files: `.github/workflows/open-homebrew-profile.yml` (51+/1-), `src/apu.S` (38+/1-), `src/profile.S` (23+/0-). No unrelated core-semantic or S64P-layout changes.
+**REJECTED / ARCHITECTURE DECISION:** `BLOCK_SIZE=32` is rejected despite its reproducible 44->48/60 throughput gain. Sodium64 1.0 requires correct audio/timing; we will not buy speed by allowing materially worse DSP scheduling lateness. Do not merge or hardware-test `a758629...` as a performance candidate. Retain the result as knowledge: dispatch/block overhead is significant, but must be reduced without lengthening scheduler return intervals this way.
 
-Open Homebrew Ares Profile run **`35183376105` SUCCESS**, artifact **`10481267575`**, digest **`d1a8b2dcac54e00c3e3c8330501dc5eea0471b59bb40a490083868e1f3b7af7c`**. Build and Validate run **`35183376137` SUCCESS**; normal build, profile build and emulator smoke all passed. Exact settings remained frameskip0/APU21/audio4/precision8.
-
-BLOCK32 lateness result over the post-settle measured interval: **35,965 DSP-due events**, late sum **4,615,674 cycles**, average lateness **128.338 cycles**, maximum **1,218 cycles**, and **377 / 35,965 = 1.048241%** of due events were at least one full DSP period late (`>=672` cycles). Instrumented frame-budget remained 48/60 but is non-authoritative by design.
-
-**MEASURED, NOT YET INTERPRETABLE AS A 32-BYTE REGRESSION:** BLOCK32 definitely exhibits occasional >1-period scheduling lateness. This alone does not prove 32 worsens correctness because baseline16 can also overshoot due to instruction/data-access cycle costs. Paired BLOCK16 is mandatory.
-
-**BLOCK16 CONTROL HYGIENE:** commits `7715da11951f57db81fed37453802f5033d91095` and `f81370b22e5c410a3cd5e78248191bab79872538` are **SUPERSEDED / DO NOT INTERPRET**. They attempted the 32->16 control but also introduced formatting/layout differences while reconstructing `defines.h`; no results from those SHAs may be used.
-
-**BLOCK16 CONTROL — CLEAN MEASUREMENT CANDIDATE:** SHA **`8805fd6128a183ce2259dd4d85ef146f42f00d47`** restores `src/defines.h` from exact BLOCK32 measurement source and changes only `#define BLOCK_SIZE 32 -> 16`. Direct compare **`7f8faeff... -> 8805fd61...`** reports exactly one modified file, **1 addition / 1 deletion**. Therefore this is the valid paired control and any following CI/artifact must be tied to this exact SHA.
-
-**EXPERIMENT IN PROGRESS:** exact BLOCK16 SHA **`8805fd61...`** triggered Build and Validate run **`35190371186`** and Open Homebrew Ares Profile run **`35190371200`**. At checkpoint, Build/Validate profile-build had succeeded while normal build was still compiling; the ares workflow profile-build was compiling. Question: how do BLOCK16 average/max DSP lateness and `>=672` frequency compare with BLOCK32's 128.338 / 1218 / 1.048241%? Possible readings: materially lower BLOCK16 lateness means 32 trades timing quality for throughput; similar distributions weaken that concern and move 32 toward real-N64 validation. Do not interpret instrumented FPS as throughput evidence.
+## Discovered timer2 side issue
+The superseded diagnostic commit `6921055...` changed `stamp_timer2` from the baseline `sub t1,t1,t2; sw t1,apu_ocycles+8` to a `t0` variant. This was unrelated to the experiment and remains to be resolved explicitly before forgetting it. Static data-flow inspection is the next bounded correctness check; do not mix any timer change into APU performance experiments.
 
 ## RESUME HERE
-1. Read completion state for exact runs **`35190371186`** / **`35190371200`** on SHA `8805fd61...`. Ignore any runs from superseded hygiene SHAs `7715da...` or `f81370...`.
-2. If successful, record exact ares artifact and BLOCK16 average/max lateness plus >=672 frequency immediately.
-3. Compare BLOCK32 vs BLOCK16 directly. If 32 materially worsens required interleave, mark32 REJECTED despite throughput. If equivalent/safely bounded, proceed toward real-N64 validation of clean candidate `a758629...`.
-4. Separately investigate the discovered `stamp_timer2` t1/t0 issue after the paired experiment; do not silently discard it.
-5. After experiment resolves, repair master Road/Roadmap for M0 closure + evidence-driven APU/audio-first M1.
+1. On `phase2/apu-audio-first`, restore the rejected 32-byte candidate to **BLOCK_SIZE16** with a controlled one-line net diff and checkpoint the safe M1 HEAD. Do not merge diagnostic instrumentation.
+2. Resolve the `stamp_timer2` t1/t0 side issue separately by tracing register/data flow; record whether the proposed t0 variant is a real bugfix or **REJECTED**.
+3. Repair `master:docs/ROAD_TO_1_0.md` and `master:docs/ROADMAP.md` for M0 closure, real-N64 49/60 evidence, APU/audio-first M1, and rejection of 32-byte blocks on timing evidence.
+4. Start the next bounded APU optimization from BLOCK_SIZE16. Preferred next measured path: reduce `apu_read8`/`apu_write8` overhead without extending scheduler intervals; one important variable at a time. DSP inner-loop work follows if evidence warrants.
+5. Real N64 remains final performance/timing authority; no hardware session is warranted for rejected32.
 
-Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 `a758629...`=48/60 twice, **CANDIDATE / LOCALLY REPRODUCED**. Clean BLOCK32 DSP-lateness diagnostic `7f8faeff...` measured avg128.338, max1218, >=672 in1.048241% of due events. Clean paired BLOCK16 control is exact SHA `8805fd61...`; runs `35190371186` / `35190371200` are in progress and are the next evidence authority.
+Resume summary: M0 real-N64 mean49/60, APU/audio61.83%, no VI wait. Baseline16=44/60 ares. Clean32 improved to48/60 twice but paired DSP-lateness proved a timing regression: BLOCK16 avg119.073/max651/0 >=672 events vs BLOCK32 avg128.338/max1218/377 >=672 events. **BLOCK_SIZE32 REJECTED.** Restore16, close timer2 side issue, repair canonical Road/Roadmap, then pursue safer APU dispatch/memory-path optimization.

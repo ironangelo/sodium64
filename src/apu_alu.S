@@ -809,6 +809,12 @@ apu_incw: // INCW op
 
 .align 5
 apu_div: // DIV YA,X
+    // Layer-1 timing proof: DIV is 12 cycles total. Opcode fetch already
+    // contributes one, so charge the remaining eleven guest cycles here.
+    li t0, 11
+    jal jit_debit_cycles
+    nop
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SY | FLAG_SA
@@ -842,6 +848,12 @@ apu_div: // DIV YA,X
 
 .align 5
 apu_mul: // MUL YA
+    // Layer-1 timing proof: MUL is 9 cycles total. Opcode fetch already
+    // contributes one, so charge the remaining eight guest cycles here.
+    li t0, 8
+    jal jit_debit_cycles
+    nop
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY | FLAG_SA

@@ -313,3 +313,26 @@ Measured re-entry:
 4. After that checkpoint, derive and implement the **smallest instruction/path-specific timing correction candidate** supported by the pinned SPC700 reference. Do not globally change `apu_clock`; do not combine timing correction with memory/JIT optimizations.
 5. Before performance-ranking any resulting candidate, add the minimal matched-window E1 measurement boundary and establish a fresh baseline. Fidelity/cycle equivalence is required before any speed claim.
 6. E3 low-read helper, E4 validation specialization and E5 DSP invariant hoist remain candidates only after timing semantics are on firmer ground. No second emulator, no RSP offload, no scope reduction, no cartridge-assistance pivot.
+
+
+## NOP-bound candidate running — checkpoint 2026-09-17
+
+Clean one-variable candidate **`phase2/apu-nop-bound-fix@fe5fcc0ca7b817a99095dcde40dc9d37d54d4a18`** starts from safe BLOCK16 tree `225859b1...`. Its only runtime change is opcode `0x00` NOP dispatch in `src/apu_emitter.S`: `next_opcode -> finish_opcode`. No cycle-timing correction is bundled.
+
+Diagnostic child branch **`phase2/apu-nop-bound-proof@0eb17e80fc255bca61c021936b1d040abd87ceb4`** contains only the directed proof script/workflow on top of the clean candidate.
+
+Runs currently in progress:
+- candidate Build/Validate **`35283138453`** on exact `fe5fcc0c...`;
+- child Build/Validate **`35283273619`** on exact `0eb17e80...`;
+- directed **APU NOP Bound Proof `35283273808`** on exact `0eb17e80...`.
+
+Directed question: starting at PC `0x0238` with a long NOP stream, does the clean candidate stop compilation after exactly 16 source bytes at PC `0x0248`, track only tag regions 8->9, and then reject/recompile the old block after an actually covered byte in region 9 is mutated and its tag incremented?
+
+Acceptance requires all three:
+- `nop_bound_enforced=true`;
+- `bounded_block_tracks_only_two_regions=true`;
+- `covered_end_tag_prevents_stale_reentry=true`.
+
+Falsifier: any >16-byte compiled span, unexpected tag-region coverage, or re-entry into the old generated block after the covered end-region tag mutation. If falsified, do not broaden the fix until the exact mechanism is identified.
+
+Do not merge or performance-rank this candidate while the proof is running. Cycle-timing design may proceed from the already-confirmed E2 evidence but remains a separate future candidate.

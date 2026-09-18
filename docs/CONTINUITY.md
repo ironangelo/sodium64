@@ -2517,3 +2517,46 @@ Dynamic semantic authority:
 Exact clean Build and Validate run: **`35314885462`**, IN PROGRESS at checkpoint.
 
 Do not modify clean `c2f2ecc1...` until exact CI completes. Next diagnostic work is isolated ADDW/SUBW H semantics on `phase2/apu-cycle-proof`.
+
+
+## Clean ADC/SBC Half-Carry foundation — CI VALIDATED 2026-09-18
+
+Clean **`phase2/apu-timing-foundation@c2f2ecc1dfd521be724a832761db45d514ce2265`** completed **Build and Validate `35314885462` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+## SPC700 ADDW/SUBW Half-Carry proof in progress — checkpoint 2026-09-18
+
+Exact diagnostic SHA: **`06edb6afb10bc54dd79f6539c7484aad1b0d3469`**, one commit after ADC/SBC H authority `29aba03a...`.
+
+Direct compare is exactly:
+- `src/apu_alu.S` +13/-4;
+- `scripts/apu_cycle_proof.py` +29/-0.
+
+Controlled semantic change only; timing/addressing/dispatch unchanged.
+
+Pinned reference semantics:
+- ADW is two chained ADCs; final H is the high-byte nibble half-carry, equivalent to whole-word bit 12 of `x ^ y ^ result`.
+- SBW is two chained SBCs; final H is the inverted whole-word bit-12 half-borrow relation.
+
+Directed matrix:
+- ADDW H set via low-byte carry into high byte;
+- ADDW H clear from initially-set H;
+- SUBW H set via low-byte borrow path;
+- SUBW H clear via low-byte borrow path.
+
+All four retain the already validated **9 total guest cycles**. Any s3/static debit movement is a regression.
+
+Exact workflows:
+- **Build and Validate `35315076872`** — QUEUED at checkpoint.
+- **APU Cycle And Span Proof `35315076871`** — IN PROGRESS at checkpoint.
+
+Acceptance:
+1. A/Y results exact;
+2. H set/clear exact;
+3. C/N/Z/V remain correct for directed cases;
+4. total/static cycles unchanged;
+5. entire prior regression matrix remains green.

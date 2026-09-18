@@ -93,6 +93,10 @@ def boundary_state(client: RSPClient, args: argparse.Namespace, index: int) -> d
         "skipped_set": read_uint(client, args.skipped_set, 1),
         "audio_set": read_uint(client, args.audio_set, 1),
         "precision_set": read_uint(client, args.precision_set, 1),
+        "dsp_due_count": read_uint(client, args.dsp_due_count, 4),
+        "dsp_late_sum": read_uint(client, args.dsp_late_sum, 4),
+        "dsp_late_max": read_uint(client, args.dsp_late_max, 4),
+        "dsp_multi_due_count": read_uint(client, args.dsp_multi_due_count, 4),
     }
     if state["fps_native"] != 59:
         raise RuntimeError(
@@ -135,6 +139,11 @@ def main() -> int:
     parser.add_argument("--profile-write-ptr", type=parse_int, required=True)
     parser.add_argument("--profile-sample-count", type=parse_int, required=True)
     parser.add_argument("--profile-last-epc", type=parse_int, required=True)
+
+    parser.add_argument("--dsp-due-count", type=parse_int, required=True)
+    parser.add_argument("--dsp-late-sum", type=parse_int, required=True)
+    parser.add_argument("--dsp-late-max", type=parse_int, required=True)
+    parser.add_argument("--dsp-multi-due-count", type=parse_int, required=True)
 
     parser.add_argument("--apu-clock", type=parse_int, required=True)
     parser.add_argument("--jit-lookup", type=parse_int, required=True)
@@ -230,6 +239,14 @@ def main() -> int:
             "profile last EPC",
         )
 
+        for address, label in (
+            (args.dsp_due_count, "DSP due count"),
+            (args.dsp_late_sum, "DSP late sum"),
+            (args.dsp_late_max, "DSP late max"),
+            (args.dsp_multi_due_count, "DSP multi-due count"),
+        ):
+            write_verified(client, address, b"\x00\x00\x00\x00", label)
+
         advance_from_update_fps(
             client, args, "measurement start check_frame"
         )
@@ -281,6 +298,14 @@ def main() -> int:
                 "max_frames_per_60_vi": max(frame_counts),
                 "final_sample_count": final_samples,
                 "measured_wall_seconds": measured_wall_seconds,
+                "dsp_due_count": measured[-1]["dsp_due_count"],
+                "dsp_late_sum": measured[-1]["dsp_late_sum"],
+                "dsp_late_max": measured[-1]["dsp_late_max"],
+                "dsp_multi_due_count": measured[-1]["dsp_multi_due_count"],
+                "dsp_late_avg": (
+                    measured[-1]["dsp_late_sum"] / measured[-1]["dsp_due_count"]
+                    if measured[-1]["dsp_due_count"] else 0.0
+                ),
             },
         }
         args.state_output.parent.mkdir(parents=True, exist_ok=True)

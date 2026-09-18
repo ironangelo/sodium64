@@ -2303,3 +2303,73 @@ Diagnostic Build and Validate `35313083584` SUCCESS.
 Exact clean Build and Validate run: **`35313761832`**, QUEUED at checkpoint.
 
 Do not modify clean `68958b68...` until exact CI completes.
+
+
+## Clean operand-form timing foundation — CI VALIDATED 2026-09-18
+
+Clean **`phase2/apu-timing-foundation@68958b689750cbcdb2d703679b1a975858186637`** completed **Build and Validate `35313761832` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+Combined authority:
+- dynamic operand-form timing/semantics: diagnostic **`1dc544fa64a0d0fd9984bc94c492d0306766bf7a`**, APU Cycle And Span Proof **`35313083578` SUCCESS**;
+- clean core consumption: `68958b68...`;
+- exact clean CI: `35313761832` SUCCESS.
+
+## RESUME HERE — 2026-09-18 current authoritative state
+
+### Phase / gate
+- Road phase: **M1 faster/correcter base core**, APU/SPC700 timing foundation remains the active gate driver.
+- This work primarily advances **Gate A / Gate C correctness prerequisites** and changes the validity of future Gate B performance measurements: configured `apu_clock=21` is no longer being treated as sufficient proof of effective full-rate SPC700 timing.
+
+### Exact repo state
+- `master`: **`a2270699e60cdf2b8b8303aaa5a1aa4a0e8dd89e`** — integrated truth, unchanged by this timing series.
+- clean candidate: **`phase2/apu-timing-foundation@68958b689750cbcdb2d703679b1a975858186637`**.
+- diagnostic authority: **`phase2/apu-cycle-proof@1dc544fa64a0d0fd9984bc94c492d0306766bf7a`**.
+- no claim that the clean candidate is merged into master.
+
+### Validated timing/state foundation now includes
+- bounded JIT block behavior / NOP boundary repair already consumed earlier in this branch;
+- fixed implied/register-transfer/stack timing;
+- conditional/taken branch timing;
+- CALL/TCALL/PCALL/RET/RET1/BRK timing and PCALL target repair;
+- ADDW/SUBW/MOVW YA,dp word timing;
+- absolute bit timing and carry-PSW persistence;
+- bus-exact TSET1/TCLR1 second read + flags/data preservation;
+- CMP memory-form trailing idle;
+- `(X),(Y)` dummy-PC timing;
+- bus-real MOV dp,#imm destination read;
+- no-change controls for sibling/shared paths.
+
+### Exact latest authorities
+- bit-family proof `df5fd66c...` / run `35308254504` SUCCESS;
+- clean bit foundation `0fe8c45f...` / run `35308801632` SUCCESS;
+- operand-form proof `1dc544fa...` / run `35313083578` SUCCESS;
+- clean operand foundation `68958b68...` / run `35313761832` SUCCESS.
+
+### What this proves
+- the directed SPC700 families above now match pinned-reference **total guest cycle debit** and the checked register/RAM/PSW semantics in the ares laboratory;
+- all historical cases in the growing regression matrix still pass together;
+- the latest clean candidate compiles and survives independent pinned Mupen smoke.
+
+### What this does NOT prove
+- complete 256-opcode SPC700 semantic/timing correctness;
+- correct DSP PCM/echo/FIR/pitch-modulation fidelity;
+- native cadence or performance improvement on real N64;
+- that Gothicvania now reaches a higher frame budget;
+- Gate B/C completion.
+
+### Immediate next uncertainty
+Before re-baselining performance, determine whether any **material SPC700 opcode/timing holes remain outside the validated families**. In particular inspect:
+- opcode-table entries still mapped to `apu_unk`;
+- explicit APU TODOs affecting arithmetic flags/semantics;
+- any remaining pinned-reference dummy reads/idles not represented by existing addressing/operation generators.
+
+Decision rule:
+- if remaining gaps are bounded REQUIRED SUPPORT / correctness items, finish them first and then establish a new matched performance baseline;
+- if the remaining gaps are only low-priority edge semantics that do not affect the current representative workload, record/defer them and re-baseline `68958b68...` before further optimization.
+
+Do not resume Experiment 2B memory-helper optimization until this timing foundation has a new trustworthy baseline.

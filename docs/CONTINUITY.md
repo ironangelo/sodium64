@@ -5000,3 +5000,36 @@ SRS has autonomous build + executable benchmark + repeatable sustained lab frame
 
 If falsified:
 do not optimize Sodium64. Improve or reject the deterministic SRS route first, because a stuck/dead benchmark is not a representative workload.
+
+
+## Gate-B SRS guest-progression attempt 1 — SYMBOL-PROBE HARNESS FALSE NEGATIVE 2026-09-18
+
+Exact authority:
+- audition head **`phase3/gate-b-srs-audition@03496a4587a7bc76836f26791144bcab0c77573b`**;
+- **Gate B SRS Audition `35400382816` FAILED**;
+- same-head **Build and Validate `35400382836` SUCCESS**;
+- diagnostic artifact **`10571140040`**, digest `sha256:f5b30c73a825a77f44977b72ffb782a0b8e27864a91fc8e1a610cf83ca4de5ca`;
+- source-build provenance artifact **`10570560258`**, digest `sha256:2719aeb4e3325aa6bff26860f3ab91dd18bf8252078b41796f0471c0c63890a3`.
+
+What passed before failure:
+- exact pinned SRS/toolchain checkout;
+- full CLI toolchain build;
+- unmodified release ROM rebuild;
+- deterministic benchmark patch/rebuild;
+- benchmark ROM SHA-256 remained **`7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`**;
+- benchmark patch SHA-256 remained **`4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`**.
+
+Failure occurred in the new compile-time-only symbol-resolution step, before Sodium64 PROFILE/ares execution:
+`error: constant has unknown value: Project.GameState.Words.playerHealth`
+at the injected `print_hex(6, Project.GameState.Words.playerHealth)`.
+
+Therefore:
+- no new progression measurement exists from this run;
+- no new frame-budget/profile result exists from this run;
+- this failure is **HARNESS FALSE NEGATIVE / REJECTED as SRS or Sodium64 runtime evidence**.
+
+Interpretation:
+Bass can assemble/use the generated game-state symbol in normal code, but the injected print site cannot resolve that constant value at that phase of assembly. Using more injected compile-time prints is fragile and risks coupling the benchmark to assembler ordering.
+
+Next action:
+resolve guest addresses from existing build/map/symbol outputs where possible, or use symbols/aliases that are already concretely allocated at the observation point. Prefer host-side parsing over further guest-code instrumentation. Keep benchmark ROM/patch and Sodium64 runtime unchanged. No hardware request.

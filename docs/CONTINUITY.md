@@ -1433,3 +1433,18 @@ Execution stopped while arming `notc_fixed`, before compiling or executing NOTC.
 This is a diagnostic-protocol parser defect, not an emulator result. GDB RSP errors have the shape `E` + two hex digits (normally exactly 3 ASCII bytes), while a memory/register hex payload can legitimately begin with hexadecimal E.
 
 **Decision:** fix only RSP error recognition (and the identical single-register-read check) to recognize actual 3-byte `Ehh` error packets, then rerun the unchanged core timing candidate. Do not alter cycle charges or reference expectations.
+
+
+## Fixed-family timing rerun after RSP parser fix — checkpoint 2026-09-17/18
+
+Diagnostic HEAD **`2e01d323f458575fcaac8602331a87a36854c081`** has the **same APU core timing implementation as `62e661b6...`**. The only changes are diagnostic protocol parsing:
+- `scripts/gdb_rsp_dump.py`: memory reads classify an error only when the reply is exactly a 3-byte `Ehh` packet;
+- `scripts/apu_cycle_proof.py`: single GPR reads use the same exact `Ehh` rule.
+
+This removes the false collision where valid hex payload `ED2FFD` was misread as a GDB error.
+
+Exact rerun workflows:
+- **Build and Validate `35298264597`** — queued at checkpoint.
+- **APU Cycle And Span Proof `35298264479`** — queued at checkpoint.
+
+Core acceptance criteria are unchanged from `62e661b6...`. In particular, NOTC/XCN/PUSH A and the already corrected POP timing must now be reached and judged without any change to their expected cycles.

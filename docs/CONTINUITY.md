@@ -1448,3 +1448,41 @@ Exact rerun workflows:
 - **APU Cycle And Span Proof `35298264479`** — queued at checkpoint.
 
 Core acceptance criteria are unchanged from `62e661b6...`. In particular, NOTC/XCN/PUSH A and the already corrected POP timing must now be reached and judged without any change to their expected cycles.
+
+
+## Fixed implied/flags/transfers/stack timing — VALIDATED 2026-09-17/18
+
+Exact diagnostic core authority remains **`62e661b62a177c5b1c087226e589153c29e439fe`**. Exact rerun SHA **`2e01d323f458575fcaac8602331a87a36854c081`** changes only diagnostic GDB-RSP error parsing; APU core timing is identical to `62e661b6...`.
+
+Authorities:
+- **Build and Validate `35298264597` SUCCESS**.
+- **APU Cycle And Span Proof `35298264479` SUCCESS**, cycle-proof job **`105455473977`**.
+- proof result artifact **`10529235434`**, digest `sha256:11065dc6adc72c36c1af3d5c405214a9de6e6a1d265545ec2a23f69f38e63962`;
+- exact proof-build artifact **`10529166425`**, digest `sha256:834ad7453b358ed56c18c3ab0cbb40e08e42c0e2c704bfd632b7613db38a338e`.
+
+All required summary invariants are true:
+- `all_static_debits_match_source_prediction=true`;
+- `all_total_debits_match_reference=true`;
+- `all_runtime_cycle_debits_match_expected=true`;
+- `all_semantics_match_expected=true`;
+- `compiled_long_probe_is_bounded_to_one_tag_region=true`.
+
+Representative newly validated totals, each combined with the already validated trailing BRA loop:
+- INC A + BRA: **6 cycles**;
+- MOV X,A + BRA: **6**;
+- MOV SP,X + BRA: **6**;
+- CLRC + BRA: **6**;
+- DI + BRA: **7**;
+- EI + BRA: **7**;
+- NOTC + BRA: **7**;
+- XCN + BRA: **9**;
+- PUSH A + BRA: **8**, writes expected byte to stack page and updates S correctly;
+- POP A + BRA: **8**, reads expected stack-page sentinel `0xBB` and updates S correctly.
+
+The prior `62e661b6...` proof failure on source bytes beginning `ED...` is **REJECTED as core evidence**: exact rerun with parser-only correction passes unchanged timing implementation.
+
+**VALIDATED scope:** fixed missing-cycle rules for implied A/X/Y modify operations, A/X/Y/SP register transfers, CLRC/SETC/CLRV/CLRP/SETP, DI/EI, NOTC, XCN, and PUSH/POP A/X/Y/PSW families.
+
+**Decision:** consume only APU core changes from `62e661b6...` into clean `phase2/apu-timing-foundation@fe53aa5f...`: `src/apu_alu.S`, `src/apu_control.S`, `src/apu_transfer.S`. Do NOT copy proof script/workflow or GDB parser changes.
+
+Next timing families remain isolated: CALL/TCALL/PCALL/RET/RET1/BRK first, then word/bit/special operations. DAA/DAS remain Gate-C REQUIRED SUPPORT debt, not part of timing-only changes.

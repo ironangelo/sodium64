@@ -46,6 +46,7 @@
 jit_tags: .word 0:0x400
 jit_lookup: .word 0:0x10000
 jit_pointer: .word JIT_BUFFER
+jit_block_cycles: .word 0
 
 .align 4
 jit_opcodes: // Lookup table for addressing and operation functions
@@ -119,7 +120,11 @@ jit_opcodes: // Lookup table for addressing and operation functions
 
 .align 5
 jit_read8: // a0: address - v0: value
-    // Read a byte from memory, count cycles, and increment the address
+    // Read a byte from memory, count cycles, and increment the address.
+    // The compile-only block budget counts this guest fetch as one cycle.
+    lw t2, jit_block_cycles
+    addiu t2, t2, 1
+    sw t2, jit_block_cycles
     lbu v0, apu_clock
     srl t0, a0, 6
     lbu t1, apu_map(t0)
@@ -131,8 +136,11 @@ jit_read8: // a0: address - v0: value
 
 .align 5
 jit_charge_cycles: // t0: additional guest cycles missing from fetch/data accounting
-    // Compile-time only: convert guest SPC700 cycles to the configured APU
-    // master-cycle debit accumulated in s2.
+    // Compile-time only: track worst-case guest cycles and convert them to the
+    // configured master-cycle debit accumulated in s2.
+    lw t2, jit_block_cycles
+    addu t2, t2, t0
+    sw t2, jit_block_cycles
     lbu t1, apu_clock
     mult t0, t1
     mflo t0
@@ -141,7 +149,11 @@ jit_charge_cycles: // t0: additional guest cycles missing from fetch/data accoun
 
 .align 5
 jit_emit_runtime_cycles: // t0: conditional guest cycles to debit at runtime
-    // Emit one ADDI s3,s3,-cycles*apu_clock into the generated block.
+    // Budget the conditional path at its worst-case guest cost, then emit one
+    // ADDI s3,s3,-cycles*apu_clock into the generated block.
+    lw t2, jit_block_cycles
+    addu t2, t2, t0
+    sw t2, jit_block_cycles
     // t5 is unused by the APU JIT compiler and only preserves this helper's RA.
     move t5, ra
     lbu t1, apu_clock
@@ -175,9 +187,10 @@ compile_block:
 
     // Initialize values for tracking JIT block state
     move s1, zero // Status
-    move s2, zero // Cycles
+    move s2, zero // Static master-cycle debit
+    sw zero, jit_block_cycles // Worst-case guest SPC cycles
     move a0, s0 // PC
-    addi t9, a0, BLOCK_SIZE // Limit
+    addi t9, a0, BLOCK_SIZE // Independent source-byte safety limit
 
     // Check JIT bounds and invalidate data cache for the header
     li a2, ROM_BUFFER // Bounds
@@ -203,8 +216,16 @@ next_opcode:
 
 .align 5
 finish_opcode:
-    // Compile another opcode if the limit hasn't been reached
-    blt a0, t9, next_opcode
+    // Keep the inherited 16-byte source-span bound as an independent tag/cache
+    // safety limit. Temporal interleave adds a second bound: the pinned SPC700
+    // reference's most expensive finite instruction is DIV at 12 cycles, so
+    // only continue while the completed block is <=20 worst-case cycles.
+    // The next instruction can then bring the block to at most 32 cycles,
+    // strictly below one full late DSP period on the following scheduler check.
+    bge a0, t9, finish_block
+    nop
+    lw t0, jit_block_cycles
+    ble t0, 20, next_opcode
     nop
 
 finish_block:
@@ -514,6 +535,21 @@ emit_j: // t0: target
 
 .align 5
 emit_jal: // t0: target
+    // Every generated apu_read8/apu_write8 performs one guest bus cycle.
+    // Count it in the compile-only worst-case block budget.
+    la t1, apu_read8
+    beq t0, t1, emit_jal_guest_bus
+    nop
+    la t1, apu_write8
+    bne t0, t1, emit_jal_encode
+    nop
+
+emit_jal_guest_bus:
+    lw t1, jit_block_cycles
+    addiu t1, t1, 1
+    sw t1, jit_block_cycles
+
+emit_jal_encode:
     // Emit a "jal" opcode for the JIT
     srl t0, t0, 2
     li t1, 0x3FFFFFF

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - phase2/apu-cycle-proof
+      - phase2/apu-cycle-budget-proof
   workflow_dispatch:
 
 permissions:

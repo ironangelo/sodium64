@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - phase2/apu-matched-baseline
+      - phase2/apu-matched-dsp-lateness
   workflow_dispatch:
 
 permissions:
@@ -194,6 +195,11 @@ jobs:
           profile_sample_count=$(symbol profile_sample_count)
           profile_last_epc=$(symbol profile_last_epc)
 
+          dsp_due_count=$(symbol profile_apu_dsp_due_count)
+          dsp_late_sum=$(symbol profile_apu_dsp_late_sum)
+          dsp_late_max=$(symbol profile_apu_dsp_late_max)
+          dsp_multi_due_count=$(symbol profile_apu_dsp_multi_due_count)
+
           apu_clock=$(symbol apu_clock)
           jit_lookup=$(symbol jit_lookup)
           jit_pointer=$(symbol jit_pointer)
@@ -212,7 +218,8 @@ jobs:
 
           for value in \
             "$profile_magic" "$profile_end" "$profile_buffer" "$profile_write_ptr" \
-            "$profile_sample_count" "$profile_last_epc" "$apu_clock" "$jit_lookup" \
+            "$profile_sample_count" "$profile_last_epc" "$dsp_due_count" "$dsp_late_sum" \
+            "$dsp_late_max" "$dsp_multi_due_count" "$apu_clock" "$jit_lookup" \
             "$jit_pointer" "$skipped_set" "$audio_set" "$precision_set" \
             "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
             "$cpu_execute" "$update_fps" "$check_frame"; do
@@ -235,6 +242,10 @@ jobs:
             echo "PROFILE_WRITE_PTR=$profile_write_ptr"
             echo "PROFILE_SAMPLE_COUNT=$profile_sample_count"
             echo "PROFILE_LAST_EPC=$profile_last_epc"
+            echo "DSP_DUE_COUNT=$dsp_due_count"
+            echo "DSP_LATE_SUM=$dsp_late_sum"
+            echo "DSP_LATE_MAX=$dsp_late_max"
+            echo "DSP_MULTI_DUE_COUNT=$dsp_multi_due_count"
             echo "APU_CLOCK=$apu_clock"
             echo "JIT_LOOKUP=$jit_lookup"
             echo "JIT_LOOKUP_SIZE=$jit_lookup_size"
@@ -307,6 +318,10 @@ jobs:
               --profile-write-ptr "0x$PROFILE_WRITE_PTR" \
               --profile-sample-count "0x$PROFILE_SAMPLE_COUNT" \
               --profile-last-epc "0x$PROFILE_LAST_EPC" \
+              --dsp-due-count "0x$DSP_DUE_COUNT" \
+              --dsp-late-sum "0x$DSP_LATE_SUM" \
+              --dsp-late-max "0x$DSP_LATE_MAX" \
+              --dsp-multi-due-count "0x$DSP_MULTI_DUE_COUNT" \
               --apu-clock "0x$APU_CLOCK" \
               --jit-lookup "0x$JIT_LOOKUP" \
               --jit-lookup-size "$JIT_LOOKUP_SIZE" \
@@ -387,6 +402,11 @@ jobs:
               assert all(b > a for a, b in zip([0] + sample_counts[:-1], sample_counts))
               assert sample_counts[-1] >= 800
 
+              final = data["summary"]
+              assert final["dsp_due_count"] > 0
+              assert final["dsp_multi_due_count"] == 0
+              assert final["dsp_late_max"] < 672
+
               frames = [row["completed_frames"] for row in measured]
               rows.append({
                   "repeat": repeat,
@@ -396,6 +416,10 @@ jobs:
                   "max": max(frames),
                   "samples": sample_counts[-1],
                   "wall": data["summary"]["measured_wall_seconds"],
+                  "dsp_due": final["dsp_due_count"],
+                  "dsp_late_avg": final["dsp_late_avg"],
+                  "dsp_late_max": final["dsp_late_max"],
+                  "dsp_multi_due": final["dsp_multi_due_count"],
               })
 
           all_frames = [value for row in rows for value in row["frames"]]
@@ -418,14 +442,15 @@ jobs:
               "Settings are applied at the first cpu_execute before guest execution.",
               "Two complete 60-VI windows are warm-up; the next five complete 60-VI windows are measured.",
               "",
-              "| repeat | W1 | W2 | W3 | W4 | W5 | mean | min | max | samples | lab wall s |",
-              "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+              "| repeat | W1 | W2 | W3 | W4 | W5 | mean | samples | DSP due | avg late | max late | >=672 |",
+              "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
           ]
           for row in rows:
               cells = " | ".join(str(v) for v in row["frames"])
               lines.append(
                   f"| {row['repeat']} | {cells} | {row['mean']:.2f} | "
-                  f"{row['min']} | {row['max']} | {row['samples']} | {row['wall']:.3f} |"
+                  f"{row['samples']} | {row['dsp_due']} | {row['dsp_late_avg']:.3f} | "
+                  f"{row['dsp_late_max']} | {row['dsp_multi_due']} |"
               )
           lines += [
               "",

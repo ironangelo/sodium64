@@ -254,8 +254,12 @@ apu_adca: // ADC A,op
     EMIT_OP ADD(T7, T7, T1)
 
     // Emit code to set flags for addition
-    // TODO: set the H flag
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, T0, V0)
+    EMIT_OP XOR(T1, T1, T7)
+    EMIT_OP ANDI(T1, T1, 0x10)
+    EMIT_OP SRL(T1, T1, 1) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP SRL(T1, T7, 8) // C
     EMIT_OP OR(S1, S1, T1)
     EMIT_OP XOR(T1, T7, T0)
@@ -287,8 +291,12 @@ apu_adcm: // ADC op
     EMIT_OP ADD(A1, A1, T1)
 
     // Emit code to set flags for addition
-    // TODO: set the H flag
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, V0, S0)
+    EMIT_OP XOR(T1, T1, A1)
+    EMIT_OP ANDI(T1, T1, 0x10)
+    EMIT_OP SRL(T1, T1, 1) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP SRL(T1, A1, 8) // C
     EMIT_OP OR(S1, S1, T1)
     EMIT_OP XOR(T1, A1, V0)
@@ -317,8 +325,13 @@ apu_sbca: // SBC A,op
     EMIT_OP ADD(T7, T7, T1)
 
     // Emit code to set flags for subtraction
-    // TODO: set the H flag
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, T0, V0)
+    EMIT_OP XOR(T1, T1, T7)
+    EMIT_OP ANDI(T1, T1, 0x10)
+    EMIT_OP XORI(T1, T1, 0x10)
+    EMIT_OP SRL(T1, T1, 1) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP ADDI(T1, T0, 1)
     EMIT_OP SLTU(T1, T7, T1) // C
     EMIT_OP OR(S1, S1, T1)
@@ -352,8 +365,13 @@ apu_sbcm: // SBC op
     EMIT_OP ADD(A1, A1, T1)
 
     // Emit code to set flags for subtraction
-    // TODO: set the H flag
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, V0, S0)
+    EMIT_OP XOR(T1, T1, A1)
+    EMIT_OP ANDI(T1, T1, 0x10)
+    EMIT_OP XORI(T1, T1, 0x10)
+    EMIT_OP SRL(T1, T1, 1) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP ADDI(T1, V0, 1)
     EMIT_OP SLTU(T1, A1, T1) // C
     EMIT_OP OR(S1, S1, T1)

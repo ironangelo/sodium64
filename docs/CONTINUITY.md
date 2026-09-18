@@ -4310,3 +4310,64 @@ Next action:
 - wait for all three exact-master-SHA gates;
 - if green, mark M1 **MERGED-CONSUMED / ACHIEVED** and move RESUME HERE to Gate-B corpus definition;
 - if any fails, inspect exact failure before changing code.
+
+
+## M1 MERGED-CONSUMED / ACHIEVED — 2026-09-18
+
+Integrated authority:
+**`master@ac1ce74740d974b70206fcb6ba842e492b5d7272`**.
+
+PR #12 was squash-merged with an exact tree match to the fully validated PR head.
+
+All exact-master-SHA post-merge gates are green:
+- **Build and Validate `35387454297` SUCCESS**;
+- **APU Cycle And Span Proof `35387454371` SUCCESS**;
+- **Ares Profile Validation `35387454367` SUCCESS**.
+
+Therefore the M1 runtime and its durable regression proof are now **MERGED-CONSUMED** in master. M1 is **ACHIEVED**. Gate B / M2 is the active milestone.
+
+The authoritative M1 hardware result remains the real-N64 Gothicvania capture:
+- 60,60,60,60,60 /60;
+- frameskip 0;
+- APU clock 21;
+- audio 4;
+- precision 8;
+- 3,580 samples;
+- 11.51% frame/VI wait.
+
+Do not resume Gothicvania FPS optimization unless a later regression makes it gate-relevant again.
+
+## Gate-B autonomy constraint — 2026-09-18
+
+Iron clarified an architectural workflow requirement:
+
+**The normal technical loop must remain autonomous through repository-accessible infrastructure. Do not make local commercial ROMs, Iron's powered-on PC, or Iron's continuous availability a dependency of routine diagnosis, iteration or gate selection.**
+
+Consequences:
+
+- The **primary Gate-B development corpus must be fully reproducible by the assistant/CI from legally redistributable/open sources or generated test workloads available from GitHub-accessible infrastructure.**
+- Do **not** fill the corpus with near-duplicate workloads merely because they are convenient. Diversity of engine/toolchain and exercised SNES subsystems is required.
+- Gothicvania remains one representative regression workload, not the template all new workloads must resemble.
+- Open-source/source-available workloads may be patched for deterministic input/checkpoints when the patch is explicit, hashed and does not amputate required emulation work.
+- Commercial ROMs may be used later as **supplemental representativeness / milestone validation** when Iron is available, but they must never become the main daily development loop.
+- Commercial ROM bytes must not be committed or uploaded to GitHub/Actions/artifacts. A commercial test, if later used, is local-only and should be requested only when a sufficiently mature batch has accumulated and multiple autonomous lab checks already indicate it is worth testing.
+- Real N64 remains final performance authority, but hardware sessions should aggregate multiple hardware-ready questions/workloads rather than serving as an iterative debugger.
+
+This refines the red-team Batch-2 interpretation:
+- Astra's requirement is a **small diverse base corpus**, not specifically a commercial corpus.
+- First build a diverse autonomous corpus and use it to discover the next Gate-B blocker.
+- Use commercial software later to test representativeness once autonomous evidence has converged enough to justify a milestone session.
+
+### RESUME HERE — Gate B / M2
+
+M1 is integrated and closed.
+
+Immediate next technical batch:
+1. define a **four-workload autonomous Gate-B corpus**: Gothicvania plus three non-redundant workloads chosen for materially different CPU/gameplay, PPU/HDMA/Mode-7, and audio behavior;
+2. prefer different codebases/toolchains/engines where practical rather than three more PVSnesLib examples;
+3. pin source commit/toolchain/input/checkpoint/ROM hash and expected observable behavior for every workload;
+4. run them first in reproducible emulator labs and classify failures before changing runtime;
+5. choose the next runtime intervention only from the first demonstrated corpus blocker;
+6. reserve commercial-ROM and real-hardware validation for a later aggregated milestone after the autonomous corpus has converged.
+
+Do not preselect APU, DSP, PPU, S-CPU dynarec or another architecture before the corpus evidence exists.

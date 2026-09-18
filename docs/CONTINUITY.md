@@ -3378,3 +3378,33 @@ Test whether JIT block interleave, rather than an individual instruction or DSP 
 - if lateness remains >=672, block aggregation is insufficient as the explanation and the next investigation must inspect individual-instruction / scheduler-event semantics.
 
 This one-op mode is a **causal control only**, not a proposed permanent architecture. Its throughput cost is secondary to isolating the mechanism.
+
+
+## One-op APU JIT interleave causal proof — running 2026-09-18
+
+Diagnostic child branch: **`phase2/apu-one-op-interleave-proof@c1548c21e4764a1827ebe1af8980ec319f560bbb`**, based on matched-lateness authority `a8c56301...`.
+
+Direct diff from `a8c56301...` is exactly:
+- `src/defines.h`: **one runtime line**, `BLOCK_SIZE 16 -> 1`;
+- `.github/workflows/apu-matched-baseline.yml`: one trigger-line addition for this diagnostic branch.
+
+Production-semantic test variable: one SPC700 instruction per generated block. No timing charges, opcode semantics, scheduler checks, DSP logic, profiler counters or workload settings changed.
+
+Purpose: causal isolation only. This is **not** a proposed permanent performance architecture.
+
+Hypothesis: the validated >672 DSP lateness tail is produced by aggregating several now-correctly-timed SPC700 instructions inside one JIT block before returning to the scheduler.
+
+Acceptance as causal proof:
+- exact matched-window contract completes;
+- `dsp_multi_due_count == 0`;
+- `dsp_late_max < 672`.
+
+Interpretation:
+- if accepted, block aggregation/interleave is the demonstrated mechanism; next design must retain multi-op performance while adding a bounded guest-cycle return contract;
+- if >=672 remains, multi-op aggregation alone is insufficient and investigation moves to individual-instruction / scheduler-event semantics.
+
+Exact HEAD runs:
+- **APU Matched Baseline `35354324333`** — queued/running;
+- **Build and Validate `35354324334`** — queued/running.
+
+Do not merge BLOCK_SIZE=1. Do not use throughput from this diagnostic as a performance target; frame counts only show the cost of the causal control.

@@ -2874,3 +2874,20 @@ Directed cases:
 Exact workflows are the newest runs for SHA `35a983e7...` on the diagnostic branch. Acceptance requires exact A/C/N/Z/H/V semantics, 7-cycle total with BRA, and all historical regression cases green.
 
 SLEEP/STOP are deliberately excluded and remain separate scheduler-state work.
+
+
+## Clean DIV semantic foundation — CI VALIDATED 2026-09-18
+
+Clean **`phase2/apu-timing-foundation@7f1d7f52c320ea065699f92737d1b320140f8141`** completed **Build and Validate `35345349822` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+Combined authority:
+- dynamic DIV semantic/timing proof: diagnostic `f3bad9af...`, ares run `35317084547` SUCCESS;
+- clean consumption: exactly `src/apu_alu.S`;
+- exact clean CI `35345349822` SUCCESS.
+
+Next active diagnostic remains DAA/DAS at `35a983e7...`; SLEEP/STOP stay separate scheduler-state work.

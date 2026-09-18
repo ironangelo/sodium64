@@ -1321,3 +1321,42 @@ Clean timing foundation remains frozen at **`fe53aa5f...`**, Build and Validate 
 This is a real base-SPC700 compatibility/accuracy gap, not a missing-cycle-only issue. Do not silently include it in the current timing batch. Track it for a later Gate C/base-core completeness pass after the timing contract is stabilized, unless representative software proves it is an earlier blocker.
 
 The active experiment remains POP stack-page semantics at `410985f0...` / run `35296994473`.
+
+
+## POP stack-page hypothesis — REJECTED dynamically 2026-09-17/18
+
+Diagnostic-only SHA **`410985f0ba2fbf22c1d8341890bbf5fd1dba2d32`** changed only the proof harness/workflow; no APU core source changed.
+
+Authorities:
+- **Build and Validate `35296994425` SUCCESS**.
+- **APU Cycle And Span Proof `35296994473` SUCCESS**, cycle-proof job **`105451729667`**.
+- proof result artifact **`10528910419`**, digest `sha256:a47ce297dace8fe48385fffcfadb07de141091dd12ee1e3900c635220c4611e8`;
+- exact proof-build artifact **`10528369355`**, digest `sha256:b61b722699a915de1cb57d77ec0e6e9e2987c4a400b2c200e024790647a38c53`.
+
+Directed sentinel case:
+- initial `S=0x7F`;
+- direct page `RAM[0x0080]=0xAA`;
+- stack page `RAM[0x0180]=0xBB`;
+- source `POP A; BRA back`;
+- measured **A=0xBB**, **S=0x80**, semantic check true.
+
+Therefore the suspected inherited POP stack-page bug is **REJECTED**.
+
+Why the static sequence looked wrong: the generator calls `emit_jal` to emit a runtime MIPS `JAL apu_read8`; the immediately following emitted `ORI A0,A0,0x100` occupies that runtime JAL's **delay slot**. It executes before control enters `apu_read8`, so the read correctly sees `0x01xx`. This discarded explanation is now preserved so the code is not “fixed” incorrectly later.
+
+The proof intentionally did not judge POP timing (`reference_cycles=None`). Its observed block had static 5 units and total 6 units including runtime read because the trailing validated BRA contributes 4 cycles; stack-family timing correction remains the next variable.
+
+## RESUME HERE — fixed implied/flags/transfers/stack timing next
+
+1. Clean timing foundation remains **`phase2/apu-timing-foundation@fe53aa5f...`**, Build/Validate `35296688540` SUCCESS, unmerged.
+2. POP stack-page suspicion is REJECTED by `410985f0...` / proof `35296994473`; do not change POP addressing.
+3. Next controlled diagnostic batch on `phase2/apu-cycle-proof`: add only fixed missing cycles for implied ALU/register operations, flag operations, register transfers and PUSH/POP.
+4. Expected missing charges from pinned ares:
+   - implied A/X/Y modify and register transfers: +1;
+   - CLRC/SETC/CLRP/SETP/CLRV: +1;
+   - DI/EI and NOTC: +2;
+   - XCN: +4;
+   - PUSH/POP family: +2 beyond existing opcode fetch + runtime stack read/write.
+5. Validate representative semantics + total `s3` cycles before consuming anything cleanly.
+6. Keep CALL/TCALL/PCALL/RET/RET1/BRK, word operations, bit operations and decimal-adjust support as separate later batches.
+7. DAA/DAS remain MEASURED STATIC / REQUIRED SUPPORT / DEFERRED Gate C debt.

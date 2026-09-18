@@ -1263,3 +1263,27 @@ Authority split:
 - clean integration candidate: `fe53aa5f...`, awaiting its own normal/PROFILE/Mupen CI.
 
 Do not modify clean `fe53aa5f...` until run `35296688540` completes. Next work is read-only mapping of remaining fixed-cycle SPC700 instruction families.
+
+
+## Clean conditional timing foundation — CI VALIDATED 2026-09-17/18
+
+Clean **`phase2/apu-timing-foundation@fe53aa5fe574baa5a4dba141e8c34ea8ce5996bc`** completed **Build and Validate `35296688540` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+Combined authority:
+- clean code-only branch `fe53aa5f...`;
+- dynamic conditional timing/semantics authority `a435d8f8...` / ares proof `35295336130`;
+- clean exact-SHA CI `35296688540`.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+### New stack correctness question before next timing batch
+
+Static audit of inherited POP generators shows a potentially material ordering issue:
+`apu_ppa/ppx/ppy/ppp` increment S, mask to low 8 bits, call `apu_read8`, and only **after the read returns** execute `ORI A0,A0,0x100`. PUSH generators construct `0x01xx` before `apu_write8`.
+
+**OPEN QUESTION / HYPOTHESIS:** POP may therefore read direct-page `0x00xx` instead of stack-page `0x01xx`. Do not infer a bug solely from the static sequence; prove it dynamically before adding stack timing charges.
+
+Next controlled experiment: on diagnostic `phase2/apu-cycle-proof`, test PUSH/POP semantics with distinct sentinel bytes at `00xx` and `01xx`, initially without changing stack semantics. If POP observes the direct-page sentinel, classify as CONFIRMED correctness defect and repair stack addressing before timing it. If it observes the stack-page sentinel, reject the hypothesis and continue the planned implied/flags/transfers/stack timing batch.

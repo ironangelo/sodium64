@@ -4410,3 +4410,45 @@ Current reclassification:
 - **Furry RPG — TECHNICALLY STRONG, ELIGIBILITY BLOCKED.** Architecture remains attractive for the ALttP/RPG role: area loader, event scripting, collision, world map, Mode 7, NMI/IRQ work and SPC700/SNESGSS audio. It is WIP and the repository contains no explicit LICENSE despite the README calling it open-source freeware. Do not consume it into the principal corpus until redistribution/automation rights are unambiguous.
 
 Implication: do not confuse source availability with representativeness. The three main slots should survive an **audition** based on sustained real gameplay complexity, independent engine/toolchain lineage, observable subsystem activity and reproducible build/input/checkpoint behavior. Smaller demos remain useful as probes but should not crowd out stronger candidates.
+
+
+## Gate-B Space Rescue Squad audition — source-build proof running 2026-09-18
+
+First execution-based corpus audition has started on:
+**`phase3/gate-b-srs-audition@25f71f2e3690385727fc5b45ff2c0810b5667460`**,
+parented directly from integrated **`master@ac1ce74740d974b70206fcb6ba842e492b5d7272`**.
+
+This branch changes **workflow only**. No Sodium64 runtime/emulator source is modified.
+
+Question:
+Can the strongest currently clean DKC-/heavy-platformer candidate, **Space Rescue Squad**, be reconstructed autonomously and reproducibly from its exact public source without Iron's PC, proprietary Aseprite regeneration, or redistribution of its ROM?
+
+Pinned upstream:
+- `undisbeliever/space-rescue-squad@e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865`;
+- `bass-untech@9db6088a378061afc7b82f50997a5b9a1d951175`;
+- `untech-editor@4c72dc69619c0c246aa7e6325b18b6fb3c219821`;
+- `terrific-audio-driver@17823e5a55893e8442917abadb4e84feb216e5ad`.
+
+Controlled build proof:
+- builds the exact upstream CLI tools from pinned submodules;
+- uses committed generated PNG inputs instead of requiring the proprietary Aseprite editor;
+- builds the **unmodified release game** first;
+- rejects any tracked-source mutation;
+- records ROM size/hash and toolchain provenance;
+- uploads **provenance/hash only, not the SRS ROM**.
+
+Run:
+- **Gate B SRS Audition `35393181107`** @ `25f71f2e...` — queued/running at checkpoint.
+
+Acceptance:
+- exact pinned source/submodules reproduce a non-empty release ROM;
+- upstream tracked tree remains clean;
+- build requires no local/private input;
+- only non-ROM provenance leaves the job.
+
+Falsifier / downgrade:
+- required source/assets are unavailable or non-reproducible;
+- build depends materially on proprietary/local-only tooling despite committed generated inputs;
+- fixing the build would require maintaining a second toolchain/project disproportionate to Gate-B value.
+
+If accepted, next controlled step is a **temporary explicit benchmark patch** (auto-start + deterministic input + survival only if needed while preserving collisions/hurt/audio), followed by a pinned ares N64 profile/frame-budget audition at Road-valid settings. Do not request hardware.

@@ -3537,9 +3537,9 @@ Acceptance remains unchanged:
 4. only then consume the emitter change into clean timing foundation.
 
 
-## Guest-cycle-bounded multi-op JIT — MATCHED CADENCE + THROUGHPUT VALIDATED 2026-09-18
+## Cycle-budget implementation v1 — MATCHED RESULT VALID, IMPLEMENTATION SUPERSEDED 2026-09-18
 
-Exact candidate authority: **`phase2/apu-cycle-budget-interleave@a4b8f2d74f368568ef519ea76bb589d7fe98d265`**, based on matched-lateness diagnostic authority `a8c56301...`.
+Exact v1 diagnostic authority: **`phase2/apu-cycle-budget-interleave@a4b8f2d74f368568ef519ea76bb589d7fe98d265`**, based on matched-lateness diagnostic authority `a8c56301...`. **Do not consume this SHA:** its matched result is valid evidence for the cycle-budget architecture, but the implementation is superseded by the source-proven `t2` clobber regression documented above.
 
 Direct production-semantic change from `a8c56301...` remains confined to `src/apu_emitter.S`:
 - compile-only `jit_block_cycles` accounting;
@@ -3572,12 +3572,12 @@ Comparison:
 - one-op causal control: **49.4/60**, max **168**, **0 >=672** — cadence PASS, throughput FAIL;
 - cycle-bounded multi-op: **60/60**, max **21**, **0 >=672** — cadence PASS + throughput target in valid ares lab.
 
-**ARCHITECTURE PROOF:** guest-cycle-bounded multi-op compilation resolves the demonstrated conflict between SPC700 JIT throughput and DSP scheduler cadence for Gothicvania in the valid ares lab. The mechanism is not an arbitrary block-size reduction: it constrains scheduler return latency in emulated time while retaining multi-op blocks.
+**ARCHITECTURE PROOF (mechanism only):** the v1 matched result demonstrates that guest-cycle-bounded multi-op compilation can resolve the measured conflict between SPC700 JIT throughput and DSP scheduler cadence for Gothicvania in the valid ares lab. It does **not** validate the v1 implementation because that SHA violates a compiler-helper clobber contract. v2 must reproduce the result and pass cycle/semantic proof before clean consumption.
 
 **What this does NOT prove:** commercial compatibility, real-N64 60 FPS, audio waveform correctness, or Gate B completion. ares remains a laboratory; exact opcode cycle/address regression and then real hardware authority are still required.
 
-### Immediate next action
-Consume **only the `src/apu_emitter.S` production change** into the existing APU cycle/address proof line and run the full deterministic opcode/timing/address regression. Do not consume PROFILE lateness instrumentation or matched-lab workflow changes into the clean candidate.
+### Immediate next action (superseded by v2 work now running)
+Validate the clobber-safe v2 emitter through both the matched cadence/throughput run and the existing cycle/address proof line. Do not consume the v1 emitter into any clean branch.
 
 Acceptance:
 - all existing 256-opcode cycle/address proof cases remain green;

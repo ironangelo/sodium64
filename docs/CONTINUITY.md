@@ -3283,3 +3283,40 @@ Before promoting this corrected foundation to a real-N64 milestone, run one **se
 - do not use the instrumented run for throughput comparison.
 
 If DSP scheduling remains bounded, the next gate-relevant action is a milestone real-N64 measurement of exact clean `9204ad2f...` (or a byte-equivalent release artifact), because ares has ceased to be discriminative for this workload's performance.
+
+
+## Matched DSP-lateness diagnostic — running 2026-09-18
+
+Diagnostic child branch: **`phase2/apu-matched-dsp-lateness@a8c56301d3bc3d65b100b5cbb702f043ec6126de`**, based on measurement-only E1 authority `d20258be...`. Clean runtime candidate `9204ad2f...` is unchanged.
+
+Direct compare from E1 measurement branch is exactly four diagnostic files:
+- `src/apu.S` +37/-0, all scheduler observation under `SODIUM64_PROFILE`;
+- `src/profile.S` +28/-0, PROFILE-only counters outside the canonical S64P snapshot;
+- `scripts/gdb_matched_profile.py` +25/-0;
+- `.github/workflows/apu-matched-baseline.yml` +29/-4.
+
+Question: does the corrected timing foundation's exact-window 60/60-class ares result preserve DSP scheduling without ever becoming at least one full DSP sample period late?
+
+Measurement contract:
+- same exact first-guest configuration boundary and 2-warmup + 5-measured 60-VI windows as validated E1;
+- counters reset at the exact measurement boundary;
+- record DSP due count, lateness sum/average, max lateness and events with lateness >= `DSP_SAMPLE=672`;
+- instrumented run is timing evidence only, **not** throughput evidence.
+
+Acceptance:
+- `dsp_due_count > 0`;
+- `dsp_multi_due_count == 0`;
+- `dsp_late_max < 672`;
+- exact-window/settings contract still passes;
+- ordinary Build and Validate remains green.
+
+Falsifier: any >=672-cycle event, max >=672, settings/window-contract regression, or core/build regression.
+
+Exact HEAD runs:
+- **Build and Validate `35353207712`** — running;
+- **APU Matched Baseline `35353207814`** — running; exact PROFILE build already SUCCESS, artifact `10550441933`, digest `sha256:6492d5e5c45661f0ba6772c637aade4c1a968bcad92fac3dfcb7f62a20a8d9f5`.
+
+Decision map:
+- if accepted, do not merge diagnostic instrumentation; promote exact clean `9204ad2f...` to a prepared real-N64 milestone because ares already has 9.7% VI idle and is no longer discriminative for Gothicvania performance;
+- if lateness fails, treat 60/60 as cadence-invalid and repair scheduler/interleave before any hardware performance claim;
+- if only harness/workflow fails, repair the diagnostic harness without changing clean core semantics.

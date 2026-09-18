@@ -136,6 +136,7 @@ def arm_case(
     *,
     code: bytes,
     apu_ram: int,
+    apu_map: int,
     apu_count: int,
     apu_clock: int,
     apu_reg_x: int,
@@ -154,6 +155,9 @@ def arm_case(
 ) -> None:
     lookup_entry = jit_lookup + TEST_PC * 4
     client.write_memory(apu_ram + TEST_PC, code)
+    # Force the top 64-byte page to RAM so TCALL/BRK vector reads are
+    # deterministic and do not depend on the guest's inherited IPL-ROM mapping.
+    client.write_memory(apu_map + 0x3FF, b"\x00")
     client.write_memory(apu_count, be(TEST_PC, 2))
     client.write_memory(apu_clock, bytes([APU_CLOCK]))
     client.write_memory(apu_reg_x, bytes([x_value & 0xFF]))
@@ -169,6 +173,8 @@ def arm_case(
     # Verify every piece of state that makes the experiment deterministic.
     if client.read_memory(apu_ram + TEST_PC, len(code), min(len(code), 0x100)) != code:
         raise RuntimeError("APU test program verification failed")
+    if read_u8(client, apu_map + 0x3FF) != 0:
+        raise RuntimeError("apu_map top-page verification failed")
     if read_u16(client, apu_count) != TEST_PC:
         raise RuntimeError("apu_count verification failed")
     if read_u8(client, apu_clock) != APU_CLOCK:
@@ -210,6 +216,7 @@ def compile_one_case(
     expected_accum: int | None = None,
     expected_x: int | None = None,
     expected_memory: tuple[int, int] | None = None,
+    expected_memories: tuple[tuple[int, int], ...] = (),
     expected_y: int | None = None,
     expected_stack: int | None = None,
     expected_flags: int | None = None,
@@ -224,6 +231,7 @@ def compile_one_case(
         client,
         code=code,
         apu_ram=addresses.apu_ram,
+        apu_map=addresses.apu_map,
         apu_count=addresses.apu_count,
         apu_clock=addresses.apu_clock,
         apu_reg_x=addresses.apu_reg_x,
@@ -343,6 +351,13 @@ def compile_one_case(
         result["expected_memory_value"] = value
         result["observed_memory_value"] = observed
         semantic_checks.append(observed == value)
+    if expected_memories:
+        checks = []
+        for offset, value in expected_memories:
+            observed = read_u8(client, addresses.apu_ram + offset)
+            checks.append({"offset": offset, "expected": value, "observed": observed})
+            semantic_checks.append(observed == value)
+        result["memory_checks"] = checks
     result["semantics_match_expected"] = all(semantic_checks)
 
     print(json.dumps(result, sort_keys=True))
@@ -442,6 +457,7 @@ def main() -> int:
     parser.add_argument("--connect-timeout", type=float, default=45.0)
     parser.add_argument("--response-timeout", type=float, default=60.0)
     parser.add_argument("--apu-ram", type=parse_int, required=True)
+    parser.add_argument("--apu-map", type=parse_int, required=True)
     parser.add_argument("--apu-count", type=parse_int, required=True)
     parser.add_argument("--apu-clock", type=parse_int, required=True)
     parser.add_argument("--apu-reg-x", type=parse_int, required=True)
@@ -686,6 +702,44 @@ def main() -> int:
              expected_memory=(0x0180, 0x11)),
     ]
 
+
+    call_return_cases = [
+        # CALL absolute: 3 fetch units + 3 fixed idles + 2 runtime stack writes = 8.
+        dict(name="call_absolute", code=bytes.fromhex("3f3412"), expected_debit=-126,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             stack_value=0x80, expected_stack=0x7E, expected_pc_after=0x1234,
+             expected_memories=((0x0180, 0x02), (0x017F, 0x03))),
+        # PCALL: opcode+operand +2 fixed +2 stack writes = 6.
+        dict(name="pcall", code=bytes.fromhex("4f34"), expected_debit=-84,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             stack_value=0x80, expected_stack=0x7E, expected_pc_after=0xFF34,
+             expected_memories=((0x0180, 0x02), (0x017F, 0x02))),
+        # TCALL 0: opcode +3 fixed +2 stack writes +2 vector reads = 8.
+        dict(name="tcall0", code=bytes.fromhex("01"), expected_debit=-84,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             stack_value=0x80, expected_stack=0x7E, expected_pc_after=0x1234,
+             memory_writes=((0xFFDE, b"\x34\x12"),),
+             expected_memories=((0x0180, 0x02), (0x017F, 0x01))),
+        # RET: opcode +2 fixed +2 stack reads = 5.
+        dict(name="ret", code=bytes.fromhex("6f"), expected_debit=-63,
+             reference_cycles=5, expected_end_region=8, y_value=0x06,
+             stack_value=0x7E, expected_stack=0x80, expected_pc_after=0x1234,
+             memory_writes=((0x017F, b"\x34"), (0x0180, b"\x12"))),
+        # RET1: opcode +2 fixed +3 stack reads = 6.
+        dict(name="ret1", code=bytes.fromhex("7f"), expected_debit=-63,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             stack_value=0x7D, flags_value=0x00, expected_stack=0x80,
+             expected_pc_after=0x1234, expected_flags=0x04,
+             memory_writes=((0x017E, b"\x04"), (0x017F, b"\x34"), (0x0180, b"\x12"))),
+        # BRK: opcode +2 fixed +3 stack writes +2 vector reads = 8.
+        dict(name="brk", code=bytes.fromhex("0f"), expected_debit=-63,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             stack_value=0x80, flags_value=0x04, expected_stack=0x7D,
+             expected_pc_after=0x1234, expected_flags=0x10,
+             memory_writes=((0xFFDE, b"\x34\x12"),),
+             expected_memories=((0x0180, 0x02), (0x017F, 0x01), (0x017E, 0x04))),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -728,6 +782,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in fixed_family_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in call_return_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

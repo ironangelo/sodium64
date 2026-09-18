@@ -169,6 +169,7 @@ jobs:
           }
 
           apu_ram=$(symbol apu_ram)
+          apu_map=$(symbol apu_map)
           apu_count=$(symbol apu_count)
           apu_clock=$(symbol apu_clock)
           apu_reg_x=$(symbol apu_reg_x)
@@ -184,7 +185,7 @@ jobs:
           cpu_execute=$(symbol cpu_execute)
 
           for value in \
-            "$apu_ram" "$apu_count" "$apu_clock" "$apu_reg_x" "$apu_reg_y" \
+            "$apu_ram" "$apu_map" "$apu_count" "$apu_clock" "$apu_reg_x" "$apu_reg_y" \
             "$apu_accum" "$apu_stack" "$apu_flags" "$jit_tags" "$jit_lookup" "$jit_pointer" \
             "$apu_execute" "$compile_block" "$cpu_execute"; do
             test -n "$value"
@@ -192,6 +193,7 @@ jobs:
 
           {
             echo "APU_RAM_ADDR=$apu_ram"
+            echo "APU_MAP_ADDR=$apu_map"
             echo "APU_COUNT_ADDR=$apu_count"
             echo "APU_CLOCK_ADDR=$apu_clock"
             echo "APU_REG_X_ADDR=$apu_reg_x"
@@ -247,6 +249,7 @@ jobs:
             --connect-timeout 45 \
             --response-timeout 60 \
             --apu-ram "0x$APU_RAM_ADDR" \
+            --apu-map "0x$APU_MAP_ADDR" \
             --apu-count "0x$APU_COUNT_ADDR" \
             --apu-clock "0x$APU_CLOCK_ADDR" \
             --apu-reg-x "0x$APU_REG_X_ADDR" \

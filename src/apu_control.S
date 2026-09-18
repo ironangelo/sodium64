@@ -454,6 +454,10 @@ apu_jmpm: // JMP [op]
 
 .align 5
 apu_call: // CALL op
+    // CALL has one idle before stack pushes and two idles after them.
+    jal jit_charge_cycles
+    li t0, 3
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_PC
@@ -483,6 +487,10 @@ apu_call: // CALL op
 
 .align 5
 apu_tcall1: // TCALL n
+    // TCALL has a dummy PC read plus two internal idle cycles.
+    jal jit_charge_cycles
+    li t0, 3
+
     // Create an address based on the opcode number
     srl t0, v1, 7
     sll t0, t0, 1
@@ -532,6 +540,10 @@ apu_tcall1: // TCALL n
 
 .align 5
 apu_pcall: // PCALL uu
+    // PCALL has one pre-push and one post-push idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Create an address based on the parameter
     jal jit_read8
     nop
@@ -570,6 +582,10 @@ apu_pcall: // PCALL uu
 
 .align 5
 apu_ret: // RET
+    // RET has a dummy PC read plus one internal idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_PC
@@ -594,6 +610,10 @@ apu_ret: // RET
 
 .align 5
 apu_ret1: // RET1
+    // RET1 has a dummy PC read plus one internal idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_SF | FLAG_LF | FLAG_PC
@@ -627,6 +647,10 @@ apu_ret1: // RET1
 
 .align 5
 apu_brk: // BRK
+    // BRK has a dummy PC read plus one internal idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_SF | FLAG_PC

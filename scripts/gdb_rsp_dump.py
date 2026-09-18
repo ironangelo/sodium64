@@ -98,7 +98,7 @@ class RSPClient:
         while offset < size:
             length = min(chunk_size, size - offset)
             reply = self.request(f"m{address + offset:x},{length:x}")
-            if reply.startswith(b"E"):
+            if len(reply) == 3 and reply.startswith(b"E"):
                 raise RuntimeError(
                     f"target rejected memory read at 0x{address + offset:08X}: "
                     f"{reply.decode('ascii', errors='replace')}"

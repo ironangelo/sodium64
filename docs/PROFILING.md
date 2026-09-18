@@ -74,21 +74,40 @@ Before using a result for an architecture decision, verify:
 
 Synthetic stress ROMs are **causal controls**, not commercial-game representatives. A CPU-heavy control being CPU-heavy does not by itself justify a dynarec, and a DMA stress result does not describe ordinary gameplay.
 
-## Full-rate APU preparation
+## Road-valid measurement preparation
 
-Sodium64 inherits an APU-underclock mode. Road-to-1.0 decision measurements must not rely on it.
+Road-to-1.0 performance evidence must use explicit settings and complete guest-time windows. The inherited APU-underclock mode is not acceptable evidence for the target.
 
-After warm-up the ares harness therefore:
+For target measurements verify and record:
 
-1. patches `apu_clock` to `APU_CYCLE` (`21`);
-2. invalidates the APU JIT lookup table;
-3. resets `jit_pointer` to `JIT_BUFFER`;
-4. forces frameskip setting `0`;
-5. keeps audio enabled;
-6. resets profiler and frame-budget state;
-7. starts the measured interval.
+- frameskip `0`;
+- APU clock `21`;
+- audio enabled;
+- precision setting `8`;
+- exact ROM/workload hash;
+- exact Sodium64 SHA / ELF / map / artifact;
+- complete guest-frame/VI measurement boundaries;
+- sample density and environment.
 
-Preparation cost is excluded from the measured profile.
+### Emulator matched-window harness
+
+The current ares decision harness resolves an exact guest configuration boundary, establishes the Road-valid settings, resets the relevant profiler/frame-budget state, then measures complete 60-VI guest windows. Candidate comparisons must use the same guest boundaries rather than host wall-clock duration.
+
+Host execution time may vary substantially across CI runners while the guest-frame vector remains identical. **Host wall time is never N64 FPS.**
+
+### Real-N64 SRAM capture
+
+Milestone hardware builds use `HW_PROFILE=1` to write a self-describing capture through the normal N64 SRAM path. The M1 contract uses:
+
+- 2 complete 60-VI warmup windows;
+- 5 complete 60-VI measured windows;
+- runtime settings embedded in the capture;
+- statistical R4300 samples;
+- exact completion metadata before the solid-red completion signal.
+
+The host decoder rejects incomplete captures, frameskip, underclocked APU, invalid settings and insufficient sample density. The returned SRAM plus the exact matching ELF/map is the performance/profile authority for that hardware run.
+
+Preparation and transport mechanics are measurement infrastructure; they are not evidence that emulator correctness or cadence is complete.
 
 ## Automated laboratories
 
@@ -200,6 +219,19 @@ Current valid run:
 
 `61/60` must **not** be described as “better than perfect” or proof of correct cadence. It establishes that this synthetic workload is not throughput-bound in the valid ares lab. Exact temporal cadence remains a separate correctness question and ultimately requires appropriate emulator/hardware validation.
 
+## Separate measurement dimensions
+
+Do not collapse these into one “FPS correctness” claim:
+
+- **throughput** — how many required guest frames complete within the native VI budget;
+- **scheduler/event cadence** — whether timed work such as DSP service is returned to before its deadline;
+- **presentation cadence** — whether completed guest frames are presented at the intended native sequence without skips/duplication tricks;
+- **audio correctness** — synchronization, underruns, long-run drift and PCM/fidelity behavior.
+
+A workload can reach `60/60` throughput while still violating an internal event deadline. That occurred during M1 and is why the earlier multi-op baseline was rejected despite reaching the ares throughput ceiling.
+
+Statistical percentages are **sample shares**, not absolute subsystem costs unless guest work and normalization make that comparison valid.
+
 ## What this currently proves
 
 **MEASUREMENT PROOF:**
@@ -217,14 +249,32 @@ It does **not** prove:
 - that a 65C816 dynarec is already justified;
 - exact SNES/N64 cadence correctness.
 
-## Current M1 profiling role
+## Current profiling role after M1
 
-M0 is closed. The representative real-N64 Gothicvania capture measured a mean **49/60** completed frames with frameskip `0`, full-rate APU, active audio and essentially no VI idle headroom; its profile placed **61.83%** of sampled R4300 time in APU/JIT/DSP-audio work. That evidence makes APU/audio the first M1 gate driver rather than an assumed 65C816 dynarec.
+M0 and M1 are closed; profiling now serves Gate-B corpus selection and blocker diagnosis.
 
-Profiling in M1 is therefore a decision instrument, not a new infrastructure project. Use the exact representative Gothicvania workload and the valid ares lab for controlled candidate-vs-baseline comparisons, then use real N64 hardware as final performance/timing authority for candidates worth retaining.
+Historical M0 authority:
 
-The rejected `BLOCK_SIZE 16 -> 32` experiment is the current model for interpretation discipline: it reproducibly improved the ares virtual frame budget from **44 -> 48/60**, but paired DSP-lateness instrumentation showed a material timing regression, so the optimization was rejected. Throughput movement alone is not sufficient.
+- real-N64 Gothicvania mean **49.0/60**;
+- frameskip `0`, APU `21`, audio enabled, precision `8`;
+- 3,581 samples;
+- essentially no frame/VI idle;
+- APU/JIT/DSP-audio **61.83% of samples**.
 
-The next profiling target is bounded APU memory/dispatch work (`apu_read8` / `apu_write8` and closely related hot paths) while preserving scheduler return frequency. Add new instrumentation only when existing samples/state cannot distinguish the competing explanations.
+Validated M1 authority:
+
+- real-N64 Gothicvania **60/60 in all five measured windows**;
+- same Road-valid settings;
+- 3,580 samples;
+- frame/VI wait **11.51%**;
+- APU/JIT/DSP-audio **51.03% of samples**.
+
+The M0→M1 movement belongs to the **combined corrected timing foundation plus cycle-budget architecture**. The cycle-budget mechanism's strongest causal result is narrower: it retained multi-op throughput while bounding scheduler return enough to eliminate the measured >= one-period DSP-lateness tail. Do not attribute the entire real-hardware 49→60 movement to the final emitter patch alone.
+
+Gothicvania is now primarily a regression workload. Its FPS counter should not rank further optimizations while it already meets native frame budget with VI wait.
+
+The next profiling target is a small versioned base-system corpus with intentionally different CPU, PPU/HDMA/Mode-7 and audio characteristics. Use emulator labs to filter progression/correctness and real N64 hardware to rank actual performance blockers. Do not choose `apu_read8`, DSP, PPU or a 65C816 dynarec merely because one subsystem has a large sample share.
+
+Add instrumentation only when existing samples, state and deterministic proofs cannot distinguish the competing explanations.
 
 Commercial ROMs may later be used locally for representativeness but must not be committed or distributed as project artifacts.

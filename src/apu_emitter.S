@@ -24,6 +24,8 @@
 .globl jit_pointer
 
 .globl jit_read8
+.globl jit_charge_cycles
+.globl jit_emit_runtime_cycles
 .globl compile_block
 .globl finish_opcode
 .globl finish_block
@@ -44,10 +46,11 @@
 jit_tags: .word 0:0x400
 jit_lookup: .word 0:0x10000
 jit_pointer: .word JIT_BUFFER
+jit_block_cycles: .word 0
 
 .align 4
 jit_opcodes: // Lookup table for addressing and operation functions
-    .word next_opcode, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x00-0x03
+    .word apu_nop, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x00-0x03
     .word apu_dirr, apu_ora,  apu_absr, apu_ora,  apu_brxr, apu_ora,  apu_idxr, apu_ora // 0x04-0x07
     .word apu_imm, apu_ora,  apu_dr2, apu_orm,  apu_drb, apu_or1a,  apu_dirr, apu_aslm // 0x08-0x0B
     .word apu_absr, apu_aslm,  apu_php, 0,  apu_absr, apu_tset1,  apu_brk, 0 // 0x0C-0x0F
@@ -82,7 +85,7 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_setc, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x80-0x83
     .word apu_dirr, apu_adca,  apu_absr, apu_adca,  apu_brxr, apu_adca,  apu_idxr, apu_adca // 0x84-0x87
     .word apu_imm, apu_adca,  apu_dr2, apu_adcm,  apu_drb, apu_eor1,  apu_dirr, apu_decm // 0x88-0x8B
-    .word apu_absr, apu_decm,  apu_imm, apu_movy,  apu_ppp, 0,  apu_dri, apu_movm // 0x8C-0x8F
+    .word apu_absr, apu_decm,  apu_imm, apu_movy,  apu_ppp, 0,  apu_dri, apu_movmi // 0x8C-0x8F
     .word apu_bcc, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0x90-0x93
     .word apu_drxr, apu_adca,  apu_abxr, apu_adca,  apu_abyr, apu_adca,  apu_idyr, apu_adca // 0x94-0x97
     .word apu_dri, apu_adcm,  apu_bxy, apu_adcm,  apu_dirr, apu_subw,  apu_drxr, apu_decm // 0x98-0x9B
@@ -94,31 +97,35 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_bcs, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0xB0-0xB3
     .word apu_drxr, apu_sbca,  apu_abxr, apu_sbca,  apu_abyr, apu_sbca,  apu_idyr, apu_sbca // 0xB4-0xB7
     .word apu_dri, apu_sbcm,  apu_bxy, apu_sbcm,  apu_dirr, apu_movwya,  apu_drxr, apu_incm // 0xB8-0xBB
-    .word apu_inca, 0,  apu_movsx, 0,  apu_unk, 0,  apu_bxpr, apu_mova // 0xBC-0xBF
+    .word apu_inca, 0,  apu_movsx, 0,  apu_das, 0,  apu_bxpr, apu_mova // 0xBC-0xBF
     .word apu_di, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0xC0-0xC3
-    .word apu_dira, apu_amov,  apu_absa, apu_amov,  apu_brxa, apu_amov,  apu_idxa, apu_amov // 0xC4-0xC7
-    .word apu_imm, apu_cmpx,  apu_absa, apu_xmov,  apu_drb, apu_mov1a,  apu_dira, apu_ymov // 0xC8-0xCB
-    .word apu_absa, apu_ymov,  apu_imm, apu_movx,  apu_ppx, 0,  apu_mul, 0 // 0xCC-0xCF
+    .word apu_dira, apu_amov,  apu_absw, apu_amov,  apu_brxa, apu_amov,  apu_idxa, apu_amov // 0xC4-0xC7
+    .word apu_imm, apu_cmpx,  apu_absw, apu_xmov,  apu_drb, apu_mov1a,  apu_dira, apu_ymov // 0xC8-0xCB
+    .word apu_absw, apu_ymov,  apu_imm, apu_movx,  apu_ppx, 0,  apu_mul, 0 // 0xCC-0xCF
     .word apu_bne, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0xD0-0xD3
     .word apu_drxa, apu_amov,  apu_abxa, apu_amov,  apu_abya, apu_amov,  apu_idya, apu_amov // 0xD4-0xD7
     .word apu_dira, apu_xmov,  apu_drya, apu_xmov,  apu_dira, apu_movway,  apu_drxa, apu_ymov // 0xD8-0xDB
-    .word apu_decy, 0,  apu_movay, 0,  apu_drxr, apu_cbne,  apu_unk, 0 // 0xDC-0xDF
+    .word apu_decy, 0,  apu_movay, 0,  apu_drxr, apu_cbne,  apu_daa, 0 // 0xDC-0xDF
     .word apu_clrv, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0xE0-0xE3
     .word apu_dirr, apu_mova,  apu_absr, apu_mova,  apu_brxr, apu_mova,  apu_idxr, apu_mova // 0xE4-0xE7
     .word apu_imm, apu_mova,  apu_absr, apu_movx,  apu_drb, apu_not1,  apu_dirr, apu_movy // 0xE8-0xEB
-    .word apu_absr, apu_movy,  apu_notc, 0,  apu_ppy, 0,  apu_unk, 0 // 0xEC-0xEF
+    .word apu_absr, apu_movy,  apu_notc, 0,  apu_ppy, 0,  apu_sleep, 0 // 0xEC-0xEF
     .word apu_beq, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0xF0-0xF3
     .word apu_drxr, apu_mova,  apu_abxr, apu_mova,  apu_abyr, apu_mova,  apu_idyr, apu_mova // 0xF4-0xF7
     .word apu_dirr, apu_movx,  apu_dryr, apu_movx,  apu_dr2, apu_movm,  apu_drxr, apu_movy // 0xF8-0xFB
-    .word apu_incy, 0,  apu_movya, 0,  apu_dbnzy, 0,  apu_unk, 0 // 0xFC-0xFF
+    .word apu_incy, 0,  apu_movya, 0,  apu_dbnzy, 0,  apu_stop, 0 // 0xFC-0xFF
 
 .text
 .set noreorder
 
 .align 5
 jit_read8: // a0: address - v0: value
-    // Read a byte from memory, count cycles, and increment the address
+    // Read a byte from memory, count cycles, and increment the address.
+    // Preserve the helper's historical clobber contract: only v0/t0/t1.
     lbu v0, apu_clock
+    lw t0, jit_block_cycles
+    addiu t0, t0, 1
+    sw t0, jit_block_cycles
     srl t0, a0, 6
     lbu t1, apu_map(t0)
     sub s2, s2, v0
@@ -126,6 +133,46 @@ jit_read8: // a0: address - v0: value
     lbu v0, apu_ram(t0)
     jr ra
     addi a0, a0, 1
+
+.align 5
+jit_charge_cycles: // t0: additional guest cycles missing from fetch/data accounting
+    // Track worst-case guest cycles without expanding this helper's historical
+    // t0/t1 clobber contract.
+    lw t1, jit_block_cycles
+    addu t1, t1, t0
+    sw t1, jit_block_cycles
+    lbu t1, apu_clock
+    mult t0, t1
+    mflo t0
+    jr ra
+    sub s2, s2, t0
+
+.align 5
+jit_emit_runtime_cycles: // t0: conditional guest cycles to debit at runtime
+    // Budget the conditional path at its worst-case guest cost. Preserve this
+    // helper's existing t0/t1/t5 clobber contract.
+    move t5, ra
+    lw t1, jit_block_cycles
+    addu t1, t1, t0
+    sw t1, jit_block_cycles
+    lbu t1, apu_clock
+    mult t0, t1
+    mflo t0
+    sub t0, zero, t0
+    andi t0, t0, 0xFFFF
+    lui t1, 0x2273 // high half of ADDI s3,s3,imm
+    jal emit_op
+    or t0, t0, t1
+    jr t5
+    nop
+
+.align 5
+apu_nop:
+    // NOP has one opcode fetch plus one dummy PC read on the SPC700.
+    jal jit_charge_cycles
+    li t0, 1
+    j finish_opcode
+    nop
 
 .align 5
 compile_block:
@@ -139,9 +186,10 @@ compile_block:
 
     // Initialize values for tracking JIT block state
     move s1, zero // Status
-    move s2, zero // Cycles
+    move s2, zero // Static master-cycle debit
+    sw zero, jit_block_cycles // Worst-case guest SPC cycles
     move a0, s0 // PC
-    addi t9, a0, BLOCK_SIZE // Limit
+    addi t9, a0, BLOCK_SIZE // Independent source-byte safety limit
 
     // Check JIT bounds and invalidate data cache for the header
     li a2, ROM_BUFFER // Bounds
@@ -167,8 +215,14 @@ next_opcode:
 
 .align 5
 finish_opcode:
-    // Compile another opcode if the limit hasn't been reached
-    blt a0, t9, next_opcode
+    // Retain the 16-byte source-span bound. Also stop once the completed block
+    // exceeds 20 worst-case SPC cycles: the pinned reference's most expensive
+    // finite instruction is DIV at 12 cycles, so the next instruction can bring
+    // the block to at most one 32-cycle DSP period.
+    bge a0, t9, finish_block
+    nop
+    lw t0, jit_block_cycles
+    ble t0, 20, next_opcode
     nop
 
 finish_block:
@@ -275,6 +329,43 @@ reset_loop:
     li t0, JIT_BUFFER
     sw t0, jit_pointer
     j compile_block
+    nop
+
+.align 5
+apu_sleep:
+    li t6, 1
+    b apu_halt_common
+    nop
+
+.align 5
+apu_stop:
+    li t6, 2
+
+apu_halt_common:
+    // Opcode fetch is already charged by jit_read8. WAIT/STOP then perform one
+    // real read of the next PC and one idle cycle before scheduler return.
+    jal jit_charge_cycles
+    li t0, 1
+
+    // Latch distinct WAIT/STOP state before the first bus read.
+    li t0, ORI(A1, ZERO, 0)
+    jal emit_op
+    or t0, t0, t6
+    li t3, SB(A1, 0, 0)
+    la t4, apu_halt
+    jal full_address
+    nop
+
+    // First halted read happens immediately in the entry block. PC itself is
+    // still committed normally by finish_block as the instruction-after-opcode.
+    li t0, ORI(A0, ZERO, 0)
+    jal emit_op
+    or t0, t0, a0
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP SLL(ZERO, ZERO, 0)
+    j finish_block
     nop
 
 .align 5
@@ -441,6 +532,21 @@ emit_j: // t0: target
 
 .align 5
 emit_jal: // t0: target
+    // apu_read8/apu_write8 each represent one guest bus cycle. Count them
+    // compile-side while preserving emit_jal's historical t0/t1 clobbers.
+    la t1, apu_read8
+    beq t0, t1, emit_jal_guest_bus
+    nop
+    la t1, apu_write8
+    bne t0, t1, emit_jal_encode
+    nop
+
+emit_jal_guest_bus:
+    lw t1, jit_block_cycles
+    addiu t1, t1, 1
+    sw t1, jit_block_cycles
+
+emit_jal_encode:
     // Emit a "jal" opcode for the JIT
     srl t0, t0, 2
     li t1, 0x3FFFFFF

@@ -31,6 +31,7 @@
 .globl apu_bxpa
 .globl apu_bxpr
 .globl apu_absa
+.globl apu_absw
 .globl apu_absr
 .globl apu_abxa
 .globl apu_abxr
@@ -69,6 +70,12 @@ apu_dirr:
     li t8, 1
 
 apu_dir:
+    // Pure direct stores have one dummy destination-read cycle.
+    bnez t8, dir_cycles_done
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+dir_cycles_done:
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -100,6 +107,11 @@ apu_drxr:
     li t8, 1
 
 apu_drx:
+    // Direct-indexed reads spend one address cycle; pure stores spend that
+    // cycle plus one dummy destination-read cycle.
+    li t0, 2
+    jal jit_charge_cycles
+    sub t0, t0, t8
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -136,6 +148,11 @@ apu_dryr:
     li t8, 1
 
 apu_dry:
+    // Direct-indexed reads spend one address cycle; pure stores spend that
+    // cycle plus one dummy destination-read cycle.
+    li t0, 2
+    jal jit_charge_cycles
+    sub t0, t0, t8
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -172,6 +189,11 @@ apu_brxr:
     li t8, 1
 
 apu_brx:
+    // (X) reads have one dummy PC cycle; pure stores also dummy-read the
+    // destination before writing it.
+    li t0, 2
+    jal jit_charge_cycles
+    sub t0, t0, t8
     // Update the JIT register state
     jal load_reg_x
     nop
@@ -201,6 +223,10 @@ apu_bxpr:
     li t8, 1
 
 apu_bxp:
+    // (X)+ spends two cycles beyond the semantic data access for both
+    // directions.
+    jal jit_charge_cycles
+    li t0, 2
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SX
@@ -221,6 +247,14 @@ bxp_skip:
     li t0, ADDI(T9, T9, 1)
     j emit_op
     move ra, gp
+
+.align 5
+apu_absw: // pure write to aaaa
+    // Pure absolute stores dummy-read the destination before writing.
+    jal jit_charge_cycles
+    li t0, 1
+    j apu_absa
+    nop
 
 .align 5
 apu_absa: // aaaa
@@ -276,6 +310,11 @@ apu_abxr:
     li t8, 1
 
 apu_abx:
+    // Absolute-indexed reads spend one index cycle; pure stores also
+    // dummy-read the destination.
+    li t0, 2
+    jal jit_charge_cycles
+    sub t0, t0, t8
     // Get the 16-bit immediate address
     jal jit_read8
     nop
@@ -311,6 +350,11 @@ apu_abyr:
     li t8, 1
 
 apu_aby:
+    // Absolute-indexed reads spend one index cycle; pure stores also
+    // dummy-read the destination.
+    li t0, 2
+    jal jit_charge_cycles
+    sub t0, t0, t8
     // Get the 16-bit immediate address
     jal jit_read8
     nop
@@ -346,6 +390,11 @@ apu_idxr:
     li t8, 1
 
 apu_idx:
+    // [dp+X] spends one index cycle; pure stores also dummy-read the final
+    // destination before writing.
+    li t0, 2
+    jal jit_charge_cycles
+    sub t0, t0, t8
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -394,6 +443,11 @@ apu_idyr:
     li t8, 1
 
 apu_idy:
+    // [dp]+Y spends one index cycle; pure stores also dummy-read the final
+    // destination before writing.
+    li t0, 2
+    jal jit_charge_cycles
+    sub t0, t0, t8
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -519,6 +573,10 @@ apu_dr2: // aa,bb
 
 .align 5
 apu_bxy: // (X),(Y)
+    // (X),(Y) forms spend one dummy PC-read cycle before the data accesses.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_x
     nop

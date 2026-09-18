@@ -71,6 +71,8 @@
 .globl apu_notc
 .globl apu_clrv
 .globl apu_xcn
+.globl apu_daa
+.globl apu_das
 .globl apu_tclr1
 .globl apu_tset1
 
@@ -217,6 +219,10 @@ apu_cmpy: // CMP Y,op
 
 .align 5
 apu_cmpm: // CMP op
+    // Memory-form CMP has one trailing internal idle after the comparison.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     nop
@@ -250,8 +256,12 @@ apu_adca: // ADC A,op
     EMIT_OP ADD(T7, T7, T1)
 
     // Emit code to set flags for addition
-    // TODO: set the H flag
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, T0, V0)
+    EMIT_OP XOR(T1, T1, T7)
+    EMIT_OP ANDI(T1, T1, 0x10)
+    EMIT_OP SRL(T1, T1, 1) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP SRL(T1, T7, 8) // C
     EMIT_OP OR(S1, S1, T1)
     EMIT_OP XOR(T1, T7, T0)
@@ -283,8 +293,12 @@ apu_adcm: // ADC op
     EMIT_OP ADD(A1, A1, T1)
 
     // Emit code to set flags for addition
-    // TODO: set the H flag
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, V0, S0)
+    EMIT_OP XOR(T1, T1, A1)
+    EMIT_OP ANDI(T1, T1, 0x10)
+    EMIT_OP SRL(T1, T1, 1) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP SRL(T1, A1, 8) // C
     EMIT_OP OR(S1, S1, T1)
     EMIT_OP XOR(T1, A1, V0)
@@ -313,8 +327,13 @@ apu_sbca: // SBC A,op
     EMIT_OP ADD(T7, T7, T1)
 
     // Emit code to set flags for subtraction
-    // TODO: set the H flag
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, T0, V0)
+    EMIT_OP XOR(T1, T1, T7)
+    EMIT_OP ANDI(T1, T1, 0x10)
+    EMIT_OP XORI(T1, T1, 0x10)
+    EMIT_OP SRL(T1, T1, 1) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP ADDI(T1, T0, 1)
     EMIT_OP SLTU(T1, T7, T1) // C
     EMIT_OP OR(S1, S1, T1)
@@ -348,8 +367,13 @@ apu_sbcm: // SBC op
     EMIT_OP ADD(A1, A1, T1)
 
     // Emit code to set flags for subtraction
-    // TODO: set the H flag
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, V0, S0)
+    EMIT_OP XOR(T1, T1, A1)
+    EMIT_OP ANDI(T1, T1, 0x10)
+    EMIT_OP XORI(T1, T1, 0x10)
+    EMIT_OP SRL(T1, T1, 1) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP ADDI(T1, V0, 1)
     EMIT_OP SLTU(T1, A1, T1) // C
     EMIT_OP OR(S1, S1, T1)
@@ -365,6 +389,10 @@ apu_sbcm: // SBC op
 
 .align 5
 apu_asla: // ASL A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -402,6 +430,10 @@ apu_aslm: // ASL op
 
 .align 5
 apu_lsra: // LSR A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -438,6 +470,10 @@ apu_lsrm: // LSR op
 
 .align 5
 apu_rola: // ROL A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -479,6 +515,10 @@ apu_rolm: // ROL op
 
 .align 5
 apu_rora: // ROR A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -519,6 +559,10 @@ apu_rorm: // ROR op
 
 .align 5
 apu_deca: // DEC A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -531,6 +575,10 @@ apu_deca: // DEC A
 
 .align 5
 apu_decx: // DEC X
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SX
@@ -543,6 +591,10 @@ apu_decx: // DEC X
 
 .align 5
 apu_decy: // DEC Y
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY
@@ -566,6 +618,10 @@ apu_decm: // DEC op
 
 .align 5
 apu_inca: // INC A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -578,6 +634,10 @@ apu_inca: // INC A
 
 .align 5
 apu_incx: // INC X
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SX
@@ -590,6 +650,10 @@ apu_incx: // INC X
 
 .align 5
 apu_incy: // INC Y
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY
@@ -613,6 +677,10 @@ apu_incm: // INC op
 
 .align 5
 apu_addw: // ADDW YA,op
+    // ADDW has one internal idle between the low and high direct-page reads.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY | FLAG_SA
@@ -638,9 +706,13 @@ apu_addw: // ADDW YA,op
     EMIT_OP ADD(T7, T0, A1)
     EMIT_OP SRL(T8, T7, 8)
 
-    // Emit code to set carry and overflow
-    // TODO: set the H flag
+    // Emit code to set half-carry, carry and overflow
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, T0, A1)
+    EMIT_OP XOR(T1, T1, T7)
+    EMIT_OP ANDI(T1, T1, 0x1000)
+    EMIT_OP SRL(T1, T1, 9) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP SRL(T1, T7, 16) // C
     EMIT_OP OR(S1, S1, T1)
     EMIT_OP XOR(T1, T7, T0)
@@ -660,6 +732,10 @@ apu_addw: // ADDW YA,op
 
 .align 5
 apu_subw: // SUBW YA,op
+    // SUBW has one internal idle between the low and high direct-page reads.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY | FLAG_SA
@@ -685,9 +761,14 @@ apu_subw: // SUBW YA,op
     EMIT_OP SUB(T7, T0, A1)
     EMIT_OP SRL(T8, T7, 8)
 
-    // Emit code to set carry and overflow
-    // TODO: set the H flag
+    // Emit code to set half-carry, carry and overflow
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, T0, A1)
+    EMIT_OP XOR(T1, T1, T7)
+    EMIT_OP ANDI(T1, T1, 0x1000)
+    EMIT_OP XORI(T1, T1, 0x1000)
+    EMIT_OP SRL(T1, T1, 9) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP ADDI(T1, T0, 1)
     EMIT_OP SLTU(T1, T7, T1) // C
     EMIT_OP OR(S1, S1, T1)
@@ -808,7 +889,70 @@ apu_incw: // INCW op
     li t1, T0
 
 .align 5
+apu_div_runtime:
+    // Runtime helper for the S-SMP's non-standard DIV YA,X semantics.
+    // Generated JIT state: T7=A, T8=Y, T9=X, S1=PSW.
+    andi t9, t9, 0xFF
+    andi t8, t8, 0xFF
+    andi t7, t7, 0xFF
+
+    // DIV preserves C/I/B/P and recomputes H/V before the quotient.
+    andi s1, s1, 0xB7
+    andi t0, t8, 0x0F
+    andi t1, t9, 0x0F
+    sltu t2, t0, t1
+    xori t2, t2, 1
+    sll t2, t2, 3
+    or s1, s1, t2 // H = (Y&15) >= (X&15)
+
+    sltu t2, t8, t9
+    xori t2, t2, 1
+    sll t2, t2, 6
+    or s1, s1, t2 // V = Y >= X
+
+    // Preserve the original 16-bit YA value for either arithmetic branch.
+    sll a0, t8, 8
+    or a0, a0, t7
+
+    // Normal path is valid only while Y < 2*X. X=0 therefore always takes
+    // the special path and never reaches a divide-by-zero.
+    sll t0, t9, 1
+    sltu t1, t8, t0
+    beqz t1, apu_div_runtime_special
+    nop
+
+    div a0, t9
+    mflo t7
+    mfhi t8
+    andi t7, t7, 0xFF
+    andi t8, t8, 0xFF
+    jr ra
+    nop
+
+apu_div_runtime_special:
+    // A = 255 - (YA - (X<<9)) / (256-X)
+    // Y = X + (YA - (X<<9)) % (256-X)
+    li t0, 256
+    sub t0, t0, t9
+    sll t1, t9, 9
+    sub a1, a0, t1
+    div a1, t0
+    mflo v0
+    mfhi v1
+    li t7, 255
+    sub t7, t7, v0
+    add t8, t9, v1
+    andi t7, t7, 0xFF
+    andi t8, t8, 0xFF
+    jr ra
+    nop
+
+.align 5
 apu_div: // DIV YA,X
+    // One opcode fetch is already charged; DIV has 11 additional SPC700 cycles.
+    jal jit_charge_cycles
+    li t0, 11
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SY | FLAG_SA
@@ -819,29 +963,23 @@ apu_div: // DIV YA,X
     jal load_flags
     nop
 
-    // Emit code to divide register YA by register X
-    EMIT_OP ANDI(T9, T9, 0xFF)
-    EMIT_OP ANDI(T8, T8, 0xFF)
-    EMIT_OP ANDI(T7, T7, 0xFF)
-    EMIT_OP SLL(T0, T8, 8)
-    EMIT_OP OR(T0, T0, T7)
-    EMIT_OP DIV(T0, T9)
-
-    // Emit code to move the result to register YA and set flags for Y
-    // TODO: set the H flag
-    EMIT_OP MFLO(T7) // Quotient
-    EMIT_OP MFHI(T8) // Remainder
-    EMIT_OP ANDI(S1, S1, 0xB7)
-    EMIT_OP SRL(T0, T7, 8)
-    EMIT_OP SLT(T0, ZERO, T0)
-    EMIT_OP SLL(T0, T0, 6) // V
-    EMIT_OP OR(S1, S1, T0)
+    // Emit one call to the runtime helper. N/Z are still queued from A below,
+    // so the existing JIT flag persistence mechanism remains authoritative.
+    la t0, apu_div_runtime
+    jal emit_jal
+    nop
+    // Neutralize the runtime JAL delay slot so queued N/Z observes new A.
+    EMIT_OP SLL(ZERO, ZERO, 0)
     la ra, finish_opcode
     j queue_nz
     li t1, T7
 
 .align 5
 apu_mul: // MUL YA
+    // One opcode fetch is already charged; MUL has 8 additional SPC700 cycles.
+    jal jit_charge_cycles
+    li t0, 8
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY | FLAG_SA
@@ -907,6 +1045,10 @@ apu_not1: // NOT1 op
 
 .align 5
 apu_mov1a: // MOV1 op,C
+    // MOV1 mem.bit,C has one internal idle before the write.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     nop
@@ -928,7 +1070,7 @@ apu_mov1a: // MOV1 op,C
 apu_mov1b: // MOV1 C,op
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to set the carry flag to a bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -940,9 +1082,13 @@ apu_mov1b: // MOV1 C,op
 
 .align 5
 apu_or1a: // OR1 C,op
+    // OR1 has one internal idle after reading the addressed bit.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise or the carry flag with a bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -953,9 +1099,13 @@ apu_or1a: // OR1 C,op
 
 .align 5
 apu_or1b: // OR1 C,/op
+    // OR1 /bit has one internal idle after reading the addressed bit.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise or the carry flag with a negated bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -969,7 +1119,7 @@ apu_or1b: // OR1 C,/op
 apu_and1a: // AND1 C,op
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise and the carry flag with a bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -983,7 +1133,7 @@ apu_and1a: // AND1 C,op
 apu_and1b: // AND1 C,/op
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise and the carry flag with a negated bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -996,9 +1146,13 @@ apu_and1b: // AND1 C,/op
 
 .align 5
 apu_eor1: // EOR1 C,op
+    // EOR1 has one internal idle after reading the addressed bit.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise exclusive or the carry flag with a bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -1009,6 +1163,10 @@ apu_eor1: // EOR1 C,op
 
 .align 5
 apu_clrc: // CLRC
+    // SPC700 flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -1020,6 +1178,10 @@ apu_clrc: // CLRC
 
 .align 5
 apu_setc: // SETC
+    // SPC700 flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -1031,6 +1193,10 @@ apu_setc: // SETC
 
 .align 5
 apu_notc: // NOTC
+    // NOTC has one dummy PC read plus one internal idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -1042,6 +1208,10 @@ apu_notc: // NOTC
 
 .align 5
 apu_clrv: // CLRV
+    // SPC700 flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -1053,6 +1223,10 @@ apu_clrv: // CLRV
 
 .align 5
 apu_xcn: // XCN A
+    // XCN has one dummy PC read plus three internal idle cycles.
+    jal jit_charge_cycles
+    li t0, 4
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -1065,22 +1239,124 @@ apu_xcn: // XCN A
     j queue_nz
     li t1, T7
 
+
+.align 5
+apu_daa_runtime:
+    // DAA preserves H/V and adjusts C/A from the incoming BCD state.
+    andi t7, t7, 0xFF
+    andi t0, s1, 0x1
+    bnez t0, apu_daa_high
+    nop
+    sltiu t0, t7, 0x9A
+    bnez t0, apu_daa_low
+    nop
+apu_daa_high:
+    addiu t7, t7, 0x60
+    andi t7, t7, 0xFF
+    ori s1, s1, 0x1
+apu_daa_low:
+    andi t0, s1, 0x8
+    bnez t0, apu_daa_add6
+    nop
+    andi t0, t7, 0x0F
+    sltiu t0, t0, 10
+    bnez t0, apu_daa_done
+    nop
+apu_daa_add6:
+    addiu t7, t7, 0x06
+    andi t7, t7, 0xFF
+apu_daa_done:
+    jr ra
+    nop
+
+.align 5
+apu_das_runtime:
+    // DAS preserves H/V and adjusts C/A from the incoming BCD state.
+    andi t7, t7, 0xFF
+    andi t0, s1, 0x1
+    beqz t0, apu_das_high
+    nop
+    sltiu t0, t7, 0x9A
+    bnez t0, apu_das_low
+    nop
+apu_das_high:
+    addiu t7, t7, -0x60
+    andi t7, t7, 0xFF
+    andi s1, s1, 0xFE
+apu_das_low:
+    andi t0, s1, 0x8
+    beqz t0, apu_das_sub6
+    nop
+    andi t0, t7, 0x0F
+    sltiu t0, t0, 10
+    bnez t0, apu_das_done
+    nop
+apu_das_sub6:
+    addiu t7, t7, -0x06
+    andi t7, t7, 0xFF
+apu_das_done:
+    jr ra
+    nop
+
+.align 5
+apu_daa: // DAA A
+    // Opcode fetch is already charged; DAA has one dummy PC read + one idle.
+    jal jit_charge_cycles
+    li t0, 2
+    jal load_accum
+    ori s1, s1, FLAG_SA
+    jal load_flags
+    ori s1, s1, FLAG_SF
+    la t0, apu_daa_runtime
+    jal emit_jal
+    nop
+    EMIT_OP SLL(ZERO, ZERO, 0)
+    la ra, finish_opcode
+    j queue_nz
+    li t1, T7
+
+.align 5
+apu_das: // DAS A
+    // Opcode fetch is already charged; DAS has one dummy PC read + one idle.
+    jal jit_charge_cycles
+    li t0, 2
+    jal load_accum
+    ori s1, s1, FLAG_SA
+    jal load_flags
+    ori s1, s1, FLAG_SF
+    la t0, apu_das_runtime
+    jal emit_jal
+    nop
+    EMIT_OP SLL(ZERO, ZERO, 0)
+    la ra, finish_opcode
+    j queue_nz
+    li t1, T7
+
 .align 5
 apu_tclr1: // TCLR1 op
     // Update the JIT register state
     jal load_accum
     nop
 
-    // Emit code to clear bits in a memory value and set flags
+    // Preserve comparison flags from the first read before helper calls can
+    // clobber T0. Pinned SPC700 timing performs a second real read before write.
+    EMIT_OP SUB(T0, T7, V0) // CMP against first read
+    jal queue_nz
+    li t1, T0
+
+    // Keep the first-read-derived write value in A1 across the second read.
     EMIT_OP XORI(T0, T7, 0xFF)
-    EMIT_OP AND(A1, V0, T0)
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP AND(A1, V0, T0) // second-read JAL delay slot; uses first V0
+
     la t0, apu_write8
     jal emit_jal
     nop
-    EMIT_OP SUB(T0, T7, V0) // CMP
-    la ra, finish_opcode
-    j queue_nz
-    li t1, T0
+    EMIT_OP OR(A1, A1, ZERO) // preserve write value in JAL delay slot
+    j finish_opcode
+    nop
 
 .align 5
 apu_tset1: // TSET1 op
@@ -1088,12 +1364,21 @@ apu_tset1: // TSET1 op
     jal load_accum
     nop
 
-    // Emit code to set bits in a memory value and set flags
+    // Preserve comparison flags from the first read before helper calls can
+    // clobber T0. Pinned SPC700 timing performs a second real read before write.
+    EMIT_OP SUB(T0, T7, V0) // CMP against first read
+    jal queue_nz
+    li t1, T0
+
+    // Form the first-read-derived write value in the second-read JAL delay slot.
+    la t0, apu_read8
+    jal emit_jal
+    nop
     EMIT_OP OR(A1, V0, T7)
+
     la t0, apu_write8
     jal emit_jal
     nop
-    EMIT_OP SUB(T0, T7, V0) // CMP
-    la ra, finish_opcode
-    j queue_nz
-    li t1, T0
+    EMIT_OP OR(A1, A1, ZERO) // preserve write value in JAL delay slot
+    j finish_opcode
+    nop

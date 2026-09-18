@@ -3154,3 +3154,35 @@ Exact clean validation:
 Acceptance: normal build, PROFILE build and pinned Mupen emulator smoke all SUCCESS on exact SHA `9204ad2f...`.
 
 If green: mark SLEEP/STOP clean candidate VALIDATED and the enumerated base-SPC700 opcode/semantic foundation complete enough to move to a fresh matched APU/audio performance baseline. If red: diagnose clean-integration failure; do not reinterpret the already-green dynamic diagnostic proof.
+
+
+## Clean SLEEP/STOP foundation — VALIDATED 2026-09-18
+
+Exact clean candidate: **`phase2/apu-timing-foundation@9204ad2fae7f37d9950a0f3a88cc3ff4299e1bc1`**.
+
+**Build and Validate `35350851813` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen normal/profile emulator smoke and profile decode SUCCESS.
+
+Artifacts:
+- normal build **`10549768562`**, digest `sha256:31c0a7c41d74c75c7661de03d4b021736c9e9e4e420ea8ab5c51ed87bfb14705`;
+- PROFILE build **`10548818655`**, digest `sha256:9d08f44a06ef252732221b33e9b7154340f6e2e5d709bae6dcded607370490ca`;
+- emulator smoke **`10548888744`**, digest `sha256:6bddf2a328b3be20da8bbd6e38e5587ee9624386c55b03761cb22922f1c0092f`.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+The clean branch now contains the validated DAA/DAS, Half-Carry, DIV, timing/address/bus corrections and persistent SLEEP/STOP scheduler state without diagnostic-only proof code.
+
+### Immediate next action
+Do **not** resume the old memory-helper experiment from pre-foundation measurements. First establish a **fresh matched, repeated APU/audio baseline on this exact clean SHA**. The audit demonstrated same-SHA ares A/A spread (44/60 vs 48/60), so single-run deltas of a few FPS are not attribution-quality evidence.
+
+Baseline design must preserve:
+- same exact `9204ad2f...` build/artifact;
+- same Gothicvania workload and pinned ares configuration;
+- CPU JIT + RSP interpreter laboratory mode;
+- frameskip 0, full-rate APU and audio path intact;
+- repeated independent observations sufficient to characterize run-to-run variance;
+- paired DSP-lateness / audio-timing evidence, not FPS alone.
+
+Only after that baseline should a new optimization hypothesis be selected from the corrected profile distribution.

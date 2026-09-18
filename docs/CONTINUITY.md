@@ -4280,3 +4280,33 @@ PR #12 is currently:
 **PRE-MERGE STATE: VALIDATED / READY TO MERGE.**
 
 Next action: squash-merge PR #12 to keep the mainline history free of integration/harness intermediate commits while preserving the exact validated final tree, then validate the resulting master SHA before marking M1 MERGED-CONSUMED.
+
+
+## PR #12 MERGED — post-merge validation running 2026-09-18
+
+PR **#12** was squash-merged successfully.
+
+New integrated authority:
+**`master@ac1ce74740d974b70206fcb6ba842e492b5d7272`**.
+
+Squash integrity check:
+- PR head `d701f80f5339c727f231e4e9cc2b7222ec9c1561` tree: `28147decc7994542d352738c43f40fe1249bbb71`;
+- merged master `ac1ce747...` tree: `28147decc7994542d352738c43f40fe1249bbb71`;
+- **exact tree match = true**.
+
+Therefore the squash merge changed commit history only; it did not alter the validated candidate tree.
+
+Merge parent:
+- previous master `a2270699e60cdf2b8b8303aaa5a1aa4a0e8dd89e`.
+
+Post-merge exact-SHA workflows automatically triggered:
+- **Build and Validate `35387454297`** @ `ac1ce747...` — running;
+- **APU Cycle And Span Proof `35387454371`** @ `ac1ce747...` — running;
+- **Ares Profile Validation `35387454367`** @ `ac1ce747...` — running.
+
+Do **not** mark M1 MERGED-CONSUMED until these post-merge gates finish. Because the merged tree is byte-identical to the fully validated PR tree, any new failure must first be classified as workflow/lab nondeterminism versus genuine exact-tree regression rather than assumed to be a new code change.
+
+Next action:
+- wait for all three exact-master-SHA gates;
+- if green, mark M1 **MERGED-CONSUMED / ACHIEVED** and move RESUME HERE to Gate-B corpus definition;
+- if any fails, inspect exact failure before changing code.

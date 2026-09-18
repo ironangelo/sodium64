@@ -1275,6 +1275,19 @@ def main() -> int:
         for case in budget_edge_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
+        # Seed the cache-reuse check immediately before exercising it. All proof
+        # cases share TEST_PC, so running this after the full matrix would test
+        # whichever later case most recently replaced the lookup at 0x0200.
+        reuse_seed_case = dict(budget_edge_cases[0])
+        reuse_seed_case["name"] = "budget_reuse_seed_32"
+        reuse_seed_result = compile_one_case(
+            client, addresses=args, **reuse_seed_case
+        )
+        results.append(reuse_seed_result)
+        cycle_budget_reuse = verify_cycle_budget_reuse(
+            client, base_result=reuse_seed_result, addresses=args
+        )
+
         for case in address_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
@@ -1313,9 +1326,6 @@ def main() -> int:
 
         budget_edge_result = next(
             item for item in results if item["name"] == "budget_20_nop_div_32"
-        )
-        cycle_budget_reuse = verify_cycle_budget_reuse(
-            client, base_result=budget_edge_result, addresses=args
         )
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

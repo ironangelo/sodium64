@@ -1128,3 +1128,37 @@ Then Build/Validate the clean branch. After that, conditional branch timing is t
 5. Next isolated timing variable after clean CI: conditional branches. Add +2 guest cycles only on the taken runtime path; keep not-taken timing unchanged. Validate taken/not-taken pairs for ordinary flag branch, bit branch, CBNE, DBNZ Y and DBNZ memory.
 6. Remaining fixed-cycle families come after conditional branches. Exact I/O/timer cycle placement remains a later fidelity contract.
 7. E1 matched-window repair remains required before ranking performance. E3/E4/E5 remain DEFERRED.
+
+
+## Clean SPC700 timing foundation — candidate created 2026-09-17/18
+
+Clean branch: **`phase2/apu-timing-foundation@a62e95b1764d296dc74e711903c2431c343a54c2`**, created directly from validated block-bound candidate `7e48bcc994483e7aaf7cc2793b03fe0ebf13ee84`.
+
+This is a **CANDIDATE** code-only recreation of the dynamically validated fixed-timing/addressing work. Direct compare `7e48bcc9... -> a62e95b1...` is exactly one commit and exactly four core files:
+- `src/apu_address.S` +54/-0;
+- `src/apu_alu.S` +8/-0;
+- `src/apu_control.S` +4/-0;
+- `src/apu_emitter.S` +23/-4.
+
+No diagnostic workflow, GDB script, `apu_cycle_diag.S`, PROFILE capture, profiler code or documentation is present in the candidate.
+
+Included validated semantics:
+- NOP uses shared fixed-cycle helper and still routes through `finish_opcode`;
+- BRA +2 fixed internal cycles;
+- MUL +8 missing cycles;
+- DIV +11 missing cycles;
+- validated direct/indexed/indirect addressing-family fixed charges;
+- `apu_absw` wrapper only for pure absolute stores so CALL/JMP do not inherit store dummy-read timing.
+
+Build and Validate run for exact candidate SHA: **`35296376545`**, currently PENDING at checkpoint. Branch creation itself triggered an earlier redundant run `35296360910` for base SHA `7e48bcc9...`; do not confuse that base run with candidate validation.
+
+**Acceptance:** candidate remains unmerged until exact SHA `a62e95b1...` completes normal build, PROFILE build and pinned Mupen smoke successfully. The independent dynamic semantic authority remains diagnostic SHA `e78b3c47...` / ares proof `35294386627`.
+
+### Next isolated variable after clean CI
+
+Conditional branch timing remains next. Static/reference audit confirms:
+- ordinary conditional branch: not taken = fetch-only base timing; taken adds **+2 cycles**;
+- bit branch, CBNE, DBNZ memory/Y each have their own fixed pre-branch bus/idle work, but the **taken-path delta itself is +2 cycles**.
+Because the decision is runtime-dependent, these +2 cycles must be emitted on the generated taken path, not added through compile-time `jit_charge_cycles`.
+
+Do not modify the clean timing foundation until `35296376545` finishes.

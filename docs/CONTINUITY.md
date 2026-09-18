@@ -3838,3 +3838,94 @@ Interpret this as a major M1 convergence event. Before choosing the next optimiz
 3. do **not** immediately optimize further against Gothicvania FPS because this workload now has **11.51% VI wait** on real hardware and is no longer throughput-bound;
 4. re-profile/choose the next gate driver using a broader representative base workload/corpus rather than chasing more speed in this already-native workload;
 5. keep the cycle-budget emitter architecture; v1 remains SUPERSEDED, v2 clean candidate is the valid implementation.
+
+
+## Independent red-team audit after real-N64 60/60 — 2026-09-18
+
+Independent Astra/Codex read-only audit reproduced the M0 and M1 SRAM decodes and profiles from the original artifacts and verified the recorded branch/commit identities, package provenance and checksums. The auditor did **not** modify the repository.
+
+Additional authority:
+- returned M1 SRAM SHA256: **`674e426257dff80ad1bcf3bbdd9837d3f68fe8f9d7a48f2fd21d2296d80f1582`**;
+- audit independently reproduced M0 **48,49,48,50,50 /60** and M1 **60,60,60,60,60 /60**;
+- both captures validate frameskip 0, APU clock 21, audio 4, precision 8 and complete capture state.
+
+### Interpretation corrections
+
+**SUPPORTED INTERPRETATION:** the measured real-N64 result establishes that the **combined timing-foundation + cycle-budget-v2 candidate** removes the Gothicvania frame-budget deficit for the measured hardware segment. Do not attribute the entire M0 49/60 -> M1 60/60 jump to the cycle-budget change alone.
+
+Reason: the corrected timing foundation already reached the ares throughput ceiling while still violating DSP lateness. The strongest causal claim for cycle-budget v2 is that it preserved multi-op throughput while restoring the required scheduler return bound.
+
+**REJECTED wording:** “cycle-budget alone produced +22.45% speedup.” The +22.45% figure is the relative increase in completed guest frames per 60-VI measurement window between two different full runtime states, not isolated causal attribution to one emitter patch.
+
+**REJECTED wording:** “APU/audio costs 17.5% less.” The real-hardware profile shows APU/JIT/DSP **share** moving from 61.83% to 51.03%; statistical sample share is not an absolute cost measurement normalized to identical guest work.
+
+**MEASURED:** M1 has 11.51% R4300 frame/VI wait in this capture. **SUPPORTED INTERPRETATION:** Gothicvania is no longer useful as an FPS-ranking workload for further optimization. **UNKNOWN:** that wait fraction is not a universal spare-N64 budget and does not directly measure unused RSP capacity.
+
+### Cycle-budget contract audit
+
+The source audit supports the current compile-time budget model:
+- source/operand fetch through `jit_read8`: +1 guest cycle;
+- fixed cycles through `jit_charge_cycles`: +N;
+- conditional runtime cycles: budget worst-case/taken value;
+- generated calls to guest `apu_read8` / `apu_write8`: +1 guest bus cycle;
+- `jit_block_cycles` is compile-time accounting only and is not itself charged again at runtime.
+
+Finite-op bound remains:
+- completed-block continuation threshold = 20 SPC cycles;
+- largest pinned finite single opcode = DIV at 12 SPC cycles;
+- therefore a continued block can reach at most **32 SPC cycles = 672 master cycles** before scheduler return.
+
+Important mathematical clarification: the **block duration may equal one DSP period**; the scheduler lateness remains strictly below one period if DSP is serviced whenever `s3 <= a3` before block entry and entry begins with positive headroom.
+
+This contract is explicitly tied to the Road-valid **APU clock 21** configuration and must not be generalized blindly to other clock settings.
+
+### Remaining bounded proof gap
+
+Current dynamic APU proof contains **114 directed cases plus halted-state observations**. It validates audited families and regressions; it is **not** an exhaustive 256-opcode/state/composition proof.
+
+The current largest deliberate block debit exercised by the proof is 22 SPC cycles (the long-NOP temporal-cutoff case). The exact **20 + DIV = 32-cycle boundary** has not yet been exercised dynamically.
+
+**TODO / immediate proof batch:**
+1. a 20-cycle NOP prefix followed by DIV;
+2. a 20-cycle prefix built using real guest accesses followed by DIV;
+3. taken/not-taken branch cases near the temporal cutoff;
+4. a few tag/cache/reuse boundary cases, comparing first compile against cached execution.
+
+Acceptance:
+- compile-time budget is conservative relative to executed guest work;
+- no produced block exceeds 32 SPC cycles;
+- expected debit/state remain exact;
+- cached execution matches initial compilation;
+- no stale/self-modifying reuse is observed in the directed boundary cases.
+
+This is a small extension of the existing proof harness, **not** a new profiling/tooling project.
+
+### Accuracy risks preserved for later Gate C work
+
+These are not demonstrated Gothicvania failures and were not introduced by v2, but remain architectural correctness boundaries:
+
+- Some dummy reads are represented as cycle charge only rather than emitted observable bus reads; total cycles can therefore be correct while I/O side effects differ, especially around timer/DSP/port registers.
+- Tag validation on block entry protects later reuse but does not by itself prove that a write performed during an executing block cannot invalidate not-yet-executed instructions within that same block.
+- Future emitter helpers that bypass `apu_read8`/`apu_write8` or reintroduce direct guest-memory accesses could escape the cycle-budget accounting even if runtime debits remain correct. Any future APU-memory fast path must preserve or extend the budget contract deliberately.
+
+### Milestone interpretation
+
+**SUPPORTED INTERPRETATION:** M1's material performance objective is satisfied by the validated candidate: a measured APU/audio bottleneck was reduced enough for the representative hardware workload to reach native frame budget under Road-valid settings.
+
+**ENGINEERING CLOSURE still required before declaring M1 closed/integrated:** complete the bounded edge proof above and integrate the clean candidate into `master` through normal validation.
+
+A second hardware workload is **not** required retroactively to close M1. Broader workload coverage belongs to M2 / Gate B.
+
+**Gate B remains OPEN.** The current SRAM does not prove sustained presentation cadence over a base corpus, AI underrun behavior, long-run A/V drift, PCM equivalence, or broad base-system compatibility.
+
+### Direction after M1 closure
+
+Do not resume Gothicvania FPS optimization or automatically return to `apu_read8`/`apu_write8` optimization.
+
+After the bounded edge proof and integration:
+- define a small base-system corpus with distinct CPU / PPU-HD-MA-Mode7 / audio characteristics;
+- use emulator labs to filter correctness/progression;
+- take the corpus to real N64 in one milestone batch;
+- choose the next optimization or accuracy recovery from the **first demonstrated gate blocker**, not from subsystem sample share alone.
+
+No evidence currently justifies cartridge assistance, a clean-sheet second emulator, or an immediate 65C816 dynarec.

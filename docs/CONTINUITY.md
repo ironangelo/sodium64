@@ -2194,3 +2194,41 @@ Expected totals including the existing 4-cycle BRA loop:
 - MOV dp,dp: 9.
 
 Falsifiers: any shared-generator control overcharges, total `s3` differs, destination/data semantics differ, or new real-read path clobbers state.
+
+
+## SPC700 operand-form timing proof in progress — checkpoint 2026-09-18
+
+Exact diagnostic SHA: **`1dc544fa64a0d0fd9984bc94c492d0306766bf7a`**, one commit after validated bit-family authority `df5fd66c...`.
+
+Direct compare `df5fd66c... -> 1dc544fa...` is exactly:
+- `scripts/apu_cycle_proof.py` +32/-0;
+- `src/apu_address.S` +4/-0;
+- `src/apu_alu.S` +4/-0;
+- `src/apu_emitter.S` +1/-1;
+- `src/apu_transfer.S` +17/-0.
+
+Controlled core rules:
+- `apu_cmpm`: +1 trailing internal idle for memory-form CMP;
+- `apu_bxy`: +1 dummy-PC timing cycle for `(X),(Y)` forms;
+- opcode **0x8F MOV dp,#imm** dispatches to dedicated `apu_movmi`, which performs a real destination `apu_read8` before `apu_write8`; opcode 0xFA remains on generic `apu_movm`.
+
+Directed cases and expected totals including the validated 4-cycle BRA loop:
+- CMP dp,dp = 10;
+- CMP dp,#imm = 9;
+- CMP (X),(Y) = 9;
+- OR (X),(Y) = 9;
+- MOV dp,#imm = 9;
+- MOV dp,dp no-change control = 9.
+
+Exact workflows:
+- **APU Cycle And Span Proof `35313083578`** — IN PROGRESS at checkpoint.
+- **Build and Validate `35313083584`** — IN PROGRESS at checkpoint.
+
+Acceptance:
+1. previous complete regression matrix remains green;
+2. three CMP cases match total timing and C/N/Z semantics;
+3. OR `(X),(Y)` proves the shared `apu_bxy` +1 without overcharging a modifying sibling;
+4. MOV dp,#imm gains exactly one real read and writes the immediate correctly;
+5. MOV dp,dp remains exact and unchanged.
+
+Falsifier: any total/static debit mismatch, shared-handler control overcharge, data/flags mismatch, or state clobber from the added real read.

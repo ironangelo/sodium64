@@ -230,6 +230,85 @@ jobs:
             echo "disabled=nothing"
           } | tee srs-benchmark-provenance.txt
 
+      - name: Resolve SRS guest progression symbols without changing ROM bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$SRS_ROOT"
+          main="$root/game/src/_main.asm"
+          before_sha="$(sha256sum "$root/game/bin/space-rescue-squad.sfc" | awk '{print $1}')"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          p = Path(os.environ["SRS_ROOT"]) / "game/src/_main.asm"
+          text = p.read_text()
+          probe = r'''
+          // SODIUM64 GATE-B COMPILE-TIME SYMBOL PROBE.
+          // These print directives emit no guest instructions/data.
+          print "SODIUM64_SRS_ROOM_ID_ADDR="
+          print_hex(6, GameState.roomId)
+          print "\n"
+          print "SODIUM64_SRS_PLAYER_X_ADDR="
+          print_hex(6, Entity.Player.xPos.px)
+          print "\n"
+          print "SODIUM64_SRS_PLAYER_Y_ADDR="
+          print_hex(6, Entity.Player.yPos.px)
+          print "\n"
+          print "SODIUM64_SRS_CAMERA_X_ADDR="
+          print_hex(6, Camera.xPos)
+          print "\n"
+          print "SODIUM64_SRS_CAMERA_Y_ADDR="
+          print_hex(6, Camera.yPos)
+          print "\n"
+          print "SODIUM64_SRS_HEALTH_ADDR="
+          print_hex(6, Project.GameState.Words.playerHealth)
+          print "\n"
+          print "SODIUM64_SRS_ROOM_A1A_ID="
+          print_hex(2, Project.RoomList.a1a_entrance)
+          print "\n"
+          print "SODIUM64_SRS_ROOM_A1B_ID="
+          print_hex(2, Project.RoomList.a1b_stairway)
+          print "\n"
+          print "SODIUM64_SRS_MAP_LEFT="
+          print_hex(4, MetaTiles.map.LEFT)
+          print "\n"
+          print "SODIUM64_SRS_MAP_TOP="
+          print_hex(4, MetaTiles.map.TOP)
+          print "\n"
+          '''
+          p.write_text(text + probe)
+          PY
+
+          # Rebuild with compile-time prints only and prove the ROM bytes are
+          # unchanged from the already-hashed deterministic benchmark.
+          touch "$main"
+          make -C "$root/game" bin/space-rescue-squad.sfc 2>&1 | tee srs-symbol-probe.log
+          after_sha="$(sha256sum "$root/game/bin/space-rescue-squad.sfc" | awk '{print $1}')"
+          test "$after_sha" = "$before_sha"
+          test "$after_sha" = "7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e"
+
+          probe() {
+            key="$1"
+            value="$(sed -n "s/^SODIUM64_SRS_${key}=//p" srs-symbol-probe.log | tail -n1)"
+            test -n "$value"
+            printf '%s' "$value"
+          }
+
+          {
+            echo "SRS_GUEST_ROOM_ID=$(probe ROOM_ID_ADDR)"
+            echo "SRS_GUEST_PLAYER_X=$(probe PLAYER_X_ADDR)"
+            echo "SRS_GUEST_PLAYER_Y=$(probe PLAYER_Y_ADDR)"
+            echo "SRS_GUEST_CAMERA_X=$(probe CAMERA_X_ADDR)"
+            echo "SRS_GUEST_CAMERA_Y=$(probe CAMERA_Y_ADDR)"
+            echo "SRS_GUEST_HEALTH=$(probe HEALTH_ADDR)"
+            echo "SRS_ROOM_A1A_ID=$(probe ROOM_A1A_ID)"
+            echo "SRS_ROOM_A1B_ID=$(probe ROOM_A1B_ID)"
+            echo "SRS_MAP_LEFT=$(probe MAP_LEFT)"
+            echo "SRS_MAP_TOP=$(probe MAP_TOP)"
+          } | tee -a "$GITHUB_ENV"
+
       - name: Setup Node.js for Sodium64 profile build
         uses: actions/setup-node@v4
         with:
@@ -339,6 +418,7 @@ jobs:
           skipped_set=$(symbol skipped_set)
           precision_set=$(symbol precision_set)
           audio_set=$(symbol audio_set)
+          wram=$(symbol wram)
           vi_history_count=$(symbol profile_vi_history_count)
           vi_history=$(symbol profile_vi_history)
 
@@ -346,7 +426,7 @@ jobs:
             "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
             "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer" \
             "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
-            "$skipped_set" "$precision_set" "$audio_set" \
+            "$skipped_set" "$precision_set" "$audio_set" "$wram" \
             "$vi_history_count" "$vi_history"; do
             test -n "$value"
           done
@@ -355,6 +435,26 @@ jobs:
           jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
           test "$size" -gt 16384
           test "$jit_lookup_size" -eq 262144
+
+          guest_wram_to_host() {
+            guest_hex="$1"
+            guest=$((0x$guest_hex))
+            bank=$(((guest >> 16) & 0xff))
+            offset=$((guest & 0xffff))
+            case "$bank" in
+              126) ;;
+              127) offset=$((offset + 0x10000)) ;;
+              *) echo "guest address 0x$guest_hex is not WRAM 7E/7F" >&2; return 1 ;;
+            esac
+            printf '%08x' "$((0x$wram + offset))"
+          }
+
+          srs_room_id_host=$(guest_wram_to_host "$SRS_GUEST_ROOM_ID")
+          srs_player_x_host=$(guest_wram_to_host "$SRS_GUEST_PLAYER_X")
+          srs_player_y_host=$(guest_wram_to_host "$SRS_GUEST_PLAYER_Y")
+          srs_camera_x_host=$(guest_wram_to_host "$SRS_GUEST_CAMERA_X")
+          srs_camera_y_host=$(guest_wram_to_host "$SRS_GUEST_CAMERA_Y")
+          srs_health_host=$(guest_wram_to_host "$SRS_GUEST_HEALTH")
 
           buffer_hex=$(printf '%08x' "$((0x$buffer))")
           rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
@@ -381,6 +481,12 @@ jobs:
             echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
             echo "ARES_PRECISION_SET_ADDR=$precision_set"
             echo "ARES_AUDIO_SET_ADDR=$audio_set"
+            echo "ARES_SRS_ROOM_ID_ADDR=$srs_room_id_host"
+            echo "ARES_SRS_PLAYER_X_ADDR=$srs_player_x_host"
+            echo "ARES_SRS_PLAYER_Y_ADDR=$srs_player_y_host"
+            echo "ARES_SRS_CAMERA_X_ADDR=$srs_camera_x_host"
+            echo "ARES_SRS_CAMERA_Y_ADDR=$srs_camera_y_host"
+            echo "ARES_SRS_HEALTH_ADDR=$srs_health_host"
             echo "ARES_VI_HISTORY_COUNT_ADDR=$vi_history_count"
             echo "ARES_VI_HISTORY_ADDR=$vi_history"
             for offset in 0 8 16 24 32 40 48 56; do
@@ -460,6 +566,12 @@ jobs:
               --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
               --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
               --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+              --observe "srs_room_id:0x$ARES_SRS_ROOM_ID_ADDR:1" \
+              --observe "srs_player_x:0x$ARES_SRS_PLAYER_X_ADDR:2" \
+              --observe "srs_player_y:0x$ARES_SRS_PLAYER_Y_ADDR:2" \
+              --observe "srs_camera_x:0x$ARES_SRS_CAMERA_X_ADDR:2" \
+              --observe "srs_camera_y:0x$ARES_SRS_CAMERA_Y_ADDR:2" \
+              --observe "srs_health:0x$ARES_SRS_HEALTH_ADDR:2" \
               --observe "vi_history_count:0x$ARES_VI_HISTORY_COUNT_ADDR:1" \
               --observe "vi_history_0:0x$ARES_VI_HISTORY_0_ADDR:8" \
               --observe "vi_history_1:0x$ARES_VI_HISTORY_1_ADDR:8" \
@@ -515,6 +627,20 @@ jobs:
               for i in range(8)
           )
           windows = list(raw[:count])
+
+          def le16(key):
+              raw_value = int(obs[key]).to_bytes(2, "big")
+              return int.from_bytes(raw_value, "little")
+
+          guest_state = {
+              "room_id": int(obs["srs_room_id"]),
+              "player_x": le16("srs_player_x"),
+              "player_y": le16("srs_player_y"),
+              "camera_x": le16("srs_camera_x"),
+              "camera_y": le16("srs_camera_y"),
+              "health": le16("srs_health"),
+          }
+
           payload = {
               "repeat": int(repeat),
               "history_count": count,
@@ -522,6 +648,7 @@ jobs:
               "min": min(windows),
               "max": max(windows),
               "mean": sum(windows) / len(windows),
+              "guest_state_end": guest_state,
           }
           Path(f"profiles/srs-vi-history-r{repeat}.json").write_text(
               json.dumps(payload, indent=2) + "\n"
@@ -558,6 +685,19 @@ jobs:
           steady = [p[1:] for p in prefixes]
           steady_equal = all(p == steady[0] for p in steady[1:])
 
+          a1a = int(os.environ["SRS_ROOM_A1A_ID"], 16)
+          a1b = int(os.environ["SRS_ROOM_A1B_ID"], 16)
+          map_left = int(os.environ["SRS_MAP_LEFT"], 16)
+          initial_x = map_left + 56
+
+          states = [r["guest_state_end"] for r in runs]
+          progressed = [
+              (st["room_id"] != a1a) or (st["player_x"] >= initial_x + 64)
+              for st in states
+          ]
+          alive = [st["health"] > 0 for st in states]
+          entered_a1b = [st["room_id"] == a1b for st in states]
+
           payload = {
               "counts": [len(s) for s in seqs],
               "sequences": seqs,
@@ -565,6 +705,11 @@ jobs:
               "common_prefix_equal": exact_common_prefix,
               "steady_common_prefix_equal": steady_equal,
               "steady_common_sequence": steady[0],
+              "guest_state_end": states,
+              "progressed_from_a1a": progressed,
+              "alive_at_end": alive,
+              "entered_a1b_at_end": entered_a1b,
+              "initial_a1a_player_x": initial_x,
           }
           Path("profiles/srs-history-repeatability.json").write_text(
               json.dumps(payload, indent=2) + "\n"
@@ -572,7 +717,13 @@ jobs:
 
           lines = ["# SRS internally aligned repeatability", ""]
           for i, seq in enumerate(seqs, 1):
+              st = states[i - 1]
               lines.append(f"- r{i} ({len(seq)} windows): " + ", ".join(f"{v}/60" for v in seq))
+              lines.append(
+                  f"  - end state: room={st['room_id']}, player=({st['player_x']},{st['player_y']}), "
+                  f"camera=({st['camera_x']},{st['camera_y']}), health={st['health']}, "
+                  f"progressed={progressed[i - 1]}"
+              )
           lines += [
               "",
               f"- common windows compared: {common}",
@@ -583,6 +734,9 @@ jobs:
           ]
           Path("profiles/srs-history-repeatability.md").write_text("\n".join(lines))
           print(json.dumps(payload, indent=2))
+
+          assert all(progressed), f"guest progression not demonstrated in all repeats: {states}"
+          assert all(alive), f"player not alive at end of all repeats: {states}"
           PY
 
           python3 scripts/profile_matrix.py \
@@ -615,4 +769,5 @@ jobs:
             srs-provenance.txt
             srs-benchmark.patch
             srs-benchmark-provenance.txt
+            srs-symbol-probe.log
             profiles/

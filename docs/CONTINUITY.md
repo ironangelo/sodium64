@@ -3497,3 +3497,41 @@ Falsifiers:
 - build/runtime regression;
 - cycle proof regression;
 - throughput near one-op indicating the temporal cap destroys the multi-op benefit.
+
+
+## Cycle-budget implementation v1 — SUPERSEDED before acceptance 2026-09-18
+
+Source-contract audit found a real compiler-helper clobber regression in first cycle-budget implementation `a4b8f2d7...`: its new bookkeeping used **`t2`** inside `jit_read8` / cycle helpers even though those helpers historically clobbered only their existing temporaries.
+
+Concrete proof: `apu_bbc1` and `apu_bbs1` compute the tested-bit mask into `t2`, call `jit_read8`, then use `t2` to encode the generated ANDI. Therefore v1 can silently corrupt BBS/BBC compiled semantics. This is source-proven, not hypothetical.
+
+State:
+- `phase2/apu-cycle-budget-interleave@a4b8f2d7...` = **SUPERSEDED implementation** regardless of its eventual matched-run numbers;
+- `phase2/apu-cycle-budget-proof@1f7aa124...` = **SUPERSEDED proof implementation** for the same reason;
+- any v1 CI result may be retained only as diagnostic evidence about that exact flawed SHA, not as candidate correctness/performance authority.
+
+No clean branch was touched.
+
+## Guest-cycle-bounded multi-op JIT v2 — running 2026-09-18
+
+Corrected diagnostic candidate:
+**`phase2/apu-cycle-budget-interleave-v2@5b9f16c0127b9ec99e7bdc5d811a183e87065b86`**.
+Core commit before trigger-only workflow line: `709def0969c97e66c195b490deb480324e6e9a3f`.
+
+Corrected cycle-proof child:
+**`phase2/apu-cycle-budget-proof-v2@91f8f13a9a4cdd8ccc98da7452935e387664a8c0`**, based on immutable proof authority `e7cc3cf...`.
+
+The temporal-budget design is unchanged from v1. The only implementation correction is register discipline:
+- `jit_read8` bookkeeping reuses only historical clobbers `v0/t0/t1`; **t2 is preserved**;
+- `jit_charge_cycles` reuses only existing `t0/t1`;
+- `jit_emit_runtime_cycles` reuses only existing `t0/t1/t5`;
+- `emit_jal` remains within existing `t0/t1` clobbers.
+
+Direct v2 candidate diff from matched-lateness base `a8c56301...`: only `src/apu_emitter.S` +42/-9 plus one workflow trigger line.
+Direct v2 proof diff from `e7cc3cf...`: only `src/apu_emitter.S` +42/-9 plus one proof-workflow trigger line.
+
+Acceptance remains unchanged:
+1. exact Build/Validate + Mupen green;
+2. matched Gothicvania: `multi_due=0`, max <672 and throughput materially above one-op 49.4/60;
+3. full APU Cycle And Span Proof regression matrix green;
+4. only then consume the emitter change into clean timing foundation.

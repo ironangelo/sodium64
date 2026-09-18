@@ -1,0 +1,132 @@
+name: Gate B SRS Audition
+
+on:
+  push:
+    branches:
+      - phase3/gate-b-srs-audition
+    paths:
+      - '.github/workflows/gate-b-srs-audition.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-b-srs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-build-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    env:
+      SRS_REPO: https://github.com/undisbeliever/space-rescue-squad.git
+      SRS_SHA: e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865
+      BASS_SHA: 9db6088a378061afc7b82f50997a5b9a1d951175
+      UNTECH_EDITOR_SHA: 4c72dc69619c0c246aa7e6325b18b6fb3c219821
+      TAD_SHA: 17823e5a55893e8442917abadb4e84feb216e5ad
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Install pinned-source build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libgl1-mesa-dev \
+            libmsgsl-dev \
+            libsdl2-dev \
+            ninja-build \
+            python3
+
+      - name: Checkout exact Space Rescue Squad source and submodules
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/space-rescue-squad"
+          git clone --filter=blob:none "$SRS_REPO" "$root"
+          git -C "$root" checkout --detach "$SRS_SHA"
+          git -C "$root" submodule update --init --recursive
+
+          test "$(git -C "$root" rev-parse HEAD)" = "$SRS_SHA"
+          test "$(git -C "$root/bass-untech" rev-parse HEAD)" = "$BASS_SHA"
+          test "$(git -C "$root/untech-editor" rev-parse HEAD)" = "$UNTECH_EDITOR_SHA"
+          test "$(git -C "$root/terrific-audio-driver" rev-parse HEAD)" = "$TAD_SHA"
+
+          echo "SRS_ROOT=$root" >> "$GITHUB_ENV"
+
+      - name: Build exact upstream CLI toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$SRS_ROOT"
+
+          # bass-untech is built by the game Makefile when required.
+
+          cmake -S "$root/untech-editor" -B "$root/untech-editor/build" \
+            -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$root/untech-editor/build" --parallel "$(nproc)" --target \
+            untech-compiler \
+            untech-lz4c \
+            untech-png2snes \
+            untech-png2tileset \
+            untech-write-sfc-checksum
+
+          make -j"$(nproc)" -C "$root/terrific-audio-driver/wiz"
+          cargo build --quiet --release \
+            --manifest-path "$root/terrific-audio-driver/Cargo.toml" \
+            --package tad-compiler
+
+          test -x "$root/untech-editor/build/untech-compiler"
+          test -x "$root/untech-editor/build/untech-png2tileset"
+          test -x "$root/untech-editor/build/untech-write-sfc-checksum"
+          test -x "$root/terrific-audio-driver/target/release/tad-compiler"
+
+      - name: Build unmodified release game from pinned source
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$SRS_ROOT"
+
+          # Upstream commits both .aseprite sources and the generated PNG inputs.
+          # The release build only needs the committed PNGs; touching them after
+          # checkout prevents Make from needlessly requiring the proprietary
+          # Aseprite editor to regenerate byte-identical build inputs.
+          find "$root/game/resources" -type f -name '*.png' -exec touch {} +
+
+          make -C "$root/game" bin/space-rescue-squad.sfc
+
+          rom="$root/game/bin/space-rescue-squad.sfc"
+          test -s "$rom"
+          test "$(stat -c '%s' "$rom")" -gt 0
+
+          # Build products must not mutate tracked upstream source/assets.
+          git -C "$root" diff --check
+          test -z "$(git -C "$root" diff --name-only)"
+
+          sha256sum "$rom" | tee srs-rom.sha256
+          {
+            echo "upstream_repo=$SRS_REPO"
+            echo "upstream_sha=$SRS_SHA"
+            echo "bass_sha=$BASS_SHA"
+            echo "untech_editor_sha=$UNTECH_EDITOR_SHA"
+            echo "terrific_audio_driver_sha=$TAD_SHA"
+            echo "rom_size=$(stat -c '%s' "$rom")"
+            echo "rom_sha256=$(sha256sum "$rom" | awk '{print $1}')"
+          } | tee srs-provenance.txt
+
+      - name: Upload provenance only
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-srs-source-build-proof
+          retention-days: 14
+          path: |
+            srs-rom.sha256
+            srs-provenance.txt

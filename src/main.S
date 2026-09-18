@@ -20,6 +20,7 @@
 #include "defines.h"
 
 .globl framebuffer
+.globl fps_native
 .globl fps_emulate
 .globl fps_display
 .globl skip_native

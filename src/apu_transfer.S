@@ -30,6 +30,7 @@
 .globl apu_movy
 .globl apu_movwya
 .globl apu_movm
+.globl apu_movmi
 .globl apu_amov
 .globl apu_xmov
 .globl apu_ymov
@@ -48,6 +49,10 @@
 
 .align 5
 apu_movax: // MOV A,X
+    // SPC700 register transfer has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SA | FLAG_LA
@@ -60,6 +65,10 @@ apu_movax: // MOV A,X
 
 .align 5
 apu_movxa: // MOV X,A
+    // SPC700 register transfer has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SX | FLAG_LX
@@ -72,6 +81,10 @@ apu_movxa: // MOV X,A
 
 .align 5
 apu_movay: // MOV A,Y
+    // SPC700 register transfer has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SA | FLAG_LA
@@ -84,6 +97,10 @@ apu_movay: // MOV A,Y
 
 .align 5
 apu_movya: // MOV Y,A
+    // SPC700 register transfer has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SY | FLAG_LY
@@ -96,6 +113,10 @@ apu_movya: // MOV Y,A
 
 .align 5
 apu_movxs: // MOV X,SP
+    // SPC700 register transfer has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SX | FLAG_LX
@@ -108,6 +129,10 @@ apu_movxs: // MOV X,SP
 
 .align 5
 apu_movsx: // MOV SP,X
+    // SPC700 register transfer has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SS | FLAG_LS
@@ -152,6 +177,10 @@ apu_movy: // MOV Y,op
 
 .align 5
 apu_movwya: // MOVW YA,op
+    // MOVW YA,dp has one internal idle between the low and high reads.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     ori s1, s1, FLAG_SY | FLAG_SA | FLAG_LY | FLAG_LA
 
@@ -177,6 +206,22 @@ apu_movm: // MOV op
     jal emit_jal
     nop
     EMIT_OP OR(A1, ZERO, V0)
+    j finish_opcode
+    nop
+
+.align 5
+apu_movmi: // MOV dp,#imm
+    // The S-SMP dummy-reads the destination before writing the immediate.
+    // Preserve the immediate in A1 in the read helper's delay slot; apu_read8
+    // preserves A0/A1, so the following write targets the exact same address.
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP OR(A1, ZERO, V0)
+    la t0, apu_write8
+    jal emit_jal
+    nop
+    EMIT_OP OR(A1, ZERO, A1)
     j finish_opcode
     nop
 
@@ -245,6 +290,10 @@ apu_movway: // MOVW op,YA
 
 .align 5
 apu_pha: // PUSH A
+    // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS
@@ -264,6 +313,10 @@ apu_pha: // PUSH A
 
 .align 5
 apu_phx: // PUSH X
+    // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS
@@ -283,6 +336,10 @@ apu_phx: // PUSH X
 
 .align 5
 apu_phy: // PUSH Y
+    // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS
@@ -302,6 +359,10 @@ apu_phy: // PUSH Y
 
 .align 5
 apu_php: // PUSH PSW
+    // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS
@@ -323,6 +384,10 @@ apu_php: // PUSH PSW
 
 .align 5
 apu_ppa: // POP A
+    // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_SA | FLAG_LA
@@ -340,6 +405,10 @@ apu_ppa: // POP A
 
 .align 5
 apu_ppx: // POP X
+    // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_SX | FLAG_LX
@@ -357,6 +426,10 @@ apu_ppx: // POP X
 
 .align 5
 apu_ppy: // POP Y
+    // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_SY | FLAG_LY
@@ -374,6 +447,10 @@ apu_ppy: // POP Y
 
 .align 5
 apu_ppp: // POP PSW
+    // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_SF | FLAG_LF

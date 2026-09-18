@@ -4,6 +4,12 @@ PROJ_NAME := sodium64
 BUILD_DIR := build
 SRC_DIRS := src
 PROFILE ?= 0
+HW_PROFILE ?= 0
+
+# Real-N64 M0 profiling is a specialization of the statistical PROFILE build.
+ifeq ($(HW_PROFILE),1)
+PROFILE := 1
+endif
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
@@ -50,6 +56,9 @@ N64_ED64ROMCONFIGFLAGS = --savetype $(N64_ROM_SAVETYPE) --regionfree
 
 ifeq ($(PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_PROFILE=1
+endif
+ifeq ($(HW_PROFILE),1)
+N64_ASFLAGS += -DSODIUM64_HW_PROFILE=1
 endif
 
 COMMA := ,

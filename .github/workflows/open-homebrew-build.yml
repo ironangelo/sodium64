@@ -1,0 +1,372 @@
+name: Open Homebrew Workload Build
+
+on:
+  push:
+    branches:
+      - phase1/open-homebrew-workload
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-open-homebrew-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gothicvania-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    env:
+      GOTHICVANIA_REPO: https://github.com/donth77/snes-homebrew.git
+      GOTHICVANIA_SHA: 119496e6a2f1e53b7704712fef8cb81814f1698a
+      GOTHICVANIA_ASSET_SHA: 913ea78a3b35d3dfb62d7b76a33598b02107a2e7
+      PVSNESLIB_URL: https://github.com/alekmaul/pvsneslib/releases/download/4.5.0/pvsneslib_450_64b_linux.zip
+      PVSNESLIB_SHA256: b69ff32ada19895b7ebfe02a1e3c08a44c80bd9c8132de05f5c356f86264ce32
+      KENNEY_FONT_REPO: https://github.com/ereborstudios/kenney-fonts.git
+      KENNEY_FONT_SHA: 9d94d3b50c68036a740115c577598fa1a02723f0
+      KENNEY_PIXEL_BLOB: e6978d7d6f6a91ca8cdd5515e338110d9977fe69
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git make unzip python3-numpy python3-pil
+
+      - name: Install pinned PVSnesLib 4.5.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk_zip="$RUNNER_TEMP/pvsneslib.zip"
+          sdk_root="$RUNNER_TEMP/pvsneslib"
+          curl --fail --location --retry 3 "$PVSNESLIB_URL" -o "$sdk_zip"
+          echo "$PVSNESLIB_SHA256  $sdk_zip" | sha256sum --check
+          mkdir -p "$sdk_root"
+          unzip -q "$sdk_zip" -d "$sdk_root"
+
+          rules=$(find "$sdk_root" -type f -path '*/devkitsnes/snes_rules' -print -quit)
+          test -n "$rules"
+          pvsneslib_home=$(dirname "$(dirname "$rules")")
+          test -f "$pvsneslib_home/devkitsnes/snes_rules"
+          echo "PVSNESLIB_HOME=$pvsneslib_home" >> "$GITHUB_ENV"
+          echo "PVSnesLib home: $pvsneslib_home"
+
+      - name: Checkout pinned final Gothicvania source
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/snes-homebrew"
+          git clone --filter=blob:none "$GOTHICVANIA_REPO" "$root"
+          git -C "$root" checkout --detach "$GOTHICVANIA_SHA"
+          test "$(git -C "$root" rev-parse HEAD)" = "$GOTHICVANIA_SHA"
+          echo "GOTHICVANIA_ROOT=$root" >> "$GITHUB_ENV"
+
+      - name: Restore upstream source-art pack from history
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$GOTHICVANIA_ROOT"
+          historical_path="gothicvania/assets/gothicvania-cemetery-files"
+
+          # The final upstream commit intentionally removed this CC0 conversion-input
+          # pack and explicitly documents that it is recoverable from Git history.
+          # Restore it to the worktree only; do not alter the final commit's index.
+          git -C "$root" fetch --no-tags origin "$GOTHICVANIA_ASSET_SHA"
+          git -C "$root" restore --source="$GOTHICVANIA_ASSET_SHA" --worktree -- "$historical_path"
+
+          test -f "$root/$historical_path/Assets/Environment/background.png"
+          test -f "$root/$historical_path/Assets/Phaser Demo/assets/environment/bg-mountains.png"
+          test -f "$root/$historical_path/Assets/Phaser Demo/assets/sprites/title-screen.png"
+          test -f "$root/$historical_path/public-license.pdf"
+
+          # The recovered pack must be temporary/untracked relative to final source.
+          test -z "$(git -C "$root" diff --name-only)"
+          git -C "$root" status --porcelain --untracked-files=normal | grep -F "?? $historical_path/"
+
+      - name: Install pinned Kenney Pixel build font
+        shell: bash
+        run: |
+          set -euo pipefail
+          font_root="$RUNNER_TEMP/kenney-fonts"
+          git clone --filter=blob:none "$KENNEY_FONT_REPO" "$font_root"
+          git -C "$font_root" checkout --detach "$KENNEY_FONT_SHA"
+          test "$(git -C "$font_root" rev-parse HEAD)" = "$KENNEY_FONT_SHA"
+          test "$(git -C "$font_root" hash-object 'Kenney Pixel.ttf')" = "$KENNEY_PIXEL_BLOB"
+
+          # adapt_title.py names this exact path from the author's build host.
+          # Recreate the expected build input rather than modifying upstream code.
+          target="/Users/tomdonohue/Documents/gameassets/Kenney Game Assets All-in-1 3.5.0/Other/Fonts/Kenney Pixel.ttf"
+          sudo mkdir -p "$(dirname "$target")"
+          sudo cp "$font_root/Kenney Pixel.ttf" "$target"
+          sudo chmod 0644 "$target"
+          test -s "$target"
+
+      - name: Apply deterministic benchmark patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ['GOTHICVANIA_ROOT']) / 'gothicvania' / 'src'
+          main = root / 'main.c'
+          play = root / 'play.c'
+
+          main_text = main.read_text()
+          old_main = 'GameState st = ST_TITLE, prev = ST_TITLE;'
+          new_main = 'GameState st = ST_PLAY, prev = ST_TITLE;'
+          assert main_text.count(old_main) == 1, 'unexpected Gothicvania initial-state source'
+          main.write_text(main_text.replace(old_main, new_main, 1))
+
+          play_text = play.read_text()
+          old_play = 'u16 pad = padsCurrent(0);'
+          new_play = 'u16 pad = KEY_RIGHT; /* Sodium64 deterministic benchmark input */'
+          assert play_text.count(old_play) == 1, 'unexpected Gothicvania gameplay input source'
+          play_text = play_text.replace(old_play, new_play, 1)
+
+          # The first real-N64 capture proved the transport/profile path but the hero
+          # died during the five measured windows. Preserve enemy/spike collision,
+          # hurt knockback and SFX while making death unreachable in this short M0 run.
+          old_health = 'u8  health = PLAYER_HP;'
+          new_health = 'u8  health = 255; /* Sodium64 benchmark: survive full M0 measurement */'
+          assert play_text.count(old_health) == 1, 'unexpected Gothicvania health source'
+          play_text = play_text.replace(old_health, new_health, 1)
+          play.write_text(play_text)
+          PY
+
+          git -C "$GOTHICVANIA_ROOT" diff --check
+          git -C "$GOTHICVANIA_ROOT" diff -- gothicvania/src/main.c gothicvania/src/play.c | tee gothicvania-benchmark.patch
+
+          changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
+          test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
+
+      - name: Verify pinned frozen Gothicvania outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          game="$GOTHICVANIA_ROOT/gothicvania"
+
+          # Final upstream explicitly declares these committed conversion outputs as
+          # source-of-truth. Git does not preserve historical mtimes, so the build
+          # marks only those high-level outputs as old-files. Derived leaf products
+          # (.pic/.pal/split .bin/stream outputs) remain rebuildable so their recipes
+          # can create every required companion file.
+          for frozen in \
+            res/effectssfx.it \
+            res/title.it \
+            res/baroque.it \
+            res/level/.stamp \
+            res/level/sky_coldata.bin \
+            res/moon.png \
+            res/hero.png \
+            res/skeleton.png \
+            res/gato.png \
+            res/ghost.png \
+            src/hero_anim.h \
+            src/skeleton_anim.h \
+            src/gato_anim.h \
+            src/ghost_anim.h \
+            src/sky_params.h; do
+            test -f "$game/$frozen"
+          done
+
+          changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
+          test "$changed" = $'gothicvania/src/main.c\ngothicvania/src/play.c'
+
+      - name: Build Gothicvania from source
+        shell: bash
+        run: |
+          set -euo pipefail
+          game="$GOTHICVANIA_ROOT/gothicvania"
+
+          # Upstream documents plain `make`; do not use -j because data.asm has
+          # hand-written dependencies. `-o` expresses upstream's frozen-source
+          # policy explicitly instead of relying on checkout mtimes. Low-level
+          # generated products still rebuild exactly as they did in validated runs.
+          make -C "$game" \
+            -o res/effectssfx.it \
+            -o res/title.it \
+            -o res/baroque.it \
+            -o res/level/.stamp \
+            -o res/level/sky_coldata.bin \
+            -o res/moon.png \
+            -o res/hero.png \
+            -o res/skeleton.png \
+            -o res/gato.png \
+            -o res/ghost.png \
+            -o src/hero_anim.h \
+            -o src/skeleton_anim.h \
+            -o src/gato_anim.h \
+            -o src/ghost_anim.h \
+            -o src/sky_params.h
+
+          rom="$game/gothicvania.sfc"
+          test -s "$rom"
+          size=$(stat -c '%s' "$rom")
+          test "$size" -le $((512 * 1024))
+
+          # No tracked upstream file may change except the deliberate benchmark
+          # controls in main.c/play.c. If that invariant fails, print the offender.
+          changed=$(git -C "$GOTHICVANIA_ROOT" diff --name-only)
+          expected=$'gothicvania/src/main.c\ngothicvania/src/play.c'
+          if [ "$changed" != "$expected" ]; then
+            echo "Unexpected tracked changes after Gothicvania build:"
+            printf '%s\n' "$changed"
+            git -C "$GOTHICVANIA_ROOT" diff --stat
+            exit 1
+          fi
+
+          sha256sum "$rom" | tee gothicvania-rom.sha256
+          sha256sum gothicvania-benchmark.patch | tee gothicvania-patch.sha256
+          printf 'upstream_repo=%s\nupstream_sha=%s\nsource_pack_sha=%s\npvsneslib_version=4.5.0\npvsneslib_sha256=%s\nkenney_font_repo=%s\nkenney_font_sha=%s\nkenney_pixel_blob=%s\nrom_size=%s\n' \
+            "$GOTHICVANIA_REPO" "$GOTHICVANIA_SHA" "$GOTHICVANIA_ASSET_SHA" \
+            "$PVSNESLIB_SHA256" "$KENNEY_FONT_REPO" "$KENNEY_FONT_SHA" \
+            "$KENNEY_PIXEL_BLOB" "$size" \
+            | tee gothicvania-provenance.txt
+          cp "$rom" gothicvania-benchmark.sfc
+
+      - name: Upload deterministic Gothicvania workload
+        uses: actions/upload-artifact@v4
+        with:
+          name: gothicvania-benchmark-source-build
+          retention-days: 14
+          path: |
+            gothicvania-benchmark.sfc
+            gothicvania-benchmark.patch
+            gothicvania-rom.sha256
+            gothicvania-patch.sha256
+            gothicvania-provenance.txt
+
+  hw-profile-package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs:
+      - gothicvania-build
+    env:
+      GOTHICVANIA_ROM_SHA256: 5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Run profiling host tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
+      - name: Compile real-N64 M0 profiler build
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+          test -s build/sodium64.map
+
+          nm -n build/sodium64.elf | grep -q ' hw_profile_header$'
+          nm -n build/sodium64.elf | grep -q ' profile_sample_buffer_end$'
+          nm -n build/sodium64.elf | grep -q ' hw_profile_phase$'
+
+      - name: Download exact Gothicvania workload from this run
+        uses: actions/download-artifact@v4
+        with:
+          name: gothicvania-benchmark-source-build
+          path: workload
+
+      - name: Verify workload and build self-contained hardware ROM
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$GOTHICVANIA_ROM_SHA256  workload/gothicvania-benchmark.sfc" | sha256sum --check
+
+          wrap="$RUNNER_TEMP/sodium64-m0-wrap"
+          rm -rf "$wrap"
+          mkdir -p "$wrap" package
+          cp sodium64.z64 "$wrap/sodium64.z64"
+          cp rom-converter.py "$wrap/rom-converter.py"
+          cp workload/gothicvania-benchmark.sfc "$wrap/gothicvania-m0.smc"
+          (
+            cd "$wrap"
+            python3 rom-converter.py </dev/null
+          )
+          test -s "$wrap/out/gothicvania-m0.z64"
+          cp "$wrap/out/gothicvania-m0.z64" package/sodium64-m0-gothicvania.z64
+
+          # Verify that the exact validated 512 KiB SNES payload survived wrapping.
+          dd if=package/sodium64-m0-gothicvania.z64 of="$RUNNER_TEMP/embedded-gothicvania.sfc" \
+            bs=1 skip=$((0x104000)) count=$((512 * 1024)) status=none
+          echo "$GOTHICVANIA_ROM_SHA256  $RUNNER_TEMP/embedded-gothicvania.sfc" | sha256sum --check
+          rm "$RUNNER_TEMP/embedded-gothicvania.sfc"
+
+          cp build/sodium64.elf package/sodium64-m0-gothicvania.elf
+          cp build/sodium64.map package/sodium64-m0-gothicvania.map
+          cp scripts/hw_profile_report.py package/
+          cp scripts/profile_report.py package/
+          cp workload/gothicvania-provenance.txt package/
+          cp workload/gothicvania-benchmark.patch package/
+          cp workload/gothicvania-rom.sha256 package/
+
+          emulator_sha=$(sha256sum sodium64.z64 | awk '{print $1}')
+          wrapped_sha=$(sha256sum package/sodium64-m0-gothicvania.z64 | awk '{print $1}')
+          cat > package/MANIFEST.txt <<EOF
+          Sodium64 real-N64 M0 Gothicvania package
+          sodium64_git_sha=$GITHUB_SHA
+          mode=PROFILE=1 + HW_PROFILE=1
+          warmup_seconds=2
+          measured_seconds=5
+          frameskip=0
+          apu_clock=21
+          audio_setting=4
+          precision_setting=8
+          guest_rom_sha256=$GOTHICVANIA_ROM_SHA256
+          emulator_rom_sha256=$emulator_sha
+          wrapped_rom_sha256=$wrapped_sha
+          capture_transport=N64 standard PI SRAM at 0x08000000 (no SummerCart runtime registers)
+          completion_signal=solid red screen after SRAM DMA finishes
+          EOF
+
+          cat > package/HARDWARE_TEST.txt <<'EOF'
+          Sodium64 M0 real-N64 milestone — Gothicvania
+
+          1. Launch sodium64-m0-gothicvania.z64 directly on the real N64/SummerCart64.
+          2. Do not press the controller or open Sodium64 settings during the measurement.
+          3. The benchmark auto-enters gameplay and holds SNES Right itself.
+          4. Let it run. It performs 2 seconds warmup + 5 complete 60-VI measurement windows.
+          5. DONE is a SOLID RED SCREEN. This appears only after the statistical snapshot and
+             validity header have been DMA-written through the standard N64 SRAM path.
+          6. Once red appears, wait about 2 seconds, then use the normal reset/return-to-cart-menu
+             flow so the flashcart has an opportunity to persist SRAM. Do not power off first.
+          7. Retrieve the SRAM/save file associated with sodium64-m0-gothicvania.z64 and provide it
+             together with a note on whether gameplay/audio looked and sounded sane before red.
+
+          Do not use the old PROFILE_USB/SC64-register telemetry path; that path previously froze
+          this hardware setup and is deliberately absent from this package.
+          EOF
+
+          # The uploaded artifact strips the `package/` directory itself, so record
+          # checksums exactly as a user will see them after extraction: relative to
+          # the artifact root, with no hidden staging directories.
+          test -z "$(find package -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          (
+            cd package
+            find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -printf '%f\0' \
+              | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+            cat SHA256SUMS.txt
+            sha256sum --check SHA256SUMS.txt
+          )
+
+      - name: Upload real-N64 M0 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-real-n64-m0-gothicvania
+          retention-days: 14
+          path: package/

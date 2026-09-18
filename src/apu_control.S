@@ -65,14 +65,16 @@ apu_bpl: // BPL dest
 
     // Emit code to branch if the N flag is clear
     EMIT_OP ANDI(T0, S1, 0x80) // N
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BNE(T0, ZERO, 3)
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, v0
+    or t0, t0, a0 // delay slot: fallthrough PC on both paths
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, a0
+    or t0, t0, v0 // taken target
 
 .align 5
 apu_bmi: // BMI dest
@@ -90,14 +92,16 @@ apu_bmi: // BMI dest
 
     // Emit code to branch if the N flag is set
     EMIT_OP ANDI(T0, S1, 0x80) // N
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BEQ(T0, ZERO, 3)
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, a0
+    or t0, t0, a0 // delay slot: fallthrough PC on both paths
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, v0
+    or t0, t0, v0 // taken target
 
 .align 5
 apu_bvc: // BVC dest
@@ -114,14 +118,16 @@ apu_bvc: // BVC dest
 
     // Emit code to branch if the V flag is clear
     EMIT_OP ANDI(T0, S1, 0x40) // V
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BNE(T0, ZERO, 3)
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, v0
+    or t0, t0, a0 // delay slot: fallthrough PC on both paths
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, a0
+    or t0, t0, v0 // taken target
 
 .align 5
 apu_bvs: // BVS dest
@@ -138,14 +144,16 @@ apu_bvs: // BVS dest
 
     // Emit code to branch if the V flag is set
     EMIT_OP ANDI(T0, S1, 0x40) // V
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BEQ(T0, ZERO, 3)
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, a0
+    or t0, t0, a0 // delay slot: fallthrough PC on both paths
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, v0
+    or t0, t0, v0 // taken target
 
 .align 5
 apu_bcc: // BCC dest
@@ -162,14 +170,16 @@ apu_bcc: // BCC dest
 
     // Emit code to branch if the C flag is clear
     EMIT_OP ANDI(T0, S1, 0x1) // C
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BNE(T0, ZERO, 3)
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, v0
+    or t0, t0, a0 // delay slot: fallthrough PC on both paths
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, a0
+    or t0, t0, v0 // taken target
 
 .align 5
 apu_bcs: // BCS dest
@@ -186,14 +196,16 @@ apu_bcs: // BCS dest
 
     // Emit code to branch if the C flag is set
     EMIT_OP ANDI(T0, S1, 0x1) // C
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BEQ(T0, ZERO, 3)
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, a0
+    or t0, t0, a0 // delay slot: fallthrough PC on both paths
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, v0
+    or t0, t0, v0 // taken target
 
 .align 5
 apu_bne: // BNE dest
@@ -211,14 +223,16 @@ apu_bne: // BNE dest
 
     // Emit code to branch if the Z flag is clear
     EMIT_OP ANDI(T0, S1, 0x2) // Z
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BNE(T0, ZERO, 3)
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, v0
+    or t0, t0, a0 // delay slot: fallthrough PC on both paths
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, a0
+    or t0, t0, v0 // taken target
 
 .align 5
 apu_beq: // BEQ dest
@@ -236,17 +250,23 @@ apu_beq: // BEQ dest
 
     // Emit code to branch if the Z flag is set
     EMIT_OP ANDI(T0, S1, 0x2) // Z
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BEQ(T0, ZERO, 3)
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, a0
+    or t0, t0, a0 // delay slot: fallthrough PC on both paths
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, v0
+    or t0, t0, v0 // taken target
 
 .align 5
 apu_bbc1: // BBC op.b,dest
+    // BranchBit has one fixed idle cycle before the displacement fetch.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Create a mask based on the opcode number
     srl t0, v1, 8
     li t1, 1
@@ -259,21 +279,27 @@ apu_bbc1: // BBC op.b,dest
     sra v0, v0, 24
     add v0, v0, a0
 
-    // Emit code to branch if a bit in a memory value is clear
+    // Emit code to branch if a bit in a memory value is clear.
     li t0, ANDI(T0, V0, 0)
     jal emit_op
     or t0, t0, t2
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BNE(T0, ZERO, 3) // nonzero => BBC not taken
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
-    or t0, t0, v0
+    or t0, t0, a0
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
-    or t0, t0, a0
+    or t0, t0, v0
 
 .align 5
 apu_bbs1: // BBS op.b,dest
+    // BranchBit has one fixed idle cycle before the displacement fetch.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Create a mask based on the opcode number
     srl t0, v1, 8
     li t1, 1
@@ -286,14 +312,16 @@ apu_bbs1: // BBS op.b,dest
     sra v0, v0, 24
     add v0, v0, a0
 
-    // Emit code to branch if a bit in a memory value is set
+    // Emit code to branch if a bit in a memory value is set.
     li t0, ANDI(T0, V0, 0)
     jal emit_op
     or t0, t0, t2
-    EMIT_OP BEQ(T0, ZERO, 2)
+    EMIT_OP BEQ(T0, ZERO, 3) // zero => BBS not taken
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
     or t0, t0, a0
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -301,6 +329,10 @@ apu_bbs1: // BBS op.b,dest
 
 .align 5
 apu_cbne: // CBNE op,dest
+    // CBNE has one fixed idle cycle beyond its addressing-mode work.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Sign-extend the offset value and add it to the PC
     jal jit_read8
     nop
@@ -312,12 +344,14 @@ apu_cbne: // CBNE op,dest
     jal load_accum
     ori s1, s1, FLAG_PC
 
-    // Emit code to branch if the accumulator doesn't equal a memory value
+    // Emit code to branch if the accumulator doesn't equal a memory value.
     EMIT_OP ANDI(T7, T7, 0xFF)
-    EMIT_OP BEQ(T7, V0, 2)
+    EMIT_OP BEQ(T7, V0, 3) // equal => not taken
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
     or t0, t0, a0
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -325,6 +359,10 @@ apu_cbne: // CBNE op,dest
 
 .align 5
 apu_dbnzy: // DBNZ Y,dest
+    // DBNZ Y has a dummy PC read and one fixed idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Sign-extend the offset value and add it to the PC
     jal jit_read8
     nop
@@ -336,13 +374,15 @@ apu_dbnzy: // DBNZ Y,dest
     jal load_reg_y
     ori s1, s1, FLAG_SY | FLAG_PC
 
-    // Emit code to decrement register Y and branch if it's not zero
+    // Emit code to decrement register Y and branch if it's not zero.
     EMIT_OP ANDI(T8, T8, 0xFF)
     EMIT_OP ADDI(T8, T8, -1)
-    EMIT_OP BEQ(T8, ZERO, 2)
+    EMIT_OP BEQ(T8, ZERO, 3) // zero => not taken
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
     or t0, t0, a0
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -357,15 +397,17 @@ apu_dbnzm: // DBNZ op,dest
     sra v0, v0, 24
     add v0, v0, a0
 
-    // Emit code to decrement a memory value and branch if it's not zero
+    // Emit code to decrement a memory value and branch if it's not zero.
     la t0, apu_write8
     jal emit_jal
     nop
     EMIT_OP ADDI(A1, V0, -1)
-    EMIT_OP BEQ(A1, ZERO, 2)
+    EMIT_OP BEQ(A1, ZERO, 3) // zero => not taken
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
     or t0, t0, a0
+    jal jit_emit_runtime_cycles
+    li t0, 2
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -373,6 +415,10 @@ apu_dbnzm: // DBNZ op,dest
 
 .align 5
 apu_bra: // BRA dest
+    // BRA always spends two internal cycles after fetching displacement.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Sign-extend the offset value and add it to the PC
     jal jit_read8
     ori s1, s1, FLAG_PC // Update the JIT register state
@@ -408,6 +454,10 @@ apu_jmpm: // JMP [op]
 
 .align 5
 apu_call: // CALL op
+    // CALL has one idle before stack pushes and two idles after them.
+    jal jit_charge_cycles
+    li t0, 3
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_PC
@@ -437,6 +487,10 @@ apu_call: // CALL op
 
 .align 5
 apu_tcall1: // TCALL n
+    // TCALL has a dummy PC read plus two internal idle cycles.
+    jal jit_charge_cycles
+    li t0, 3
+
     // Create an address based on the opcode number
     srl t0, v1, 7
     sll t0, t0, 1
@@ -486,14 +540,19 @@ apu_tcall1: // TCALL n
 
 .align 5
 apu_pcall: // PCALL uu
-    // Create an address based on the parameter
+    // PCALL has one pre-push and one post-push idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
+    // Fetch the high-page parameter. Preserve it in v0 across load_stack;
+    // full_address uses t2 as scratch while emitting the stack-pointer load.
     jal jit_read8
     nop
-    ori t2, v0, 0xFF00
 
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_PC
+    ori t2, v0, 0xFF00
 
     // Emit code to jump to an address in the highest page of RAM
     li t0, ORI(S0, ZERO, 0)
@@ -524,6 +583,10 @@ apu_pcall: // PCALL uu
 
 .align 5
 apu_ret: // RET
+    // RET has a dummy PC read plus one internal idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_PC
@@ -548,6 +611,10 @@ apu_ret: // RET
 
 .align 5
 apu_ret1: // RET1
+    // RET1 has a dummy PC read plus one internal idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_SF | FLAG_LF | FLAG_PC
@@ -581,6 +648,10 @@ apu_ret1: // RET1
 
 .align 5
 apu_brk: // BRK
+    // BRK has a dummy PC read plus one internal idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_SF | FLAG_PC
@@ -635,6 +706,10 @@ apu_brk: // BRK
 
 .align 5
 apu_clrp: // CLRP
+    // SPC700 P-flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -647,6 +722,10 @@ apu_clrp: // CLRP
 
 .align 5
 apu_setp: // SETP
+    // SPC700 P-flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -659,6 +738,10 @@ apu_setp: // SETP
 
 .align 5
 apu_di: // DI
+    // SPC700 I-flag operation has one dummy PC read plus one idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -671,6 +754,10 @@ apu_di: // DI
 
 .align 5
 apu_ei: // EI
+    // SPC700 I-flag operation has one dummy PC read plus one idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF

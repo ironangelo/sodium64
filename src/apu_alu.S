@@ -71,6 +71,8 @@
 .globl apu_notc
 .globl apu_clrv
 .globl apu_xcn
+.globl apu_daa
+.globl apu_das
 .globl apu_tclr1
 .globl apu_tset1
 
@@ -1233,6 +1235,99 @@ apu_xcn: // XCN A
     EMIT_OP SRL(T0, T7, 4)
     EMIT_OP SLL(T1, T7, 4)
     EMIT_OP OR(T7, T0, T1)
+    la ra, finish_opcode
+    j queue_nz
+    li t1, T7
+
+
+.align 5
+apu_daa_runtime:
+    // DAA preserves H/V and adjusts C/A from the incoming BCD state.
+    andi t7, t7, 0xFF
+    andi t0, s1, 0x1
+    bnez t0, apu_daa_high
+    nop
+    sltiu t0, t7, 0x9A
+    bnez t0, apu_daa_low
+    nop
+apu_daa_high:
+    addiu t7, t7, 0x60
+    andi t7, t7, 0xFF
+    ori s1, s1, 0x1
+apu_daa_low:
+    andi t0, s1, 0x8
+    bnez t0, apu_daa_add6
+    nop
+    andi t0, t7, 0x0F
+    sltiu t0, t0, 10
+    bnez t0, apu_daa_done
+    nop
+apu_daa_add6:
+    addiu t7, t7, 0x06
+    andi t7, t7, 0xFF
+apu_daa_done:
+    jr ra
+    nop
+
+.align 5
+apu_das_runtime:
+    // DAS preserves H/V and adjusts C/A from the incoming BCD state.
+    andi t7, t7, 0xFF
+    andi t0, s1, 0x1
+    beqz t0, apu_das_high
+    nop
+    sltiu t0, t7, 0x9A
+    bnez t0, apu_das_low
+    nop
+apu_das_high:
+    addiu t7, t7, -0x60
+    andi t7, t7, 0xFF
+    andi s1, s1, 0xFE
+apu_das_low:
+    andi t0, s1, 0x8
+    beqz t0, apu_das_sub6
+    nop
+    andi t0, t7, 0x0F
+    sltiu t0, t0, 10
+    bnez t0, apu_das_done
+    nop
+apu_das_sub6:
+    addiu t7, t7, -0x06
+    andi t7, t7, 0xFF
+apu_das_done:
+    jr ra
+    nop
+
+.align 5
+apu_daa: // DAA A
+    // Opcode fetch is already charged; DAA has one dummy PC read + one idle.
+    jal jit_charge_cycles
+    li t0, 2
+    jal load_accum
+    ori s1, s1, FLAG_SA
+    jal load_flags
+    ori s1, s1, FLAG_SF
+    la t0, apu_daa_runtime
+    jal emit_jal
+    nop
+    EMIT_OP SLL(ZERO, ZERO, 0)
+    la ra, finish_opcode
+    j queue_nz
+    li t1, T7
+
+.align 5
+apu_das: // DAS A
+    // Opcode fetch is already charged; DAS has one dummy PC read + one idle.
+    jal jit_charge_cycles
+    li t0, 2
+    jal load_accum
+    ori s1, s1, FLAG_SA
+    jal load_flags
+    ori s1, s1, FLAG_SF
+    la t0, apu_das_runtime
+    jal emit_jal
+    nop
+    EMIT_OP SLL(ZERO, ZERO, 0)
     la ra, finish_opcode
     j queue_nz
     li t1, T7

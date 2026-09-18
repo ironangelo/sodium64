@@ -96,7 +96,7 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_bcs, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0xB0-0xB3
     .word apu_drxr, apu_sbca,  apu_abxr, apu_sbca,  apu_abyr, apu_sbca,  apu_idyr, apu_sbca // 0xB4-0xB7
     .word apu_dri, apu_sbcm,  apu_bxy, apu_sbcm,  apu_dirr, apu_movwya,  apu_drxr, apu_incm // 0xB8-0xBB
-    .word apu_inca, 0,  apu_movsx, 0,  apu_unk, 0,  apu_bxpr, apu_mova // 0xBC-0xBF
+    .word apu_inca, 0,  apu_movsx, 0,  apu_das, 0,  apu_bxpr, apu_mova // 0xBC-0xBF
     .word apu_di, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0xC0-0xC3
     .word apu_dira, apu_amov,  apu_absw, apu_amov,  apu_brxa, apu_amov,  apu_idxa, apu_amov // 0xC4-0xC7
     .word apu_imm, apu_cmpx,  apu_absw, apu_xmov,  apu_drb, apu_mov1a,  apu_dira, apu_ymov // 0xC8-0xCB
@@ -104,7 +104,7 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_bne, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0xD0-0xD3
     .word apu_drxa, apu_amov,  apu_abxa, apu_amov,  apu_abya, apu_amov,  apu_idya, apu_amov // 0xD4-0xD7
     .word apu_dira, apu_xmov,  apu_drya, apu_xmov,  apu_dira, apu_movway,  apu_drxa, apu_ymov // 0xD8-0xDB
-    .word apu_decy, 0,  apu_movay, 0,  apu_drxr, apu_cbne,  apu_unk, 0 // 0xDC-0xDF
+    .word apu_decy, 0,  apu_movay, 0,  apu_drxr, apu_cbne,  apu_daa, 0 // 0xDC-0xDF
     .word apu_clrv, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0xE0-0xE3
     .word apu_dirr, apu_mova,  apu_absr, apu_mova,  apu_brxr, apu_mova,  apu_idxr, apu_mova // 0xE4-0xE7
     .word apu_imm, apu_mova,  apu_absr, apu_movx,  apu_drb, apu_not1,  apu_dirr, apu_movy // 0xE8-0xEB

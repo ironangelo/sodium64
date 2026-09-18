@@ -101,6 +101,9 @@ jobs:
           # Aseprite editor to regenerate byte-identical build inputs.
           find "$root/game/resources" -type f -name '*.png' -exec touch {} +
 
+          # Direct ROM targets do not inherit upstream's `all: directories`
+          # prerequisite, so create generated-output directories explicitly.
+          make -C "$root/game" directories
           make -C "$root/game" bin/space-rescue-squad.sfc
 
           rom="$root/game/bin/space-rescue-squad.sfc"

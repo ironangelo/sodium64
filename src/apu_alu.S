@@ -365,6 +365,10 @@ apu_sbcm: // SBC op
 
 .align 5
 apu_asla: // ASL A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -402,6 +406,10 @@ apu_aslm: // ASL op
 
 .align 5
 apu_lsra: // LSR A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -438,6 +446,10 @@ apu_lsrm: // LSR op
 
 .align 5
 apu_rola: // ROL A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -479,6 +491,10 @@ apu_rolm: // ROL op
 
 .align 5
 apu_rora: // ROR A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -519,6 +535,10 @@ apu_rorm: // ROR op
 
 .align 5
 apu_deca: // DEC A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -531,6 +551,10 @@ apu_deca: // DEC A
 
 .align 5
 apu_decx: // DEC X
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SX
@@ -543,6 +567,10 @@ apu_decx: // DEC X
 
 .align 5
 apu_decy: // DEC Y
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY
@@ -566,6 +594,10 @@ apu_decm: // DEC op
 
 .align 5
 apu_inca: // INC A
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA
@@ -578,6 +610,10 @@ apu_inca: // INC A
 
 .align 5
 apu_incx: // INC X
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SX
@@ -590,6 +626,10 @@ apu_incx: // INC X
 
 .align 5
 apu_incy: // INC Y
+    // SPC700 implied operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY
@@ -1017,6 +1057,10 @@ apu_eor1: // EOR1 C,op
 
 .align 5
 apu_clrc: // CLRC
+    // SPC700 flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -1028,6 +1072,10 @@ apu_clrc: // CLRC
 
 .align 5
 apu_setc: // SETC
+    // SPC700 flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -1039,6 +1087,10 @@ apu_setc: // SETC
 
 .align 5
 apu_notc: // NOTC
+    // NOTC has one dummy PC read plus one internal idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -1050,6 +1102,10 @@ apu_notc: // NOTC
 
 .align 5
 apu_clrv: // CLRV
+    // SPC700 flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -1061,6 +1117,10 @@ apu_clrv: // CLRV
 
 .align 5
 apu_xcn: // XCN A
+    // XCN has one dummy PC read plus three internal idle cycles.
+    jal jit_charge_cycles
+    li t0, 4
+
     // Update the JIT register state
     jal load_accum
     ori s1, s1, FLAG_SA

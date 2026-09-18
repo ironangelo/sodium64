@@ -681,6 +681,10 @@ apu_brk: // BRK
 
 .align 5
 apu_clrp: // CLRP
+    // SPC700 P-flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -693,6 +697,10 @@ apu_clrp: // CLRP
 
 .align 5
 apu_setp: // SETP
+    // SPC700 P-flag operation has one dummy PC read.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -705,6 +713,10 @@ apu_setp: // SETP
 
 .align 5
 apu_di: // DI
+    // SPC700 I-flag operation has one dummy PC read plus one idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF
@@ -717,6 +729,10 @@ apu_di: // DI
 
 .align 5
 apu_ei: // EI
+    // SPC700 I-flag operation has one dummy PC read plus one idle cycle.
+    jal jit_charge_cycles
+    li t0, 2
+
     // Update the JIT register state
     jal load_flags
     ori s1, s1, FLAG_SF

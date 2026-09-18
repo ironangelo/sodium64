@@ -212,6 +212,7 @@ def compile_one_case(
     expected_memory: tuple[int, int] | None = None,
     expected_y: int | None = None,
     expected_stack: int | None = None,
+    expected_flags: int | None = None,
     expected_pc_after: int | None = None,
     expected_runtime_debits: tuple[int, ...] = (),
 ) -> dict[str, object]:
@@ -315,6 +316,7 @@ def compile_one_case(
         "apu_reg_y_after_block": read_u8(client, addresses.apu_reg_y),
         "apu_accum_after_block": read_u8(client, addresses.apu_accum),
         "apu_stack_after_block": read_u8(client, addresses.apu_stack),
+        "apu_flags_after_block": read_u8(client, addresses.apu_flags),
         "jit_pointer_uncached": end_uncached,
     }
 
@@ -332,6 +334,8 @@ def compile_one_case(
         semantic_checks.append(result["apu_reg_y_after_block"] == expected_y)
     if expected_stack is not None:
         semantic_checks.append(result["apu_stack_after_block"] == expected_stack)
+    if expected_flags is not None:
+        semantic_checks.append(result["apu_flags_after_block"] == expected_flags)
     if expected_memory is not None:
         offset, value = expected_memory
         observed = read_u8(client, addresses.apu_ram + offset)
@@ -633,8 +637,8 @@ def main() -> int:
         dict(
             name="pop_a_stack_page",
             code=bytes.fromhex("ae2ffd"),
-            expected_debit=-105,
-            reference_cycles=None,
+            expected_debit=-147,
+            reference_cycles=8,
             expected_end_region=8,
             y_value=0x06,
             stack_value=0x7F,
@@ -643,6 +647,43 @@ def main() -> int:
             expected_stack=0x80,
             expected_pc_after=TEST_PC,
         ),
+    ]
+
+    fixed_family_cases = [
+        # Implied ALU: opcode fetch + dummy PC read = 2; trailing BRA = 4.
+        dict(name="inca_fixed", code=bytes.fromhex("bc2ffd"), expected_debit=-126,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             a_value=0x10, expected_accum=0x11),
+        # Register transfers: one dummy PC read beyond opcode fetch.
+        dict(name="mov_x_a_fixed", code=bytes.fromhex("5d2ffd"), expected_debit=-126,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             a_value=0x44, expected_x=0x44),
+        dict(name="mov_sp_x_fixed", code=bytes.fromhex("bd2ffd"), expected_debit=-126,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             x_value=0x55, expected_stack=0x55),
+        # Ordinary flags: one dummy PC read.
+        dict(name="clrc_fixed", code=bytes.fromhex("602ffd"), expected_debit=-126,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             flags_value=0x01, expected_flags=0x00),
+        # I flag operations and NOTC each have two missing cycles.
+        dict(name="di_fixed", code=bytes.fromhex("c02ffd"), expected_debit=-147,
+             reference_cycles=7, expected_end_region=8, y_value=0x06,
+             flags_value=0x04, expected_flags=0x00),
+        dict(name="ei_fixed", code=bytes.fromhex("a02ffd"), expected_debit=-147,
+             reference_cycles=7, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, expected_flags=0x04),
+        dict(name="notc_fixed", code=bytes.fromhex("ed2ffd"), expected_debit=-147,
+             reference_cycles=7, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, expected_flags=0x01),
+        # XCN is 5 cycles by itself: opcode fetch + dummy read + 3 idles.
+        dict(name="xcn_fixed", code=bytes.fromhex("9f2ffd"), expected_debit=-189,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             a_value=0x12, expected_accum=0x21),
+        # PUSH A: 7 static units plus one runtime stack write = 8 total.
+        dict(name="push_a_fixed", code=bytes.fromhex("2d2ffd"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             a_value=0x11, stack_value=0x80, expected_stack=0x7F,
+             expected_memory=(0x0180, 0x11)),
     ]
 
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
@@ -684,6 +725,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in stack_semantic_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in fixed_family_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

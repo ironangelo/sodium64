@@ -4948,3 +4948,55 @@ Immediate next experiment:
 - keep SRS/Sodium64 production behavior unchanged and request no hardware.
 
 If progression is demonstrated, SRS can be locked as the autonomous DKC-like/heavy-platformer slot and corpus selection proceeds to the remaining SMW-like and ALttP-like slots.
+
+
+## Gate-B SRS guest-progression proof — RUNNING 2026-09-18
+
+Exact current audition head:
+**`phase3/gate-b-srs-audition@03496a4587a7bc76836f26791144bcab0c77573b`**.
+
+Parent validated measurement head:
+`2694c455ba92bace9e644652eb5034f8a88d6961`.
+
+Change scope since the validated aligned-repeatability result:
+**workflow only**. No Sodium64 source/runtime/instrumentation change and no benchmark-runtime logic change.
+
+Purpose:
+The sustained internally aligned SRS signal is reproducibly 60/60 after the first reset/queue transient, but that is insufficient to lock SRS into the corpus unless the deterministic Right+Run benchmark is proven to make meaningful guest progress instead of becoming stuck in a low-activity state.
+
+Progress authority chosen from the game itself:
+- starting room `a1a_entrance` has authored entrance x=56;
+- its right-door script loads `a1b_stairway`;
+- observe actual SRS `GameState.roomId`, player x/y, camera x/y and player health.
+
+Address resolution:
+- do **not** hardcode guessed WRAM offsets;
+- after the exact benchmark ROM/patch is built and hashed, append **compile-time-only bass print directives** that expose the exact guest constants for those variables and room IDs;
+- rebuild and require the ROM SHA-256 to remain exactly `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`, proving the symbol probe emits no guest bytes;
+- resolve Sodium64's host `wram` symbol and map SRS 7E/7F addresses into that array for GDB observation.
+
+Each of the three fresh aligned-history repeats now also captures end state:
+- room ID;
+- player x/y;
+- camera x/y;
+- player health.
+
+Progress acceptance:
+- every repeat must either leave `a1a_entrance` or move the player at least 64 px beyond the authored initial x;
+- player health must remain >0 at the measured end;
+- entering `a1b_stairway` is tracked explicitly as the strongest natural checkpoint.
+
+The internally aligned frame-history comparison remains unchanged and still records data without assuming 60/60.
+
+A first workflow commit `6d20faa2...` was statically found to be missing Python `import os` in the final comparator before its long run could be trusted. It is **SUPERSEDED as harness state** by `03496a45...`; no runtime hypothesis changed.
+
+Current exact runs:
+- **Gate B SRS Audition `35400382816`** @ `03496a45...` — queued/running;
+- **Build and Validate `35400382836`** @ same SHA — queued/running.
+Older `6d20faa2...` runs are superseded by concurrency/correction and must not be interpreted.
+
+If accepted:
+SRS has autonomous build + executable benchmark + repeatable sustained lab frame budget + meaningful guest progression. It can then be locked as the DKC-like/heavy-platformer Gate-B corpus slot, with real-N64 validation deferred to the later aggregated hardware milestone.
+
+If falsified:
+do not optimize Sodium64. Improve or reject the deterministic SRS route first, because a stuck/dead benchmark is not a representative workload.

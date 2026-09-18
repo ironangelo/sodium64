@@ -2055,3 +2055,50 @@ Acceptance:
 2. TSET1 total remains 10, RAM remains correct, PSW becomes N=1/Z=0 for directed case;
 3. TCLR1 reaches execution and passes 10-cycle/RAM/PSW case;
 4. no synthetic runtime cycle-debit instruction is needed for these instructions.
+
+
+## SPC700 bit-family timing + semantics — VALIDATED 2026-09-18
+
+Exact diagnostic authority: **`df5fd66c76d5b3898a6c5d6020aacfff38e8daf5`**.
+
+CI:
+- **Build and Validate `35308254510` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke green.
+- **APU Cycle And Span Proof `35308254504` SUCCESS**, cycle-proof job **`105484997903`**.
+- proof result artifact **`10531889516`**, digest `sha256:e51ef26ec7ccab0f85f1c4c2b6992bc554cf596d24854f408744deaaccb71427`;
+- exact proof-build artifact **`10532298069`**, digest `sha256:a9d5fe5a8c2137b7b47fd900263c97a0d0388e5ce10071ec0a2ab86e52636a41`.
+
+All global proof invariants are true:
+- `all_runtime_cycle_debits_match_expected=true`;
+- `all_semantics_match_expected=true`;
+- `all_static_debits_match_source_prediction=true`;
+- `all_total_debits_match_reference=true`;
+- `compiled_long_probe_is_bounded_to_one_tag_region=true`.
+
+### VALIDATED bit-family cases
+
+Added timing:
+- OR1 C,mem.bit = **9 total cycles**, C persistence correct;
+- OR1 C,/mem.bit = **9**, correct;
+- EOR1 C,mem.bit = **9**, correct;
+- MOV1 mem.bit,C = **10**, memory correct.
+
+No-added-timing controls remain exact:
+- AND1 C,mem.bit = **8**;
+- AND1 C,/mem.bit = **8**;
+- MOV1 C,mem.bit = **8**;
+- NOT1 mem.bit = **9**;
+- SET1 dp.bit = **8**;
+- CLR1 dp.bit = **8**.
+
+Carry-modifying bit generators now correctly mark PSW dirty via `FLAG_SF`; OR1/AND1/EOR1/MOV1 C,mem persistence passes.
+
+TSET1/TCLR1 are now both timing- and bus-semantics-correct for the audited access pattern:
+- TSET1: static **7 units**, three runtime memory accesses, **10 total cycles**, RAM `0x0F -> 0xFF`, PSW **0x80** (N=1/Z=0);
+- TCLR1: static **7 units**, three runtime accesses, **10 total cycles**, RAM `0xFF -> 0xF0`, PSW **0x00**.
+
+The previous synthetic +1 TSET/TCLR debit is **SUPERSEDED**. The validated implementation performs the second real `apu_read8` required by the pinned reference and preserves first-read-derived data/NZ across helper calls.
+
+### Clean-consumption proof
+`src/apu_alu.S` at clean foundation `4a3cf13a...` and diagnostic pre-bit authority `90c700a4...` have the **same blob SHA `ec2fbd2a00da7512f11b7a1ca89c807ced891b16`**. Diagnostic target blob `df5fd66c...` is `6bf7db555f2adf4a38c76b9b637cd4aae670ec5c` and contains no diagnostic/PROFILE references.
+
+Decision: consume exactly that one core file into clean `phase2/apu-timing-foundation@4a3cf13a...`, then require exact clean Build/Validate before the next timing family.

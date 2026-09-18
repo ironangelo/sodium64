@@ -1486,3 +1486,23 @@ The prior `62e661b6...` proof failure on source bytes beginning `ED...` is **REJ
 **Decision:** consume only APU core changes from `62e661b6...` into clean `phase2/apu-timing-foundation@fe53aa5f...`: `src/apu_alu.S`, `src/apu_control.S`, `src/apu_transfer.S`. Do NOT copy proof script/workflow or GDB parser changes.
 
 Next timing families remain isolated: CALL/TCALL/PCALL/RET/RET1/BRK first, then word/bit/special operations. DAA/DAS remain Gate-C REQUIRED SUPPORT debt, not part of timing-only changes.
+
+
+## Clean implied/flags/transfers/stack timing candidate — checkpoint 2026-09-17/18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@46230daa7ac66b7b400ce6d2105e3834a15ed4ec`**, one commit on top of clean conditional foundation `fe53aa5f...`.
+
+Direct compare `fe53aa5f... -> 46230daa...` is exactly:
+- `src/apu_alu.S` +60/-0;
+- `src/apu_control.S` +16/-0;
+- `src/apu_transfer.S` +56/-0.
+
+No diagnostic scripts/workflows, GDB parser fixes, PROFILE capture or `apu_cycle_diag` code are present.
+
+This clean commit consumes the dynamically validated fixed-family timing rules from diagnostic core SHA `62e661b6...` / rerun authority `2e01d323...`.
+
+Exact clean Build and Validate run: **`35301478900`**, QUEUED at checkpoint.
+
+Acceptance remains normal build + PROFILE build + pinned Mupen smoke green on exact SHA `46230daa...`. Dynamic semantic/cycle authority remains ares proof `35298264479`.
+
+While clean CI runs, next work is READ-ONLY mapping of CALL/TCALL/PCALL/RET/RET1/BRK timing and semantics against pinned ares. Do not modify clean `46230daa...` until its exact CI completes.

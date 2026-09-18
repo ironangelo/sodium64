@@ -1629,3 +1629,60 @@ Conditional next actions:
 - PCALL passes and later cases pass => validate timing family plus PCALL semantic fix, then consume only validated core changes cleanly on `phase2/apu-timing-foundation@46230daa...`;
 - PCALL still fails => inspect emitted target opcode/register value; do not broaden patch;
 - later opcode fails => preserve PCALL as fixed and isolate only that later instruction.
+
+
+## CALL/TCALL/PCALL/RET/RET1/BRK timing + PCALL semantic fix — VALIDATED 2026-09-17/18
+
+Exact diagnostic authority: **`f4da303dc3cd901672f923d476284b3f05372e38`**.
+
+CI:
+- **Build and Validate `35302251447` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35302251443` SUCCESS**, cycle-proof job **`105467368408`**.
+- proof-build artifact **`10529948912`**, digest `sha256:38d213c8e1727cef9310728d982975dc8bef202f7f2688729e843cebb7a5ef89`;
+- proof result artifact **`10530423530`**, digest `sha256:9834d8846aa1b135a3e4b1e2f443d3a8a089e7a7d363b83be2fecdfbb0b13e50`.
+
+All global proof invariants are true:
+- `all_header_spans_match_source_prediction=true`;
+- `all_runtime_cycle_debits_match_expected=true`;
+- `all_semantics_match_expected=true`;
+- `all_static_debits_match_source_prediction=true`;
+- `all_total_debits_match_reference=true`;
+- `compiled_long_probe_is_bounded_to_one_tag_region=true`.
+
+### MEASURED / VALIDATED directed control-flow cases
+
+- **CALL absolute:** 8 total cycles; PC `0x1234`; S `0x80 -> 0x7E`; return bytes `0x02,0x03` pushed at `0x0180,0x017F`.
+- **PCALL:** 6 total cycles; corrected PC **`0xFF34`**; S `0x80 -> 0x7E`; return bytes `0x02,0x02` correct.
+- **TCALL0:** 8 total cycles; vector target PC `0x1234`; S `0x80 -> 0x7E`; return bytes correct.
+- **RET:** 5 total cycles; PC `0x1234`; S `0x7E -> 0x80`.
+- **RET1:** 6 total cycles; PC `0x1234`; S `0x7D -> 0x80`; PSW restored to `0x04`.
+- **BRK:** 8 total cycles; vector PC `0x1234`; S `0x80 -> 0x7D`; pushed PC/PSW correct; post-BRK PSW `0x10` (I clear, B set).
+
+The previous PCALL failure at `044009a4...` is now fully explained and superseded:
+- old wrong PC `0xD475` exactly matched low16 of `apu_stack=0x8001D475`;
+- `load_stack -> full_address` clobbered compile-time scratch `t2`;
+- **validated fix:** preserve fetched PCALL operand in `v0` across `load_stack`, then form `t2=0xFF00|v0` immediately before target emission;
+- rerun restores `0xFF34` while retaining exact 6-cycle total and stack semantics.
+
+### Timing rules validated
+
+- CALL +3 fixed missing cycles;
+- TCALL +3;
+- PCALL +2;
+- RET +2;
+- RET1 +2;
+- BRK +2.
+
+**Important remaining limitation:** these tests validate total guest cycles and directed end-state semantics. They do **not** validate exact intra-instruction bus-cycle ordering. Static comparison still shows Sodium64 TCALL/BRK vector-vs-stack access ordering differs from pinned ares. Preserve this as timing/fidelity debt for later timer/I/O-sensitive validation.
+
+### Decision
+
+Consume only validated core changes from diagnostic `f4da303d...` into clean `phase2/apu-timing-foundation@46230daa...`:
+- `src/apu_control.S` fixed-cycle charges for CALL/TCALL/PCALL/RET/RET1/BRK;
+- PCALL compile-time target lifetime fix.
+Do NOT copy `apu_map` proof setup, scripts, workflows or diagnostics.
+
+After exact clean CI, next isolated timing batch is word/bit coverage. Current read-only hypotheses:
+- word: ADDW, SUBW, MOVW YA,dp likely +1 fixed each; CMPW/INCW/DECW/MOVW dp,YA likely already match total cycles;
+- bit: OR1 variants, EOR1, MOV1 mem.bit,C and TSET1/TCLR1 likely each miss one cycle; AND1/MOV1 C,mem/NOT1/SET1/CLR1 likely already match.
+These remain **HYPOTHESIS** until dynamic proof.

@@ -4043,3 +4043,68 @@ Direct comparison shows `phase2/apu-cycle-budget-clean` is **not** a fast-forwar
 - clean is 40 commits ahead of merge base while master contains 4 commits absent from clean.
 
 **Do not merge the historical clean branch wholesale.** Next action: inspect the 4 master-only commits and reconstruct a fresh M1 integration branch from current master, porting the validated production state without losing current master changes or diagnostic-only branches.
+
+
+## M1 master integration candidate — running 2026-09-18
+
+Integration branch: **`phase2/m1-integration@671ed75c1f736ebb18bba7c40ec663b278f32865`**.
+Parent authority: current **`master@a2270699e60cdf2b8b8303aaa5a1aa4a0e8dd89e`**.
+
+### Runtime integration method
+Historical `phase2/apu-cycle-budget-clean` diverges from master because master gained four documentation-only commits after their old merge base. To avoid importing rejected/noop experimental history, the M1 runtime was reconstructed **from current master** using an atomic Git tree whose 14 changed runtime/infrastructure files point to the exact final blob SHAs from clean `d5ce93a0...`.
+
+First integration runtime commit:
+**`bc64e8e6080aed53f8f85cff460ddbc930cbe4c1`**.
+
+The master-only changes absent from historical clean were verified to be documentation only:
+- `81e14f5f...` Road-to-1.0 M0/M1 docs;
+- `69f893bc...` Roadmap APU-first route;
+- `90fafc89...` Profiling M1 guidance;
+- `a2270699...` docs synchronization.
+
+No current-master emulator/runtime change was overwritten.
+
+Exact clean blobs consumed include the validated emitter blob:
+`src/apu_emitter.S = fc510743836c2a0a8afca771ca016cf2d02bf83a`
+plus the final timing-foundation APU files and M0 hardware-profile infrastructure.
+
+### Durable regression proof
+The final edge-proof harness was preserved without importing proof-branch runtime diagnostics:
+- `scripts/apu_cycle_proof.py`;
+- `.github/workflows/apu-cycle-proof.yml`.
+
+The durable workflow runs automatically on `master` only for relevant APU/JIT/proof paths (and on the integration branch for this graduation), plus manual dispatch. It does **not** import `src/apu_cycle_diag.S` or PROFILE-only diagnostic emitter changes.
+
+Exact edge-proof scope now documented in Validation:
+- **119 directed execution cases + 2 persistent SLEEP/STOP halt groups**;
+- exact 20+DIV=32;
+- access-built 32-cycle edge;
+- conditional paths near cutoff;
+- cached replay;
+- entry-tag mutation/recompile;
+- historical timing/address/semantic families.
+
+### Canonical documentation convergence
+On the integration branch:
+- `ROAD_TO_1_0.md`: **M0 + M1 achieved; M2/Gate B active**;
+- `ROADMAP.md`: Phase 2/M1 achieved; Phase 3 corpus discovery active; no automatic `apu_read8`/DSP/dynarec next step;
+- `PROFILING.md`: matched guest-window and real-N64 SRAM authority, throughput vs event cadence vs presentation vs audio distinction, sample-share interpretation limits, Gothicvania demoted to regression workload;
+- `VALIDATION.md`: exact 119-case proof scope and explicit non-coverage (dummy-read I/O effects, intra-block SMC, long-run A/V/PCM, broad compatibility).
+
+The docs preserve the audit correction that the real-N64 49->60 movement belongs to the **combined timing-foundation + cycle-budget state**, not the final emitter patch alone, and that 61.83%->51.03% is a change in profile share rather than normalized absolute cost.
+
+### Final integration gates now running
+- final branch **Build and Validate `35384286620`** @ `671ed75c...` — pending/running;
+- integrated runtime **APU Cycle And Span Proof `35384115986`** @ `5cf83f31...` — running. Later commits are documentation-only, so this proof exercises the exact integrated runtime/proof code.
+
+Previous Build-and-Validate runs cancelled by subsequent sequential integration/doc commits are superseded and are not failure evidence.
+
+### Decision map
+If both gates pass:
+1. open PR `phase2/m1-integration -> master`;
+2. verify PR diff/status and merge without altering the candidate;
+3. verify resulting master CI;
+4. mark **M1 MERGED-CONSUMED / ACHIEVED** in continuity;
+5. begin M2/Gate-B corpus definition as the next technical batch.
+
+If either gate fails, do not merge; isolate whether failure belongs to runtime, durable proof packaging, documentation workflow behavior, or laboratory.

@@ -4452,3 +4452,31 @@ Falsifier / downgrade:
 - fixing the build would require maintaining a second toolchain/project disproportionate to Gate-B value.
 
 If accepted, next controlled step is a **temporary explicit benchmark patch** (auto-start + deterministic input + survival only if needed while preserving collisions/hurt/audio), followed by a pinned ares N64 profile/frame-budget audition at Road-valid settings. Do not request hardware.
+
+
+## SRS source-build attempt 1 — HARNESS/BUILD INVOCATION FALSE NEGATIVE 2026-09-18
+
+Exact run:
+- branch `phase3/gate-b-srs-audition@25f71f2e3690385727fc5b45ff2c0810b5667460`;
+- **Gate B SRS Audition `35393181107` FAILED** in the final game-build step.
+
+What passed:
+- Ubuntu dependency install;
+- exact SRS checkout and all pinned submodules;
+- UnTech Editor CLI toolchain build;
+- pinned Wiz build;
+- Terrific Audio Driver `tad-compiler` build.
+
+Failure:
+`python3 ../tables/sine-table.py > gen/tables/sine-table.inc`
+returned `Directory nonexistent`.
+
+Cause:
+The audition invoked `make ... bin/space-rescue-squad.sfc` directly. Upstream's normal `all` path depends on its `directories` target, which creates `gen/tables` and the other generated-output directories. Directly naming the ROM target bypassed that prerequisite.
+
+Classification:
+**HARNESS/BUILD INVOCATION FALSE NEGATIVE / REJECTED as candidate evidence.**
+This does not show unavailable dependencies, proprietary-tool dependence or an upstream source defect.
+
+Immediate repair:
+run upstream `make -C game directories` before the explicit release-ROM target, then repeat unchanged. No upstream source, assets, Sodium64 runtime or benchmark behavior changes.

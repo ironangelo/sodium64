@@ -4108,3 +4108,36 @@ If both gates pass:
 5. begin M2/Gate-B corpus definition as the next technical batch.
 
 If either gate fails, do not merge; isolate whether failure belongs to runtime, durable proof packaging, documentation workflow behavior, or laboratory.
+
+
+## Integrated durable proof attempt 1 — HARNESS FALSE NEGATIVE 2026-09-18
+
+Integration runtime remained green under final **Build and Validate `35384286620`**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen normal/profile smoke SUCCESS.
+
+The first durable integrated proof run **`35384115986`** at integration runtime/proof SHA `5cf83f31b0fae672e347b6310530372bf4e974f3` failed after the newly added cycle-budget edge/reuse cases had already passed.
+
+Observed failure:
+`RuntimeError: target rejected memory read at 0x8000E600: ED2FFD`.
+
+This is **HARNESS FALSE NEGATIVE / REJECTED as runtime evidence**.
+
+Cause:
+- GDB RSP memory reads return raw hexadecimal text;
+- the guest bytes `ED 2F FD` legitimately return `ED2FFD`;
+- the master-era `scripts/gdb_rsp_dump.py` treated **any** reply beginning with ASCII `E` as an RSP error;
+- the validated proof branch had already corrected this parser to recognize an error only when the reply has the three-byte RSP error form (`len(reply) == 3 && startswith("E")`);
+- that one-line harness fix was accidentally omitted when preserving the proof on the fresh master-based integration branch.
+
+Evidence that the runtime/proof contract itself was healthy before the parser false positive:
+- `budget_20_nop_div_32`: exact 32 SPC cycles, semantic/debit/span checks true;
+- `budget_20_access_div_32`: exact 32 total cycles with real guest-read timing included;
+- taken/not-taken cutoff branch checks true;
+- fresh cached 32-cycle replay: same -672 debit, same PC/A/Y/flags, lookup/JIT pointer unchanged;
+- covered tag mutation: stale block rejected and lookup/JIT pointer changed through recompilation.
+
+The integration branch must consume the exact validated one-line RSP parser fix before re-running the durable proof. Also add `scripts/gdb_rsp_dump.py` to the proof workflow path filter because the proof imports `RSPClient` from that file.
+
+No emulator/runtime source change is authorized by this finding.

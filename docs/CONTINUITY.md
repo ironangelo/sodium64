@@ -2102,3 +2102,37 @@ The previous synthetic +1 TSET/TCLR debit is **SUPERSEDED**. The validated imple
 `src/apu_alu.S` at clean foundation `4a3cf13a...` and diagnostic pre-bit authority `90c700a4...` have the **same blob SHA `ec2fbd2a00da7512f11b7a1ca89c807ced891b16`**. Diagnostic target blob `df5fd66c...` is `6bf7db555f2adf4a38c76b9b637cd4aae670ec5c` and contains no diagnostic/PROFILE references.
 
 Decision: consume exactly that one core file into clean `phase2/apu-timing-foundation@4a3cf13a...`, then require exact clean Build/Validate before the next timing family.
+
+
+## Clean bit timing/state candidate — checkpoint 2026-09-18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@0fe8c45f9b1b1c719d52490d8f233950b4d4c489`**, one commit on top of clean word foundation `4a3cf13a...`.
+
+Direct clean diff is exactly one core file:
+- `src/apu_alu.S` +51/-17.
+
+No diagnostic script/workflow changes.
+
+Included validated bit work:
+- OR1 normal/inverted +1 timing;
+- EOR1 +1;
+- MOV1 mem.bit,C +1;
+- PSW dirty persistence for carry-modifying bit generators;
+- TSET1/TCLR1 second real read, preserved first-read data/NZ, exact 10-cycle behavior.
+
+Exact clean Build and Validate run: **`35308801632`**, QUEUED at checkpoint.
+
+Dynamic semantic/cycle authority remains `df5fd66c...` / ares proof `35308254504` SUCCESS.
+
+Do not modify clean `0fe8c45f...` until exact CI completes.
+
+### Next read-only mapped timing family
+
+Static comparison against pinned ares identifies a bounded remaining operand-form cluster:
+- CMP dp,dp: likely +1 trailing idle;
+- CMP dp,#imm: likely +1 trailing idle;
+- `(X),(Y)` modifying ops: likely +1 dummy PC read;
+- CMP `(X),(Y)`: likely +1 dummy PC read plus +1 trailing idle;
+- MOV dp,#imm: missing a real dummy destination read before write; should prefer emitting the real `apu_read8` rather than a synthetic +1 debit.
+
+JMP [abs+X] appears already covered by the validated indexed-addressing +1 and two runtime reads; treat as a no-change control, not a candidate fix.

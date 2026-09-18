@@ -2996,3 +2996,30 @@ Remaining unimplemented base SPC700 opcodes after this candidate are only:
 - 0xFF STOP.
 
 Do not implement them as normal returning JIT handlers. Pinned ares models each as a persistent processor state repeatedly consuming `read(PC)+idle` until external synchronization/reset semantics release it. Next work is scheduler/state design and proof, isolated from arithmetic/timing work.
+
+
+## SLEEP/STOP scheduler design — pre-implementation checkpoint 2026-09-18
+
+Pinned ares SFC behavior:
+- SMP main checks `r.wait` / `r.stop` before decoding another opcode;
+- WAIT and STOP each latch persistent state and repeatedly execute `read(PC) + idle`;
+- pinned source clears these state bits in SPC700 power/reset; no ordinary CPU->APU port write wake path was found.
+
+Sodium64 scheduler fit:
+- `cpu_execute` hands control to `apu_execute` according to `s3`;
+- `apu_execute` already checks DSP deadline before entering JIT;
+- APU timers are derived from the same advancing `s3` timeline.
+
+Selected diagnostic architecture:
+1. add `apu_halt` byte: 0=RUN, 1=WAIT, 2=STOP;
+2. `apu_execute` keeps the existing DSP-deadline check first, then if halted performs a real `apu_read8(apu_count)` plus one idle-cycle debit and returns to `cpu_execute`; PC does not advance;
+3. SLEEP/STOP generated handlers set their distinct latch and immediately perform the **first** real read of next PC + one idle before block return, avoiding a one-iteration scheduler/interleave delay;
+4. normal finish-block stores the already-incremented next PC;
+5. CPU->APU communication must not clear the latch.
+
+Expected timing:
+- entry block containing SLEEP or STOP: opcode fetch + first read + idle = **3 SPC cycles**;
+- each subsequent halted scheduler service = **2 SPC cycles**;
+- halt PC remains instruction-after-opcode.
+
+This is a scheduler-state proof, not a normal fixed-cycle opcode patch. Acceptance must show distinct WAIT/STOP latch values, exact entry/tick debits, stable PC, and no JIT/decode advance while halted. Reset/power initialization remains `apu_halt=0`.

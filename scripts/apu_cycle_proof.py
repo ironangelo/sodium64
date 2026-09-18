@@ -941,6 +941,36 @@ def main() -> int:
              expected_accum=0x00, expected_y=0x00, expected_flags=0x03),
     ]
 
+
+    decimal_adjust_cases = [
+        # DAA/DAS are 3-cycle instructions; each test ends with the validated
+        # 4-cycle BRA loop, so total reference time is 7 cycles.
+        dict(name="daa_low_only", code=bytes.fromhex("df2ffd"),
+             expected_debit=-147, reference_cycles=7, expected_end_region=8,
+             a_value=0x0A, flags_value=0x40,
+             expected_accum=0x10, expected_flags=0x40),
+        dict(name="daa_high_only", code=bytes.fromhex("df2ffd"),
+             expected_debit=-147, reference_cycles=7, expected_end_region=8,
+             a_value=0x15, flags_value=0x41,
+             expected_accum=0x75, expected_flags=0x41),
+        dict(name="daa_both_wrap_zero", code=bytes.fromhex("df2ffd"),
+             expected_debit=-147, reference_cycles=7, expected_end_region=8,
+             a_value=0x9A, flags_value=0x48,
+             expected_accum=0x00, expected_flags=0x4B),
+        dict(name="das_low_only", code=bytes.fromhex("be2ffd"),
+             expected_debit=-147, reference_cycles=7, expected_end_region=8,
+             a_value=0x15, flags_value=0x41,
+             expected_accum=0x0F, expected_flags=0x41),
+        dict(name="das_high_only", code=bytes.fromhex("be2ffd"),
+             expected_debit=-147, reference_cycles=7, expected_end_region=8,
+             a_value=0x75, flags_value=0x48,
+             expected_accum=0x15, expected_flags=0x48),
+        dict(name="das_both_negative", code=bytes.fromhex("be2ffd"),
+             expected_debit=-147, reference_cycles=7, expected_end_region=8,
+             a_value=0x00, flags_value=0x40,
+             expected_accum=0x9A, expected_flags=0xC0),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -1004,6 +1034,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in div_semantic_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in decimal_adjust_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

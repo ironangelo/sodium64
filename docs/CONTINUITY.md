@@ -4238,3 +4238,45 @@ Decision:
 - wait for the PR-only Ares validation;
 - if green, merge PR #12 without modifying the candidate;
 - if it fails, classify the failure as workload/lab/runtime before merge.
+
+
+## PR #12 PR-only Ares gate — VALIDATED 2026-09-18
+
+Exact PR head remains:
+**`phase2/m1-integration@d701f80f5339c727f231e4e9cc2b7222ec9c1561`**.
+
+**Ares Profile Validation `35385948762` SUCCESS** on the exact PR head.
+
+Jobs:
+- profile-build SUCCESS;
+- ares-smoke SUCCESS;
+- pinned N64-only ares build SUCCESS;
+- deterministic workload generation SUCCESS;
+- interpreter control + CPU-JIT workload matrix SUCCESS;
+- frame-budget/profile report generation SUCCESS.
+
+Road-valid runtime state was observed during the lab:
+- `apu_clock=21`;
+- audio `4`;
+- precision `8`;
+- valid statistical sample densities for the decision matrix.
+
+Artifact:
+- `sodium64-ares-profile-matrix` ID **`10564595266`**;
+- digest **`sha256:f4bc1721be208f84046a37b3d5360c8c3673a76082964f1945e1ddaec5ba32a6`**.
+
+Exact profile-build artifact:
+- ID **`10563408739`**;
+- digest `sha256:0dcdc3439594d540ce3745617affb84dcdca7f49d3392889722c7cf2bc9c2f7e`.
+
+Interpretation: this is the additional PR-only emulator-lab regression gate. It does not supersede real-N64 hardware authority, but no lab regression was found that blocks integration.
+
+PR #12 is currently:
+- open;
+- `mergeable=true`;
+- no merge conflict;
+- exact head unchanged from all green pre-merge gates.
+
+**PRE-MERGE STATE: VALIDATED / READY TO MERGE.**
+
+Next action: squash-merge PR #12 to keep the mainline history free of integration/harness intermediate commits while preserving the exact validated final tree, then validate the resulting master SHA before marking M1 MERGED-CONSUMED.

@@ -4732,3 +4732,47 @@ Falsifier / interpretation:
 - stable sub-60 windows support treating SRS as a real Gate-B lab blocker candidate, but still do **not** establish real-N64 performance deficit.
 
 If stable, next experiment is progression/checkpoint anchoring or later-segment measurement before selecting any runtime intervention. No hardware request yet.
+
+## Gate-B SRS repeatability result — NOT STABLE / measurement window rejected 2026-09-18
+
+Exact authority:
+- experiment head **`phase3/gate-b-srs-audition@466be943a7a725c2833e9dba4dd8d56c2f0a01ff`**;
+- **Gate B SRS Audition `35395725393` SUCCESS**;
+- **Build and Validate `35395725495` SUCCESS** at the same SHA;
+- diagnostic artifact **`10568281259`**, digest `sha256:b5b79dbf4ad6d6de5edaca568df5e2300767159f9d4ab719dee0e6d477e1cb00`;
+- source-build provenance artifact `10567223794`, digest `sha256:9cab4c5d581e252d0c2a5ec3889163f8db7964699d32e055ebdbee7e1b3e7adc`.
+
+Workload identity checks passed before profiling:
+- benchmark ROM SHA-256 `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e` — exact match;
+- benchmark patch SHA-256 `4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7` — exact match;
+- no Sodium64 production/runtime source changed.
+
+Three fresh pinned-ares processes at frameskip0/APU21/audio4/precision8:
+- **r1:** 2,203 samples; last complete VI window **60/60**; measurement stopped after 12 s host wall time; VI wait 29.10%, APU static 24.10%, S-CPU 14.84%, DSP 9.71%, PPU 8.40%, APU JIT 5.95%, DMA 4.86%, Memory/I-O 1.77%, VRAM/RSP wait 1.18%.
+- **r2:** 1,221 samples; last complete VI window **59/60**; stopped after 3 s host wall time; VI wait 41.11%, APU static 29.07%, DSP 12.04%, S-CPU 7.78%, PPU 4.75%, APU JIT 3.52%, DMA 1.56%.
+- **r3:** 881 samples; last complete VI window **53/60**; stopped after 12 s host wall time; VI wait 33.60%, APU static 19.64%, S-CPU 17.25%, PPU 9.31%, APU JIT 6.81%, DMA 5.79%, DSP 4.09%, VRAM/RSP wait 3.41%.
+
+The earlier first successful run at `6e5d4440...` also ended on **53/60**, but that does not rescue stability: the controlled three-repeat matrix spans **53..60/60** with qualitatively different subsystem mixes.
+
+Interpretation:
+**REJECTED:** treating the current single `fps_display` value as a stable SRS Gate-B performance result.
+
+The experiment's explicit falsifier fired. The >=800-sample stopping rule reaches threshold at materially different host times and therefore captures the 'last complete 60-VI window' at different guest/workload phases. The profile distributions changing with the window supports phase/measurement-position sensitivity rather than one stable compute ceiling.
+
+What this DOES show:
+- SRS repeatedly boots/runs through the lab path at Road-valid settings;
+- its workload has materially varying frame cost over time;
+- the current measurement method is insufficiently phase-aligned for using one terminal window to select an optimization.
+
+What this does NOT show:
+- no defensible single SRS FPS number;
+- no real-N64 deficit;
+- no evidence yet that CPU, APU, DSP, PPU or DMA should be the next optimization target.
+
+Immediate next experiment:
+replace the terminal-window question with an **internal-VI-window history** measurement. Capture several consecutive completed 60-VI budgets from Sodium64 itself, independent of when the host reaches the statistical-sample threshold. Keep runtime settings and SRS workload unchanged. Prefer tiny PROFILE-only instrumentation (one history write per completed 60-VI window) plus host decoding over any production behavior change.
+
+Acceptance:
+a single run yields an ordered series of consecutive complete internal VI windows with enough context to distinguish startup/transitions from sustained gameplay. Repeat only after that series is defined.
+
+No hardware request and no runtime optimization until this measurement ambiguity is resolved.

@@ -2373,3 +2373,44 @@ Decision rule:
 - if the remaining gaps are only low-priority edge semantics that do not affect the current representative workload, record/defer them and re-baseline `68958b68...` before further optimization.
 
 Do not resume Experiment 2B memory-helper optimization until this timing foundation has a new trustworthy baseline.
+
+
+## Remaining SPC700 semantic inventory — 2026-09-18
+
+Read-only scan of clean `phase2/apu-timing-foundation@68958b68...` found concrete remaining base-core gaps.
+
+### REQUIRED SUPPORT — unimplemented opcodes
+Opcode table still maps exactly four base SPC700 opcodes to `apu_unk`:
+- **0xBE DAS A**;
+- **0xDF DAA A**;
+- **0xEF SLEEP/WAIT**;
+- **0xFF STOP**.
+
+Current `apu_unk` intentionally loops forever, so these are real compatibility holes, not minor timing approximations.
+
+### OPEN semantic TODOs — Half-Carry / arithmetic
+Seven explicit `TODO: set the H flag` sites remain:
+- `apu_adca` — ADC accumulator forms;
+- `apu_adcm` — ADC memory-modify forms;
+- `apu_sbca` — SBC accumulator forms;
+- `apu_sbcm` — SBC memory-modify forms;
+- `apu_addw`;
+- `apu_subw`;
+- `apu_div`.
+
+These are not one uniform change:
+- ADC/SBC 8-bit share one nibble half-carry/borrow rule;
+- ADDW/SUBW use the 16-bit word half-carry rule;
+- DIV has special S-SMP H/V/result behavior and current simple MIPS DIV path needs separate semantic validation.
+
+### Decision / order
+Do NOT re-baseline performance yet; the remaining gaps are bounded base-SPC700 correctness work and therefore qualify as REQUIRED SUPPORT before declaring the timing foundation representative.
+
+Proceed one semantic family at a time:
+1. ADC/SBC 8-bit H flag proof + repair;
+2. ADDW/SUBW H flag proof;
+3. DIV semantic proof/repair;
+4. DAA/DAS implementation once H/C prerequisites are trustworthy;
+5. SLEEP/STOP scheduler semantics separately.
+
+Each family must retain the full existing cycle/address/state regression matrix. Do not bundle WAIT/STOP scheduler behavior with arithmetic work.

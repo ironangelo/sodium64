@@ -4141,3 +4141,30 @@ Evidence that the runtime/proof contract itself was healthy before the parser fa
 The integration branch must consume the exact validated one-line RSP parser fix before re-running the durable proof. Also add `scripts/gdb_rsp_dump.py` to the proof workflow path filter because the proof imports `RSPClient` from that file.
 
 No emulator/runtime source change is authorized by this finding.
+
+
+## M1 integration durable-proof parser repair — running 2026-09-18
+
+Integration branch advanced to **`phase2/m1-integration@d701f80f5339c727f231e4e9cc2b7222ec9c1561`**.
+
+Changes since the previously Build/Validate-green `671ed75c...`:
+- `scripts/gdb_rsp_dump.py`: consume the already-validated one-line RSP parser fix from the edge-proof line, recognizing only the three-byte `E??` RSP error form rather than misclassifying arbitrary E-prefixed memory hex data;
+- `.github/workflows/apu-cycle-proof.yml`: add `scripts/gdb_rsp_dump.py` to the path trigger because the proof imports `RSPClient` from that file.
+
+No emulator/runtime source changed. The 14 M1 runtime/infrastructure blobs consumed from clean remain unchanged from the real-N64 60/60 candidate.
+
+Exact current runs:
+- **APU Cycle And Span Proof `35385014498`** @ `d701f80f...` — running;
+- **Build and Validate `35385014527`** @ `d701f80f...` — queued/running.
+
+Question: does the durable proof reproduce the already-green edge-proof result once its exact validated RSP parser dependency is present?
+
+Acceptance:
+- all 119 directed cases + halt groups pass;
+- exact 32-cycle/access/branch/cache/tag invariants remain true;
+- final Build and Validate remains green.
+
+Falsifier:
+- any timing/semantic/cache/tag invariant fails after the parser repair, or final build/smoke regresses.
+
+If accepted, this closes the final pre-PR integration gate. If not, do not merge; classify the failure before changing runtime.

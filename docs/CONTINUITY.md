@@ -1967,3 +1967,59 @@ Readings:
 - OR1 still returns C=0 => reject/narrow dirty-flag explanation and inspect generated spill path before further timing work.
 - sibling AND/EOR/MOV1 C,bit failure after OR1 passes => family is not uniform; isolate that generator rather than broadening changes.
 - TSET/TCLR remain total-timing-only in this rerun; their planned second-real-read repair is separate.
+
+
+## Bit timing rerun — carry family VALIDATED; TSET/TCLR semantic defect isolated 2026-09-18
+
+Exact diagnostic SHA **`2602249fafb0084b3cbf45d352720e4e1ba73af9`**:
+- **Build and Validate `35307619439` SUCCESS**: normal, PROFILE and pinned Mupen smoke green.
+- **APU Cycle And Span Proof `35307619471` FAILURE**, cycle-proof job **`105483171401`**.
+- failed proof result artifact **`10532446373`**, digest `sha256:871961a769fce9d5fe79913bd4bce0f29687775a01981c3eaeea4ff66369a32f`;
+- exact proof-build artifact **`10532302018`**, digest `sha256:03af6d1b7c3862113968eef5449939dec54fd0019d3f6acdde3b7f0a0077be71`.
+
+### VALIDATED before the stop
+
+Carry-persistence repair is confirmed:
+- OR1 C,mem.bit: **9 cycles**, C persisted =1, semantic pass;
+- OR1 C,/mem.bit: **9**, pass;
+- EOR1 C,mem.bit: **9**, pass;
+- MOV1 mem.bit,C: **10**, memory write pass;
+- AND1 C,mem.bit control: **8**, C persistence pass;
+- AND1 C,/mem.bit control: **8**, pass;
+- MOV1 C,mem.bit control: **8**, pass;
+- NOT1 control: **9**, memory pass;
+- SET1 dp.bit control: **8**, memory pass;
+- CLR1 dp.bit control: **8**, memory pass.
+
+Thus the missing `FLAG_SF` dirty marking was the cause of the OR1 persistence defect and the six-generator family repair is **VALIDATED** for the reached carry-modifying cases.
+
+Timing rules validated by these cases:
+- OR1 normal/inverted +1 fixed;
+- EOR1 +1 fixed;
+- MOV1 mem.bit,C +1 fixed;
+- AND1 variants / MOV1 C,mem / NOT1 / SET1 / CLR1 require no added fixed timing.
+
+### TSET1 result — timing correct, flags wrong
+
+`tset1_ram_total` measured:
+- static debit **-168 = 8 units**, expected;
+- total debit **-210 = 10 cycles**, exact reference total;
+- RAM `0x0F -> 0xFF`, correct;
+- observed PSW **0x02 (Z=1)**, expected **0x80 (N=1)** for `A=0xF0, data=0x0F`;
+- semantic check failed, so TCLR1 was not reached.
+
+**SUPPORTED ROOT CAUSE:** current generated order computes `SUB T0,T7,V0` in the delay slot of runtime `JAL apu_write8`; `apu_write8` then clobbers T0 before the subsequently emitted `queue_nz` instruction reads it. The comparison used for N/Z is therefore not preserved.
+
+### Decision — repair TSET/TCLR semantically and bus-correctly
+
+Do NOT consume the diagnostic fixed +1 TSET/TCLR charge.
+
+Next controlled change:
+1. remove TSET/TCLR fixed +1 charge;
+2. compute A-first-read comparison and emit `queue_nz` **before** any helper call that can clobber T0;
+3. emit the pinned-reference **second real `apu_read8`** to the same address;
+4. preserve final write data through that read in A1 (all audited APU read paths do not touch A1; A2 used by queued NZ is also untouched);
+5. emit the write using the first read's data;
+6. update TSET/TCLR expected static debit from -168 to **-147**, while total remains **10 cycles** via 3 runtime memory accesses.
+
+Expected: TSET PSW becomes N=1/Z=0, TCLR semantic case runs, both totals remain 10. Falsifier: changed total, wrong RAM/flags, or evidence A1/A2 are clobbered by a read path.

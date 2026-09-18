@@ -877,3 +877,23 @@ Acceptance requires ALL of:
 5. semantic postconditions and one-region block bound remain correct.
 
 Any mismatch rejects or narrows the family rule; do not paper over a failure by adjusting the reference expectation without reconciling the pinned ares instruction sequence.
+
+
+## Addressing proof attempt 1 — harness false negative 2026-09-17
+
+Exact diagnostic SHA **`19b3d6cfe7c042109fe08bc08e44eac0a9abb510`**:
+- Build and Validate **`35289165618` SUCCESS**: normal build, PROFILE build, pinned Mupen smoke all green.
+- APU Cycle And Span Proof **`35289165637` FAILURE**, cycle-proof job `105428441273`.
+
+The failure is **REJECTED as core evidence**. It occurred before any of the 16 new addressing-family cases ran.
+
+Measured legacy regression cases before the stop all passed total-cycle measurement through R4300 `s3`:
+- BRA: `s3 1064 -> 980`, delta **-84 = 4 cycles**;
+- NOP+BRA: delta **-126 = 6**;
+- MUL+BRA: delta **-273 = 13**;
+- DIV+BRA: delta **-336 = 16**;
+- long bounded NOP probe: delta **-672 = 32**, header 8->8, static debit -672, PC after block **0x0210**.
+
+Harness bug: the newly added generic semantic check assumed every case must return `apu_count == TEST_PC (0x0200)`. That is wrong for the bounded long-NOP regression case, whose correct postcondition since the validated block-bound fix is `0x0210` after compiling/executing exactly 16 NOPs. The harness therefore raised `long_nop_dbnzy: semantic postcondition mismatch` despite its cycle/span result being correct.
+
+**Decision:** fix only the diagnostic expected-PC postcondition for the long probe and rerun the exact addressing batch. Do not change core timing rules or reference cycle expectations based on this failure. The 16 addressing-family cases remain **UNMEASURED** by this attempt because execution stopped before reaching them.

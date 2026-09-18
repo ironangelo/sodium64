@@ -1360,3 +1360,52 @@ The proof intentionally did not judge POP timing (`reference_cycles=None`). Its 
 5. Validate representative semantics + total `s3` cycles before consuming anything cleanly.
 6. Keep CALL/TCALL/PCALL/RET/RET1/BRK, word operations, bit operations and decimal-adjust support as separate later batches.
 7. DAA/DAS remain MEASURED STATIC / REQUIRED SUPPORT / DEFERRED Gate C debt.
+
+
+## Fixed implied/flags/transfers/stack timing proof in progress — checkpoint 2026-09-17/18
+
+Exact diagnostic SHA: **`62e661b62a177c5b1c087226e589153c29e439fe`**, one commit after the POP semantic-only authority `410985f0...`.
+
+Controlled timing class:
+- implied A/X/Y register modify operations: +1 missing cycle;
+- register transfers A/X/Y/SP: +1;
+- CLRC/SETC/CLRV and CLRP/SETP: +1;
+- NOTC: +2;
+- DI/EI: +2;
+- XCN: +4;
+- PUSH A/X/Y/PSW and POP A/X/Y/PSW: +2 beyond existing opcode fetch + runtime stack access.
+
+No CALL/TCALL/PCALL/RET/RET1/BRK, word, bit, decimal-adjust or other special-family timing changes are included.
+
+Direct compare `410985f0... -> 62e661b6...` is one commit:
+- `src/apu_alu.S` +60/-0;
+- `src/apu_control.S` +16/-0;
+- `src/apu_transfer.S` +56/-0;
+- `scripts/apu_cycle_proof.py` +46/-2.
+
+Representative dynamic cases added:
+- INC A + BRA: expected total 6 cycles;
+- MOV X,A + BRA: 6;
+- MOV SP,X + BRA: 6;
+- CLRC + BRA: 6;
+- DI + BRA: 7;
+- EI + BRA: 7;
+- NOTC + BRA: 7;
+- XCN + BRA: 9;
+- PUSH A + BRA: static 7 cycles + runtime write = total 8;
+- existing directed POP A stack sentinel now also expects static 7 + runtime read = total 8.
+
+Each case checks static debit, total R4300 `s3` delta, PC/span and relevant A/X/SP/flags/RAM postcondition.
+
+Runs for exact SHA:
+- **Build and Validate `35297695310`** — in progress at checkpoint.
+- **APU Cycle And Span Proof `35297695313`** — in progress at checkpoint.
+
+Acceptance:
+1. normal + PROFILE build + Mupen smoke green;
+2. all previous timing/addressing/branch/span regressions remain green;
+3. every new representative case matches pinned ares total cycles exactly;
+4. PUSH/POP preserve proven stack-page semantics and expected S/RAM/A state;
+5. no unexpected runtime debit instruction appears for these fixed-cycle-only families.
+
+A mismatch narrows/rejects the specific family rule; do not adjust the reference expectation without reconciling the pinned ares instruction sequence.

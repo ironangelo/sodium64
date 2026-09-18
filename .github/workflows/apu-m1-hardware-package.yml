@@ -1,0 +1,166 @@
+name: APU M1 Real N64 Package
+
+on:
+  push:
+    branches:
+      - phase2/apu-hardware-milestone
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  CORE_SHA: 9204ad2fae7f37d9950a0f3a88cc3ff4299e1bc1
+  GOTHICVANIA_SOURCE_RUN: 35145447113
+  GOTHICVANIA_ARTIFACT_ID: 10466504920
+  GOTHICVANIA_ROM_SHA256: 5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout measurement package branch
+        uses: actions/checkout@v4
+
+      - name: Verify runtime core is exact clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code "$CORE_SHA" -- src
+          git diff --exit-code "$CORE_SHA" -- Makefile n64.ld rom-converter.py
+          echo "runtime_core_sha=$CORE_SHA" | tee runtime-identity.txt
+          git diff --name-status "$CORE_SHA" | tee -a runtime-identity.txt
+
+      - name: Run profiling host tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
+      - name: Compile exact real-N64 profiler build
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+          test -s build/sodium64.map
+          nm -n build/sodium64.elf | grep -q ' hw_profile_header$'
+          nm -n build/sodium64.elf | grep -q ' profile_sample_buffer_end$'
+          nm -n build/sodium64.elf | grep -q ' hw_profile_phase$'
+
+      - name: Download exact validated Gothicvania workload
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p workload
+          zip="$RUNNER_TEMP/gothicvania-source-build.zip"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$GOTHICVANIA_ARTIFACT_ID/zip" \
+            -o "$zip"
+          unzip -q "$zip" -d workload
+          test -s workload/gothicvania-benchmark.sfc
+          echo "$GOTHICVANIA_ROM_SHA256  workload/gothicvania-benchmark.sfc" | sha256sum --check
+          test -s workload/gothicvania-provenance.txt
+
+      - name: Build self-contained M1 hardware ROM
+        shell: bash
+        run: |
+          set -euo pipefail
+          wrap="$RUNNER_TEMP/sodium64-m1-wrap"
+          rm -rf "$wrap"
+          mkdir -p "$wrap" package
+          cp sodium64.z64 "$wrap/sodium64.z64"
+          cp rom-converter.py "$wrap/rom-converter.py"
+          cp workload/gothicvania-benchmark.sfc "$wrap/gothicvania-m1.smc"
+          (
+            cd "$wrap"
+            python3 rom-converter.py </dev/null
+          )
+          test -s "$wrap/out/gothicvania-m1.z64"
+          cp "$wrap/out/gothicvania-m1.z64" package/sodium64-m1-gothicvania.z64
+
+          dd if=package/sodium64-m1-gothicvania.z64 of="$RUNNER_TEMP/embedded-gothicvania.sfc" \
+            bs=1 skip=$((0x104000)) count=$((512 * 1024)) status=none
+          echo "$GOTHICVANIA_ROM_SHA256  $RUNNER_TEMP/embedded-gothicvania.sfc" | sha256sum --check
+          rm "$RUNNER_TEMP/embedded-gothicvania.sfc"
+
+          cp build/sodium64.elf package/sodium64-m1-gothicvania.elf
+          cp build/sodium64.map package/sodium64-m1-gothicvania.map
+          cp scripts/hw_profile_report.py package/
+          cp scripts/profile_report.py package/
+          cp workload/gothicvania-provenance.txt package/
+          cp workload/gothicvania-benchmark.patch package/
+          cp workload/gothicvania-rom.sha256 package/
+          cp runtime-identity.txt package/
+          cp hw-profile-build.log package/
+
+          emulator_sha=$(sha256sum sodium64.z64 | awk '{print $1}')
+          wrapped_sha=$(sha256sum package/sodium64-m1-gothicvania.z64 | awk '{print $1}')
+          cat > package/MANIFEST.txt <<EOF
+          Sodium64 M1 real-N64 Gothicvania timing-foundation milestone
+          package_git_sha=$GITHUB_SHA
+          runtime_core_sha=$CORE_SHA
+          mode=PROFILE=1 + HW_PROFILE=1
+          warmup_seconds=2
+          measured_seconds=5
+          frameskip=0
+          apu_clock=21
+          audio_setting=4
+          precision_setting=8
+          guest_rom_sha256=$GOTHICVANIA_ROM_SHA256
+          emulator_rom_sha256=$emulator_sha
+          wrapped_rom_sha256=$wrapped_sha
+          capture_transport=N64 standard PI SRAM at 0x08000000
+          completion_signal=solid red screen after SRAM DMA finishes
+          EOF
+
+          cat > package/HARDWARE_TEST.txt <<'EOF'
+          Sodium64 M1 real-N64 milestone — Gothicvania
+
+          Purpose:
+          Measure the validated SPC700 timing foundation on real Nintendo 64 hardware,
+          using the same Gothicvania survivability workload and SRAM capture method as M0.
+
+          1. Launch sodium64-m1-gothicvania.z64 directly on the real N64/SummerCart64.
+          2. Do not press the controller or open Sodium64 settings during measurement.
+          3. The workload auto-enters gameplay and holds SNES Right.
+          4. Let it run through 2 warmup 60-VI windows + 5 measured windows.
+          5. DONE = SOLID RED SCREEN, shown only after the profile snapshot and validity
+             header have been DMA-written through the normal N64 SRAM path.
+          6. Once red appears, wait about 2 seconds, then use the normal reset/return-to-cart
+             flow so SRAM is persisted. Do not power off first.
+          7. Retrieve the SRAM/save associated with this ROM.
+          8. Also note whether gameplay, music and sound effects looked/sounded sane before red.
+
+          The returned save is the authority for the five frame-budget windows, exact settings,
+          sample density and R4300 subsystem profile. Real hardware is the performance authority.
+          EOF
+
+          (
+            cd package
+            find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -printf '%f\0' \
+              | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+            sha256sum --check SHA256SUMS.txt
+          )
+
+      - name: Upload real-N64 M1 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-real-n64-m1-gothicvania
+          retention-days: 14
+          path: package/

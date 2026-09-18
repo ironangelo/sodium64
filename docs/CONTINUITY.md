@@ -2560,3 +2560,36 @@ Acceptance:
 3. C/N/Z/V remain correct for directed cases;
 4. total/static cycles unchanged;
 5. entire prior regression matrix remains green.
+
+
+## SPC700 ADDW/SUBW Half-Carry — VALIDATED 2026-09-18
+
+Exact diagnostic authority: **`06edb6afb10bc54dd79f6539c7484aad1b0d3469`**.
+
+CI:
+- **Build and Validate `35315076872` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35315076871` SUCCESS**, cycle-proof job **`105505142348`**.
+- proof result artifact **`10535525484`**, digest `sha256:1389cc5dde25b485506c3e35e5e1e3af4b69ec2bf395ad761fd6657437098ef0`;
+- exact proof-build artifact **`10535025192`**, digest `sha256:0d6597be2a80960cdcc8dc8eeda88b2c4da7e37bf90a6ea631201da9617b2d85`.
+
+Directed word-H cases all passed at unchanged **9 total guest cycles**:
+- ADDW H set via low-byte carry: YA 0x0FFF + 0x0001 -> **0x1000**, H=1;
+- ADDW H clear from initial H=1: 0x0100 + 0x0100 -> **0x0200**, H=0;
+- SUBW H set via low-byte borrow path: 0x1100 - 0x0001 -> **0x10FF**, C/H=1;
+- SUBW H clear via low-byte borrow path: 0x1000 - 0x0001 -> **0x0FFF**, C=1/H=0.
+
+All global invariants remained true:
+`all_runtime_cycle_debits_match_expected`,
+`all_semantics_match_expected`,
+`all_static_debits_match_source_prediction`,
+`all_total_debits_match_reference`,
+`compiled_long_probe_is_bounded_to_one_tag_region`.
+
+Validated rules:
+- ADDW H = whole-word bit 12 of `x ^ y ^ result`;
+- SUBW H = inverted whole-word bit-12 half-borrow relation.
+
+No timing changes were introduced.
+
+### Decision
+Consume only `src/apu_alu.S` core changes into clean timing foundation. Then exact clean CI. Next semantic family: DIV YA,X, which requires full result/H/V behavior proof, not just a flag patch.

@@ -1762,3 +1762,51 @@ Decision rules:
 - data semantic mismatch with correct cycles => isolate inherited word-operation correctness separately from timing.
 
 Bit-family hypotheses remain DEFERRED until this word batch closes.
+
+
+## SPC700 word timing — VALIDATED 2026-09-18
+
+Exact diagnostic authority: **`90c700a404f7d5a5abdc65d92e4869a431e7ad2d`**.
+
+CI:
+- **Build and Validate `35302988477` SUCCESS**: normal build, PROFILE build, pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35302988483` SUCCESS**, cycle-proof job **`105469587489`**.
+- proof result artifact **`10531230748`**, digest `sha256:d4c061fd78f3e8ae99e8e358e6d51063ed79a953a623358c91a019f22d5baa68`;
+- exact proof-build artifact **`10530635328`**, digest `sha256:96cdb5bfce147f4a4ba22535ae1266759380cdbd69a12b5c2c8d9b26a88e8e5e`.
+
+All global proof invariants are true:
+- `all_runtime_cycle_debits_match_expected=true`;
+- `all_semantics_match_expected=true`;
+- `all_static_debits_match_source_prediction=true`;
+- `all_total_debits_match_reference=true`;
+- `compiled_long_probe_is_bounded_to_one_tag_region=true`.
+
+### MEASURED / VALIDATED word cases
+
+Corrected families:
+- ADDW YA,dp + BRA: **9 total cycles**, expected YA result passed;
+- SUBW YA,dp + BRA: **9**, expected YA result passed;
+- MOVW YA,dp + BRA: **9**, expected YA load passed.
+
+Controls with NO timing change required:
+- CMPW + BRA: **8 total cycles**;
+- DECW + BRA: **10**, both result bytes correct;
+- INCW + BRA: **10**, both result bytes correct;
+- MOVW dp,YA + BRA: **9**, both written bytes correct.
+
+Therefore the validated fixed rules are exactly:
+- `apu_addw`: +1;
+- `apu_subw`: +1;
+- `apu_movwya`: +1.
+
+Do NOT add timing to CMPW/INCW/DECW/MOVW dp,YA based on this family.
+
+Known semantic debt remains explicit: ADDW/SUBW source still contains `TODO: set the H flag`; this batch validates total timing and selected data results, not full flag fidelity.
+
+### Decision
+Consume only the three validated core timing additions into clean `phase2/apu-timing-foundation@fafc0847...`:
+- `src/apu_alu.S` ADDW/SUBW +1;
+- `src/apu_transfer.S` MOVW YA,dp +1.
+Do NOT copy proof script/harness changes.
+
+After exact clean CI, proceed to a separate bit-family timing batch. Current bit hypotheses remain unvalidated until dynamic proof.

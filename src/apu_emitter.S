@@ -25,6 +25,7 @@
 
 .globl jit_read8
 .globl jit_charge_cycles
+.globl jit_emit_runtime_cycles
 .globl compile_block
 .globl finish_opcode
 .globl finish_block
@@ -137,6 +138,22 @@ jit_charge_cycles: // t0: additional guest cycles missing from fetch/data accoun
     mflo t0
     jr ra
     sub s2, s2, t0
+
+.align 5
+jit_emit_runtime_cycles: // t0: conditional guest cycles to debit at runtime
+    // Emit one ADDI s3,s3,-cycles*apu_clock into the generated block.
+    // t5 is unused by the APU JIT compiler and only preserves this helper's RA.
+    move t5, ra
+    lbu t1, apu_clock
+    mult t0, t1
+    mflo t0
+    sub t0, zero, t0
+    andi t0, t0, 0xFFFF
+    lui t1, 0x2273 // high half of ADDI s3,s3,imm
+    jal emit_op
+    or t0, t0, t1
+    jr t5
+    nop
 
 .align 5
 apu_nop:

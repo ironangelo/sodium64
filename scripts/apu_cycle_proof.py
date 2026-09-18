@@ -124,8 +124,10 @@ def find_cycle_debit(code: bytes) -> tuple[int | None, list[dict[str, int]]]:
         if imm & 0x8000:
             imm -= 0x10000
         matches.append({"offset": offset, "word": word, "debit": imm})
-    if len(matches) == 1:
-        return matches[0]["debit"], matches
+    if matches:
+        # finish_block emits the block-wide static debit last. Earlier s3
+        # ADDIs are explicit conditional runtime timing charges.
+        return matches[-1]["debit"], matches
     return None, matches
 
 
@@ -202,6 +204,9 @@ def compile_one_case(
     expected_accum: int | None = None,
     expected_x: int | None = None,
     expected_memory: tuple[int, int] | None = None,
+    expected_y: int | None = None,
+    expected_pc_after: int | None = None,
+    expected_runtime_debits: tuple[int, ...] = (),
 ) -> dict[str, object]:
     # Arrive before apu_execute touches s0/lookup. This avoids changing apu_count
     # while an old generated block is still in flight.
@@ -277,6 +282,11 @@ def compile_one_case(
         "cycle_debit_matches": debit_matches,
         "expected_cycle_debit": expected_debit,
         "cycle_debit_matches_expected": debit == expected_debit,
+        "runtime_cycle_debits": [item["debit"] for item in debit_matches[:-1]],
+        "expected_runtime_cycle_debits": list(expected_runtime_debits),
+        "runtime_cycle_debits_match_expected": (
+            [item["debit"] for item in debit_matches[:-1]] == list(expected_runtime_debits)
+        ),
         "source_clock_units": (-debit // APU_CLOCK) if debit is not None and debit <= 0 else None,
         "reference_spc_cycles": reference_cycles,
         "s3_before": s3_before,
@@ -298,7 +308,8 @@ def compile_one_case(
         "jit_pointer_uncached": end_uncached,
     }
 
-    expected_pc_after = TEST_PC + 16 if name == "long_nop_dbnzy" else TEST_PC
+    if expected_pc_after is None:
+        expected_pc_after = TEST_PC + 16 if name == "long_nop_dbnzy" else TEST_PC
     result["expected_apu_count_after_block"] = expected_pc_after
     semantic_checks: list[bool] = [
         result["apu_count_after_block"] == expected_pc_after
@@ -307,6 +318,8 @@ def compile_one_case(
         semantic_checks.append(result["apu_accum_after_block"] == expected_accum)
     if expected_x is not None:
         semantic_checks.append(result["apu_reg_x_after_block"] == expected_x)
+    if expected_y is not None:
+        semantic_checks.append(result["apu_reg_y_after_block"] == expected_y)
     if expected_memory is not None:
         offset, value = expected_memory
         observed = read_u8(client, addresses.apu_ram + offset)
@@ -319,6 +332,8 @@ def compile_one_case(
     print(json.dumps(result, sort_keys=True))
     if not result["cycle_debit_matches_expected"]:
         raise RuntimeError(f"{name}: static cycle debit mismatch")
+    if not result["runtime_cycle_debits_match_expected"]:
+        raise RuntimeError(f"{name}: generated runtime cycle debit shape mismatch")
     if not result["total_cycle_debit_matches_reference"]:
         raise RuntimeError(f"{name}: total s3 cycle debit mismatch")
     if not result["span_matches_expected"]:
@@ -493,6 +508,112 @@ def main() -> int:
              expected_memory=(0x0406, 0x11)),
     ]
 
+    branch_cases = [
+        # Ordinary condition branches: base 2, taken +2.
+        dict(name="bpl_taken", code=bytes.fromhex("10fe"), expected_debit=-42,
+             reference_cycles=4, expected_end_region=8, y_value=0x06, flags_value=0x00,
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="bpl_not_taken", code=bytes.fromhex("10fe"), expected_debit=-42,
+             reference_cycles=2, expected_end_region=8, y_value=0x06, flags_value=0x80,
+             expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+        dict(name="bmi_taken", code=bytes.fromhex("30fe"), expected_debit=-42,
+             reference_cycles=4, expected_end_region=8, y_value=0x06, flags_value=0x80,
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="bmi_not_taken", code=bytes.fromhex("30fe"), expected_debit=-42,
+             reference_cycles=2, expected_end_region=8, y_value=0x06, flags_value=0x00,
+             expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+        dict(name="bvc_taken", code=bytes.fromhex("50fe"), expected_debit=-42,
+             reference_cycles=4, expected_end_region=8, y_value=0x06, flags_value=0x00,
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="bvc_not_taken", code=bytes.fromhex("50fe"), expected_debit=-42,
+             reference_cycles=2, expected_end_region=8, y_value=0x06, flags_value=0x40,
+             expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+        dict(name="bvs_taken", code=bytes.fromhex("70fe"), expected_debit=-42,
+             reference_cycles=4, expected_end_region=8, y_value=0x06, flags_value=0x40,
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="bvs_not_taken", code=bytes.fromhex("70fe"), expected_debit=-42,
+             reference_cycles=2, expected_end_region=8, y_value=0x06, flags_value=0x00,
+             expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+        dict(name="bcc_taken", code=bytes.fromhex("90fe"), expected_debit=-42,
+             reference_cycles=4, expected_end_region=8, y_value=0x06, flags_value=0x00,
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="bcc_not_taken", code=bytes.fromhex("90fe"), expected_debit=-42,
+             reference_cycles=2, expected_end_region=8, y_value=0x06, flags_value=0x01,
+             expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+        dict(name="bcs_taken", code=bytes.fromhex("b0fe"), expected_debit=-42,
+             reference_cycles=4, expected_end_region=8, y_value=0x06, flags_value=0x01,
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="bcs_not_taken", code=bytes.fromhex("b0fe"), expected_debit=-42,
+             reference_cycles=2, expected_end_region=8, y_value=0x06, flags_value=0x00,
+             expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+        dict(name="bne_taken", code=bytes.fromhex("d0fe"), expected_debit=-42,
+             reference_cycles=4, expected_end_region=8, y_value=0x06, flags_value=0x00,
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="bne_not_taken", code=bytes.fromhex("d0fe"), expected_debit=-42,
+             reference_cycles=2, expected_end_region=8, y_value=0x06, flags_value=0x02,
+             expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+        dict(name="beq_taken", code=bytes.fromhex("f0fe"), expected_debit=-42,
+             reference_cycles=4, expected_end_region=8, y_value=0x06, flags_value=0x02,
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="beq_not_taken", code=bytes.fromhex("f0fe"), expected_debit=-42,
+             reference_cycles=2, expected_end_region=8, y_value=0x06, flags_value=0x00,
+             expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+
+        # BranchBit: base 5, taken 7.
+        dict(name="bbs_taken", code=bytes.fromhex("0320fd"), expected_debit=-84,
+             reference_cycles=7, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x01"),), expected_pc_after=TEST_PC,
+             expected_runtime_debits=(-42,)),
+        dict(name="bbs_not_taken", code=bytes.fromhex("0320fd"), expected_debit=-84,
+             reference_cycles=5, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x00"),), expected_pc_after=TEST_PC + 3,
+             expected_runtime_debits=(-42,)),
+        dict(name="bbc_taken", code=bytes.fromhex("1320fd"), expected_debit=-84,
+             reference_cycles=7, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x00"),), expected_pc_after=TEST_PC,
+             expected_runtime_debits=(-42,)),
+        dict(name="bbc_not_taken", code=bytes.fromhex("1320fd"), expected_debit=-84,
+             reference_cycles=5, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x01"),), expected_pc_after=TEST_PC + 3,
+             expected_runtime_debits=(-42,)),
+
+        # CBNE: direct base 5 / indexed base 6, taken +2.
+        dict(name="cbne_direct_taken", code=bytes.fromhex("2e20fd"), expected_debit=-84,
+             reference_cycles=7, expected_end_region=8, y_value=0x06, a_value=0x11,
+             memory_writes=((0x0020, b"\x22"),), expected_pc_after=TEST_PC,
+             expected_runtime_debits=(-42,)),
+        dict(name="cbne_direct_not_taken", code=bytes.fromhex("2e20fd"), expected_debit=-84,
+             reference_cycles=5, expected_end_region=8, y_value=0x06, a_value=0x11,
+             memory_writes=((0x0020, b"\x11"),), expected_pc_after=TEST_PC + 3,
+             expected_runtime_debits=(-42,)),
+        dict(name="cbne_direct_x_taken", code=bytes.fromhex("de20fd"), expected_debit=-105,
+             reference_cycles=8, expected_end_region=8, y_value=0x06, a_value=0x11,
+             memory_writes=((0x0024, b"\x22"),), expected_pc_after=TEST_PC,
+             expected_runtime_debits=(-42,)),
+        dict(name="cbne_direct_x_not_taken", code=bytes.fromhex("de20fd"), expected_debit=-105,
+             reference_cycles=6, expected_end_region=8, y_value=0x06, a_value=0x11,
+             memory_writes=((0x0024, b"\x11"),), expected_pc_after=TEST_PC + 3,
+             expected_runtime_debits=(-42,)),
+
+        # DBNZ memory: base 5, taken 7.
+        dict(name="dbnzm_taken", code=bytes.fromhex("6e20fd"), expected_debit=-63,
+             reference_cycles=7, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x02"),), expected_memory=(0x0020, 0x01),
+             expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="dbnzm_not_taken", code=bytes.fromhex("6e20fd"), expected_debit=-63,
+             reference_cycles=5, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x01"),), expected_memory=(0x0020, 0x00),
+             expected_pc_after=TEST_PC + 3, expected_runtime_debits=(-42,)),
+
+        # DBNZ Y: base 4, taken 6.
+        dict(name="dbnzy_taken", code=bytes.fromhex("fefe"), expected_debit=-84,
+             reference_cycles=6, expected_end_region=8, y_value=0x02,
+             expected_y=0x01, expected_pc_after=TEST_PC, expected_runtime_debits=(-42,)),
+        dict(name="dbnzy_not_taken", code=bytes.fromhex("fefe"), expected_debit=-84,
+             reference_cycles=4, expected_end_region=8, y_value=0x01,
+             expected_y=0x00, expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -528,6 +649,9 @@ def main() -> int:
         for case in address_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
+        for case in branch_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")
         reentry = middle_region_reentry(client, long_result=long_result, addresses=args)
 
@@ -546,6 +670,9 @@ def main() -> int:
                 ),
                 "all_total_debits_match_reference": all(
                     bool(item["total_cycle_debit_matches_reference"]) for item in results
+                ),
+                "all_runtime_cycle_debits_match_expected": all(
+                    bool(item["runtime_cycle_debits_match_expected"]) for item in results
                 ),
                 "all_semantics_match_expected": all(
                     bool(item["semantics_match_expected"]) for item in results
@@ -571,6 +698,7 @@ def main() -> int:
             report["summary"]["all_static_debits_match_source_prediction"]
             and report["summary"]["all_header_spans_match_source_prediction"]
             and report["summary"]["all_total_debits_match_reference"]
+            and report["summary"]["all_runtime_cycle_debits_match_expected"]
             and report["summary"]["all_semantics_match_expected"]
             and report["summary"]["compiled_long_probe_is_bounded_to_one_tag_region"]
         )

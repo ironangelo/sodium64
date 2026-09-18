@@ -3610,3 +3610,69 @@ Exact current proof runs:
 - **APU Cycle And Span Proof `35356429346`** — queued;
 - **Build and Validate `35356429215`** — queued.
 Earlier proof-v2 run at `91f8f13a...` is superseded by this expectation-only correction.
+
+
+## Guest-cycle-bounded multi-op JIT v2 — VALIDATED FOR CLEAN CONSUMPTION 2026-09-18
+
+Corrected candidate authority: **`phase2/apu-cycle-budget-interleave-v2@5b9f16c0127b9ec99e7bdc5d811a183e87065b86`**.
+Production emitter commit before trigger-only workflow change: **`709def0969c97e66c195b490deb480324e6e9a3f`**.
+
+### L1/L2 build authority
+**Build and Validate `35356204540` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen64Plus normal/profile smoke SUCCESS.
+
+### Matched cadence + throughput authority
+**APU Matched Baseline `35356204750` SUCCESS**, matched job `105636472480`.
+
+All three fresh ares repeats produced the same five-window vector:
+**61,59,60,61,60 /60**, mean **60.20/60**, range **59..61**, samples **3582**.
+
+DSP scheduler evidence in each repeat:
+- due count **159882**;
+- late sum **16855692 master cycles**;
+- average lateness **105.4258265 master cycles ~= 5.02 SPC cycles**;
+- maximum lateness **546 master cycles = 26 SPC cycles**;
+- **multi-due count = 0** (no event reached the 672-master / 32-SPC DSP period).
+
+Warmup maximum was also bounded at 546 with zero multi-due events.
+
+Artifacts:
+- matched diagnostics **`10552485210`**, digest `sha256:f717d6488f0ef3ed04fd7a7c26d68ad7e29380d1533d8d467336dc4e0467c91b`;
+- exact PROFILE build **`10551443618`**, digest `sha256:82122533a864a648aadbef12c660a565b63346c16bea1bbcc635dcd36071329e`.
+
+**VALIDATED:** clobber-safe v2 retains the measured throughput benefit while keeping DSP scheduler lateness below one full sample period. This reproduces the architecture result without the v1 helper-clobber defect.
+
+### Cycle/address/semantic proof authority
+Proof branch: **`phase2/apu-cycle-budget-proof-v2@151466bb39ab7a7739ec76e415e4deafb0a600e4`**.
+
+**APU Cycle And Span Proof `35356429346` SUCCESS**, dynamic proof job `105637636509`.
+Companion **Build and Validate `35356429215` SUCCESS**.
+
+Proof summary:
+- `all_static_debits_match_source_prediction = true`;
+- `all_header_spans_match_source_prediction = true`;
+- `all_runtime_cycle_debits_match_expected = true`;
+- `all_total_debits_match_reference = true`;
+- `all_semantics_match_expected = true`;
+- `all_halt_scheduler_ticks_match_expected = true`;
+- `compiled_long_probe_is_bounded_to_one_tag_region = true`.
+
+The architecture-specific long-NOP probe correctly compiled **11 NOP bytes / 22 SPC cycles / 462 master cycles**, not the old 16-NOP/32-cycle cutoff. BBS/BBC taken/not-taken, addressing families, branches, stack/call/return, word/bit operations, half-carry, DIV, decimal adjust, SLEEP and STOP remained in the unchanged semantic/timing matrix and passed.
+
+Proof artifacts:
+- diagnostics **`10552885741`**, digest `sha256:ca40f0c2e100b3b26b8c14b8c7f778e273bc77728f1511c4801203bc614114a2`;
+- exact proof build **`10552426125`**, digest `sha256:4d9e5e4026fb5486036e7fe832273f916bcd10e004ada080155f546d4d325a1b`.
+
+**ARCHITECTURE PROOF + COMPATIBILITY/TIMING REGRESSION:** v2 is now acceptable for clean consumption. This validates the audited SPC700 timing/address/semantic corpus and the Gothicvania matched cadence contract; it does not establish complete SPC700 correctness or real-N64 performance.
+
+### Immediate next action
+Create a clean child of **`phase2/apu-timing-foundation@9204ad2f...`** that consumes **only the exact v2 `src/apu_emitter.S` production change** from `709def09...`.
+Do not consume PROFILE lateness counters, matched workflows, proof harness changes, or diagnostic files.
+
+Then:
+1. require clean Build and Validate + Mupen SUCCESS;
+2. verify direct diff from `9204ad2f...` is only `src/apu_emitter.S`;
+3. build a fresh real-N64 M1 Gothicvania package from that exact clean SHA;
+4. only that fresh package may be presented for the next hardware milestone.

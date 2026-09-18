@@ -2232,3 +2232,48 @@ Acceptance:
 5. MOV dp,dp remains exact and unchanged.
 
 Falsifier: any total/static debit mismatch, shared-handler control overcharge, data/flags mismatch, or state clobber from the added real read.
+
+
+## SPC700 operand-form timing — VALIDATED 2026-09-18
+
+Exact diagnostic authority: **`1dc544fa64a0d0fd9984bc94c492d0306766bf7a`**.
+
+CI:
+- **Build and Validate `35313083584` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke green.
+- **APU Cycle And Span Proof `35313083578` SUCCESS**, cycle-proof job **`105499188711`**.
+- proof result artifact **`10533722861`**, digest `sha256:6f82bc03c9cc813facf2466f8c875540fa400f3f7e650444e850c731e642ba96`;
+- exact proof-build artifact **`10533672483`**, digest `sha256:cb3d1956b9812f95ad76f7bf346309116bef745e444621ea48151cade3ecb22b`.
+
+All global proof invariants remain true:
+- `all_runtime_cycle_debits_match_expected=true`;
+- `all_semantics_match_expected=true`;
+- `all_static_debits_match_source_prediction=true`;
+- `all_total_debits_match_reference=true`;
+- `compiled_long_probe_is_bounded_to_one_tag_region=true`.
+
+### VALIDATED cases
+
+- CMP dp,dp: static **8 units**, **10 total cycles**, C/N/Z postcondition correct.
+- CMP dp,#imm: static **8**, **9 total**, flags correct.
+- CMP (X),(Y): static **7**, **9 total**, flags correct.
+- OR (X),(Y): static **6**, **9 total**, destination RAM correct; validates shared `apu_bxy` +1 without overcharge.
+- MOV dp,#imm: static **7**, **9 total**, destination receives immediate correctly with the added real dummy read.
+- MOV dp,dp control: static **7**, **9 total**, unchanged generic path remains correct.
+
+Therefore the validated core rules are:
+- `apu_cmpm`: +1 trailing internal idle;
+- `apu_bxy`: +1 dummy-PC timing cycle;
+- opcode 0x8F uses dedicated `apu_movmi` with a real destination read then write;
+- opcode 0xFA remains on generic `apu_movm`.
+
+### Clean-consumption note
+
+Clean `0fe8c45f...` and diagnostic base `df5fd66c...` are byte-identical for:
+- `src/apu_address.S`;
+- `src/apu_alu.S`;
+- `src/apu_transfer.S`.
+
+`src/apu_emitter.S` differs only because the diagnostic branch carries a PROFILE-only cycle-proof observation block around block finalization. The direct diagnostic-base -> validated-target emitter change is exactly one opcode-table substitution:
+- 0x8F `apu_movm -> apu_movmi`.
+
+Decision: consume the three validated core blobs directly into clean foundation and apply only the single 0x8F table substitution to the clean emitter. Do NOT copy the diagnostic PROFILE block or proof script.

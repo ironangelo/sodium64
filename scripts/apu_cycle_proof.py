@@ -886,6 +886,32 @@ def main() -> int:
              expected_memory=(0x0020, 0x10), expected_flags=0x09),
     ]
 
+
+    word_half_carry_cases = [
+        # Word H is the high-byte nibble half-carry/borrow produced by the
+        # second 8-bit ADC/SBC step in the pinned reference.
+        dict(name="addw_h_set_via_low_carry", code=bytes.fromhex("7a202ffc"),
+             expected_debit=-147, reference_cycles=9, expected_end_region=8,
+             y_value=0x0F, a_value=0xFF, flags_value=0x00,
+             memory_writes=((0x0020, b"\x01\x00"),),
+             expected_accum=0x00, expected_y=0x10, expected_flags=0x08),
+        dict(name="addw_h_clear", code=bytes.fromhex("7a202ffc"),
+             expected_debit=-147, reference_cycles=9, expected_end_region=8,
+             y_value=0x01, a_value=0x00, flags_value=0x08,
+             memory_writes=((0x0020, b"\x00\x01"),),
+             expected_accum=0x00, expected_y=0x02, expected_flags=0x00),
+        dict(name="subw_h_set_via_low_borrow", code=bytes.fromhex("9a202ffc"),
+             expected_debit=-147, reference_cycles=9, expected_end_region=8,
+             y_value=0x11, a_value=0x00, flags_value=0x00,
+             memory_writes=((0x0020, b"\x01\x00"),),
+             expected_accum=0xFF, expected_y=0x10, expected_flags=0x09),
+        dict(name="subw_h_clear_via_low_borrow", code=bytes.fromhex("9a202ffc"),
+             expected_debit=-147, reference_cycles=9, expected_end_region=8,
+             y_value=0x10, a_value=0x00, flags_value=0x08,
+             memory_writes=((0x0020, b"\x01\x00"),),
+             expected_accum=0xFF, expected_y=0x0F, expected_flags=0x01),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -943,6 +969,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in half_carry_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in word_half_carry_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

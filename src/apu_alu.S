@@ -988,7 +988,7 @@ apu_mov1a: // MOV1 op,C
 apu_mov1b: // MOV1 C,op
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to set the carry flag to a bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -1006,7 +1006,7 @@ apu_or1a: // OR1 C,op
 
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise or the carry flag with a bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -1023,7 +1023,7 @@ apu_or1b: // OR1 C,/op
 
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise or the carry flag with a negated bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -1037,7 +1037,7 @@ apu_or1b: // OR1 C,/op
 apu_and1a: // AND1 C,op
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise and the carry flag with a bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -1051,7 +1051,7 @@ apu_and1a: // AND1 C,op
 apu_and1b: // AND1 C,/op
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise and the carry flag with a negated bit from a memory value
     EMIT_OP AND(T0, V0, A1)
@@ -1070,7 +1070,7 @@ apu_eor1: // EOR1 C,op
 
     // Update the JIT register state
     jal load_flags
-    nop
+    ori s1, s1, FLAG_SF
 
     // Emit code to bitwise exclusive or the carry flag with a bit from a memory value
     EMIT_OP AND(T0, V0, A1)

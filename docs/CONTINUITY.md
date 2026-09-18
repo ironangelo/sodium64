@@ -3585,3 +3585,28 @@ Acceptance:
 - normal/PROFILE build + emulator smoke remain green.
 
 Only after that proof passes should the emitter change be consumed into the clean timing foundation and a fresh real-N64 M1 package be built from the resulting exact clean SHA.
+
+
+## Cycle-budget v2 proof expectation repair — checkpoint 2026-09-18
+
+Proof v2 advanced to **`phase2/apu-cycle-budget-proof-v2@151466bb39ab7a7739ec76e415e4deafb0a600e4`**.
+
+Reason: the historical `long_nop_dbnzy` regression probe encoded the OLD architecture's desired cutoff: 16 NOP bytes / 32 guest cycles. Under the new temporal block contract the intentional cutoff is earlier:
+- each NOP = 2 SPC cycles;
+- after 10 NOPs budget =20 and one more finite instruction is permitted;
+- after 11 NOPs budget =22, so the block terminates;
+- expected PC advance =11 bytes;
+- static/total debit =22 SPC cycles =462 master cycles.
+
+Only proof expectations for this architecture-specific long-NOP cutoff changed:
+- expected PC +16 -> +11;
+- expected debit -672 -> -462;
+- reference cycles 32 ->22;
+- summary long-probe clock-units 32 ->22.
+
+All instruction semantic/timing expectations, addressing cases, branch/runtime debits, halt scheduler checks, tag-region bound and historical family regressions remain unchanged.
+
+Exact current proof runs:
+- **APU Cycle And Span Proof `35356429346`** — queued;
+- **Build and Validate `35356429215`** — queued.
+Earlier proof-v2 run at `91f8f13a...` is superseded by this expectation-only correction.

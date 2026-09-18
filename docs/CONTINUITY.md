@@ -3243,3 +3243,43 @@ This is a **MEASUREMENT PROOF**, not a speedup experiment. Accept the repair if:
 Do not require the three repeats to be numerically identical: variation itself is evidence. The goal is to make the **guest interval identical in definition**, so its observed variation becomes measurable instead of being conflated with different stop phases.
 
 If accepted, this exact-window harness becomes the laboratory authority for a fresh baseline on clean `9204ad2f...`. Only then rank E3 low-read, E4 same-boundary validation or E5 DSP-invariant hypotheses. ares results remain laboratory evidence; real N64 remains final performance/timing authority.
+
+
+## E1 matched-window baseline repair — VALIDATED 2026-09-18
+
+Measurement-only authority: **`phase2/apu-matched-baseline@d20258be3f783728b500cfd95065abc185b14f2b`**, tree-equivalent in emulator core to clean timing foundation **`9204ad2fae7f37d9950a0f3a88cc3ff4299e1bc1`**.
+
+CI:
+- **APU Matched Baseline `35351837163` SUCCESS**, matched job `105621983942`;
+- **Build and Validate `35351837019` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green;
+- matched diagnostics artifact **`10550167013`**, digest `sha256:0127fdbe1823fa40aa18fbbff0a4b99d82a32ee2bbd226d9ae1e2a1c5c2843d7`;
+- exact matched PROFILE build **`10550355610`**, digest `sha256:99d8c6e0e4cd208f036db934a6b00d6b4c1c3404685ba09ad6fbfd2deafcb185`.
+
+All three fresh ares processes produced the identical five-window vector:
+**61, 60, 59, 61, 59 /60**, mean **60.00/60**, range **59..61**, with exactly **3582 samples** per repeat. Every warmup/measured boundary had `fps_native=59` and settings remained APU21 / frameskip0 / audio4 / precision8.
+
+The statistical profile was also identical across all three repeats:
+- S-CPU **23.5%**;
+- APU generated **2.5%**;
+- APU static **22.1%**;
+- DSP/audio **23.2%**;
+- PPU **10.9%**;
+- DMA **6.1%**;
+- VRAM/RSP wait **1.9%**;
+- VI wait **9.7%**.
+
+**MEASUREMENT PROOF:** the exact guest-window harness removes the prior same-binary phase ambiguity for this deterministic workload. Host wall time varied materially across repeats while guest frame vectors, sample counts and profiles remained identical, confirming host wall time is irrelevant to the guest-frame result.
+
+**SUPPORTED INTERPRETATION:** on the corrected timing foundation, Gothicvania is no longer throughput-bound in the valid ares laboratory and has measurable VI idle headroom. This is a major change from pre-foundation ares observations, but it is NOT yet real-N64 performance evidence and does not prove Gate B.
+
+**REJECTED inference:** do not rank E3/E4/E5 by ares FPS while this workload is already at the laboratory ceiling. Small speedups can be hidden inside VI wait.
+
+### Immediate next action
+Before promoting this corrected foundation to a real-N64 milestone, run one **separate PROFILE-only matched-window DSP-lateness diagnostic** on the exact core:
+- reuse the previously validated due-count / late-sum / late-max / multi-due counters;
+- measure the same exact five 60-VI windows;
+- require **multi-due count = 0** (no lateness >= one 672-cycle DSP period);
+- record due count, average and max as timing evidence;
+- do not use the instrumented run for throughput comparison.
+
+If DSP scheduling remains bounded, the next gate-relevant action is a milestone real-N64 measurement of exact clean `9204ad2f...` (or a byte-equivalent release artifact), because ares has ceased to be discriminative for this workload's performance.

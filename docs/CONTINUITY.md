@@ -4555,3 +4555,26 @@ This run says nothing yet about SRS boot/progression, Sodium64 compatibility, th
 
 Immediate controlled repair:
 replace only the malformed changed-file shell comparison with a correctly quoted two-line expected value, keep the intended benchmark patch and all profiling settings unchanged, then rerun. Do not change emulator/runtime code and do not request hardware.
+
+
+## Gate-B SRS deterministic-profile attempt 2 — WORKFLOW PARSE FALSE NEGATIVE 2026-09-18
+
+Repair commit **`phase3/gate-b-srs-audition@07b0b3b152b6e903c3c01289e095d305720c0fda`** attempted to replace the malformed changed-file assertion.
+
+GitHub Actions run:
+- workflow/run **`35394545732`** — immediate FAILURE;
+- **no jobs were created**;
+- Build and Validate for the same branch commit was separately queued/running and is not relevant to this YAML parser failure.
+
+Repo inspection shows the intended ANSI-C quoted expected string did not survive in the workflow file: the block contains only `expected=` before the next command. GitHub therefore rejected the workflow before executing the source-build or benchmark steps.
+
+Classification:
+**WORKFLOW PARSE/HARNESS FALSE NEGATIVE / REJECTED as candidate or runtime evidence.**
+
+What this does NOT prove:
+- nothing new about SRS build/runtime;
+- nothing about benchmark patch validity;
+- nothing about Sodium64 compatibility/performance.
+
+Next repair:
+avoid multiline shell-string quoting entirely. Materialize actual and expected changed-file lists into temporary files and compare with `cmp`. Keep every benchmark/runtime/profile setting otherwise unchanged.

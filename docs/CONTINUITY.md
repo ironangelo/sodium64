@@ -1904,3 +1904,43 @@ Acceptance:
 2. corrected OR1/EOR1/MOV1 mem,C cases match reference totals and semantics;
 3. no-change controls remain exact without added charges;
 4. TSET/TCLR ordinary-RAM cases may establish total timing only, not bus fidelity.
+
+
+## Bit timing attempt 1 — timing matched, pre-existing carry-persistence bug exposed 2026-09-18
+
+Exact diagnostic SHA **`1958dff26eefdafffa849cd2d1b5ca83045230d2`**:
+- **Build and Validate `35307039426` SUCCESS**: normal, PROFILE and pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35307039329` FAILURE**, cycle-proof job **`105481467236`**.
+- failed proof result artifact **`10532800207`**, digest `sha256:c2c56b360156d1a057f92e8fd0a057ee5fabc15ea480c35a98fa91f27d30e55a`;
+- exact proof-build artifact **`10532056467`**, digest `sha256:d45aebc00ea68d6fb321608233ad49196d6c4816af9ac925d81c376e6b680539`.
+
+The proof stopped on the **first new bit case, OR1 C,mem.bit**. Its timing evidence PASSED:
+- static debit **-168 = 8 units**, exactly expected;
+- total `s3` debit **-189 = 9 cycles**, exactly pinned-reference total;
+- span/header checks passed.
+
+The failure was semantic only:
+- source bit = 1, initial C=0;
+- expected persisted C=1;
+- observed `apu_flags_after_block=0`;
+- `semantics_match_expected=false`.
+
+### Root cause — SUPPORTED STATIC + dynamic symptom
+
+Inherited carry-modifying bit generators load PSW but do not mark it dirty in compiler state:
+- `apu_mov1b` (MOV1 C,mem.bit);
+- `apu_or1a`;
+- `apu_or1b`;
+- `apu_and1a`;
+- `apu_and1b`;
+- `apu_eor1`.
+
+They call `load_flags` but omit `ori s1,s1,FLAG_SF`. Consequently generated code can modify runtime S1/C inside the block while `finish_block` is not told that PSW must be persisted. OR1's correct timing plus failed persisted carry is consistent with this defect.
+
+State: **CONFIRMED semantic defect for OR1 persistence; HYPOTHESIS for the same missing-dirty cause across the sibling carry-bit generators until rerun.**
+
+Decision:
+1. Do NOT change the validated OR1 +1 timing rule based on this failure.
+2. Add only the missing `FLAG_SF` dirty marking to all six carry-modifying bit generators.
+3. Rerun the same bit matrix unchanged. This will simultaneously test OR1/EOR1/AND1/MOV1 C,bit persistence and continue into the timing/control cases that attempt 1 never reached.
+4. TSET/TCLR remain separate: their +1 fixed debit is still diagnostic total-timing only; a bus-exact second-read implementation is planned after the carry persistence rerun.

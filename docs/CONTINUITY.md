@@ -993,3 +993,38 @@ Included semantic scope is only already-validated work:
 Exact clean CI launched: **Build and Validate `35294889292`** for SHA `1248bc98...`. An earlier run `35294839654` belongs to the transient branch-creation base SHA `7e48bcc9...` and is not authority for the clean timing commit.
 
 Next action remains conditional taken-branch timing only after `35294889292` is green.
+
+
+## Clean SPC700 timing candidate — CI VALIDATED 2026-09-17
+
+Clean production candidate **`phase2/apu-timing-correctness@1248bc98e9f71e37d3f384bf3f8aef243022e4e4`** passed **Build and Validate `35294889292` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+The candidate remains exactly one clean semantic commit over `7e48bcc9...`, touching only `apu_address.S`, `apu_alu.S`, `apu_control.S`, and `apu_emitter.S`. It carries no diagnostic workflow/state.
+
+This candidate is therefore **CANDIDATE / CI-VALIDATED**, backed by the independent ares dynamic proofs already recorded for its included timing rules. It is not yet merged because SPC700 timing coverage is intentionally continuing before integration.
+
+### Conditional-branch design refinement
+
+Static comparison to pinned ares shows the next branch batch must not be modeled as a uniform “taken +2 only” rule:
+
+- ordinary flag branches (BPL/BMI/BVC/BVS/BCC/BCS/BNE/BEQ): base 2 cycles, **+2 only if taken**;
+- BBC/BBS: base includes **+1 fixed idle** beyond existing fetch/data accounting, then **+2 if taken**;
+- CBNE direct/direct+X: operation contributes **+1 fixed idle** beyond the addressing timing already validated, then **+2 if taken**;
+- DBNZ memory: base is already composed by fetch/read/write/fetch accounting, then **+2 if taken**;
+- DBNZ Y: **+2 fixed** (dummy PC read + idle) beyond fetch accounting, then **+2 if taken**.
+
+Architecture for the taken surcharge: emit one generated MIPS `ADDI s3,s3,-(2*apu_clock)` only on the taken path. Compute its immediate at JIT compile time from configured `apu_clock`; do not add a runtime helper call per branch.
+
+Efficient control-flow shape: branch on the **not-taken** condition over the taken-only debit/PC assignment, using the branch delay slot to set the fallthrough SPC PC. Taken path then executes one timing `ADDI` and overwrites SPC PC with the target. This avoids charging not-taken paths and avoids a runtime call.
+
+## RESUME HERE — clean timing core green; conditional branches next
+
+1. Clean current candidate: `phase2/apu-timing-correctness@1248bc98...`, Build/Validate `35294889292` SUCCESS.
+2. Diagnostic addressing authority remains `e78b3c47...` / ares proof `35294386627` SUCCESS.
+3. Next technical batch should be diagnostic first: add an emitter helper that emits a runtime cycle-debit `ADDI`, then update conditional branch generators with fixed family charges plus taken-only +2.
+4. Proof both taken and not-taken paths. Minimum coverage: all eight ordinary condition branches, BBC/BBS, CBNE direct and direct+X, DBNZ memory, DBNZ Y. Check total `s3` cycles, resulting PC, and memory/Y side effects where applicable.
+5. Only after that proof passes, port the validated branch timing into the clean `apu-timing-correctness` candidate.
+6. Special non-branch operation families remain TODO. E1 matched-window repair still gates performance ranking.

@@ -4510,3 +4510,48 @@ This does not yet establish corpus membership, correctness under Sodium64, repre
 
 Next controlled step:
 create an explicit temporary benchmark patch that preserves normal audio/game-state/room/entity/collision/render logic, starts directly in the first gameplay level after normal initialization, and supplies deterministic Right+Run input. Run the resulting workload under the existing pinned ares N64 Sodium64 profile/frame-budget lab at frameskip 0, APU21, audio4, precision8. Do not request hardware.
+
+
+## Gate-B SRS deterministic-profile attempt 1 — HARNESS FALSE NEGATIVE 2026-09-18
+
+Repo/CI reconciliation found continuity lagging one technical step behind the actual audition branch.
+
+Current audition authority before repair:
+- **`phase3/gate-b-srs-audition@300a358e50f88df8a4f03e98dc5f7adb9dc5772b`**;
+- branch remains workflow-only relative to **`master@ac1ce74740d974b70206fcb6ba842e492b5d7272`**;
+- no Sodium64 emulator/runtime source is changed.
+
+The previously documented source-build proof remains valid:
+- **Gate B SRS Audition `35393460280` SUCCESS** @ `0c5f3a3d...`;
+- exact unmodified upstream release ROM SHA-256 `d5bd7b17aa19a1b370efa38554b6ebfd77c4756e7184e9f2e848e8193bc9bed0`;
+- build is autonomous from pinned public source/toolchain and requires no Iron-local input.
+
+A later commit attempted the next controlled step: explicit deterministic first-level gameplay + Road-valid Sodium64 PROFILE/ares measurement.
+
+Exact run:
+- **Gate B SRS Audition `35393812922` FAILED** @ `300a358e...`;
+- branch **Build and Validate `35393812773` SUCCESS** at the same SHA.
+
+What the failed audition actually reached:
+- source/toolchain checkout/build SUCCESS;
+- unmodified SRS release build SUCCESS;
+- provenance-only artifact upload SUCCESS;
+- **benchmark-creation shell step FAILED before the Python patch executed**;
+- all Sodium64 PROFILE, ares, wrapping and profiling steps were skipped.
+
+Exact failure:
+`unexpected EOF while looking for matching '\''`.
+
+Cause:
+the workflow's post-patch changed-file assertion was emitted with malformed shell quoting:
+`test "$changed" = game/src/_main.asm\ngame/src/gameloop.inc'`.
+
+Classification:
+**HARNESS FALSE NEGATIVE / REJECTED as SRS or Sodium64 evidence.**
+No benchmark ROM was produced and no emulator-profile result exists from this run.
+
+Important non-conclusion:
+This run says nothing yet about SRS boot/progression, Sodium64 compatibility, throughput, subsystem pressure, cadence, or corpus suitability.
+
+Immediate controlled repair:
+replace only the malformed changed-file shell comparison with a correctly quoted two-line expected value, keep the intended benchmark patch and all profiling settings unchanged, then rerun. Do not change emulator/runtime code and do not request hardware.

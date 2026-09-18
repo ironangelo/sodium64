@@ -3096,3 +3096,41 @@ Falsifiers:
 If accepted, consume only the runtime core files `src/apu.S` and `src/apu_emitter.S` into clean `phase2/apu-timing-foundation@9f070fae...`, then run exact clean CI. Do **not** copy diagnostic script/workflow into the clean branch.
 
 Do not re-baseline Gothicvania or resume the memory-helper experiment until this last base-SPC700 scheduler correctness item is resolved.
+
+
+## SPC700 SLEEP/STOP scheduler-state proof — VALIDATED 2026-09-18
+
+Exact diagnostic authority: **`e7cc3cf27f10bd5e3310a158bd56cf9965b7166e`**.
+
+CI:
+- **Build and Validate `35349865989` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35349866045` SUCCESS**, cycle-proof job **`105615549216`**.
+- proof result artifact **`10549793093`**, digest `sha256:16ecb1d8f86c6045b11d2999c9562c0d166081826ab0583cb7cbbe204cb7a111`;
+- exact proof-build artifact **`10548992246`**, digest `sha256:3be016038bb0f209d5528499f6d997b55edb18c8475e54568e950b90f469295a`;
+- normal Build and Validate artifact **`10548652376`**, digest `sha256:07679ab4051faff12658e86600898f508c542e5e6285e3fb88732cee66bfdc44`.
+
+Dynamic results at `apu_clock=21`:
+- SLEEP entry: PC 0x0200 -> **0x0201**, latch=**1**, static debit=-42, total debit=**-63 = 3 SPC cycles**;
+- STOP entry: PC 0x0200 -> **0x0201**, latch=**2**, static debit=-42, total debit=**-63 = 3 SPC cycles**;
+- SLEEP halted tick 1: real read address **0x0201**, PC remains 0x0201, latch remains 1, JIT pointer unchanged, debit **-42 = 2 cycles**;
+- SLEEP halted tick 2: same invariants, **2 cycles**;
+- STOP halted tick 1: real read address **0x0201**, PC remains 0x0201, latch remains 2, JIT pointer unchanged, debit **2 cycles**;
+- STOP halted tick 2: same invariants, **2 cycles**.
+
+All proof summary invariants are true:
+`all_halt_scheduler_ticks_match_expected`,
+`all_header_spans_match_source_prediction`,
+`all_runtime_cycle_debits_match_expected`,
+`all_semantics_match_expected`,
+`all_static_debits_match_source_prediction`,
+`all_total_debits_match_reference`,
+`compiled_long_probe_is_bounded_to_one_tag_region`.
+
+Pinned ares authority also confirms SMP dispatch checks persistent `r.wait`/`r.stop` before decoding another opcode and each state repeatedly performs `read(PC)+idle`; power/reset clears both states.
+
+### Decision
+SLEEP/STOP scheduler semantics are **VALIDATED** in the ares laboratory. This closes the previously enumerated `apu_unk` base-opcode holes: 0xEF and 0xFF are no longer unimplemented in the validated diagnostic core.
+
+Consume only runtime core changes from `src/apu.S` and `src/apu_emitter.S` into clean `phase2/apu-timing-foundation@9f070fae...`. Do not copy diagnostic proof/workflow changes. Then run exact clean Build and Validate before any re-baseline.
+
+This does **not** prove Gate B performance or real-N64 behavior. The added normal `apu_execute` halt-state check is a correctness cost that must be included in the new matched performance baseline rather than assumed negligible.

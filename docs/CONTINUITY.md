@@ -4907,3 +4907,44 @@ Exact runs:
 
 If sustained internally indexed windows reproduce at 60/60, the earlier 53/59 terminal-window readings remain rejected and SRS moves to progression/checkpoint validation rather than performance optimization.
 If the internally indexed sequences diverge materially, keep SRS measurement methodology OPEN and do not select a blocker or request hardware.
+
+
+## Gate-B SRS internally aligned repeatability — VALIDATED 2026-09-18
+
+Exact authority:
+- audition head **`phase3/gate-b-srs-audition@2694c455ba92bace9e644652eb5034f8a88d6961`**;
+- **Gate B SRS Audition `35398977369` SUCCESS**;
+- **Build and Validate `35398977413` SUCCESS** at the same SHA;
+- non-ROM audition artifact **`10569538598`**, digest **`sha256:3e34de347e20401f0a3db796a8aa51aef0824373a5ad71b5d02c01c2f171f73d`**;
+- source-build provenance artifact **`10569272694`**, digest `sha256:3c2c69a391919fc884a9caf0167030c5ec7c9dfe3b4f3157321f343b51e0c982`.
+
+Three fresh pinned-ares processes used the exact same benchmark ROM/patch, Road-valid settings and PROFILE VI-history instrumentation.
+
+Internally aligned histories:
+- **r1 (14 windows):** `48,60,60,60,60,60,60,60,60,60,60,60,60,60`;
+- **r2 (18):** `59,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60`;
+- **r3 (19):** `59,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60`.
+
+Across the 14-window common span:
+- exact full prefix equality = false because the first diagnostic window varies `48/59/59`;
+- **sustained common prefix after window 1 = exact match**;
+- the common sustained sequence is **13 consecutive `60/60` windows in all three runs**.
+
+Interpretation:
+- the first post-reset window is a queue/reset-boundary transient and is not suitable as a sustained-throughput metric;
+- after that transient, the internally indexed sustained frame-budget signal is **repeatably 60/60** for this exact SRS segment in the pinned ares lab;
+- the older host-stop terminal readings `53/60` and `59/60` remain **REJECTED** as blocker evidence;
+- no SRS throughput-driven CPU/APU/DSP/PPU/DMA optimization is justified from the current lab result.
+
+The statistical sample mixes differ because each fixed host-duration run reaches a different amount of guest progress and the 4096-entry EPC ring represents the terminal portion, not a normalized same-guest interval. Example VI-wait shares were 45.0%, 65.0%, 64.0%. Do not interpret those differences as subsystem cost movement.
+
+What remains OPEN before fixing SRS as a principal Gate-B corpus member:
+**guest progression/checkpoint proof.** A stable 60/60 sequence is insufficient if deterministic Right+Run has become stuck in a low-activity state.
+
+Immediate next experiment:
+- resolve exact SRS guest symbols from the pinned build output rather than guessing WRAM offsets;
+- observe at least room/state plus player/camera position through Sodium64's mapped guest WRAM across the same lab run;
+- establish that meaningful game state changes during the sustained 60/60 sequence;
+- keep SRS/Sodium64 production behavior unchanged and request no hardware.
+
+If progression is demonstrated, SRS can be locked as the autonomous DKC-like/heavy-platformer slot and corpus selection proceeds to the remaining SMW-like and ALttP-like slots.

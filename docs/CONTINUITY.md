@@ -1162,3 +1162,37 @@ Conditional branch timing remains next. Static/reference audit confirms:
 Because the decision is runtime-dependent, these +2 cycles must be emitted on the generated taken path, not added through compile-time `jit_charge_cycles`.
 
 Do not modify the clean timing foundation until `35296376545` finishes.
+
+
+## Clean SPC700 timing foundation — CI VALIDATED 2026-09-17/18
+
+Clean candidate **`phase2/apu-timing-foundation@a62e95b1764d296dc74e711903c2431c343a54c2`** completed **Build and Validate `35296376545` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+The earlier branch-creation run `35296360910` for base SHA `7e48bcc9...` was cancelled by concurrency after the real candidate push; it is not relevant to candidate validity.
+
+Combined authority for this candidate:
+- clean code diff: exactly four APU core files, no diagnostics;
+- exact candidate CI: `35296376545` SUCCESS;
+- independent dynamic semantic/cycle authority: diagnostic `e78b3c47...`, ares proof `35294386627` SUCCESS.
+
+State: **VALIDATED CANDIDATE**, not merged.
+
+### Conditional branch timing design selected
+
+The existing generated branch layout has two orientations:
+- for conditions where the emitted MIPS branch corresponds to **SNES taken**, charge +2 cycles statically and emit one **+2-cycle refund** instruction only on the sequential SNES-not-taken path; increase branch skip from 2 to 3 emitted instructions;
+- for conditions where the emitted MIPS branch corresponds to **SNES not-taken**, leave static timing unchanged and emit one **-2-cycle debit** instruction only on the sequential SNES-taken path; likewise increase skip from 2 to 3.
+
+This preserves one extra runtime MIPS instruction on only the path needing adjustment and avoids new runtime helper calls.
+
+Additional fixed branch-family timing from pinned ares reference:
+- ordinary flag branches: +0 fixed, +2 only when taken;
+- BBC/BBS: +1 fixed idle, +2 when taken;
+- CBNE direct/direct+X: +1 fixed idle beyond addressing-family timing, +2 when taken;
+- DBNZ Y: +2 fixed cycles, +2 when taken;
+- DBNZ memory: +0 fixed beyond existing read/write/fetches, +2 when taken.
+
+Next diagnostic matrix must exercise taken/not-taken pairs for BCC and BCS (both branch orientations), BBC/BBS, CBNE direct and direct+X, DBNZ Y and DBNZ memory; verify total `s3` delta, resulting PC and register/RAM postconditions. Do not modify clean `a62e95b1` until this diagnostic batch passes.

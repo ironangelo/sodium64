@@ -887,6 +887,65 @@ apu_incw: // INCW op
     li t1, T0
 
 .align 5
+apu_div_runtime:
+    // Runtime helper for the S-SMP's non-standard DIV YA,X semantics.
+    // Generated JIT state: T7=A, T8=Y, T9=X, S1=PSW.
+    andi t9, t9, 0xFF
+    andi t8, t8, 0xFF
+    andi t7, t7, 0xFF
+
+    // DIV preserves C/I/B/P and recomputes H/V before the quotient.
+    andi s1, s1, 0xB7
+    andi t0, t8, 0x0F
+    andi t1, t9, 0x0F
+    sltu t2, t0, t1
+    xori t2, t2, 1
+    sll t2, t2, 3
+    or s1, s1, t2 // H = (Y&15) >= (X&15)
+
+    sltu t2, t8, t9
+    xori t2, t2, 1
+    sll t2, t2, 6
+    or s1, s1, t2 // V = Y >= X
+
+    // Preserve the original 16-bit YA value for either arithmetic branch.
+    sll a0, t8, 8
+    or a0, a0, t7
+
+    // Normal path is valid only while Y < 2*X. X=0 therefore always takes
+    // the special path and never reaches a divide-by-zero.
+    sll t0, t9, 1
+    sltu t1, t8, t0
+    beqz t1, apu_div_runtime_special
+    nop
+
+    div a0, t9
+    mflo t7
+    mfhi t8
+    andi t7, t7, 0xFF
+    andi t8, t8, 0xFF
+    jr ra
+    nop
+
+apu_div_runtime_special:
+    // A = 255 - (YA - (X<<9)) / (256-X)
+    // Y = X + (YA - (X<<9)) % (256-X)
+    li t0, 256
+    sub t0, t0, t9
+    sll t1, t9, 9
+    sub a1, a0, t1
+    div a1, t0
+    mflo v0
+    mfhi v1
+    li t7, 255
+    sub t7, t7, v0
+    add t8, t9, v1
+    andi t7, t7, 0xFF
+    andi t8, t8, 0xFF
+    jr ra
+    nop
+
+.align 5
 apu_div: // DIV YA,X
     // One opcode fetch is already charged; DIV has 11 additional SPC700 cycles.
     jal jit_charge_cycles
@@ -902,23 +961,13 @@ apu_div: // DIV YA,X
     jal load_flags
     nop
 
-    // Emit code to divide register YA by register X
-    EMIT_OP ANDI(T9, T9, 0xFF)
-    EMIT_OP ANDI(T8, T8, 0xFF)
-    EMIT_OP ANDI(T7, T7, 0xFF)
-    EMIT_OP SLL(T0, T8, 8)
-    EMIT_OP OR(T0, T0, T7)
-    EMIT_OP DIV(T0, T9)
-
-    // Emit code to move the result to register YA and set flags for Y
-    // TODO: set the H flag
-    EMIT_OP MFLO(T7) // Quotient
-    EMIT_OP MFHI(T8) // Remainder
-    EMIT_OP ANDI(S1, S1, 0xB7)
-    EMIT_OP SRL(T0, T7, 8)
-    EMIT_OP SLT(T0, ZERO, T0)
-    EMIT_OP SLL(T0, T0, 6) // V
-    EMIT_OP OR(S1, S1, T0)
+    // Emit one call to the runtime helper. N/Z are still queued from A below,
+    // so the existing JIT flag persistence mechanism remains authoritative.
+    la t0, apu_div_runtime
+    jal emit_jal
+    nop
+    // Neutralize the runtime JAL delay slot so queued N/Z observes new A.
+    EMIT_OP SLL(ZERO, ZERO, 0)
     la ra, finish_opcode
     j queue_nz
     li t1, T7

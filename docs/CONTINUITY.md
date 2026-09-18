@@ -3080,8 +3080,8 @@ Directed proof requires separately for SLEEP and STOP:
 The proof runs halt cases last so their persistent state cannot affect earlier cases.
 
 ### Exact workflows now running
-- **Build and Validate `35349865989`** — IN PROGRESS.
-- **APU Cycle And Span Proof `35349866045`** — IN PROGRESS.
+- **Build and Validate `35349865989` SUCCESS** — normal build, PROFILE build and pinned Mupen emulator smoke all green.
+- **APU Cycle And Span Proof `35349866045`** — IN PROGRESS; profile-build is already SUCCESS and the dynamic ares proof is still running.
 
 Acceptance: both workflows green and all new halt invariants true.
 

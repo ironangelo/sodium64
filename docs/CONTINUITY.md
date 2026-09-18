@@ -1728,3 +1728,37 @@ Combined authority:
 - exact clean SHA CI: `35302765614` SUCCESS.
 
 Next isolated variable: SPC700 word-instruction total-cycle coverage. Do not fold bit-family timing into the same experiment.
+
+
+## SPC700 word timing proof in progress — checkpoint 2026-09-17/18
+
+Exact diagnostic SHA: **`90c700a404f7d5a5abdc65d92e4869a431e7ad2d`**, parent `f4da303d...`.
+
+Controlled core changes:
+- `apu_addw`: +1 fixed cycle;
+- `apu_subw`: +1 fixed cycle;
+- `apu_movwya` (MOVW YA,dp): +1 fixed cycle.
+No changes to CMPW, INCW, DECW or MOVW dp,YA controls.
+
+Directed matrix:
+- ADDW YA,dp + closing BRA: expected **9 total cycles**, verifies YA result;
+- SUBW YA,dp + BRA: **9**, verifies YA result;
+- MOVW YA,dp + BRA: **9**, verifies YA load;
+- CMPW control + BRA: **8**;
+- DECW control + BRA: **10**, verifies two output bytes;
+- INCW control + BRA: **10**, verifies two output bytes;
+- MOVW dp,YA control + BRA: **9**, verifies two output bytes.
+
+Known semantic limitation intentionally not hidden: ADDW/SUBW source still has `TODO: set the H flag`. This proof validates total timing and chosen data-result postconditions; it does not claim full flag correctness.
+
+Exact workflows:
+- **Build and Validate `35302988477`** — IN PROGRESS at checkpoint.
+- **APU Cycle And Span Proof `35302988483`** — IN PROGRESS at checkpoint.
+
+Decision rules:
+- all seven cases pass => validate the three +1 timing rules and consume only `apu_alu.S` / `apu_transfer.S` core changes cleanly on `fafc0847...`;
+- corrected case cycle mismatch => reject/narrow the +1 rule for that opcode;
+- control mismatch => stop and repair the timing model before consuming any word changes;
+- data semantic mismatch with correct cycles => isolate inherited word-operation correctness separately from timing.
+
+Bit-family hypotheses remain DEFERRED until this word batch closes.

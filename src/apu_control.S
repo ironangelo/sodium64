@@ -544,14 +544,15 @@ apu_pcall: // PCALL uu
     jal jit_charge_cycles
     li t0, 2
 
-    // Create an address based on the parameter
+    // Fetch the high-page parameter. Preserve it in v0 across load_stack;
+    // full_address uses t2 as scratch while emitting the stack-pointer load.
     jal jit_read8
     nop
-    ori t2, v0, 0xFF00
 
     // Update the JIT register state
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_PC
+    ori t2, v0, 0xFF00
 
     // Emit code to jump to an address in the highest page of RAM
     li t0, ORI(S0, ZERO, 0)

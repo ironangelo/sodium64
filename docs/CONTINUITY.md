@@ -2651,3 +2651,50 @@ Directed proof cases must cover:
 4. overflow case with H clear;
 5. X=0;
 6. unchanged **16 total cycles** and full historical regression matrix.
+
+
+## Clean ADDW/SUBW Half-Carry foundation — CI VALIDATED 2026-09-18
+
+Clean **`phase2/apu-timing-foundation@74455bb8ae15b7b654eef7f9812a65db7ccdd964`** completed **Build and Validate `35315787073` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+## SPC700 DIV semantic repair proof in progress — checkpoint 2026-09-18
+
+Exact diagnostic SHA: **`18c25ce797ff49957da99cb0a31aef30a661fdfc`**, one commit after ADDW/SUBW H authority `06edb6af...`.
+
+Direct compare is exactly:
+- `src/apu_alu.S` +64/-17;
+- `scripts/apu_cycle_proof.py` +32/-0.
+
+Controlled repair:
+- retain existing validated DIV timing: opcode fetch + 11 extra cycles = **12-cycle DIV**;
+- replace unconditional normal MIPS division with one generated JAL to a dedicated runtime helper;
+- helper recomputes H/V from original Y/X;
+- normal arithmetic only when `Y < 2*X`;
+- otherwise reproduce the S-SMP overflow formula;
+- X=0 necessarily takes the special path, avoiding undefined divide-by-zero;
+- N/Z still use the existing queued-A mechanism;
+- C/I/B/P are preserved.
+
+Directed semantic matrix, all still **16 cycles including trailing BRA**:
+1. normal branch with H/V clear and preserved C;
+2. normal branch with 9-bit quotient and H/V set;
+3. known inherited failure X=4,Y=0x5A,A=0x11;
+4. overflow branch with H clear;
+5. X=0;
+6. zero-result N/Z path.
+
+Exact workflows:
+- **APU Cycle And Span Proof `35316149582`** — IN PROGRESS at checkpoint.
+- **Build and Validate `35316149675`** — IN PROGRESS at checkpoint.
+
+Acceptance:
+- all six A/Y outputs match pinned reference;
+- H/V/N/Z exact and C preserved where directed;
+- static/total guest debit unchanged;
+- full historical regression matrix remains green;
+- normal/PROFILE build and Mupen smoke remain green.

@@ -3040,3 +3040,59 @@ Artifacts:
 State: **VALIDATED CANDIDATE**, unmerged.
 
 The diagnostic and clean branches are byte-unchanged from their recorded DAA/DAS checkpoints; no SLEEP/STOP implementation exists yet. The next technical batch is the already-designed isolated SLEEP/STOP scheduler-state proof. Do not re-baseline Gothicvania or resume memory-helper optimization before this bounded base-SPC700 correctness item is resolved.
+
+
+## SPC700 SLEEP/STOP scheduler-state proof — checkpoint 2026-09-18
+
+Exact diagnostic SHA: **`e7cc3cf27f10bd5e3310a158bd56cf9965b7166e`**, one atomic commit after validated DAA/DAS diagnostic authority `db413794...`.
+
+Direct compare `db413794... -> e7cc3cf...` is exactly:
+- `src/apu.S` +20/-0;
+- `src/apu_emitter.S` +39/-2;
+- `scripts/apu_cycle_proof.py` +116/-0;
+- `.github/workflows/apu-cycle-proof.yml` +8/-2.
+
+### Controlled architecture under test
+- add persistent `apu_halt`: 0=RUN, 1=WAIT/SLEEP, 2=STOP;
+- keep the existing DSP-deadline test ahead of halt servicing;
+- halted `apu_execute` performs real `apu_read8(apu_count)` + one idle-cycle debit and returns to `cpu_execute`, without changing PC or entering JIT/decode;
+- opcode 0xEF and 0xFF now latch distinct states;
+- the entry JIT block immediately performs the first real read of the instruction-after-opcode PC + idle before returning;
+- normal `finish_block` remains authoritative for storing that next PC;
+- ordinary proof setup clears `apu_halt` so persistent state cannot contaminate historical cases.
+
+Expected guest timing:
+- SLEEP/STOP entry = opcode fetch + real read(next PC) + idle = **3 SPC cycles**;
+- each subsequent halted scheduler service = real read(same PC) + idle = **2 SPC cycles**;
+- PC remains `TEST_PC+1`;
+- halt state remains latched;
+- JIT pointer remains unchanged on halted service.
+
+### Dynamic proof additions
+Directed proof requires separately for SLEEP and STOP:
+1. entry total = 3 cycles and state = 1/2 respectively;
+2. two consecutive halted scheduler services each debit exactly 2 cycles;
+3. the real bus read address equals the stable instruction-after-opcode PC;
+4. PC and halt state remain unchanged;
+5. JIT pointer does not advance, proving no further decode/compile during halted service;
+6. the full historical timing/address/semantic regression matrix remains green.
+
+The proof runs halt cases last so their persistent state cannot affect earlier cases.
+
+### Exact workflows now running
+- **Build and Validate `35349865989`** — IN PROGRESS.
+- **APU Cycle And Span Proof `35349866045`** — IN PROGRESS.
+
+Acceptance: both workflows green and all new halt invariants true.
+
+Falsifiers:
+- compile/PROFILE/Mupen regression;
+- entry debit != 3 cycles;
+- any persistent tick != 2 cycles;
+- read address differs from stable PC;
+- PC advances, latch changes, or JIT pointer moves while halted;
+- any prior regression case fails.
+
+If accepted, consume only the runtime core files `src/apu.S` and `src/apu_emitter.S` into clean `phase2/apu-timing-foundation@9f070fae...`, then run exact clean CI. Do **not** copy diagnostic script/workflow into the clean branch.
+
+Do not re-baseline Gothicvania or resume the memory-helper experiment until this last base-SPC700 scheduler correctness item is resolved.

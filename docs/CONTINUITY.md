@@ -4609,3 +4609,29 @@ Acceptance remains unchanged:
 produce the deterministic first-level SRS benchmark from pinned public source, preserve normal emulation/gameplay/audio work, run Road-valid Sodium64 PROFILE under pinned ares, and obtain valid profile/frame-budget evidence.
 
 Until `35394713398` reaches the profile stage, there is still **no SRS execution evidence** beyond the already-validated autonomous source build.
+
+## Gate-B SRS deterministic benchmark — BUILD ACCEPTED / profiling running 2026-09-18
+
+Exact audition head remains **`phase3/gate-b-srs-audition@6e5d444017ca899bcf2b69be6cbf8dd94eee9507`**.
+
+Run **Gate B SRS Audition `35394713398`** has now passed:
+- exact pinned SRS/toolchain checkout;
+- full CLI toolchain build;
+- unmodified release ROM rebuild;
+- provenance-only upload;
+- **explicit deterministic gameplay benchmark creation and rebuild**.
+
+The benchmark patch therefore compiles successfully and reaches the next lab stage. It:
+- keeps normal SRS audio initialization;
+- initializes normal game state;
+- selects the first authored gameplay room (`a1a_entrance`);
+- preserves room/entity/collision/camera/metatile/animation/script/WaitFrame work;
+- injects deterministic held Right+Run input in the normal game loop;
+- does not disable enemies, collision, audio, PPU work, APU work, frameskip or precision.
+
+Current run has advanced to Sodium64 PROFILE build; ares/profile/frame-budget steps are still pending/running.
+
+Interpretation:
+**BUILD/WORKLOAD CONSTRUCTION ACCEPTED.** This is not yet execution/compatibility/performance evidence. Do not classify SRS as a corpus member until the pinned ares lab actually boots/progresses and yields valid Road-state counters.
+
+Benchmark ROM/patch hashes will be recorded from the completed run artifact/log once available.

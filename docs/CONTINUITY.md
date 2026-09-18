@@ -1409,3 +1409,27 @@ Acceptance:
 5. no unexpected runtime debit instruction appears for these fixed-cycle-only families.
 
 A mismatch narrows/rejects the specific family rule; do not adjust the reference expectation without reconciling the pinned ares instruction sequence.
+
+
+## Fixed-family timing proof attempt 1 — harness false negative on 0xED 2026-09-17/18
+
+Exact core/harness SHA **`62e661b62a177c5b1c087226e589153c29e439fe`**:
+- **Build and Validate `35297695310` SUCCESS**, including normal build, PROFILE build and pinned Mupen smoke.
+- **APU Cycle And Span Proof `35297695313` FAILURE**, cycle-proof job `105453803356`.
+- failed proof result artifact **`10528981437`**, digest `sha256:d0ea14cfc5f171b9d6900bf7d977602d65271d079e01113ec464eb4910767a0b`;
+- exact proof-build artifact **`10528736287`**, digest `sha256:2684ab8874f58050c4a5441ab722400b35a5ebb7000fdd9dadf681c3d03312a1`.
+
+The failure is **REJECTED as core/timing evidence**. All prior regression cases remained green, POP A now matched 8 total cycles with correct stack semantics, and the new cases completed successfully through:
+- INC A + BRA = **6 cycles**, semantic pass;
+- MOV X,A + BRA = **6**, X semantic pass;
+- MOV SP,X + BRA = **6**, SP semantic pass;
+- CLRC + BRA = **6**, flags semantic pass;
+- DI + BRA = **7**, flags semantic pass;
+- EI + BRA = **7**, flags semantic pass.
+
+Execution stopped while arming `notc_fixed`, before compiling or executing NOTC. The injected source bytes are `ED 2F FD`. Shared `RSPClient.read_memory()` currently treats **any** reply beginning with ASCII `E` as a GDB error. A valid memory reply `ED2FFD` therefore triggered:
+`target rejected memory read ...: ED2FFD`.
+
+This is a diagnostic-protocol parser defect, not an emulator result. GDB RSP errors have the shape `E` + two hex digits (normally exactly 3 ASCII bytes), while a memory/register hex payload can legitimately begin with hexadecimal E.
+
+**Decision:** fix only RSP error recognition (and the identical single-register-read check) to recognize actual 3-byte `Ehh` error packets, then rerun the unchanged core timing candidate. Do not alter cycle charges or reference expectations.

@@ -3535,3 +3535,53 @@ Acceptance remains unchanged:
 2. matched Gothicvania: `multi_due=0`, max <672 and throughput materially above one-op 49.4/60;
 3. full APU Cycle And Span Proof regression matrix green;
 4. only then consume the emitter change into clean timing foundation.
+
+
+## Guest-cycle-bounded multi-op JIT — MATCHED CADENCE + THROUGHPUT VALIDATED 2026-09-18
+
+Exact candidate authority: **`phase2/apu-cycle-budget-interleave@a4b8f2d74f368568ef519ea76bb589d7fe98d265`**, based on matched-lateness diagnostic authority `a8c56301...`.
+
+Direct production-semantic change from `a8c56301...` remains confined to `src/apu_emitter.S`:
+- compile-only `jit_block_cycles` accounting;
+- +1 per `jit_read8` source/operand fetch;
+- fixed extra guest cycles through existing `jit_charge_cycles`;
+- conditional cycles conservatively budgeted at the existing `jit_emit_runtime_cycles` value;
+- +1 for generated `apu_read8` / `apu_write8` guest bus calls;
+- multi-op continuation only while completed worst-case block budget <=20 cycles, preserving the independent 16-byte source-span cap.
+
+CI:
+- **Build and Validate `35355419608` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Matched Baseline `35355419586` SUCCESS**.
+- matched diagnostic artifact **`10551783478`**, digest `sha256:95c8a3a88ed7815e614440e1d366b2024e4043dfc7b18fdf60377611ad94950e`;
+- exact PROFILE build artifact **`10551457203`**, digest `sha256:c16261aafd8ea11709d4e1cbcaceb9af5a46689330d5a8fc0458ae2603dc2ce6`.
+
+All three fresh ares repeats were identical:
+- measured frame vector **60,60,60,60,60 /60**;
+- mean **60.00/60**, range **60..60**;
+- samples **3584**;
+- DSP due count **159539**;
+- late sum **3350319 master cycles**;
+- average lateness **21.0 master cycles = 1 SPC cycle**;
+- maximum measured-window lateness **21 master cycles = 1 SPC cycle**;
+- **`dsp_multi_due_count = 0`**.
+
+Warmup still observed a bounded max of 483 master cycles (<672), with zero multi-due events. After the exact measurement-boundary reset, all five windows remained at one SPC cycle maximum lateness.
+
+Comparison:
+- original corrected multi-op BLOCK16: **60/60**, max **1029**, **1420 >=672** — cadence FAIL;
+- one-op causal control: **49.4/60**, max **168**, **0 >=672** — cadence PASS, throughput FAIL;
+- cycle-bounded multi-op: **60/60**, max **21**, **0 >=672** — cadence PASS + throughput target in valid ares lab.
+
+**ARCHITECTURE PROOF:** guest-cycle-bounded multi-op compilation resolves the demonstrated conflict between SPC700 JIT throughput and DSP scheduler cadence for Gothicvania in the valid ares lab. The mechanism is not an arbitrary block-size reduction: it constrains scheduler return latency in emulated time while retaining multi-op blocks.
+
+**What this does NOT prove:** commercial compatibility, real-N64 60 FPS, audio waveform correctness, or Gate B completion. ares remains a laboratory; exact opcode cycle/address regression and then real hardware authority are still required.
+
+### Immediate next action
+Consume **only the `src/apu_emitter.S` production change** into the existing APU cycle/address proof line and run the full deterministic opcode/timing/address regression. Do not consume PROFILE lateness instrumentation or matched-lab workflow changes into the clean candidate.
+
+Acceptance:
+- all existing 256-opcode cycle/address proof cases remain green;
+- WAIT/STOP/NOP and branch taken/not-taken expectations remain green;
+- normal/PROFILE build + emulator smoke remain green.
+
+Only after that proof passes should the emitter change be consumed into the clean timing foundation and a fresh real-N64 M1 package be built from the resulting exact clean SHA.

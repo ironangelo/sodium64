@@ -2023,3 +2023,35 @@ Next controlled change:
 6. update TSET/TCLR expected static debit from -168 to **-147**, while total remains **10 cycles** via 3 runtime memory accesses.
 
 Expected: TSET PSW becomes N=1/Z=0, TCLR semantic case runs, both totals remain 10. Falsifier: changed total, wrong RAM/flags, or evidence A1/A2 are clobbered by a read path.
+
+
+## TSET/TCLR bus-exact repair — proof in progress 2026-09-18
+
+Exact diagnostic HEAD: **`df5fd66c76d5b3898a6c5d6020aacfff38e8daf5`**, one commit after carry-persistence authority `2602249f...`.
+
+Controlled change:
+- remove TSET/TCLR fixed +1 synthetic debit;
+- preserve the first-read comparison into queued NZ before helper calls;
+- emit the pinned-reference **second real `apu_read8`** to the same address;
+- derive write data from the first read in that JAL delay slot and preserve it in A1;
+- emit `apu_write8` afterward;
+- A1/A2 preservation was statically audited across all current APU read paths.
+
+Proof expectations change only for TSET/TCLR static debit:
+- **-168 -> -147** (8 -> 7 static units);
+- total reference remains **10 cycles**, now from three runtime memory accesses rather than two accesses + synthetic fixed cycle;
+- RAM and PSW semantic expectations are unchanged.
+
+Direct compare `2602249f... -> df5fd66c...`:
+- `src/apu_alu.S` +29/-21;
+- `scripts/apu_cycle_proof.py` +4/-5.
+
+Exact workflows:
+- **Build and Validate `35308254510`** — IN PROGRESS at checkpoint.
+- **APU Cycle And Span Proof `35308254504`** — IN PROGRESS at checkpoint.
+
+Acceptance:
+1. all previously validated bit/carry/control cases remain green;
+2. TSET1 total remains 10, RAM remains correct, PSW becomes N=1/Z=0 for directed case;
+3. TCLR1 reaches execution and passes 10-cycle/RAM/PSW case;
+4. no synthetic runtime cycle-debit instruction is needed for these instructions.

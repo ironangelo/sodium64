@@ -4870,3 +4870,40 @@ Next controlled checks before SRS can become a fixed corpus member:
 2. add a guest-progression/checkpoint observation so a stable 60/60 cannot be produced by a workload that has become stuck in one low-activity gameplay state.
 
 Only after those checks should SRS be locked as the DKC-like/autonomous corpus slot.
+
+
+## Gate-B SRS internally aligned repeatability — RUNNING 2026-09-18
+
+Exact head:
+**`phase3/gate-b-srs-audition@2694c455ba92bace9e644652eb5034f8a88d6961`**.
+
+Diff from first internal-history result `bd9f7a75...`:
+- workflow only;
+- no Sodium64 source/runtime/instrumentation change;
+- no SRS source/benchmark change.
+
+Controlled experiment:
+- same pinned benchmark ROM and patch;
+- same PROFILE VI-history instrumentation;
+- same Road-valid frameskip0/APU21/audio4/precision8;
+- same pinned ares lab;
+- three fresh ares processes;
+- fixed 20 host-second observation each;
+- each process resets `fps_native`, `fps_emulate`, `fps_display` and history count together before measurement;
+- compare histories by internal 60-VI index, not terminal host stop phase.
+
+Question:
+Does the sustained internal sequence itself reproduce across fresh processes?
+
+Interpretation rule:
+- exact common-prefix agreement is strongest;
+- the first window is tracked separately because queue/reset settling may produce a one-frame transient;
+- the sustained common prefix after window 1 is the primary repeatability signal;
+- do not fail the workflow merely because a measured window is sub-60; preserve the data and interpret it.
+
+Exact runs:
+- **Gate B SRS Audition `35398977369`** @ `2694c455...` — running;
+- Build and Validate `35398977413` @ same SHA — queued/running.
+
+If sustained internally indexed windows reproduce at 60/60, the earlier 53/59 terminal-window readings remain rejected and SRS moves to progression/checkpoint validation rather than performance optimization.
+If the internally indexed sequences diverge materially, keep SRS measurement methodology OPEN and do not select a blocker or request hardware.

@@ -704,9 +704,13 @@ apu_addw: // ADDW YA,op
     EMIT_OP ADD(T7, T0, A1)
     EMIT_OP SRL(T8, T7, 8)
 
-    // Emit code to set carry and overflow
-    // TODO: set the H flag
+    // Emit code to set half-carry, carry and overflow
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, T0, A1)
+    EMIT_OP XOR(T1, T1, T7)
+    EMIT_OP ANDI(T1, T1, 0x1000)
+    EMIT_OP SRL(T1, T1, 9) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP SRL(T1, T7, 16) // C
     EMIT_OP OR(S1, S1, T1)
     EMIT_OP XOR(T1, T7, T0)
@@ -755,9 +759,14 @@ apu_subw: // SUBW YA,op
     EMIT_OP SUB(T7, T0, A1)
     EMIT_OP SRL(T8, T7, 8)
 
-    // Emit code to set carry and overflow
-    // TODO: set the H flag
+    // Emit code to set half-carry, carry and overflow
     EMIT_OP ANDI(S1, S1, 0xB6)
+    EMIT_OP XOR(T1, T0, A1)
+    EMIT_OP XOR(T1, T1, T7)
+    EMIT_OP ANDI(T1, T1, 0x1000)
+    EMIT_OP XORI(T1, T1, 0x1000)
+    EMIT_OP SRL(T1, T1, 9) // H
+    EMIT_OP OR(S1, S1, T1)
     EMIT_OP ADDI(T1, T0, 1)
     EMIT_OP SLTU(T1, T7, T1) // C
     EMIT_OP OR(S1, S1, T1)

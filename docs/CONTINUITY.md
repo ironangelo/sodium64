@@ -3457,3 +3457,43 @@ No other audited APU generator file emits direct guest-`apu_ram` accesses; guest
 Since one finite instruction is <=12 cycles, a multi-op compiler can continue only while the completed block budget is <=20 cycles. Adding one more worst-case instruction then yields a hard maximum of **32 guest cycles**, while the existing 16-byte source-span cap remains as an independent safety bound.
 
 Next controlled implementation must add compile-time-only cycle accounting and this continuation rule, with no change to per-instruction guest debits or opcode semantics. It must be validated by cycle/address regression plus the same exact-window DSP-lateness run before any hardware test.
+
+
+## Guest-cycle-bounded multi-op JIT candidate — running 2026-09-18
+
+Diagnostic branch: **`phase2/apu-cycle-budget-interleave@a4b8f2d74f368568ef519ea76bb589d7fe98d265`**, based on matched-lateness authority `a8c56301...`.
+
+Direct diff:
+- `src/apu_emitter.S` +44/-8 — compiler-only cycle accounting plus block continuation bound;
+- `.github/workflows/apu-matched-baseline.yml` +1 trigger line.
+
+No opcode semantic implementation, per-instruction guest debit, DSP scheduler ordering, APU memory helper semantics or workload setting changed.
+
+Design:
+- preserve inherited independent `BLOCK_SIZE=16` source-span/tag safety bound;
+- maintain compile-only `jit_block_cycles` worst-case guest-cycle count;
+- +1 per source-byte fetch in `jit_read8`;
+- +N for fixed cycles in `jit_charge_cycles`;
+- +N for conditional runtime cycles in `jit_emit_runtime_cycles`, conservatively counting the taken/worst-case path;
+- +1 for every generated `apu_read8`/`apu_write8` guest bus access inside `emit_jal`;
+- after each completed opcode, continue compiling only if source span remains under 16 bytes **and** completed worst-case budget <=20 cycles.
+
+Pinned reference bound: maximum finite single opcode = DIV at 12 cycles. Therefore any continued block can reach at most **20+12 = 32 SPC cycles**, one DSP period. Because `apu_execute` services DSP when `s3 <= a3` and enters a block only with positive headroom, a <=32-cycle block must return with lateness <672 master cycles.
+
+Source audit found no generated direct guest-`apu_ram` data accesses outside `apu_read8`/`apu_write8`; direct load/store emission in `apu_emitter.S` is emulator-state spill/load machinery. WAIT/STOP remain separate persistent scheduler state and do not violate the finite-op bound.
+
+Exact HEAD runs:
+- **APU Matched Baseline `35355419586`** — running;
+- **Build and Validate `35355419608`** — queued/running.
+
+Acceptance:
+1. normal/PROFILE build + Mupen smoke green;
+2. exact-window `dsp_multi_due_count=0` and `dsp_late_max<672`;
+3. materially better throughput than one-op 49.4/60;
+4. then consume the same emitter change into cycle/address proof and require the full timing/semantic regression matrix green before clean consumption.
+
+Falsifiers:
+- any >=672 event;
+- build/runtime regression;
+- cycle proof regression;
+- throughput near one-op indicating the temporal cap destroys the multi-op benefit.

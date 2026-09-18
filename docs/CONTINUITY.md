@@ -3929,3 +3929,46 @@ After the bounded edge proof and integration:
 - choose the next optimization or accuracy recovery from the **first demonstrated gate blocker**, not from subsystem sample share alone.
 
 No evidence currently justifies cartridge assistance, a clean-sheet second emulator, or an immediate 65C816 dynarec.
+
+
+## Cycle-budget boundary proof — running 2026-09-18
+
+Diagnostic proof child:
+**`phase2/apu-cycle-budget-edge-proof@4f197702ff81687d68a33842105c907b888a2be6`**, based on validated proof authority `151466bb...`.
+
+Direct diff from proof authority:
+- `.github/workflows/apu-cycle-proof.yml`: +1 branch-trigger line;
+- `scripts/apu_cycle_proof.py`: directed proof additions only;
+- **no emulator/runtime source changed**.
+
+New bounded cases:
+1. **`budget_20_nop_div_32`** — 10 NOPs (20 SPC cycles) + DIV (12), with a trailing sentinel NOP; expected compiled/executed block = exactly **32 cycles**, PC stops before sentinel.
+2. **`budget_20_access_div_32`** — four real direct guest reads + four NOPs form a 20-cycle prefix, then DIV reaches exactly 32; validates that generated `apu_read8` costs participate in the temporal budget.
+3. **`budget_branch_taken_22`** / **`budget_branch_not_taken_20`** — conditional path near cutoff, checking static debit plus runtime taken-cycle behavior.
+4. Cached exact-32 block re-entry without mutation must reuse the existing block with identical debit/post-state and unchanged JIT pointer/lookup.
+5. A covered-region tag increment before re-entry must force recompilation rather than execute the stale cached block.
+
+Acceptance:
+- all historical proof invariants remain green;
+- every new `budget_*` case total <=32 SPC cycles;
+- exact 20+DIV case reports 32 cycles and stops before trailing sentinel;
+- access-built 20+DIV also totals 32 with correct state/debit;
+- cached replay matches initial execution without recompile;
+- covered tag mutation forces recompile.
+
+Falsifiers:
+- any produced edge block >32 cycles;
+- missing access cost in the budget;
+- wrong runtime branch debit/state;
+- cached execution differs from initial execution;
+- stale block survives an entry-tag mutation;
+- any historical semantic/timing regression.
+
+This proof does **not** attempt to close known Gate-C debts around observable dummy-read side effects or intra-block self-modifying code. Those remain explicitly separate accuracy work.
+
+Exact triggered runs:
+- **APU Cycle And Span Proof `35380159442`** @ `4f197702ff81...` — pending
+- **Build and Validate `35380159566`** @ `4f197702ff81...` — pending
+- **APU Cycle And Span Proof `35380154641`** @ `385caf3e0411...` — in_progress
+- **Build and Validate `35380154737`** @ `385caf3e0411...` — completed/cancelled
+- **Build and Validate `35380150454`** @ `151466bb39ab...` — in_progress

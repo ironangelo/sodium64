@@ -3023,3 +3023,20 @@ Expected timing:
 - halt PC remains instruction-after-opcode.
 
 This is a scheduler-state proof, not a normal fixed-cycle opcode patch. Acceptance must show distinct WAIT/STOP latch values, exact entry/tick debits, stable PC, and no JIT/decode advance while halted. Reset/power initialization remains `apu_halt=0`.
+
+
+## Clean DAA/DAS foundation — CI VALIDATED 2026-09-18
+
+Clean **`phase2/apu-timing-foundation@9f070faeb6e9ea20012601d3eff1947658cfb93f`** completed **Build and Validate `35347334777` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+Artifacts:
+- normal build `10547931294`, digest `sha256:5c98696cb55d7c824f0b19b0bac0cecdd2f28f31b801223be7587365b620ce27`;
+- profile build `10547173242`, digest `sha256:0caa0a0e92f4b7ab85c5324c82e6205c0479d9862887237ad3a6a2702d994597`;
+- emulator smoke `10547383323`, digest `sha256:684d663493aa48b7d38bd5d37a5a9aa11cb97f40378493129cf5fb55c4d47676`.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+The diagnostic and clean branches are byte-unchanged from their recorded DAA/DAS checkpoints; no SLEEP/STOP implementation exists yet. The next technical batch is the already-designed isolated SLEEP/STOP scheduler-state proof. Do not re-baseline Gothicvania or resume memory-helper optimization before this bounded base-SPC700 correctness item is resolved.

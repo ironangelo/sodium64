@@ -4480,3 +4480,33 @@ This does not show unavailable dependencies, proprietary-tool dependence or an u
 
 Immediate repair:
 run upstream `make -C game directories` before the explicit release-ROM target, then repeat unchanged. No upstream source, assets, Sodium64 runtime or benchmark behavior changes.
+
+
+## SRS source-build proof — VALIDATED 2026-09-18
+
+Exact candidate/build authority:
+- audition branch `phase3/gate-b-srs-audition@0c5f3a3df4f2f790d8c09c5dd2b3f01c6d68e432`;
+- **Gate B SRS Audition `35393460280` SUCCESS**;
+- upstream SRS `e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865`;
+- exact release ROM size **262,144 bytes**;
+- exact unmodified release ROM SHA-256 **`d5bd7b17aa19a1b370efa38554b6ebfd77c4756e7184e9f2e848e8193bc9bed0`**.
+
+Pinned-source toolchain successfully rebuilt:
+- bass-untech `9db6088a378061afc7b82f50997a5b9a1d951175`;
+- untech-editor `4c72dc69619c0c246aa7e6325b18b6fb3c219821`;
+- terrific-audio-driver `17823e5a55893e8442917abadb4e84feb216e5ad` plus its pinned Wiz submodule.
+
+No Aseprite binary was required: committed generated PNGs were used as intended build inputs. The tracked upstream tree remained unmodified after the release build.
+
+Provenance-only artifact:
+- ID **`10566587049`**;
+- digest **`sha256:d1a63b07b6a434cc101da6585da01f25fd4b0a46613c18995008527fda1eab27`**.
+- artifact contains hashes/provenance only; **the SRS ROM is not uploaded**.
+
+Interpretation:
+**Space Rescue Squad passes the autonomy/buildability gate.** Its game-jam origin does not create a toolchain or source-availability dependency on Iron.
+
+This does not yet establish corpus membership, correctness under Sodium64, representativeness, or real-N64 performance.
+
+Next controlled step:
+create an explicit temporary benchmark patch that preserves normal audio/game-state/room/entity/collision/render logic, starts directly in the first gameplay level after normal initialization, and supplies deterministic Right+Run input. Run the resulting workload under the existing pinned ares N64 Sodium64 profile/frame-budget lab at frameskip 0, APU21, audio4, precision8. Do not request hardware.

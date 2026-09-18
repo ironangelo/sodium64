@@ -3186,3 +3186,60 @@ Baseline design must preserve:
 - paired DSP-lateness / audio-timing evidence, not FPS alone.
 
 Only after that baseline should a new optimization hypothesis be selected from the corrected profile distribution.
+
+
+## E1 matched-window baseline repair — running 2026-09-18
+
+Measurement-only branch: **`phase2/apu-matched-baseline@d20258be3f783728b500cfd95065abc185b14f2b`**, created directly from validated clean core **`9204ad2fae7f37d9950a0f3a88cc3ff4299e1bc1`**.
+
+Direct compare `9204ad2f... -> d20258be...` is exactly two added diagnostic files and **zero emulator-core changes**:
+- `.github/workflows/apu-matched-baseline.yml` +463;
+- `scripts/gdb_matched_profile.py` +309.
+
+### Measurement contract under test
+
+The old open-homebrew harness is not attribution-grade for small deltas because it patches settings after host-time warmup/settle and terminates on host-time/sample targets, producing unmatched guest phases.
+
+The new bounded E1 harness instead:
+1. stops at the **first `cpu_execute` before any guest CPU/APU execution**;
+2. there sets APU clock=21, frameskip=0, audio=4, precision=8, zeros APU JIT lookup and resets JIT pointer;
+3. uses local `update_fps` as an exact guest boundary. At its entry exactly 60 VI have elapsed and `fps_emulate` still contains completed SNES frames for that just-finished interval;
+4. warms for exactly **2 complete 60-VI windows**;
+5. resets only profiler-ring metadata at that exact boundary;
+6. captures exactly **5 consecutive complete 60-VI windows**;
+7. repeats the whole process **3 times from fresh ares processes** while reusing one exact PROFILE binary, one exact Gothicvania ROM and one pinned ares build;
+8. captures one statistical profile per repeat over the same five-window guest interval.
+
+Pinned lab remains:
+- Gothicvania source artifact `10466504920`, SNES ROM SHA-256 `5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`;
+- ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`;
+- R4300 JIT ON, RSP interpreter forced due documented ares RSP-JIT LAB LIMITATION;
+- deterministic entropy;
+- frameskip0 / APU21 / audio4 / precision8.
+
+The script uses the already-proven ares software-breakpoint mechanism from the SPC700 proof harness. Between repeated `update_fps` boundaries it advances through `check_frame` so the same breakpoint cannot immediately re-hit.
+
+### Exact runs
+- **APU Matched Baseline `35351837163`** — IN PROGRESS at checkpoint.
+- **Build and Validate `35351837019`** — PENDING/starting at checkpoint.
+
+### Acceptance
+This is a **MEASUREMENT PROOF**, not a speedup experiment. Accept the repair if:
+- the exact branch compiles and ordinary Build/Validate remains green;
+- all three fresh repeats reach the first-guest configuration boundary;
+- every warmup/measured `update_fps` stop observes `fps_native=59`, confirming an exact 60-VI boundary;
+- settings remain 21/0/4/8 through all measured windows;
+- each repeat yields five complete windows and >=800 statistical samples;
+- the artifact exposes the actual repeat/window distribution rather than reducing it to one host-time-selected total.
+
+### Falsifiers / failure classes
+- cannot reliably breakpoint `cpu_execute`, `update_fps` or `check_frame`;
+- settings are not safely writable/retained before first guest execution;
+- `fps_native` does not equal 59 at the claimed boundary;
+- profiler sample count does not advance monotonically;
+- build/Mupen regression despite no core changes indicates branch/harness integration error;
+- repeated exact-window vectors remain materially phase-incomparable for a reason not controlled by the contract.
+
+Do not require the three repeats to be numerically identical: variation itself is evidence. The goal is to make the **guest interval identical in definition**, so its observed variation becomes measurable instead of being conflated with different stop phases.
+
+If accepted, this exact-window harness becomes the laboratory authority for a fresh baseline on clean `9204ad2f...`. Only then rank E3 low-read, E4 same-boundary validation or E5 DSP-invariant hypotheses. ares results remain laboratory evidence; real N64 remains final performance/timing authority.

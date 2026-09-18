@@ -4213,3 +4213,28 @@ The prior integrated proof failure `35384115986` is **HARNESS FALSE NEGATIVE / S
 State: **VALIDATED / READY FOR PR TO MASTER**.
 
 Next action: open `phase2/m1-integration -> master`, verify mergeability/diff/checks, merge without modifying the candidate, then validate the resulting master SHA before marking M1 MERGED-CONSUMED.
+
+
+## PR #12 — M1 integration candidate OPEN / awaiting PR-only lab gate 2026-09-18
+
+PR: **#12 `phase2/m1-integration -> master`**
+Title: `M1: integrate validated SPC700 timing and cycle-budget core`.
+Exact head: **`d701f80f5339c727f231e4e9cc2b7222ec9c1561`**.
+Base at PR open: **`master@a2270699e60cdf2b8b8303aaa5a1aa4a0e8dd89e`**.
+
+GitHub recalculated the initial transient `mergeable=false` to:
+- `mergeable=true`;
+- `rebaseable=true`;
+- `mergeable_state=unstable`.
+
+There is **no merge conflict**. The unstable state is due to an additional PR-only workflow currently running:
+- **Ares Profile Validation `35385948762`** @ exact PR head `d701f80f...`.
+
+Already-green exact-head pre-PR gates remain:
+- Build and Validate `35385014527` SUCCESS;
+- durable APU Cycle And Span Proof `35385014498` SUCCESS.
+
+Decision:
+- wait for the PR-only Ares validation;
+- if green, merge PR #12 without modifying the candidate;
+- if it fails, classify the failure as workload/lab/runtime before merge.

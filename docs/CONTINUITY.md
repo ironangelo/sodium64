@@ -4635,3 +4635,58 @@ Interpretation:
 **BUILD/WORKLOAD CONSTRUCTION ACCEPTED.** This is not yet execution/compatibility/performance evidence. Do not classify SRS as a corpus member until the pinned ares lab actually boots/progresses and yields valid Road-state counters.
 
 Benchmark ROM/patch hashes will be recorded from the completed run artifact/log once available.
+
+## Gate-B SRS first execution profile — MEASURED / needs repeatability 2026-09-18
+
+Exact authority:
+- audition head **`phase3/gate-b-srs-audition@6e5d444017ca899bcf2b69be6cbf8dd94eee9507`**;
+- **Gate B SRS Audition `35394713398` SUCCESS**;
+- same-head **Build and Validate `35394713401` SUCCESS**;
+- non-ROM diagnostic artifact **`10567217952`**, digest `sha256:7bd5e9045de0d2fb3b55902829947b3448d3fcecfe265f006e8a0d8daa4e7d1a`;
+- source-build provenance artifact `10567178769`, digest `sha256:ea44a19cf04e20501ce04fcc395bb7e85fd026deadce797551ad95a19d2dba2b`.
+
+Pinned workload:
+- upstream `undisbeliever/space-rescue-squad@e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865`;
+- unmodified release ROM: 262144 bytes, SHA-256 **`d5bd7b17aa19a1b370efa38554b6ebfd77c4756e7184e9f2e848e8193bc9bed0`**;
+- deterministic benchmark ROM: 262144 bytes, SHA-256 **`7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`**;
+- benchmark patch SHA-256 **`4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`**.
+
+Benchmark patch scope is exactly two upstream files:
+- `_main.asm`: after normal audio init, initialize normal game state, select authored room `a1a_entrance`, enter `Mode.GAME`;
+- `gameloop.inc`: inject held Right+Run into the normal controller state before normal gameplay processing.
+
+Preserved workload work:
+audio init/song path, game state, room loading, entities, collisions, camera, metatiles, animations, scripts, PPU/DMA/HDMA paths and `WaitFrame`. Nothing is disabled for speed.
+
+Road-valid observed runtime settings:
+- frameskip `0`;
+- APU clock `21`;
+- audio `4`;
+- precision `8`.
+
+First pinned ares lab measurement (R4300 recompiler ON, RSP interpreter forced due known ares LAB LIMITATION):
+- measured wall time 9 s to reach sample-density threshold;
+- **1,282 valid statistical samples**;
+- last complete internal VI window: **53/60**;
+- virtual budget: **88.3% — below virtual target**;
+- partial window at stop: 48/60, 48 guest frames;
+- queue `1`.
+
+Sample shares:
+- frame/VI wait **28.24%**;
+- APU/SPC700 static **28.08%**;
+- S-CPU interpreter **15.99%**;
+- PPU/events/frame prep **8.19%**;
+- DSP/audio **6.63%**;
+- APU JIT generated **6.24%**;
+- DMA/HDMA **4.29%**;
+- RSP/VRAM semaphore wait **2.18%**;
+- SNES memory/I/O 0.08%; input 0.08%.
+
+Interpretation:
+**MEASURED in emulator lab, not real-N64 performance authority.** SRS successfully survives the full autonomous build/wrap/profile path and produces a materially different profile from Gothicvania. The single measured complete window is below 60/60, so SRS is a strong candidate for exposing a Gate-B issue.
+
+However, do NOT yet call `53/60` a real-N64 deficit or choose an optimization from it. The simultaneously high 28.24% VI-wait share makes the first run insufficient to distinguish sustained compute deficit from bursty workload, measurement-window/startup effects, presentation/cadence behavior, or another lab/runtime interaction.
+
+Next controlled experiment:
+repeat the exact same SRS benchmark/profile multiple times at the same SHA/settings, preferably without changing runtime or workload, and compare complete-window frame budget plus subsystem distribution. If the sub-60 result is stable, add a progression/checkpoint observation before selecting a runtime intervention. No hardware request yet.

@@ -2498,3 +2498,22 @@ No guest timing changes were introduced.
 
 ### Decision
 Consume only `src/apu_alu.S` core changes into clean timing foundation. Then run exact clean CI. Next isolated arithmetic semantic family: ADDW/SUBW H flag.
+
+
+## Clean ADC/SBC Half-Carry candidate — checkpoint 2026-09-18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@c2f2ecc1dfd521be724a832761db45d514ce2265`**, one commit on top of `68958b68...`.
+
+Direct clean diff is exactly:
+- `src/apu_alu.S` +22/-4.
+
+No timing charge, addressing, dispatch, diagnostic script or workflow changes.
+
+Dynamic semantic authority:
+- diagnostic `29aba03a...`;
+- Build and Validate `35314192559` SUCCESS;
+- APU Cycle And Span Proof `35314192576` SUCCESS.
+
+Exact clean Build and Validate run: **`35314885462`**, IN PROGRESS at checkpoint.
+
+Do not modify clean `c2f2ecc1...` until exact CI completes. Next diagnostic work is isolated ADDW/SUBW H semantics on `phase2/apu-cycle-proof`.

@@ -1686,3 +1686,28 @@ After exact clean CI, next isolated timing batch is word/bit coverage. Current r
 - word: ADDW, SUBW, MOVW YA,dp likely +1 fixed each; CMPW/INCW/DECW/MOVW dp,YA likely already match total cycles;
 - bit: OR1 variants, EOR1, MOV1 mem.bit,C and TSET1/TCLR1 likely each miss one cycle; AND1/MOV1 C,mem/NOT1/SET1/CLR1 likely already match.
 These remain **HYPOTHESIS** until dynamic proof.
+
+
+## Clean CALL/return/BRK + PCALL candidate — checkpoint 2026-09-17/18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@fafc08478bcf918bca4e17e04b9b6c9b4e7a62c8`**, one commit on top of `46230daa...`.
+
+Direct compare `46230daa... -> fafc0847...` is exactly one file:
+- `src/apu_control.S` +27/-2.
+
+Patch contents are limited to validated core behavior:
+- CALL +3 fixed cycles;
+- TCALL +3;
+- PCALL +2;
+- RET +2;
+- RET1 +2;
+- BRK +2;
+- PCALL target formation moved after `load_stack` so volatile compile-time `t2` is not clobbered.
+
+No scripts, workflows, `apu_map` diagnostic setup, GDB code or PROFILE diagnostics are present.
+
+Exact clean Build and Validate run: **`35302765614`**, IN PROGRESS at checkpoint.
+
+Dynamic authority remains diagnostic `f4da303d...` / ares proof `35302251443` SUCCESS. Accept clean candidate only after normal build + PROFILE build + pinned Mupen smoke succeed on exact SHA `fafc0847...`.
+
+Next technical batch after exact clean CI: dynamically prove the already-mapped word/bit timing hypotheses on diagnostic branch. Keep known H-flag semantic TODOs and TCALL/BRK intra-instruction bus-order debt explicit; do not conflate total-cycle correctness with those unresolved contracts.

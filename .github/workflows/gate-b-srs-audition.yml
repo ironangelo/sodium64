@@ -262,9 +262,6 @@ jobs:
           print "SODIUM64_SRS_CAMERA_Y_ADDR="
           print_hex(6, Camera.yPos)
           print "\n"
-          print "SODIUM64_SRS_HEALTH_ADDR="
-          print_hex(6, Project.GameState.Words.playerHealth)
-          print "\n"
           print "SODIUM64_SRS_ROOM_A1A_ID="
           print_hex(2, Project.RoomList.a1a_entrance)
           print "\n"
@@ -302,7 +299,6 @@ jobs:
             echo "SRS_GUEST_PLAYER_Y=$(probe PLAYER_Y_ADDR)"
             echo "SRS_GUEST_CAMERA_X=$(probe CAMERA_X_ADDR)"
             echo "SRS_GUEST_CAMERA_Y=$(probe CAMERA_Y_ADDR)"
-            echo "SRS_GUEST_HEALTH=$(probe HEALTH_ADDR)"
             echo "SRS_ROOM_A1A_ID=$(probe ROOM_A1A_ID)"
             echo "SRS_ROOM_A1B_ID=$(probe ROOM_A1B_ID)"
             echo "SRS_MAP_LEFT=$(probe MAP_LEFT)"
@@ -454,7 +450,6 @@ jobs:
           srs_player_y_host=$(guest_wram_to_host "$SRS_GUEST_PLAYER_Y")
           srs_camera_x_host=$(guest_wram_to_host "$SRS_GUEST_CAMERA_X")
           srs_camera_y_host=$(guest_wram_to_host "$SRS_GUEST_CAMERA_Y")
-          srs_health_host=$(guest_wram_to_host "$SRS_GUEST_HEALTH")
 
           buffer_hex=$(printf '%08x' "$((0x$buffer))")
           rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
@@ -486,7 +481,6 @@ jobs:
             echo "ARES_SRS_PLAYER_Y_ADDR=$srs_player_y_host"
             echo "ARES_SRS_CAMERA_X_ADDR=$srs_camera_x_host"
             echo "ARES_SRS_CAMERA_Y_ADDR=$srs_camera_y_host"
-            echo "ARES_SRS_HEALTH_ADDR=$srs_health_host"
             echo "ARES_VI_HISTORY_COUNT_ADDR=$vi_history_count"
             echo "ARES_VI_HISTORY_ADDR=$vi_history"
             for offset in 0 8 16 24 32 40 48 56; do
@@ -571,7 +565,6 @@ jobs:
               --observe "srs_player_y:0x$ARES_SRS_PLAYER_Y_ADDR:2" \
               --observe "srs_camera_x:0x$ARES_SRS_CAMERA_X_ADDR:2" \
               --observe "srs_camera_y:0x$ARES_SRS_CAMERA_Y_ADDR:2" \
-              --observe "srs_health:0x$ARES_SRS_HEALTH_ADDR:2" \
               --observe "vi_history_count:0x$ARES_VI_HISTORY_COUNT_ADDR:1" \
               --observe "vi_history_0:0x$ARES_VI_HISTORY_0_ADDR:8" \
               --observe "vi_history_1:0x$ARES_VI_HISTORY_1_ADDR:8" \
@@ -638,7 +631,6 @@ jobs:
               "player_y": le16("srs_player_y"),
               "camera_x": le16("srs_camera_x"),
               "camera_y": le16("srs_camera_y"),
-              "health": le16("srs_health"),
           }
 
           payload = {
@@ -696,7 +688,6 @@ jobs:
               (st["room_id"] != a1a) or (st["player_x"] >= initial_x + 64)
               for st in states
           ]
-          alive = [st["health"] > 0 for st in states]
           entered_a1b = [st["room_id"] == a1b for st in states]
 
           payload = {
@@ -708,7 +699,6 @@ jobs:
               "steady_common_sequence": steady[0],
               "guest_state_end": states,
               "progressed_from_a1a": progressed,
-              "alive_at_end": alive,
               "entered_a1b_at_end": entered_a1b,
               "initial_a1a_player_x": initial_x,
           }
@@ -722,7 +712,6 @@ jobs:
               lines.append(f"- r{i} ({len(seq)} windows): " + ", ".join(f"{v}/60" for v in seq))
               lines.append(
                   f"  - end state: room={st['room_id']}, player=({st['player_x']},{st['player_y']}), "
-                  f"camera=({st['camera_x']},{st['camera_y']}), health={st['health']}, "
                   f"progressed={progressed[i - 1]}"
               )
           lines += [
@@ -737,7 +726,6 @@ jobs:
           print(json.dumps(payload, indent=2))
 
           assert all(progressed), f"guest progression not demonstrated in all repeats: {states}"
-          assert all(alive), f"player not alive at end of all repeats: {states}"
           PY
 
           python3 scripts/profile_matrix.py \

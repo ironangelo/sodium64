@@ -2774,3 +2774,49 @@ Acceptance:
 - X=0 passes without divide-by-zero;
 - all total/static timing remains unchanged;
 - complete historical regression matrix remains green.
+
+
+## SPC700 DIV semantic repair — VALIDATED 2026-09-18
+
+Final diagnostic authority: **`f3bad9af878b94e7be3a2f3f1d0d04fa8db103ec`**.
+
+CI:
+- **Build and Validate `35317084579` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35317084547` SUCCESS**, cycle-proof job **`105511291125`**.
+- proof result artifact **`10535762581`**, digest `sha256:eccf0a9ad14818f32097858126ba015805eec458de3413ab2ca3fa1960197da6`;
+- exact proof-build artifact **`10535992426`**, digest `sha256:9a452e37cb0d70ed2b2d5f903b1886822a3f5cb7945281dfc8cf23bc6067726e`.
+
+The inherited unconditional MIPS DIV behavior is superseded.
+
+Validated repair:
+- dedicated runtime DIV helper reproduces the S-SMP normal and overflow branches;
+- H = `(Y & 0x0f) >= (X & 0x0f)`;
+- V = `Y >= X`;
+- normal quotient/remainder path only when `Y < 2*X`;
+- overflow formula used otherwise;
+- X=0 is handled by the special path, avoiding undefined divide-by-zero;
+- C/I/B/P preserved;
+- N/Z queue reads repaired A after helper return by neutralizing the generated JAL delay slot with one MIPS NOP;
+- already-validated guest timing remains exactly **12-cycle DIV**, or **16 total with the trailing BRA test loop**.
+
+Directed results include:
+- normal H/V-clear case: A=0x42,Y=0, PSW preserves C, **16 cycles**;
+- 9-bit-quotient normal case: A=0x40,Y=0, H/V=1/1, Z clear, **16 cycles**;
+- inherited failing overflow case X=4,Y=0x5A,A=0x11 now produces **A=0xAC,Y=0x61**, H/V=1/1 with correct N/Z;
+- X=0 case passes without divide-by-zero and produces the pinned-reference state;
+- zero-result case queues Z from repaired A correctly.
+
+All global invariants remain true:
+`all_runtime_cycle_debits_match_expected`,
+`all_semantics_match_expected`,
+`all_static_debits_match_source_prediction`,
+`all_total_debits_match_reference`,
+`compiled_long_probe_is_bounded_to_one_tag_region`.
+
+### Discarded explanation preserved
+Attempt 1's N/Z mismatch was NOT caused by the runtime helper clobbering A2 or by sampling Y. The generated `queue_nz` instruction occupied the runtime JAL delay slot and therefore sampled old A before the helper ran. That explanation is REJECTED and should not be revisited.
+
+### Decision
+Consume only validated `src/apu_alu.S` DIV repair into clean timing foundation if clean/base blob identity is confirmed. Then exact clean CI.
+
+Next REQUIRED SUPPORT arithmetic work: implement and prove **DAA (0xDF) / DAS (0xBE)** now that H/C semantics are trustworthy. SLEEP/STOP remain separate scheduler-state work.

@@ -18,7 +18,7 @@ concurrency:
 jobs:
   source-build-proof:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     env:
       SRS_REPO: https://github.com/undisbeliever/space-rescue-squad.git
@@ -133,3 +133,395 @@ jobs:
           path: |
             srs-rom.sha256
             srs-provenance.txt
+
+
+      - name: Create explicit deterministic gameplay benchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$SRS_ROOT"
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path(__import__('os').environ['SRS_ROOT'])
+
+          main = root / 'game/src/_main.asm'
+          text = main.read_text()
+          old = """    rep     #$30
+          a16()
+
+
+              if {defined DEBUG_BUILD} {
+          """
+          new = """    rep     #$30
+          a16()
+
+              // SODIUM64 GATE-B BENCHMARK PATCH:
+              // Keep normal audio/game-state initialization, then enter the first
+              // authored gameplay level without title/menu input latency.
+              jsr     GameState.LoadInitialGameState
+              LevelNameScreen.ResetLevelNumber()
+
+              lda.w   #Project.RoomList.a1a_entrance
+              sta.w   GameState.roomId
+              stz.w   GameState.entranceId
+
+              lda.w   #Mode.GAME
+              jmp     SwitchMode
+
+
+              if {defined DEBUG_BUILD} {
+          """
+          if text.count(old) != 1:
+              raise SystemExit(f'_main.asm benchmark anchor count={text.count(old)}')
+          main.write_text(text.replace(old, new, 1))
+
+          loop = root / 'game/src/gameloop.inc'
+          text = loop.read_text()
+          old = """        sep     #$30
+              a8()
+              i8()
+                  lda.w   Controller.Joy1.pressed + 1
+          """
+          new = """        sep     #$30
+              a8()
+              i8()
+                  // Deterministic benchmark input: hold Right + Run.  Input still
+                  // flows through the normal player/entity/collision/game loop.
+                  stz.w   Controller.Joy1.current
+                  stz.w   Controller.Joy1.pressed
+                  stz.w   Controller.Joy1.pressed + 1
+                  lda.b   #JOYH.right | JOYH.y
+                  sta.w   Controller.Joy1.current + 1
+
+                  lda.w   Controller.Joy1.pressed + 1
+          """
+          if text.count(old) != 1:
+              raise SystemExit(f'gameloop.inc benchmark anchor count={text.count(old)}')
+          loop.write_text(text.replace(old, new, 1))
+          PY
+
+          git -C "$root" diff --check
+          changed="$(git -C "$root" diff --name-only)"
+          test "$changed" = game/src/_main.asm\ngame/src/gameloop.inc'
+
+          git -C "$root" diff -- game/src/_main.asm game/src/gameloop.inc \
+            | tee srs-benchmark.patch
+
+          make -C "$root/game" bin/space-rescue-squad.sfc
+          rom="$root/game/bin/space-rescue-squad.sfc"
+          test -s "$rom"
+
+          {
+            echo "upstream_sha=$SRS_SHA"
+            echo "benchmark=first authored level, deterministic Right+Run"
+            echo "modified_files=game/src/_main.asm,game/src/gameloop.inc"
+            echo "benchmark_rom_size=$(stat -c '%s' "$rom")"
+            echo "benchmark_rom_sha256=$(sha256sum "$rom" | awk '{print $1}')"
+            echo "benchmark_patch_sha256=$(sha256sum srs-benchmark.patch | awk '{print $1}')"
+            echo "preserved=audio initialization, game state, room loading, entities, collisions, camera, metatile processing, animations, scripts, WaitFrame"
+            echo "disabled=nothing"
+          } | tee srs-benchmark-provenance.txt
+
+      - name: Setup Node.js for Sodium64 profile build
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Build Sodium64 PROFILE runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install -g libdragon
+          python3 -m unittest discover -s scripts -p 'test_*.py' -v
+          libdragon init
+          libdragon make PROFILE=1 -j"$(nproc)" 2>&1 | tee profile-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Install ares lab dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            curl \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Restore ares compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ares-n64-ccache-\${{ runner.os }}-\${{ runner.arch }}-17813a3ccda21ab9bd45f09bfc2f91196dbf50ff-rsp-interpreter-v1
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+
+          # Existing LAB LIMITATION: the pinned ares RSP recompiler collapses
+          # Sodium64's VRAM semaphore path. Keep R4300 JIT; force only RSP interpreter.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
+          ccache --zero-stats
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ccache --show-stats
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Wrap benchmark locally without publishing ROM bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workloads/ares
+          cp sodium64.z64 workloads/ares/sodium64.z64
+          cp rom-converter.py workloads/ares/rom-converter.py
+          cp "$SRS_ROOT/game/bin/space-rescue-squad.sfc" workloads/ares/profile-srs.smc
+          (
+            cd workloads/ares
+            python3 rom-converter.py </dev/null
+          )
+          test -s workloads/ares/out/profile-srs.z64
+
+      - name: Locate Sodium64 profiling and frame-budget state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf="build/sodium64.elf"
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          magic=$(symbol profile_magic)
+          end=$(symbol profile_sample_buffer_end)
+          buffer=$(symbol profile_sample_buffer)
+          write_ptr=$(symbol profile_write_ptr)
+          sample_count=$(symbol profile_sample_count)
+          last_epc=$(symbol profile_last_epc)
+          apu_clock=$(symbol apu_clock)
+          jit_lookup=$(symbol jit_lookup)
+          jit_pointer=$(symbol jit_pointer)
+          fps_native=$(symbol fps_native)
+          fps_emulate=$(symbol fps_emulate)
+          fps_display=$(symbol fps_display)
+          frame_count=$(symbol frame_count)
+          skipped_set=$(symbol skipped_set)
+          precision_set=$(symbol precision_set)
+          audio_set=$(symbol audio_set)
+
+          for value in \
+            "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
+            "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer" \
+            "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
+            "$skipped_set" "$precision_set" "$audio_set"; do
+            test -n "$value"
+          done
+
+          size=$((0x$end - 0x$magic))
+          jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
+          test "$size" -gt 16384
+          test "$jit_lookup_size" -eq 262144
+
+          buffer_hex=$(printf '%08x' "$((0x$buffer))")
+          rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
+          test -n "$rom_buffer"
+          jit_buffer=$((rom_buffer - 0x40000))
+          jit_buffer_hex=$(printf '%08x' "$jit_buffer")
+
+          {
+            echo "ARES_PROFILE_ADDR=$magic"
+            echo "ARES_PROFILE_SIZE=$size"
+            echo "ARES_PROFILE_BUFFER_HEX=$buffer_hex"
+            echo "ARES_PROFILE_WRITE_PTR_ADDR=$write_ptr"
+            echo "ARES_PROFILE_SAMPLE_COUNT_ADDR=$sample_count"
+            echo "ARES_PROFILE_LAST_EPC_ADDR=$last_epc"
+            echo "ARES_APU_CLOCK_ADDR=$apu_clock"
+            echo "ARES_JIT_LOOKUP_ADDR=$jit_lookup"
+            echo "ARES_JIT_LOOKUP_SIZE=$jit_lookup_size"
+            echo "ARES_JIT_POINTER_ADDR=$jit_pointer"
+            echo "ARES_JIT_BUFFER_HEX=$jit_buffer_hex"
+            echo "ARES_FPS_NATIVE_ADDR=$fps_native"
+            echo "ARES_FPS_EMULATE_ADDR=$fps_emulate"
+            echo "ARES_FPS_DISPLAY_ADDR=$fps_display"
+            echo "ARES_FRAME_COUNT_ADDR=$frame_count"
+            echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
+            echo "ARES_PRECISION_SET_ADDR=$precision_set"
+            echo "ARES_AUDIO_SET_ADDR=$audio_set"
+          } >> "$GITHUB_ENV"
+
+      - name: Profile SRS deterministic gameplay under Sodium64
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p profiles
+
+          label="recompiler-srs"
+          rom="workloads/ares/out/profile-srs.z64"
+          home="$RUNNER_TEMP/ares-home-$label"
+          settings="$RUNNER_TEMP/ares-settings-$label.bml"
+          emulator_log="profiles/$label-emulator.log"
+          gdb_log="profiles/$label-gdb.log"
+          snapshot="profiles/$label.bin"
+          report="profiles/$label.txt"
+          json="profiles/$label.json"
+          state="profiles/$label-state.json"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9140" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              "$rom" \
+              > "$emulator_log" 2>&1 &
+          ares_pid=$!
+
+          cleanup_run() {
+            kill "$ares_pid" 2>/dev/null || true
+            wait "$ares_pid" 2>/dev/null || true
+          }
+          trap cleanup_run EXIT
+
+          if ! python3 scripts/gdb_rsp_dump.py \
+            --port 9140 \
+            --connect-timeout 45 \
+            --response-timeout 60 \
+            --warmup-seconds 1 \
+            --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
+            --write "0x$ARES_APU_CLOCK_ADDR:15" \
+            --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
+            --write "0x$ARES_SKIPPED_SET_ADDR:00" \
+            --write "0x$ARES_AUDIO_SET_ADDR:04" \
+            --settle-seconds 1 \
+            --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
+            --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
+            --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+            --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
+            --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
+            --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
+            --run-seconds 3 \
+            --sample-count-address "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR" \
+            --min-samples 800 \
+            --max-run-seconds 60 \
+            --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
+            --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
+            --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
+            --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
+            --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
+            --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
+            --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
+            --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+            --observe "sp_status:0xA4040010:4" \
+            --observe "sp_dma_full:0xA4040014:4" \
+            --observe "sp_dma_busy:0xA4040018:4" \
+            --observe "sp_pc:0xA4080000:4" \
+            --state-output "$state" \
+            --address "0x$ARES_PROFILE_ADDR" \
+            --size "$ARES_PROFILE_SIZE" \
+            --output "$snapshot" \
+            > "$gdb_log" 2>&1; then
+            cat "$gdb_log"
+            tail -200 "$emulator_log" || true
+            exit 1
+          fi
+          cat "$gdb_log"
+          cleanup_run
+          trap - EXIT
+
+          python3 scripts/profile_report.py \
+            "$snapshot" \
+            build/sodium64.elf \
+            --nm nm \
+            --map build/sodium64.map \
+            --json-output "$json" | tee "$report"
+
+          samples=$(awk '/total samples:/ { print $3 }' "$report")
+          test -n "$samples"
+          test "$samples" -ge 800
+
+          python3 - <<'PY'
+          import json
+          state = json.load(open('profiles/recompiler-srs-state.json'))
+          obs = state['observations']
+          assert int(obs['skipped_set']) == 0, obs
+          assert int(obs['apu_clock']) == 21, obs
+          assert int(obs['audio_set']) == 4, obs
+          assert int(obs['precision_set']) == 8, obs
+          PY
+
+      - name: Build SRS audition reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/profile_matrix.py \
+            profiles/recompiler-srs.json \
+            --output profiles/srs-profile.md
+
+          python3 scripts/frame_budget_report.py \
+            profiles/recompiler-srs-state.json \
+            --target-fps 60 \
+            --output profiles/srs-frame-budget.md
+
+          {
+            echo '### Gate-B Space Rescue Squad audition'
+            echo
+            echo '- Open source pinned and rebuilt inside this job; ROM bytes are not uploaded.'
+            echo '- Benchmark patch enters first authored level after normal audio/game-state init and holds Right+Run.'
+            echo '- Entities, collision, camera, metatiles, animations, scripts and audio remain active.'
+            echo '- R4300 recompiler ON; RSP interpreter forced due documented ares LAB LIMITATION.'
+            echo '- Frameskip 0; APU clock 21; audio 4; precision 8.'
+            echo
+            cat profiles/srs-profile.md
+            echo
+            cat profiles/srs-frame-budget.md
+            echo
+            echo '> This is emulator-lab filtering, not real-N64 performance authority.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload non-ROM audition diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-srs-ares-audition
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            ares-version.txt
+            profile-build.log
+            srs-rom.sha256
+            srs-provenance.txt
+            srs-benchmark.patch
+            srs-benchmark-provenance.txt
+            profiles/

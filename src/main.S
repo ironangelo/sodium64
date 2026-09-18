@@ -261,6 +261,26 @@ update_fps:
     la k0, fps_display
     sb k1, (k0)
 
+#ifdef SODIUM64_PROFILE
+    // Record consecutive exact 60-VI budgets for phase-aligned profiling.
+    // This runs once per emulated second and only in PROFILE builds.
+    la k0, profile_vi_history_count
+    lbu k1, (k0)
+    sltiu k0, k1, 64
+    beqz k0, profile_vi_history_full
+    nop
+    la k0, profile_vi_history
+    addu k0, k0, k1
+    la k1, fps_display
+    lbu k1, (k1)
+    sb k1, (k0)
+    la k0, profile_vi_history_count
+    lbu k1, (k0)
+    addiu k1, k1, 1
+    sb k1, (k0)
+profile_vi_history_full:
+#endif
+
     // Check if SRAM is dirty
     la k0, sram_dirty
     lbu k1, (k0)

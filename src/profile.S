@@ -32,6 +32,9 @@
 .globl profile_last_epc
 .globl profile_sample_buffer
 .globl profile_sample_buffer_end
+.globl profile_vi_history_count
+.globl profile_vi_history
+.globl profile_vi_history_end
 
 #ifdef SODIUM64_HW_PROFILE
 .globl hw_profile_phase
@@ -56,6 +59,15 @@ profile_reserved:     .word 0
 .align 5
 profile_sample_buffer: .word 0:PROFILE_SAMPLE_CAPACITY
 profile_sample_buffer_end:
+
+// PROFILE-only ordered history of completed guest frames per exact 60-VI window.
+// Kept outside the canonical S64P snapshot so existing profile_report.py and
+// hardware-capture formats remain byte-for-byte compatible.
+.align 4
+profile_vi_history_count: .byte 0
+.align 4
+profile_vi_history: .byte 0:64
+profile_vi_history_end:
 
 #ifdef SODIUM64_HW_PROFILE
 // Real-N64 M0 capture header. The payload written to cart SRAM is:
@@ -108,6 +120,8 @@ profile_init:
     sw zero, (t1)
     la t1, profile_last_epc
     sw zero, (t1)
+    la t1, profile_vi_history_count
+    sb zero, (t1)
 
 #ifdef SODIUM64_HW_PROFILE
     // Hardware M0 measurements start with the Road-to-1.0 settings already in

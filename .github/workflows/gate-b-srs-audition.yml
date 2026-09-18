@@ -6,6 +6,8 @@ on:
       - phase3/gate-b-srs-audition
     paths:
       - '.github/workflows/gate-b-srs-audition.yml'
+      - 'src/main.S'
+      - 'src/profile.S'
   workflow_dispatch:
 
 permissions:
@@ -337,12 +339,15 @@ jobs:
           skipped_set=$(symbol skipped_set)
           precision_set=$(symbol precision_set)
           audio_set=$(symbol audio_set)
+          vi_history_count=$(symbol profile_vi_history_count)
+          vi_history=$(symbol profile_vi_history)
 
           for value in \
             "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
             "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer" \
             "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
-            "$skipped_set" "$precision_set" "$audio_set"; do
+            "$skipped_set" "$precision_set" "$audio_set" \
+            "$vi_history_count" "$vi_history"; do
             test -n "$value"
           done
 
@@ -376,160 +381,185 @@ jobs:
             echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
             echo "ARES_PRECISION_SET_ADDR=$precision_set"
             echo "ARES_AUDIO_SET_ADDR=$audio_set"
+            echo "ARES_VI_HISTORY_COUNT_ADDR=$vi_history_count"
+            echo "ARES_VI_HISTORY_ADDR=$vi_history"
+            for offset in 0 8 16 24 32 40 48 56; do
+              addr=$((0x$vi_history + offset))
+              printf 'ARES_VI_HISTORY_%d_ADDR=%08x\n' "$((offset / 8))" "$addr"
+            done
           } >> "$GITHUB_ENV"
 
-      - name: Profile SRS deterministic gameplay repeatability
+      - name: Profile SRS with internal 60-VI window history
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p profiles
 
+          label="recompiler-srs-history"
           rom="workloads/ares/out/profile-srs.z64"
+          home="$RUNNER_TEMP/ares-home-$label"
+          settings="$RUNNER_TEMP/ares-settings-$label.bml"
+          emulator_log="profiles/$label-emulator.log"
+          gdb_log="profiles/$label-gdb.log"
+          snapshot="profiles/$label.bin"
+          report="profiles/$label.txt"
+          json="profiles/$label.json"
+          state="profiles/$label-state.json"
 
-          profile_repeat() {
-            repeat="$1"
-            label="recompiler-srs-r$repeat"
-            home="$RUNNER_TEMP/ares-home-$label"
-            settings="$RUNNER_TEMP/ares-settings-$label.bml"
-            emulator_log="profiles/$label-emulator.log"
-            gdb_log="profiles/$label-gdb.log"
-            snapshot="profiles/$label.bin"
-            report="profiles/$label.txt"
-            json="profiles/$label.json"
-            state="profiles/$label-state.json"
+          rm -rf "$home"
+          mkdir -p "$home"
 
-            rm -rf "$home"
-            mkdir -p "$home"
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9140" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              "$rom" \
+              > "$emulator_log" 2>&1 &
+          ares_pid=$!
 
-            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
-              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
-                --no-file-prompt \
-                --system "Nintendo 64" \
-                --settings-file "$settings" \
-                --setting "Developer/DebugServerEnabled=true" \
-                --setting "Developer/DebugServerUseIPv4=true" \
-                --setting "Developer/DebugServerPort=9140" \
-                --setting "Developer/HomebrewMode=true" \
-                --setting "Developer/DeterministicEntropy=true" \
-                --setting "Developer/ForceInterpreter=false" \
-                --setting "Boot/AwaitGDBClient=true" \
-                "$rom" \
-                > "$emulator_log" 2>&1 &
-            ares_pid=$!
+          cleanup_run() {
+            kill "$ares_pid" 2>/dev/null || true
+            wait "$ares_pid" 2>/dev/null || true
+          }
+          trap cleanup_run EXIT
 
-            cleanup_run() {
-              kill "$ares_pid" 2>/dev/null || true
-              wait "$ares_pid" 2>/dev/null || true
-            }
-            trap cleanup_run EXIT
-
-            if ! python3 scripts/gdb_rsp_dump.py \
-              --port 9140 \
-              --connect-timeout 45 \
-              --response-timeout 60 \
-              --warmup-seconds 1 \
-              --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
-              --write "0x$ARES_APU_CLOCK_ADDR:15" \
-              --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
-              --write "0x$ARES_SKIPPED_SET_ADDR:00" \
-              --write "0x$ARES_AUDIO_SET_ADDR:04" \
-              --settle-seconds 1 \
-              --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
-              --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
-              --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
-              --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
-              --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
-              --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
-              --run-seconds 3 \
-              --sample-count-address "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR" \
-              --min-samples 800 \
-              --max-run-seconds 60 \
-              --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
-              --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
-              --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
-              --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
-              --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
-              --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
-              --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
-              --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
-              --observe "sp_status:0xA4040010:4" \
-              --observe "sp_dma_full:0xA4040014:4" \
-              --observe "sp_dma_busy:0xA4040018:4" \
-              --observe "sp_pc:0xA4080000:4" \
-              --state-output "$state" \
-              --address "0x$ARES_PROFILE_ADDR" \
-              --size "$ARES_PROFILE_SIZE" \
-              --output "$snapshot" \
-              > "$gdb_log" 2>&1; then
-              cat "$gdb_log"
-              tail -200 "$emulator_log" || true
-              exit 1
-            fi
-
+          if ! python3 scripts/gdb_rsp_dump.py \
+            --port 9140 \
+            --connect-timeout 45 \
+            --response-timeout 60 \
+            --warmup-seconds 1 \
+            --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
+            --write "0x$ARES_APU_CLOCK_ADDR:15" \
+            --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
+            --write "0x$ARES_SKIPPED_SET_ADDR:00" \
+            --write "0x$ARES_AUDIO_SET_ADDR:04" \
+            --settle-seconds 1 \
+            --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
+            --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
+            --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+            --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
+            --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
+            --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
+            --after-settle-write "0x$ARES_VI_HISTORY_COUNT_ADDR:00" \
+            --run-seconds 20 \
+            --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
+            --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
+            --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
+            --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
+            --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
+            --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
+            --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
+            --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+            --observe "vi_history_count:0x$ARES_VI_HISTORY_COUNT_ADDR:1" \
+            --observe "vi_history_0:0x$ARES_VI_HISTORY_0_ADDR:8" \
+            --observe "vi_history_1:0x$ARES_VI_HISTORY_1_ADDR:8" \
+            --observe "vi_history_2:0x$ARES_VI_HISTORY_2_ADDR:8" \
+            --observe "vi_history_3:0x$ARES_VI_HISTORY_3_ADDR:8" \
+            --observe "vi_history_4:0x$ARES_VI_HISTORY_4_ADDR:8" \
+            --observe "vi_history_5:0x$ARES_VI_HISTORY_5_ADDR:8" \
+            --observe "vi_history_6:0x$ARES_VI_HISTORY_6_ADDR:8" \
+            --observe "vi_history_7:0x$ARES_VI_HISTORY_7_ADDR:8" \
+            --observe "sp_status:0xA4040010:4" \
+            --observe "sp_dma_full:0xA4040014:4" \
+            --observe "sp_dma_busy:0xA4040018:4" \
+            --observe "sp_pc:0xA4080000:4" \
+            --state-output "$state" \
+            --address "0x$ARES_PROFILE_ADDR" \
+            --size "$ARES_PROFILE_SIZE" \
+            --output "$snapshot" \
+            > "$gdb_log" 2>&1; then
             cat "$gdb_log"
-            cleanup_run
-            trap - EXIT
-            sleep 1
+            tail -200 "$emulator_log" || true
+            exit 1
+          fi
 
-            python3 scripts/profile_report.py \
-              "$snapshot" \
-              build/sodium64.elf \
-              --nm nm \
-              --map build/sodium64.map \
-              --json-output "$json" | tee "$report"
+          cat "$gdb_log"
+          cleanup_run
+          trap - EXIT
 
-            samples=$(awk '/total samples:/ { print $3 }' "$report")
-            test -n "$samples"
-            test "$samples" -ge 800
+          python3 scripts/profile_report.py \
+            "$snapshot" \
+            build/sodium64.elf \
+            --nm nm \
+            --map build/sodium64.map \
+            --json-output "$json" | tee "$report"
 
-            STATE_FILE="$state" python3 - <<'PY'
+          samples=$(awk '/total samples:/ { print $3 }' "$report")
+          test -n "$samples"
+          test "$samples" -ge 800
+
+          STATE_FILE="$state" python3 - <<'PY'
           import json
           import os
-          state = json.load(open(os.environ['STATE_FILE']))
-          obs = state['observations']
-          assert int(obs['skipped_set']) == 0, obs
-          assert int(obs['apu_clock']) == 21, obs
-          assert int(obs['audio_set']) == 4, obs
-          assert int(obs['precision_set']) == 8, obs
-          PY
+          from pathlib import Path
+
+          state_path = Path(os.environ["STATE_FILE"])
+          state = json.loads(state_path.read_text())
+          obs = state["observations"]
+
+          assert int(obs["skipped_set"]) == 0, obs
+          assert int(obs["apu_clock"]) == 21, obs
+          assert int(obs["audio_set"]) == 4, obs
+          assert int(obs["precision_set"]) == 8, obs
+
+          count = int(obs["vi_history_count"])
+          assert 8 <= count <= 64, f"expected >=8 completed 60-VI windows, got {count}"
+
+          raw = b"".join(
+              int(obs[f"vi_history_{i}"]).to_bytes(8, "big")
+              for i in range(8)
+          )
+          windows = list(raw[:count])
+
+          payload = {
+              "history_count": count,
+              "complete_60vi_windows": windows,
+              "min": min(windows),
+              "max": max(windows),
+              "mean": sum(windows) / len(windows),
           }
+          Path("profiles/srs-vi-history.json").write_text(
+              json.dumps(payload, indent=2) + "\n"
+          )
+          Path("profiles/srs-vi-history.md").write_text(
+              "# SRS internal 60-VI history\n\n"
+              f"- complete windows: {count}\n"
+              f"- sequence: {', '.join(f'{v}/60' for v in windows)}\n"
+              f"- min/max: {min(windows)}/60 .. {max(windows)}/60\n"
+              f"- mean: {payload['mean']:.2f}/60\n"
+          )
+          print(json.dumps(payload, indent=2))
+          PY
 
-          for repeat in 1 2 3; do
-            echo "=== SRS repeat $repeat/3 ==="
-            profile_repeat "$repeat"
-          done
-
-      - name: Build SRS repeatability reports
+      - name: Build SRS internal-window report
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/profile_matrix.py \
-            profiles/recompiler-srs-r1.json \
-            profiles/recompiler-srs-r2.json \
-            profiles/recompiler-srs-r3.json \
-            --output profiles/srs-repeatability-profile.md
-
-          python3 scripts/frame_budget_report.py \
-            profiles/recompiler-srs-r1-state.json \
-            profiles/recompiler-srs-r2-state.json \
-            profiles/recompiler-srs-r3-state.json \
-            --target-fps 60 \
-            --output profiles/srs-repeatability-frame-budget.md
+            profiles/recompiler-srs-history.json \
+            --output profiles/srs-history-profile.md
 
           {
-            echo '### Gate-B Space Rescue Squad repeatability'
+            echo '### Gate-B Space Rescue Squad internal VI-window history'
             echo
-            echo '- Same pinned benchmark ROM and Sodium64 runtime for all three fresh ares processes.'
-            echo '- Benchmark enters first authored level after normal audio/game-state init and holds Right+Run.'
-            echo '- Entities, collision, camera, metatiles, animations, scripts and audio remain active.'
-            echo '- R4300 recompiler ON; RSP interpreter forced due documented ares LAB LIMITATION.'
-            echo '- Frameskip 0; APU clock 21; audio 4; precision 8.'
+            echo '- Same pinned benchmark ROM and Road-valid Sodium64 settings.'
+            echo '- fps_native/fps_emulate/history are reset together while stopped before measurement.'
+            echo '- Each history byte is Sodium64 completed guest frames for one consecutive exact 60-VI window.'
+            echo '- Fixed 20 s host observation avoids sample-threshold-dependent terminal-window selection.'
             echo
-            cat profiles/srs-repeatability-profile.md
+            cat profiles/srs-vi-history.md
             echo
-            cat profiles/srs-repeatability-frame-budget.md
+            cat profiles/srs-history-profile.md
             echo
-            echo '> This is emulator-lab repeatability evidence, not real-N64 performance authority.'
+            echo '> Emulator-lab phase/cadence evidence only; not real-N64 performance authority.'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload non-ROM audition diagnostics

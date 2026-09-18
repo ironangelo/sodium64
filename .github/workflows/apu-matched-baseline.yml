@@ -5,6 +5,7 @@ on:
     branches:
       - phase2/apu-matched-baseline
       - phase2/apu-matched-dsp-lateness
+      - phase2/apu-cycle-budget-interleave
   workflow_dispatch:
 
 permissions:

@@ -54,7 +54,7 @@ def read_u32(client: RSPClient, address: int) -> int:
 
 def read_gpr(client: RSPClient, index: int) -> int:
     reply = client.request(f"p{index:x}")
-    if reply.startswith(b"E"):
+    if len(reply) == 3 and reply.startswith(b"E"):
         raise RuntimeError(f"target rejected GPR read p{index:x}: {reply!r}")
     text = reply.decode("ascii")
     if len(text) != 16:

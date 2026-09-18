@@ -897,3 +897,73 @@ Measured legacy regression cases before the stop all passed total-cycle measurem
 Harness bug: the newly added generic semantic check assumed every case must return `apu_count == TEST_PC (0x0200)`. That is wrong for the bounded long-NOP regression case, whose correct postcondition since the validated block-bound fix is `0x0210` after compiling/executing exactly 16 NOPs. The harness therefore raised `long_nop_dbnzy: semantic postcondition mismatch` despite its cycle/span result being correct.
 
 **Decision:** fix only the diagnostic expected-PC postcondition for the long probe and rerun the exact addressing batch. Do not change core timing rules or reference cycle expectations based on this failure. The 16 addressing-family cases remain **UNMEASURED** by this attempt because execution stopped before reaching them.
+
+
+## SPC700 addressing-family timing — VALIDATED 2026-09-17
+
+Exact diagnostic SHA **`e78b3c47989359c3796887d00da9dcca56740e2b`** (core timing rules identical to `19b3d6cf...`; final commit only fixes the bounded-NOP diagnostic expected-PC postcondition).
+
+**Build and Validate `35294386630` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+Dynamic authority: **APU Cycle And Span Proof `35294386627` SUCCESS**, cycle-proof job **`105444053413`**.
+- result artifact **`10527331782`**, digest `sha256:3ddaf910afbb446093aa9fe154756f8e507d52633a05a18b29b96aba31e51f0b`;
+- exact proof-build artifact **`10526324943`**, digest `sha256:92d3fcd835b0bebc9f4e7b662baa2216557a4c0cd1554b50f23cb1d3f75046c5`.
+
+All 16 representative addressing cases matched:
+- compile-time/static debit prediction;
+- total runtime R4300 `s3` debit against pinned ares SPC700 cycles × `apu_clock=21`;
+- expected register or RAM semantics;
+- expected one-region JIT span.
+
+Measured total sequence cycles (tested instruction + corrected 4-cycle BRA loop):
+- direct read/write: **7 / 8**;
+- direct+X read/write: **8 / 9**;
+- `(X)` read/write: **7 / 8**;
+- `(X)+` read/write: **8 / 8**;
+- absolute read/write: **8 / 9**;
+- absolute+X read/write: **9 / 10**;
+- `[dp+X]` read/write: **10 / 11**;
+- `[dp]+Y` read/write: **10 / 11**.
+
+The measured total `s3` debit was exact in every case; e.g. direct read -147 (7), direct write -168 (8), absolute+X write -210 (10), indexed/indirect writes -231 (11).
+
+Existing fixed-cycle regressions BRA/NOP/MUL/DIV and bounded 16-NOP block also remained green. Summary flags all true:
+`all_static_debits_match_source_prediction`,
+`all_total_debits_match_reference`,
+`all_semantics_match_expected`,
+`all_header_spans_match_source_prediction`,
+`compiled_long_probe_is_bounded_to_one_tag_region`.
+
+### Interpretation / scope
+
+**VALIDATED:** the shared missing-cycle mechanism plus audited addressing-family rules correctly reconstruct total SPC700 guest timing for the tested ordinary byte read/write paths while retaining existing runtime memory-helper timing.
+
+**NOT PROVEN:** every opcode that happens to reuse one of these address generators is fully cycle-correct. Special operations such as word operations, read-modify-write, stack/control and other multi-access instructions may have additional operation-specific cycles and need their own family proof. Addressing correction is a component of their timing, not automatic proof of the whole instruction.
+
+The previous attempt `35289165637` is retained as **HARNESS FALSE NEGATIVE / REJECTED AS CORE EVIDENCE**: it stopped on the long-NOP expected-PC bug before any addressing case ran.
+
+### Decision
+
+Recreate the validated semantic core cleanly from **`phase2/apu-block-bound-fix@7e48bcc9...`**:
+- shared fixed-cycle charge mechanism;
+- NOP dummy-cycle timing while retaining block bound;
+- BRA fixed +2;
+- MUL +8 / DIV +11;
+- validated addressing-family rules including pure absolute-store wrapper.
+No PROFILE diagnostic state, GDB harness or proof workflow belongs in the clean candidate.
+
+Then run normal Build/Validate on the clean candidate. Conditional taken-branch timing remains the next separate variable and must use a runtime-only debit on the taken path, not compile-time `s2`.
+
+## RESUME HERE — addressing validated; clean timing candidate next
+
+1. `master` remains `a2270699...`.
+2. Clean block-bound base: `phase2/apu-block-bound-fix@7e48bcc9...`, VALIDATED.
+3. Fixed-cycle mechanism: `842a1412...` / run `35288358655`, VALIDATED for NOP/BRA/MUL/DIV.
+4. Addressing timing: `e78b3c47...` / run `35294386627`, VALIDATED for 16 representative byte read/write cases with exact total `s3` timing and semantics.
+5. Immediate action: create a clean timing-correctness branch from `7e48bcc9...` containing only validated semantic core changes; verify diff and Build/Validate.
+6. Next controlled timing batch after that: conditional branches. Emit the +2 taken-cycle debit in generated MIPS only on the taken path. Test both taken and not-taken for ordinary condition flags, bit branches, CBNE, DBNZ memory and DBNZ Y.
+7. Special operation families (word/RMW/implied/stack/call/return/XCN/etc.) remain TODO and must not be declared corrected by addressing validation alone.
+8. E1 matched-window repair remains required before performance ranking. E3/E4/E5 remain DEFERRED.

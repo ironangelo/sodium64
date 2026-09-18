@@ -1827,3 +1827,41 @@ Exact clean Build and Validate run: **`35306811545`**, QUEUED at checkpoint.
 Dynamic word timing/semantic authority remains diagnostic `90c700a4...` / ares proof `35302988483` SUCCESS.
 
 Do not modify clean `4a3cf13a...` until exact CI completes. Next work is read-only mapping of bit-family timing and semantics.
+
+
+## Clean SPC700 word timing foundation — CI VALIDATED 2026-09-18
+
+Clean **`phase2/apu-timing-foundation@4a3cf13a54213b401b82bd715a07732b4b8dc66f`** completed **Build and Validate `35306811545` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+Combined authority:
+- dynamic word timing/semantics: diagnostic `90c700a4...` / ares proof `35302988483` SUCCESS;
+- clean integration: exactly `apu_alu.S` +8 and `apu_transfer.S` +4;
+- exact clean CI `35306811545` SUCCESS.
+
+## Next isolated variable — bit-family timing
+
+Pinned ares/static mapping yields these hypotheses:
+
+Likely +1 fixed timing:
+- OR1 C,mem.bit;
+- OR1 C,/mem.bit;
+- EOR1 C,mem.bit;
+- MOV1 mem.bit,C.
+
+Likely cycle-complete controls:
+- AND1 C,mem.bit;
+- AND1 C,/mem.bit;
+- MOV1 C,mem.bit;
+- NOT1 mem.bit;
+- SET1 dp.bit;
+- CLR1 dp.bit.
+
+Special case:
+- TSET1/TCLR1 each need one additional **bus read** before write in pinned ares. A simple +1 fixed debit can validate total cycles for ordinary RAM but is NOT bus-semantically exact for I/O/timer side effects. If timing proof uses +1 fixed, preserve this as explicit fidelity debt and do not claim those opcodes are fully cycle/bus exact.
+
+Next diagnostic batch should validate corrected cases and no-change controls separately, checking total `s3`, carry/RAM postconditions and block span.

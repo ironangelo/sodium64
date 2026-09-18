@@ -1865,3 +1865,42 @@ Special case:
 - TSET1/TCLR1 each need one additional **bus read** before write in pinned ares. A simple +1 fixed debit can validate total cycles for ordinary RAM but is NOT bus-semantically exact for I/O/timer side effects. If timing proof uses +1 fixed, preserve this as explicit fidelity debt and do not claim those opcodes are fully cycle/bus exact.
 
 Next diagnostic batch should validate corrected cases and no-change controls separately, checking total `s3`, carry/RAM postconditions and block span.
+
+
+## SPC700 bit timing proof in progress — checkpoint 2026-09-18
+
+Exact diagnostic SHA: **`1958dff26eefdafffa849cd2d1b5ca83045230d2`**, one commit after validated word authority `90c700a4...`.
+
+Direct compare is exactly:
+- `src/apu_alu.S` +26/-0;
+- `scripts/apu_cycle_proof.py` +60/-0.
+
+Controlled timing candidates:
+- OR1 C,mem.bit +1 fixed cycle;
+- OR1 C,/mem.bit +1;
+- EOR1 C,mem.bit +1;
+- MOV1 mem.bit,C +1;
+- TSET1 +1 total-cycle debit for ordinary RAM;
+- TCLR1 +1 total-cycle debit for ordinary RAM.
+
+No-change controls:
+- AND1 C,mem.bit;
+- AND1 C,/mem.bit;
+- MOV1 C,mem.bit;
+- NOT1 mem.bit;
+- SET1 dp.bit;
+- CLR1 dp.bit.
+
+Directed proof checks carry/RAM semantics plus exact total `s3`, static debit and span.
+
+Important limitation for TSET1/TCLR1: pinned ares performs a **second real bus read** before write. This diagnostic uses a fixed +1 debit, which can match ordinary-RAM total cycles but is not I/O/timer side-effect exact. Even if these two cases pass, do not classify them as fully bus-cycle-exact or consume them cleanly without an explicit decision on that semantic debt.
+
+Exact workflows:
+- **APU Cycle And Span Proof `35307039329`** — IN PROGRESS at checkpoint.
+- **Build and Validate `35307039426`** — IN PROGRESS at checkpoint.
+
+Acceptance:
+1. previous regression matrix remains green;
+2. corrected OR1/EOR1/MOV1 mem,C cases match reference totals and semantics;
+3. no-change controls remain exact without added charges;
+4. TSET/TCLR ordinary-RAM cases may establish total timing only, not bus fidelity.

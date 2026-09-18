@@ -2463,3 +2463,38 @@ Falsifiers:
 - accumulator vs memory form diverges;
 - any total/static debit changes;
 - any prior regression case fails.
+
+
+## SPC700 ADC/SBC 8-bit Half-Carry — VALIDATED 2026-09-18
+
+Exact diagnostic authority: **`29aba03ab3eb07401cd521092e11aedc3436582e`**.
+
+CI:
+- **Build and Validate `35314192559` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35314192576` SUCCESS**, cycle-proof job **`105502513799`**.
+- proof result artifact **`10534743489`**, digest `sha256:fb25c9d2a9a71bd9a7117f953e95c9b42742011feb602e5a474eedfff50abe34`;
+- exact proof-build artifact **`10533703688`**, digest `sha256:c90c229be2631974237d128427a73aba816acbf63a36d5e09ebbe662d5aab7d5`.
+
+Directed cases all passed with unchanged timing:
+- ADC immediate H set: A=0x10, H=1, **6 cycles**;
+- ADC immediate H clear from initial H=1: A=0x02, H=0, **6 cycles**;
+- SBC immediate H set: A=0x10, C/H=1, **6 cycles**;
+- SBC immediate H clear from initial H=1: A=0x0F, C=1/H=0, **6 cycles**;
+- ADC dp,#imm memory-modify: RAM result 0x10, H=1, **9 total cycles**;
+- SBC dp,#imm memory-modify: RAM result 0x10, C/H=1, **9 total cycles**.
+
+All global proof invariants remained true:
+`all_runtime_cycle_debits_match_expected`,
+`all_semantics_match_expected`,
+`all_static_debits_match_source_prediction`,
+`all_total_debits_match_reference`,
+`compiled_long_probe_is_bounded_to_one_tag_region`.
+
+Validated core rule:
+- ADC: H from bit 4 of `x ^ y ^ result`;
+- SBC: equivalent half-borrow polarity using the existing complemented-operand subtraction path.
+
+No guest timing changes were introduced.
+
+### Decision
+Consume only `src/apu_alu.S` core changes into clean timing foundation. Then run exact clean CI. Next isolated arithmetic semantic family: ADDW/SUBW H flag.

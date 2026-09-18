@@ -2933,3 +2933,41 @@ Interpretation rules:
 - all six decimal cases + historical regression matrix pass => DAA/DAS core at `35a983e7...` VALIDATED;
 - any decimal semantic/timing failure => inspect that case as core evidence;
 - any new harness/setup failure => fix only harness after proving it is not core behavior.
+
+
+## SPC700 DAA/DAS — VALIDATED 2026-09-18
+
+Core diagnostic authority: **`35a983e7e0d8f9161d599e498acbf8b004f2d6e5`**.
+Harness-only rerun authority: **`db4137947d17403c81948c98907b16d424958181`**.
+
+CI:
+- **Build and Validate `35346467855` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35346467906` SUCCESS**, cycle-proof job **`105604478664`**.
+- proof result artifact **`10547176802`**, digest `sha256:8867600f6a186efd91f8f60525aa3577789979eb1c6b072f2d80773f604ae3f3`;
+- exact proof-build artifact **`10547940108`**, digest `sha256:5587c8a5c1d3384656bcd55e91e343ef7891aad74b8b19bacbfe7a6217d06bc4`.
+
+All global invariants are true:
+`all_runtime_cycle_debits_match_expected`,
+`all_semantics_match_expected`,
+`all_static_debits_match_source_prediction`,
+`all_total_debits_match_reference`,
+`compiled_long_probe_is_bounded_to_one_tag_region`.
+
+Directed results, each DAA/DAS followed by the validated 4-cycle BRA:
+- DAA low-only: A=0x10, PSW V preserved, **7 cycles**;
+- DAA high-only: A=0x75, C/V preserved/set correctly, **7**;
+- DAA both adjustments with wrap: A=0x00, C/H/V/Z correct, **7**;
+- DAS low-only: A=0x0F, C/V preserved, **7**;
+- DAS high-only: A=0x15, H/V preserved and C cleared as reference requires, **7**;
+- DAS both adjustments: A=0x9A, N/V correct, **7**.
+
+Validated implementation:
+- opcode 0xDF DAA is now implemented;
+- opcode 0xBE DAS is now implemented;
+- each charges +2 fixed guest cycles beyond fetch;
+- runtime helper semantics match pinned ares;
+- H/V and unrelated PSW bits are preserved; C/N/Z change per reference.
+
+Attempt 1 failure is permanently classified **HARNESS FALSE NEGATIVE / REJECTED as core evidence**.
+
+Decision: consume only DAA/DAS core into clean `phase2/apu-timing-foundation@7f1d7f52...`; then exact clean CI. Remaining unimplemented base SPC700 opcodes are only SLEEP/STOP and require scheduler-state design, not a normal opcode patch.

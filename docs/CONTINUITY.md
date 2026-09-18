@@ -2277,3 +2277,29 @@ Clean `0fe8c45f...` and diagnostic base `df5fd66c...` are byte-identical for:
 - 0x8F `apu_movm -> apu_movmi`.
 
 Decision: consume the three validated core blobs directly into clean foundation and apply only the single 0x8F table substitution to the clean emitter. Do NOT copy the diagnostic PROFILE block or proof script.
+
+
+## Clean operand-form timing candidate — checkpoint 2026-09-18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@68958b689750cbcdb2d703679b1a975858186637`**, one commit on top of clean bit foundation `0fe8c45f...`.
+
+Direct clean diff is exactly four core files:
+- `src/apu_address.S` +4/-0;
+- `src/apu_alu.S` +4/-0;
+- `src/apu_emitter.S` +1/-1;
+- `src/apu_transfer.S` +17/-0.
+
+No diagnostic script/workflow changes. Clean `apu_emitter.S` contains no `SODIUM64_PROFILE` / `apu_cycle_diag` references.
+
+Included validated operand-form work:
+- `apu_cmpm` +1 trailing idle;
+- `apu_bxy` +1 dummy-PC timing cycle;
+- dedicated 0x8F `apu_movmi` destination real-read + write;
+- 0xFA remains on generic `apu_movm`.
+
+Dynamic authority: diagnostic `1dc544fa...`, APU Cycle And Span Proof `35313083578` SUCCESS.
+Diagnostic Build and Validate `35313083584` SUCCESS.
+
+Exact clean Build and Validate run: **`35313761832`**, QUEUED at checkpoint.
+
+Do not modify clean `68958b68...` until exact CI completes.

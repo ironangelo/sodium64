@@ -141,12 +141,14 @@ def arm_case(
     apu_reg_x: int,
     apu_reg_y: int,
     apu_accum: int,
+    apu_stack: int,
     apu_flags: int,
     jit_lookup: int,
     jit_pointer: int,
     x_value: int = 0x04,
     y_value: int = 0x06,
     a_value: int = 0x11,
+    stack_value: int = 0x7F,
     flags_value: int = 0x00,
     memory_writes: tuple[tuple[int, bytes], ...] = (),
 ) -> None:
@@ -157,6 +159,7 @@ def arm_case(
     client.write_memory(apu_reg_x, bytes([x_value & 0xFF]))
     client.write_memory(apu_reg_y, bytes([y_value & 0xFF]))
     client.write_memory(apu_accum, bytes([a_value & 0xFF]))
+    client.write_memory(apu_stack, bytes([stack_value & 0xFF]))
     client.write_memory(apu_flags, bytes([flags_value & 0xFF]))
     for offset, data in memory_writes:
         client.write_memory(apu_ram + offset, data)
@@ -176,6 +179,8 @@ def arm_case(
         raise RuntimeError("apu_reg_y verification failed")
     if read_u8(client, apu_accum) != (a_value & 0xFF):
         raise RuntimeError("apu_accum verification failed")
+    if read_u8(client, apu_stack) != (stack_value & 0xFF):
+        raise RuntimeError("apu_stack verification failed")
     if read_u8(client, apu_flags) != (flags_value & 0xFF):
         raise RuntimeError("apu_flags verification failed")
     for offset, data in memory_writes:
@@ -199,12 +204,14 @@ def compile_one_case(
     addresses: argparse.Namespace,
     x_value: int = 0x04,
     a_value: int = 0x11,
+    stack_value: int = 0x7F,
     flags_value: int = 0x00,
     memory_writes: tuple[tuple[int, bytes], ...] = (),
     expected_accum: int | None = None,
     expected_x: int | None = None,
     expected_memory: tuple[int, int] | None = None,
     expected_y: int | None = None,
+    expected_stack: int | None = None,
     expected_pc_after: int | None = None,
     expected_runtime_debits: tuple[int, ...] = (),
 ) -> dict[str, object]:
@@ -221,12 +228,14 @@ def compile_one_case(
         apu_reg_x=addresses.apu_reg_x,
         apu_reg_y=addresses.apu_reg_y,
         apu_accum=addresses.apu_accum,
+        apu_stack=addresses.apu_stack,
         apu_flags=addresses.apu_flags,
         jit_lookup=addresses.jit_lookup,
         jit_pointer=addresses.jit_pointer,
         x_value=x_value,
         y_value=y_value,
         a_value=a_value,
+        stack_value=stack_value,
         flags_value=flags_value,
         memory_writes=memory_writes,
     )
@@ -305,6 +314,7 @@ def compile_one_case(
         "apu_reg_x_after_block": read_u8(client, addresses.apu_reg_x),
         "apu_reg_y_after_block": read_u8(client, addresses.apu_reg_y),
         "apu_accum_after_block": read_u8(client, addresses.apu_accum),
+        "apu_stack_after_block": read_u8(client, addresses.apu_stack),
         "jit_pointer_uncached": end_uncached,
     }
 
@@ -320,6 +330,8 @@ def compile_one_case(
         semantic_checks.append(result["apu_reg_x_after_block"] == expected_x)
     if expected_y is not None:
         semantic_checks.append(result["apu_reg_y_after_block"] == expected_y)
+    if expected_stack is not None:
+        semantic_checks.append(result["apu_stack_after_block"] == expected_stack)
     if expected_memory is not None:
         offset, value = expected_memory
         observed = read_u8(client, addresses.apu_ram + offset)
@@ -431,6 +443,7 @@ def main() -> int:
     parser.add_argument("--apu-reg-x", type=parse_int, required=True)
     parser.add_argument("--apu-reg-y", type=parse_int, required=True)
     parser.add_argument("--apu-accum", type=parse_int, required=True)
+    parser.add_argument("--apu-stack", type=parse_int, required=True)
     parser.add_argument("--apu-flags", type=parse_int, required=True)
     parser.add_argument("--jit-tags", type=parse_int, required=True)
     parser.add_argument("--jit-lookup", type=parse_int, required=True)
@@ -614,6 +627,24 @@ def main() -> int:
              expected_y=0x00, expected_pc_after=TEST_PC + 2, expected_runtime_debits=(-42,)),
     ]
 
+    stack_semantic_cases = [
+        # POP A increments S=0x7F to 0x80 and must read stack page 0x0180.
+        # Direct page 0x0080 carries a distinct sentinel to detect aliasing.
+        dict(
+            name="pop_a_stack_page",
+            code=bytes.fromhex("ae2ffd"),
+            expected_debit=-105,
+            reference_cycles=None,
+            expected_end_region=8,
+            y_value=0x06,
+            stack_value=0x7F,
+            memory_writes=((0x0080, b"\xAA"), (0x0180, b"\xBB")),
+            expected_accum=0xBB,
+            expected_stack=0x80,
+            expected_pc_after=TEST_PC,
+        ),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -650,6 +681,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in branch_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in stack_semantic_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

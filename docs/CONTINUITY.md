@@ -1944,3 +1944,26 @@ Decision:
 2. Add only the missing `FLAG_SF` dirty marking to all six carry-modifying bit generators.
 3. Rerun the same bit matrix unchanged. This will simultaneously test OR1/EOR1/AND1/MOV1 C,bit persistence and continue into the timing/control cases that attempt 1 never reached.
 4. TSET/TCLR remain separate: their +1 fixed debit is still diagnostic total-timing only; a bus-exact second-read implementation is planned after the carry persistence rerun.
+
+
+## Bit carry persistence repair — rerun in progress 2026-09-18
+
+Exact diagnostic HEAD: **`2602249fafb0084b3cbf45d352720e4e1ba73af9`**, one commit after failed bit attempt `1958dff2...`.
+
+Controlled change is exactly one file, **`src/apu_alu.S +6/-6`**:
+for `apu_mov1b`, `apu_or1a`, `apu_or1b`, `apu_and1a`, `apu_and1b`, `apu_eor1`, replace the `load_flags` delay-slot `nop` with:
+`ori s1, s1, FLAG_SF`.
+
+No timing charge, opcode dispatch, addressing or proof expectation changed.
+
+Hypothesis: this marks PSW dirty so carry modifications that already occur correctly in generated runtime S1 are persisted at block exit. It directly addresses the observed OR1 symptom from `1958dff2...`.
+
+Exact rerun workflows:
+- **Build and Validate `35307619439`** — QUEUED at checkpoint.
+- **APU Cycle And Span Proof `35307619471`** — QUEUED at checkpoint.
+
+Readings:
+- OR1 carry now persists and matrix advances => confirms dirty-flag root cause; continue judging unchanged bit timing rules.
+- OR1 still returns C=0 => reject/narrow dirty-flag explanation and inspect generated spill path before further timing work.
+- sibling AND/EOR/MOV1 C,bit failure after OR1 passes => family is not uniform; isolate that generator rather than broadening changes.
+- TSET/TCLR remain total-timing-only in this rerun; their planned second-real-read repair is separate.

@@ -217,6 +217,10 @@ apu_cmpy: // CMP Y,op
 
 .align 5
 apu_cmpm: // CMP op
+    // Memory-form CMP has one trailing internal idle after the comparison.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     nop

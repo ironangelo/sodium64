@@ -84,7 +84,7 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_setc, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x80-0x83
     .word apu_dirr, apu_adca,  apu_absr, apu_adca,  apu_brxr, apu_adca,  apu_idxr, apu_adca // 0x84-0x87
     .word apu_imm, apu_adca,  apu_dr2, apu_adcm,  apu_drb, apu_eor1,  apu_dirr, apu_decm // 0x88-0x8B
-    .word apu_absr, apu_decm,  apu_imm, apu_movy,  apu_ppp, 0,  apu_dri, apu_movm // 0x8C-0x8F
+    .word apu_absr, apu_decm,  apu_imm, apu_movy,  apu_ppp, 0,  apu_dri, apu_movmi // 0x8C-0x8F
     .word apu_bcc, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0x90-0x93
     .word apu_drxr, apu_adca,  apu_abxr, apu_adca,  apu_abyr, apu_adca,  apu_idyr, apu_adca // 0x94-0x97
     .word apu_dri, apu_adcm,  apu_bxy, apu_adcm,  apu_dirr, apu_subw,  apu_drxr, apu_decm // 0x98-0x9B

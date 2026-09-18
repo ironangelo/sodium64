@@ -963,6 +963,10 @@ apu_not1: // NOT1 op
 
 .align 5
 apu_mov1a: // MOV1 op,C
+    // MOV1 mem.bit,C has one internal idle before the write.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     nop
@@ -996,6 +1000,10 @@ apu_mov1b: // MOV1 C,op
 
 .align 5
 apu_or1a: // OR1 C,op
+    // OR1 has one internal idle after reading the addressed bit.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     nop
@@ -1009,6 +1017,10 @@ apu_or1a: // OR1 C,op
 
 .align 5
 apu_or1b: // OR1 C,/op
+    // OR1 /bit has one internal idle after reading the addressed bit.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     nop
@@ -1052,6 +1064,10 @@ apu_and1b: // AND1 C,/op
 
 .align 5
 apu_eor1: // EOR1 C,op
+    // EOR1 has one internal idle after reading the addressed bit.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_flags
     nop
@@ -1143,6 +1159,11 @@ apu_xcn: // XCN A
 
 .align 5
 apu_tclr1: // TCLR1 op
+    // Total-cycle correction: pinned reference performs a second bus read before write.
+    // This fixed debit matches ordinary-RAM timing but is not bus-side-effect exact for I/O.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     nop
@@ -1160,6 +1181,11 @@ apu_tclr1: // TCLR1 op
 
 .align 5
 apu_tset1: // TSET1 op
+    // Total-cycle correction: pinned reference performs a second bus read before write.
+    // This fixed debit matches ordinary-RAM timing but is not bus-side-effect exact for I/O.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_accum
     nop

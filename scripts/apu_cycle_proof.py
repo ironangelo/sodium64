@@ -776,6 +776,63 @@ def main() -> int:
              expected_memories=((0x0020, 0x34), (0x0021, 0x12))),
     ]
 
+
+    bit_cases = [
+        # Absolute bit-address instructions use bit 0 of RAM[0x0400].
+        # Each case ends in the already validated 4-cycle BRA loop.
+        dict(name="or1_bit", code=bytes.fromhex("0a00042ffb"), expected_debit=-168,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, memory_writes=((0x0400, b"\x01"),),
+             expected_flags=0x01),
+        dict(name="or1_not_bit", code=bytes.fromhex("2a00042ffb"), expected_debit=-168,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, memory_writes=((0x0400, b"\x00"),),
+             expected_flags=0x01),
+        dict(name="eor1_bit", code=bytes.fromhex("8a00042ffb"), expected_debit=-168,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, memory_writes=((0x0400, b"\x01"),),
+             expected_flags=0x01),
+        dict(name="mov1_mem_c_bit", code=bytes.fromhex("ca00042ffb"), expected_debit=-168,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             flags_value=0x01, memory_writes=((0x0400, b"\x00"),),
+             expected_flags=0x01, expected_memory=(0x0400, 0x01)),
+
+        # Controls expected to be cycle-complete already.
+        dict(name="and1_bit_control", code=bytes.fromhex("4a00042ffb"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             flags_value=0x01, memory_writes=((0x0400, b"\x01"),),
+             expected_flags=0x01),
+        dict(name="and1_not_bit_control", code=bytes.fromhex("6a00042ffb"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             flags_value=0x01, memory_writes=((0x0400, b"\x00"),),
+             expected_flags=0x01),
+        dict(name="mov1_c_mem_bit_control", code=bytes.fromhex("aa00042ffb"), expected_debit=-147,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, memory_writes=((0x0400, b"\x01"),),
+             expected_flags=0x01),
+        dict(name="not1_bit_control", code=bytes.fromhex("ea00042ffb"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0400, b"\x00"),), expected_memory=(0x0400, 0x01)),
+        dict(name="set1_dp_control", code=bytes.fromhex("02202ffc"), expected_debit=-126,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x00"),), expected_memory=(0x0020, 0x01)),
+        dict(name="clr1_dp_control", code=bytes.fromhex("12202ffc"), expected_debit=-126,
+             reference_cycles=8, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x01"),), expected_memory=(0x0020, 0x00)),
+
+        # TSET/TCLR: this batch validates ordinary-RAM total cycles only.
+        # Pinned ares performs a second real read before write; the diagnostic
+        # core uses a fixed +1 debit, so exact I/O/timer bus side effects remain open.
+        dict(name="tset1_ram_total", code=bytes.fromhex("0e00042ffb"), expected_debit=-168,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             a_value=0xF0, flags_value=0x00, memory_writes=((0x0400, b"\x0F"),),
+             expected_flags=0x80, expected_memory=(0x0400, 0xFF)),
+        dict(name="tclr1_ram_total", code=bytes.fromhex("4e00042ffb"), expected_debit=-168,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             a_value=0x0F, flags_value=0x00, memory_writes=((0x0400, b"\xFF"),),
+             expected_flags=0x00, expected_memory=(0x0400, 0xF0)),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -824,6 +881,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in word_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in bit_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

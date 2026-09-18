@@ -452,6 +452,14 @@ jobs:
           srs_camera_x_virtual=$(guest_virtual "$SRS_GUEST_CAMERA_X")
           srs_camera_y_virtual=$(guest_virtual "$SRS_GUEST_CAMERA_Y")
 
+          # ares GDB treats 2-byte requests as CPU Half reads. These SRS fields
+          # are unaligned, so observe each byte independently at its exact
+          # guest virtual address and reconstruct the SNES little-endian word.
+          srs_player_x_hi=$(printf '%08x' "$((0x$srs_player_x_virtual + 1))")
+          srs_player_y_hi=$(printf '%08x' "$((0x$srs_player_y_virtual + 1))")
+          srs_camera_x_hi=$(printf '%08x' "$((0x$srs_camera_x_virtual + 1))")
+          srs_camera_y_hi=$(printf '%08x' "$((0x$srs_camera_y_virtual + 1))")
+
           buffer_hex=$(printf '%08x' "$((0x$buffer))")
           rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
           test -n "$rom_buffer"
@@ -479,9 +487,13 @@ jobs:
             echo "ARES_AUDIO_SET_ADDR=$audio_set"
             echo "ARES_SRS_ROOM_ID_ADDR=$srs_room_id_virtual"
             echo "ARES_SRS_PLAYER_X_ADDR=$srs_player_x_virtual"
+            echo "ARES_SRS_PLAYER_X_HI_ADDR=$srs_player_x_hi"
             echo "ARES_SRS_PLAYER_Y_ADDR=$srs_player_y_virtual"
+            echo "ARES_SRS_PLAYER_Y_HI_ADDR=$srs_player_y_hi"
             echo "ARES_SRS_CAMERA_X_ADDR=$srs_camera_x_virtual"
+            echo "ARES_SRS_CAMERA_X_HI_ADDR=$srs_camera_x_hi"
             echo "ARES_SRS_CAMERA_Y_ADDR=$srs_camera_y_virtual"
+            echo "ARES_SRS_CAMERA_Y_HI_ADDR=$srs_camera_y_hi"
             echo "ARES_VI_HISTORY_COUNT_ADDR=$vi_history_count"
             echo "ARES_VI_HISTORY_ADDR=$vi_history"
             for offset in 0 8 16 24 32 40 48 56; do
@@ -562,10 +574,14 @@ jobs:
               --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
               --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
               --observe "srs_room_id:0x$ARES_SRS_ROOM_ID_ADDR:1" \
-              --observe "srs_player_x:0x$ARES_SRS_PLAYER_X_ADDR:2" \
-              --observe "srs_player_y:0x$ARES_SRS_PLAYER_Y_ADDR:2" \
-              --observe "srs_camera_x:0x$ARES_SRS_CAMERA_X_ADDR:2" \
-              --observe "srs_camera_y:0x$ARES_SRS_CAMERA_Y_ADDR:2" \
+              --observe "srs_player_x_lo:0x$ARES_SRS_PLAYER_X_ADDR:1" \
+              --observe "srs_player_x_hi:0x$ARES_SRS_PLAYER_X_HI_ADDR:1" \
+              --observe "srs_player_y_lo:0x$ARES_SRS_PLAYER_Y_ADDR:1" \
+              --observe "srs_player_y_hi:0x$ARES_SRS_PLAYER_Y_HI_ADDR:1" \
+              --observe "srs_camera_x_lo:0x$ARES_SRS_CAMERA_X_ADDR:1" \
+              --observe "srs_camera_x_hi:0x$ARES_SRS_CAMERA_X_HI_ADDR:1" \
+              --observe "srs_camera_y_lo:0x$ARES_SRS_CAMERA_Y_ADDR:1" \
+              --observe "srs_camera_y_hi:0x$ARES_SRS_CAMERA_Y_HI_ADDR:1" \
               --observe "vi_history_count:0x$ARES_VI_HISTORY_COUNT_ADDR:1" \
               --observe "vi_history_0:0x$ARES_VI_HISTORY_0_ADDR:8" \
               --observe "vi_history_1:0x$ARES_VI_HISTORY_1_ADDR:8" \
@@ -622,16 +638,18 @@ jobs:
           )
           windows = list(raw[:count])
 
-          def le16(key):
-              raw_value = int(obs[key]).to_bytes(2, "big")
-              return int.from_bytes(raw_value, "little")
+          def snes_u16(key):
+              lo = int(obs[f"{key}_lo"])
+              hi = int(obs[f"{key}_hi"])
+              assert 0 <= lo <= 0xff and 0 <= hi <= 0xff
+              return lo | (hi << 8)
 
           guest_state = {
               "room_id": int(obs["srs_room_id"]),
-              "player_x": le16("srs_player_x"),
-              "player_y": le16("srs_player_y"),
-              "camera_x": le16("srs_camera_x"),
-              "camera_y": le16("srs_camera_y"),
+              "player_x": snes_u16("srs_player_x"),
+              "player_y": snes_u16("srs_player_y"),
+              "camera_x": snes_u16("srs_camera_x"),
+              "camera_y": snes_u16("srs_camera_y"),
           }
 
           payload = {

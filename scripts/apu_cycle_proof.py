@@ -30,6 +30,7 @@ TEST_PC = 0x0200
 APU_CLOCK = 21
 BREAKPOINT_KIND = 4
 S3_GPR_INDEX = 19
+A0_GPR_INDEX = 4
 
 
 def parse_int(text: str) -> int:
@@ -144,6 +145,7 @@ def arm_case(
     apu_accum: int,
     apu_stack: int,
     apu_flags: int,
+    apu_halt: int,
     jit_lookup: int,
     jit_pointer: int,
     x_value: int = 0x04,
@@ -165,6 +167,7 @@ def arm_case(
     client.write_memory(apu_accum, bytes([a_value & 0xFF]))
     client.write_memory(apu_stack, bytes([stack_value & 0xFF]))
     client.write_memory(apu_flags, bytes([flags_value & 0xFF]))
+    client.write_memory(apu_halt, b"\x00")
     for offset, data in memory_writes:
         client.write_memory(apu_ram + offset, data)
     client.write_memory(lookup_entry, bytes(4))
@@ -189,6 +192,8 @@ def arm_case(
         raise RuntimeError("apu_stack verification failed")
     if read_u8(client, apu_flags) != (flags_value & 0xFF):
         raise RuntimeError("apu_flags verification failed")
+    if read_u8(client, apu_halt) != 0:
+        raise RuntimeError("apu_halt verification failed")
     for offset, data in memory_writes:
         if client.read_memory(apu_ram + offset, len(data), len(data)) != data:
             raise RuntimeError(f"APU data patch verification failed at 0x{offset:04X}")
@@ -221,6 +226,7 @@ def compile_one_case(
     expected_stack: int | None = None,
     expected_flags: int | None = None,
     expected_pc_after: int | None = None,
+    expected_halt: int | None = None,
     expected_runtime_debits: tuple[int, ...] = (),
 ) -> dict[str, object]:
     # Arrive before apu_execute touches s0/lookup. This avoids changing apu_count
@@ -239,6 +245,7 @@ def compile_one_case(
         apu_accum=addresses.apu_accum,
         apu_stack=addresses.apu_stack,
         apu_flags=addresses.apu_flags,
+        apu_halt=addresses.apu_halt,
         jit_lookup=addresses.jit_lookup,
         jit_pointer=addresses.jit_pointer,
         x_value=x_value,
@@ -325,6 +332,7 @@ def compile_one_case(
         "apu_accum_after_block": read_u8(client, addresses.apu_accum),
         "apu_stack_after_block": read_u8(client, addresses.apu_stack),
         "apu_flags_after_block": read_u8(client, addresses.apu_flags),
+        "apu_halt_after_block": read_u8(client, addresses.apu_halt),
         "jit_pointer_uncached": end_uncached,
     }
 
@@ -344,6 +352,8 @@ def compile_one_case(
         semantic_checks.append(result["apu_stack_after_block"] == expected_stack)
     if expected_flags is not None:
         semantic_checks.append(result["apu_flags_after_block"] == expected_flags)
+    if expected_halt is not None:
+        semantic_checks.append(result["apu_halt_after_block"] == expected_halt)
     if expected_memory is not None:
         offset, value = expected_memory
         observed = read_u8(client, addresses.apu_ram + offset)
@@ -371,6 +381,83 @@ def compile_one_case(
         raise RuntimeError(f"{name}: JIT header span mismatch")
     if not result["semantics_match_expected"]:
         raise RuntimeError(f"{name}: semantic postcondition mismatch")
+    return result
+
+
+def measure_halt_ticks(
+    client: RSPClient,
+    *,
+    name: str,
+    expected_halt: int,
+    addresses: argparse.Namespace,
+    ticks: int = 2,
+) -> dict[str, object]:
+    expected_pc = TEST_PC + 1
+    observations: list[dict[str, object]] = []
+
+    if read_u16(client, addresses.apu_count) != expected_pc:
+        raise RuntimeError(f"{name}: entry PC did not advance to instruction-after-opcode")
+    if read_u8(client, addresses.apu_halt) != expected_halt:
+        raise RuntimeError(f"{name}: halt latch mismatch after entry")
+
+    for index in range(ticks):
+        continue_to_breakpoint(
+            client, addresses.apu_execute, f"{name}: halted apu_execute tick {index + 1}"
+        )
+        s3_before = read_gpr(client, S3_GPR_INDEX)
+        pc_before = read_u16(client, addresses.apu_count)
+        halt_before = read_u8(client, addresses.apu_halt)
+        pointer_before = read_u32(client, addresses.jit_pointer)
+
+        continue_to_breakpoint(
+            client, addresses.apu_read8, f"{name}: halted read tick {index + 1}"
+        )
+        read_address = read_gpr(client, A0_GPR_INDEX) & 0xFFFF
+
+        continue_to_breakpoint(
+            client, addresses.cpu_execute, f"{name}: halted cpu return tick {index + 1}"
+        )
+        s3_after = read_gpr(client, S3_GPR_INDEX)
+        pc_after = read_u16(client, addresses.apu_count)
+        halt_after = read_u8(client, addresses.apu_halt)
+        pointer_after = read_u32(client, addresses.jit_pointer)
+        debit = signed_delta_u64(s3_after, s3_before)
+
+        tick = {
+            "tick": index + 1,
+            "s3_before": s3_before,
+            "s3_after": s3_after,
+            "cycle_debit": debit,
+            "expected_cycle_debit": -2 * APU_CLOCK,
+            "pc_before": pc_before,
+            "pc_after": pc_after,
+            "read_address": read_address,
+            "halt_before": halt_before,
+            "halt_after": halt_after,
+            "jit_pointer_before": pointer_before,
+            "jit_pointer_after": pointer_after,
+        }
+        tick["matches_expected"] = (
+            debit == -2 * APU_CLOCK
+            and pc_before == expected_pc
+            and pc_after == expected_pc
+            and read_address == expected_pc
+            and halt_before == expected_halt
+            and halt_after == expected_halt
+            and pointer_before == pointer_after
+        )
+        observations.append(tick)
+        print(json.dumps({"name": name, **tick}, sort_keys=True))
+
+    result = {
+        "name": name,
+        "expected_halt": expected_halt,
+        "expected_pc": expected_pc,
+        "ticks": observations,
+        "all_ticks_match_expected": all(bool(item["matches_expected"]) for item in observations),
+    }
+    if not result["all_ticks_match_expected"]:
+        raise RuntimeError(f"{name}: persistent halt scheduler semantics mismatch")
     return result
 
 
@@ -465,10 +552,12 @@ def main() -> int:
     parser.add_argument("--apu-accum", type=parse_int, required=True)
     parser.add_argument("--apu-stack", type=parse_int, required=True)
     parser.add_argument("--apu-flags", type=parse_int, required=True)
+    parser.add_argument("--apu-halt", type=parse_int, required=True)
     parser.add_argument("--jit-tags", type=parse_int, required=True)
     parser.add_argument("--jit-lookup", type=parse_int, required=True)
     parser.add_argument("--jit-pointer", type=parse_int, required=True)
     parser.add_argument("--apu-execute", type=parse_int, required=True)
+    parser.add_argument("--apu-read8", type=parse_int, required=True)
     parser.add_argument("--compile-block", type=parse_int, required=True)
     parser.add_argument("--cpu-execute", type=parse_int, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -942,6 +1031,15 @@ def main() -> int:
     ]
 
 
+    halt_entry_cases = [
+        dict(name="sleep_entry", code=bytes.fromhex("ef"),
+             expected_debit=-42, reference_cycles=3, expected_end_region=8,
+             y_value=0x06, expected_pc_after=TEST_PC + 1, expected_halt=1),
+        dict(name="stop_entry", code=bytes.fromhex("ff"),
+             expected_debit=-42, reference_cycles=3, expected_end_region=8,
+             y_value=0x06, expected_pc_after=TEST_PC + 1, expected_halt=2),
+    ]
+
     decimal_adjust_cases = [
         # DAA/DAS are 3-cycle instructions; each test ends with the validated
         # 4-cycle BRA loop, so total reference time is 7 cycles.
@@ -1042,12 +1140,26 @@ def main() -> int:
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")
         reentry = middle_region_reentry(client, long_result=long_result, addresses=args)
 
+        halt_scheduler: list[dict[str, object]] = []
+        for case in halt_entry_cases:
+            entry = compile_one_case(client, addresses=args, **case)
+            results.append(entry)
+            halt_scheduler.append(
+                measure_halt_ticks(
+                    client,
+                    name=case["name"],
+                    expected_halt=int(case["expected_halt"]),
+                    addresses=args,
+                )
+            )
+
         report = {
             "apu_clock": APU_CLOCK,
             "test_pc": TEST_PC,
             "jit_buffer": JIT_BUFFER,
             "cases": results,
             "middle_region_reentry": reentry,
+            "halt_scheduler": halt_scheduler,
             "summary": {
                 "all_static_debits_match_source_prediction": all(
                     bool(item["cycle_debit_matches_expected"]) for item in results
@@ -1063,6 +1175,9 @@ def main() -> int:
                 ),
                 "all_semantics_match_expected": all(
                     bool(item["semantics_match_expected"]) for item in results
+                ),
+                "all_halt_scheduler_ticks_match_expected": all(
+                    bool(item["all_ticks_match_expected"]) for item in halt_scheduler
                 ),
                 "long_source_program_exceeds_block_size": int(long_result["source_bytes"]) > 16,
                 "compiled_long_probe_is_bounded_to_one_tag_region": (
@@ -1087,6 +1202,7 @@ def main() -> int:
             and report["summary"]["all_total_debits_match_reference"]
             and report["summary"]["all_runtime_cycle_debits_match_expected"]
             and report["summary"]["all_semantics_match_expected"]
+            and report["summary"]["all_halt_scheduler_ticks_match_expected"]
             and report["summary"]["compiled_long_probe_is_bounded_to_one_tag_region"]
         )
         if not required:

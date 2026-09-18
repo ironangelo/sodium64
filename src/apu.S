@@ -29,6 +29,7 @@
 .globl apu_stack
 .globl apu_flags
 .globl apu_clock
+.globl apu_halt
 
 .globl apu_execute
 .globl apu_read8
@@ -68,6 +69,7 @@ apu_timers: .byte 0:3
 apu_tmdivs: .byte 0:3
 apu_tmouts: .byte 0:3
 apu_control: .byte 0xB0
+apu_halt: .byte 0
 
 .align 4
 apu_count: .hword 0xFFC0
@@ -101,6 +103,13 @@ apu_execute:
     lhu s0, apu_count
     ble s3, a3, dsp_sample // Check if the DSP should run
     sll t0, s0, 2
+
+    // WAIT/STOP remain latched until reset. Service their read+idle pair at
+    // scheduler boundaries instead of decoding another opcode.
+    lbu t1, apu_halt
+    bnez t1, apu_halted
+    nop
+
     lw t0, jit_lookup(t0)
     beqz t0, compile_block
 
@@ -120,6 +129,17 @@ apu_execute:
     addi t0, t0, 12
     jr t0
     nop
+
+.align 5
+apu_halted:
+    // Pinned SPC700 WAIT/STOP repeatedly perform read(PC) + idle without
+    // advancing PC. Keep the existing DSP deadline check ahead of this path.
+    move a0, s0
+    jal apu_read8
+    nop
+    lbu t0, apu_clock
+    j cpu_execute
+    sub s3, s3, t0
 
 .align 5
 apu_read8: // a0: address - v0: value

@@ -177,17 +177,19 @@ jobs:
           apu_accum=$(symbol apu_accum)
           apu_stack=$(symbol apu_stack)
           apu_flags=$(symbol apu_flags)
+          apu_halt=$(symbol apu_halt)
           jit_tags=$(symbol jit_tags)
           jit_lookup=$(symbol jit_lookup)
           jit_pointer=$(symbol jit_pointer)
           apu_execute=$(symbol apu_execute)
+          apu_read8=$(symbol apu_read8)
           compile_block=$(symbol compile_block)
           cpu_execute=$(symbol cpu_execute)
 
           for value in \
             "$apu_ram" "$apu_map" "$apu_count" "$apu_clock" "$apu_reg_x" "$apu_reg_y" \
-            "$apu_accum" "$apu_stack" "$apu_flags" "$jit_tags" "$jit_lookup" "$jit_pointer" \
-            "$apu_execute" "$compile_block" "$cpu_execute"; do
+            "$apu_accum" "$apu_stack" "$apu_flags" "$apu_halt" "$jit_tags" "$jit_lookup" "$jit_pointer" \
+            "$apu_execute" "$apu_read8" "$compile_block" "$cpu_execute"; do
             test -n "$value"
           done
 
@@ -201,10 +203,12 @@ jobs:
             echo "APU_ACCUM_ADDR=$apu_accum"
             echo "APU_STACK_ADDR=$apu_stack"
             echo "APU_FLAGS_ADDR=$apu_flags"
+            echo "APU_HALT_ADDR=$apu_halt"
             echo "JIT_TAGS_ADDR=$jit_tags"
             echo "JIT_LOOKUP_ADDR=$jit_lookup"
             echo "JIT_POINTER_ADDR=$jit_pointer"
             echo "APU_EXECUTE_ADDR=$apu_execute"
+            echo "APU_READ8_ADDR=$apu_read8"
             echo "COMPILE_BLOCK_ADDR=$compile_block"
             echo "CPU_EXECUTE_ADDR=$cpu_execute"
           } | tee -a "$GITHUB_ENV"
@@ -257,10 +261,12 @@ jobs:
             --apu-accum "0x$APU_ACCUM_ADDR" \
             --apu-stack "0x$APU_STACK_ADDR" \
             --apu-flags "0x$APU_FLAGS_ADDR" \
+            --apu-halt "0x$APU_HALT_ADDR" \
             --jit-tags "0x$JIT_TAGS_ADDR" \
             --jit-lookup "0x$JIT_LOOKUP_ADDR" \
             --jit-pointer "0x$JIT_POINTER_ADDR" \
             --apu-execute "0x$APU_EXECUTE_ADDR" \
+            --apu-read8 "0x$APU_READ8_ADDR" \
             --compile-block "0x$COMPILE_BLOCK_ADDR" \
             --cpu-execute "0x$CPU_EXECUTE_ADDR" \
             --output "$proof_json" \

@@ -3320,3 +3320,17 @@ Decision map:
 - if accepted, do not merge diagnostic instrumentation; promote exact clean `9204ad2f...` to a prepared real-N64 milestone because ares already has 9.7% VI idle and is no longer discriminative for Gothicvania performance;
 - if lateness fails, treat 60/60 as cadence-invalid and repair scheduler/interleave before any hardware performance claim;
 - if only harness/workflow fails, repair the diagnostic harness without changing clean core semantics.
+
+
+## M1 hardware-package guard attempt 1 — HARNESS FALSE NEGATIVE 2026-09-18
+
+Measurement-package branch was created from clean core `9204ad2f...` as **`phase2/apu-hardware-milestone`**. Its only intended repo change is the hardware-package workflow; emulator runtime files remain from the clean candidate.
+
+First package SHA `d86de54b113ca18bdf56e61240ed9868ffdaed7a`, run **`35353828653`**, failed before compilation in the runtime-identity guard with:
+`fatal: bad object 9204ad2fae7f37d9950a0f3a88cc3ff4299e1bc1`.
+
+Cause: `actions/checkout@v4` defaulted to `fetch-depth: 1`, so the clean parent commit object was absent locally. This is **HARNESS FALSE NEGATIVE / REJECTED as core evidence**.
+
+No build, ROM, hardware result or Sodium64 behavior was tested by the failed attempt.
+
+Workflow-only fix: package branch advanced to **`e0dfe19b59cd4b86ee96eb250c9ad4bfda437a3b`**, adding only `fetch-depth: 0` so the guard can compare against exact clean core `9204ad2f...`. Runtime core remains unchanged.

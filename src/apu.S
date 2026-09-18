@@ -101,8 +101,45 @@ write_iomap:
 apu_execute:
     // Compile a new JIT block if one doesn't exist for the current PC
     lhu s0, apu_count
+#ifdef SODIUM64_PROFILE
+    // Diagnostic only: observe scheduler lateness when DSP work is due.
+    // Do not modify s3/a3 or event ordering.
+    bgt s3, a3, apu_profile_not_due
+    sll t0, s0, 2
+    subu t1, a3, s3
+
+    la t0, profile_apu_dsp_due_count
+    lw t2, (t0)
+    addiu t2, t2, 1
+    sw t2, (t0)
+
+    la t0, profile_apu_dsp_late_sum
+    lw t2, (t0)
+    addu t2, t2, t1
+    sw t2, (t0)
+
+    la t0, profile_apu_dsp_late_max
+    lw t2, (t0)
+    bgeu t2, t1, apu_profile_max_done
+    nop
+    sw t1, (t0)
+apu_profile_max_done:
+    sltiu t2, t1, DSP_SAMPLE
+    bnez t2, apu_profile_due_done
+    nop
+    la t0, profile_apu_dsp_multi_due_count
+    lw t2, (t0)
+    addiu t2, t2, 1
+    sw t2, (t0)
+apu_profile_due_done:
+    j dsp_sample
+    nop
+
+apu_profile_not_due:
+#else
     ble s3, a3, dsp_sample // Check if the DSP should run
     sll t0, s0, 2
+#endif
 
     // WAIT/STOP remain latched until reset. Service their read+idle pair at
     // scheduler boundaries instead of decoding another opcode.

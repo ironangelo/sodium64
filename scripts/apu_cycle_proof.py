@@ -820,14 +820,13 @@ def main() -> int:
              reference_cycles=8, expected_end_region=8, y_value=0x06,
              memory_writes=((0x0020, b"\x01"),), expected_memory=(0x0020, 0x00)),
 
-        # TSET/TCLR: this batch validates ordinary-RAM total cycles only.
-        # Pinned ares performs a second real read before write; the diagnostic
-        # core uses a fixed +1 debit, so exact I/O/timer bus side effects remain open.
-        dict(name="tset1_ram_total", code=bytes.fromhex("0e00042ffb"), expected_debit=-168,
+        # TSET/TCLR now perform the second real read required by the pinned
+        # reference. Static debit drops by one unit while total stays 10.
+        dict(name="tset1_ram_total", code=bytes.fromhex("0e00042ffb"), expected_debit=-147,
              reference_cycles=10, expected_end_region=8, y_value=0x06,
              a_value=0xF0, flags_value=0x00, memory_writes=((0x0400, b"\x0F"),),
              expected_flags=0x80, expected_memory=(0x0400, 0xFF)),
-        dict(name="tclr1_ram_total", code=bytes.fromhex("4e00042ffb"), expected_debit=-168,
+        dict(name="tclr1_ram_total", code=bytes.fromhex("4e00042ffb"), expected_debit=-147,
              reference_cycles=10, expected_end_region=8, y_value=0x06,
              a_value=0x0F, flags_value=0x00, memory_writes=((0x0400, b"\xFF"),),
              expected_flags=0x00, expected_memory=(0x0400, 0xF0)),

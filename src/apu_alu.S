@@ -1159,43 +1159,51 @@ apu_xcn: // XCN A
 
 .align 5
 apu_tclr1: // TCLR1 op
-    // Total-cycle correction: pinned reference performs a second bus read before write.
-    // This fixed debit matches ordinary-RAM timing but is not bus-side-effect exact for I/O.
-    jal jit_charge_cycles
-    li t0, 1
-
     // Update the JIT register state
     jal load_accum
     nop
 
-    // Emit code to clear bits in a memory value and set flags
+    // Preserve comparison flags from the first read before helper calls can
+    // clobber T0. Pinned SPC700 timing performs a second real read before write.
+    EMIT_OP SUB(T0, T7, V0) // CMP against first read
+    jal queue_nz
+    li t1, T0
+
+    // Keep the first-read-derived write value in A1 across the second read.
     EMIT_OP XORI(T0, T7, 0xFF)
-    EMIT_OP AND(A1, V0, T0)
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP AND(A1, V0, T0) // second-read JAL delay slot; uses first V0
+
     la t0, apu_write8
     jal emit_jal
     nop
-    EMIT_OP SUB(T0, T7, V0) // CMP
-    la ra, finish_opcode
-    j queue_nz
-    li t1, T0
+    EMIT_OP OR(A1, A1, ZERO) // preserve write value in JAL delay slot
+    j finish_opcode
+    nop
 
 .align 5
 apu_tset1: // TSET1 op
-    // Total-cycle correction: pinned reference performs a second bus read before write.
-    // This fixed debit matches ordinary-RAM timing but is not bus-side-effect exact for I/O.
-    jal jit_charge_cycles
-    li t0, 1
-
     // Update the JIT register state
     jal load_accum
     nop
 
-    // Emit code to set bits in a memory value and set flags
+    // Preserve comparison flags from the first read before helper calls can
+    // clobber T0. Pinned SPC700 timing performs a second real read before write.
+    EMIT_OP SUB(T0, T7, V0) // CMP against first read
+    jal queue_nz
+    li t1, T0
+
+    // Form the first-read-derived write value in the second-read JAL delay slot.
+    la t0, apu_read8
+    jal emit_jal
+    nop
     EMIT_OP OR(A1, V0, T7)
+
     la t0, apu_write8
     jal emit_jal
     nop
-    EMIT_OP SUB(T0, T7, V0) // CMP
-    la ra, finish_opcode
-    j queue_nz
-    li t1, T0
+    EMIT_OP OR(A1, A1, ZERO) // preserve write value in JAL delay slot
+    j finish_opcode
+    nop

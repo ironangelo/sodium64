@@ -967,3 +967,29 @@ Then run normal Build/Validate on the clean candidate. Conditional taken-branch 
 6. Next controlled timing batch after that: conditional branches. Emit the +2 taken-cycle debit in generated MIPS only on the taken path. Test both taken and not-taken for ordinary condition flags, bit branches, CBNE, DBNZ memory and DBNZ Y.
 7. Special operation families (word/RMW/implied/stack/call/return/XCN/etc.) remain TODO and must not be declared corrected by addressing validation alone.
 8. E1 matched-window repair remains required before performance ranking. E3/E4/E5 remain DEFERRED.
+
+
+## Clean SPC700 timing candidate — checkpoint 2026-09-17
+
+Clean branch **`phase2/apu-timing-correctness@1248bc98e9f71e37d3f384bf3f8aef243022e4e4`** was created directly from validated clean block-bound base `7e48bcc994483e7aaf7cc2793b03fe0ebf13ee84`.
+
+It is exactly one commit ahead of that base and modifies only four production core files:
+- `src/apu_address.S` +47;
+- `src/apu_alu.S` +8;
+- `src/apu_control.S` +4;
+- `src/apu_emitter.S` +23/-4.
+
+Explicit audit found **zero** `SODIUM64_PROFILE` or `apu_cycle_diag` references in the clean emitter. No workflow, harness, diagnostic state or profiling source is present.
+
+Included semantic scope is only already-validated work:
+- retained NOP BLOCK_SIZE bound from the base;
+- shared compile-time missing-cycle helper;
+- NOP dummy cycle;
+- unconditional BRA +2;
+- MUL +8 / DIV +11;
+- validated ordinary addressing-family fixed cycles;
+- pure absolute-store wrapper so CALL/JMP do not inherit store timing.
+
+Exact clean CI launched: **Build and Validate `35294889292`** for SHA `1248bc98...`. An earlier run `35294839654` belongs to the transient branch-creation base SHA `7e48bcc9...` and is not authority for the clean timing commit.
+
+Next action remains conditional taken-branch timing only after `35294889292` is green.

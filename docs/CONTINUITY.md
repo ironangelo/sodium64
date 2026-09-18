@@ -1506,3 +1506,53 @@ Exact clean Build and Validate run: **`35301478900`**, QUEUED at checkpoint.
 Acceptance remains normal build + PROFILE build + pinned Mupen smoke green on exact SHA `46230daa...`. Dynamic semantic/cycle authority remains ares proof `35298264479`.
 
 While clean CI runs, next work is READ-ONLY mapping of CALL/TCALL/PCALL/RET/RET1/BRK timing and semantics against pinned ares. Do not modify clean `46230daa...` until its exact CI completes.
+
+
+## Clean fixed-family timing foundation — CI VALIDATED 2026-09-17/18
+
+Clean **`phase2/apu-timing-foundation@46230daa7ac66b7b400ce6d2105e3834a15ed4ec`** completed **Build and Validate `35301478900` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+State: **VALIDATED CANDIDATE**, unmerged. Dynamic cycle/semantic authority remains diagnostic `62e661b6...` with parser-only rerun `2e01d323...` / ares proof `35298264479`.
+
+## CALL/TCALL/PCALL/RET/RET1/BRK timing proof in progress — checkpoint 2026-09-17/18
+
+Exact diagnostic SHA: **`044009a4c8bc34ffa8314ddcb99fbe2b31099de5`**, based on `2e01d323...`.
+
+Controlled core timing changes, only in `src/apu_control.S`:
+- CALL +3 fixed cycles;
+- TCALL +3;
+- PCALL +2;
+- RET +2;
+- RET1 +2;
+- BRK +2.
+
+Reference-derived accounting:
+- CALL absolute: opcode+2 operand fetches +3 fixed +2 stack writes = **8 total**;
+- PCALL: opcode+operand +2 fixed +2 stack writes = **6**;
+- TCALL0: opcode +3 fixed +2 stack writes +2 vector reads = **8**;
+- RET: opcode +2 fixed +2 stack reads = **5**;
+- RET1: opcode +2 fixed +3 stack reads = **6**;
+- BRK: opcode +2 fixed +3 stack writes +2 vector reads = **8**.
+
+The proof also:
+- forces `apu_map[0x3FF]=0` so FFDE/FFDF vectors come deterministically from RAM, not inherited IPL-ROM mapping;
+- validates final PC and S;
+- validates pushed return-PC bytes for CALL/PCALL/TCALL;
+- validates RET/RET1 stack reconstruction;
+- validates RET1 PSW restore;
+- validates BRK pushed PC/PSW and post-BRK flags.
+
+Exact workflows:
+- **Build and Validate `35301687790`** — QUEUED at checkpoint.
+- **APU Cycle And Span Proof `35301687777`** — IN PROGRESS at checkpoint.
+
+Expected readings:
+- all six exact cycle totals + semantic postconditions pass => VALIDATE this timing family and consume only `apu_control.S` core timing changes cleanly on `46230daa...`;
+- cycle mismatch with semantic pass => narrow/reject only the affected fixed-cycle rule against pinned ares;
+- semantic mismatch with matching cycles => treat as pre-existing CALL/RET/BRK correctness defect, do not hide it with timing charges;
+- harness/vector mismatch => repair diagnostic setup only after proving the mismatch is not core behavior.
+
+**Known limitation preserved:** TCALL/BRK bus-access ordering in Sodium64 differs statically from pinned ares (vector vs stack access order). This batch tests total guest cycles and end-state semantics only; exact intra-instruction I/O/timer ordering remains separate fidelity work.

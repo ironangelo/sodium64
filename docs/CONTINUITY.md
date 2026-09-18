@@ -2414,3 +2414,52 @@ Proceed one semantic family at a time:
 5. SLEEP/STOP scheduler semantics separately.
 
 Each family must retain the full existing cycle/address/state regression matrix. Do not bundle WAIT/STOP scheduler behavior with arithmetic work.
+
+
+## SPC700 ADC/SBC 8-bit Half-Carry proof in progress — checkpoint 2026-09-18
+
+Exact diagnostic SHA: **`29aba03ab3eb07401cd521092e11aedc3436582e`**, one commit after operand-form proof authority `1dc544fa...`.
+
+Direct compare `1dc544fa... -> 29aba03a...` is exactly:
+- `src/apu_alu.S` +22/-4;
+- `scripts/apu_cycle_proof.py` +28/-0.
+
+Controlled semantic change only; **no guest cycle charge/addressing/dispatch change**.
+
+Pinned ares reference:
+- ADC: `HF = (x ^ y ^ result) & 0x10`;
+- SBC reuses ADC with `~y`.
+
+Candidate implementation updates exactly:
+- `apu_adca`;
+- `apu_adcm`;
+- `apu_sbca`;
+- `apu_sbcm`.
+
+Directed matrix explicitly tests:
+- ADC immediate H set;
+- ADC immediate H clear from an initially-set H;
+- SBC immediate H set;
+- SBC immediate H clear from an initially-set H;
+- ADC direct-page memory-modify H set;
+- SBC direct-page memory-modify H set.
+
+Timing expectations are unchanged. Any `s3`/static debit movement is a regression.
+
+Exact workflows:
+- **Build and Validate `35314192559`** — IN PROGRESS at checkpoint.
+- **APU Cycle And Span Proof `35314192576`** — IN PROGRESS at checkpoint.
+
+Acceptance:
+1. H sets and clears exactly per pinned reference;
+2. C/N/Z/V and data/register postconditions remain correct in directed cases;
+3. accumulator and memory-modify generators agree;
+4. exact guest cycle debit is unchanged;
+5. entire existing timing/address/state regression matrix stays green.
+
+Falsifiers:
+- H remains stale when expected clear;
+- SBC half-borrow polarity differs;
+- accumulator vs memory form diverges;
+- any total/static debit changes;
+- any prior regression case fails.

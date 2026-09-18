@@ -10,6 +10,7 @@ on:
       - 'src/defines.h'
       - 'Makefile'
       - 'scripts/apu_cycle_proof.py'
+      - 'scripts/gdb_rsp_dump.py'
       - '.github/workflows/apu-cycle-proof.yml'
   workflow_dispatch:
 

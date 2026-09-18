@@ -809,6 +809,10 @@ apu_incw: // INCW op
 
 .align 5
 apu_div: // DIV YA,X
+    // One opcode fetch is already charged; DIV has 11 additional SPC700 cycles.
+    jal jit_charge_cycles
+    li t0, 11
+
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SY | FLAG_SA
@@ -842,6 +846,10 @@ apu_div: // DIV YA,X
 
 .align 5
 apu_mul: // MUL YA
+    // One opcode fetch is already charged; MUL has 8 additional SPC700 cycles.
+    jal jit_charge_cycles
+    li t0, 8
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY | FLAG_SA

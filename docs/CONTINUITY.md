@@ -4827,3 +4827,46 @@ Falsifier:
 
 Decision:
 Do not choose CPU/APU/DSP/PPU/DMA work from SRS until this phase-aligned sequence is understood. No hardware request.
+
+
+## Gate-B SRS internal 60-VI history — MEASURED 60/60 sustained in ares lab 2026-09-18
+
+Exact authority:
+- diagnostic head **`phase3/gate-b-srs-audition@bd9f7a75518a21563cb62cbce2c5dfd177cc777b`**;
+- **Gate B SRS Audition `35398205311` SUCCESS**;
+- **Build and Validate `35398205355` SUCCESS** at the same SHA, including normal build, PROFILE build and pinned Mupen smoke;
+- non-ROM audition artifact **`10570116759`**, digest **`sha256:4221fb4e6aa103d1987226fc83098a0fb8b10e4c38ed8d38bfb621fa6ee6ddb5`**;
+- source-build provenance artifact **`10569901158`**, digest `sha256:afc441006b18a6ccc615f9d8744f281d5c0fe3d6eca1bf60ba22d859a77cda56`.
+
+Workload identity remained exact:
+- benchmark ROM SHA-256 `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`;
+- benchmark patch SHA-256 `4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`.
+
+Road-valid observed settings:
+- frameskip 0;
+- APU clock 21;
+- audio 4;
+- precision 8.
+
+The PROFILE-only history captured **15 consecutive internally aligned 60-VI windows**:
+**`61,60,60,60,60,60,60,60,60,60,60,60,60,60,60`**.
+
+Interpretation:
+- the first 61/60 is a boundary/queue-settling transient after diagnostic counter reset and is not evidence of >native target cadence;
+- the following **14 consecutive windows are exactly 60/60**;
+- therefore the earlier terminal values 53/60 and 59/60 are **REJECTED as sustained-throughput evidence**. They were artifacts of stopping at different guest phases and reading only the current/last visible counter.
+- This exact SRS segment does **not** currently demonstrate a sustained Gate-B throughput blocker in the pinned ares lab.
+
+The fixed 20-s host observation produced 11,230 total statistical samples (4,096 ring-valid). The terminal statistical distribution was dominated by frame/VI wait (**53.32%**) with APU static 25.17%, DSP/audio 7.98%, S-CPU 5.05%, PPU 3.56%, DMA 0.63%, VRAM/RSP wait 0.02%. Treat this as a long aggregate activity profile, not normalized subsystem cost and not real-N64 headroom.
+
+Important non-conclusions:
+- ares 60/60 does not prove N64-real 60/60;
+- this does not prove broad SRS correctness or that the deterministic input actually traverses all intended gameplay states;
+- no hardware request is justified yet;
+- no CPU/APU/DSP/PPU/DMA optimization is justified from this result.
+
+Next controlled checks before SRS can become a fixed corpus member:
+1. repeat the **internal history metric** in fresh ares processes to verify that the ordered sustained 60/60 pattern itself is reproducible;
+2. add a guest-progression/checkpoint observation so a stable 60/60 cannot be produced by a workload that has become stuck in one low-activity gameplay state.
+
+Only after those checks should SRS be locked as the DKC-like/autonomous corpus slot.

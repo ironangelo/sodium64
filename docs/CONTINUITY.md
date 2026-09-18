@@ -4168,3 +4168,48 @@ Falsifier:
 - any timing/semantic/cache/tag invariant fails after the parser repair, or final build/smoke regresses.
 
 If accepted, this closes the final pre-PR integration gate. If not, do not merge; classify the failure before changing runtime.
+
+
+## M1 integration pre-PR gates — VALIDATED 2026-09-18
+
+Final integration branch authority:
+**`phase2/m1-integration@d701f80f5339c727f231e4e9cc2b7222ec9c1561`**.
+
+No emulator/runtime source changed after the validated M1 runtime integration commit; later changes preserve the durable proof, canonical docs and the one-line RSP harness parser dependency.
+
+### Final Build and Validate
+**Run `35385014527` SUCCESS** at exact HEAD `d701f80f...`:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen normal/profile smoke SUCCESS.
+
+Artifacts:
+- normal build **`10564130283`**, digest `sha256:4f87d77b053bf7be137ca5f657aa74d38a272af66b524134674950d4cd858ce4`;
+- PROFILE build **`10563627262`**, digest `sha256:d3a36d51c4251f4fc4119a7da7b0a06b92f5cf43dfbf50f469251fda542a2524`;
+- emulator smoke **`10563682276`**, digest `sha256:6d0bac540a4178f8bfa81d4a85752e32223b5cf9fcb868e2e26797dbbff3aea5`.
+
+### Final durable SPC700 cycle-budget proof
+**APU Cycle And Span Proof `35385014498` SUCCESS**, exact HEAD `d701f80f...`, dynamic job `105730158853`.
+
+Artifacts:
+- exact proof build **`10563771898`**, digest `sha256:93cb8ee27b798a15eeb0457d872f1cbf1ce94f01fe18cc86bf816294fd8fc05b`;
+- proof diagnostics **`10563443390`**, digest `sha256:7973295305bc6f71cbb131dbc22228d696cd131e1dce6220600fcde063627096`.
+
+All durable summary invariants are true:
+- all cycle-budget edge cases <=32 SPC cycles;
+- all static debits match prediction;
+- all runtime debits match expected;
+- all total debits match pinned reference;
+- all semantics match expected;
+- all header spans match expected;
+- all SLEEP/STOP halt scheduler ticks match;
+- long temporal-cutoff probe remains bounded;
+- exact 20+DIV reaches 32;
+- cached exact-32 replay reuses without recompilation and reproduces state/debit;
+- covered tag mutation forces recompilation.
+
+The prior integrated proof failure `35384115986` is **HARNESS FALSE NEGATIVE / SUPERSEDED** by the exact RSP parser dependency repair. It is not runtime failure evidence.
+
+State: **VALIDATED / READY FOR PR TO MASTER**.
+
+Next action: open `phase2/m1-integration -> master`, verify mergeability/diff/checks, merge without modifying the candidate, then validate the resulting master SHA before marking M1 MERGED-CONSUMED.

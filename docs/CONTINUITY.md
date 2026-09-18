@@ -4393,3 +4393,20 @@ Initial research findings, not yet locked:
 - `undisbeliever/unnamed-snes-engine` is MIT and top-down but currently a single-screen tech demo; useful fallback/probe, probably too narrow for the main representativeness slot.
 
 Next action: continue candidate search with explicit preference for different authors/toolchains/engines where practical; validate buildability, licensing/distribution boundaries and reproducible deterministic execution before fixing the final three.
+
+
+## Gate-B candidate quality reassessment — 2026-09-18
+
+Iron challenged whether visually/gameplay-poor homebrew or game-jam projects are representative enough for the three principal Gate-B slots. This distinction matters.
+
+**Selection rule clarified:** visual polish, commercial appeal and fun are not requirements for a performance/correctness workload. However, project scope, sustained gameplay complexity, engine diversity, subsystem activity and duration **are** relevant. A tiny demo may be technically correct yet still be too narrow to represent a commercial-style engine family.
+
+Current reclassification:
+
+- **Space Rescue Squad — STRONG CANDIDATE, still not locked.** Although created for the 2025 SNESDEV game jam and visually modest, repository evidence shows materially nontrivial architecture/content: ~15 authored rooms including boss/water/gravity scenarios; multiple enemy/projectile/entity behaviors; collision and scrolling engine; HDMA; explicit VBlank/DMA-time budgeting; animated tilesets; Terrific Audio Driver; five music themes and substantial BRR/sample content. Its game-jam origin alone does not disqualify it. It must still pass build reproducibility and sustained-workload profiling before occupying a principal slot.
+
+- **Castle Platformer — DOWNGRADED to AUXILIARY / FALLBACK.** It has a legitimate MIT ca65 engine, dynamic map, entity physics, interactive tiles, animated sprites and five levels, but it is explicitly a simple platformer engine/demo, materially smaller, and shares author/technical lineage with Space Rescue Squad. It is useful as an open diagnostic/regression workload but currently does not justify one of the three principal diversity slots if a stronger independent SMW-like candidate exists.
+
+- **Furry RPG — TECHNICALLY STRONG, ELIGIBILITY BLOCKED.** Architecture remains attractive for the ALttP/RPG role: area loader, event scripting, collision, world map, Mode 7, NMI/IRQ work and SPC700/SNESGSS audio. It is WIP and the repository contains no explicit LICENSE despite the README calling it open-source freeware. Do not consume it into the principal corpus until redistribution/automation rights are unambiguous.
+
+Implication: do not confuse source availability with representativeness. The three main slots should survive an **audition** based on sustained real gameplay complexity, independent engine/toolchain lineage, observable subsystem activity and reproducible build/input/checkpoint behavior. Smaller demos remain useful as probes but should not crowd out stronger candidates.

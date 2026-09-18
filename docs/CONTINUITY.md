@@ -4776,3 +4776,54 @@ Acceptance:
 a single run yields an ordered series of consecutive complete internal VI windows with enough context to distinguish startup/transitions from sustained gameplay. Repeat only after that series is defined.
 
 No hardware request and no runtime optimization until this measurement ambiguity is resolved.
+
+
+## Gate-B SRS internal 60-VI history experiment — RUNNING 2026-09-18
+
+Exact diagnostic head:
+**`phase3/gate-b-srs-audition@bd9f7a75518a21563cb62cbce2c5dfd177cc777b`**,
+one commit ahead of the repeatability head `466be943...`.
+
+Reason:
+The controlled repeatability matrix rejected the terminal-window method: identical SRS workload/settings produced last-window values 60/60, 59/60 and 53/60 because the >=800-sample stop condition landed at different guest phases. No runtime optimization is justified from those terminal values.
+
+Controlled change:
+- `src/profile.S`: add a PROFILE-only 64-byte ordered VI-window history and count **outside the canonical S64P snapshot**, preserving the existing statistical snapshot/hardware format;
+- `src/main.S`: under `#ifdef SODIUM64_PROFILE` only, append the just-completed `fps_display` value once at each existing exact 60-VI `update_fps` boundary;
+- audition workflow: reset history count together with `fps_native/fps_emulate/fps_display`, then run a fixed **20 host seconds** and read the ordered history plus the normal statistical profile.
+
+No production/release behavior is intentionally changed. The new VI-history write executes only in PROFILE builds and only once per emulated 60-VI window.
+
+Alignment:
+The harness already resets `fps_native=0`, `fps_emulate=0` and `fps_display` while the target is stopped immediately before measurement. It now resets `profile_vi_history_count` at the same point. Therefore the first recorded entry is the first full 60-VI diagnostic window after reset; subsequent entries are consecutive internal windows independent of when the host stops.
+
+History capacity:
+64 completed 60-VI windows. The current fixed 20-second host observation is expected to produce at least 8; the workflow rejects fewer than 8.
+
+Workload identity remains pinned and unchanged:
+- SRS upstream `e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865`;
+- benchmark ROM SHA-256 `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`;
+- benchmark patch SHA-256 `4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`;
+- frameskip0 / APU21 / audio4 / precision8;
+- normal SRS entity/collision/camera/metatile/animation/script/audio work preserved.
+
+Exact runs:
+- **Gate B SRS Audition `35398205311`** @ `bd9f7a75...` — running;
+- **Build and Validate `35398205355`** @ same SHA — running.
+
+Question:
+What ordered frame-budget pattern does this exact SRS segment produce across consecutive internally aligned 60-VI windows?
+
+Acceptance:
+- Build/Validate stays green;
+- >=8 consecutive history entries are captured;
+- settings remain Road-valid;
+- sequence is coherent enough to distinguish startup/transition cost from sustained gameplay.
+
+Falsifier:
+- history instrumentation/build fails;
+- fewer than 8 internal windows are captured;
+- repeated internal sequence later proves unstable even when indexed by the same 60-VI position.
+
+Decision:
+Do not choose CPU/APU/DSP/PPU/DMA work from SRS until this phase-aligned sequence is understood. No hardware request.

@@ -204,7 +204,10 @@ jobs:
 
           git -C "$root" diff --check
           changed="$(git -C "$root" diff --name-only)"
-          expected=
+          printf '%s\n' "$changed" > "$RUNNER_TEMP/srs-changed-files.txt"
+          printf '%s\n' game/src/_main.asm game/src/gameloop.inc > "$RUNNER_TEMP/srs-expected-files.txt"
+          cmp -s "$RUNNER_TEMP/srs-changed-files.txt" "$RUNNER_TEMP/srs-expected-files.txt"
+
           git -C "$root" diff -- game/src/_main.asm game/src/gameloop.inc \
             | tee srs-benchmark.patch
 

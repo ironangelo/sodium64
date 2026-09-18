@@ -1,0 +1,463 @@
+name: APU Matched Baseline
+
+on:
+  push:
+    branches:
+      - phase2/apu-matched-baseline
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: sodium64-apu-matched-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GOTHICVANIA_SOURCE_RUN: 35145447113
+  GOTHICVANIA_ARTIFACT_ID: 10466504920
+  GOTHICVANIA_ROM_SHA256: 5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519
+  ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+
+jobs:
+  profile-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Run host profiling tests
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_*.py' -v
+          python3 -m py_compile scripts/gdb_matched_profile.py
+
+      - name: Compile exact PROFILE build
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make PROFILE=1 -j"$(nproc)" 2>&1 | tee profile-build.log
+          {
+            echo "source_sha=${GITHUB_SHA}"
+            sha256sum sodium64.z64 build/sodium64.elf
+          } | tee binary-identity.txt
+
+      - name: Upload exact matched-baseline build
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-apu-matched-baseline-build
+          retention-days: 14
+          path: |
+            sodium64.z64
+            rom-converter.py
+            build/sodium64.elf
+            build/*.map
+            profile-build.log
+            binary-identity.txt
+
+  matched-gothicvania:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    needs:
+      - profile-build
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Download exact PROFILE build
+        uses: actions/download-artifact@v4
+        with:
+          name: sodium64-apu-matched-baseline-build
+          path: artifacts/profile
+
+      - name: Install ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            curl \
+            git \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Restore ares compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ares-n64-ccache-${{ runner.os }}-${{ runner.arch }}-17813a3ccda21ab9bd45f09bfc2f91196dbf50ff-rsp-interpreter-v1
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout "$ARES_PIN"
+          cd "$root"
+
+          # Documented LAB LIMITATION: pinned ares RSP JIT is invalid for
+          # Sodium64 custom microcode. Keep R4300 JIT, force RSP interpreter.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
+          ccache --zero-stats
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ccache --show-stats
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Download exact validated Gothicvania survivability workload
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p workload/source workloads/ares
+          zip="$RUNNER_TEMP/gothicvania-source-build.zip"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$GOTHICVANIA_ARTIFACT_ID/zip" \
+            -o "$zip"
+          unzip -q "$zip" -d workload/source
+
+          test -s workload/source/gothicvania-benchmark.sfc
+          echo "$GOTHICVANIA_ROM_SHA256  workload/source/gothicvania-benchmark.sfc" | sha256sum --check
+          test -s workload/source/gothicvania-provenance.txt
+          test -s workload/source/gothicvania-benchmark.patch
+
+          cp artifacts/profile/sodium64.z64 workloads/ares/sodium64.z64
+          cp artifacts/profile/rom-converter.py workloads/ares/rom-converter.py
+          cp workload/source/gothicvania-benchmark.sfc workloads/ares/profile-gothicvania.smc
+          (
+            cd workloads/ares
+            python3 rom-converter.py </dev/null
+          )
+          test -s workloads/ares/out/profile-gothicvania.z64
+
+          {
+            echo "source_sha=$GITHUB_SHA"
+            echo "validated_source_run=$GOTHICVANIA_SOURCE_RUN"
+            echo "validated_source_artifact=$GOTHICVANIA_ARTIFACT_ID"
+            echo "validated_snes_rom_sha256=$GOTHICVANIA_ROM_SHA256"
+            echo "ares_pin=$ARES_PIN"
+            sha256sum artifacts/profile/sodium64.z64 artifacts/profile/build/sodium64.elf
+            sha256sum workloads/ares/out/profile-gothicvania.z64
+          } | tee workload/measurement-authority.txt
+
+      - name: Resolve exact runtime boundaries and profile state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf="artifacts/profile/build/sodium64.elf"
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          profile_magic=$(symbol profile_magic)
+          profile_end=$(symbol profile_sample_buffer_end)
+          profile_buffer=$(symbol profile_sample_buffer)
+          profile_write_ptr=$(symbol profile_write_ptr)
+          profile_sample_count=$(symbol profile_sample_count)
+          profile_last_epc=$(symbol profile_last_epc)
+
+          apu_clock=$(symbol apu_clock)
+          jit_lookup=$(symbol jit_lookup)
+          jit_pointer=$(symbol jit_pointer)
+          skipped_set=$(symbol skipped_set)
+          audio_set=$(symbol audio_set)
+          precision_set=$(symbol precision_set)
+
+          fps_native=$(symbol fps_native)
+          fps_emulate=$(symbol fps_emulate)
+          fps_display=$(symbol fps_display)
+          frame_count=$(symbol frame_count)
+
+          cpu_execute=$(symbol cpu_execute)
+          update_fps=$(symbol update_fps)
+          check_frame=$(symbol check_frame)
+
+          for value in \
+            "$profile_magic" "$profile_end" "$profile_buffer" "$profile_write_ptr" \
+            "$profile_sample_count" "$profile_last_epc" "$apu_clock" "$jit_lookup" \
+            "$jit_pointer" "$skipped_set" "$audio_set" "$precision_set" \
+            "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
+            "$cpu_execute" "$update_fps" "$check_frame"; do
+            test -n "$value"
+          done
+
+          profile_size=$((0x$profile_end - 0x$profile_magic))
+          jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
+          test "$profile_size" -gt 16384
+          test "$jit_lookup_size" -eq 262144
+
+          rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
+          test -n "$rom_buffer"
+          jit_buffer=$((rom_buffer - 0x40000))
+
+          {
+            echo "PROFILE_ADDR=$profile_magic"
+            echo "PROFILE_SIZE=$profile_size"
+            echo "PROFILE_BUFFER=$profile_buffer"
+            echo "PROFILE_WRITE_PTR=$profile_write_ptr"
+            echo "PROFILE_SAMPLE_COUNT=$profile_sample_count"
+            echo "PROFILE_LAST_EPC=$profile_last_epc"
+            echo "APU_CLOCK=$apu_clock"
+            echo "JIT_LOOKUP=$jit_lookup"
+            echo "JIT_LOOKUP_SIZE=$jit_lookup_size"
+            printf 'JIT_BUFFER=%08x\n' "$jit_buffer"
+            echo "JIT_POINTER=$jit_pointer"
+            echo "SKIPPED_SET=$skipped_set"
+            echo "AUDIO_SET=$audio_set"
+            echo "PRECISION_SET=$precision_set"
+            echo "FPS_NATIVE=$fps_native"
+            echo "FPS_EMULATE=$fps_emulate"
+            echo "FPS_DISPLAY=$fps_display"
+            echo "FRAME_COUNT=$frame_count"
+            echo "CPU_EXECUTE=$cpu_execute"
+            echo "UPDATE_FPS=$update_fps"
+            echo "CHECK_FRAME=$check_frame"
+          } >> "$GITHUB_ENV"
+
+      - name: Run three fresh exact-window repeats
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p profiles
+          rom="workloads/ares/out/profile-gothicvania.z64"
+
+          for repeat in 1 2 3; do
+            label="matched-$repeat"
+            port=$((9140 + repeat))
+            home="$RUNNER_TEMP/ares-home-$label"
+            settings="$RUNNER_TEMP/ares-settings-$label.bml"
+            emulator_log="profiles/$label-emulator.log"
+            gdb_log="profiles/$label-gdb.log"
+            snapshot="profiles/$label.bin"
+            state="profiles/$label-state.json"
+            report="profiles/$label.txt"
+            json="profiles/$label.json"
+            mkdir -p "$home"
+
+            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+                --no-file-prompt \
+                --system "Nintendo 64" \
+                --settings-file "$settings" \
+                --setting "Developer/DebugServerEnabled=true" \
+                --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" \
+                --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" \
+                --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" \
+                "$rom" \
+                > "$emulator_log" 2>&1 &
+            ares_pid=$!
+
+            cleanup_repeat() {
+              kill "$ares_pid" 2>/dev/null || true
+              wait "$ares_pid" 2>/dev/null || true
+            }
+            trap cleanup_repeat EXIT
+
+            if ! python3 scripts/gdb_matched_profile.py \
+              --port "$port" \
+              --connect-timeout 45 \
+              --response-timeout 120 \
+              --cpu-execute "0x$CPU_EXECUTE" \
+              --update-fps "0x$UPDATE_FPS" \
+              --check-frame "0x$CHECK_FRAME" \
+              --profile-address "0x$PROFILE_ADDR" \
+              --profile-size "$PROFILE_SIZE" \
+              --profile-buffer "0x$PROFILE_BUFFER" \
+              --profile-write-ptr "0x$PROFILE_WRITE_PTR" \
+              --profile-sample-count "0x$PROFILE_SAMPLE_COUNT" \
+              --profile-last-epc "0x$PROFILE_LAST_EPC" \
+              --apu-clock "0x$APU_CLOCK" \
+              --jit-lookup "0x$JIT_LOOKUP" \
+              --jit-lookup-size "$JIT_LOOKUP_SIZE" \
+              --jit-pointer "0x$JIT_POINTER" \
+              --jit-buffer "0x$JIT_BUFFER" \
+              --skipped-set "0x$SKIPPED_SET" \
+              --audio-set "0x$AUDIO_SET" \
+              --precision-set "0x$PRECISION_SET" \
+              --fps-native "0x$FPS_NATIVE" \
+              --fps-emulate "0x$FPS_EMULATE" \
+              --fps-display "0x$FPS_DISPLAY" \
+              --frame-count "0x$FRAME_COUNT" \
+              --warmup-windows 2 \
+              --measure-windows 5 \
+              --snapshot "$snapshot" \
+              --state-output "$state" \
+              > "$gdb_log" 2>&1; then
+              cat "$gdb_log"
+              tail -200 "$emulator_log" || true
+              exit 1
+            fi
+            cat "$gdb_log"
+
+            cleanup_repeat
+            trap - EXIT
+
+            python3 scripts/profile_report.py \
+              "$snapshot" \
+              artifacts/profile/build/sodium64.elf \
+              --nm nm \
+              --map artifacts/profile/build/sodium64.map \
+              --json-output "$json" | tee "$report"
+          done
+
+      - name: Validate and summarize matched-window contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/profile_matrix.py \
+            profiles/matched-1.json \
+            profiles/matched-2.json \
+            profiles/matched-3.json \
+            --output profiles/matched-profile.md
+
+          python3 - <<'PY'
+          import json
+          import statistics
+          from pathlib import Path
+
+          rows = []
+          for repeat in range(1, 4):
+              path = Path(f"profiles/matched-{repeat}-state.json")
+              data = json.loads(path.read_text())
+              contract = data["measurement_contract"]
+              assert contract["configuration_boundary"] == "first_cpu_execute_before_guest_execution"
+              assert contract["window_boundary"] == "update_fps_entry"
+              assert contract["vi_per_window"] == 60
+              assert contract["warmup_windows"] == 2
+              assert contract["measured_windows"] == 5
+
+              cfg = data["configured"]
+              assert cfg["apu_clock"] == 21
+              assert cfg["skipped_set"] == 0
+              assert cfg["audio_set"] == 4
+              assert cfg["precision_set"] == 8
+
+              warmup = data["warmup"]
+              measured = data["measured"]
+              assert len(warmup) == 2
+              assert len(measured) == 5
+              assert all(row["fps_native"] == 59 for row in warmup + measured)
+              assert all(row["apu_clock"] == 21 for row in measured)
+              assert all(row["skipped_set"] == 0 for row in measured)
+              assert all(row["audio_set"] == 4 for row in measured)
+              assert all(row["precision_set"] == 8 for row in measured)
+
+              sample_counts = [row["sample_count"] for row in measured]
+              assert all(b > a for a, b in zip([0] + sample_counts[:-1], sample_counts))
+              assert sample_counts[-1] >= 800
+
+              frames = [row["completed_frames"] for row in measured]
+              rows.append({
+                  "repeat": repeat,
+                  "frames": frames,
+                  "mean": statistics.fmean(frames),
+                  "min": min(frames),
+                  "max": max(frames),
+                  "samples": sample_counts[-1],
+                  "wall": data["summary"]["measured_wall_seconds"],
+              })
+
+          all_frames = [value for row in rows for value in row["frames"]]
+          summary = {
+              "repeats": rows,
+              "all_window_mean": statistics.fmean(all_frames),
+              "all_window_min": min(all_frames),
+              "all_window_max": max(all_frames),
+              "repeat_mean_min": min(row["mean"] for row in rows),
+              "repeat_mean_max": max(row["mean"] for row in rows),
+          }
+          Path("profiles/matched-summary.json").write_text(
+              json.dumps(summary, indent=2, sort_keys=True) + "\n"
+          )
+
+          lines = [
+              "# Exact matched 60-VI Gothicvania baseline",
+              "",
+              "Each repeat is a fresh ares process using the same exact Sodium64 PROFILE binary.",
+              "Settings are applied at the first cpu_execute before guest execution.",
+              "Two complete 60-VI windows are warm-up; the next five complete 60-VI windows are measured.",
+              "",
+              "| repeat | W1 | W2 | W3 | W4 | W5 | mean | min | max | samples | lab wall s |",
+              "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+          ]
+          for row in rows:
+              cells = " | ".join(str(v) for v in row["frames"])
+              lines.append(
+                  f"| {row['repeat']} | {cells} | {row['mean']:.2f} | "
+                  f"{row['min']} | {row['max']} | {row['samples']} | {row['wall']:.3f} |"
+              )
+          lines += [
+              "",
+              f"All-window mean: **{summary['all_window_mean']:.2f}/60**.",
+              f"Observed window range: **{summary['all_window_min']}..{summary['all_window_max']}/60**.",
+              f"Repeat-mean range: **{summary['repeat_mean_min']:.2f}..{summary['repeat_mean_max']:.2f}/60**.",
+              "",
+              "> ares lab wall time is not N64 FPS. The frame counts above are Sodium64's own completed "
+              "SNES-frame count over exact 60-VI guest intervals.",
+          ]
+          Path("profiles/matched-window.md").write_text("\n".join(lines) + "\n")
+          print(Path("profiles/matched-window.md").read_text())
+          PY
+
+          {
+            echo '### Exact matched Gothicvania frame windows'
+            echo
+            cat profiles/matched-window.md
+            echo
+            echo '### Matched statistical profile repeats'
+            echo
+            cat profiles/matched-profile.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload matched-baseline diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-apu-matched-baseline
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            ares-version.txt
+            workload/
+            profiles/

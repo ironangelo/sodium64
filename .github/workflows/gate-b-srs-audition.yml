@@ -214,6 +214,8 @@ jobs:
           make -C "$root/game" bin/space-rescue-squad.sfc
           rom="$root/game/bin/space-rescue-squad.sfc"
           test -s "$rom"
+          echo "7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e  $rom" | sha256sum --check
+          echo "4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7  srs-benchmark.patch" | sha256sum --check
 
           {
             echo "upstream_sha=$SRS_SHA"
@@ -376,140 +378,158 @@ jobs:
             echo "ARES_AUDIO_SET_ADDR=$audio_set"
           } >> "$GITHUB_ENV"
 
-      - name: Profile SRS deterministic gameplay under Sodium64
+      - name: Profile SRS deterministic gameplay repeatability
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p profiles
 
-          label="recompiler-srs"
           rom="workloads/ares/out/profile-srs.z64"
-          home="$RUNNER_TEMP/ares-home-$label"
-          settings="$RUNNER_TEMP/ares-settings-$label.bml"
-          emulator_log="profiles/$label-emulator.log"
-          gdb_log="profiles/$label-gdb.log"
-          snapshot="profiles/$label.bin"
-          report="profiles/$label.txt"
-          json="profiles/$label.json"
-          state="profiles/$label-state.json"
-          mkdir -p "$home"
 
-          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
-            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
-              --no-file-prompt \
-              --system "Nintendo 64" \
-              --settings-file "$settings" \
-              --setting "Developer/DebugServerEnabled=true" \
-              --setting "Developer/DebugServerUseIPv4=true" \
-              --setting "Developer/DebugServerPort=9140" \
-              --setting "Developer/HomebrewMode=true" \
-              --setting "Developer/DeterministicEntropy=true" \
-              --setting "Developer/ForceInterpreter=false" \
-              --setting "Boot/AwaitGDBClient=true" \
-              "$rom" \
-              > "$emulator_log" 2>&1 &
-          ares_pid=$!
+          profile_repeat() {
+            repeat="$1"
+            label="recompiler-srs-r$repeat"
+            home="$RUNNER_TEMP/ares-home-$label"
+            settings="$RUNNER_TEMP/ares-settings-$label.bml"
+            emulator_log="profiles/$label-emulator.log"
+            gdb_log="profiles/$label-gdb.log"
+            snapshot="profiles/$label.bin"
+            report="profiles/$label.txt"
+            json="profiles/$label.json"
+            state="profiles/$label-state.json"
 
-          cleanup_run() {
-            kill "$ares_pid" 2>/dev/null || true
-            wait "$ares_pid" 2>/dev/null || true
-          }
-          trap cleanup_run EXIT
+            rm -rf "$home"
+            mkdir -p "$home"
 
-          if ! python3 scripts/gdb_rsp_dump.py \
-            --port 9140 \
-            --connect-timeout 45 \
-            --response-timeout 60 \
-            --warmup-seconds 1 \
-            --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
-            --write "0x$ARES_APU_CLOCK_ADDR:15" \
-            --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
-            --write "0x$ARES_SKIPPED_SET_ADDR:00" \
-            --write "0x$ARES_AUDIO_SET_ADDR:04" \
-            --settle-seconds 1 \
-            --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
-            --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
-            --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
-            --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
-            --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
-            --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
-            --run-seconds 3 \
-            --sample-count-address "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR" \
-            --min-samples 800 \
-            --max-run-seconds 60 \
-            --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
-            --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
-            --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
-            --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
-            --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
-            --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
-            --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
-            --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
-            --observe "sp_status:0xA4040010:4" \
-            --observe "sp_dma_full:0xA4040014:4" \
-            --observe "sp_dma_busy:0xA4040018:4" \
-            --observe "sp_pc:0xA4080000:4" \
-            --state-output "$state" \
-            --address "0x$ARES_PROFILE_ADDR" \
-            --size "$ARES_PROFILE_SIZE" \
-            --output "$snapshot" \
-            > "$gdb_log" 2>&1; then
+            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+                --no-file-prompt \
+                --system "Nintendo 64" \
+                --settings-file "$settings" \
+                --setting "Developer/DebugServerEnabled=true" \
+                --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=9140" \
+                --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" \
+                --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" \
+                "$rom" \
+                > "$emulator_log" 2>&1 &
+            ares_pid=$!
+
+            cleanup_run() {
+              kill "$ares_pid" 2>/dev/null || true
+              wait "$ares_pid" 2>/dev/null || true
+            }
+            trap cleanup_run EXIT
+
+            if ! python3 scripts/gdb_rsp_dump.py \
+              --port 9140 \
+              --connect-timeout 45 \
+              --response-timeout 60 \
+              --warmup-seconds 1 \
+              --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
+              --write "0x$ARES_APU_CLOCK_ADDR:15" \
+              --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
+              --write "0x$ARES_SKIPPED_SET_ADDR:00" \
+              --write "0x$ARES_AUDIO_SET_ADDR:04" \
+              --settle-seconds 1 \
+              --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
+              --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
+              --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+              --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
+              --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
+              --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
+              --run-seconds 3 \
+              --sample-count-address "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR" \
+              --min-samples 800 \
+              --max-run-seconds 60 \
+              --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
+              --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
+              --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
+              --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
+              --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
+              --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
+              --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
+              --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+              --observe "sp_status:0xA4040010:4" \
+              --observe "sp_dma_full:0xA4040014:4" \
+              --observe "sp_dma_busy:0xA4040018:4" \
+              --observe "sp_pc:0xA4080000:4" \
+              --state-output "$state" \
+              --address "0x$ARES_PROFILE_ADDR" \
+              --size "$ARES_PROFILE_SIZE" \
+              --output "$snapshot" \
+              > "$gdb_log" 2>&1; then
+              cat "$gdb_log"
+              tail -200 "$emulator_log" || true
+              exit 1
+            fi
+
             cat "$gdb_log"
-            tail -200 "$emulator_log" || true
-            exit 1
-          fi
-          cat "$gdb_log"
-          cleanup_run
-          trap - EXIT
+            cleanup_run
+            trap - EXIT
+            sleep 1
 
-          python3 scripts/profile_report.py \
-            "$snapshot" \
-            build/sodium64.elf \
-            --nm nm \
-            --map build/sodium64.map \
-            --json-output "$json" | tee "$report"
+            python3 scripts/profile_report.py \
+              "$snapshot" \
+              build/sodium64.elf \
+              --nm nm \
+              --map build/sodium64.map \
+              --json-output "$json" | tee "$report"
 
-          samples=$(awk '/total samples:/ { print $3 }' "$report")
-          test -n "$samples"
-          test "$samples" -ge 800
+            samples=$(awk '/total samples:/ { print $3 }' "$report")
+            test -n "$samples"
+            test "$samples" -ge 800
 
-          python3 - <<'PY'
+            STATE_FILE="$state" python3 - <<'PY'
           import json
-          state = json.load(open('profiles/recompiler-srs-state.json'))
+          import os
+          state = json.load(open(os.environ['STATE_FILE']))
           obs = state['observations']
           assert int(obs['skipped_set']) == 0, obs
           assert int(obs['apu_clock']) == 21, obs
           assert int(obs['audio_set']) == 4, obs
           assert int(obs['precision_set']) == 8, obs
           PY
+          }
 
-      - name: Build SRS audition reports
+          for repeat in 1 2 3; do
+            echo "=== SRS repeat $repeat/3 ==="
+            profile_repeat "$repeat"
+          done
+
+      - name: Build SRS repeatability reports
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/profile_matrix.py \
-            profiles/recompiler-srs.json \
-            --output profiles/srs-profile.md
+            profiles/recompiler-srs-r1.json \
+            profiles/recompiler-srs-r2.json \
+            profiles/recompiler-srs-r3.json \
+            --output profiles/srs-repeatability-profile.md
 
           python3 scripts/frame_budget_report.py \
-            profiles/recompiler-srs-state.json \
+            profiles/recompiler-srs-r1-state.json \
+            profiles/recompiler-srs-r2-state.json \
+            profiles/recompiler-srs-r3-state.json \
             --target-fps 60 \
-            --output profiles/srs-frame-budget.md
+            --output profiles/srs-repeatability-frame-budget.md
 
           {
-            echo '### Gate-B Space Rescue Squad audition'
+            echo '### Gate-B Space Rescue Squad repeatability'
             echo
-            echo '- Open source pinned and rebuilt inside this job; ROM bytes are not uploaded.'
-            echo '- Benchmark patch enters first authored level after normal audio/game-state init and holds Right+Run.'
+            echo '- Same pinned benchmark ROM and Sodium64 runtime for all three fresh ares processes.'
+            echo '- Benchmark enters first authored level after normal audio/game-state init and holds Right+Run.'
             echo '- Entities, collision, camera, metatiles, animations, scripts and audio remain active.'
             echo '- R4300 recompiler ON; RSP interpreter forced due documented ares LAB LIMITATION.'
             echo '- Frameskip 0; APU clock 21; audio 4; precision 8.'
             echo
-            cat profiles/srs-profile.md
+            cat profiles/srs-repeatability-profile.md
             echo
-            cat profiles/srs-frame-budget.md
+            cat profiles/srs-repeatability-frame-budget.md
             echo
-            echo '> This is emulator-lab filtering, not real-N64 performance authority.'
+            echo '> This is emulator-lab repeatability evidence, not real-N64 performance authority.'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload non-ROM audition diagnostics

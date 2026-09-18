@@ -3408,3 +3408,52 @@ Exact HEAD runs:
 - **Build and Validate `35354324334`** — queued/running.
 
 Do not merge BLOCK_SIZE=1. Do not use throughput from this diagnostic as a performance target; frame counts only show the cost of the causal control.
+
+
+## One-op APU JIT interleave proof — VALIDATED CAUSAL RESULT 2026-09-18
+
+Exact diagnostic authority: **`phase2/apu-one-op-interleave-proof@c1548c21e4764a1827ebe1af8980ec319f560bbb`**.
+Runtime test variable from matched-lateness authority `a8c56301...`: exactly **`BLOCK_SIZE 16 -> 1`**. Workflow has one trigger-line addition only.
+
+CI:
+- **Build and Validate `35354324334` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Matched Baseline `35354324333` SUCCESS**.
+- diagnostic artifact **`10551701393`**, digest `sha256:109da718606b3d01332dfd65aff321f6b5a0ed26ef88fd3f4bdae4edc16e38b8`;
+- exact PROFILE build artifact **`10550643405`**, digest `sha256:4bd6cdbbe58086d675f31c1adeff199d83d41f77ffb5f6286e94213b31beb1b9`.
+
+All three fresh ares repeats were identical:
+- measured windows: **48,49,49,51,50 /60**;
+- mean **49.4/60**, range **48..51**;
+- samples **3580**;
+- DSP due count **131397**;
+- late sum **5891319** master cycles;
+- average lateness **44.836 master cycles = 2.135 SPC cycles**;
+- max lateness **168 master cycles = 8 SPC cycles**;
+- **`dsp_multi_due_count = 0`**.
+
+Compared with the multi-op corrected-timing baseline:
+- BLOCK16: max **1029 = 49 SPC cycles**, **1420 >=672** events, cadence FAIL despite 60/60 throughput;
+- one-op: max **168 = 8 SPC cycles**, **0 >=672** events, cadence PASS but throughput falls to **49.4/60**.
+
+**ARCHITECTURE PROOF:** multi-instruction JIT block aggregation before scheduler return is the demonstrated cause of the invalid DSP-lateness tail. The scheduler can maintain bounded DSP cadence when return frequency is sufficiently high.
+
+**REJECTED architecture:** `BLOCK_SIZE=1` is not a production solution; its throughput cost essentially gives back the corrected-timing ares gain.
+
+Pinned ares source audit at `17813a3c...` shows the highest-cost finite single SPC700 instruction is DIV at **12 total cycles** (opcode fetch + 11 explicit read/idle cycles). WAIT/STOP are persistent states and Sodium64 already returns to the scheduler after their 3-cycle entry / 2-cycle ticks.
+
+### Next design — guest-cycle-bounded multi-op JIT blocks
+Target invariant: retain multi-op blocks but guarantee a generated block cannot consume a full DSP period before scheduler return.
+
+DSP period = `DSP_SAMPLE=672` master cycles = **32 SPC cycles** at `apu_clock=21`.
+
+A conservative compile-time block budget can be derived from the existing cycle mechanisms:
+1. each source byte fetched by `jit_read8` = 1 guest cycle;
+2. `jit_charge_cycles` = fixed extra guest cycles;
+3. `jit_emit_runtime_cycles` = conditional runtime cycles, counted at their worst-case value for budgeting;
+4. every generated call to `apu_read8` / `apu_write8` = 1 guest bus cycle.
+
+No other audited APU generator file emits direct guest-`apu_ram` accesses; guest data cycles flow through those helpers. The direct LBU/SB/SH/LHU emissions in `apu_emitter.S` are emulator-state register spill/load machinery, not guest bus cycles.
+
+Since one finite instruction is <=12 cycles, a multi-op compiler can continue only while the completed block budget is <=20 cycles. Adding one more worst-case instruction then yields a hard maximum of **32 guest cycles**, while the existing 16-byte source-span cap remains as an independent safety bound.
+
+Next controlled implementation must add compile-time-only cycle accounting and this continuation rule, with no change to per-instruction guest debits or opcode semantics. It must be validated by cycle/address regression plus the same exact-window DSP-lateness run before any hardware test.

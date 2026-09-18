@@ -2593,3 +2593,61 @@ No timing changes were introduced.
 
 ### Decision
 Consume only `src/apu_alu.S` core changes into clean timing foundation. Then exact clean CI. Next semantic family: DIV YA,X, which requires full result/H/V behavior proof, not just a flag patch.
+
+
+## Clean ADDW/SUBW Half-Carry candidate — checkpoint 2026-09-18
+
+Clean branch is **`phase2/apu-timing-foundation@74455bb8ae15b7b654eef7f9812a65db7ccdd964`**, consuming only validated `src/apu_alu.S` changes from diagnostic `06edb6af...`.
+
+Exact clean Build and Validate run: **`35315787073`**, IN PROGRESS at checkpoint.
+
+Dynamic authority remains:
+- `06edb6af...`;
+- Build and Validate `35315076872` SUCCESS;
+- APU Cycle And Span Proof `35315076871` SUCCESS.
+
+## DIV YA,X semantic defect — dynamic baseline before repair
+
+Existing regression case `div_bra` on diagnostic run `35315076871` provides a direct pre-repair observation with default injected state:
+- X = **0x04**;
+- Y = **0x5A**;
+- A = **0x11**;
+- inherited DIV+BRA total timing = **16 cycles**, correctly measured.
+
+Observed inherited Sodium64 result:
+- A = **0x84**;
+- Y = **0x01**;
+- PSW = **0xC0**.
+
+Pinned ares/S-SMP reference for the same DIV input:
+- H = `(Y & 0x0F) >= (X & 0x0F)` => 1;
+- V = `Y >= X` => 1;
+- because `Y >= 2*X`, DIV must use the S-SMP overflow branch, not ordinary integer division;
+- expected A = **0xAC**;
+- expected Y = **0x61**;
+- expected N=1, Z=0, H=1, V=1 => PSW arithmetic bits **0xC8**.
+
+Therefore the inherited DIV implementation is **CONFIRMED semantically wrong**, not merely missing H:
+- normal MIPS DIV is used unconditionally;
+- overflow-branch A/Y behavior is absent;
+- H is absent;
+- X=0 behavior is also not safely modeled by the inherited direct MIPS DIV path.
+
+Timing itself (12-cycle DIV + 4-cycle BRA) is already validated and must remain unchanged.
+
+### Next controlled DIV repair
+Use a dedicated runtime assembly helper called by generated DIV JIT code. It will:
+- preserve C/I/B/P and clear/recompute H/V;
+- set H and V from original Y/X;
+- use normal quotient/remainder only when `Y < 2*X`;
+- otherwise reproduce the S-SMP overflow formula;
+- handle X=0 through the overflow formula, avoiding undefined divide-by-zero behavior;
+- leave N/Z to the existing queued-A mechanism.
+
+Directed proof cases must cover:
+1. normal branch, V/H clear;
+2. normal branch with quotient >255 and V/H set;
+3. known failing overflow case X=4,Y=0x5A,A=0x11;
+4. overflow case with H clear;
+5. X=0;
+6. unchanged **16 total cycles** and full historical regression matrix.

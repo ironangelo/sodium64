@@ -3676,3 +3676,26 @@ Then:
 2. verify direct diff from `9204ad2f...` is only `src/apu_emitter.S`;
 3. build a fresh real-N64 M1 Gothicvania package from that exact clean SHA;
 4. only that fresh package may be presented for the next hardware milestone.
+
+
+## Clean cycle-budget consumption — running 2026-09-18
+
+Clean candidate: **`phase2/apu-cycle-budget-clean@d5ce93a03b2dbf5065fefa5276533e02f9658215`**.
+
+Authority:
+- parent is exact clean timing foundation **`9204ad2fae7f37d9950a0f3a88cc3ff4299e1bc1`**;
+- branch is ahead by exactly one commit;
+- direct diff is exactly one production file: **`src/apu_emitter.S` +42/-9**;
+- resulting emitter blob **`fc510743836c2a0a8afca771ca016cf2d02bf83a`** exactly matches the clobber-safe v2 emitter validated in matched and cycle-proof branches.
+
+No PROFILE lateness counters, diagnostic workflows, proof scripts, or measurement-only source changes were consumed.
+
+Exact clean CI:
+- **Build and Validate `35357705471`** — queued/running.
+
+Acceptance before hardware packaging:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen normal/profile smoke SUCCESS.
+
+After clean CI passes, build a fresh M1 real-N64 package from this exact clean SHA. The previous hardware artifact from `9204ad2f...` remains BLOCKED/SUPERSEDED for this milestone because it predates the cycle-budget interleave fix.

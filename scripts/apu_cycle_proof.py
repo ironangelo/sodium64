@@ -384,6 +384,111 @@ def compile_one_case(
     return result
 
 
+
+def verify_cycle_budget_reuse(
+    client: RSPClient,
+    *,
+    base_result: dict[str, object],
+    addresses: argparse.Namespace,
+) -> dict[str, object]:
+    """Verify cached execution is stable and a covered-region tag change recompiles."""
+
+    lookup_entry = addresses.jit_lookup + TEST_PC * 4
+
+    def restore_guest_state() -> None:
+        # Restore only guest-visible state. Keep JIT lookup/pointer/tags intact so
+        # the next entry genuinely exercises the cached block.
+        client.write_memory(addresses.apu_count, be(TEST_PC, 2))
+        client.write_memory(addresses.apu_reg_x, b"\x04")
+        client.write_memory(addresses.apu_reg_y, b"\x01")
+        client.write_memory(addresses.apu_accum, b"\x08")
+        client.write_memory(addresses.apu_stack, b"\x7f")
+        client.write_memory(addresses.apu_flags, b"\x49")
+        client.write_memory(addresses.apu_halt, b"\x00")
+
+    # First, prove an unchanged cached entry executes without compilation.
+    continue_to_breakpoint(client, addresses.apu_execute, "budget-reuse: cached boundary")
+    lookup_before = read_u32(client, lookup_entry)
+    pointer_before = read_u32(client, addresses.jit_pointer)
+    restore_guest_state()
+    s3_before = read_gpr(client, S3_GPR_INDEX)
+    continue_to_breakpoint(client, addresses.cpu_execute, "budget-reuse: cached return")
+    s3_after = read_gpr(client, S3_GPR_INDEX)
+    lookup_after = read_u32(client, lookup_entry)
+    pointer_after = read_u32(client, addresses.jit_pointer)
+
+    cached_debit = signed_delta_u64(s3_after, s3_before)
+    cached_pc = read_u16(client, addresses.apu_count)
+    cached_a = read_u8(client, addresses.apu_accum)
+    cached_y = read_u8(client, addresses.apu_reg_y)
+    cached_flags = read_u8(client, addresses.apu_flags)
+    cached_reused = (
+        lookup_after == lookup_before
+        and pointer_after == pointer_before
+        and cached_debit == -32 * APU_CLOCK
+        and cached_pc == TEST_PC + 11
+        and cached_a == 0x42
+        and cached_y == 0x00
+        and cached_flags == 0x01
+    )
+
+    # Then change a byte in the covered tag region and advance that region's tag
+    # exactly as an APU write would. Entry validation must reject the stale block.
+    continue_to_breakpoint(client, addresses.apu_execute, "budget-reuse: tag boundary")
+    region = TEST_PC // 64
+    tag_addr = addresses.jit_tags + region * 4
+    tag_before = read_u32(client, tag_addr)
+    mutation_addr = addresses.apu_ram + TEST_PC
+    mutation_before = read_u8(client, mutation_addr)
+    client.write_memory(mutation_addr, b"\x60")  # CLRC, same 1-byte/2-cycle shape as NOP.
+    client.write_memory(tag_addr, be((tag_before + 1) & 0xFFFFFFFF, 4))
+    restore_guest_state()
+
+    stale_lookup = read_u32(client, lookup_entry)
+    stale_pointer = read_u32(client, addresses.jit_pointer)
+    continue_to_breakpoint(client, addresses.cpu_execute, "budget-reuse: recompiled return")
+    recompiled_lookup = read_u32(client, lookup_entry)
+    recompiled_pointer = read_u32(client, addresses.jit_pointer)
+    tag_after = read_u32(client, tag_addr)
+
+    recompiled = (
+        recompiled_lookup != stale_lookup
+        and recompiled_pointer != stale_pointer
+        and tag_after == ((tag_before + 1) & 0xFFFFFFFF)
+    )
+
+    result = {
+        "base_case": base_result["name"],
+        "cached_lookup_before": lookup_before,
+        "cached_lookup_after": lookup_after,
+        "cached_pointer_before": pointer_before,
+        "cached_pointer_after": pointer_after,
+        "cached_cycle_debit": cached_debit,
+        "cached_pc_after": cached_pc,
+        "cached_accum_after": cached_a,
+        "cached_y_after": cached_y,
+        "cached_flags_after": cached_flags,
+        "cached_reused_without_recompile": cached_reused,
+        "tag_region": region,
+        "mutation_address": TEST_PC,
+        "mutation_before": mutation_before,
+        "mutation_after": read_u8(client, mutation_addr),
+        "tag_before": tag_before,
+        "tag_after": tag_after,
+        "stale_lookup_before_reentry": stale_lookup,
+        "recompiled_lookup_after_reentry": recompiled_lookup,
+        "stale_pointer_before_reentry": stale_pointer,
+        "recompiled_pointer_after_reentry": recompiled_pointer,
+        "tag_mutation_forced_recompile": recompiled,
+    }
+    print(json.dumps(result, sort_keys=True))
+    if not cached_reused:
+        raise RuntimeError("cycle-budget cached block did not reproduce initial execution")
+    if not recompiled:
+        raise RuntimeError("cycle-budget tag mutation reused a stale block")
+    return result
+
+
 def measure_halt_ticks(
     client: RSPClient,
     *,
@@ -573,6 +678,72 @@ def main() -> int:
         # the temporal limit intentionally stops before the old 16-byte bound.
         ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -462, 22, 8, 0xFF),
     ]
+
+
+    budget_edge_cases = [
+        # Exact temporal edge: 10 NOPs = 20 cycles, then the 12-cycle DIV.
+        # A trailing sentinel NOP must NOT enter this block. Total = 32 cycles.
+        dict(
+            name="budget_20_nop_div_32",
+            code=(b"\x00" * 10) + bytes.fromhex("9e00"),
+            expected_debit=-672,
+            reference_cycles=32,
+            expected_end_region=8,
+            x_value=0x04,
+            y_value=0x01,
+            a_value=0x08,
+            flags_value=0x49,
+            expected_pc_after=TEST_PC + 11,
+            expected_accum=0x42,
+            expected_y=0x00,
+            expected_flags=0x01,
+        ),
+        # Same 20-cycle prefix, but 12 cycles come from four real guest reads
+        # (OR A,dp = 2 static source cycles + 1 apu_read8 runtime cycle each)
+        # and 8 cycles from four NOPs. DIV takes the block to exactly 32.
+        dict(
+            name="budget_20_access_div_32",
+            code=(bytes.fromhex("0420") * 4) + (b"\x00" * 4) + bytes.fromhex("9e00"),
+            expected_debit=-588,
+            reference_cycles=32,
+            expected_end_region=8,
+            x_value=0x04,
+            y_value=0x01,
+            a_value=0x08,
+            flags_value=0x49,
+            memory_writes=((0x0020, b"\x00"),),
+            expected_pc_after=TEST_PC + 13,
+            expected_accum=0x42,
+            expected_y=0x00,
+            expected_flags=0x01,
+        ),
+        # Near-cut conditional path: 9 NOPs = 18 cycles; BPL has a 2-cycle
+        # base and +2 when taken. Compiler budgeting must conservatively account
+        # for the 22-cycle taken path while runtime totals remain path-correct.
+        dict(
+            name="budget_branch_taken_22",
+            code=(b"\x00" * 9) + bytes.fromhex("10fe00"),
+            expected_debit=-420,
+            reference_cycles=22,
+            expected_end_region=8,
+            y_value=0x06,
+            flags_value=0x00,
+            expected_pc_after=TEST_PC + 9,
+            expected_runtime_debits=(-42,),
+        ),
+        dict(
+            name="budget_branch_not_taken_20",
+            code=(b"\x00" * 9) + bytes.fromhex("10fe00"),
+            expected_debit=-420,
+            reference_cycles=20,
+            expected_end_region=8,
+            y_value=0x06,
+            flags_value=0x80,
+            expected_pc_after=TEST_PC + 11,
+            expected_runtime_debits=(-42,),
+        ),
+    ]
+
 
     address_cases = [
         dict(name="direct_read", code=bytes.fromhex("04202ffc"), expected_debit=-126,
@@ -1101,6 +1272,9 @@ def main() -> int:
             )
             results.append(result)
 
+        for case in budget_edge_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
         for case in address_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
@@ -1137,6 +1311,13 @@ def main() -> int:
         for case in decimal_adjust_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
+        budget_edge_result = next(
+            item for item in results if item["name"] == "budget_20_nop_div_32"
+        )
+        cycle_budget_reuse = verify_cycle_budget_reuse(
+            client, base_result=budget_edge_result, addresses=args
+        )
+
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")
         reentry = middle_region_reentry(client, long_result=long_result, addresses=args)
 
@@ -1159,6 +1340,7 @@ def main() -> int:
             "jit_buffer": JIT_BUFFER,
             "cases": results,
             "middle_region_reentry": reentry,
+            "cycle_budget_reuse": cycle_budget_reuse,
             "halt_scheduler": halt_scheduler,
             "summary": {
                 "all_static_debits_match_source_prediction": all(
@@ -1185,6 +1367,21 @@ def main() -> int:
                     == int(long_result["header_start_region"])
                     and int(long_result["source_clock_units"]) == 22
                 ),
+                "all_cycle_budget_edge_cases_at_or_below_32": all(
+                    int(item["total_clock_units"]) <= 32
+                    for item in results
+                    if str(item["name"]).startswith("budget_")
+                ),
+                "exact_20_plus_div_reaches_32": (
+                    int(budget_edge_result["total_clock_units"]) == 32
+                    and int(budget_edge_result["apu_count_after_block"]) == TEST_PC + 11
+                ),
+                "cached_cycle_budget_block_reused_without_recompile": bool(
+                    cycle_budget_reuse["cached_reused_without_recompile"]
+                ),
+                "covered_tag_mutation_forces_recompile": bool(
+                    cycle_budget_reuse["tag_mutation_forced_recompile"]
+                ),
                 "middle_region_probe_applicable": bool(reentry.get("applicable", True)),
                 "stale_block_reentered_after_middle_tag_mutation": (
                     reentry["stale_block_reused_without_recompile"]
@@ -1204,6 +1401,10 @@ def main() -> int:
             and report["summary"]["all_semantics_match_expected"]
             and report["summary"]["all_halt_scheduler_ticks_match_expected"]
             and report["summary"]["compiled_long_probe_is_bounded_to_one_tag_region"]
+            and report["summary"]["all_cycle_budget_edge_cases_at_or_below_32"]
+            and report["summary"]["exact_20_plus_div_reaches_32"]
+            and report["summary"]["cached_cycle_budget_block_reused_without_recompile"]
+            and report["summary"]["covered_tag_mutation_forces_recompile"]
         )
         if not required:
             raise RuntimeError("SPC700 cycle/addressing proof failed required invariants")

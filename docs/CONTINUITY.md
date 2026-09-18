@@ -3775,3 +3775,66 @@ Hardware decision:
 - use real hardware, not ares wall time, to decide whether the cycle-budget architecture materially advances M1.
 
 Do not merge to master or update Road-to-1.0 convergence claims until this hardware result is interpreted.
+
+
+## Real-N64 M1 cycle-budget milestone — MEASURED 60/60 x5 2026-09-18
+
+Hardware authority capture received from exact package:
+- runtime core **`phase2/apu-cycle-budget-clean@d5ce93a03b2dbf5065fefa5276533e02f9658215`**;
+- package branch **`phase2/apu-cycle-budget-hardware-m1@3d4555e5f4174770f1c98a8209fc6809ca57a447`**;
+- package artifact **`10552617325`**, artifact digest `sha256:5e4ef08c647b2b9a3af905855258ca63809fa2767c3554bce1848b087c171100`;
+- wrapped ROM SHA256 **`d9c151c3246ecd553af247d565c52bad94ae33fe513b4f1a9f075f48fce1614b`**;
+- returned SRAM/save decoded successfully by the exact package `hw_profile_report.py`.
+
+Strict hardware capture validation:
+- capture format: canonical big-endian;
+- complete=1;
+- warmup: 2 complete 60-VI windows;
+- measurement: 5 complete 60-VI windows;
+- sample count: **3580** at interval **65521**;
+- frameskip: **0**;
+- APU clock: **21** (full-rate project target);
+- audio setting: **4** (active);
+- precision: **8**;
+- frame queue at capture: 1.
+
+**REAL-N64 FRAME BUDGET:**
+**60/60, 60/60, 60/60, 60/60, 60/60**.
+Mean: **60.0/60**.
+M0 authority baseline was **48,49,48,50,50**, mean **49.0/60**.
+
+This is an absolute improvement of **+11.0 completed guest frames per 60-VI window on average**, about **+22.45%** relative completed-frame throughput versus M0, and eliminates the measured frame-budget deficit in this representative hardware workload.
+
+Exact real-N64 R4300 sample profile (3580 valid samples):
+- DSP/audio: **21.98%** (787);
+- APU/SPC700 static: **20.36%** (729);
+- APU JIT generated: **8.69%** (311);
+- combined APU/JIT/DSP-audio: **51.03%**;
+- S-CPU interpreter: **19.75%** (707);
+- frame/VI wait: **11.51%** (412);
+- PPU/events/frame prep: **8.63%** (309);
+- DMA/HDMA: **7.01%** (251);
+- RSP/VRAM semaphore wait: **2.01%** (72);
+- input: **0.06%** (2).
+
+Comparison to M0 real hardware:
+- combined APU/audio: **61.83% -> 51.03%** (down 10.80 percentage points, ~17.5% relative share reduction);
+- S-CPU: **22.12% -> 19.75%**;
+- VI idle/headroom: **essentially 0% -> 11.51%**;
+- frame budget: **49.0/60 -> 60.0/60**.
+
+**MEASURED / ARCHITECTURE PROOF ON REAL HARDWARE:** the clobber-safe guest-cycle-bounded SPC700 multi-op JIT materially improves the representative real-N64 M1 workload while preserving frameskip=0, full-rate APU, active audio, precision=8, and the previously validated emulator-lab DSP scheduler invariant (max < one DSP period, multi-due=0).
+
+User-provided video from the same run visually shows active Gothicvania gameplay and the final solid-red completion screen. Video is observational evidence only; SRAM is the performance/settings authority.
+
+**What this proves:** this representative base workload now sustains the native 60/60 frame-budget target on real N64 under Road-valid settings, with measurable VI headroom and materially reduced APU/audio share.
+
+**What this does NOT yet prove:** Gate B across the defined base-system corpus, complete audio waveform fidelity, broad commercial compatibility, or 1.0. One representative workload reaching 60/60 is a major M1 milestone, not a full base-system release claim.
+
+### RESUME HERE
+Interpret this as a major M1 convergence event. Before choosing the next optimization:
+1. update Road/Roadmap only to the extent milestone/gate convergence has materially changed;
+2. decide whether M1 exit condition is now satisfied or whether one additional representative hardware workload is required for milestone closure;
+3. do **not** immediately optimize further against Gothicvania FPS because this workload now has **11.51% VI wait** on real hardware and is no longer throughput-bound;
+4. re-profile/choose the next gate driver using a broader representative base workload/corpus rather than chasing more speed in this already-native workload;
+5. keep the cycle-budget emitter architecture; v1 remains SUPERSEDED, v2 clean candidate is the valid implementation.

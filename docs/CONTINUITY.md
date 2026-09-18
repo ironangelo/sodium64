@@ -3699,3 +3699,26 @@ Acceptance before hardware packaging:
 - pinned Mupen normal/profile smoke SUCCESS.
 
 After clean CI passes, build a fresh M1 real-N64 package from this exact clean SHA. The previous hardware artifact from `9204ad2f...` remains BLOCKED/SUPERSEDED for this milestone because it predates the cycle-budget interleave fix.
+
+
+## Clean cycle-budget candidate — VALIDATED 2026-09-18
+
+Clean candidate authority: **`phase2/apu-cycle-budget-clean@d5ce93a03b2dbf5065fefa5276533e02f9658215`**.
+
+Identity:
+- exact parent: `phase2/apu-timing-foundation@9204ad2fae7f37d9950a0f3a88cc3ff4299e1bc1`;
+- exactly one commit ahead;
+- only changed production file: **`src/apu_emitter.S` +42/-9**;
+- emitter blob **`fc510743836c2a0a8afca771ca016cf2d02bf83a`**, byte-identical to clobber-safe v2 production emitter `709def09...`.
+
+No matched-lateness instrumentation, proof harness, diagnostic source, or diagnostic workflow was consumed.
+
+**Build and Validate `35357705471` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen64Plus normal runtime smoke SUCCESS;
+- pinned Mupen64Plus PROFILE runtime/sample-decode smoke SUCCESS.
+
+State: **VALIDATED clean M1 candidate / READY FOR REAL-N64 MILESTONE PACKAGE**.
+
+This does not yet establish a real-N64 speedup. The next authority step is one fresh hardware package built from exact `d5ce93a0...`, using the already validated M0 SRAM capture method and the exact pinned Gothicvania workload.

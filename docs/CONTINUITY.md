@@ -1287,3 +1287,28 @@ Static audit of inherited POP generators shows a potentially material ordering i
 **OPEN QUESTION / HYPOTHESIS:** POP may therefore read direct-page `0x00xx` instead of stack-page `0x01xx`. Do not infer a bug solely from the static sequence; prove it dynamically before adding stack timing charges.
 
 Next controlled experiment: on diagnostic `phase2/apu-cycle-proof`, test PUSH/POP semantics with distinct sentinel bytes at `00xx` and `01xx`, initially without changing stack semantics. If POP observes the direct-page sentinel, classify as CONFIRMED correctness defect and repair stack addressing before timing it. If it observes the stack-page sentinel, reject the hypothesis and continue the planned implied/flags/transfers/stack timing batch.
+
+
+## POP stack-page semantic proof in progress — checkpoint 2026-09-17/18
+
+Diagnostic-only SHA **`410985f0ba2fbf22c1d8341890bbf5fd1dba2d32`** adds only harness/workflow support for `apu_stack` and one directed POP-A semantic case. No APU core source is changed.
+
+Runs:
+- **Build and Validate `35296994425`** — queued at checkpoint.
+- **APU Cycle And Span Proof `35296994473`** — in progress at checkpoint.
+
+Directed case:
+- initial `S=0x7F`;
+- `RAM[0x0080]=0xAA` direct-page sentinel;
+- `RAM[0x0180]=0xBB` correct stack-page sentinel;
+- program `POP A; BRA back`;
+- expected postcondition: `S=0x80`, `A=0xBB`.
+
+This experiment deliberately does **not** judge POP timing yet (`reference_cycles=None`). It only separates the static-addressing hypothesis.
+
+Readings:
+- `A=0xBB, S=0x80` => REJECT the suspected stack-page bug; proceed to timing charges.
+- `A=0xAA, S=0x80` => CONFIRM inherited POP reads page `0x00xx` because `0x0100` is ORed into A0 after `apu_read8`; repair semantics before timing stack family.
+- other value/state => inspect harness/JIT state before attributing a core defect.
+
+Clean timing foundation remains frozen at **`fe53aa5f...`**, Build and Validate **`35296688540` SUCCESS**.

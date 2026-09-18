@@ -1608,3 +1608,24 @@ State:
 On diagnostic `phase2/apu-cycle-proof`, move `ori t2,v0,0xFF00` to immediately after `load_stack`, where `v0` still holds the fetched PCALL operand and before target emission. Do not change PCALL timing, stack sequence, harness expectations, or any other opcode.
 
 Falsifier: if rerun still does not reach PC=0xFF34 with correct stack/timing, reject this cause and inspect the generated target instruction rather than broadening the patch.
+
+
+## PCALL target-clobber diagnostic fix in progress — checkpoint 2026-09-17/18
+
+Exact diagnostic SHA: **`f4da303dc3cd901672f923d476284b3f05372e38`**, parent `044009a4...`.
+
+Controlled change: **only `src/apu_control.S` PCALL compile-time target lifetime**.
+- Before: `t2 = 0xFF00 | operand` was computed before `load_stack`, then overwritten by `full_address`.
+- Now: fetched operand remains in `v0` across `load_stack`, and `t2 = 0xFF00 | v0` is formed immediately afterward, before emitting S0 target.
+- PCALL fixed timing (+2), stack sequence and all harness expectations are unchanged.
+
+Exact workflows:
+- **APU Cycle And Span Proof `35302251443`** — IN PROGRESS at checkpoint.
+- **Build and Validate `35302251447`** — IN PROGRESS at checkpoint.
+
+Question: does this single lifetime fix restore PCALL target `0xFF34` while preserving measured 6-cycle total and correct return-stack bytes, allowing the unchanged proof to advance to TCALL/RET/RET1/BRK?
+
+Conditional next actions:
+- PCALL passes and later cases pass => validate timing family plus PCALL semantic fix, then consume only validated core changes cleanly on `phase2/apu-timing-foundation@46230daa...`;
+- PCALL still fails => inspect emitted target opcode/register value; do not broaden patch;
+- later opcode fails => preserve PCALL as fixed and isolate only that later instruction.

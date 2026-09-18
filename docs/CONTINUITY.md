@@ -1312,3 +1312,12 @@ Readings:
 - other value/state => inspect harness/JIT state before attributing a core defect.
 
 Clean timing foundation remains frozen at **`fe53aa5f...`**, Build and Validate **`35296688540` SUCCESS**.
+
+
+## Static compatibility debt surfaced during timing audit — DEFERRED 2026-09-17/18
+
+**MEASURED STATIC / REQUIRED SUPPORT, but not current M1 variable:** the current SPC700 opcode table maps **0xBE (DAS)** and **0xDF (DAA)** to `apu_unk`. The pinned independent SPC700 reference implements both decimal-adjust instructions.
+
+This is a real base-SPC700 compatibility/accuracy gap, not a missing-cycle-only issue. Do not silently include it in the current timing batch. Track it for a later Gate C/base-core completeness pass after the timing contract is stabilized, unless representative software proves it is an earlier blocker.
+
+The active experiment remains POP stack-page semantics at `410985f0...` / run `35296994473`.

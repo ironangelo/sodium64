@@ -3998,3 +3998,48 @@ The tag-mutation half of the reuse experiment also worked:
 This failure is **REJECTED as runtime/cycle-budget evidence**.
 
 Immediate repair: immediately before cache-reuse measurement, compile a fresh dedicated 20-NOP-cycle + DIV seed at the fixed test PC, then perform unchanged cached replay and tag-mutation checks before any other case can overwrite that lookup. No runtime source changes are permitted.
+
+
+## Cycle-budget boundary proof — VALIDATED 2026-09-18
+
+Final proof authority:
+**`phase2/apu-cycle-budget-edge-proof@c72068140caa8d7c8b4c862c86de9ef59a9f9231`**.
+
+CI:
+- **APU Cycle And Span Proof `35382966438` SUCCESS**, dynamic job `105723612910`;
+- **Build and Validate `35382966472` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke green.
+- proof artifact **`10562273321`**, digest `sha256:7db0e005a55a19ac20c311cf00cb0bd3f26d9c619b816178a4ce0c173734d9ef`;
+- exact proof build **`10562117702`**, digest `sha256:52ceeab65be69f74b41697b6f39129b4bdf3d14c6d067a8270b4a09e5e39798c`.
+
+Validated new edge evidence:
+- `budget_20_nop_div_32`: **32 SPC cycles / 672 master cycles exact**, PC stops before trailing sentinel, DIV state correct.
+- `budget_20_access_div_32`: four real guest reads contribute runtime bus cycles; total remains **32 SPC cycles exact** with correct state.
+- `budget_branch_taken_22`: total **22**, including expected runtime taken debit.
+- `budget_branch_not_taken_20`: total **20**, with conservative compile-time branch budget and correct untaken runtime behavior.
+- dedicated `budget_reuse_seed_32`: cached replay executed the exact same 32-cycle block with unchanged lookup/JIT pointer and identical PC/A/Y/flags.
+- covered tag mutation incremented the region tag and **forced recompilation**; stale entry was not reused.
+
+Proof summary additionally remained true:
+- all static debits match source prediction;
+- all runtime debits match expected;
+- all total debits match pinned reference;
+- all semantics match expected;
+- all halt scheduler ticks match expected;
+- long-probe temporal cutoff remains bounded;
+- all directed cycle-budget edge cases <=32;
+- exact 20+DIV reaches 32;
+- cached replay succeeds without recompile;
+- covered entry-tag mutation forces recompile.
+
+The earlier `4f197702...` proof failure is **HARNESS FALSE NEGATIVE / SUPERSEDED**, caused by testing cached replay after later cases had replaced the fixed TEST_PC lookup. No runtime change was needed.
+
+**M1 bounded architecture contract is now validated to the intended edge.** This still does not prove intra-block self-modifying-code behavior or observable dummy-read I/O effects; those remain Gate-C accuracy debt, not blockers to this M1 performance integration.
+
+### Integration discovery
+Direct comparison shows `phase2/apu-cycle-budget-clean` is **not** a fast-forward child of current `master`:
+- current master: `a2270699e60cdf2b8b8303aaa5a1aa4a0e8dd89e`;
+- clean: `d5ce93a03b2dbf5065fefa5276533e02f9658215`;
+- merge base: `ee86d3391f9ef7f407b9b3f683b145253ff1ef3f`;
+- clean is 40 commits ahead of merge base while master contains 4 commits absent from clean.
+
+**Do not merge the historical clean branch wholesale.** Next action: inspect the 4 master-only commits and reconstruct a fresh M1 integration branch from current master, porting the validated production state without losing current master changes or diagnostic-only branches.

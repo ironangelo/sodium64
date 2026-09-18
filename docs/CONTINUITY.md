@@ -4371,3 +4371,25 @@ Immediate next technical batch:
 6. reserve commercial-ROM and real-hardware validation for a later aggregated milestone after the autonomous corpus has converged.
 
 Do not preselect APU, DSP, PPU, S-CPU dynarec or another architecture before the corpus evidence exists.
+
+
+## Gate-B corpus selection refinement — 2026-09-18
+
+Iron refined the desired diversity criterion for the three new autonomous workloads:
+
+Choose workloads whose **architectural behavior** approximates three materially different commercial SNES families, using **SMW / DKC / Zelda: A Link to the Past** as reference archetypes. Similarity is about execution patterns and subsystem pressure, not visual style or IP imitation.
+
+Target archetypes:
+- **SMW-like:** scrolling platformer, dynamic/map updates, collision/object logic, sprites and per-frame gameplay loop;
+- **DKC-like:** heavier audiovisual pressure, entity/animation work, DMA/HDMA/PPU activity and active audio/SPC700;
+- **ALttP-like:** top-down area/map logic, scripting/state, object interaction, tilemap updates and transitions.
+
+This remains inside Astra's Batch-2 direction: Gothicvania + three diverse workloads, emulator labs first, one aggregated real-N64 milestone later, next runtime work selected only from the first demonstrated blocker.
+
+Initial research findings, not yet locked:
+- `undisbeliever/space-rescue-squad@e08333a6...` is a strong DKC-like candidate: full platformer/game code, custom entity/collision/scrolling engine, HDMA, DMA-time budgeting, animated tilesets and Terrific Audio Driver. Code is zlib; game resources are source-available but restricted to this game, so use only as its own workload.
+- `undisbeliever/castle_platformer@79e2eb4e...` is a possible SMW-like candidate: MIT, ca65, dynamic editable map, tile-specific movement/friction, interactive tiles, static platforms and dynamically loaded animated sprites. It may be too simple and shares author/lineage with Space Rescue Squad, so do not lock it without a diversity comparison.
+- `Ramsis-SNES/furryrpg@35b4eb22...` is architecturally attractive for the ALttP/RPG role (area loader, scripting, sprite-to-BG collision, Mode-1 world map, Mode-7, SPC700/audio), but repository license metadata/file is absent despite the README describing it as open-source freeware. Treat licensing/reuse status as **OPEN QUESTION**; do not consume or redistribute it until that is resolved.
+- `undisbeliever/unnamed-snes-engine` is MIT and top-down but currently a single-screen tech demo; useful fallback/probe, probably too narrow for the main representativeness slot.
+
+Next action: continue candidate search with explicit preference for different authors/toolchains/engines where practical; validate buildability, licensing/distribution boundaries and reproducible deterministic execution before fixing the final three.

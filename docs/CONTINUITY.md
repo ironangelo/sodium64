@@ -3972,3 +3972,29 @@ Exact triggered runs:
 - **APU Cycle And Span Proof `35380154641`** @ `385caf3e0411...` — in_progress
 - **Build and Validate `35380154737`** @ `385caf3e0411...` — completed/cancelled
 - **Build and Validate `35380150454`** @ `151466bb39ab...` — in_progress
+
+
+## Cycle-budget boundary proof attempt 1 — HARNESS FALSE NEGATIVE 2026-09-18
+
+Exact attempt: **`phase2/apu-cycle-budget-edge-proof@4f197702ff81687d68a33842105c907b888a2be6`**.
+
+- **Build and Validate `35380159566` SUCCESS** — runtime/build/Mupen remained green.
+- **APU Cycle And Span Proof `35380159442` FAILED** only in the newly added cache-reuse assertion.
+- diagnostic artifact **`10561814892`**, digest `sha256:0934deb69528d3da795b23834ad1e333756cbddee839bfec802f02dc209d80e4`.
+
+The temporal-edge cases themselves **passed**:
+- `budget_20_nop_div_32`: static/total debit **-672 master = 32 SPC cycles**, PC stopped at `0x020B` before the sentinel, DIV post-state matched.
+- `budget_20_access_div_32`: static debit **-588** (28 static units) plus four real guest-read cycles produced exact total **-672 / 32 SPC cycles**, with correct DIV state.
+- `budget_branch_taken_22`: exact 22-cycle total with expected +2 runtime taken debit.
+- `budget_branch_not_taken_20`: exact 20-cycle total with identical compile-time worst-case shape and no taken debit applied.
+- all historical cases reached the cache-reuse phase without a timing/semantic failure.
+
+The tag-mutation half of the reuse experiment also worked:
+- covered region tag increment changed the lookup/pointer on re-entry;
+- stale block was rejected and recompilation occurred.
+
+**HARNESS FALSE NEGATIVE:** the cached-reuse check was executed only after the rest of the full proof matrix. Every proof case uses the same fixed `TEST_PC=0x0200` and recompiles its own block there. Therefore the lookup and guest bytes no longer represented `budget_20_nop_div_32` when the reuse check ran. Evidence: the mutation byte observed at `0x0200` was **0xBE (DAS)** rather than the NOP expected from the 20+DIV seed. The observed cached debit/state therefore belonged to a later proof case and cannot test the intended block.
+
+This failure is **REJECTED as runtime/cycle-budget evidence**.
+
+Immediate repair: immediately before cache-reuse measurement, compile a fresh dedicated 20-NOP-cycle + DIV seed at the fixed test PC, then perform unchanged cached replay and tag-mutation checks before any other case can overwrite that lookup. No runtime source changes are permitted.

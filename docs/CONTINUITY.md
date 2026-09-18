@@ -2913,3 +2913,23 @@ Decision:
 - do NOT alter cycle or semantic expectations;
 - add only `y_value=0x06` to the six diagnostic case dictionaries;
 - rerun the identical proof.
+
+
+## DAA/DAS proof attempt 2 — harness-only rerun in progress 2026-09-18
+
+Exact rerun SHA: **`db4137947d17403c81948c98907b16d424958181`**.
+
+Direct compare `35a983e7... -> db413794...` is harness-only:
+- `scripts/apu_cycle_proof.py` +6/-6;
+- each decimal case now supplies required `y_value=0x06`.
+
+No APU core source, timing expectation, semantic expectation or dispatch changed.
+
+Exact workflows:
+- **Build and Validate `35346467855`** — QUEUED at checkpoint.
+- **APU Cycle And Span Proof `35346467906`** — IN PROGRESS at checkpoint.
+
+Interpretation rules:
+- all six decimal cases + historical regression matrix pass => DAA/DAS core at `35a983e7...` VALIDATED;
+- any decimal semantic/timing failure => inspect that case as core evidence;
+- any new harness/setup failure => fix only harness after proving it is not core behavior.

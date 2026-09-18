@@ -2839,3 +2839,38 @@ Dynamic semantic/timing authority:
 Exact clean Build and Validate run: **`35345349822`**, IN_PROGRESS at checkpoint.
 
 Do not modify clean `7f1d7f52...` until exact CI completes. Next diagnostic family is DAA/DAS only; SLEEP/STOP remain separate scheduler work.
+
+
+## SPC700 DAA/DAS implementation proof in progress — checkpoint 2026-09-18
+
+Exact diagnostic SHA: **`35a983e7e0d8f9161d599e498acbf8b004f2d6e5`**, one commit after validated DIV authority `f3bad9af...`.
+
+Controlled core additions:
+- `apu_daa` / `apu_das` handlers;
+- runtime helpers implementing pinned S-SMP decimal-adjust semantics;
+- opcode 0xDF maps to DAA;
+- opcode 0xBE maps to DAS.
+
+Guest timing:
+- opcode fetch already charged;
+- each instruction adds +2 fixed cycles for dummy PC read + idle;
+- expected instruction total = **3 cycles**, or **7 with trailing validated BRA loop**.
+
+Pinned semantics reproduced:
+- DAA: if C or A>0x99, add 0x60 and set C; then if H or low nibble>9, add 0x06;
+- DAS: if !C or A>0x99, subtract 0x60 and clear C; then if !H or low nibble>9, subtract 0x06;
+- H and V preserved;
+- N/Z recomputed from adjusted A;
+- other PSW bits preserved.
+
+Directed cases:
+- DAA low-only;
+- DAA high-only;
+- DAA both adjustments with wrap to zero;
+- DAS low-only;
+- DAS high-only;
+- DAS both adjustments to negative result.
+
+Exact workflows are the newest runs for SHA `35a983e7...` on the diagnostic branch. Acceptance requires exact A/C/N/Z/H/V semantics, 7-cycle total with BRA, and all historical regression cases green.
+
+SLEEP/STOP are deliberately excluded and remain separate scheduler-state work.

@@ -5123,3 +5123,36 @@ Next controlled experiment:
 - require actual room transition or >=64 px player movement before locking SRS into the corpus.
 
 No hardware request and no optimization is authorized from this finding.
+
+
+## Gate-B SRS guest-progression proof v3 — RUNNING 2026-09-18
+
+Exact audition head:
+**`phase3/gate-b-srs-audition@09ffc26305781ba17624b3defa5932ac5db7e618`**.
+
+This is a harness-only correction over the already-validated benchmark/runtime:
+- guest-state reads now use the resolved SNES/R4300 virtual addresses directly (`0x007e....`) so pinned ares `readDebug` consults the same virtually-indexed D-cache line used by Sodium64 guest execution;
+- the previous KSEG0 backing-buffer aliases are no longer used for SRS guest state;
+- per-run internal-history minimum is reduced from 8 to 5 complete 60-VI windows because sustained aligned throughput repeatability was already validated separately; this run is a progression proof, not a throughput requalification;
+- final comparator now rejects implausible guest state before considering progression:
+  - room must be `a1a` or `a1b`;
+  - player/camera x/y must lie in the engine's map-space range `0x1000 <= value < 0x8000`;
+- progression still requires every repeat either to leave `a1a` or move player x at least 64 px beyond the authored initial x.
+
+Benchmark identity remains required:
+- ROM SHA-256 `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`;
+- patch SHA-256 `4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`.
+
+No Sodium64 runtime/production code is changed by this progression repair. No hardware request.
+
+Acceptance:
+- guest observations satisfy authored/map plausibility;
+- all repeats demonstrate progression;
+- Road-valid settings remain frameskip0/APU21/audio4/precision8.
+
+Falsifier:
+- virtual-address reads still produce impossible state;
+- deterministic route does not progress in all repeats;
+- benchmark identity/settings change.
+
+If accepted, SRS can be locked as the autonomous DKC-like/heavy-platformer corpus slot; its ares 60/60 evidence remains lab filtering only, not real-N64 performance authority.

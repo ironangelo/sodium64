@@ -653,6 +653,10 @@ apu_incm: // INC op
 
 .align 5
 apu_addw: // ADDW YA,op
+    // ADDW has one internal idle between the low and high direct-page reads.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY | FLAG_SA
@@ -700,6 +704,10 @@ apu_addw: // ADDW YA,op
 
 .align 5
 apu_subw: // SUBW YA,op
+    // SUBW has one internal idle between the low and high direct-page reads.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_y
     ori s1, s1, FLAG_SY | FLAG_SA

@@ -740,6 +740,42 @@ def main() -> int:
              expected_memories=((0x0180, 0x02), (0x017F, 0x01), (0x017E, 0x04))),
     ]
 
+
+    word_cases = [
+        # Direct-page word timing. Each case ends in BRA back to TEST_PC (4 cycles).
+        # ADDW/SUBW/MOVW YA,dp have one internal idle between low/high reads.
+        dict(name="addw_word", code=bytes.fromhex("7a202ffc"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x01, a_value=0x02,
+             memory_writes=((0x0020, b"\x03\x02"),),
+             expected_accum=0x05, expected_y=0x03),
+        dict(name="subw_word", code=bytes.fromhex("9a202ffc"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x03, a_value=0x05,
+             memory_writes=((0x0020, b"\x03\x02"),),
+             expected_accum=0x02, expected_y=0x01),
+        dict(name="movw_ya_dp_word", code=bytes.fromhex("ba202ffc"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x00, a_value=0x00,
+             memory_writes=((0x0020, b"\x34\x12"),),
+             expected_accum=0x34, expected_y=0x12),
+
+        # Controls expected to be cycle-complete already.
+        dict(name="cmpw_word_control", code=bytes.fromhex("5a202ffc"), expected_debit=-126,
+             reference_cycles=8, expected_end_region=8, y_value=0x03, a_value=0x05,
+             memory_writes=((0x0020, b"\x03\x02"),),
+             expected_accum=0x05, expected_y=0x03),
+        dict(name="decw_word_control", code=bytes.fromhex("1a202ffc"), expected_debit=-126,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x00\x01"),),
+             expected_memories=((0x0020, 0xFF), (0x0021, 0x00))),
+        dict(name="incw_word_control", code=bytes.fromhex("3a202ffc"), expected_debit=-126,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\xFF\x00"),),
+             expected_memories=((0x0020, 0x00), (0x0021, 0x01))),
+        dict(name="movw_dp_ya_word_control", code=bytes.fromhex("da202ffc"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x12, a_value=0x34,
+             memory_writes=((0x0020, b"\x00\x00"),),
+             expected_memories=((0x0020, 0x34), (0x0021, 0x12))),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -785,6 +821,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in call_return_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in word_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

@@ -176,6 +176,10 @@ apu_movy: // MOV Y,op
 
 .align 5
 apu_movwya: // MOVW YA,op
+    // MOVW YA,dp has one internal idle between the low and high reads.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     ori s1, s1, FLAG_SY | FLAG_SA | FLAG_LY | FLAG_LA
 

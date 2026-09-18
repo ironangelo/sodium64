@@ -2971,3 +2971,28 @@ Validated implementation:
 Attempt 1 failure is permanently classified **HARNESS FALSE NEGATIVE / REJECTED as core evidence**.
 
 Decision: consume only DAA/DAS core into clean `phase2/apu-timing-foundation@7f1d7f52...`; then exact clean CI. Remaining unimplemented base SPC700 opcodes are only SLEEP/STOP and require scheduler-state design, not a normal opcode patch.
+
+
+## Clean DAA/DAS candidate — checkpoint 2026-09-18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@9f070faeb6e9ea20012601d3eff1947658cfb93f`**, one commit on top of clean DIV foundation `7f1d7f52...`.
+
+Direct clean diff is exactly:
+- `src/apu_alu.S` +95/-0;
+- `src/apu_emitter.S` +2/-2.
+
+Clean emitter contains no `SODIUM64_PROFILE` / `apu_cycle_diag` references.
+
+Dynamic authority:
+- DAA/DAS core `35a983e7...`;
+- harness-only rerun `db413794...`;
+- Build and Validate `35346467855` SUCCESS;
+- APU Cycle And Span Proof `35346467906` SUCCESS.
+
+Exact clean Build and Validate run: **`35347334777`**, IN PROGRESS at checkpoint.
+
+Remaining unimplemented base SPC700 opcodes after this candidate are only:
+- 0xEF SLEEP/WAIT;
+- 0xFF STOP.
+
+Do not implement them as normal returning JIT handlers. Pinned ares models each as a persistent processor state repeatedly consuming `read(PC)+idle` until external synchronization/reset semantics release it. Next work is scheduler/state design and proof, isolated from arithmetic/timing work.

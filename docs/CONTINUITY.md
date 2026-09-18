@@ -2748,3 +2748,29 @@ The runtime helper does not clobber A2; the defect is purely emitted instruction
 Keep the runtime DIV arithmetic helper unchanged. Insert one generated MIPS NOP (`SLL ZERO,ZERO,0`) immediately after emitted helper JAL so the JAL delay slot is neutral. Then `queue_nz` executes after helper return and snapshots new T7/A.
 
 Do not change guest cycle accounting or proof expectations. Rerun the identical six-case DIV matrix plus full regression suite.
+
+
+## DIV repair attempt 2 — delay-slot correction in progress 2026-09-18
+
+Exact diagnostic SHA: **`f3bad9af878b94e7be3a2f3f1d0d04fa8db103ec`**, one commit after failed-but-informative DIV helper SHA `18c25ce...`.
+
+Direct compare `18c25ce... -> f3bad9af...` is exactly:
+- `src/apu_alu.S` +2/-0.
+
+Controlled change:
+- emit one runtime MIPS NOP (`SLL ZERO,ZERO,0`) immediately after the generated JAL to `apu_div_runtime`;
+- no guest timing, arithmetic, flags formula, dispatch or harness expectation change.
+
+Question: does neutralizing the JAL delay slot make queued N/Z sample repaired T7/A after helper return while leaving the already-correct A/Y/H/V and 16-cycle DIV+BRA total unchanged?
+
+Exact workflows:
+- **Build and Validate `35317084579`** — QUEUED at checkpoint.
+- **APU Cycle And Span Proof `35317084547`** — IN PROGRESS at checkpoint.
+
+Acceptance:
+- all six directed DIV cases pass A/Y/H/V/N/Z;
+- known overflow case becomes A=0xAC,Y=0x61,PSW arithmetic=0xC8;
+- 9-bit normal case becomes A=0x40,Y=0,PSW H/V=0x48 with Z clear;
+- X=0 passes without divide-by-zero;
+- all total/static timing remains unchanged;
+- complete historical regression matrix remains green.

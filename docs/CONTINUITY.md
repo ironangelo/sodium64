@@ -5033,3 +5033,36 @@ Bass can assemble/use the generated game-state symbol in normal code, but the in
 
 Next action:
 resolve guest addresses from existing build/map/symbol outputs where possible, or use symbols/aliases that are already concretely allocated at the observation point. Prefer host-side parsing over further guest-code instrumentation. Keep benchmark ROM/patch and Sodium64 runtime unchanged. No hardware request.
+
+
+## Gate-B SRS guest-progression proof v2 — RUNNING 2026-09-18
+
+Exact audition head:
+**`phase3/gate-b-srs-audition@99870f702751e9de08aac84c65dfb56d80d04586`**.
+
+Parent:
+`03496a4587a7bc76836f26791144bcab0c77573b`.
+
+Controlled repair after the symbol-probe false negative:
+- workflow only;
+- no Sodium64 source/runtime change;
+- no SRS benchmark/runtime logic change;
+- deterministic benchmark ROM/patch identity remains required unchanged.
+
+The failed observation dependency on `Project.GameState.Words.playerHealth` was removed. Health is not required to answer the current Gate-B question: whether the deterministic workload makes meaningful guest progress instead of remaining stuck in one low-activity state.
+
+Progress evidence now uses:
+- `GameState.roomId`;
+- player x/y;
+- camera x/y;
+- authored room IDs `a1a_entrance` / `a1b_stairway`;
+- authored initial player x.
+
+Acceptance is unchanged in substance:
+every fresh repeat must either leave `a1a_entrance` or move the player at least 64 px beyond the authored initial x. Entering `a1b_stairway` remains the strongest natural checkpoint.
+
+The internally aligned VI-history measurement remains present and unchanged. No CPU/APU/DSP/PPU/DMA optimization is authorized from this experiment.
+
+If progression is demonstrated alongside the already-validated sustained 60/60 aligned histories, SRS can be locked as the autonomous DKC-like/heavy-platformer corpus slot. If progression is not demonstrated, improve or reject the deterministic route before touching Sodium64.
+
+No hardware request.

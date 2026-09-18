@@ -1556,3 +1556,55 @@ Expected readings:
 - harness/vector mismatch => repair diagnostic setup only after proving the mismatch is not core behavior.
 
 **Known limitation preserved:** TCALL/BRK bus-access ordering in Sodium64 differs statically from pinned ares (vector vs stack access order). This batch tests total guest cycles and end-state semantics only; exact intra-instruction I/O/timer ordering remains separate fidelity work.
+
+
+## CALL/PCALL proof exposed inherited PCALL target bug — 2026-09-17/18
+
+Diagnostic SHA **`044009a4c8bc34ffa8314ddcb99fbe2b31099de5`**:
+- Build and Validate **`35301687790` SUCCESS** (normal, PROFILE, pinned Mupen smoke all green).
+- APU Cycle And Span Proof **`35301687777` FAILURE**, cycle-proof job **`105465701875`**.
+- exact proof-build artifact **`10529863114`**, digest `sha256:219d6d9dae8d5dc860be1dd8a1e3ac7154fd9a06df751291d9e6759f27a01384`;
+- failed-proof diagnostics artifact **`10529489052`**, digest `sha256:b697eab9d4d9d6c394e382ae3189fe15a75bad35030be96005f27afe95a89a98`.
+
+The proof reached the new CALL/return family after all prior required timing cases continued to pass.
+
+### MEASURED
+
+**CALL absolute** passed completely:
+- static debit -126 = 6 SPC cycles before runtime stack accesses;
+- total debit -168 = **8 cycles**, matching pinned ares;
+- final PC **0x1234**;
+- S **0x80 -> 0x7E**;
+- return bytes correctly pushed: `RAM[0x0180]=0x02`, `RAM[0x017F]=0x03`;
+- semantic postcondition true.
+
+**PCALL** timing and stack writes passed, but target semantics failed:
+- static debit -84 = 4 cycles;
+- total debit -126 = **6 cycles**, matching pinned ares;
+- S **0x80 -> 0x7E**;
+- return bytes correctly pushed: `RAM[0x0180]=0x02`, `RAM[0x017F]=0x02`;
+- expected PC `0xFF34`, observed **`0xD475`**;
+- semantic postcondition false; proof stopped here, so TCALL/RET/RET1/BRK are **NOT YET MEASURED** in this run.
+
+### SUPPORTED CAUSE
+
+This is an inherited PCALL semantic defect, not evidence against the +2 timing rule:
+- `apu_pcall` computes target `0xFF00 | operand` into compile-time scratch `t2`;
+- it then calls `load_stack`;
+- `load_stack -> full_address` explicitly writes `t2 = low16(apu_stack)`;
+- exact build symbol `apu_stack=0x8001D475`;
+- observed wrong PC is exactly **0xD475**.
+
+CALL does not suffer this because its destination is already carried in generated runtime `A0` and copied directly to S0.
+
+State:
+- **VALIDATED:** CALL total timing + end-state semantics for directed case.
+- **MEASURED / SUPPORTED:** PCALL total timing 6 cycles.
+- **CONFIRMED CORRECTNESS DEFECT:** PCALL target clobbered by volatile compile-time `t2`.
+- **UNKNOWN:** TCALL/RET/RET1/BRK until proof advances past PCALL.
+
+### Next controlled change
+
+On diagnostic `phase2/apu-cycle-proof`, move `ori t2,v0,0xFF00` to immediately after `load_stack`, where `v0` still holds the fetched PCALL operand and before target emission. Do not change PCALL timing, stack sequence, harness expectations, or any other opcode.
+
+Falsifier: if rerun still does not reach PC=0xFF34 with correct stack/timing, reject this cause and inspect the generated target instruction rather than broadening the patch.

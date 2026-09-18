@@ -2891,3 +2891,25 @@ Combined authority:
 - exact clean CI `35345349822` SUCCESS.
 
 Next active diagnostic remains DAA/DAS at `35a983e7...`; SLEEP/STOP stay separate scheduler-state work.
+
+
+## DAA/DAS proof attempt 1 — harness false negative 2026-09-18
+
+Exact diagnostic SHA **`35a983e7e0d8f9161d599e498acbf8b004f2d6e5`**:
+- **Build and Validate `35345543217` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Cycle And Span Proof `35345543241` FAILURE**, cycle-proof job **`105601488300`**.
+- failed proof artifact **`10547251142`**, digest `sha256:ae7405a8b48078ef8dc42be5fb941258ae429ae8c0597afcc14a79e59a739392`;
+- exact proof-build artifact **`10547145095`**, digest `sha256:07c466993c6bdee4859f95f92106b76038ee348413e3cc7b44b61fcaa84c8c2c`.
+
+The failure is **REJECTED as core evidence**. The entire historical regression matrix, including final DIV repair cases, passed before the harness reached the new decimal-adjust cases.
+
+Traceback:
+`TypeError: compile_one_case() missing 1 required keyword-only argument: 'y_value'`.
+
+Cause: all six new `decimal_adjust_cases` omitted the harness-only `y_value` parameter. No DAA/DAS case executed, so DAA/DAS dynamic semantics/timing remain **UNMEASURED** by attempt 1.
+
+Decision:
+- do NOT modify DAA/DAS core code;
+- do NOT alter cycle or semantic expectations;
+- add only `y_value=0x06` to the six diagnostic case dictionaries;
+- rerun the identical proof.

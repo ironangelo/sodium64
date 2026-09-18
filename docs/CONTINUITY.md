@@ -1062,3 +1062,69 @@ Exact runs launched:
 At checkpoint both are still compiling exact SHA.
 
 Acceptance: both CI and all 28 path-specific dynamic cases must pass. A compile-only green result is insufficient. Any not-taken path executing the -42 debit, any taken path missing it, wrong PC, wrong DBNZ side effect, or disagreement with pinned ares cycles rejects/narrows the branch implementation.
+
+
+## SPC700 addressing-family timing — VALIDATED 2026-09-17/18
+
+Exact diagnostic SHA **`e78b3c47989359c3796887d00da9dcca56740e2b`**. This SHA differs from `19b3d6cf...` only by the harness correction for the already-validated bounded long-NOP expected PC; core timing rules are unchanged.
+
+**Build and Validate `35294386630` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+
+Dynamic authority: **APU Cycle And Span Proof `35294386627` SUCCESS**, cycle-proof job **`105444053413`**.
+- proof result artifact **`10527331782`**, digest `sha256:3ddaf910afbb446093aa9fe154756f8e507d52633a05a18b29b96aba31e51f0b`;
+- exact proof-build artifact **`10526324943`**, digest `sha256:92d3fcd835b0bebc9f4e7b662baa2216557a4c0cd1554b50f23cb1d3f75046c5`.
+
+All required summary invariants were true:
+- `all_static_debits_match_source_prediction=true`;
+- `all_total_debits_match_reference=true`;
+- `all_semantics_match_expected=true`;
+- `all_header_spans_match_source_prediction=true`;
+- `compiled_long_probe_is_bounded_to_one_tag_region=true`.
+
+### MEASURED representative addressing totals
+
+Each case includes the already-corrected 4-cycle BRA loop. Total `s3` debit matched pinned ares reference exactly at `apu_clock=21`:
+
+- direct read: **7 cycles**, total debit -147;
+- direct write: **8**, -168;
+- direct+X read: **8**, -168;
+- direct+X write: **9**, -189;
+- `(X)` read: **7**, -147;
+- `(X)` write: **8**, -168;
+- `(X)+` read: **8**, -168;
+- `(X)+` write: **8**, -168;
+- absolute read: **8**, -168;
+- absolute write: **9**, -189;
+- absolute+X read: **9**, -189;
+- absolute+X write: **10**, -210;
+- `[dp+X]` read: **10**, -210;
+- `[dp+X]` write: **11**, -231;
+- `[dp]+Y` read: **10**, -210;
+- `[dp]+Y` write: **11**, -231.
+
+All semantic postconditions passed: read cases produced the expected accumulator/X state, write cases wrote the expected RAM byte, and all tested blocks remained in the expected tag region.
+
+**VALIDATED scope:** fixed missing-cycle charges for the audited direct/indexed/indirect addressing families, while preserving existing runtime data-access debit placement. This materially expands timing correctness beyond the four-opcode mechanism proof.
+
+**NOT YET COMPLETE:** conditional branch taken-path cycles, implied/stack/call/return/bit/word/special instruction families, and exact intra-instruction I/O/timer bus-cycle placement remain open.
+
+### Decision
+
+Create a **clean code-only timing foundation branch from `phase2/apu-block-bound-fix@7e48bcc9...`** containing:
+- shared compile-time missing-cycle helper;
+- corrected NOP/BRA/MUL/DIV fixed timing;
+- validated addressing-family charges and absolute-store wrapper;
+- NO PROFILE diagnostic capture;
+- NO GDB proof script/workflow changes.
+
+Then Build/Validate the clean branch. After that, conditional branch timing is the next isolated batch. Conditional +2 cycles must be charged at runtime only on the taken path; compile-time `jit_charge_cycles` is not appropriate for that variable.
+
+## RESUME HERE — addressing timing validated; clean timing foundation next
+
+1. `master` remains `a2270699...`.
+2. Clean block-bound branch `phase2/apu-block-bound-fix@7e48bcc9...` is the base for the next clean candidate.
+3. Diagnostic authority for fixed timing/addressing is `e78b3c47...`, Build/Validate `35294386630`, ares proof `35294386627`; all 16 representative addressing cases match total reference cycles and semantics.
+4. Recreate only validated core changes cleanly from `7e48bcc9...`. Do not copy `apu_cycle_diag.S`, diagnostic finish-block capture, workflow or proof script.
+5. Next isolated timing variable after clean CI: conditional branches. Add +2 guest cycles only on the taken runtime path; keep not-taken timing unchanged. Validate taken/not-taken pairs for ordinary flag branch, bit branch, CBNE, DBNZ Y and DBNZ memory.
+6. Remaining fixed-cycle families come after conditional branches. Exact I/O/timer cycle placement remains a later fidelity contract.
+7. E1 matched-window repair remains required before ranking performance. E3/E4/E5 remain DEFERRED.

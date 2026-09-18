@@ -180,15 +180,27 @@ The milestone order may change if profiling reveals a better dependency order. T
 
 ## Current position
 
-**M0 is achieved; M1 is active.** The project now has a representative real-N64 measurement rather than only emulator/synthetic inference.
+**M0 and M1 are achieved; M2 / Gate B is active.**
 
-The M0 Gothicvania survivability capture on real N64, with frameskip `0`, full-rate APU clock `21`, audio enabled and precision `8`, completed **48/60, 49/60, 48/60, 50/60 and 50/60** guest frames across five complete 60-VI windows (mean **49.0/60**). The R4300 profile contained 3,581 samples, essentially no VI idle headroom, and attributed about **61.83%** of sampled host time to SPC700/APU JIT/DSP/audio versus **22.12%** to the S-CPU interpreter. This establishes the current representative base workload as throughput-bound and makes APU/audio the first M1 gate driver.
+M0 established the first representative real-N64 authority measurement. The Gothicvania survivability workload, with frameskip `0`, full-rate APU clock `21`, audio enabled and precision `8`, completed **48/60, 49/60, 48/60, 50/60 and 50/60** guest frames across five complete 60-VI windows (mean **49.0/60**). That capture had essentially no VI idle headroom and placed **61.83%** of R4300 samples in APU/JIT/DSP-audio work, making APU/audio the first measured M1 gate driver.
 
-The immediate M1 route is therefore **not** “build a 65C816 dynarec first.” A 65C816-to-MIPS dynarec remains strategically attractive, especially because mature machinery could later serve SA-1, but current hardware evidence does not justify it as the first attack. It should be revisited when re-profiling shows S-CPU cost has become a gate driver or a focused proof demonstrates enough leverage to justify integration.
+M1 corrected the SPC700 timing foundation and replaced byte-span-only JIT interleave with a **guest-cycle-bounded multi-op contract**. The compiler retains the independent 16-byte source safety limit, but returns to the scheduler after a completed block exceeds a 20-SPC-cycle continuation threshold. With the pinned finite-op maximum of 12 cycles, a block can consume at most **32 SPC cycles / 672 master cycles** before scheduler return at Road-valid APU clock `21`.
 
-The first APU experiment also established a useful constraint. Increasing APU JIT `BLOCK_SIZE` from 16 to 32 bytes reproducibly moved the valid ares Gothicvania frame budget from **44/60 to 48/60**, proving block/dispatch overhead matters. However, a paired profile-only timing diagnostic found that 16-byte blocks had average DSP scheduling lateness **119.073 cycles**, maximum **651**, and **0/35,982** events at least one DSP period late, while 32-byte blocks had average **128.338**, maximum **1,218**, and **377/35,965 (1.048%)** events at least one DSP period late. The 32-byte change is therefore **rejected**: throughput gains that materially worsen required audio/timing interleave do not move the Road to 1.0.
+The architecture was not accepted from throughput alone. A corrected multi-op baseline reached the ares throughput ceiling while producing DSP events at least one full period late; a one-op causal control removed that lateness but fell to about **49.4/60**; the clobber-safe cycle-budget v2 restored multi-op throughput while keeping the measured DSP scheduler tail below one 32-cycle period. A directed edge proof now covers **119 cases plus halted-state observations**, including exact `20 + DIV = 32` blocks, access-built 32-cycle blocks, conditional paths near the cutoff, cached replay and entry-tag invalidation. This is strong regression evidence for the audited contract, not an exhaustive proof of every SPC700 state or observable bus side effect.
 
-M1 continues from the safe 16-byte APU block configuration. Near-term work should reduce the measured APU/audio cost without extending scheduler return intervals or hiding required work; current priority is the hot APU memory/dispatch path, followed by DSP inner-loop work if measurement supports it. Accepted candidates graduate from paired emulator labs to milestone real-N64 validation when the result can answer a concrete gate question.
+The resulting real-N64 M1 capture completed **60/60 in all five measured 60-VI windows** with frameskip `0`, APU clock `21`, audio `4`, precision `8` and 3,580 valid samples. The profile contained **11.51% frame/VI wait**, showing that this exact workload is no longer throughput-bound on the R4300. APU/JIT/DSP-audio accounted for **51.03% of samples** versus 61.83% at M0; that is a change in sampled execution share, not a direct measurement of absolute subsystem cost.
+
+The defensible causal statement is therefore:
+
+> The combined corrected timing foundation plus guest-cycle-bounded APU JIT removes the measured Gothicvania frame-budget deficit on real N64 under Road-valid settings. The cycle-budget architecture specifically preserves multi-op throughput while restoring the validated DSP scheduler-return bound.
+
+It is **not** justified to assign the entire M0 `49/60 -> 60/60` movement to the final cycle-budget patch in isolation.
+
+M1's material exit condition is satisfied: a measured base-core bottleneck was reduced without using frameskip, additional APU underclock, muted audio or an accepted timing regression, and the result materially improved the real-N64 frame budget.
+
+**Gate B remains open.** One representative workload does not establish a base-system performance corpus, sustained audiovisual synchronization, AI underrun behavior, long-run drift, broad compatibility or PCM fidelity. The next active task is therefore to define a small versioned base-system corpus with distinct CPU, PPU/HDMA/Mode-7 and audio characteristics, filter it through emulator labs, then use real N64 hardware as the performance authority for the resulting milestone.
+
+Gothicvania should no longer be optimized by FPS alone: its measured 11.51% frame/VI wait makes it a regression workload, not the current performance gate driver. Likewise, `apu_read8`/`apu_write8`, DSP optimization and a 65C816 dynarec are no longer automatic next steps. The next architecture change should be selected by the first demonstrated Gate-B blocker in the broader corpus.
 
 ## Decision rule
 

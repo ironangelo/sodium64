@@ -5156,3 +5156,57 @@ Falsifier:
 - benchmark identity/settings change.
 
 If accepted, SRS can be locked as the autonomous DKC-like/heavy-platformer corpus slot; its ares 60/60 evidence remains lab filtering only, not real-N64 performance authority.
+
+
+## Gate-B SRS guest-progression attempt 3 — ARES UNALIGNED-HALF DEBUG LIMITATION 2026-09-18
+
+Exact authority:
+- audition head **`phase3/gate-b-srs-audition@09ffc26305781ba17624b3defa5932ac5db7e618`**;
+- **Gate B SRS Audition `35406148298` FAILED** only in the final progression comparator;
+- same-head **Build and Validate `35406148307` SUCCESS**;
+- audition artifact **`10573085612`**, digest **`sha256:bb370553f1af0a70fa662b816afbadda509b8e428e104e45e08d4fba25759e2c`**;
+- source-build provenance artifact **`10571984681`**, digest `sha256:91690474099710362dcb0e7f44b94e46737b8a76d40598117ed89a5d774b2ff8`.
+
+What passed:
+- exact pinned source/toolchain/release build;
+- deterministic benchmark patch/rebuild with unchanged benchmark identity;
+- symbol resolution;
+- Sodium64 PROFILE build;
+- pinned ares build;
+- three benchmark executions;
+- internally aligned history capture;
+- Road-valid settings.
+
+Observed room ID remained plausible (`a1a = 1`), but 16-bit coordinate observations were implausible, e.g. end-state tuples such as:
+- player x 39518/39666/39533;
+- player y 41728;
+- camera x 6660;
+- camera y 16.
+
+These values are **REJECTED as guest-state evidence**.
+
+### Root cause — LAB/OBSERVABILITY LIMITATION
+
+Pinned ares GDB handles a two-byte memory request by calling `cpu.readDebug<Half>(address)`.
+
+The resolved SRS 16-bit fields are at odd guest virtual addresses:
+- player x `0x007e0123`;
+- player y `0x007e0127`;
+- camera x `0x007e87b3`;
+- camera y `0x007e87b5`.
+
+In pinned ares, `DataCache::Line::read<Half>` selects the halfword using `paddr >> 1`; the low address bit is therefore not represented as a byte offset for an unaligned two-byte debugger request. A GDB `mADDR,2` from these odd addresses does **not** reliably mean “read byte ADDR and byte ADDR+1”.
+
+This explains why the 1-byte `room_id` observation is coherent while the 16-bit coordinate observations fail plausibility.
+
+Classification:
+**ARES DEBUGGER UNALIGNED-HALF LAB LIMITATION / REJECTED as SRS or Sodium64 runtime evidence.**
+
+Immediate controlled repair:
+- keep exact benchmark ROM/patch, Sodium64 runtime and guest virtual aliases unchanged;
+- observe every SRS 16-bit field as **two independent 1-byte GDB reads** at `addr` and `addr+1`;
+- reconstruct the SNES value host-side as `low | (high << 8)`, matching Sodium64 `MEM_WRITE16` / `MEM_READ16`;
+- retain room/state plausibility and >=64-px/room-transition progression criteria;
+- do not requalify throughput or request hardware.
+
+If byte-wise guest observations become plausible and demonstrate progression in all repeats, SRS can be locked as the autonomous DKC-like/heavy-platformer Gate-B slot.

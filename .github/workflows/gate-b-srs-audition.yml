@@ -685,6 +685,20 @@ jobs:
           initial_x = map_left + 56
 
           states = [r["guest_state_end"] for r in runs]
+
+          # The engine reserves map-space coordinates from 0x1000 upward.
+          # Reject impossible values before using them as progression evidence;
+          # this protects the proof against debugger/cache-alias mistakes.
+          plausible_state = [
+              (
+                  st["room_id"] in (a1a, a1b)
+                  and 0x1000 <= st["player_x"] < 0x8000
+                  and 0x1000 <= st["player_y"] < 0x8000
+                  and 0x1000 <= st["camera_x"] < 0x8000
+                  and 0x1000 <= st["camera_y"] < 0x8000
+              )
+              for st in states
+          ]
           progressed = [
               (st["room_id"] != a1a) or (st["player_x"] >= initial_x + 64)
               for st in states
@@ -699,6 +713,7 @@ jobs:
               "steady_common_prefix_equal": steady_equal,
               "steady_common_sequence": steady[0],
               "guest_state_end": states,
+              "plausible_guest_state": plausible_state,
               "progressed_from_a1a": progressed,
               "entered_a1b_at_end": entered_a1b,
               "initial_a1a_player_x": initial_x,
@@ -726,6 +741,7 @@ jobs:
           Path("profiles/srs-history-repeatability.md").write_text("\n".join(lines))
           print(json.dumps(payload, indent=2))
 
+          assert all(plausible_state), f"guest-state observation failed plausibility bounds: {states}"
           assert all(progressed), f"guest progression not demonstrated in all repeats: {states}"
           PY
 

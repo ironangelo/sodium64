@@ -30,6 +30,7 @@
 .globl apu_movy
 .globl apu_movwya
 .globl apu_movm
+.globl apu_movmi
 .globl apu_amov
 .globl apu_xmov
 .globl apu_ymov
@@ -205,6 +206,22 @@ apu_movm: // MOV op
     jal emit_jal
     nop
     EMIT_OP OR(A1, ZERO, V0)
+    j finish_opcode
+    nop
+
+.align 5
+apu_movmi: // MOV dp,#imm
+    // The S-SMP dummy-reads the destination before writing the immediate.
+    // Preserve the immediate in A1 in the read helper's delay slot; apu_read8
+    // preserves A0/A1, so the following write targets the exact same address.
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP OR(A1, ZERO, V0)
+    la t0, apu_write8
+    jal emit_jal
+    nop
+    EMIT_OP OR(A1, ZERO, A1)
     j finish_opcode
     nop
 

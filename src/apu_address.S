@@ -573,6 +573,10 @@ apu_dr2: // aa,bb
 
 .align 5
 apu_bxy: // (X),(Y)
+    // (X),(Y) forms spend one dummy PC-read cycle before the data accesses.
+    jal jit_charge_cycles
+    li t0, 1
+
     // Update the JIT register state
     jal load_reg_x
     nop

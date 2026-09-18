@@ -832,6 +832,35 @@ def main() -> int:
              expected_flags=0x00, expected_memory=(0x0400, 0xF0)),
     ]
 
+
+    operand_form_cases = [
+        # Remaining shared operand-form timing cluster. Every case ends in the
+        # already validated 4-cycle BRA loop.
+        dict(name="cmp_dp_dp", code=bytes.fromhex("6920212ffb"), expected_debit=-168,
+             reference_cycles=10, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, memory_writes=((0x0020, b"\x03"), (0x0021, b"\x05")),
+             expected_flags=0x01),
+        dict(name="cmp_dp_imm", code=bytes.fromhex("7803212ffb"), expected_debit=-168,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, memory_writes=((0x0021, b"\x05"),),
+             expected_flags=0x01),
+        dict(name="cmp_x_y", code=bytes.fromhex("792ffd"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x20, x_value=0x21,
+             flags_value=0x00, memory_writes=((0x0020, b"\x03"), (0x0021, b"\x05")),
+             expected_flags=0x01),
+        dict(name="or_x_y", code=bytes.fromhex("192ffd"), expected_debit=-126,
+             reference_cycles=9, expected_end_region=8, y_value=0x20, x_value=0x21,
+             flags_value=0x00, memory_writes=((0x0020, b"\x02"), (0x0021, b"\x01")),
+             expected_flags=0x00, expected_memory=(0x0021, 0x03)),
+        dict(name="mov_dp_imm", code=bytes.fromhex("8f7a212ffb"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0021, b"\x55"),), expected_memory=(0x0021, 0x7A)),
+        dict(name="mov_dp_dp_control", code=bytes.fromhex("fa20212ffb"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             memory_writes=((0x0020, b"\x66"), (0x0021, b"\x00")),
+             expected_memory=(0x0021, 0x66)),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -883,6 +912,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in bit_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in operand_form_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

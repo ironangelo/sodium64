@@ -966,6 +966,8 @@ apu_div: // DIV YA,X
     la t0, apu_div_runtime
     jal emit_jal
     nop
+    // Neutralize the runtime JAL delay slot so queued N/Z observes new A.
+    EMIT_OP SLL(ZERO, ZERO, 0)
     la ra, finish_opcode
     j queue_nz
     li t1, T7

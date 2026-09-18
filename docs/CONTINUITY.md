@@ -1810,3 +1810,20 @@ Consume only the three validated core timing additions into clean `phase2/apu-ti
 Do NOT copy proof script/harness changes.
 
 After exact clean CI, proceed to a separate bit-family timing batch. Current bit hypotheses remain unvalidated until dynamic proof.
+
+
+## Clean word-timing candidate — checkpoint 2026-09-18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@4a3cf13a54213b401b82bd715a07732b4b8dc66f`**, one commit on top of `fafc0847...`.
+
+Direct clean diff `fafc0847... -> 4a3cf13a...` is exactly:
+- `src/apu_alu.S` +8/-0 (ADDW +1, SUBW +1);
+- `src/apu_transfer.S` +4/-0 (MOVW YA,dp +1).
+
+No diagnostic scripts/workflows or unrelated core edits.
+
+Exact clean Build and Validate run: **`35306811545`**, QUEUED at checkpoint.
+
+Dynamic word timing/semantic authority remains diagnostic `90c700a4...` / ares proof `35302988483` SUCCESS.
+
+Do not modify clean `4a3cf13a...` until exact CI completes. Next work is read-only mapping of bit-family timing and semantics.

@@ -337,7 +337,7 @@ def compile_one_case(
     }
 
     if expected_pc_after is None:
-        expected_pc_after = TEST_PC + 16 if name == "long_nop_dbnzy" else TEST_PC
+        expected_pc_after = TEST_PC + 11 if name == "long_nop_dbnzy" else TEST_PC
     result["expected_apu_count_after_block"] = expected_pc_after
     semantic_checks: list[bool] = [
         result["apu_count_after_block"] == expected_pc_after
@@ -568,10 +568,10 @@ def main() -> int:
         ("nop_bra", bytes.fromhex("002ffd"), -126, 6, 8, 0x5A),
         ("mul_bra", bytes.fromhex("cf2ffd"), -273, 13, 8, 0x5A),
         ("div_bra", bytes.fromhex("9e2ffd"), -336, 16, 8, 0x5A),
-        # Regression probe: source contains 126 NOPs + DBNZ Y,-128, but with
-        # NOP routed through finish_opcode the compiler must stop after the
-        # first 16 bytes at the existing BLOCK_SIZE boundary.
-        ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -672, 32, 8, 0xFF),
+        # Regression probe: source contains 126 NOPs + DBNZ Y,-128. With the
+        # cycle-bounded compiler, 11 two-cycle NOPs produce a 22-cycle block;
+        # the temporal limit intentionally stops before the old 16-byte bound.
+        ("long_nop_dbnzy", b"\x00" * 126 + bytes.fromhex("fe80"), -462, 22, 8, 0xFF),
     ]
 
     address_cases = [
@@ -1183,7 +1183,7 @@ def main() -> int:
                 "compiled_long_probe_is_bounded_to_one_tag_region": (
                     int(long_result["header_end_region"])
                     == int(long_result["header_start_region"])
-                    and int(long_result["source_clock_units"]) == 32
+                    and int(long_result["source_clock_units"]) == 22
                 ),
                 "middle_region_probe_applicable": bool(reentry.get("applicable", True)),
                 "stale_block_reentered_after_middle_tag_mutation": (

@@ -5,6 +5,7 @@ on:
     branches:
       - phase2/apu-cycle-proof
       - phase2/apu-cycle-budget-proof-v2
+      - phase2/apu-cycle-budget-edge-proof
   workflow_dispatch:
 
 permissions:

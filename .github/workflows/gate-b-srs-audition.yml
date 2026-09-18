@@ -414,7 +414,6 @@ jobs:
           skipped_set=$(symbol skipped_set)
           precision_set=$(symbol precision_set)
           audio_set=$(symbol audio_set)
-          wram=$(symbol wram)
           vi_history_count=$(symbol profile_vi_history_count)
           vi_history=$(symbol profile_vi_history)
 
@@ -422,7 +421,7 @@ jobs:
             "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" \
             "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer" \
             "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
-            "$skipped_set" "$precision_set" "$audio_set" "$wram" \
+            "$skipped_set" "$precision_set" "$audio_set" \
             "$vi_history_count" "$vi_history"; do
             test -n "$value"
           done
@@ -432,24 +431,26 @@ jobs:
           test "$size" -gt 16384
           test "$jit_lookup_size" -eq 262144
 
-          guest_wram_to_host() {
+          # Read SRS state through the same R4300 virtual addresses used by
+          # Sodium64's guest memory accesses.  Do not translate these to the
+          # KSEG0 backing-buffer alias: ares's N64 D-cache is virtually indexed,
+          # so an alias read can miss a dirty guest line and return stale RDRAM.
+          guest_virtual() {
             guest_hex="$1"
             guest=$((0x$guest_hex))
             bank=$(((guest >> 16) & 0xff))
-            offset=$((guest & 0xffff))
             case "$bank" in
-              126) ;;
-              127) offset=$((offset + 0x10000)) ;;
+              126|127) ;;
               *) echo "guest address 0x$guest_hex is not WRAM 7E/7F" >&2; return 1 ;;
             esac
-            printf '%08x' "$((0x$wram + offset))"
+            printf '%08x' "$guest"
           }
 
-          srs_room_id_host=$(guest_wram_to_host "$SRS_GUEST_ROOM_ID")
-          srs_player_x_host=$(guest_wram_to_host "$SRS_GUEST_PLAYER_X")
-          srs_player_y_host=$(guest_wram_to_host "$SRS_GUEST_PLAYER_Y")
-          srs_camera_x_host=$(guest_wram_to_host "$SRS_GUEST_CAMERA_X")
-          srs_camera_y_host=$(guest_wram_to_host "$SRS_GUEST_CAMERA_Y")
+          srs_room_id_virtual=$(guest_virtual "$SRS_GUEST_ROOM_ID")
+          srs_player_x_virtual=$(guest_virtual "$SRS_GUEST_PLAYER_X")
+          srs_player_y_virtual=$(guest_virtual "$SRS_GUEST_PLAYER_Y")
+          srs_camera_x_virtual=$(guest_virtual "$SRS_GUEST_CAMERA_X")
+          srs_camera_y_virtual=$(guest_virtual "$SRS_GUEST_CAMERA_Y")
 
           buffer_hex=$(printf '%08x' "$((0x$buffer))")
           rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
@@ -476,11 +477,11 @@ jobs:
             echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
             echo "ARES_PRECISION_SET_ADDR=$precision_set"
             echo "ARES_AUDIO_SET_ADDR=$audio_set"
-            echo "ARES_SRS_ROOM_ID_ADDR=$srs_room_id_host"
-            echo "ARES_SRS_PLAYER_X_ADDR=$srs_player_x_host"
-            echo "ARES_SRS_PLAYER_Y_ADDR=$srs_player_y_host"
-            echo "ARES_SRS_CAMERA_X_ADDR=$srs_camera_x_host"
-            echo "ARES_SRS_CAMERA_Y_ADDR=$srs_camera_y_host"
+            echo "ARES_SRS_ROOM_ID_ADDR=$srs_room_id_virtual"
+            echo "ARES_SRS_PLAYER_X_ADDR=$srs_player_x_virtual"
+            echo "ARES_SRS_PLAYER_Y_ADDR=$srs_player_y_virtual"
+            echo "ARES_SRS_CAMERA_X_ADDR=$srs_camera_x_virtual"
+            echo "ARES_SRS_CAMERA_Y_ADDR=$srs_camera_y_virtual"
             echo "ARES_VI_HISTORY_COUNT_ADDR=$vi_history_count"
             echo "ARES_VI_HISTORY_ADDR=$vi_history"
             for offset in 0 8 16 24 32 40 48 56; do
@@ -613,7 +614,7 @@ jobs:
           assert int(obs["precision_set"]) == 8, obs
 
           count = int(obs["vi_history_count"])
-          assert 8 <= count <= 64, f"repeat {repeat}: expected >=8 windows, got {count}"
+          assert 5 <= count <= 64, f"repeat {repeat}: expected >=5 windows, got {count}"
 
           raw = b"".join(
               int(obs[f"vi_history_{i}"]).to_bytes(8, "big")

@@ -32,6 +32,8 @@ jobs:
 
       - name: Checkout measurement package branch
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Verify runtime core is exact clean candidate
         shell: bash

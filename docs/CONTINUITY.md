@@ -2136,3 +2136,61 @@ Static comparison against pinned ares identifies a bounded remaining operand-for
 - MOV dp,#imm: missing a real dummy destination read before write; should prefer emitting the real `apu_read8` rather than a synthetic +1 debit.
 
 JMP [abs+X] appears already covered by the validated indexed-addressing +1 and two runtime reads; treat as a no-change control, not a candidate fix.
+
+
+## Clean bit timing/state foundation — CI VALIDATED 2026-09-18
+
+Clean **`phase2/apu-timing-foundation@0fe8c45f9b1b1c719d52490d8f233950b4d4c489`** completed **Build and Validate `35308801632` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+Combined authority:
+- dynamic bit timing/state/bus semantics: diagnostic **`df5fd66c76d5b3898a6c5d6020aacfff38e8daf5`**, APU Cycle And Span Proof **`35308254504` SUCCESS**;
+- clean core consumption: `0fe8c45f...`;
+- exact clean CI: `35308801632` SUCCESS.
+
+Do not reopen the superseded synthetic TSET/TCLR +1 implementation: the validated path performs the real second read.
+
+## Next controlled timing cluster — operand forms
+
+Static comparison against pinned ares plus current generator structure yields a bounded three-rule experiment:
+
+1. **CMP memory-form trailing idle**
+   - `CMP dp,dp` (0x69) needs +1 trailing idle;
+   - `CMP dp,#imm` (0x78) needs +1;
+   - `CMP (X),(Y)` (0x79) needs the same +1 in addition to the addressing dummy cycle below.
+   - Natural implementation point: `apu_cmpm`, because all three forms share it and modifying siblings do not.
+
+2. **`(X),(Y)` dummy-PC cycle**
+   - modifying forms OR/AND/EOR/ADC/SBC `(X),(Y)` need +1 dummy PC read cycle;
+   - CMP `(X),(Y)` needs this +1 plus the CMP trailing idle.
+   - Natural implementation point: `apu_bxy`.
+   - This is a timing debit, consistent with the already validated treatment of dummy PC reads elsewhere; no claim of a separately observable bus read is made.
+
+3. **MOV dp,#imm destination dummy read**
+   - opcode 0x8F requires a real destination read before write;
+   - opcode 0xFA MOV dp,dp is a no-change control and must NOT gain the extra read.
+   - Use a dedicated `apu_movmi` handler for 0x8F rather than changing generic `apu_movm`.
+   - Generated sequence: preserve immediate in A1 in the dummy-read JAL delay slot; `apu_read8` preserves A0/A1; then `apu_write8` to the same A0.
+   - This reproduces the actual helper/bus access instead of a synthetic +1.
+
+Directed proof matrix should include:
+- CMP dp,dp;
+- CMP dp,#imm;
+- CMP (X),(Y);
+- OR (X),(Y) modifying control for `apu_bxy`;
+- MOV dp,#imm candidate;
+- MOV dp,dp no-change control.
+
+Expected totals including the existing 4-cycle BRA loop:
+- CMP dp,dp: 10;
+- CMP dp,#imm: 9;
+- CMP (X),(Y): 9;
+- OR (X),(Y): 9;
+- MOV dp,#imm: 9;
+- MOV dp,dp: 9.
+
+Falsifiers: any shared-generator control overcharges, total `s3` differs, destination/data semantics differ, or new real-read path clobbers state.

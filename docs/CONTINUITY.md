@@ -3134,3 +3134,23 @@ SLEEP/STOP scheduler semantics are **VALIDATED** in the ares laboratory. This cl
 Consume only runtime core changes from `src/apu.S` and `src/apu_emitter.S` into clean `phase2/apu-timing-foundation@9f070fae...`. Do not copy diagnostic proof/workflow changes. Then run exact clean Build and Validate before any re-baseline.
 
 This does **not** prove Gate B performance or real-N64 behavior. The added normal `apu_execute` halt-state check is a correctness cost that must be included in the new matched performance baseline rather than assumed negligible.
+
+
+## Clean SLEEP/STOP consumption — checkpoint 2026-09-18
+
+Clean candidate advanced atomically from validated DAA/DAS `9f070fae...` to **`phase2/apu-timing-foundation@9204ad2fae7f37d9950a0f3a88cc3ff4299e1bc1`** with message `fix: implement SPC700 SLEEP STOP scheduler state`.
+
+Direct clean compare is exactly two runtime files:
+- `src/apu.S` +20/-0;
+- `src/apu_emitter.S` +39/-2.
+
+No diagnostic script or workflow changes were consumed.
+
+The clean `src/apu.S` blob is exactly the dynamically validated diagnostic runtime blob `6f7a8f2015f588dd7b8773a28c22e57ed6cb82a7`. The clean emitter carries the same SLEEP/STOP runtime logic while retaining the clean branch's absence of PROFILE-only cycle diagnostics.
+
+Exact clean validation:
+- **Build and Validate `35350851813`** — QUEUED at checkpoint.
+
+Acceptance: normal build, PROFILE build and pinned Mupen emulator smoke all SUCCESS on exact SHA `9204ad2f...`.
+
+If green: mark SLEEP/STOP clean candidate VALIDATED and the enumerated base-SPC700 opcode/semantic foundation complete enough to move to a fresh matched APU/audio performance baseline. If red: diagnose clean-integration failure; do not reinterpret the already-green dynamic diagnostic proof.

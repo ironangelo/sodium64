@@ -5066,3 +5066,60 @@ The internally aligned VI-history measurement remains present and unchanged. No 
 If progression is demonstrated alongside the already-validated sustained 60/60 aligned histories, SRS can be locked as the autonomous DKC-like/heavy-platformer corpus slot. If progression is not demonstrated, improve or reject the deterministic route before touching Sodium64.
 
 No hardware request.
+
+
+## Gate-B SRS guest-progression attempt 2 — CACHE-ALIAS OBSERVABILITY LIMITATION 2026-09-18
+
+Exact authority:
+- audition head **`phase3/gate-b-srs-audition@99870f702751e9de08aac84c65dfb56d80d04586`**;
+- **Gate B SRS Audition `35405118537` FAILED** in the repeat-history stage;
+- same-head **Build and Validate `35405118547` SUCCESS**, including normal/PROFILE builds and pinned Mupen smoke;
+- audition artifact **`10571618879`**, digest `sha256:14a31c5c8d81e67cd719e66747025f493cfd882ef20b610355c9402ef98d3598`;
+- source-build provenance artifact **`10571912960`**, digest `sha256:446ea03b9e64fcceff7035b8be6b0f672f5f403e7ca877795faa5f337dd2cacb`.
+
+What this run DID establish:
+- source/toolchain/release build SUCCESS;
+- deterministic benchmark rebuild SUCCESS with unchanged benchmark ROM/patch hashes;
+- guest symbol resolution SUCCESS:
+  - `GameState.roomId = 0x7e2200`;
+  - `Entity.Player.xPos.px = 0x7e0123`;
+  - `Entity.Player.yPos.px = 0x7e0127`;
+  - `Camera.xPos = 0x7e87b3`;
+  - `Camera.yPos = 0x7e87b5`;
+  - authored room IDs `a1a=0x01`, `a1b=0x02`;
+  - map origin `LEFT=TOP=0x1000`;
+- Sodium64 PROFILE and pinned ares lab setup SUCCESS;
+- three benchmark executions began and internally aligned histories were captured;
+- r3 contained only 7 complete internal windows and tripped the per-repeat diagnostic minimum of 8 before the final comparator.
+
+The observed guest-coordinate values from this run are **REJECTED as authoritative progression evidence**.
+
+Cause discovered by source audit:
+- Sodium64 maps SNES WRAM `7E/7F` through R4300 TLB pages to the physical `wram` backing buffer;
+- guest execution accesses those pages using the SNES-like R4300 virtual addresses (for example `0x007e0123`);
+- the progression harness instead translated them to their KSEG0 backing alias (for example `0x80071123`) and asked ares GDB to read that alias;
+- pinned ares `CPU::readDebug` correctly consults D-cache, but D-cache is **virtually indexed**: `line(vaddr) = lines[vaddr >> 4 & 0x1ff]`;
+- therefore `0x007e0123` uses cache index `0x12`, while its KSEG0 alias `0x80071123` uses index `0x112`;
+- a dirty guest WRAM line can consequently be present under the guest virtual alias while a GDB read through KSEG0 misses it and falls back to stale backing RDRAM.
+
+This is a **LAB/OBSERVABILITY LIMITATION**, not evidence of an SRS gameplay or Sodium64 emulation failure.
+
+Endian audit:
+- Sodium64 `MEM_WRITE16` stores the SNES low byte at guest address and high byte at guest+1;
+- `MEM_READ16` reconstructs that little-endian guest word;
+- ares GDB 2-byte reads are returned as R4300 halfword values;
+- the host-side little-endian reconstruction remains appropriate once the correct guest virtual alias is read.
+
+Expected authored state provides an independent sanity bound:
+- `a1a_entrance` entrance is x=56,y=164;
+- engine adds map origin `0x1000`;
+- initial player position should therefore be about x=4152,y=4260, with camera clamped near map origin.
+
+Next controlled experiment:
+- keep the exact benchmark ROM/patch and Sodium64 runtime unchanged;
+- observe guest state by GDB **directly at the resolved virtual addresses `0x007e....`**, not via KSEG0 backing aliases;
+- validate resulting positions against authored map bounds;
+- decouple progression acceptance from an arbitrary >=8 history-count threshold (the aligned 60/60 repeatability was already established separately);
+- require actual room transition or >=64 px player movement before locking SRS into the corpus.
+
+No hardware request and no optimization is authorized from this finding.

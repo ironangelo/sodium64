@@ -1238,3 +1238,28 @@ The generated code contains the -42 master-cycle runtime instruction in both var
 **Decision:** consume only core changes from `a435d8f8...` into clean `phase2/apu-timing-foundation@a62e95b1...`: `apu_control.S`, runtime cycle helper in clean `apu_emitter.S`, and BNE encoding in `defines.h`. Do NOT copy diagnostic script/workflow/PROFILE capture.
 
 After clean CI, proceed to remaining fixed-cycle SPC700 families (implied/flag/stack/call/return/bit/word/XCN/BRK/etc.) as the next timing-coverage batch. Performance ranking remains deferred until timing coverage is broad enough for a new honest baseline.
+
+
+## Clean conditional-branch timing candidate — checkpoint 2026-09-17/18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@fe53aa5fe574baa5a4dba141e8c34ea8ce5996bc`**, one commit on top of CI-validated fixed/addressing foundation `a62e95b1...`.
+
+Direct clean diff `a62e95b1... -> fe53aa5f...`:
+- `src/apu_control.S` +78/-36;
+- `src/apu_emitter.S` +17/-0;
+- `src/defines.h` +1/-0.
+No diagnostics, scripts, workflows or PROFILE capture.
+
+Included semantics are exactly the dynamically validated `a435d8f8...` conditional timing changes:
+- runtime conditional cycle-debit emitter;
+- BNE encoding;
+- taken-only +2 timing for all audited conditional branches;
+- fixed +1/+2 family timing for BranchBit / CBNE / DBNZ Y.
+
+Exact clean Build and Validate run: **`35296688540`**, QUEUED at checkpoint.
+
+Authority split:
+- dynamic timing/semantic proof: diagnostic `a435d8f8...`, ares run `35295336130` SUCCESS;
+- clean integration candidate: `fe53aa5f...`, awaiting its own normal/PROFILE/Mupen CI.
+
+Do not modify clean `fe53aa5f...` until run `35296688540` completes. Next work is read-only mapping of remaining fixed-cycle SPC700 instruction families.

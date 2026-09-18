@@ -389,120 +389,117 @@ jobs:
             done
           } >> "$GITHUB_ENV"
 
-      - name: Profile SRS with internal 60-VI window history
+      - name: Repeat internally aligned SRS 60-VI histories
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p profiles
-
-          label="recompiler-srs-history"
           rom="workloads/ares/out/profile-srs.z64"
-          home="$RUNNER_TEMP/ares-home-$label"
-          settings="$RUNNER_TEMP/ares-settings-$label.bml"
-          emulator_log="profiles/$label-emulator.log"
-          gdb_log="profiles/$label-gdb.log"
-          snapshot="profiles/$label.bin"
-          report="profiles/$label.txt"
-          json="profiles/$label.json"
-          state="profiles/$label-state.json"
 
-          rm -rf "$home"
-          mkdir -p "$home"
+          profile_history() {
+            repeat="$1"
+            label="recompiler-srs-history-r$repeat"
+            home="$RUNNER_TEMP/ares-home-$label"
+            settings="$RUNNER_TEMP/ares-settings-$label.bml"
+            emulator_log="profiles/$label-emulator.log"
+            gdb_log="profiles/$label-gdb.log"
+            snapshot="profiles/$label.bin"
+            report="profiles/$label.txt"
+            json="profiles/$label.json"
+            state="profiles/$label-state.json"
 
-          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
-            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
-              --no-file-prompt \
-              --system "Nintendo 64" \
-              --settings-file "$settings" \
-              --setting "Developer/DebugServerEnabled=true" \
-              --setting "Developer/DebugServerUseIPv4=true" \
-              --setting "Developer/DebugServerPort=9140" \
-              --setting "Developer/HomebrewMode=true" \
-              --setting "Developer/DeterministicEntropy=true" \
-              --setting "Developer/ForceInterpreter=false" \
-              --setting "Boot/AwaitGDBClient=true" \
-              "$rom" \
-              > "$emulator_log" 2>&1 &
-          ares_pid=$!
+            rm -rf "$home"
+            mkdir -p "$home"
 
-          cleanup_run() {
-            kill "$ares_pid" 2>/dev/null || true
-            wait "$ares_pid" 2>/dev/null || true
-          }
-          trap cleanup_run EXIT
+            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+                --no-file-prompt \
+                --system "Nintendo 64" \
+                --settings-file "$settings" \
+                --setting "Developer/DebugServerEnabled=true" \
+                --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=9140" \
+                --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" \
+                --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" \
+                "$rom" \
+                > "$emulator_log" 2>&1 &
+            ares_pid=$!
 
-          if ! python3 scripts/gdb_rsp_dump.py \
-            --port 9140 \
-            --connect-timeout 45 \
-            --response-timeout 60 \
-            --warmup-seconds 1 \
-            --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
-            --write "0x$ARES_APU_CLOCK_ADDR:15" \
-            --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
-            --write "0x$ARES_SKIPPED_SET_ADDR:00" \
-            --write "0x$ARES_AUDIO_SET_ADDR:04" \
-            --settle-seconds 1 \
-            --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
-            --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
-            --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
-            --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
-            --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
-            --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
-            --after-settle-write "0x$ARES_VI_HISTORY_COUNT_ADDR:00" \
-            --run-seconds 20 \
-            --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
-            --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
-            --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
-            --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
-            --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
-            --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
-            --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
-            --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
-            --observe "vi_history_count:0x$ARES_VI_HISTORY_COUNT_ADDR:1" \
-            --observe "vi_history_0:0x$ARES_VI_HISTORY_0_ADDR:8" \
-            --observe "vi_history_1:0x$ARES_VI_HISTORY_1_ADDR:8" \
-            --observe "vi_history_2:0x$ARES_VI_HISTORY_2_ADDR:8" \
-            --observe "vi_history_3:0x$ARES_VI_HISTORY_3_ADDR:8" \
-            --observe "vi_history_4:0x$ARES_VI_HISTORY_4_ADDR:8" \
-            --observe "vi_history_5:0x$ARES_VI_HISTORY_5_ADDR:8" \
-            --observe "vi_history_6:0x$ARES_VI_HISTORY_6_ADDR:8" \
-            --observe "vi_history_7:0x$ARES_VI_HISTORY_7_ADDR:8" \
-            --observe "sp_status:0xA4040010:4" \
-            --observe "sp_dma_full:0xA4040014:4" \
-            --observe "sp_dma_busy:0xA4040018:4" \
-            --observe "sp_pc:0xA4080000:4" \
-            --state-output "$state" \
-            --address "0x$ARES_PROFILE_ADDR" \
-            --size "$ARES_PROFILE_SIZE" \
-            --output "$snapshot" \
-            > "$gdb_log" 2>&1; then
+            cleanup_run() {
+              kill "$ares_pid" 2>/dev/null || true
+              wait "$ares_pid" 2>/dev/null || true
+            }
+            trap cleanup_run EXIT
+
+            if ! python3 scripts/gdb_rsp_dump.py \
+              --port 9140 \
+              --connect-timeout 45 \
+              --response-timeout 60 \
+              --warmup-seconds 1 \
+              --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
+              --write "0x$ARES_APU_CLOCK_ADDR:15" \
+              --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
+              --write "0x$ARES_SKIPPED_SET_ADDR:00" \
+              --write "0x$ARES_AUDIO_SET_ADDR:04" \
+              --settle-seconds 1 \
+              --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
+              --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
+              --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+              --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
+              --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
+              --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
+              --after-settle-write "0x$ARES_VI_HISTORY_COUNT_ADDR:00" \
+              --run-seconds 20 \
+              --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
+              --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
+              --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
+              --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
+              --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
+              --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
+              --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
+              --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+              --observe "vi_history_count:0x$ARES_VI_HISTORY_COUNT_ADDR:1" \
+              --observe "vi_history_0:0x$ARES_VI_HISTORY_0_ADDR:8" \
+              --observe "vi_history_1:0x$ARES_VI_HISTORY_1_ADDR:8" \
+              --observe "vi_history_2:0x$ARES_VI_HISTORY_2_ADDR:8" \
+              --observe "vi_history_3:0x$ARES_VI_HISTORY_3_ADDR:8" \
+              --observe "vi_history_4:0x$ARES_VI_HISTORY_4_ADDR:8" \
+              --observe "vi_history_5:0x$ARES_VI_HISTORY_5_ADDR:8" \
+              --observe "vi_history_6:0x$ARES_VI_HISTORY_6_ADDR:8" \
+              --observe "vi_history_7:0x$ARES_VI_HISTORY_7_ADDR:8" \
+              --state-output "$state" \
+              --address "0x$ARES_PROFILE_ADDR" \
+              --size "$ARES_PROFILE_SIZE" \
+              --output "$snapshot" \
+              > "$gdb_log" 2>&1; then
+              cat "$gdb_log"
+              tail -200 "$emulator_log" || true
+              exit 1
+            fi
+
             cat "$gdb_log"
-            tail -200 "$emulator_log" || true
-            exit 1
-          fi
+            cleanup_run
+            trap - EXIT
+            sleep 1
 
-          cat "$gdb_log"
-          cleanup_run
-          trap - EXIT
+            python3 scripts/profile_report.py \
+              "$snapshot" build/sodium64.elf \
+              --nm nm --map build/sodium64.map \
+              --json-output "$json" | tee "$report"
 
-          python3 scripts/profile_report.py \
-            "$snapshot" \
-            build/sodium64.elf \
-            --nm nm \
-            --map build/sodium64.map \
-            --json-output "$json" | tee "$report"
+            samples=$(awk '/total samples:/ { print $3 }' "$report")
+            test -n "$samples"
+            test "$samples" -ge 800
 
-          samples=$(awk '/total samples:/ { print $3 }' "$report")
-          test -n "$samples"
-          test "$samples" -ge 800
-
-          STATE_FILE="$state" python3 - <<'PY'
+            REPEAT="$repeat" STATE_FILE="$state" python3 - <<'PY'
           import json
           import os
           from pathlib import Path
 
-          state_path = Path(os.environ["STATE_FILE"])
-          state = json.loads(state_path.read_text())
+          repeat = os.environ["REPEAT"]
+          state = json.loads(Path(os.environ["STATE_FILE"]).read_text())
           obs = state["observations"]
 
           assert int(obs["skipped_set"]) == 0, obs
@@ -511,55 +508,97 @@ jobs:
           assert int(obs["precision_set"]) == 8, obs
 
           count = int(obs["vi_history_count"])
-          assert 8 <= count <= 64, f"expected >=8 completed 60-VI windows, got {count}"
+          assert 8 <= count <= 64, f"repeat {repeat}: expected >=8 windows, got {count}"
 
           raw = b"".join(
               int(obs[f"vi_history_{i}"]).to_bytes(8, "big")
               for i in range(8)
           )
           windows = list(raw[:count])
-
           payload = {
+              "repeat": int(repeat),
               "history_count": count,
               "complete_60vi_windows": windows,
               "min": min(windows),
               "max": max(windows),
               "mean": sum(windows) / len(windows),
           }
-          Path("profiles/srs-vi-history.json").write_text(
+          Path(f"profiles/srs-vi-history-r{repeat}.json").write_text(
               json.dumps(payload, indent=2) + "\n"
-          )
-          Path("profiles/srs-vi-history.md").write_text(
-              "# SRS internal 60-VI history\n\n"
-              f"- complete windows: {count}\n"
-              f"- sequence: {', '.join(f'{v}/60' for v in windows)}\n"
-              f"- min/max: {min(windows)}/60 .. {max(windows)}/60\n"
-              f"- mean: {payload['mean']:.2f}/60\n"
           )
           print(json.dumps(payload, indent=2))
           PY
+          }
 
-      - name: Build SRS internal-window report
+          for repeat in 1 2 3; do
+            echo "=== internally aligned SRS history $repeat/3 ==="
+            profile_history "$repeat"
+          done
+
+      - name: Compare internally aligned SRS histories
         shell: bash
         run: |
           set -euo pipefail
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          runs = [
+              json.loads(Path(f"profiles/srs-vi-history-r{i}.json").read_text())
+              for i in range(1, 4)
+          ]
+          seqs = [r["complete_60vi_windows"] for r in runs]
+          common = min(map(len, seqs))
+          prefixes = [s[:common] for s in seqs]
+          exact_common_prefix = all(p == prefixes[0] for p in prefixes[1:])
+
+          # The first diagnostic window may contain a one-frame queue transient.
+          # Compare sustained common windows separately, without assuming 60.
+          steady = [p[1:] for p in prefixes]
+          steady_equal = all(p == steady[0] for p in steady[1:])
+
+          payload = {
+              "counts": [len(s) for s in seqs],
+              "sequences": seqs,
+              "common_window_count": common,
+              "common_prefix_equal": exact_common_prefix,
+              "steady_common_prefix_equal": steady_equal,
+              "steady_common_sequence": steady[0],
+          }
+          Path("profiles/srs-history-repeatability.json").write_text(
+              json.dumps(payload, indent=2) + "\n"
+          )
+
+          lines = ["# SRS internally aligned repeatability", ""]
+          for i, seq in enumerate(seqs, 1):
+              lines.append(f"- r{i} ({len(seq)} windows): " + ", ".join(f"{v}/60" for v in seq))
+          lines += [
+              "",
+              f"- common windows compared: {common}",
+              f"- exact common prefix equal: {exact_common_prefix}",
+              f"- sustained common prefix (after first window) equal: {steady_equal}",
+              "- sustained common sequence: " + ", ".join(f"{v}/60" for v in steady[0]),
+              "",
+          ]
+          Path("profiles/srs-history-repeatability.md").write_text("\n".join(lines))
+          print(json.dumps(payload, indent=2))
+          PY
+
           python3 scripts/profile_matrix.py \
-            profiles/recompiler-srs-history.json \
-            --output profiles/srs-history-profile.md
+            profiles/recompiler-srs-history-r1.json \
+            profiles/recompiler-srs-history-r2.json \
+            profiles/recompiler-srs-history-r3.json \
+            --output profiles/srs-history-profile-repeatability.md
 
           {
-            echo '### Gate-B Space Rescue Squad internal VI-window history'
+            echo '### Gate-B SRS internally aligned repeatability'
             echo
-            echo '- Same pinned benchmark ROM and Road-valid Sodium64 settings.'
-            echo '- fps_native/fps_emulate/history are reset together while stopped before measurement.'
-            echo '- Each history byte is Sodium64 completed guest frames for one consecutive exact 60-VI window.'
-            echo '- Fixed 20 s host observation avoids sample-threshold-dependent terminal-window selection.'
+            cat profiles/srs-history-repeatability.md
             echo
-            cat profiles/srs-vi-history.md
+            cat profiles/srs-history-profile-repeatability.md
             echo
-            cat profiles/srs-history-profile.md
-            echo
-            echo '> Emulator-lab phase/cadence evidence only; not real-N64 performance authority.'
+            echo '> Emulator-lab repeatability evidence only; not real-N64 performance authority.'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload non-ROM audition diagnostics

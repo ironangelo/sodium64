@@ -861,6 +861,31 @@ def main() -> int:
              expected_memory=(0x0021, 0x66)),
     ]
 
+
+    half_carry_cases = [
+        # ADC/SBC 8-bit Half-Carry semantics. Timing must remain unchanged.
+        dict(name="adc_imm_h_set", code=bytes.fromhex("88012ffc"), expected_debit=-126,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             a_value=0x0F, flags_value=0x00, expected_accum=0x10, expected_flags=0x08),
+        dict(name="adc_imm_h_clear", code=bytes.fromhex("88012ffc"), expected_debit=-126,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             a_value=0x01, flags_value=0x08, expected_accum=0x02, expected_flags=0x00),
+        dict(name="sbc_imm_h_set", code=bytes.fromhex("a8012ffc"), expected_debit=-126,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             a_value=0x11, flags_value=0x01, expected_accum=0x10, expected_flags=0x09),
+        dict(name="sbc_imm_h_clear", code=bytes.fromhex("a8012ffc"), expected_debit=-126,
+             reference_cycles=6, expected_end_region=8, y_value=0x06,
+             a_value=0x10, flags_value=0x09, expected_accum=0x0F, expected_flags=0x01),
+        dict(name="adc_dp_imm_h_set", code=bytes.fromhex("9801202ffb"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             flags_value=0x00, memory_writes=((0x0020, b"\x0F"),),
+             expected_memory=(0x0020, 0x10), expected_flags=0x08),
+        dict(name="sbc_dp_imm_h_set", code=bytes.fromhex("b801202ffb"), expected_debit=-147,
+             reference_cycles=9, expected_end_region=8, y_value=0x06,
+             flags_value=0x01, memory_writes=((0x0020, b"\x11"),),
+             expected_memory=(0x0020, 0x10), expected_flags=0x09),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -915,6 +940,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in operand_form_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in half_carry_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

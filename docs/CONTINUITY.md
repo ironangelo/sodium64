@@ -1196,3 +1196,45 @@ Additional fixed branch-family timing from pinned ares reference:
 - DBNZ memory: +0 fixed beyond existing read/write/fetches, +2 when taken.
 
 Next diagnostic matrix must exercise taken/not-taken pairs for BCC and BCS (both branch orientations), BBC/BBS, CBNE direct and direct+X, DBNZ Y and DBNZ memory; verify total `s3` delta, resulting PC and register/RAM postconditions. Do not modify clean `a62e95b1` until this diagnostic batch passes.
+
+
+## SPC700 conditional branch timing — VALIDATED 2026-09-17/18
+
+Diagnostic authority SHA: **`a435d8f8af05db4e155304812161adb295adf130`**.
+
+CI:
+- **Build and Validate `35295336043` SUCCESS**.
+- **APU Cycle And Span Proof `35295336130` SUCCESS**, cycle-proof job **`105446873166`**.
+- proof-build artifact **`10528215894`**, digest `sha256:25964401ec72a5c41e8edbfe86cfe718fc901da5686dbce52885865b30801149`;
+- proof result artifact **`10527812627`**, digest `sha256:f1adacc4ecb5b64fc9384d000f9d080d6fd0b81ad4fca97e6020533260d3b64c`.
+
+Implementation pattern validated:
+- new compile-time helper emits one runtime `ADDI s3,s3,-cycles*apu_clock` into generated code;
+- ordinary conditional branches choose fallthrough in the delay slot and execute the -2-cycle runtime debit only on the SNES-taken path;
+- BNE opcode macro was added for the clear-condition branch orientation;
+- BBC/BBS add +1 fixed cycle;
+- CBNE adds +1 fixed cycle beyond its addressing work;
+- DBNZ Y adds +2 fixed cycles;
+- DBNZ memory adds no extra fixed cycles beyond existing read/write/fetch accounting;
+- all conditional families add +2 cycles only when taken.
+
+Dynamic matrix validated taken/not-taken semantics and total cycles for:
+- BPL/BMI/BVC/BVS/BCC/BCS/BNE/BEQ: **2 not taken / 4 taken**;
+- BBC/BBS: **5 / 7**;
+- CBNE direct: **5 / 7**;
+- CBNE direct+X: **6 / 8**;
+- DBNZ memory: **5 / 7**;
+- DBNZ Y: **4 / 6**.
+
+All summary invariants passed:
+`all_runtime_cycle_debits_match_expected`,
+`all_semantics_match_expected`,
+`all_static_debits_match_source_prediction`,
+`all_total_debits_match_reference`,
+`compiled_long_probe_is_bounded_to_one_tag_region`.
+
+The generated code contains the -42 master-cycle runtime instruction in both variants, but GDB `s3` delta proves it executes only on the taken path. Example ordinary branch: static debit remains 2 cycles; measured total is 4 taken and 2 not-taken.
+
+**Decision:** consume only core changes from `a435d8f8...` into clean `phase2/apu-timing-foundation@a62e95b1...`: `apu_control.S`, runtime cycle helper in clean `apu_emitter.S`, and BNE encoding in `defines.h`. Do NOT copy diagnostic script/workflow/PROFILE capture.
+
+After clean CI, proceed to remaining fixed-cycle SPC700 families (implied/flag/stack/call/return/bit/word/XCN/BRK/etc.) as the next timing-coverage batch. Performance ranking remains deferred until timing coverage is broad enough for a new honest baseline.

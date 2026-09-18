@@ -5210,3 +5210,39 @@ Immediate controlled repair:
 - do not requalify throughput or request hardware.
 
 If byte-wise guest observations become plausible and demonstrate progression in all repeats, SRS can be locked as the autonomous DKC-like/heavy-platformer Gate-B slot.
+
+
+## Gate-B SRS guest-progression proof v4 — RUNNING 2026-09-18
+
+Exact audition head:
+**`phase3/gate-b-srs-audition@d00ce599563ee5a7be94356150bae73a018a4e52`**.
+
+This is a harness-only observability repair over v3:
+- no Sodium64 runtime/production change;
+- no SRS benchmark/runtime logic change;
+- benchmark identity and Road-valid settings remain required unchanged.
+
+Root-cause-driven change:
+- pinned ares GDB handles a 2-byte request with `readDebug<Half>`;
+- all four observed SRS 16-bit fields are at odd guest virtual addresses;
+- the halfword debug path indexes the D-cache by `paddr >> 1`, so an unaligned `mADDR,2` request does not reliably mean two consecutive guest bytes;
+- each 16-bit field is now observed as **two separate one-byte reads** at `addr` and `addr+1`;
+- host reconstruction uses the Sodium64/SNES layout: `value = low | (high << 8)`.
+
+The coherent 1-byte room-id observation is unchanged.
+
+Progress acceptance remains:
+- room must be authored `a1a` or `a1b`;
+- player/camera coordinates must lie in plausible map-space bounds;
+- each repeat must either leave `a1a` or move player x >=64 px beyond the authored initial x;
+- frameskip0 / APU21 / audio4 / precision8 remain mandatory.
+
+Exact runs:
+- **Gate B SRS Audition `35407369415`** @ `d00ce599...` — queued/running;
+- **Build and Validate `35407369417`** @ same SHA — queued/running.
+
+If accepted:
+SRS has autonomous source build, deterministic benchmark, repeatable sustained aligned 60/60 lab throughput and meaningful guest progression. Lock it as the DKC-like/heavy-platformer Gate-B corpus slot and move corpus selection to the remaining SMW-like and ALttP-like slots.
+
+If falsified:
+do not optimize Sodium64. Classify the remaining observation/route problem first. No hardware request.

@@ -4578,3 +4578,34 @@ What this does NOT prove:
 
 Next repair:
 avoid multiline shell-string quoting entirely. Materialize actual and expected changed-file lists into temporary files and compare with `cmp`. Keep every benchmark/runtime/profile setting otherwise unchanged.
+
+## Gate-B SRS workflow reconstruction — RUNNING 2026-09-18
+
+Root cause of the immediate parser failures after `300a358e...` was broader than the intended one-line quote repair:
+the two attempted edits contaminated the workflow with an accidental **~325-line duplicated tail**.
+
+Evidence:
+- compare `300a358e... -> 63ba40f5...`: +325/-1 lines in the single workflow file;
+- GitHub rejected the contaminated workflows before creating jobs;
+- these runs are **WORKFLOW PARSE FALSE NEGATIVES**, not runtime evidence.
+
+Clean reconstruction:
+- rebuilt `.github/workflows/gate-b-srs-audition.yml` from the last GitHub-executed base **`300a358e50f88df8a4f03e98dc5f7adb9dc5772b`**;
+- replaced only the malformed changed-file assertion with three simple checks:
+  - exactly two changed paths;
+  - one is `game/src/_main.asm`;
+  - one is `game/src/gameloop.inc`.
+- new audition head: **`phase3/gate-b-srs-audition@6e5d444017ca899bcf2b69be6cbf8dd94eee9507`**;
+- compare vs `300a358e...`: **+3/-1 lines only**;
+- workflow line count restored to 530 (previous contaminated head 852).
+
+Current exact runs:
+- **Gate B SRS Audition `35394713398`** @ `6e5d4440...` — running;
+- Build and Validate `35394713401` @ same SHA — queued/running.
+
+No Sodium64 runtime/emulator source changed.
+
+Acceptance remains unchanged:
+produce the deterministic first-level SRS benchmark from pinned public source, preserve normal emulation/gameplay/audio work, run Road-valid Sodium64 PROFILE under pinned ares, and obtain valid profile/frame-budget evidence.
+
+Until `35394713398` reaches the profile stage, there is still **no SRS execution evidence** beyond the already-validated autonomous source build.

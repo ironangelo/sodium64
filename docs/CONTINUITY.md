@@ -3722,3 +3722,56 @@ No matched-lateness instrumentation, proof harness, diagnostic source, or diagno
 State: **VALIDATED clean M1 candidate / READY FOR REAL-N64 MILESTONE PACKAGE**.
 
 This does not yet establish a real-N64 speedup. The next authority step is one fresh hardware package built from exact `d5ce93a0...`, using the already validated M0 SRAM capture method and the exact pinned Gothicvania workload.
+
+
+## Real-N64 M1 cycle-budget package — READY FOR HARDWARE 2026-09-18
+
+Measurement-package branch: **`phase2/apu-cycle-budget-hardware-m1@3d4555e5f4174770f1c98a8209fc6809ca57a447`**.
+Runtime core authority: **`phase2/apu-cycle-budget-clean@d5ce93a03b2dbf5065fefa5276533e02f9658215`**.
+
+Direct package-branch diff from runtime core is exactly one file:
+`.github/workflows/apu-m1-hardware-package.yml`. No runtime source differs.
+
+**APU M1 Real N64 Package `35358185620` SUCCESS**, package job `105642608821`.
+Artifact:
+- ID **`10552617325`**;
+- name `sodium64-real-n64-m1-gothicvania`;
+- artifact digest **`sha256:5e4ef08c647b2b9a3af905855258ca63809fa2767c3554bce1848b087c171100`**;
+- expires 2026-10-02.
+
+Package identity:
+- `runtime_core_sha=d5ce93a03b2dbf5065fefa5276533e02f9658215`;
+- mode `PROFILE=1 + HW_PROFILE=1`;
+- warmup 2 complete 60-VI windows;
+- measurement 5 complete 60-VI windows;
+- frameskip 0;
+- APU clock 21;
+- audio 4;
+- precision 8;
+- pinned Gothicvania payload SHA256 `5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519`;
+- wrapped N64 ROM SHA256 **`d9c151c3246ecd553af247d565c52bad94ae33fe513b4f1a9f075f48fce1614b`**;
+- underlying HW_PROFILE Sodium64 ROM SHA256 `8546b5fb7928b0d69d46dc9387bdaf926b2688fffc08579919a8f89f76d3df41`.
+
+The workflow verified the embedded 512 KiB Gothicvania payload hash after wrapping and verified every package file against `SHA256SUMS.txt`.
+
+### RESUME HERE — hardware authority required
+Run **only** `sodium64-m1-gothicvania.z64` from artifact `10552617325` on the real N64/SummerCart64.
+
+Procedure:
+1. launch the ROM directly;
+2. do not press the controller or open settings;
+3. let automated Gothicvania gameplay run through 2 warmup + 5 measured 60-VI windows;
+4. wait for the **solid red screen**, which is emitted only after SRAM capture DMA completes;
+5. wait ~2 seconds, then use normal reset/return-to-cart flow so SRAM persists; do not power off first;
+6. retrieve the SRAM/save for this ROM;
+7. record whether gameplay, music and SFX looked/sounded sane before red.
+
+Return the save file. Decode it with the package's `hw_profile_report.py` and exact ELF/map.
+
+Hardware decision:
+- compare the five real-N64 frame-budget windows against M0 **48,49,48,50,50 (mean 49.0/60)**;
+- verify frameskip/APU/audio/precision metadata and sample density;
+- compare R4300 profile distribution, especially APU/JIT/DSP and VI wait;
+- use real hardware, not ares wall time, to decide whether the cycle-budget architecture materially advances M1.
+
+Do not merge to master or update Road-to-1.0 convergence claims until this hardware result is interpreted.

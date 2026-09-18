@@ -912,6 +912,35 @@ def main() -> int:
              expected_accum=0xFF, expected_y=0x0F, expected_flags=0x01),
     ]
 
+
+    div_semantic_cases = [
+        # DIV total is 12 cycles; each case ends in the validated 4-cycle BRA.
+        dict(name="div_normal_hv_clear", code=bytes.fromhex("9e2ffd"),
+             expected_debit=-336, reference_cycles=16, expected_end_region=8,
+             x_value=0x04, y_value=0x01, a_value=0x08, flags_value=0x49,
+             expected_accum=0x42, expected_y=0x00, expected_flags=0x01),
+        dict(name="div_normal_9bit_quotient", code=bytes.fromhex("9e2ffd"),
+             expected_debit=-336, reference_cycles=16, expected_end_region=8,
+             x_value=0x04, y_value=0x05, a_value=0x00, flags_value=0x00,
+             expected_accum=0x40, expected_y=0x00, expected_flags=0x48),
+        dict(name="div_special_known_failure", code=bytes.fromhex("9e2ffd"),
+             expected_debit=-336, reference_cycles=16, expected_end_region=8,
+             x_value=0x04, y_value=0x5A, a_value=0x11, flags_value=0x00,
+             expected_accum=0xAC, expected_y=0x61, expected_flags=0xC8),
+        dict(name="div_special_h_clear", code=bytes.fromhex("9e2ffd"),
+             expected_debit=-336, reference_cycles=16, expected_end_region=8,
+             x_value=0x09, y_value=0x12, a_value=0x00, flags_value=0x08,
+             expected_accum=0xFF, expected_y=0x09, expected_flags=0xC0),
+        dict(name="div_x_zero", code=bytes.fromhex("9e2ffd"),
+             expected_debit=-336, reference_cycles=16, expected_end_region=8,
+             x_value=0x00, y_value=0x02, a_value=0x34, flags_value=0x00,
+             expected_accum=0xFD, expected_y=0x34, expected_flags=0xC8),
+        dict(name="div_zero_result", code=bytes.fromhex("9e2ffd"),
+             expected_debit=-336, reference_cycles=16, expected_end_region=8,
+             x_value=0x04, y_value=0x00, a_value=0x00, flags_value=0x49,
+             expected_accum=0x00, expected_y=0x00, expected_flags=0x03),
+    ]
+
     client = connect_with_retry(args.host, args.port, args.connect_timeout, args.response_timeout)
     results: list[dict[str, object]] = []
     try:
@@ -972,6 +1001,9 @@ def main() -> int:
             results.append(compile_one_case(client, addresses=args, **case))
 
         for case in word_half_carry_cases:
+            results.append(compile_one_case(client, addresses=args, **case))
+
+        for case in div_semantic_cases:
             results.append(compile_one_case(client, addresses=args, **case))
 
         long_result = next(item for item in results if item["name"] == "long_nop_dbnzy")

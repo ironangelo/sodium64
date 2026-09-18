@@ -108,11 +108,11 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_clrv, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0xE0-0xE3
     .word apu_dirr, apu_mova,  apu_absr, apu_mova,  apu_brxr, apu_mova,  apu_idxr, apu_mova // 0xE4-0xE7
     .word apu_imm, apu_mova,  apu_absr, apu_movx,  apu_drb, apu_not1,  apu_dirr, apu_movy // 0xE8-0xEB
-    .word apu_absr, apu_movy,  apu_notc, 0,  apu_ppy, 0,  apu_unk, 0 // 0xEC-0xEF
+    .word apu_absr, apu_movy,  apu_notc, 0,  apu_ppy, 0,  apu_sleep, 0 // 0xEC-0xEF
     .word apu_beq, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0xF0-0xF3
     .word apu_drxr, apu_mova,  apu_abxr, apu_mova,  apu_abyr, apu_mova,  apu_idyr, apu_mova // 0xF4-0xF7
     .word apu_dirr, apu_movx,  apu_dryr, apu_movx,  apu_dr2, apu_movm,  apu_drxr, apu_movy // 0xF8-0xFB
-    .word apu_incy, 0,  apu_movya, 0,  apu_dbnzy, 0,  apu_unk, 0 // 0xFC-0xFF
+    .word apu_incy, 0,  apu_movya, 0,  apu_dbnzy, 0,  apu_stop, 0 // 0xFC-0xFF
 
 .text
 .set noreorder
@@ -311,6 +311,43 @@ reset_loop:
     li t0, JIT_BUFFER
     sw t0, jit_pointer
     j compile_block
+    nop
+
+.align 5
+apu_sleep:
+    li t6, 1
+    b apu_halt_common
+    nop
+
+.align 5
+apu_stop:
+    li t6, 2
+
+apu_halt_common:
+    // Opcode fetch is already charged by jit_read8. WAIT/STOP then perform one
+    // real read of the next PC and one idle cycle before scheduler return.
+    jal jit_charge_cycles
+    li t0, 1
+
+    // Latch distinct WAIT/STOP state before the first bus read.
+    li t0, ORI(A1, ZERO, 0)
+    jal emit_op
+    or t0, t0, t6
+    li t3, SB(A1, 0, 0)
+    la t4, apu_halt
+    jal full_address
+    nop
+
+    // First halted read happens immediately in the entry block. PC itself is
+    // still committed normally by finish_block as the instruction-after-opcode.
+    li t0, ORI(A0, ZERO, 0)
+    jal emit_op
+    or t0, t0, a0
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP SLL(ZERO, ZERO, 0)
+    j finish_block
     nop
 
 .align 5

@@ -24,6 +24,7 @@
 .globl jit_pointer
 
 .globl jit_read8
+.globl jit_charge_cycles
 .globl compile_block
 .globl finish_opcode
 .globl finish_block
@@ -47,7 +48,7 @@ jit_pointer: .word JIT_BUFFER
 
 .align 4
 jit_opcodes: // Lookup table for addressing and operation functions
-    .word finish_opcode, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x00-0x03
+    .word apu_nop, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0x00-0x03
     .word apu_dirr, apu_ora,  apu_absr, apu_ora,  apu_brxr, apu_ora,  apu_idxr, apu_ora // 0x04-0x07
     .word apu_imm, apu_ora,  apu_dr2, apu_orm,  apu_drb, apu_or1a,  apu_dirr, apu_aslm // 0x08-0x0B
     .word apu_absr, apu_aslm,  apu_php, 0,  apu_absr, apu_tset1,  apu_brk, 0 // 0x0C-0x0F
@@ -96,9 +97,9 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_dri, apu_sbcm,  apu_bxy, apu_sbcm,  apu_dirr, apu_movwya,  apu_drxr, apu_incm // 0xB8-0xBB
     .word apu_inca, 0,  apu_movsx, 0,  apu_unk, 0,  apu_bxpr, apu_mova // 0xBC-0xBF
     .word apu_di, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0xC0-0xC3
-    .word apu_dira, apu_amov,  apu_absa, apu_amov,  apu_brxa, apu_amov,  apu_idxa, apu_amov // 0xC4-0xC7
-    .word apu_imm, apu_cmpx,  apu_absa, apu_xmov,  apu_drb, apu_mov1a,  apu_dira, apu_ymov // 0xC8-0xCB
-    .word apu_absa, apu_ymov,  apu_imm, apu_movx,  apu_ppx, 0,  apu_mul, 0 // 0xCC-0xCF
+    .word apu_dira, apu_amov,  apu_absw, apu_amov,  apu_brxa, apu_amov,  apu_idxa, apu_amov // 0xC4-0xC7
+    .word apu_imm, apu_cmpx,  apu_absw, apu_xmov,  apu_drb, apu_mov1a,  apu_dira, apu_ymov // 0xC8-0xCB
+    .word apu_absw, apu_ymov,  apu_imm, apu_movx,  apu_ppx, 0,  apu_mul, 0 // 0xCC-0xCF
     .word apu_bne, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0xD0-0xD3
     .word apu_drxa, apu_amov,  apu_abxa, apu_amov,  apu_abya, apu_amov,  apu_idya, apu_amov // 0xD4-0xD7
     .word apu_dira, apu_xmov,  apu_drya, apu_xmov,  apu_dira, apu_movway,  apu_drxa, apu_ymov // 0xD8-0xDB
@@ -126,6 +127,24 @@ jit_read8: // a0: address - v0: value
     lbu v0, apu_ram(t0)
     jr ra
     addi a0, a0, 1
+
+.align 5
+jit_charge_cycles: // t0: additional guest cycles missing from fetch/data accounting
+    // Compile-time only: convert guest SPC700 cycles to the configured APU
+    // master-cycle debit accumulated in s2.
+    lbu t1, apu_clock
+    mult t0, t1
+    mflo t0
+    jr ra
+    sub s2, s2, t0
+
+.align 5
+apu_nop:
+    // NOP has one opcode fetch plus one dummy PC read on the SPC700.
+    jal jit_charge_cycles
+    li t0, 1
+    j finish_opcode
+    nop
 
 .align 5
 compile_block:

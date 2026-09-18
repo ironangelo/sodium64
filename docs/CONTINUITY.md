@@ -1028,3 +1028,37 @@ Efficient control-flow shape: branch on the **not-taken** condition over the tak
 4. Proof both taken and not-taken paths. Minimum coverage: all eight ordinary condition branches, BBC/BBS, CBNE direct and direct+X, DBNZ memory, DBNZ Y. Check total `s3` cycles, resulting PC, and memory/Y side effects where applicable.
 5. Only after that proof passes, port the validated branch timing into the clean `apu-timing-correctness` candidate.
 6. Special non-branch operation families remain TODO. E1 matched-window repair still gates performance ranking.
+
+
+## Conditional branch timing proof in progress — checkpoint 2026-09-17
+
+Exact diagnostic SHA: **`a435d8f8af05db4e155304812161adb295adf130`**, one conceptual commit over validated addressing diagnostic `e78b3c47...`.
+
+Question: can Sodium64 reproduce SPC700 conditional branch timing exactly while charging the **+2 taken cycles only on the runtime-taken path**, without adding a runtime helper call or disturbing PC/side effects?
+
+Controlled diagnostic changes:
+- add generated-MIPS `BNE` encoding;
+- add `jit_emit_runtime_cycles`, which emits one generated `ADDI s3,s3,-cycles*apu_clock`; it does not execute a timing helper from generated code;
+- ordinary BPL/BMI/BVC/BVS/BCC/BCS/BNE/BEQ: base unchanged, generated -2-cycle surcharge only on taken path;
+- BBC/BBS: +1 fixed compile-time cycle plus taken-only +2;
+- CBNE direct/direct+X: +1 fixed operation cycle beyond already-validated addressing plus taken-only +2;
+- DBNZ memory: taken-only +2;
+- DBNZ Y: +2 fixed plus taken-only +2.
+
+Generated control-flow uses the MIPS branch delay slot to establish fallthrough SPC PC, skips the surcharge on not-taken paths, and overwrites PC with target only on taken paths.
+
+Proof matrix: **28 cases** — taken + not-taken for all 8 ordinary conditional branches, BBC/BBS, CBNE direct and direct+X, DBNZ memory, DBNZ Y. Each case checks:
+- block-final static debit;
+- presence/shape of exactly one generated conditional runtime debit `-42`;
+- actual total R4300 `s3` delta vs pinned ares reference;
+- final SPC PC;
+- Y/RAM side effects where applicable;
+- inherited block-span invariants.
+
+Exact runs launched:
+- **Build and Validate `35295336043`** for `a435d8f8...`;
+- **APU Cycle And Span Proof `35295336130`** for `a435d8f8...`.
+
+At checkpoint both are still compiling exact SHA.
+
+Acceptance: both CI and all 28 path-specific dynamic cases must pass. A compile-only green result is insufficient. Any not-taken path executing the -42 debit, any taken path missing it, wrong PC, wrong DBNZ side effect, or disagreement with pinned ares cycles rejects/narrows the branch implementation.

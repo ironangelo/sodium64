@@ -3334,3 +3334,47 @@ Cause: `actions/checkout@v4` defaulted to `fetch-depth: 1`, so the clean parent 
 No build, ROM, hardware result or Sodium64 behavior was tested by the failed attempt.
 
 Workflow-only fix: package branch advanced to **`e0dfe19b59cd4b86ee96eb250c9ad4bfda437a3b`**, adding only `fetch-depth: 0` so the guard can compare against exact clean core `9204ad2f...`. Runtime core remains unchanged.
+
+
+## Matched DSP-lateness diagnostic — FAILED CADENCE GATE / VALID EVIDENCE 2026-09-18
+
+Exact diagnostic authority: **`phase2/apu-matched-dsp-lateness@a8c56301d3bc3d65b100b5cbb702f043ec6126de`**.
+
+CI:
+- **Build and Validate `35353207712` SUCCESS**: normal build, PROFILE build and pinned Mupen smoke all green.
+- **APU Matched Baseline `35353207814`** completed all three exact-window repeats successfully, then intentionally FAILED the final acceptance assertion because DSP lateness exceeded the allowed period.
+- diagnostic artifact **`10550684126`**, digest `sha256:50dcdc3c80aa8f834df8c13eb6aa5c0f0dc3ef374afe60e92f165af785fe54a6`;
+- exact PROFILE build artifact **`10550441933`**, digest `sha256:6492d5e5c45661f0ba6772c637aade4c1a968bcad92fac3dfcb7f62a20a8d9f5`.
+
+All three fresh ares processes were bit-for-bit deterministic at the reported measurement level:
+- measured frame vector: **60,60,60,60,60 /60** in every repeat;
+- final samples: **3581** in every repeat;
+- DSP due count: **159849**;
+- DSP late sum: **20846385** master cycles;
+- average lateness: **130.4129835 master cycles = 6.210 SPC cycles**;
+- maximum lateness: **1029 master cycles = 49 SPC cycles**;
+- events with lateness >= one DSP period (`672 = 32 SPC cycles`): **1420**, about **0.8883%** of due events.
+
+**VALIDATED correctness finding:** the corrected timing foundation can report 60/60 completed frames while violating the required DSP scheduler cadence. Therefore the current ares 60/60 result is **NOT cadence-valid Gate-B evidence**.
+
+**REJECTED inference:** do not treat ares VI headroom or 60/60 as proof that the clean candidate is ready for real-N64 performance graduation. Throughput and event cadence are now explicitly separated.
+
+The lateness counters are diagnostic-only and read `a3-s3` before their own logging work, so the observed lateness is not created by the counter instructions themselves. The repeated exact values across three fresh processes strengthen the scheduler/interleave interpretation.
+
+### Hardware package status
+A measurement-only branch **`phase2/apu-hardware-milestone@e0dfe19b59cd4b86ee96eb250c9ad4bfda437a3b`** successfully built the real-N64 M1 package after fixing a shallow-checkout guard false negative:
+- package run **`35353932617` SUCCESS**;
+- artifact **`10550379275`**, digest `sha256:8fff13c90307f90d21cab84afb2c6ecb4766ff3f3f3d3b0617efd4b1d6c28c8a`;
+- runtime identity guard proved `src`/build inputs are exact clean core `9204ad2f...`, with workflow-only packaging changes.
+
+State: **BLOCKED / DO NOT HARDWARE-TEST YET**. Preserve the artifact but do not ask Iron to run it while DSP cadence is invalid.
+
+### Immediate next controlled experiment
+Test whether JIT block interleave, rather than an individual instruction or DSP scheduler bug, causes the >672 tail:
+- create a diagnostic child of `a8c56301...`;
+- change only `BLOCK_SIZE 16 -> 1`, which forces one SPC700 instruction per generated block after the already-validated NOP-bound repair;
+- keep identical matched-window lateness instrumentation and workload;
+- accept as causal proof if `dsp_multi_due_count` falls to 0 and max <672;
+- if lateness remains >=672, block aggregation is insufficient as the explanation and the next investigation must inspect individual-instruction / scheduler-event semantics.
+
+This one-op mode is a **causal control only**, not a proposed permanent architecture. Its throughput cost is secondary to isolating the mechanism.

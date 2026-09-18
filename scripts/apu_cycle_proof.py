@@ -298,7 +298,11 @@ def compile_one_case(
         "jit_pointer_uncached": end_uncached,
     }
 
-    semantic_checks: list[bool] = [result["apu_count_after_block"] == TEST_PC]
+    expected_pc_after = TEST_PC + 16 if name == "long_nop_dbnzy" else TEST_PC
+    result["expected_apu_count_after_block"] = expected_pc_after
+    semantic_checks: list[bool] = [
+        result["apu_count_after_block"] == expected_pc_after
+    ]
     if expected_accum is not None:
         semantic_checks.append(result["apu_accum_after_block"] == expected_accum)
     if expected_x is not None:

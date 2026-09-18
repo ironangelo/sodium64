@@ -4690,3 +4690,45 @@ However, do NOT yet call `53/60` a real-N64 deficit or choose an optimization fr
 
 Next controlled experiment:
 repeat the exact same SRS benchmark/profile multiple times at the same SHA/settings, preferably without changing runtime or workload, and compare complete-window frame budget plus subsystem distribution. If the sub-60 result is stable, add a progression/checkpoint observation before selecting a runtime intervention. No hardware request yet.
+
+## Gate-B SRS repeatability experiment — RUNNING 2026-09-18
+
+Exact experiment head:
+**`phase3/gate-b-srs-audition@466be943a7a725c2833e9dba4dd8d56c2f0a01ff`**.
+
+Diff from first successful SRS profile head `6e5d4440...`:
+- one commit;
+- **workflow only** (`.github/workflows/gate-b-srs-audition.yml`);
+- no Sodium64 runtime/emulator source change;
+- no upstream SRS source or benchmark logic change.
+
+Workload identity is now gated before profiling:
+- deterministic benchmark ROM must remain SHA-256 `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`;
+- benchmark patch must remain SHA-256 `4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`.
+
+Controlled experiment:
+- build the same pinned SRS benchmark once;
+- build the same Sodium64 PROFILE runtime once;
+- build the same pinned ares lab once;
+- launch **three fresh ares processes** (`r1/r2/r3`) sequentially;
+- each repeat uses the same Road-valid settings and the same warmup/settle/sample-density contract as the first measured run;
+- each repeat requires >=800 samples and validates frameskip 0, APU21, audio4, precision8;
+- aggregate all three profile JSONs and frame-budget state files into comparison tables.
+
+Exact runs:
+- **Gate B SRS Audition `35395725393`** @ `466be943...` — running;
+- Build and Validate `35395725495` @ same SHA — running.
+
+Question:
+Is the first `53/60` complete-window result a repeatable property of this exact SRS lab segment, or a one-run/start-window artifact?
+
+Acceptance for repeatability:
+- all three fresh processes complete with valid Road-state counters;
+- complete-window frame budgets cluster tightly enough to describe a stable lab signal;
+- subsystem distributions remain broadly consistent rather than changing qualitatively between repeats.
+
+Falsifier / interpretation:
+- large frame-budget dispersion or materially different profile shapes means the current measurement window/lab procedure is unstable for SRS; do not optimize runtime from it;
+- stable sub-60 windows support treating SRS as a real Gate-B lab blocker candidate, but still do **not** establish real-N64 performance deficit.
+
+If stable, next experiment is progression/checkpoint anchoring or later-segment measurement before selecting any runtime intervention. No hardware request yet.

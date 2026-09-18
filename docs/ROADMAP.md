@@ -51,46 +51,64 @@ Real-N64 M0 result: **48/60, 49/60, 48/60, 50/60, 50/60**, mean **49.0/60**, 3,5
 
 Exit condition: achieved. The first M1 gate driver is APU/audio, not an assumed 65C816 dynarec.
 
-## Phase 2 — M1 APU/audio-first base-core optimization — ACTIVE
+## Phase 2 — M1 APU/audio-first base-core optimization — ACHIEVED
 
 Goal: recover enough representative frame budget from the measured APU/audio path to move the base system toward native cadence **without worsening SPC700/DSP timing or audio correctness**.
 
-Current order of attack:
+Achieved evidence:
 
-1. reduce hot `apu_read8` / `apu_write8` and related APU memory/dispatch overhead while preserving scheduler return frequency;
-2. re-profile the exact Gothicvania workload after each bounded source-level change;
-3. inspect DSP/audio inner loops only where samples continue to justify it;
-4. graduate promising candidates to real-N64 milestone validation rather than treating emulator wall-clock as FPS.
+- the inherited SPC700 timing debt was audited and corrected across the validated fixed, conditional, stack/call/return, word/bit, operand-form, half-carry, DIV, DAA/DAS and SLEEP/STOP families;
+- the apparent multi-op throughput win was separated from DSP scheduling correctness rather than accepted from FPS alone;
+- a one-op causal control demonstrated that scheduler return interval, not merely instruction cost, caused the invalid lateness tail;
+- the retained architecture uses **guest-cycle-bounded multi-op JIT blocks**, preserving the independent 16-byte source limit while bounding scheduler return in emulated time;
+- the clobber-safe v2 survived matched ares cadence validation, cycle/address/semantic regression, exact 32-cycle boundary cases, cached replay and tag invalidation;
+- real N64 hardware moved from the M0 **49.0/60** mean to **60.0/60 across five complete windows** with frameskip `0`, APU clock `21`, audio enabled and precision `8`;
+- the M1 hardware profile contains **11.51% frame/VI wait**, so the measured Gothicvania segment is no longer throughput-bound.
 
-Important rejected path: increasing APU JIT `BLOCK_SIZE` from 16 to 32 bytes reproducibly improved the ares frame budget **44->48/60**, proving block/dispatch overhead matters, but paired timing instrumentation showed a material DSP interleave regression. BLOCK16 measured avg lateness **119.073**, max **651**, `>=672` **0/35,982**; BLOCK32 measured avg **128.338**, max **1,218**, `>=672` **377/35,965 (1.048%)**. **BLOCK_SIZE32 is REJECTED.** Keep 16-byte blocks unless a future design reduces dispatch cost without lengthening required scheduling intervals.
+Important rejected paths remain knowledge:
 
-Exit condition: a measured APU/audio optimization materially lowers representative host cost, survives timing/semantic checks, and improves the real-N64 base-system budget without fidelity loss.
+- `BLOCK_SIZE=32` is **REJECTED** because it improved throughput while allowing DSP scheduler lateness beyond one full period;
+- the first cycle-budget implementation is **SUPERSEDED** because it widened the `t2` clobber contract and could corrupt BBS/BBC behavior;
+- Gothicvania FPS is no longer a useful ranking signal for additional optimization once the workload reaches native frame budget with VI wait.
 
-## Phase 3 — broader base-core optimization, evidence-driven
+Exit condition: **achieved**. M1 does not claim Gate B or complete SPC700 fidelity; it establishes a validated base-core performance architecture and a real-hardware native-frame result for the representative M1 workload.
 
-Goal: attack the next gate driver after Phase 2 re-profiling rather than assuming which subsystem must be rewritten.
+## Phase 3 — M2 / Gate B corpus discovery and next bottleneck — ACTIVE
 
-Possible paths include:
+Goal: determine whether the recovered budget generalizes across representative ordinary SNES software and identify the first demonstrated blocker to Gate B.
 
-- further APU/DSP work if it remains dominant;
-- S-CPU interpreter fast paths or a 65C816-to-MIPS dynarec if S-CPU becomes a material gate driver;
-- memory/cache/code-layout work if profiling identifies it;
-- PPU/DMA/RSP synchronization work where representative evidence points there.
+Immediate route:
+
+1. define a small, versioned base-system corpus whose measured segments intentionally differ in CPU pressure, PPU/HDMA/Mode-7 behavior and audio activity;
+2. record ROM hash/region, checkpoint, deterministic or documented input sequence, expected progression, visual/audio expectations and measurement window for each entry;
+3. use ares/Mupen as filtering and differential laboratories, not N64 performance authority;
+4. take the fixed corpus to real N64 in **one milestone batch**, recording frame budget, settings, sample density, profile distribution and concrete audiovisual failures;
+5. keep failing entries in the corpus rather than changing membership to improve results;
+6. choose the next optimization or accuracy repair from the first measured gate blocker.
+
+Possible next architectures remain evidence-dependent:
+
+- further APU/DSP work if another corpus entry demonstrates it as a blocker;
+- S-CPU interpreter fast paths or a 65C816-to-MIPS dynarec if recoverable S-CPU cost becomes gate-driving;
+- memory/cache/code-layout changes if representative evidence points there;
+- PPU/DMA/RSP synchronization work where measured workloads expose it;
+- timing/I-O accuracy repair where total-cycle correctness still fails to reproduce observable effects.
 
 ### Conditional 65C816 dynarec proof
 
-A 65C816 dynarec remains strategically attractive because the same mature translation infrastructure could later help SA-1. It is **not currently the first M1 architecture**.
+A 65C816 dynarec remains strategically attractive because mature translation infrastructure could later help SA-1. It is **not automatically the next architecture** after M1.
 
-If re-profiling justifies a dynarec:
+If the Gate-B corpus justifies a dynarec:
 
-- build a host-testable 65C816 block representation and translator model;
+- quantify the recoverable S-CPU share in the failing segments rather than using raw subsystem sample share alone;
+- build a host-testable block representation and translator model;
 - cover a deliberately small instruction/addressing subset first;
 - differentially test translated execution against a trusted/reference path;
 - define invalidation, event-exit, interrupt and mode-change rules;
 - generate MIPS suitable for Sodium64's existing runtime rather than building a second portable emulator around it;
 - integrate only if representative savings justify the complexity.
 
-Exit condition: the next measured bottleneck is reduced materially with equal or better correctness. A dynarec is integrated only if it earns that role with evidence.
+Exit condition: the corpus identifies the next real Gate-B blocker and a validated intervention materially reduces that blocker without regressing the achieved M1 workload.
 
 ## Phase 4 — base-system native-frame and fidelity convergence
 
@@ -146,7 +164,13 @@ Goal: turn architectural success into an emulator that is pleasant and dependabl
 
 ## Current immediate batch
 
-The active safe M1 tree uses **`BLOCK_SIZE=16`**. The next bounded experiment is the APU memory/dispatch path, beginning with measured `apu_read8` / `apu_write8` overhead. One important variable should change at a time. A candidate that gains throughput but worsens timing is rejected, as the 32-byte-block experiment demonstrated.
+**M1 integration and Gate-B corpus definition.**
+
+The validated M1 runtime is the corrected SPC700 timing foundation plus clobber-safe guest-cycle-bounded APU JIT. Do not resume Gothicvania FPS optimization: the real-N64 M1 capture is already **60/60 x5** and contains measurable frame/VI wait.
+
+The durable SPC700 cycle proof protects the new architecture's key boundary: exact 32-cycle blocks, guest-access accounting, conditional runtime debit, cached replay and covered-tag invalidation. Its scope is deliberately bounded; observable dummy-read I/O effects and intra-block self-modifying code remain separate accuracy questions rather than reasons to turn validation tooling into a second project.
+
+The next technical batch is to define the small base-system Gate-B corpus and discover the next blocker. No subsystem is preselected.
 
 The question for each batch remains: **does this move a Road-to-1.0 gate?** If a tool, profiler or architecture branch stops reducing a gate-relevant uncertainty, stop expanding it.
 

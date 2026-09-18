@@ -2820,3 +2820,22 @@ Attempt 1's N/Z mismatch was NOT caused by the runtime helper clobbering A2 or b
 Consume only validated `src/apu_alu.S` DIV repair into clean timing foundation if clean/base blob identity is confirmed. Then exact clean CI.
 
 Next REQUIRED SUPPORT arithmetic work: implement and prove **DAA (0xDF) / DAS (0xBE)** now that H/C semantics are trustworthy. SLEEP/STOP remain separate scheduler-state work.
+
+
+## Clean DIV semantic candidate — checkpoint 2026-09-18
+
+Clean branch advanced to **`phase2/apu-timing-foundation@7f1d7f52c320ea065699f92737d1b320140f8141`**, one commit on top of validated ADDW/SUBW-H foundation `74455bb8...`.
+
+Direct clean diff is exactly:
+- `src/apu_alu.S` +66/-17.
+
+No diagnostic script/workflow changes.
+
+Dynamic semantic/timing authority:
+- final diagnostic `f3bad9af...`;
+- Build and Validate `35317084579` SUCCESS;
+- APU Cycle And Span Proof `35317084547` SUCCESS.
+
+Exact clean Build and Validate run: **`35345349822`**, IN_PROGRESS at checkpoint.
+
+Do not modify clean `7f1d7f52...` until exact CI completes. Next diagnostic family is DAA/DAS only; SLEEP/STOP remain separate scheduler work.

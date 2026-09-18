@@ -1711,3 +1711,20 @@ Exact clean Build and Validate run: **`35302765614`**, IN PROGRESS at checkpoint
 Dynamic authority remains diagnostic `f4da303d...` / ares proof `35302251443` SUCCESS. Accept clean candidate only after normal build + PROFILE build + pinned Mupen smoke succeed on exact SHA `fafc0847...`.
 
 Next technical batch after exact clean CI: dynamically prove the already-mapped word/bit timing hypotheses on diagnostic branch. Keep known H-flag semantic TODOs and TCALL/BRK intra-instruction bus-order debt explicit; do not conflate total-cycle correctness with those unresolved contracts.
+
+
+## Clean CALL/return/BRK + PCALL foundation — CI VALIDATED 2026-09-17/18
+
+Clean **`phase2/apu-timing-foundation@fafc08478bcf918bca4e17e04b9b6c9b4e7a62c8`** completed **Build and Validate `35302765614` SUCCESS**:
+- normal build SUCCESS;
+- PROFILE build SUCCESS;
+- pinned Mupen emulator smoke SUCCESS.
+
+State: **VALIDATED CANDIDATE**, unmerged.
+
+Combined authority:
+- dynamic timing + semantic proof: diagnostic `f4da303d...`, ares proof `35302251443` SUCCESS;
+- clean integration diff: one core file only, `src/apu_control.S`;
+- exact clean SHA CI: `35302765614` SUCCESS.
+
+Next isolated variable: SPC700 word-instruction total-cycle coverage. Do not fold bit-family timing into the same experiment.

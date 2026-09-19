@@ -5797,3 +5797,54 @@ Useful readings:
 
 Next action after this run:
 checkpoint exact window/state vectors first, then build the minimal direct-SNES reference lane. Do not resume Nova2 or optimize Sodium64 until this SRS ambiguity is separated.
+
+
+## Gate-B SRS direct-SNES reference lane — RUNNING 2026-09-19 UTC
+
+Second controlled batch started on a separate branch so it cannot cancel or mutate the in-progress Sodium64 SRS measurement:
+
+**`phase3/gate-b-srs-reference@58aa11a71ef2960c16e6e033561fad3cbf28eb65`**,
+parented from the complete safe-matched SRS diagnostic head `075068af92da1802aa3a2677c3d44f393215cc44`.
+
+Exact run:
+- **Gate B SRS Direct SNES Reference `35416567103`** — in progress at checkpoint;
+- same-head **Build and Validate `35416567070`** — pending at checkpoint.
+
+This branch adds only:
+`.github/workflows/gate-b-srs-reference.yml`.
+No Sodium64 production/runtime code is changed by the reference lane.
+
+### Question
+
+Does the exact existing SRS benchmark (same upstream pin, same benchmark patch hash and same ROM hash) progress/stall in the same way when executed directly by the pinned ares Super Famicom core?
+
+Identity is fixed:
+- SRS upstream `e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865`;
+- benchmark ROM SHA-256 `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`;
+- benchmark patch SHA-256 `4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`;
+- ares pin `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`;
+- deterministic entropy enabled.
+
+### Minimal reference adapter
+
+Pinned ares does not expose the N64-style GDB guest-memory interface for the SFC core, so the workflow applies a **read-only reference-core observer** rather than creating another emulator:
+- builds only the existing pinned ares SFC core;
+- resolves SRS symbols at compile time without changing ROM bytes;
+- reads direct ares SFC `cpu.wram` after each rendered SNES frame;
+- records `frameCounter`, room, player x/y and camera x/y;
+- captures 600 reference frames and exits;
+- uploads machine-readable trace/provenance only, never the SRS ROM or assets.
+
+`frameCounter` is especially important because upstream defines it as a 32-bit low-WRAM counter updated by `WaitFrame`. It provides a guest-owned alignment key for later Sodium64-vs-reference comparison rather than relying on host time or frontend frame number.
+
+This lane is **correctness/route evidence only**. Direct-ares wall-clock speed is not Sodium64/N64 performance evidence.
+
+### Predeclared readings
+
+1. **Reference also reaches the same stable endpoint:** the Right+Run route itself is inadequate; revise only the deterministic input route, preserving old hashes/evidence.
+2. **Reference continues while Sodium64 safe-matched state stalls/diverges:** preserve earliest matching `frameCounter` divergence as a Gate-B compatibility blocker before any performance optimization.
+3. **Both progress similarly:** SRS route remains viable and can be characterized further with aligned checkpoints/image/audio evidence.
+4. **Reference harness/build failure:** classify adapter/build issue only; no Sodium64/SRS conclusion.
+
+Important follow-up:
+the current safe Sodium64 SRS run `35416459569` captures semantic state at exact 60-VI boundaries but does **not yet capture SRS `frameCounter`**. Do not modify its branch while that run is active. After checkpointing its result, add `frameCounter` to a follow-up safe capture only if the direct reference shows that exact cross-core alignment is needed.

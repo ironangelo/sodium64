@@ -5868,3 +5868,33 @@ It still does **not** prove why progression stopped. Competing explanations rema
 - less likely remaining observation issue.
 
 The direct-SNES reference lane `35416567103` is the controlled discriminator; do not infer the cause from map geometry alone.
+
+
+## SRS direct-reference attempt 1 — PATCH-TEXT HASH HARNESS FALSE NEGATIVE 2026-09-19 UTC
+
+Exact failed authority:
+- **Gate B SRS Direct SNES Reference `35416567103` FAILED** @ `58aa11a71ef2960c16e6e033561fad3cbf28eb65`;
+- failure occurred in step `Rebuild exact SRS benchmark from public source` before any direct-SNES reference execution.
+
+What passed before failure:
+- exact pinned SRS/submodule checkout;
+- exact public toolchain rebuild;
+- upstream release build;
+- deterministic benchmark ROM rebuilt successfully;
+- benchmark ROM SHA-256 check **PASSED** for `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`.
+
+Failure:
+the reconstructed `srs-benchmark.patch` text did not match historical patch SHA
+`4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`.
+
+Cause:
+the reference workflow reproduced the same benchmark instructions/ROM bytes but omitted explanatory comments present in the historical benchmark patch. Therefore **ROM identity matched while patch-text identity did not**.
+
+Classification:
+**HARNESS FALSE NEGATIVE / NO SRS OR SODIUM64 EVIDENCE.**
+
+Controlled repair:
+**`phase3/gate-b-srs-reference@dd9eec47c98d4f27a66c1905b5ede62257899499`**
+restores the exact historical benchmark comments as well as instructions so both patch SHA and ROM SHA are required to match before direct-reference execution.
+
+No Sodium64 runtime code, benchmark behavior, upstream game source semantics or reference adapter semantics are changed by this repair.

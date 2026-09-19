@@ -1,0 +1,117 @@
+name: Gate B Nova2 Build Repro
+
+on:
+  push:
+    branches:
+      - phase3/gate-b-nova2-reference
+    paths:
+      - '.github/workflows/gate-b-nova2-build-repro.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-b-nova2-build-repro-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  serial-repro:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
+      NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Use upstream-era Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install pinned build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential cc65 git lz4
+          python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
+
+      - name: Build three independent serial Nova2 clones
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p repro
+
+          build_one() {
+            idx="$1"
+            root="$RUNNER_TEMP/nova-serial-$idx"
+            git clone --filter=blob:none "$NOVA_REPO" "$root"
+            git -C "$root" checkout --detach "$NOVA_SHA"
+            test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
+
+            gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
+            mkdir -p "$root/obj/snes"
+            make -C "$root" -j1 nova-the-squirrel-2.sfc \
+              > "repro/build-$idx.log" 2>&1
+
+            rom="$root/nova-the-squirrel-2.sfc"
+            test -s "$rom"
+            sha256sum "$rom" | awk '{print $1}' > "repro/rom-$idx.sha256"
+
+            (
+              cd "$root"
+              find . -type f \
+                -not -path './.git/*' \
+                -not -name 'nova-the-squirrel-2.sfc' \
+                -print0 \
+              | sort -z \
+              | xargs -0 sha256sum
+            ) > "$GITHUB_WORKSPACE/repro/tree-$idx.sha256"
+
+            {
+              echo "index=$idx"
+              echo "upstream_sha=$NOVA_SHA"
+              echo "rom_sha256=$(cat "repro/rom-$idx.sha256")"
+              echo "rom_size=$(stat -c '%s' "$rom")"
+              echo "tracked_diff_count=$(git -C "$root" diff --name-only | wc -l)"
+              echo "ca65=$(ca65 --version 2>&1 | head -n1)"
+              echo "ld65=$(ld65 --version 2>&1 | head -n1)"
+              echo "python=$(python3 --version 2>&1)"
+              echo "pillow=$(python3 -c 'import PIL; print(PIL.__version__)')"
+            } > "repro/meta-$idx.txt"
+          }
+
+          for i in 1 2 3; do
+            build_one "$i"
+          done
+
+          cat repro/meta-*.txt
+
+          h1="$(cat repro/rom-1.sha256)"
+          h2="$(cat repro/rom-2.sha256)"
+          h3="$(cat repro/rom-3.sha256)"
+          test "$h1" = "$h2"
+          test "$h1" = "$h3"
+
+          cmp repro/tree-1.sha256 repro/tree-2.sha256
+          cmp repro/tree-1.sha256 repro/tree-3.sha256
+
+          {
+            echo "serial_builds=3"
+            echo "all_rom_hashes_identical=true"
+            echo "all_tree_manifests_identical=true"
+            echo "canonical_unmodified_rom_sha256=$h1"
+          } | tee repro/summary.txt
+
+      - name: Upload non-ROM reproducibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-nova2-serial-build-repro
+          retention-days: 14
+          if-no-files-found: ignore
+          path: repro/

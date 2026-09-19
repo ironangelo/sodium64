@@ -5341,3 +5341,76 @@ Next technical batch:
 select and audition the remaining SMW-like and ALttP-like workloads using the same gate order: legal/autonomous source+asset provenance -> reproducible build -> deterministic meaningful gameplay route -> emulator-lab progression/correctness -> sustained aligned frame-budget characterization. Do not optimize Sodium64 until the four-workload corpus identifies a real blocker.
 
 Do not merge the one-off SRS audition branch to master yet. It contains PROFILE-only VI-history instrumentation and candidate-specific workflow. Prefer consolidating corpus infrastructure after the remaining slots are selected rather than accumulating per-candidate diagnostic machinery in master.
+
+
+## Gate-B Nova the Squirrel 2 audition — source-build proof running 2026-09-18
+
+Repo/continuity reconciliation before this batch found no work newer than the previous SRS lock checkpoint:
+- integrated **`master@ac1ce74740d974b70206fcb6ba842e492b5d7272`**;
+- **`continuity@a8c3cfafdf015bb3e3f172705f2402554edbd664`** was newer than the last SRS CI completion and already recorded it;
+- no open PRs;
+- **Space Rescue Squad remains LOCKED** as the DKC-like/heavy-platformer Gate-B corpus slot;
+- M1 remains MERGED-CONSUMED / ACHIEVED with real-N64 Gothicvania 60/60 x5.
+
+The next required uncertainty is therefore corpus selection, not another Sodium64 optimization.
+
+### SMW-like candidate selected for first audition
+
+**Nova the Squirrel 2** is the first principal SMW-like audition candidate.
+
+Pinned upstream:
+- `NovaSquirrel/NovaTheSquirrel2@94385f1812f3b322f939f79a29502a1a3ee6d87f`.
+
+Source evidence at that exact pin shows a materially broader engine/workload than the previously downgraded Castle Platformer fallback:
+- large scrolling levels, including 256x32 / 32x256 layouts;
+- independently moving second foreground layer;
+- player/enemy/object logic, enemy health and attacks;
+- hub world, overworld, dialogue/inventory/story machinery;
+- many authored levels and generated map/tile resources;
+- background effects, sprite/player graphics and per-frame PPU uploads;
+- SPC700/audio driver and generated music/sample data;
+- LZ4-compressed assets;
+- separate Mode-7 level/actor path.
+
+It also gives useful lineage diversity: different author/engine/toolchain from SRS and Gothicvania, with a ca65/ld65 + Python/LZ4 build.
+
+Eligibility boundary:
+- game/tool code is GPLv3 at the pinned source;
+- upstream README explicitly says game assets are not licensed for reuse outside this game.
+- This audition therefore uses the assets only as upstream inputs to build/profile this exact game and **does not upload or redistribute the ROM or assets**.
+
+### Controlled source-build proof
+
+Created from exact integrated master:
+**`phase3/gate-b-nova2-audition@043950304a28aec583c5b1ba70ae12c99741e206`**.
+
+This candidate changes only:
+`.github/workflows/gate-b-nova2-audition.yml`.
+
+No Sodium64 runtime/emulator source is changed.
+
+Question:
+Can exact pinned Nova 2 source/assets be rebuilt autonomously on Ubuntu with public dependencies only, without mutating tracked upstream content or launching an interactive emulator?
+
+Build contract:
+- install public `cc65`, `lz4`, Python/Pillow and normal host build tools;
+- clone exact upstream pin;
+- invoke explicit `nova-the-squirrel-2.sfc` target because upstream's default target launches an emulator;
+- require a non-empty ROM;
+- require no tracked-source/asset mutation after build;
+- record exact ROM hash/size/tool versions;
+- upload provenance/build log only, **never ROM bytes or upstream assets**.
+
+Acceptance:
+- clean autonomous source build from the exact pin;
+- reproducible non-empty ROM identity recorded;
+- upstream tracked tree remains unchanged;
+- no private/local/proprietary dependency is required.
+
+Falsifier / downgrade:
+- missing/non-public build dependency;
+- build cannot be reproduced from pinned repo state;
+- build requires source/asset repair large enough to become a second project;
+- asset/license boundary cannot be respected without redistributing restricted content.
+
+If accepted, next controlled step is **not** immediate corpus lock: first design a temporary deterministic meaningful gameplay route that preserves normal game/PPU/audio/collision/entity work, then prove guest progression and sustained internally aligned frame-budget behavior in the pinned ares lab. Real N64 remains deferred until the four-workload corpus is assembled and one aggregated hardware session is justified.

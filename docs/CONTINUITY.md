@@ -6071,3 +6071,16 @@ Pinned ares source **`17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`** explains the a
 Therefore the default direct-SFC run can execute the game indefinitely while never incrementing `sodium64TraceFrame` or reaching the tracer's `std::exit(0)` at 600 frames. This is a **SUPPORTED STATIC ROOT CAUSE / LAB HARNESS DEFECT** for the hanging reference run. It does **not** demonstrate a guest stall.
 
 Decision: make the reference mode explicit by launching pinned ares with **`Video/PixelAccuracy=true`**, matching the instrumented accurate PPU and strengthening reference fidelity. Keep SRS ROM/input/source bytes unchanged. The bounded `4a753b6e...` run is diagnostic-only and may be superseded/cancelled by this repair; no need to wait out 300 seconds solely to rediscover a statically proven tracer bypass.
+
+
+## SRS direct-SNES accurate-PPU reference launched — checkpoint 2026-09-19
+
+Exact candidate: **`phase3/gate-b-srs-reference@c5f4c0310cc2334d3f4784517a24e27addfc9e96`**.
+
+Single controlled change from bounded harness `4a753b6e...`: add CLI setting **`Video/PixelAccuracy=true`** so pinned ares selects the already instrumented `ppuImpl` rather than the default `ppuPerformanceImpl`. The 300-second command bound and `tee` diagnostics remain. SRS source patch, deterministic Right+Run input, benchmark ROM bytes/hash, semantic symbol addresses, and tracer logic are unchanged.
+
+Runs:
+- **Gate B SRS Direct SNES Reference `35418629393`** — pending at checkpoint;
+- **Build and Validate `35418629406`** — pending at checkpoint.
+
+The superseded known-valid and bounded runs were cancelled through branch concurrency; this is intentional. Current question: with the instrumented accurate PPU selected, does the direct SFC core emit the expected 600 semantic frame records and exit cleanly? If yes, compare route progression against Sodium64; if no, use the now-visible partial log to isolate the remaining harness issue before touching guest input.

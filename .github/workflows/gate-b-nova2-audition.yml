@@ -1,0 +1,93 @@
+name: Gate B Nova2 Audition
+
+on:
+  push:
+    branches:
+      - phase3/gate-b-nova2-audition
+    paths:
+      - '.github/workflows/gate-b-nova2-audition.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-b-nova2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-build-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    env:
+      NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
+      NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Install pinned-source build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cc65 \
+            git \
+            lz4 \
+            python3 \
+            python3-pil
+
+      - name: Checkout exact Nova the Squirrel 2 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/nova-the-squirrel-2"
+          git clone --filter=blob:none "$NOVA_REPO" "$root"
+          git -C "$root" checkout --detach "$NOVA_SHA"
+          test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
+          echo "NOVA_ROOT=$root" >> "$GITHUB_ENV"
+
+      - name: Build unmodified game from pinned source
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$NOVA_ROOT"
+
+          # The upstream default target launches an emulator after building.
+          # Build only the ROM target so the proof stays autonomous/headless.
+          mkdir -p "$root/obj/snes"
+          make -C "$root" -j"$(nproc)" nova-the-squirrel-2.sfc 2>&1 | tee nova2-build.log
+
+          rom="$root/nova-the-squirrel-2.sfc"
+          test -s "$rom"
+
+          # Generated products may be untracked/ignored, but the build must not
+          # require mutating any tracked source or asset.
+          git -C "$root" diff --check
+          test -z "$(git -C "$root" diff --name-only)"
+
+          sha256sum "$rom" | tee nova2-rom.sha256
+          {
+            echo "upstream_repo=$NOVA_REPO"
+            echo "upstream_sha=$NOVA_SHA"
+            echo "rom_size=$(stat -c '%s' "$rom")"
+            echo "rom_sha256=$(sha256sum "$rom" | awk '{print $1}')"
+            echo "ca65_version=$(ca65 --version 2>&1 | head -n1)"
+            echo "ld65_version=$(ld65 --version 2>&1 | head -n1)"
+            echo "lz4_version=$(lz4 --version 2>&1 | head -n1)"
+            echo "asset_boundary=assets used only to build this upstream game; no ROM/assets uploaded"
+          } | tee nova2-provenance.txt
+
+      - name: Upload provenance only
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-nova2-source-build-proof
+          retention-days: 14
+          path: |
+            nova2-rom.sha256
+            nova2-provenance.txt
+            nova2-build.log

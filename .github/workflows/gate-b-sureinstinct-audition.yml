@@ -60,6 +60,7 @@ jobs:
 
           cmake -S "$fma_root" -B "$fma_root/build" \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_FLAGS="-Wno-error=overloaded-virtual" \
             -DCMAKE_INSTALL_PREFIX="$prefix"
           cmake --build "$fma_root/build" --parallel "$(nproc)"
           cmake --install "$fma_root/build"

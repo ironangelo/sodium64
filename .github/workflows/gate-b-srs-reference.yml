@@ -27,7 +27,7 @@ jobs:
       UNTECH_EDITOR_SHA: 4c72dc69619c0c246aa7e6325b18b6fb3c219821
       TAD_SHA: 17823e5a55893e8442917abadb4e84feb216e5ad
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
-      ROUTE_ID: periodic-jump-v1
+      ROUTE_ID: periodic-jump-v2-phase32
 
     steps:
       - name: Checkout Sodium64
@@ -132,7 +132,7 @@ jobs:
           new = """        sep     #$30
               a8()
               i8()
-                  // Deterministic representative-route candidate v1.
+                  // Deterministic representative-route candidate v2.
                   // Hold Right + Run.  Every 64 guest frames, press B once and
                   // hold it for 16 frames.  B is present in pressed only on the
                   // true edge; all movement still flows through normal input,
@@ -145,16 +145,16 @@ jobs:
 
                   lda.w   frameCounter
                   and.b   #$3f
-                  cmp.b   #$08
+                  cmp.b   #$20
                   bcc     +
-                  cmp.b   #$18
+                  cmp.b   #$30
                   bcs     +
                       lda.b   #JOYH.right | JOYH.y | JOYH.b
                       sta.w   Controller.Joy1.current + 1
 
                       lda.w   frameCounter
                       and.b   #$3f
-                      cmp.b   #$08
+                      cmp.b   #$20
                       bne     +
                           lda.b   #JOYH.b
                           sta.w   Controller.Joy1.pressed + 1
@@ -371,7 +371,12 @@ jobs:
               json.dumps(payload, indent=2, sort_keys=True) + "\n"
           )
 
-          meaningful = [r for r in rows if 0x1000 <= r["player_x"] < 0x8000]
+          meaningful = [
+              r for r in rows
+              if r["game_frame"] < 10000
+              and 0 < r["room_id"] < 32
+              and 0x1000 <= r["player_x"] < 0x8000
+          ]
           print(f"trace rows={len(rows)} plausible-gameplay rows={len(meaningful)}")
           if meaningful:
               print("first plausible", meaningful[0])

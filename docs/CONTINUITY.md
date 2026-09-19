@@ -5463,3 +5463,30 @@ uses Python 3.10 + Pillow 9.1.1, i.e. the pre-9.2 padded-palette behavior. No up
 Diagnostic expectation:
 - if `encodepalettes.py` proceeds, the host-library diagnosis is confirmed;
 - if it fails identically, stop version guessing and inspect exact PNG palette encoding / build-history assumptions before another change.
+
+
+## Nova2 source-build attempt 3 — pre-9.2 Pillow explanation insufficient 2026-09-18
+
+Exact failed authority:
+- **Gate B Nova2 Audition `35410211745` FAILED** @ `60ec5caca750af20e7a3c35baacaa03db3744186`;
+- Python 3.10 + Pillow 9.1.1 installed successfully;
+- build again failed identically in `tools/encodepalettes.py` at fixed palette popping.
+
+Discarded explanation:
+**“Pillow >=9.2 alone caused the failure” is REJECTED as a sufficient cause.**
+The host library may still be part of the historical build assumption, but version pinning alone does not reconstruct it.
+
+No candidate-quality conclusion is allowed from these three failures: all occurred before ROM assembly and none involve Sodium64 runtime behavior.
+
+Next controlled diagnostic:
+**`phase3/gate-b-nova2-audition@af5602d91fff3658e083959b019138772c024f68`**
+adds a harness-only readout of every source `palettes/*.png`:
+- raw PNG PLTE entry count;
+- Pillow-visible palette entry count;
+- identification of regular palette files with fewer than the 16 entries assumed by `encodepalettes.py`.
+
+The upstream tree remains unmodified. The build still runs afterward only to preserve the exact observed failure context.
+
+Decision map:
+- if one or more committed PNGs encode <16 PLTE entries, investigate the upstream author's palette-padding/build assumption and reproduce it narrowly rather than version-guessing;
+- if all encode >=16, the failure is elsewhere in palette interpretation and must be isolated before another build repair.

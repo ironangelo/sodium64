@@ -6331,3 +6331,21 @@ Dynamic reading from the raw 600-row trace:
 - **SUPPORTED INTERPRETATION:** whole-pattern phase shifts synchronize back to essentially the same upper-platform launch state. The missing route action is not “jump a little earlier/later” from that upper ledge; it is to **skip that jump, land on the authored lower platform, then jump from its right edge**, shortening the required horizontal gap.
 - Route-v3 controlled input hypothesis: preserve all earlier v2 periodic jumps; suppress only the gf352 B pulse/hold, allow the player to drop onto columns22–24, then inject one normal B edge/hold around the expected lower-platform traversal before resuming normal periodic pulses. No player position, momentum, collision or room state will be written.
 - Falsifier: the player misses the lower platform or the targeted lower-platform jump still cannot exceed x4554. If so, inspect the resulting direct trace and adjust only the targeted controller timing.
+
+
+## Gate B SRS representative route v3 launch — 2026-09-19 UTC
+
+**Classification:** COMPATIBILITY PROOF / workload selection; experiment RUNNING.
+
+- Branch/HEAD: `phase3/gate-b-srs-representative@d3a101e4f0166bcdd3d0af68641cdfa3d0c074de`.
+- Direct-SFC run: **`35421458128`**. Same-head Build/Validate: **`35421458147`**.
+- Controlled input change from v2:
+  - preserve Right+Run and the same periodic phase-0x20, 16-frame B pulses;
+  - suppress only absolute guest `frameCounter 0x0160..0x016f` (the gf352 jump/hold that launches from the upper platform);
+  - add one normal B edge at `frameCounter=0x0176` (gf374) and hold through `0x0185` (16 frames), targeting the authored lower platform;
+  - after that, periodic pulses resume normally.
+- No player position, momentum, collision, entity, camera, room or script state is written. Only `Controller.Joy1.current/pressed` are synthesized with normal edge semantics before `InputBuffer.Process()`.
+- Hypothesis: skipping the upper-ledge jump lets the player land on lower columns22–24; the gf374 edge then launches from that shorter-gap platform and should exceed v1/v2 max x4554.
+- Falsifier: direct trace misses the lower platform, reaches x4554 or less, or otherwise enters another long non-progressing cycle.
+- Possible success: sustained x>4554 and preferably eventual authored room transition. If successful, inspect trace before declaring the route representative and pin exact patch/ROM identities.
+- **Do not measure Sodium64 yet.**

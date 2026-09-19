@@ -6472,3 +6472,14 @@ Dynamic result:
 - Branch audit: direct compare from safe Sodium64 authority `075068af92da1802aa3a2677c3d44f393215cc44` to current v5 is +13 commits but **only one added file** overall: `.github/workflows/gate-b-srs-reference.yml`. Sodium64 runtime, safe audition workflow and `gdb_matched_srs.py` remain tree-identical to the validated safe authority.
 - Consequence: if v5 qualifies, a matched Sodium64 candidate can branch from v5 without inheriting runtime changes; only the existing safe audition workflow/script need route+frameCounter observability edits.
 - Exact known SRS symbols for future same-frame matching: `frameCounter=7e1249`, room id `7e2200`, player x/y `7e0123/7e0127`, camera x/y `7e87b3/7e87b5`; `a1a=01`, `a1b=02`, map left/top `0x1000/0x1000`.
+
+
+## Matched-Sodium measurement design note pending v5 qualification — 2026-09-19 UTC
+
+**Classification:** MEASUREMENT PROOF / planned contract refinement; not yet launched.
+
+- Existing safe SRS harness uses 2 warmup + 5 measured exact 60-VI windows. On the new representative route this would end around the second-wall area and under-sample the late door traversal.
+- Do **not** simply increase measured windows: PROFILE ring capacity is 4096 EPC samples, and the prior 5-window SRS capture already produced ~3584 samples. A longer measured interval would wrap the ring and make the retained sample distribution represent only the tail despite a larger monotonic sample count.
+- Preferred matched-route contract if v5 qualifies: **5 warmup + 5 measured** exact 60-VI windows. All gameplay from boot still executes normally at Road-valid settings; only the statistical ring reset is delayed to the fifth exact boundary. Five measured windows remain comparable in sample density/capacity while targeting the late representative segment (second-wall traversal through door/transition).
+- Add 32-bit game-owned `frameCounter` to every boundary state so direct-SFC and Sodium64 states are aligned by guest frame rather than assumed boundary offset.
+- This is a planned measurement-contract change, not runtime optimization. Implement only after direct-SFC v5 route qualification.

@@ -6011,3 +6011,12 @@ Workflow audit:
 Classification: **LAB LIMITATION / HARNESS OPEN QUESTION**, not Sodium64 or SRS correctness evidence. Do not infer a guest stall from an ares process that has not produced/returned the trace.
 
 Next controlled batch: bound the direct-SFC capture itself and add enough startup/frame observability to distinguish (A) emulator never reaches the first rendered frame, (B) frames are produced but too slowly, or (C) the 600-frame termination path is wrong. Keep SRS ROM/input bytes and semantic addresses unchanged.
+
+
+## SRS direct-reference harness repair attempt 1 — workflow-definition false negative 2026-09-19
+
+Harness-only commit **`phase3/gate-b-srs-reference@ba5436747fd3f50a78af5790b1978442750d42af`** attempted to add PPU-load observability, a 300-second command-local bound, trace-count diagnostics, and `if: always()` evidence upload. It did **not** alter SRS source patch bytes, benchmark ROM identity, input sequence, semantic addresses, or Sodium64 runtime code.
+
+GitHub run **`35418466127`** completed immediately as FAILURE with **zero jobs created**. Therefore this is a **HARNESS / workflow-definition false negative** and contains no ares/SRS/Sodium64 execution evidence. The older direct-reference run `35416725629` remained in progress because the invalid replacement workflow never instantiated a job capable of exercising concurrency cancellation.
+
+Decision: diagnose and correct workflow syntax only. Do not change the direct-reference experiment or benchmark while repairing this definition.

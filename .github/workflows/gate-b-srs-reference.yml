@@ -334,7 +334,7 @@ jobs:
                 "SODIUM64_SRS_REF host_frame=%u game_frame=%u room=%u player_x=%u player_y=%u camera_x=%u camera_y=%u\\n",
                 sodium64TraceFrame, s64fc, s64room, s64px, s64py, s64cx, s64cy);
               std::fflush(stderr);
-              if(sodium64TraceFrame >= 600) std::_Exit(0);
+              if(sodium64TraceFrame >= 720) std::_Exit(0);
 
               scheduler.exit(Event::Frame);"""
           main.write_text(s.replace(anchor, trace, 1))
@@ -375,7 +375,7 @@ jobs:
               "$rom" 2>&1 | tee "$log"
 
           grep '^SODIUM64_SRS_REF ' "$log" > reference/srs-direct-snes-trace.txt
-          test "$(wc -l < reference/srs-direct-snes-trace.txt)" -eq 600
+          test "$(wc -l < reference/srs-direct-snes-trace.txt)" -eq 720
 
           python3 - <<'PY'
           import json
@@ -403,8 +403,8 @@ jobs:
                   "camera_y": cy,
               })
 
-          assert len(rows) == 600
-          assert [r["host_frame"] for r in rows] == list(range(1, 601))
+          assert len(rows) == 720
+          assert [r["host_frame"] for r in rows] == list(range(1, 721))
           payload = {
               "reference": "ares direct Super Famicom core",
               "ares_pin": "17813a3ccda21ab9bd45f09bfc2f91196dbf50ff",
@@ -440,7 +440,7 @@ jobs:
             echo "benchmark_patch_sha256=$ROUTE_PATCH_SHA256"
             echo "ares_pin=$ARES_PIN"
             echo "reference_core=direct Super Famicom"
-            echo "trace_contract=read-only WRAM observation after each rendered SNES frame; 600 frames"
+            echo "trace_contract=read-only WRAM observation after each rendered SNES frame; 720 frames"
           } > reference/reference-provenance.txt
 
       - name: Upload non-ROM direct-reference evidence

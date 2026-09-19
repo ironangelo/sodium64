@@ -6483,3 +6483,24 @@ Dynamic result:
 - Preferred matched-route contract if v5 qualifies: **5 warmup + 5 measured** exact 60-VI windows. All gameplay from boot still executes normally at Road-valid settings; only the statistical ring reset is delayed to the fifth exact boundary. Five measured windows remain comparable in sample density/capacity while targeting the late representative segment (second-wall traversal through door/transition).
 - Add 32-bit game-owned `frameCounter` to every boundary state so direct-SFC and Sodium64 states are aligned by guest frame rather than assumed boundary offset.
 - This is a planned measurement-contract change, not runtime optimization. Implement only after direct-SFC v5 route qualification.
+
+
+## Gate B SRS representative route v5 result — 2026-09-19 UTC
+
+**Classification:** COMPATIBILITY PROOF / workload selection. Route v5 = **progress improved; 600-frame horizon inconclusive for transition**.
+
+Authority:
+- Branch/HEAD: `phase3/gate-b-srs-representative@2255a6f1aca6c2f81e64c035d94f2a3b0f9a2ecd`.
+- Direct-SFC `35424126162` / job `105847016934`: **SUCCESS**.
+- Same-head Build/Validate `35424126115`: **SUCCESS**.
+- Route patch SHA-256: `b21d55df2d5fb949646c9a2124d5c062fa5e7f312264dabb2f354fdc67a27935`.
+- Route ROM SHA-256: `2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46`.
+- Artifact `10578936699`, digest `sha256:bf790779bedc3d4755850c8f5d6634bd13d88ca2abf1341774620e3aeaa956ff`.
+
+Dynamic result:
+- v5 correctly suppresses the gf544 jump. Instead of rising, y descends from 4196 at gf544 through the door approach and reaches ground y4259 at gf583.
+- x reaches 4810 at gf572, then **continues progressing** after ground contact: x4811 gf583..586, x4812 gf587..589, x4813 gf590..591, x4814 gf592..593, x4815 gf594.
+- Room remains 1 through the final observed frame. This is materially different from v4's hard x4810 upper-frame collision: v5 has no identical-x suffix once grounded.
+- Source trigger begins at local x736; player center x4815 => local719. The trace ends while still moving toward the trigger rather than proving a permanent block.
+- **SUPPORTED INTERPRETATION:** 600 host frames are now an observation-horizon limitation for the room-transition question. Do not change route input yet.
+- **Next controlled experiment:** keep exact v5 ROM/input and extend only the direct-SFC tracer horizon from 600 to 720 frames. This separates simple late transition from a possible later periodic-jump interference (next phase-0x20 pulse occurs at gf608).

@@ -73,6 +73,15 @@ jobs:
           gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
           mkdir -p "$root/obj/snes"
 
+          # Match the exact audition build sequence: first produce the pinned
+          # unmodified ROM, then patch only src/main.s and rebuild incrementally.
+          # This matters because the previous clean patched build produced a
+          # different ROM hash despite an identical source patch.
+          make -C "$root" -j"$(nproc)" nova-the-squirrel-2.sfc 2>&1 | tee nova2-unmodified-reference-build.log
+          unmodified_sha="$(sha256sum "$root/nova-the-squirrel-2.sfc" | awk '{print $1}')"
+          echo "unmodified_rom_sha256=$unmodified_sha"
+          test "$unmodified_sha" = "ecc61b2367a9261fe48131a61e5cf787b6409083827556109099a46a637d9b2f"
+
           python3 - <<'PY'
           from pathlib import Path
           import os
@@ -158,6 +167,8 @@ jobs:
 
           route_patch_sha="$(sha256sum nova2-firstlevel-benchmark.patch | awk '{print $1}')"
           route_rom_sha="$(sha256sum "$rom" | awk '{print $1}')"
+          test "$route_patch_sha" = "476d426dff8ccd356f12a7be26809cee396d07b97a3d2dd32b7a5003d3715cf2"
+          test "$route_rom_sha" = "cb59431f095c4f02b495b099022cc28a0ee1fe6c84470835754d7f0544d6466e"
           echo "ROUTE_PATCH_SHA256=$route_patch_sha" >> "$GITHUB_ENV"
           echo "ROUTE_ROM_SHA256=$route_rom_sha" >> "$GITHUB_ENV"
           echo "route_id=$ROUTE_ID patch_sha256=$route_patch_sha rom_sha256=$route_rom_sha"
@@ -418,6 +429,7 @@ jobs:
           path: |
             ares-sfc-version.txt
             nova2-firstlevel-benchmark.patch
+            nova2-unmodified-reference-build.log
             nova2-firstlevel-reference-build.log
             nova2-wram.env
             reference/

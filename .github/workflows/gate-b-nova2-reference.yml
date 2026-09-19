@@ -24,7 +24,7 @@ jobs:
       NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
       NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
-      ROUTE_ID: firstlevel-right-periodic-b-plus-f166-v2
+      ROUTE_ID: firstlevel-right-periodic-b-plus-f166-f209-v3
       PYTHONHASHSEED: '0'
 
     steps:
@@ -176,6 +176,18 @@ jobs:
               "    ora #KEY_B",
               "    sta keydown",
               "  Sodium64Nova2RouteV2TargetDone:",
+              "  ; Route-v3 controlled change: frame208 is a verified B release after",
+              "  ; landing on the X24-26 Pier. Create exactly one fresh B edge at",
+              "  ; frame209 and hold it for 16 frames to attempt the X28-30 transition.",
+              "  lda framecount",
+              "  cmp #209",
+              "  bcc Sodium64Nova2RouteV3TargetDone",
+              "  cmp #225",
+              "  bcs Sodium64Nova2RouteV3TargetDone",
+              "    lda keydown",
+              "    ora #KEY_B",
+              "    sta keydown",
+              "  Sodium64Nova2RouteV3TargetDone:",
               "  lda keylast",
               "",
           ])

@@ -24,7 +24,7 @@ jobs:
       NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
       NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
-      ROUTE_ID: firstlevel-right-periodic-b-plus-f166-f209-v3
+      ROUTE_ID: firstlevel-fixed-cost-table-v3
       PYTHONHASHSEED: '0'
 
     steps:
@@ -140,6 +140,53 @@ jobs:
               raise SystemExit(f"src/main.s entry anchor count={text.count(old)}")
           text = text.replace(old, new, 1)
 
+          # Build a fixed-size controller table. The executed guest instruction
+          # sequence stays identical when the route changes; future route tuning
+          # changes table words only. Index 0..511 maps directly to framecount
+          # modulo 512. Right is always held. B reproduces the v3 schedule.
+          table = []
+          for frame in range(512):
+              keys = 0x0100  # KEY_RIGHT
+              if (frame & 0x3f) < 0x10:
+                  keys |= 0x8000  # KEY_B: periodic 16/64 hold
+              if 166 <= frame < 182:
+                  keys |= 0x8000  # route-v2 targeted hold
+              if 209 <= frame < 225:
+                  keys |= 0x8000  # route-v3 targeted hold
+              table.append(keys)
+
+          table_rows = []
+          for i in range(0, len(table), 8):
+              table_rows.append("  .word " + ", ".join(f"${v:04x}" for v in table[i:i+8]))
+          table_source = "\n".join([
+              "; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "; fixed-size, data-only controller schedule. Keep the driver code",
+              "; identical between route variants; change only these table words.",
+              ".pushseg",
+              '.segment "C_BenchmarkInput"',
+              "Sodium64Nova2InputTable:",
+              *table_rows,
+              ".popseg",
+              "",
+          ])
+
+          proc_anchor = "\n".join([
+              ".endproc",
+              "",
+              ".export GameMainLoop",
+              ".proc GameMainLoop",
+          ])
+          proc_replacement = "\n".join([
+              ".endproc",
+              "",
+              table_source,
+              ".export GameMainLoop",
+              ".proc GameMainLoop",
+          ])
+          if text.count(proc_anchor) != 1:
+              raise SystemExit(f"src/main.s table anchor count={text.count(proc_anchor)}")
+          text = text.replace(proc_anchor, proc_replacement, 1)
+
           old = "\n".join([
               "  lda keydown",
               "  sta keylast",
@@ -152,42 +199,16 @@ jobs:
               "  lda keydown",
               "  sta keylast",
               "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
-              "  ; deterministic normal gameplay input: hold Right, plus a bounded 16-frame",
-              "  ; B hold once every 64 game frames. No player/camera/entity state is written.",
-              "  lda #KEY_RIGHT",
+              "  ; fixed-cost/table-driven input. The instruction path and cycle shape",
+              "  ; are independent of the route schedule; only ROM table data changes.",
+              "  phx",
+              "  lda framecount",
+              "  and #$01ff",
+              "  asl",
+              "  tax",
+              "  lda f:Sodium64Nova2InputTable,x",
+              "  plx",
               "  sta keydown",
-              "  lda framecount",
-              "  and #$003f",
-              "  cmp #$0010",
-              "  bcs :+",
-              "    lda keydown",
-              "    ora #KEY_B",
-              "    sta keydown",
-              "  :",
-              "  ; Route-v2 controlled change: after the frame-128 jump lands on the",
-              "  ; authored Pier at X20-22, create one new B edge and hold it for",
-              "  ; exactly 16 frames to attempt the X24-26 Pier transition.",
-              "  lda framecount",
-              "  cmp #166",
-              "  bcc Sodium64Nova2RouteV2TargetDone",
-              "  cmp #182",
-              "  bcs Sodium64Nova2RouteV2TargetDone",
-              "    lda keydown",
-              "    ora #KEY_B",
-              "    sta keydown",
-              "  Sodium64Nova2RouteV2TargetDone:",
-              "  ; Route-v3 controlled change: frame208 is a verified B release after",
-              "  ; landing on the X24-26 Pier. Create exactly one fresh B edge at",
-              "  ; frame209 and hold it for 16 frames to attempt the X28-30 transition.",
-              "  lda framecount",
-              "  cmp #209",
-              "  bcc Sodium64Nova2RouteV3TargetDone",
-              "  cmp #225",
-              "  bcs Sodium64Nova2RouteV3TargetDone",
-              "    lda keydown",
-              "    ora #KEY_B",
-              "    sta keydown",
-              "  Sodium64Nova2RouteV3TargetDone:",
               "  lda keylast",
               "",
           ])

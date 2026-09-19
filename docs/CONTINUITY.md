@@ -6519,3 +6519,11 @@ Dynamic result:
   - room1->room2 with unchanged route hashes => v5 is qualified as a representative direct-SFC route; proceed to matched Sodium64.
   - renewed hard stall caused by gf608 jump => route input still needs one targeted correction.
   - continued forward motion but no transition by 714 => inspect exact geometry/trigger; horizon may still be insufficient but do not infer failure without a stall.
+
+
+## SRS v5 extended-horizon isolation check — 2026-09-19 UTC
+
+- Direct compare `2255a6f1... -> d4c7d6ba...`: exactly one commit, one file (`.github/workflows/gate-b-srs-reference.yml`), **+5/-5**.
+- All five replacements are observation-contract `600 -> 720` changes: tracer exit threshold, trace row-count assertion, parsed-row length assertion, host-frame sequence upper bound and provenance text.
+- No route generation/input source, benchmark patch, ROM source, Sodium64 runtime or semantic field changes.
+- Therefore any dynamic divergence after the first 600 rows is attributable to continued execution of the same v5 route, subject to exact route hash equality check.

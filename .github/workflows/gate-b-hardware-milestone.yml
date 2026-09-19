@@ -1,0 +1,551 @@
+name: Gate B Hardware Milestone Prep
+
+on:
+  push:
+    branches:
+      - phase3/gate-b-hardware-milestone
+    paths:
+      - '.github/workflows/gate-b-hardware-milestone.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-b-hardware-milestone-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SRS_REPO: https://github.com/undisbeliever/space-rescue-squad.git
+  SRS_SHA: e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865
+  SRS_BASS_SHA: 9db6088a378061afc7b82f50997a5b9a1d951175
+  SRS_UNTECH_EDITOR_SHA: 4c72dc69619c0c246aa7e6325b18b6fb3c219821
+  SRS_TAD_SHA: 17823e5a55893e8442917abadb4e84feb216e5ad
+  SRS_RELEASE_ROM_SHA256: d5bd7b17aa19a1b370efa38554b6ebfd77c4756e7184e9f2e848e8193bc9bed0
+  SRS_ROUTE_PATCH_SHA256: b21d55df2d5fb949646c9a2124d5c062fa5e7f312264dabb2f354fdc67a27935
+  SRS_ROUTE_ROM_SHA256: 2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46
+  NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
+  NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
+  NOVA_ROUTE_ID: firstlevel-fixed-cost-brake-f199-f201-plus-b208-f223
+  NOVA_BASE_ROM_SHA256: fc9f9c984ea840b19847a80357cf5043eb686cc4e2a84a74843e1a451df4b60a
+  NOVA_BUILD_PATCH_SHA256: c33a2f6f2f39ca4328d702dab087dfb98bd1005d83feae897a7ace7b9b0b2e51
+  NOVA_ROUTE_PATCH_SHA256: 8c691e664976ccef3f299bb52530a626520a49c60c51a264fca29dce74797b4a
+  NOVA_ROUTE_ROM_SHA256: 4a996af6a93e997fdedf8ccd3d26ee4756b3ec12abb06ce023928a2519e20be6
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate hardware-profile decoder
+        run: python3 scripts/test_hw_profile_report.py
+
+      - name: Build clean master-derived HW_PROFILE runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install -g libdragon
+          libdragon init
+          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+          mkdir -p hardware/base
+          cp sodium64.z64 rom-converter.py hw-profile-build.log hardware/base/
+          cp build/sodium64.elf hardware/base/
+          cp build/*.map hardware/base/
+          sha256sum sodium64.z64 | tee hardware/base/sodium64-hw-profile.sha256
+
+      - name: Select reproducible Nova2 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install pinned guest-build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cc65 \
+            cmake \
+            git \
+            libgl1-mesa-dev \
+            libmsgsl-dev \
+            libsdl2-dev \
+            lz4 \
+            ninja-build
+          python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
+
+      - name: Rebuild exact qualified Space Rescue Squad v5 route
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/space-rescue-squad"
+          git clone --filter=blob:none "$SRS_REPO" "$root"
+          git -C "$root" checkout --detach "$SRS_SHA"
+          git -C "$root" submodule update --init --recursive
+          test "$(git -C "$root" rev-parse HEAD)" = "$SRS_SHA"
+          test "$(git -C "$root/bass-untech" rev-parse HEAD)" = "$SRS_BASS_SHA"
+          test "$(git -C "$root/untech-editor" rev-parse HEAD)" = "$SRS_UNTECH_EDITOR_SHA"
+          test "$(git -C "$root/terrific-audio-driver" rev-parse HEAD)" = "$SRS_TAD_SHA"
+
+          cmake -S "$root/untech-editor" -B "$root/untech-editor/build" \
+            -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$root/untech-editor/build" --parallel "$(nproc)" --target \
+            untech-compiler untech-lz4c untech-png2snes untech-png2tileset \
+            untech-write-sfc-checksum
+          make -j"$(nproc)" -C "$root/terrific-audio-driver/wiz"
+          cargo build --quiet --release \
+            --manifest-path "$root/terrific-audio-driver/Cargo.toml" \
+            --package tad-compiler
+
+          find "$root/game/resources" -type f -name '*.png' -exec touch {} +
+          make -C "$root/game" directories
+          make -C "$root/game" bin/space-rescue-squad.sfc
+          echo "$SRS_RELEASE_ROM_SHA256  $root/game/bin/space-rescue-squad.sfc" | sha256sum --check
+
+          SRS_ROOT="$root" python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["SRS_ROOT"])
+
+          main = root / "game/src/_main.asm"
+          text = main.read_text()
+          old = """    rep     #$30
+          a16()
+
+
+              if {defined DEBUG_BUILD} {
+          """
+          new = """    rep     #$30
+          a16()
+
+              // SODIUM64 GATE-B BENCHMARK PATCH:
+              // Keep normal audio/game-state initialization, then enter the first
+              // authored gameplay level without title/menu input latency.
+              jsr     GameState.LoadInitialGameState
+              LevelNameScreen.ResetLevelNumber()
+
+              lda.w   #Project.RoomList.a1a_entrance
+              sta.w   GameState.roomId
+              stz.w   GameState.entranceId
+
+              lda.w   #Mode.GAME
+              jmp     SwitchMode
+
+
+              if {defined DEBUG_BUILD} {
+          """
+          if text.count(old) != 1:
+              raise SystemExit(f"_main.asm benchmark anchor count={text.count(old)}")
+          main.write_text(text.replace(old, new, 1))
+
+          loop = root / "game/src/gameloop.inc"
+          text = loop.read_text()
+          old = """        sep     #$30
+              a8()
+              i8()
+                  lda.w   Controller.Joy1.pressed + 1
+          """
+          new = """        sep     #$30
+              a8()
+              i8()
+                  // Deterministic representative-route candidate v5.
+                  // Right + Run stay held.  Keep v2's normal periodic jumps,
+                  // except suppress the absolute gf352 jump so the player drops
+                  // from the upper platform onto the authored lower platform.
+                  // Then issue one real B edge at gf378 and hold B for 16 frames.
+                  // Finally suppress only gf544..559 so the player falls into the
+                  // authored right-door opening instead of jumping into its header.
+                  // No position, momentum, collision or room state is modified.
+                  stz.w   Controller.Joy1.current
+                  stz.w   Controller.Joy1.pressed
+                  stz.w   Controller.Joy1.pressed + 1
+                  lda.b   #JOYH.right | JOYH.y
+                  sta.w   Controller.Joy1.current + 1
+
+                  // Baseline periodic v2 pulse: phase 0x20, 16-frame hold.
+                  lda.w   frameCounter
+                  and.b   #$3f
+                  cmp.b   #$20
+                  bcc     Sodium64RouteV3_PeriodicDone
+                  cmp.b   #$30
+                  bcs     Sodium64RouteV3_PeriodicDone
+                      lda.b   #JOYH.right | JOYH.y | JOYH.b
+                      sta.w   Controller.Joy1.current + 1
+
+                      lda.w   frameCounter
+                      and.b   #$3f
+                      cmp.b   #$20
+                      bne     Sodium64RouteV3_PeriodicDone
+                          lda.b   #JOYH.b
+                          sta.w   Controller.Joy1.pressed + 1
+                  Sodium64RouteV3_PeriodicDone:
+
+                  // Suppress only absolute frameCounter 0x0160..0x016f.
+                  lda.w   frameCounter + 1
+                  cmp.b   #$01
+                  bne     Sodium64RouteV3_SpecialDone
+                      lda.w   frameCounter
+                      cmp.b   #$60
+                      bcc     Sodium64RouteV3_TargetJump
+                      cmp.b   #$70
+                      bcs     Sodium64RouteV3_TargetJump
+                          lda.b   #JOYH.right | JOYH.y
+                          sta.w   Controller.Joy1.current + 1
+                          stz.w   Controller.Joy1.pressed + 1
+
+                  Sodium64RouteV3_TargetJump:
+                      // Targeted lower-platform jump: gf378..393 (0x017a..0x0189).
+                      lda.w   frameCounter
+                      cmp.b   #$7a
+                      bcc     Sodium64RouteV3_SpecialDone
+                      cmp.b   #$8a
+                      bcs     Sodium64RouteV3_SpecialDone
+                          lda.b   #JOYH.right | JOYH.y | JOYH.b
+                          sta.w   Controller.Joy1.current + 1
+                          lda.w   frameCounter
+                          cmp.b   #$7a
+                          bne     Sodium64RouteV3_SpecialDone
+                              lda.b   #JOYH.b
+                              sta.w   Controller.Joy1.pressed + 1
+
+                  Sodium64RouteV3_SpecialDone:
+                  // Suppress only absolute frameCounter 0x0220..0x022f.
+                  lda.w   frameCounter + 1
+                  cmp.b   #$02
+                  bne     Sodium64RouteV5_DoorDone
+                      lda.w   frameCounter
+                      cmp.b   #$20
+                      bcc     Sodium64RouteV5_DoorDone
+                      cmp.b   #$30
+                      bcs     Sodium64RouteV5_DoorDone
+                          lda.b   #JOYH.right | JOYH.y
+                          sta.w   Controller.Joy1.current + 1
+                          stz.w   Controller.Joy1.pressed + 1
+                  Sodium64RouteV5_DoorDone:
+                  lda.w   Controller.Joy1.pressed + 1
+          """
+          if text.count(old) != 1:
+              raise SystemExit(f"gameloop.inc benchmark anchor count={text.count(old)}")
+          loop.write_text(text.replace(old, new, 1))
+          PY
+
+          git -C "$root" diff --check
+          changed="$(git -C "$root" diff --name-only)"
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 2
+          printf '%s\n' "$changed" | grep -Fxq 'game/src/_main.asm'
+          printf '%s\n' "$changed" | grep -Fxq 'game/src/gameloop.inc'
+          git -C "$root" diff -- game/src/_main.asm game/src/gameloop.inc > srs-v5-route.patch
+          echo "$SRS_ROUTE_PATCH_SHA256  srs-v5-route.patch" | sha256sum --check
+
+          make -C "$root/game" bin/space-rescue-squad.sfc
+          rom="$root/game/bin/space-rescue-squad.sfc"
+          echo "$SRS_ROUTE_ROM_SHA256  $rom" | sha256sum --check
+          echo "SRS_ROUTE_ROM=$rom" >> "$GITHUB_ENV"
+
+          {
+            echo "upstream_sha=$SRS_SHA"
+            echo "route=v5 a1a_entrance to a1b_stairway"
+            echo "route_patch_sha256=$SRS_ROUTE_PATCH_SHA256"
+            echo "route_rom_sha256=$SRS_ROUTE_ROM_SHA256"
+          } > srs-v5-provenance.txt
+
+      - name: Rebuild exact qualified Nova the Squirrel 2 route
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/nova-the-squirrel-2"
+          git clone --filter=blob:none "$NOVA_REPO" "$root"
+          git -C "$root" checkout --detach "$NOVA_SHA"
+          test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
+          echo "NOVA_ROOT=$root" >> "$GITHUB_ENV"
+
+          NOVA_ROOT="$root" python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["NOVA_ROOT"])
+          replacements = {
+              "tools/levelconvert.py": [
+                  ('for f in glob.glob("levels/*.json"):', 'for f in sorted(glob.glob("levels/*.json")):'),
+              ],
+              "tools/encodepalettes.py": [
+                  ('for f in glob.glob("palettes/*.png"):', 'for f in sorted(glob.glob("palettes/*.png")):'),
+                  ('for f in glob.glob("palettes/variable/*.png"):', 'for f in sorted(glob.glob("palettes/variable/*.png")):'),
+              ],
+              "tools/encodeportraits.py": [
+                  ('for f in glob.glob("portraits/*.png"):', 'for f in sorted(glob.glob("portraits/*.png")):'),
+              ],
+          }
+          for rel, edits in replacements.items():
+              p = root / rel
+              text = p.read_text()
+              for old, new in edits:
+                  if text.count(old) != 1:
+                      raise SystemExit(f"{rel}: anchor count for {old!r}={text.count(old)}")
+                  text = text.replace(old, new, 1)
+              p.write_text(text)
+          PY
+
+          git -C "$root" diff --check
+          git -C "$root" diff -- tools/levelconvert.py tools/encodepalettes.py tools/encodeportraits.py > nova2-deterministic-build.patch
+          echo "$NOVA_BUILD_PATCH_SHA256  nova2-deterministic-build.patch" | sha256sum --check
+
+          gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
+          mkdir -p "$root/obj/snes"
+          make -C "$root" -j1 nova-the-squirrel-2.sfc 2>&1 | tee nova2-unmodified-build.log
+          echo "$NOVA_BASE_ROM_SHA256  $root/nova-the-squirrel-2.sfc" | sha256sum --check
+
+          NOVA_ROOT="$root" python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["NOVA_ROOT"])
+          main = root / "src/main.s"
+          text = main.read_text()
+
+          old = "\n".join([
+              "  .import OpenOverworld",
+              "  seta8",
+              "  lda #2*16",
+              "  sta OverworldPlayerX",
+              "  lda #10*16",
+              "  sta OverworldPlayerY",
+              "  stz OverworldMap",
+              "  stz OverworldDirection",
+              "  jml OpenOverworld",
+              "",
+          ])
+          new = "\n".join([
+              "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "  ; Enter the authored firstlevel through the game's normal StartLevel path.",
+              "  ; Only overworld/menu routing is skipped; level decompression, autotiling,",
+              "  ; graphics upload, checkpoint creation and GameMainLoop remain upstream code.",
+              "  .import level_firstlevel",
+              "  seta16",
+              "  lda #.loword(level_firstlevel)",
+              "  sta LevelHeaderPointer+0",
+              "  seta8",
+              "  lda #^level_firstlevel",
+              "  sta LevelHeaderPointer+2",
+              "  seta16",
+              "  lda #1",
+              "  jml StartLevel",
+              "",
+          ])
+          if text.count(old) != 1:
+              raise SystemExit(f"src/main.s entry anchor count={text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          table = []
+          for frame in range(512):
+              keys = 0x0100
+              if (frame & 0x3f) < 0x10:
+                  keys |= 0x8000
+              if 166 <= frame < 182:
+                  keys |= 0x8000
+              if 199 <= frame < 202:
+                  keys &= ~0x0100
+              if frame == 207:
+                  keys &= ~0x8000
+              if 208 <= frame < 224:
+                  keys |= 0x8000
+              table.append(keys)
+
+          table_rows = []
+          for i in range(0, len(table), 8):
+              table_rows.append("  .word " + ", ".join("$" + f"{v:04x}" for v in table[i:i+8]))
+          table_source = "\n".join([
+              "; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "; fixed-size, data-only controller schedule. Keep the driver code",
+              "; identical between route variants; change only these table words.",
+              ".pushseg",
+              '.segment "C_BenchmarkInput"',
+              "Sodium64Nova2InputTable:",
+              *table_rows,
+              ".popseg",
+              "",
+          ])
+
+          proc_anchor = "\n".join([
+              ".endproc",
+              "",
+              ".export GameMainLoop",
+              ".proc GameMainLoop",
+          ])
+          proc_replacement = "\n".join([
+              ".endproc",
+              "",
+              table_source,
+              ".export GameMainLoop",
+              ".proc GameMainLoop",
+          ])
+          if text.count(proc_anchor) != 1:
+              raise SystemExit(f"src/main.s table anchor count={text.count(proc_anchor)}")
+          text = text.replace(proc_anchor, proc_replacement, 1)
+
+          old = "\n".join([
+              "  lda keydown",
+              "  sta keylast",
+              "  lda JOY1CUR",
+              "  sta keydown",
+              "  lda keylast",
+              "",
+          ])
+          new = "\n".join([
+              "  lda keydown",
+              "  sta keylast",
+              "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "  ; fixed-cost/table-driven input. The instruction path and cycle shape",
+              "  ; are independent of the route schedule; only ROM table data changes.",
+              "  phx",
+              "  lda framecount",
+              "  and #$01ff",
+              "  asl",
+              "  tax",
+              "  lda f:Sodium64Nova2InputTable,x",
+              "  plx",
+              "  sta keydown",
+              "  lda keylast",
+              "",
+          ])
+          if text.count(old) != 1:
+              raise SystemExit(f"src/main.s input anchor count={text.count(old)}")
+          main.write_text(text.replace(old, new, 1))
+          PY
+
+          git -C "$root" diff --check
+          changed="$(git -C "$root" diff --name-only)"
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 4
+          printf '%s\n' "$changed" | grep -Fxq 'src/main.s'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/levelconvert.py'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/encodepalettes.py'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/encodeportraits.py'
+          git -C "$root" diff -- src/main.s > nova2-firstlevel-route.patch
+          echo "$NOVA_ROUTE_PATCH_SHA256  nova2-firstlevel-route.patch" | sha256sum --check
+
+          make -C "$root" -j1 nova-the-squirrel-2.sfc 2>&1 | tee nova2-qualified-build.log
+          rom="$root/nova-the-squirrel-2.sfc"
+          echo "$NOVA_ROUTE_ROM_SHA256  $rom" | sha256sum --check
+          echo "NOVA_ROUTE_ROM=$rom" >> "$GITHUB_ENV"
+
+          {
+            echo "upstream_sha=$NOVA_SHA"
+            echo "route_id=$NOVA_ROUTE_ID"
+            echo "base_rom_sha256=$NOVA_BASE_ROM_SHA256"
+            echo "deterministic_build_patch_sha256=$NOVA_BUILD_PATCH_SHA256"
+            echo "route_patch_sha256=$NOVA_ROUTE_PATCH_SHA256"
+            echo "route_rom_sha256=$NOVA_ROUTE_ROM_SHA256"
+          } > nova2-route-provenance.txt
+
+      - name: Wrap both exact workloads with one HW_PROFILE runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in srs-v5 nova2; do
+            mkdir -p "hardware/wrap/$name"
+            cp hardware/base/sodium64.z64 "hardware/wrap/$name/sodium64.z64"
+            cp hardware/base/rom-converter.py "hardware/wrap/$name/rom-converter.py"
+          done
+          cp "$SRS_ROUTE_ROM" hardware/wrap/srs-v5/gate-b-srs-v5.smc
+          cp "$NOVA_ROUTE_ROM" hardware/wrap/nova2/gate-b-nova2.smc
+
+          (
+            cd hardware/wrap/srs-v5
+            python3 rom-converter.py </dev/null
+          )
+          (
+            cd hardware/wrap/nova2
+            python3 rom-converter.py </dev/null
+          )
+
+          srs_wrapped=hardware/wrap/srs-v5/out/gate-b-srs-v5.z64
+          nova_wrapped=hardware/wrap/nova2/out/gate-b-nova2.z64
+          test -s "$srs_wrapped"
+          test -s "$nova_wrapped"
+          sha256sum "$srs_wrapped" | tee hardware/srs-v5-wrapped.sha256
+          sha256sum "$nova_wrapped" | tee hardware/nova2-wrapped.sha256
+
+          base_sha="$(sha256sum hardware/base/sodium64.z64 | awk '{print $1}')"
+          srs_wrapped_sha="$(sha256sum "$srs_wrapped" | awk '{print $1}')"
+          nova_wrapped_sha="$(sha256sum "$nova_wrapped" | awk '{print $1}')"
+
+          {
+            echo "sodium64_commit=$GITHUB_SHA"
+            echo "hw_profile=1"
+            echo "base_sodium64_sha256=$base_sha"
+            echo "warmup_windows=2"
+            echo "measured_windows=5"
+            echo "forced_frameskip=0"
+            echo "forced_apu_clock=21"
+            echo "forced_audio=4"
+            echo "forced_precision=8"
+            echo "completion_signal=solid_red_screen"
+            echo
+            echo "srs_upstream_sha=$SRS_SHA"
+            echo "srs_route_patch_sha256=$SRS_ROUTE_PATCH_SHA256"
+            echo "srs_guest_rom_sha256=$SRS_ROUTE_ROM_SHA256"
+            echo "srs_wrapped_z64_sha256=$srs_wrapped_sha"
+            echo
+            echo "nova_upstream_sha=$NOVA_SHA"
+            echo "nova_route_id=$NOVA_ROUTE_ID"
+            echo "nova_route_patch_sha256=$NOVA_ROUTE_PATCH_SHA256"
+            echo "nova_guest_rom_sha256=$NOVA_ROUTE_ROM_SHA256"
+            echo "nova_wrapped_z64_sha256=$nova_wrapped_sha"
+            echo
+            echo "asset_boundary=wrapped and guest ROM bytes verified in CI but intentionally not uploaded"
+          } | tee hardware/gate-b-hardware-manifest.txt
+
+          cat > hardware/HARDWARE_STEPS.txt <<'EOF'
+          Gate B real-N64 milestone procedure
+
+          1. Use the exact SRS-v5 and Nova2 wrapped Z64 identities recorded in
+             gate-b-hardware-manifest.txt.
+          2. Run each build on real N64/SummerCart64 from a clean launch.
+          3. Do not change emulator settings or controller input. HW_PROFILE=1
+             forces frameskip 0, APU 21, audio 4 and precision 8 before guest work.
+          4. Wait for the screen to become solid red. Red means exactly two
+             complete 60-VI warmup windows plus five measured windows were saved.
+          5. Retrieve the raw 32 KiB SRAM save after each workload without
+             launching the other workload first. Keep the saves separate.
+          6. Preserve the wrapped Z64 SHA256, SRAM SHA256 and this manifest with
+             the returned captures. Decode with scripts/hw_profile_report.py and
+             the matching ELF/map from this artifact.
+
+          Gate decision:
+          - both valid 60/60 x5 captures => M2 / Gate B performance exit evidence;
+          - any below-target window or invalid capture => retain that workload and
+            profile it as the next Gate-B blocker. Do not substitute corpus entries.
+          EOF
+
+          # The upstream projects expose source but constrain game assets to use
+          # within their games. Preserve the project's conservative no-ROM-upload
+          # boundary: CI proves exact guest/wrapper identities, while artifacts
+          # contain only Sodium64, patches, provenance and the matching symbols.
+          rm -rf hardware/wrap
+
+      - name: Upload non-guest hardware preparation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-hardware-milestone-prep
+          retention-days: 14
+          path: |
+            hardware/base/
+            hardware/gate-b-hardware-manifest.txt
+            hardware/HARDWARE_STEPS.txt
+            hardware/srs-v5-wrapped.sha256
+            hardware/nova2-wrapped.sha256
+            srs-v5-route.patch
+            srs-v5-provenance.txt
+            nova2-deterministic-build.patch
+            nova2-firstlevel-route.patch
+            nova2-route-provenance.txt
+            nova2-unmodified-build.log
+            nova2-qualified-build.log

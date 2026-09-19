@@ -5898,3 +5898,70 @@ Controlled repair:
 restores the exact historical benchmark comments as well as instructions so both patch SHA and ROM SHA are required to match before direct-reference execution.
 
 No Sodium64 runtime code, benchmark behavior, upstream game source semantics or reference adapter semantics are changed by this repair.
+
+
+## Gate-B SRS safe matched-route result — VALID MEASUREMENT / REPRESENTATIVE ROUTE NOT YET VALID 2026-09-19 UTC
+
+Exact authority:
+- **`phase3/gate-b-srs-audition@075068af92da1802aa3a2677c3d44f393215cc44`**;
+- **Gate B SRS Audition `35416459569` SUCCESS**;
+- same-head **Build and Validate `35416459565` SUCCESS**;
+- diagnostics artifact **`10575723616`**, digest **`sha256:aa118560ab2d59b54e36717452ffcf65e58f835845d06ab504e01e491ff60539`**;
+- source-build artifact **`10576445994`**, digest **`sha256:513a591bd4b4c0198a420603701eac6e4e33b7b368416e32bb74d0b310e60438`**.
+
+Measurement contract:
+- Road-valid settings configured and verified at the **first `cpu_execute` before any guest execution**;
+- frameskip0 / APU21 / audio4 / precision8;
+- JIT lookup/pointer reset before guest work;
+- 2 complete 60-VI warmup windows;
+- profiler-only reset at exact `update_fps` boundary;
+- 5 complete 60-VI measured windows;
+- byte-wise SRS guest state at every boundary;
+- three fresh ares processes.
+
+### MEASURED
+
+All three repeats are **bit-for-bit identical in the observed semantic vectors**.
+
+Each repeat measured frame vector:
+**`[60, 60, 60, 60, 60] /60`**.
+
+Seven observed guest-state boundaries (2 warmup + 5 measured), identical in r1/r2/r3:
+1. room1 player **(4160,4259)** camera **(4096,4096)**
+2. room1 player **(4250,4259)** camera **(4122,4096)**
+3. room1 player **(4199,4259)** camera **(4096,4096)**
+4. room1 player **(4250,4259)** camera **(4122,4096)**
+5. room1 player **(4250,4259)** camera **(4122,4096)**
+6. room1 player **(4250,4259)** camera **(4122,4096)**
+7. room1 player **(4250,4259)** camera **(4122,4096)**
+
+Derived:
+- player-x span across observed boundaries: **90 px**;
+- distinct boundary states: **3**;
+- room transition: **none**;
+- final identical-state suffix: **4 complete 60-VI windows**;
+- final state exactly matches the prior endpoint `room1 / player(4250,4259) / camera(4122,4096)`.
+
+Statistical profile is also exactly repeatable at this fixed route phase:
+- **3584 samples** each;
+- S-CPU8.7%, APU JIT4.0%, APU static28.1%, DSP12.8%, PPU5.2%, DMA1.3%, VI wait39.8% (other buckets negligible).
+
+### Interpretation
+
+**VALID MEASUREMENT:** the previous host-timed APU/JIT preparation concern has been removed for this result.
+
+**MEASURED:** the existing Right+Run benchmark reaches 60/60 throughput in this pinned ares/N64 laboratory at Road-valid settings.
+
+**MEASURED:** the existing Right+Run route then enters a deterministic stable guest-state stall. It is therefore **not validated as a sustained representative DKC-like route**.
+
+Do not interpret the 60/60 vector as broad SRS performance: after the early movement, several measured windows are the same stalled gameplay state.
+
+The cause of the stall remains **UNKNOWN**. This result alone does not distinguish:
+- normal authored geometry/input requirement;
+- deterministic benchmark-route deficiency;
+- Sodium64 gameplay/correctness divergence.
+
+The direct-SNES reference experiment is now the gate-driving discriminator. Do not change SRS input or optimize Sodium64 before reading it.
+
+If direct SNES stalls at the same early location/state under the identical benchmark, classify the route as inadequate and design a richer deterministic input sequence.
+If direct SNES progresses materially beyond it, add `frameCounter` to a follow-up safe Sodium64 capture and locate the earliest guest-aligned divergence.

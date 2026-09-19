@@ -615,30 +615,54 @@ jobs:
                   last_game = game
           direct_by_frame = {int(r["game_frame"]): r for r in first_attempt}
 
-          spatial_fields = (
-              "player_x", "player_y", "scroll_x", "scroll_y", "health"
+          # The Sodium64 boundary is a host update_fps entry and can stop while
+          # the guest is part-way through a game-owned frame. The direct-SNES
+          # observer samples after a rendered SNES frame. Keep strict exact
+          # comparisons as diagnostics, but also characterize each scalar
+          # against the direct gf -> gf+1 phase envelope.
+          phase_fields = (
+              "player_x", "player_y", "player_vy",
+              "scroll_x", "scroll_y", "health",
           )
           matches = []
+          same_field_counts = {k: 0 for k in phase_fields}
+          next_field_counts = {k: 0 for k in phase_fields}
+          envelope_field_counts = {k: 0 for k in phase_fields}
           for st in sequences[0]:
               gf = int(st["framecount"])
               same = direct_by_frame.get(gf)
-              same_exact = bool(same) and all(
-                  int(st[k]) == int(same[k]) for k in spatial_fields
-              )
-              adjacent = None
-              for delta in (-1, 0, 1):
-                  ref = direct_by_frame.get(gf + delta)
-                  if ref and all(int(st[k]) == int(ref[k]) for k in spatial_fields):
-                      adjacent = delta
-                      break
+              nxt = direct_by_frame.get(gf + 1)
+
+              same_fields = {}
+              next_fields = {}
+              envelope_fields = {}
+              for key in phase_fields:
+                  sval = int(st[key])
+                  same_fields[key] = bool(same) and sval == int(same[key])
+                  next_fields[key] = bool(nxt) and sval == int(nxt[key])
+                  envelope_fields[key] = bool(same and nxt) and (
+                      min(int(same[key]), int(nxt[key]))
+                      <= sval
+                      <= max(int(same[key]), int(nxt[key]))
+                  )
+                  same_field_counts[key] += int(same_fields[key])
+                  next_field_counts[key] += int(next_fields[key])
+                  envelope_field_counts[key] += int(envelope_fields[key])
+
               matches.append({
                   "framecount": gf,
-                  "same_frame_spatial_exact": same_exact,
-                  "exact_spatial_delta_within_1": adjacent,
+                  "same_frame_fields": same_fields,
+                  "next_frame_fields": next_fields,
+                  "same_to_next_envelope_fields": envelope_fields,
+                  "all_fields_within_same_to_next_envelope": all(envelope_fields.values()),
                   "sodium": st,
                   "direct_same_frame": same,
+                  "direct_next_frame": nxt,
               })
 
+          envelope_all_count = sum(
+              m["all_fields_within_same_to_next_envelope"] for m in matches
+          )
           payload = {
               "route_id": os.environ["ROUTE_ID"],
               "benchmark_rom_sha256": os.environ["ROUTE_ROM_SHA256"],
@@ -649,9 +673,12 @@ jobs:
               "state_repeatable_across_three_runs": repeatable_state,
               "frame_vector_repeatable_across_three_runs": repeatable_vectors,
               "first_repeat_framecount_monotonic": monotonic,
-              "direct_reference_matches": matches,
-              "same_frame_spatial_exact_count": sum(m["same_frame_spatial_exact"] for m in matches),
-              "adjacent_tick_spatial_exact_count": sum(m["exact_spatial_delta_within_1"] is not None for m in matches),
+              "direct_reference_phase_matches": matches,
+              "same_frame_field_exact_counts": same_field_counts,
+              "next_frame_field_exact_counts": next_field_counts,
+              "same_to_next_envelope_field_counts": envelope_field_counts,
+              "all_phase_fields_within_same_to_next_envelope_count": envelope_all_count,
+              "semantic_phase_envelope_all_boundaries": envelope_all_count == len(matches),
           }
           Path("profiles/nova2-matched-summary.json").write_text(
               json.dumps(payload, indent=2, sort_keys=True) + "\n"
@@ -663,8 +690,11 @@ jobs:
               f"- state sequence identical across repeats: **{repeatable_state}**",
               f"- measured frame vector identical across repeats: **{repeatable_vectors}**",
               f"- first-repeat framecount monotonic: **{monotonic}**",
-              f"- same-frame direct spatial matches: **{payload['same_frame_spatial_exact_count']}/7**",
-              f"- direct spatial matches within ±1 guest tick: **{payload['adjacent_tick_spatial_exact_count']}/7**",
+              "- direct-SNES comparison is phase-aware: Sodium64 samples host update_fps entry; direct samples post-render",
+              f"- same-frame field exact counts: **{same_field_counts}**",
+              f"- next-frame field exact counts: **{next_field_counts}**",
+              f"- same→next envelope field counts: **{envelope_field_counts}**",
+              f"- all phase fields inside direct gf→gf+1 envelope: **{envelope_all_count}/{len(matches)}**",
               "",
           ]
           for i, (seq, vector) in enumerate(zip(sequences, vectors), 1):

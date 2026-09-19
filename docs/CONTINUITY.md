@@ -6189,3 +6189,27 @@ Decision:
 - next representative SRS route must differ only by realistic controller input (B edge/hold semantics already documented), be validated on direct SFC first, and demonstrate sustained progression beyond local x=154, preferably reaching the authored `a1b_stairway` room transition.
 
 Harness follow-up: repair termination so a complete 600-row trace exits green and uploads evidence. The guest trace itself is complete; do not rerun merely to answer the old-route semantic question.
+
+
+## SRS direct-reference teardown repair launched — checkpoint 2026-09-19
+
+Exact candidate: **`phase3/gate-b-srs-reference@dd05ba502a6c4c6b7c4de2da1384207d23ea5a2d`**.
+
+Controlled harness-only change from the dynamically informative `c5f4c031...` run:
+- tracer still emits the same row and flushes stderr after every frame;
+- at host frame 600 replace **`std::exit(0)` with `std::_Exit(0)`**;
+- purpose: skip ares global/static destructor teardown that produced SIGSEGV 139 after the complete 600-row trace.
+- no SRS source/input/ROM/symbol changes; no Sodium64 runtime changes; PixelAccuracy=true remains explicit.
+
+Runs:
+- **Gate B SRS Direct SNES Reference `35419188132`** — in progress at checkpoint;
+- **Build and Validate `35419188123`** — in progress at checkpoint.
+
+Question: does the already-complete 600-row direct trace now terminate with process status 0 and permit the existing non-ROM artifact upload/semantic assertions to finish?
+
+Expected readings:
+- SUCCESS + artifact => harness teardown fixed; use artifact as durable authority, with semantics expected identical to `35418629393`;
+- failure after 600 rows => guest evidence remains valid, teardown mechanism still needs a harness-only repair;
+- any semantic trace difference before frame 600 would be unexpected and must be investigated rather than ignored.
+
+The old Right+Run representativeness decision is already closed by `35418629393`; this rerun is for evidence hygiene only.

@@ -86,8 +86,25 @@ def read_snes_u16(client: RSPClient, lo_addr: int, hi_addr: int) -> int:
     return lo | (hi << 8)
 
 
+def read_snes_u32(
+    client: RSPClient, b0_addr: int, b1_addr: int, b2_addr: int, b3_addr: int
+) -> int:
+    b0 = read_uint(client, b0_addr, 1)
+    b1 = read_uint(client, b1_addr, 1)
+    b2 = read_uint(client, b2_addr, 1)
+    b3 = read_uint(client, b3_addr, 1)
+    return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24)
+
+
 def guest_state(client: RSPClient, args: argparse.Namespace) -> dict[str, int]:
     return {
+        "frame_counter": read_snes_u32(
+            client,
+            args.srs_frame_counter,
+            args.srs_frame_counter_1,
+            args.srs_frame_counter_2,
+            args.srs_frame_counter_3,
+        ),
         "room_id": read_uint(client, args.srs_room_id, 1),
         "player_x": read_snes_u16(client, args.srs_player_x, args.srs_player_x_hi),
         "player_y": read_snes_u16(client, args.srs_player_y, args.srs_player_y_hi),
@@ -150,9 +167,10 @@ def main() -> int:
         "profile_sample_count", "profile_last_epc", "apu_clock", "jit_lookup",
         "jit_lookup_size", "jit_pointer", "jit_buffer", "skipped_set", "audio_set",
         "precision_set", "fps_native", "fps_emulate", "fps_display", "frame_count",
-        "srs_room_id", "srs_player_x", "srs_player_x_hi", "srs_player_y",
-        "srs_player_y_hi", "srs_camera_x", "srs_camera_x_hi", "srs_camera_y",
-        "srs_camera_y_hi",
+        "srs_frame_counter", "srs_frame_counter_1", "srs_frame_counter_2",
+        "srs_frame_counter_3", "srs_room_id", "srs_player_x", "srs_player_x_hi",
+        "srs_player_y", "srs_player_y_hi", "srs_camera_x", "srs_camera_x_hi",
+        "srs_camera_y", "srs_camera_y_hi",
     ):
         parser.add_argument("--" + name.replace("_", "-"), type=parse_int, required=True)
 

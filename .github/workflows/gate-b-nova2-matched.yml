@@ -1,0 +1,710 @@
+name: Gate B Nova2 Matched
+
+on:
+  push:
+    branches:
+      - phase3/gate-b-nova2-reference
+    paths:
+      - '.github/workflows/gate-b-nova2-matched.yml'
+      - 'scripts/gdb_matched_nova2.py'
+      - 'src/main.S'
+      - 'src/profile.S'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: sodium64-gate-b-nova2-matched-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  matched-nova2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    env:
+      NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
+      NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
+      ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+      ROUTE_ID: firstlevel-fixed-cost-brake-f199-f201-plus-b208-f223
+      BASE_ROM_SHA256: fc9f9c984ea840b19847a80357cf5043eb686cc4e2a84a74843e1a451df4b60a
+      BUILD_PATCH_SHA256: c33a2f6f2f39ca4328d702dab087dfb98bd1005d83feae897a7ace7b9b0b2e51
+      ROUTE_PATCH_SHA256: 8c691e664976ccef3f299bb52530a626520a49c60c51a264fca29dce74797b4a
+      ROUTE_ROM_SHA256: 4a996af6a93e997fdedf8ccd3d26ee4756b3ec12abb06ce023928a2519e20be6
+      DIRECT_REFERENCE_ARTIFACT_ID: '10589106753'
+      PYTHONHASHSEED: '0'
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Reproduce pinned Nova2 Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install Nova2 build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential cc65 git lz4
+          python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
+
+      - name: Rebuild exact qualified Nova2 route
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/nova-the-squirrel-2"
+          git clone --filter=blob:none "$NOVA_REPO" "$root"
+          git -C "$root" checkout --detach "$NOVA_SHA"
+          test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
+          echo "NOVA_ROOT=$root" >> "$GITHUB_ENV"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["RUNNER_TEMP"]) / "nova-the-squirrel-2"
+          replacements = {
+              "tools/levelconvert.py": [
+                  ('for f in glob.glob("levels/*.json"):', 'for f in sorted(glob.glob("levels/*.json")):'),
+              ],
+              "tools/encodepalettes.py": [
+                  ('for f in glob.glob("palettes/*.png"):', 'for f in sorted(glob.glob("palettes/*.png")):'),
+                  ('for f in glob.glob("palettes/variable/*.png"):', 'for f in sorted(glob.glob("palettes/variable/*.png")):'),
+              ],
+              "tools/encodeportraits.py": [
+                  ('for f in glob.glob("portraits/*.png"):', 'for f in sorted(glob.glob("portraits/*.png")):'),
+              ],
+          }
+          for rel, edits in replacements.items():
+              p = root / rel
+              text = p.read_text()
+              for old, new in edits:
+                  if text.count(old) != 1:
+                      raise SystemExit(f"{rel}: anchor count for {old!r} = {text.count(old)}")
+                  text = text.replace(old, new, 1)
+              p.write_text(text)
+          PY
+
+          git -C "$root" diff --check
+          git -C "$root" diff -- tools/levelconvert.py tools/encodepalettes.py tools/encodeportraits.py             > nova2-deterministic-build.patch
+          build_patch_sha="$(sha256sum nova2-deterministic-build.patch | awk '{print $1}')"
+          test "$build_patch_sha" = "$BUILD_PATCH_SHA256"
+
+          gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
+          mkdir -p "$root/obj/snes"
+
+          make -C "$root" -j1 nova-the-squirrel-2.sfc 2>&1 | tee nova2-unmodified-build.log
+          base_sha="$(sha256sum "$root/nova-the-squirrel-2.sfc" | awk '{print $1}')"
+          echo "normalized_base_rom_sha256=$base_sha"
+          test "$base_sha" = "$BASE_ROM_SHA256"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["RUNNER_TEMP"]) / "nova-the-squirrel-2"
+          main = root / "src/main.s"
+          text = main.read_text()
+
+          old = "\n".join([
+              "  .import OpenOverworld",
+              "  seta8",
+              "  lda #2*16",
+              "  sta OverworldPlayerX",
+              "  lda #10*16",
+              "  sta OverworldPlayerY",
+              "  stz OverworldMap",
+              "  stz OverworldDirection",
+              "  jml OpenOverworld",
+              "",
+          ])
+          new = "\n".join([
+              "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "  ; Enter the authored firstlevel through the game's normal StartLevel path.",
+              "  ; Only overworld/menu routing is skipped; level decompression, autotiling,",
+              "  ; graphics upload, checkpoint creation and GameMainLoop remain upstream code.",
+              "  .import level_firstlevel",
+              "  seta16",
+              "  lda #.loword(level_firstlevel)",
+              "  sta LevelHeaderPointer+0",
+              "  seta8",
+              "  lda #^level_firstlevel",
+              "  sta LevelHeaderPointer+2",
+              "  seta16",
+              "  lda #1",
+              "  jml StartLevel",
+              "",
+          ])
+          if text.count(old) != 1:
+              raise SystemExit(f"src/main.s entry anchor count={text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          table = []
+          for frame in range(512):
+              keys = 0x0100
+              if (frame & 0x3f) < 0x10:
+                  keys |= 0x8000
+              if 166 <= frame < 182:
+                  keys |= 0x8000
+              if 199 <= frame < 202:
+                  keys &= ~0x0100
+              if frame == 207:
+                  keys &= ~0x8000
+              if 208 <= frame < 224:
+                  keys |= 0x8000
+              table.append(keys)
+
+          table_rows = []
+          for i in range(0, len(table), 8):
+              table_rows.append("  .word " + ", ".join(f"$" + f"{v:04x}" for v in table[i:i+8]))
+          table_source = "\n".join([
+              "; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "; fixed-size, data-only controller schedule.",
+              ".pushseg",
+              '.segment "C_BenchmarkInput"',
+              "Sodium64Nova2InputTable:",
+              *table_rows,
+              ".popseg",
+              "",
+          ])
+
+          proc_anchor = "\n".join([
+              ".endproc",
+              "",
+              ".export GameMainLoop",
+              ".proc GameMainLoop",
+          ])
+          proc_replacement = "\n".join([
+              ".endproc",
+              "",
+              table_source,
+              ".export GameMainLoop",
+              ".proc GameMainLoop",
+          ])
+          if text.count(proc_anchor) != 1:
+              raise SystemExit(f"src/main.s table anchor count={text.count(proc_anchor)}")
+          text = text.replace(proc_anchor, proc_replacement, 1)
+
+          old = "\n".join([
+              "  lda keydown",
+              "  sta keylast",
+              "  lda JOY1CUR",
+              "  sta keydown",
+              "  lda keylast",
+              "",
+          ])
+          new = "\n".join([
+              "  lda keydown",
+              "  sta keylast",
+              "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "  ; fixed-cost/table-driven input. The instruction path and cycle shape",
+              "  ; are independent of the route schedule; only ROM table data changes.",
+              "  phx",
+              "  lda framecount",
+              "  and #$01ff",
+              "  asl",
+              "  tax",
+              "  lda f:Sodium64Nova2InputTable,x",
+              "  plx",
+              "  sta keydown",
+              "  lda keylast",
+              "",
+          ])
+          if text.count(old) != 1:
+              raise SystemExit(f"src/main.s input anchor count={text.count(old)}")
+          main.write_text(text.replace(old, new, 1))
+          PY
+
+          git -C "$root" diff --check
+          changed="$(git -C "$root" diff --name-only)"
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 4
+          printf '%s\n' "$changed" | grep -Fxq 'src/main.s'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/levelconvert.py'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/encodepalettes.py'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/encodeportraits.py'
+          git -C "$root" diff -- src/main.s > nova2-firstlevel-benchmark.patch
+
+          make -C "$root" -j1 nova-the-squirrel-2.sfc 2>&1 | tee nova2-qualified-build.log
+          rom="$root/nova-the-squirrel-2.sfc"
+          route_patch_sha="$(sha256sum nova2-firstlevel-benchmark.patch | awk '{print $1}')"
+          route_rom_sha="$(sha256sum "$rom" | awk '{print $1}')"
+          echo "route_id=$ROUTE_ID patch_sha256=$route_patch_sha rom_sha256=$route_rom_sha"
+          test "$route_patch_sha" = "$ROUTE_PATCH_SHA256"
+          test "$route_rom_sha" = "$ROUTE_ROM_SHA256"
+
+          {
+            echo "upstream_sha=$NOVA_SHA"
+            echo "route_id=$ROUTE_ID"
+            echo "normalized_base_rom_sha256=$BASE_ROM_SHA256"
+            echo "deterministic_build_patch_sha256=$BUILD_PATCH_SHA256"
+            echo "benchmark_patch_sha256=$route_patch_sha"
+            echo "benchmark_rom_sha256=$route_rom_sha"
+            echo "asset_boundary=upstream assets used only to build/profile this game; ROM/assets are not uploaded"
+          } > nova2-matched-provenance.txt
+
+      - name: Resolve linked Nova2 low-WRAM symbols
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > nova2-wram.env
+          from pathlib import Path
+          import os
+          import re
+
+          root = Path(os.environ["RUNNER_TEMP"]) / "nova-the-squirrel-2"
+          dbg = root / "nova-the-squirrel-2.dbg"
+          if not dbg.is_file():
+              raise SystemExit(f"missing linked debug symbols: {dbg}")
+
+          wanted = {
+              "framecount": "NOVA_FRAMECOUNT_WRAM",
+              "keynew": "NOVA_KEYNEW_WRAM",
+              "ScrollX": "NOVA_SCROLLX_WRAM",
+              "ScrollY": "NOVA_SCROLLY_WRAM",
+              "PlayerPX": "NOVA_PLAYERX_WRAM",
+              "PlayerPY": "NOVA_PLAYERY_WRAM",
+              "PlayerVY": "NOVA_PLAYERVY_WRAM",
+              "PlayerHealth": "NOVA_HEALTH_WRAM",
+              "JumpGracePeriod": "NOVA_JUMP_GRACE_WRAM",
+              "PlayerWantsToJump": "NOVA_WANTS_JUMP_WRAM",
+              "PlayerOnGround": "NOVA_ON_GROUND_WRAM",
+          }
+          found = {}
+          for raw in dbg.read_text().splitlines():
+              if not raw.startswith("sym\t"):
+                  continue
+              name_m = re.search(r'(?:^|,)name="([^"]+)"', raw)
+              val_m = re.search(r'(?:^|,)val=0x([0-9A-Fa-f]+)', raw)
+              if not name_m or not val_m:
+                  continue
+              name = name_m.group(1)
+              if name in wanted:
+                  found[name] = int(val_m.group(1), 16)
+
+          missing = set(wanted) - set(found)
+          if missing:
+              raise SystemExit(f"missing linked WRAM symbols: {sorted(missing)}")
+          for name, env_name in wanted.items():
+              value = found[name]
+              if not 0 <= value < 0x2000:
+                  raise SystemExit(f"{name} outside low WRAM: 0x{value:06x}")
+              print(f"{env_name}={value}")
+          PY
+          cat nova2-wram.env
+          cat nova2-wram.env >> "$GITHUB_ENV"
+
+      - name: Switch to current Python for Sodium64 tooling
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js and build Sodium64 PROFILE runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Validate matched observer and compile Sodium64 PROFILE
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/gdb_matched_nova2.py
+          npm install -g libdragon
+          python3 -m unittest discover -s scripts -p 'test_*.py' -v
+          libdragon init
+          libdragon make PROFILE=1 -j"$(nproc)" 2>&1 | tee profile-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Install ares N64 lab dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y             ccache             cmake             curl             libgtk-3-dev             libgl1-mesa-dri             libmsgsl-dev             libsdl2-dev             libvulkan1             mesa-vulkan-drivers             ninja-build             qt6-base-dev             unzip             xauth             xvfb
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-n64"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout "$ARES_PIN"
+          cd "$root"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          if s.count(old) != 1:
+              raise SystemExit("unexpected RSP recompiler anchor")
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
+          ccache --zero-stats
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ccache --show-stats
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Wrap exact Nova2 benchmark locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workloads/ares
+          cp sodium64.z64 workloads/ares/sodium64.z64
+          cp rom-converter.py workloads/ares/rom-converter.py
+          cp "$NOVA_ROOT/nova-the-squirrel-2.sfc" workloads/ares/profile-nova2.smc
+          (
+            cd workloads/ares
+            python3 rom-converter.py </dev/null
+          )
+          test -s workloads/ares/out/profile-nova2.z64
+
+      - name: Locate Sodium64 and Nova2 guest state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf="build/sodium64.elf"
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          magic=$(symbol profile_magic)
+          end=$(symbol profile_sample_buffer_end)
+          buffer=$(symbol profile_sample_buffer)
+          write_ptr=$(symbol profile_write_ptr)
+          sample_count=$(symbol profile_sample_count)
+          last_epc=$(symbol profile_last_epc)
+          apu_clock=$(symbol apu_clock)
+          jit_lookup=$(symbol jit_lookup)
+          jit_pointer=$(symbol jit_pointer)
+          fps_native=$(symbol fps_native)
+          fps_emulate=$(symbol fps_emulate)
+          fps_display=$(symbol fps_display)
+          frame_count=$(symbol frame_count)
+          skipped_set=$(symbol skipped_set)
+          precision_set=$(symbol precision_set)
+          audio_set=$(symbol audio_set)
+          cpu_execute=$(symbol cpu_execute)
+          update_fps=$(symbol update_fps)
+          check_frame=$(symbol check_frame)
+
+          for value in             "$magic" "$end" "$buffer" "$write_ptr" "$sample_count"             "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer"             "$fps_native" "$fps_emulate" "$fps_display" "$frame_count"             "$skipped_set" "$precision_set" "$audio_set"             "$cpu_execute" "$update_fps" "$check_frame"; do
+            test -n "$value"
+          done
+
+          size=$((0x$end - 0x$magic))
+          jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
+          test "$size" -gt 16384
+          test "$jit_lookup_size" -eq 262144
+          buffer_hex=$(printf '%08x' "$((0x$buffer))")
+          rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
+          test -n "$rom_buffer"
+          jit_buffer=$((rom_buffer - 0x40000))
+          jit_buffer_hex=$(printf '%08x' "$jit_buffer")
+
+          guest_virtual() {
+            offset="$1"
+            test "$offset" -ge 0
+            test "$offset" -lt 8192
+            printf '%08x' "$((0x007e0000 + offset))"
+          }
+          hi_byte() {
+            printf '%08x' "$((0x$1 + 1))"
+          }
+
+          nova_framecount=$(guest_virtual "$NOVA_FRAMECOUNT_WRAM")
+          nova_keynew=$(guest_virtual "$NOVA_KEYNEW_WRAM")
+          nova_px=$(guest_virtual "$NOVA_PLAYERX_WRAM")
+          nova_py=$(guest_virtual "$NOVA_PLAYERY_WRAM")
+          nova_vy=$(guest_virtual "$NOVA_PLAYERVY_WRAM")
+          nova_sx=$(guest_virtual "$NOVA_SCROLLX_WRAM")
+          nova_sy=$(guest_virtual "$NOVA_SCROLLY_WRAM")
+          nova_hp=$(guest_virtual "$NOVA_HEALTH_WRAM")
+          nova_grace=$(guest_virtual "$NOVA_JUMP_GRACE_WRAM")
+          nova_wants=$(guest_virtual "$NOVA_WANTS_JUMP_WRAM")
+          nova_ground=$(guest_virtual "$NOVA_ON_GROUND_WRAM")
+
+          {
+            echo "ARES_PROFILE_ADDR=$magic"
+            echo "ARES_PROFILE_SIZE=$size"
+            echo "ARES_PROFILE_BUFFER_HEX=$buffer_hex"
+            echo "ARES_PROFILE_WRITE_PTR_ADDR=$write_ptr"
+            echo "ARES_PROFILE_SAMPLE_COUNT_ADDR=$sample_count"
+            echo "ARES_PROFILE_LAST_EPC_ADDR=$last_epc"
+            echo "ARES_APU_CLOCK_ADDR=$apu_clock"
+            echo "ARES_JIT_LOOKUP_ADDR=$jit_lookup"
+            echo "ARES_JIT_LOOKUP_SIZE=$jit_lookup_size"
+            echo "ARES_JIT_POINTER_ADDR=$jit_pointer"
+            echo "ARES_JIT_BUFFER_HEX=$jit_buffer_hex"
+            echo "ARES_FPS_NATIVE_ADDR=$fps_native"
+            echo "ARES_FPS_EMULATE_ADDR=$fps_emulate"
+            echo "ARES_FPS_DISPLAY_ADDR=$fps_display"
+            echo "ARES_FRAME_COUNT_ADDR=$frame_count"
+            echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
+            echo "ARES_PRECISION_SET_ADDR=$precision_set"
+            echo "ARES_AUDIO_SET_ADDR=$audio_set"
+            echo "ARES_CPU_EXECUTE_ADDR=$cpu_execute"
+            echo "ARES_UPDATE_FPS_ADDR=$update_fps"
+            echo "ARES_CHECK_FRAME_ADDR=$check_frame"
+            echo "ARES_NOVA_FRAMECOUNT_ADDR=$nova_framecount"
+            echo "ARES_NOVA_FRAMECOUNT_HI_ADDR=$(hi_byte "$nova_framecount")"
+            echo "ARES_NOVA_KEYNEW_ADDR=$nova_keynew"
+            echo "ARES_NOVA_KEYNEW_HI_ADDR=$(hi_byte "$nova_keynew")"
+            echo "ARES_NOVA_PLAYER_X_ADDR=$nova_px"
+            echo "ARES_NOVA_PLAYER_X_HI_ADDR=$(hi_byte "$nova_px")"
+            echo "ARES_NOVA_PLAYER_Y_ADDR=$nova_py"
+            echo "ARES_NOVA_PLAYER_Y_HI_ADDR=$(hi_byte "$nova_py")"
+            echo "ARES_NOVA_PLAYER_VY_ADDR=$nova_vy"
+            echo "ARES_NOVA_PLAYER_VY_HI_ADDR=$(hi_byte "$nova_vy")"
+            echo "ARES_NOVA_SCROLL_X_ADDR=$nova_sx"
+            echo "ARES_NOVA_SCROLL_X_HI_ADDR=$(hi_byte "$nova_sx")"
+            echo "ARES_NOVA_SCROLL_Y_ADDR=$nova_sy"
+            echo "ARES_NOVA_SCROLL_Y_HI_ADDR=$(hi_byte "$nova_sy")"
+            echo "ARES_NOVA_HEALTH_ADDR=$nova_hp"
+            echo "ARES_NOVA_JUMP_GRACE_ADDR=$nova_grace"
+            echo "ARES_NOVA_WANTS_JUMP_ADDR=$nova_wants"
+            echo "ARES_NOVA_ON_GROUND_ADDR=$nova_ground"
+          } >> "$GITHUB_ENV"
+
+      - name: Run three safe matched Nova2 repeats
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p profiles
+          rom="workloads/ares/out/profile-nova2.z64"
+
+          run_repeat() {
+            repeat="$1"
+            label="matched-nova2-r$repeat"
+            port=$((9150 + repeat))
+            home="$RUNNER_TEMP/ares-home-$label"
+            settings="$RUNNER_TEMP/ares-settings-$label.bml"
+            emulator_log="profiles/$label-emulator.log"
+            gdb_log="profiles/$label-gdb.log"
+            snapshot="profiles/$label.bin"
+            report="profiles/$label.txt"
+            json="profiles/$label.json"
+            state="profiles/$label-state.json"
+
+            rm -rf "$home"
+            mkdir -p "$home"
+
+            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1               xvfb-run -a stdbuf -oL -eL "$ARES_BIN"                 --no-file-prompt                 --system "Nintendo 64"                 --settings-file "$settings"                 --setting "Developer/DebugServerEnabled=true"                 --setting "Developer/DebugServerUseIPv4=true"                 --setting "Developer/DebugServerPort=$port"                 --setting "Developer/HomebrewMode=true"                 --setting "Developer/DeterministicEntropy=true"                 --setting "Developer/ForceInterpreter=false"                 --setting "Boot/AwaitGDBClient=true"                 "$rom" > "$emulator_log" 2>&1 &
+            ares_pid=$!
+
+            cleanup_run() {
+              kill "$ares_pid" 2>/dev/null || true
+              wait "$ares_pid" 2>/dev/null || true
+            }
+            trap cleanup_run EXIT
+
+            if ! python3 scripts/gdb_matched_nova2.py               --port "$port"               --connect-timeout 45               --response-timeout 120               --cpu-execute "0x$ARES_CPU_EXECUTE_ADDR"               --update-fps "0x$ARES_UPDATE_FPS_ADDR"               --check-frame "0x$ARES_CHECK_FRAME_ADDR"               --profile-address "0x$ARES_PROFILE_ADDR"               --profile-size "$ARES_PROFILE_SIZE"               --profile-buffer "0x$ARES_PROFILE_BUFFER_HEX"               --profile-write-ptr "0x$ARES_PROFILE_WRITE_PTR_ADDR"               --profile-sample-count "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR"               --profile-last-epc "0x$ARES_PROFILE_LAST_EPC_ADDR"               --apu-clock "0x$ARES_APU_CLOCK_ADDR"               --jit-lookup "0x$ARES_JIT_LOOKUP_ADDR"               --jit-lookup-size "$ARES_JIT_LOOKUP_SIZE"               --jit-pointer "0x$ARES_JIT_POINTER_ADDR"               --jit-buffer "0x$ARES_JIT_BUFFER_HEX"               --skipped-set "0x$ARES_SKIPPED_SET_ADDR"               --audio-set "0x$ARES_AUDIO_SET_ADDR"               --precision-set "0x$ARES_PRECISION_SET_ADDR"               --fps-native "0x$ARES_FPS_NATIVE_ADDR"               --fps-emulate "0x$ARES_FPS_EMULATE_ADDR"               --fps-display "0x$ARES_FPS_DISPLAY_ADDR"               --frame-count "0x$ARES_FRAME_COUNT_ADDR"               --nova-framecount "0x$ARES_NOVA_FRAMECOUNT_ADDR"               --nova-framecount-hi "0x$ARES_NOVA_FRAMECOUNT_HI_ADDR"               --nova-keynew "0x$ARES_NOVA_KEYNEW_ADDR"               --nova-keynew-hi "0x$ARES_NOVA_KEYNEW_HI_ADDR"               --nova-player-x "0x$ARES_NOVA_PLAYER_X_ADDR"               --nova-player-x-hi "0x$ARES_NOVA_PLAYER_X_HI_ADDR"               --nova-player-y "0x$ARES_NOVA_PLAYER_Y_ADDR"               --nova-player-y-hi "0x$ARES_NOVA_PLAYER_Y_HI_ADDR"               --nova-player-vy "0x$ARES_NOVA_PLAYER_VY_ADDR"               --nova-player-vy-hi "0x$ARES_NOVA_PLAYER_VY_HI_ADDR"               --nova-scroll-x "0x$ARES_NOVA_SCROLL_X_ADDR"               --nova-scroll-x-hi "0x$ARES_NOVA_SCROLL_X_HI_ADDR"               --nova-scroll-y "0x$ARES_NOVA_SCROLL_Y_ADDR"               --nova-scroll-y-hi "0x$ARES_NOVA_SCROLL_Y_HI_ADDR"               --nova-health "0x$ARES_NOVA_HEALTH_ADDR"               --nova-jump-grace "0x$ARES_NOVA_JUMP_GRACE_ADDR"               --nova-wants-jump "0x$ARES_NOVA_WANTS_JUMP_ADDR"               --nova-on-ground "0x$ARES_NOVA_ON_GROUND_ADDR"               --warmup-windows 2               --measure-windows 5               --snapshot "$snapshot"               --state-output "$state"               > "$gdb_log" 2>&1; then
+              cat "$gdb_log"
+              tail -200 "$emulator_log" || true
+              exit 1
+            fi
+
+            cat "$gdb_log"
+            cleanup_run
+            trap - EXIT
+
+            python3 scripts/profile_report.py               "$snapshot" build/sodium64.elf               --nm nm --map build/sodium64.map               --json-output "$json" | tee "$report"
+            samples=$(awk '/total samples:/ { print $3 }' "$report")
+            test -n "$samples"
+            test "$samples" -ge 800
+          }
+
+          run_repeat 1
+          run_repeat 2
+          run_repeat 3
+
+      - name: Download qualified direct-SNES evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p direct-reference
+          zip="$RUNNER_TEMP/nova2-direct-reference.zip"
+          curl --fail --location --retry 3             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             -H "X-GitHub-Api-Version: 2022-11-28"             "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$DIRECT_REFERENCE_ARTIFACT_ID/zip"             -o "$zip"
+          unzip -q "$zip" -d direct-reference
+          test -s direct-reference/reference/nova2-direct-snes.json
+
+      - name: Summarize matched cadence and direct-SNES semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          runs = [
+              json.load(open(f"profiles/matched-nova2-r{i}-state.json"))
+              for i in (1, 2, 3)
+          ]
+          for run in runs:
+              contract = run["measurement_contract"]
+              assert contract["vi_per_window"] == 60
+              assert contract["warmup_windows"] == 2
+              assert contract["measured_windows"] == 5
+              assert run["configured"]["apu_clock"] == 21
+              assert run["configured"]["skipped_set"] == 0
+              assert run["configured"]["audio_set"] == 4
+              assert run["configured"]["precision_set"] == 8
+              assert len(run["warmup"]) == 2
+              assert len(run["measured"]) == 5
+              assert run["summary"]["final_sample_count"] >= 800
+
+          sequences = [
+              [row["guest"] for row in run["warmup"] + run["measured"]]
+              for run in runs
+          ]
+          vectors = [
+              [row["completed_frames"] for row in run["measured"]]
+              for run in runs
+          ]
+
+          def plausible(st):
+              return (
+                  0 < st["framecount"] < 10000
+                  and 0x0100 <= st["player_x"] < 0xFF00
+                  and 0x0100 <= st["player_y"] < 0xFF00
+                  and 0 < st["health"] <= 16
+              )
+
+          assert all(plausible(st) for seq in sequences for st in seq)
+          repeatable_state = all(seq == sequences[0] for seq in sequences[1:])
+          repeatable_vectors = all(v == vectors[0] for v in vectors[1:])
+          monotonic = all(
+              b["framecount"] > a["framecount"]
+              for a, b in zip(sequences[0], sequences[0][1:])
+          )
+
+          direct = json.load(open("direct-reference/reference/nova2-direct-snes.json"))
+          assert direct["upstream_sha"] == os.environ["NOVA_SHA"]
+          assert direct["benchmark_rom_sha256"] == os.environ["ROUTE_ROM_SHA256"]
+          assert direct["route_patch_sha256"] == os.environ["ROUTE_PATCH_SHA256"]
+          assert direct["route_id"] == os.environ["ROUTE_ID"]
+
+          first_attempt = []
+          last_game = -1
+          for row in direct["rows"]:
+              game = int(row["game_frame"])
+              if first_attempt and game < last_game:
+                  break
+              if (
+                  0 < game < 10000
+                  and 0x0100 <= int(row["player_x"]) < 0xFF00
+                  and 0x0100 <= int(row["player_y"]) < 0xFF00
+                  and 0 < int(row["health"]) <= 16
+              ):
+                  first_attempt.append(row)
+                  last_game = game
+          direct_by_frame = {int(r["game_frame"]): r for r in first_attempt}
+
+          spatial_fields = (
+              "player_x", "player_y", "scroll_x", "scroll_y", "health"
+          )
+          matches = []
+          for st in sequences[0]:
+              gf = int(st["framecount"])
+              same = direct_by_frame.get(gf)
+              same_exact = bool(same) and all(
+                  int(st[k]) == int(same[k]) for k in spatial_fields
+              )
+              adjacent = None
+              for delta in (-1, 0, 1):
+                  ref = direct_by_frame.get(gf + delta)
+                  if ref and all(int(st[k]) == int(ref[k]) for k in spatial_fields):
+                      adjacent = delta
+                      break
+              matches.append({
+                  "framecount": gf,
+                  "same_frame_spatial_exact": same_exact,
+                  "exact_spatial_delta_within_1": adjacent,
+                  "sodium": st,
+                  "direct_same_frame": same,
+              })
+
+          payload = {
+              "route_id": os.environ["ROUTE_ID"],
+              "benchmark_rom_sha256": os.environ["ROUTE_ROM_SHA256"],
+              "benchmark_patch_sha256": os.environ["ROUTE_PATCH_SHA256"],
+              "measurement": "safe pre-guest full-rate configuration; 2 warmup + 5 measured exact 60-VI windows",
+              "state_sequences": sequences,
+              "measured_frame_vectors": vectors,
+              "state_repeatable_across_three_runs": repeatable_state,
+              "frame_vector_repeatable_across_three_runs": repeatable_vectors,
+              "first_repeat_framecount_monotonic": monotonic,
+              "direct_reference_matches": matches,
+              "same_frame_spatial_exact_count": sum(m["same_frame_spatial_exact"] for m in matches),
+              "adjacent_tick_spatial_exact_count": sum(m["exact_spatial_delta_within_1"] is not None for m in matches),
+          }
+          Path("profiles/nova2-matched-summary.json").write_text(
+              json.dumps(payload, indent=2, sort_keys=True) + "\n"
+          )
+
+          lines = [
+              "# Nova2 safe matched characterization",
+              "",
+              f"- state sequence identical across repeats: **{repeatable_state}**",
+              f"- measured frame vector identical across repeats: **{repeatable_vectors}**",
+              f"- first-repeat framecount monotonic: **{monotonic}**",
+              f"- same-frame direct spatial matches: **{payload['same_frame_spatial_exact_count']}/7**",
+              f"- direct spatial matches within ±1 guest tick: **{payload['adjacent_tick_spatial_exact_count']}/7**",
+              "",
+          ]
+          for i, (seq, vector) in enumerate(zip(sequences, vectors), 1):
+              lines.append(f"## Repeat {i}")
+              lines.append(f"- measured frame vector: {vector}")
+              for j, st in enumerate(seq, 1):
+                  lines.append(
+                      f"- boundary {j}: gf={st['framecount']} "
+                      f"player=({st['player_x']},{st['player_y']}) vy={st['player_vy']} "
+                      f"camera=({st['scroll_x']},{st['scroll_y']}) hp={st['health']}"
+                  )
+              lines.append("")
+          lines.append("> ares N64 is a laboratory. These frame counts are not real-N64 performance authority.")
+          Path("profiles/nova2-matched-summary.md").write_text("\n".join(lines) + "\n")
+          print(Path("profiles/nova2-matched-summary.md").read_text())
+          PY
+
+          python3 scripts/profile_matrix.py             profiles/matched-nova2-r1.json             profiles/matched-nova2-r2.json             profiles/matched-nova2-r3.json             --output profiles/nova2-matched-profile-repeatability.md
+
+          {
+            echo '### Gate-B Nova2 safe matched characterization'
+            echo
+            cat profiles/nova2-matched-summary.md
+            echo
+            cat profiles/nova2-matched-profile-repeatability.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload non-ROM matched evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-nova2-matched
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            ares-version.txt
+            profile-build.log
+            nova2-deterministic-build.patch
+            nova2-firstlevel-benchmark.patch
+            nova2-unmodified-build.log
+            nova2-qualified-build.log
+            nova2-matched-provenance.txt
+            nova2-wram.env
+            profiles/

@@ -6127,3 +6127,17 @@ Pinned SRS input/movement source establishes:
 - `game/resources/movement-table.csv` gives both PlayerWalk and PlayerRun **JumpVelocity = 2.75 px/frame**.
 
 If the direct reference confirms the authored wall, a next route can therefore differ only in deterministic controller input: introduce a real B press/hold sequence while retaining Right+Run and all ordinary game/collision logic. Test that input first on direct SFC and require sustained semantic progression before accepting it as representative.
+
+
+## SRS controller-edge semantics for future route — source-backed checkpoint 2026-09-19
+
+Pinned upstream `engine/vblank/controller.inc` defines normal joypad update as:
+`pressed = (~previous current) & current`.
+Therefore a representative deterministic jump should model an actual B edge:
+- set B in `pressed` only on the first frame the button becomes held;
+- keep B in `current` for the desired hold interval so player code selects holding-jump gravity;
+- clear B from `pressed` on subsequent held frames.
+
+The benchmark injection point in `game/src/gameloop.inc` is immediately before `InputBuffer.Process()`; player processing occurs later in the same loop and `WaitFrame__far` closes the frame. A guest-`frameCounter`-conditioned B pulse can therefore emulate normal controller semantics without changing player/collision state directly.
+
+This remains conditional design evidence only. Do not alter the Right+Run benchmark until the active direct-SNES reference closes the old-route question.

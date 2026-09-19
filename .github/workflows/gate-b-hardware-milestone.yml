@@ -263,6 +263,8 @@ jobs:
 
       - name: Rebuild exact qualified Nova the Squirrel 2 route
         shell: bash
+        env:
+          PYTHONHASHSEED: '0'
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/nova-the-squirrel-2"
@@ -305,7 +307,9 @@ jobs:
           gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
           mkdir -p "$root/obj/snes"
           make -C "$root" -j1 nova-the-squirrel-2.sfc 2>&1 | tee nova2-unmodified-build.log
-          echo "$NOVA_BASE_ROM_SHA256  $root/nova-the-squirrel-2.sfc" | sha256sum --check
+          base_sha="$(sha256sum "$root/nova-the-squirrel-2.sfc" | awk '{print $1}')"
+          echo "normalized_base_rom_sha256=$base_sha"
+          test "$base_sha" = "$NOVA_BASE_ROM_SHA256"
 
           NOVA_ROOT="$root" python3 - <<'PY'
           from pathlib import Path

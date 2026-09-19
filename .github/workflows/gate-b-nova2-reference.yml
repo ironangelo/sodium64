@@ -24,7 +24,7 @@ jobs:
       NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
       NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
-      ROUTE_ID: firstlevel-fixed-cost-v2-brake-f199-f201
+      ROUTE_ID: firstlevel-fixed-cost-brake-f199-f201-plus-b209-f224
       PYTHONHASHSEED: '0'
 
     steps:
@@ -145,8 +145,9 @@ jobs:
           # changes table words only. Index 0..511 maps directly to framecount
           # modulo 512. Start from the validated fixed-cost v2 schedule:
           # periodic B plus the 166-181 targeted hold. The only controlled
-          # route change is a three-frame Right release at 199-201 so horizontal
-          # deceleration can move the frame-202 foot collision back over the Pier.
+          # route keeps the validated three-frame Right release at 199-201.
+          # The only new controlled variable is a fresh B hold at 209-224,
+          # intended to use the game's post-landing JumpGracePeriod.
           table = []
           for frame in range(512):
               keys = 0x0100  # KEY_RIGHT
@@ -155,7 +156,9 @@ jobs:
               if 166 <= frame < 182:
                   keys |= 0x8000  # route-v2 targeted hold
               if 199 <= frame < 202:
-                  keys &= ~0x0100  # controlled variable: release KEY_RIGHT
+                  keys &= ~0x0100  # validated brake/landing window
+              if 209 <= frame < 225:
+                  keys |= 0x8000  # controlled variable: fresh post-Pier B edge
               table.append(keys)
 
           table_rows = []

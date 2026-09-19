@@ -6504,3 +6504,18 @@ Dynamic result:
 - Source trigger begins at local x736; player center x4815 => local719. The trace ends while still moving toward the trigger rather than proving a permanent block.
 - **SUPPORTED INTERPRETATION:** 600 host frames are now an observation-horizon limitation for the room-transition question. Do not change route input yet.
 - **Next controlled experiment:** keep exact v5 ROM/input and extend only the direct-SFC tracer horizon from 600 to 720 frames. This separates simple late transition from a possible later periodic-jump interference (next phase-0x20 pulse occurs at gf608).
+
+
+## Gate B SRS v5 extended-horizon launch — 2026-09-19 UTC
+
+**Classification:** MEASUREMENT PROOF / workload qualification; experiment RUNNING.
+
+- Exact v5 input/ROM is unchanged. Harness-only candidate HEAD: `phase3/gate-b-srs-representative@d4c7d6ba1ca7a9a6233973560bfd2c7268fad661`.
+- Direct-SFC extended run: **`35424563879`**. Same-head Build/Validate: **`35424563888`**.
+- Controlled variable from v5 run `35424126162`: tracer observation horizon only, **600 -> 720 host frames**. Route source patch/input logic are untouched.
+- Expected route identities must remain exactly v5 patch `b21d55df2d5fb949646c9a2124d5c062fa5e7f312264dabb2f354fdc67a27935` and ROM `2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46`; any mismatch is a harness/provenance failure.
+- Question: with more observation only, does continuing rightward motion from gf594 eventually enter authored room id 02? Also observe whether the next periodic B pulse at gf608 interferes before transition.
+- Readings:
+  - room1->room2 with unchanged route hashes => v5 is qualified as a representative direct-SFC route; proceed to matched Sodium64.
+  - renewed hard stall caused by gf608 jump => route input still needs one targeted correction.
+  - continued forward motion but no transition by 714 => inspect exact geometry/trigger; horizon may still be insufficient but do not infer failure without a stall.

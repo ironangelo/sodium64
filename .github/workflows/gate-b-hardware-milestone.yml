@@ -59,12 +59,7 @@ jobs:
           cp build/*.map hardware/base/
           sha256sum sodium64.z64 | tee hardware/base/sodium64-hw-profile.sha256
 
-      - name: Select reproducible Nova2 Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.8'
-
-      - name: Install pinned guest-build dependencies
+      - name: Install common guest-build dependencies
         shell: bash
         run: |
           set -euo pipefail
@@ -79,7 +74,6 @@ jobs:
             libsdl2-dev \
             lz4 \
             ninja-build
-          python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
 
       - name: Rebuild exact qualified Space Rescue Squad v5 route
         shell: bash
@@ -258,6 +252,14 @@ jobs:
             echo "route_patch_sha256=$SRS_ROUTE_PATCH_SHA256"
             echo "route_rom_sha256=$SRS_ROUTE_ROM_SHA256"
           } > srs-v5-provenance.txt
+
+      - name: Select reproducible Nova2 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install Nova2 pinned Python dependency
+        run: python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
 
       - name: Rebuild exact qualified Nova the Squirrel 2 route
         shell: bash

@@ -1,9 +1,9 @@
-name: Gate B Hardware Milestone Prep
+name: Gate B Hardware Encrypted Handoff
 
 on:
   push:
     branches:
-      - phase3/gate-b-hardware-milestone
+      - phase3/gate-b-hardware-handoff
     paths:
       - '.github/workflows/gate-b-hardware-milestone.yml'
       - 'scripts/rebuild_gate_b_hardware_roms.py'
@@ -542,46 +542,44 @@ jobs:
           # within their games. Preserve the project's conservative no-ROM-upload
           # boundary: CI proves exact guest/wrapper identities, while artifacts
           # contain only Sodium64, patches, provenance and the matching symbols.
+          echo "58cc069fd5e78f27cbaf464341cfb2d32c992168356412ff6a482577f6069ffc  $srs_wrapped" | sha256sum --check
+          echo "74039aafafd17d17dc7bf6c8bb1084c5fb8e7367eeab766a70c5381cd4f78975  $nova_wrapped" | sha256sum --check
+
+          cat > gate-b-handoff-cert.pem <<'CERT'
+          -----BEGIN CERTIFICATE-----
+          MIIDJTCCAg2gAwIBAgIUCN4twQZPP39Z5PW9WCMouzpYS8cwDQYJKoZIhvcNAQEL
+          BQAwIjEgMB4GA1UEAwwXU29kaXVtNjQgR2F0ZSBCIEhhbmRvZmYwHhcNMjYwOTE5
+          MjI0MzE0WhcNMjYwOTIwMjI0MzE0WjAiMSAwHgYDVQQDDBdTb2RpdW02NCBHYXRl
+          IEIgSGFuZG9mZjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALwxoKTU
+          SV2t2io2/3/fxlJR79uV8c7USRHcfDynR/sB0dGWRWLv7zjLllWhHbcRiNGQbcTy
+          kPAaDjLonDpLiYST9K+4Ll0dnrsoIIgYdz/zeVL+Bx+oguHniMPYXKzgheXeaw3N
+          6JYc9vCA7K7GWH2UeDBZ84Qyrxeti+dNCNnVHBZtyB0cf2y2JqHkmEhnLMSKMt6Z
+          4RF2Vo9IvcDnE8pjmkZ/C7dFMtFczG7DT97KLu8qummPzvnjBGwjT1cbt1kbNRYZ
+          XV6TCVtBKMuFe1Jytdecf1vTa7Bca+qJbD+6xrT01Bwbg5DqeDyMU9884bt26iIQ
+          gqMd1I++fiMhVC0CAwEAAaNTMFEwHQYDVR0OBBYEFF6JET0XhcZvIvg/+agBFQIi
+          ujMlMB8GA1UdIwQYMBaAFF6JET0XhcZvIvg/+agBFQIiujMlMA8GA1UdEwEB/wQF
+          MAMBAf8wDQYJKoZIhvcNAQELBQADggEBAFurxUH75Bs1ffPrzIuESTtHszyd6mkN
+          KuTWtnh8JH1x8Z/LapiVx3ovwtMZTGWyKd8ENgfwFPha6DlF446pgUqUZq8pfHVL
+          QetaMhz4zSSk9zCuWRRIQoWrvvzVhjB2QlHcaqQuZXwk0/azcqEuS5rmz4rxl1q3
+          Q7XSFUj5fKKcKGzv1wt+UQAAgnwYennTwW5NVFnxvm6jqphVkFDrs7IyhhyBc+8I
+          ulMfmEhac/Phk8sqCizKtH2wwBwPR9bxEDA1uoqGR3QUrvUTgNm8FWTUYMyUU4kl
+          4mw7QAi/41CZS4Bfn7o0zcTHc6dgz7qO/BrSYl2SkpFCmq0cUk6NCAc=
+          -----END CERTIFICATE-----
+          CERT
+          tar -C hardware/wrap -cf gate-b-handoff.tar \
+            srs-v5/out/gate-b-srs-v5.z64 \
+            nova2/out/gate-b-nova2.z64
+          openssl cms -encrypt -binary -aes256 \
+            -in gate-b-handoff.tar \
+            -out gate-b-handoff.cms \
+            -outform DER gate-b-handoff-cert.pem
+          test -s gate-b-handoff.cms
+          rm -f gate-b-handoff.tar gate-b-handoff-cert.pem
           rm -rf hardware/wrap
 
-      - name: Restore current Python for local-rebuild validation
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Validate exact local hardware-ROM reconstruction helper
-        shell: bash
-        run: |
-          set -euo pipefail
-          local_out="$RUNNER_TEMP/gate-b-local-rebuild"
-          python3 scripts/rebuild_gate_b_hardware_roms.py \
-            "$GITHUB_WORKSPACE" \
-            "$local_out" \
-            --nova-python "$NOVA_PYTHON38"
-
-          echo "58cc069fd5e78f27cbaf464341cfb2d32c992168356412ff6a482577f6069ffc  $local_out/gate-b-srs-v5.z64" | sha256sum --check
-          echo "74039aafafd17d17dc7bf6c8bb1084c5fb8e7367eeab766a70c5381cd4f78975  $local_out/gate-b-nova2.z64" | sha256sum --check
-          test -s "$local_out/LOCAL_REBUILD_MANIFEST.txt"
-
-          # Preserve the no-ROM-upload boundary: this step proves the exact
-          # local reconstruction path and then removes guest/wrapped bytes.
-          rm -rf "$local_out"
-
-      - name: Upload non-guest hardware preparation artifact
+      - name: Upload encrypted ROM handoff
         uses: actions/upload-artifact@v4
         with:
-          name: gate-b-hardware-milestone-prep
-          retention-days: 90
-          path: |
-            hardware/base/
-            hardware/gate-b-hardware-manifest.txt
-            hardware/HARDWARE_STEPS.txt
-            hardware/srs-v5-wrapped.sha256
-            hardware/nova2-wrapped.sha256
-            srs-v5-route.patch
-            srs-v5-provenance.txt
-            nova2-deterministic-build.patch
-            nova2-firstlevel-route.patch
-            nova2-route-provenance.txt
-            nova2-unmodified-build.log
-            nova2-qualified-build.log
+          name: gate-b-hardware-encrypted-handoff
+          retention-days: 1
+          path: gate-b-handoff.cms

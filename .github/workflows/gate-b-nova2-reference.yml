@@ -25,6 +25,7 @@ jobs:
       NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
       ROUTE_ID: firstlevel-right-periodic-b-plus-f166-v2
+      PYTHONHASHSEED: '0'
 
     steps:
       - name: Checkout Sodium64
@@ -53,17 +54,50 @@ jobs:
           test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
           echo "NOVA_ROOT=$root" >> "$GITHUB_ENV"
 
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["RUNNER_TEMP"]) / "nova-the-squirrel-2"
+          replacements = {
+              "tools/levelconvert.py": [
+                  ('for f in glob.glob("levels/*.json"):', 'for f in sorted(glob.glob("levels/*.json")):'),
+              ],
+              "tools/encodepalettes.py": [
+                  ('for f in glob.glob("palettes/*.png"):', 'for f in sorted(glob.glob("palettes/*.png")):'),
+                  ('for f in glob.glob("palettes/variable/*.png"):', 'for f in sorted(glob.glob("palettes/variable/*.png")):'),
+              ],
+              "tools/encodeportraits.py": [
+                  ('for f in glob.glob("portraits/*.png"):', 'for f in sorted(glob.glob("portraits/*.png")):'),
+              ],
+          }
+          for rel, edits in replacements.items():
+              p = root / rel
+              text = p.read_text()
+              for old, new in edits:
+                  if text.count(old) != 1:
+                      raise SystemExit(f"{rel}: anchor count for {old!r} = {text.count(old)}")
+                  text = text.replace(old, new, 1)
+              p.write_text(text)
+          PY
+
+          git -C "$root" diff --check
+          git -C "$root" diff -- tools/levelconvert.py tools/encodepalettes.py tools/encodeportraits.py \
+            > nova2-deterministic-build.patch
+          deterministic_patch_sha="$(sha256sum nova2-deterministic-build.patch | awk '{print $1}')"
+          echo "deterministic_build_patch_sha256=$deterministic_patch_sha"
+          test "$deterministic_patch_sha" = "c33a2f6f2f39ca4328d702dab087dfb98bd1005d83feae897a7ace7b9b0b2e51"
+
           gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
           mkdir -p "$root/obj/snes"
 
-          # Canonical deterministic Nova2 build: this pinned upstream Makefile
-          # has unsafe parallel multi-output generators, so build serially.
-          # First produce the pinned unmodified ROM, then patch only src/main.s
-          # and rebuild incrementally, also serially.
+          # Canonical deterministic Nova2 build: fixed Python hash seed, sorted
+          # build-relevant globs and serial make. First produce the normalized
+          # unmodified ROM, then patch only src/main.s and rebuild incrementally.
           make -C "$root" -j1 nova-the-squirrel-2.sfc 2>&1 | tee nova2-unmodified-reference-build.log
           unmodified_sha="$(sha256sum "$root/nova-the-squirrel-2.sfc" | awk '{print $1}')"
           echo "unmodified_rom_sha256=$unmodified_sha"
-          test "$unmodified_sha" = "ecc61b2367a9261fe48131a61e5cf787b6409083827556109099a46a637d9b2f"
+          test "$unmodified_sha" = "fc9f9c984ea840b19847a80357cf5043eb686cc4e2a84a74843e1a451df4b60a"
 
           python3 - <<'PY'
           from pathlib import Path
@@ -152,8 +186,11 @@ jobs:
 
           git -C "$root" diff --check
           changed="$(git -C "$root" diff --name-only)"
-          test "$(printf '%s\n' "$changed" | wc -l)" -eq 1
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 4
           printf '%s\n' "$changed" | grep -Fxq 'src/main.s'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/levelconvert.py'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/encodepalettes.py'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/encodeportraits.py'
           git -C "$root" diff -- src/main.s > nova2-firstlevel-benchmark.patch
 
           make -C "$root" -j1 nova-the-squirrel-2.sfc 2>&1 | tee nova2-firstlevel-reference-build.log
@@ -163,7 +200,9 @@ jobs:
           route_patch_sha="$(sha256sum nova2-firstlevel-benchmark.patch | awk '{print $1}')"
           route_rom_sha="$(sha256sum "$rom" | awk '{print $1}')"
           test "$route_patch_sha" != "476d426dff8ccd356f12a7be26809cee396d07b97a3d2dd32b7a5003d3715cf2"
+          test "$route_rom_sha" != "$unmodified_sha"
           test "$route_rom_sha" != "cb59431f095c4f02b495b099022cc28a0ee1fe6c84470835754d7f0544d6466e"
+          echo "DETERMINISTIC_BUILD_PATCH_SHA256=$deterministic_patch_sha" >> "$GITHUB_ENV"
           echo "ROUTE_PATCH_SHA256=$route_patch_sha" >> "$GITHUB_ENV"
           echo "ROUTE_ROM_SHA256=$route_rom_sha" >> "$GITHUB_ENV"
           echo "route_id=$ROUTE_ID patch_sha256=$route_patch_sha rom_sha256=$route_rom_sha"
@@ -448,6 +487,7 @@ jobs:
           if-no-files-found: ignore
           path: |
             ares-sfc-version.txt
+            nova2-deterministic-build.patch
             nova2-firstlevel-benchmark.patch
             nova2-unmodified-reference-build.log
             nova2-firstlevel-reference-build.log

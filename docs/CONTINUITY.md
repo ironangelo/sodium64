@@ -5995,3 +5995,19 @@ Classification:
 This very strongly supports **benchmark input deficiency / normal game collision** rather than a Sodium64-specific stall, but retain the already-running direct-SNES lane as independent dynamic confirmation before closing the route cause.
 
 If direct SNES confirms the same stop, mark the old Right+Run route REJECTED as representative coverage and replace it with a deterministic route including the required jump/action sequence. Preserve the old benchmark hash as a useful collision/regression probe rather than deleting its evidence.
+
+
+## Gate B SRS direct-SNES reference — capture harness checkpoint 2026-09-19
+
+Exact candidate remains **`phase3/gate-b-srs-reference@dd9eec47c98d4f27a66c1905b5ede62257899499`**. Direct-reference run **`35416725629`** is still `in_progress` in step **Capture direct-SNES semantic trace**. Earlier steps are green: exact public SRS rebuild, semantic symbol resolution, and pinned ares Super Famicom build all completed successfully. No evidence artifact exists yet.
+
+Workflow audit:
+- benchmark ROM identity is still exact: `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`;
+- historical benchmark patch identity is exact: `4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`;
+- tracer exits only after **600 rendered SFC frames**;
+- capture command has no command-local timeout/canary; only the job-level `timeout-minutes: 60` bounds it;
+- artifact upload is pending, so there is currently **NO dynamic direct-SNES SRS state evidence** from this run.
+
+Classification: **LAB LIMITATION / HARNESS OPEN QUESTION**, not Sodium64 or SRS correctness evidence. Do not infer a guest stall from an ares process that has not produced/returned the trace.
+
+Next controlled batch: bound the direct-SFC capture itself and add enough startup/frame observability to distinguish (A) emulator never reaches the first rendered frame, (B) frames are produced but too slowly, or (C) the 600-frame termination path is wrong. Keep SRS ROM/input bytes and semantic addresses unchanged.

@@ -28,6 +28,11 @@ jobs:
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
+      - name: Reproduce upstream-era Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install pinned-source build dependencies
         shell: bash
         run: |
@@ -37,9 +42,10 @@ jobs:
             build-essential \
             cc65 \
             git \
-            lz4 \
-            python3 \
-            python3-pil
+            lz4
+          # The 2023 palette generator relies on the padded getpalette()
+          # behavior present in the project's contemporary Pillow releases.
+          python3 -m pip install --disable-pip-version-check 'Pillow==9.4.0'
 
       - name: Checkout exact Nova the Squirrel 2 source
         shell: bash

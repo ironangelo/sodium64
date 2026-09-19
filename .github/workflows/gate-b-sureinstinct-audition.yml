@@ -69,7 +69,7 @@ jobs:
           cmake --install "$fma_root/build"
           test -x "$prefix/bin/fma"
           test -f "$prefix/include/fma/output/DynamicBuffer.hpp"
-          test -f "$prefix/lib/libfma.so"
+          test -f "$prefix/lib/liblibfma.so"
           echo "$prefix/bin" >> "$GITHUB_PATH"
           {
             echo "FMA_PREFIX=$prefix"

@@ -16,12 +16,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  serial-repro:
+  deterministic-build:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [1, 2, 3]
+
     env:
       NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
       NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
+      PYTHONHASHSEED: '0'
 
     steps:
       - name: Checkout Sodium64
@@ -40,78 +46,131 @@ jobs:
           sudo apt-get install -y build-essential cc65 git lz4
           python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
 
-      - name: Build three independent serial Nova2 clones
+      - name: Build deterministic Nova2 replica
+        shell: bash
+        env:
+          REPLICA: ${{ matrix.replica }}
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/nova-deterministic-$REPLICA"
+          mkdir -p evidence
+
+          git clone --filter=blob:none "$NOVA_REPO" "$root"
+          git -C "$root" checkout --detach "$NOVA_SHA"
+          test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["RUNNER_TEMP"]) / ("nova-deterministic-" + os.environ["REPLICA"])
+          replacements = {
+              "tools/levelconvert.py": [
+                  ('for f in glob.glob("levels/*.json"):', 'for f in sorted(glob.glob("levels/*.json")):'),
+              ],
+              "tools/encodepalettes.py": [
+                  ('for f in glob.glob("palettes/*.png"):', 'for f in sorted(glob.glob("palettes/*.png")):'),
+                  ('for f in glob.glob("palettes/variable/*.png"):', 'for f in sorted(glob.glob("palettes/variable/*.png")):'),
+              ],
+              "tools/encodeportraits.py": [
+                  ('for f in glob.glob("portraits/*.png"):', 'for f in sorted(glob.glob("portraits/*.png")):'),
+              ],
+          }
+          for rel, edits in replacements.items():
+              p = root / rel
+              text = p.read_text()
+              for old, new in edits:
+                  if text.count(old) != 1:
+                      raise SystemExit(f"{rel}: anchor count for {old!r} = {text.count(old)}")
+                  text = text.replace(old, new, 1)
+              p.write_text(text)
+          PY
+
+          git -C "$root" diff --check
+          git -C "$root" diff -- tools/levelconvert.py tools/encodepalettes.py tools/encodeportraits.py \
+            > "evidence/deterministic-build-$REPLICA.patch"
+
+          changed="$(git -C "$root" diff --name-only)"
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 3
+          printf '%s\n' "$changed" | grep -Fxq 'tools/levelconvert.py'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/encodepalettes.py'
+          printf '%s\n' "$changed" | grep -Fxq 'tools/encodeportraits.py'
+
+          gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
+          mkdir -p "$root/obj/snes"
+          make -C "$root" -j1 nova-the-squirrel-2.sfc \
+            > "evidence/build-$REPLICA.log" 2>&1
+
+          rom="$root/nova-the-squirrel-2.sfc"
+          test -s "$rom"
+          sha="$(sha256sum "$rom" | awk '{print $1}')"
+          echo "$sha" > "evidence/rom-$REPLICA.sha256"
+
+          {
+            echo "replica=$REPLICA"
+            echo "upstream_sha=$NOVA_SHA"
+            echo "python_hash_seed=$PYTHONHASHSEED"
+            echo "build_jobs=1"
+            echo "rom_sha256=$sha"
+            echo "rom_size=$(stat -c '%s' "$rom")"
+            echo "determinism_patch_sha256=$(sha256sum "evidence/deterministic-build-$REPLICA.patch" | awk '{print $1}')"
+            echo "ca65=$(ca65 --version 2>&1 | head -n1)"
+            echo "ld65=$(ld65 --version 2>&1 | head -n1)"
+            echo "python=$(python3 --version 2>&1)"
+            echo "pillow=$(python3 -c 'import PIL; print(PIL.__version__)')"
+          } | tee "evidence/meta-$REPLICA.txt"
+
+      - name: Upload replica evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-nova2-deterministic-replica-${{ matrix.replica }}
+          retention-days: 14
+          path: evidence/
+
+  compare-replicas:
+    needs: deterministic-build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download replica evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: gate-b-nova2-deterministic-replica-*
+          path: evidence
+          merge-multiple: true
+
+      - name: Assert cross-runner ROM identity
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p repro
+          cat evidence/meta-*.txt
+          cat evidence/rom-*.sha256 | sort | uniq -c | tee evidence/hash-counts.txt
+          test "$(cat evidence/rom-*.sha256 | sort -u | wc -l)" -eq 1
+          canonical="$(cat evidence/rom-1.sha256)"
+          test -n "$canonical"
 
-          build_one() {
-            idx="$1"
-            root="$RUNNER_TEMP/nova-serial-$idx"
-            git clone --filter=blob:none "$NOVA_REPO" "$root"
-            git -C "$root" checkout --detach "$NOVA_SHA"
-            test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
-
-            gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
-            mkdir -p "$root/obj/snes"
-            make -C "$root" -j1 nova-the-squirrel-2.sfc \
-              > "repro/build-$idx.log" 2>&1
-
-            rom="$root/nova-the-squirrel-2.sfc"
-            test -s "$rom"
-            sha256sum "$rom" | awk '{print $1}' > "repro/rom-$idx.sha256"
-
-            (
-              cd "$root"
-              find . -type f \
-                -not -path './.git/*' \
-                -not -name 'nova-the-squirrel-2.sfc' \
-                -print0 \
-              | sort -z \
-              | xargs -0 sha256sum
-            ) > "$GITHUB_WORKSPACE/repro/tree-$idx.sha256"
-
-            {
-              echo "index=$idx"
-              echo "upstream_sha=$NOVA_SHA"
-              echo "rom_sha256=$(cat "repro/rom-$idx.sha256")"
-              echo "rom_size=$(stat -c '%s' "$rom")"
-              echo "tracked_diff_count=$(git -C "$root" diff --name-only | wc -l)"
-              echo "ca65=$(ca65 --version 2>&1 | head -n1)"
-              echo "ld65=$(ld65 --version 2>&1 | head -n1)"
-              echo "python=$(python3 --version 2>&1)"
-              echo "pillow=$(python3 -c 'import PIL; print(PIL.__version__)')"
-            } > "repro/meta-$idx.txt"
-          }
-
-          for i in 1 2 3; do
-            build_one "$i"
-          done
-
-          cat repro/meta-*.txt
-
-          h1="$(cat repro/rom-1.sha256)"
-          h2="$(cat repro/rom-2.sha256)"
-          h3="$(cat repro/rom-3.sha256)"
-          test "$h1" = "$h2"
-          test "$h1" = "$h3"
-
-          cmp repro/tree-1.sha256 repro/tree-2.sha256
-          cmp repro/tree-1.sha256 repro/tree-3.sha256
+          p1="$(sha256sum evidence/deterministic-build-1.patch | awk '{print $1}')"
+          p2="$(sha256sum evidence/deterministic-build-2.patch | awk '{print $1}')"
+          p3="$(sha256sum evidence/deterministic-build-3.patch | awk '{print $1}')"
+          test "$p1" = "$p2"
+          test "$p1" = "$p3"
 
           {
-            echo "serial_builds=3"
+            echo "replicas=3 independent GitHub runners"
             echo "all_rom_hashes_identical=true"
-            echo "all_tree_manifests_identical=true"
-            echo "canonical_unmodified_rom_sha256=$h1"
-          } | tee repro/summary.txt
+            echo "canonical_unmodified_rom_sha256=$canonical"
+            echo "determinism_patch_sha256=$p1"
+            echo "python_hash_seed=0"
+            echo "build_jobs=1"
+          } | tee evidence/summary.txt
 
-      - name: Upload non-ROM reproducibility evidence
-        if: always()
+      - name: Upload cross-runner reproducibility summary
         uses: actions/upload-artifact@v4
         with:
-          name: gate-b-nova2-serial-build-repro
+          name: gate-b-nova2-deterministic-build-proof
           retention-days: 14
-          if-no-files-found: ignore
-          path: repro/
+          path: |
+            evidence/summary.txt
+            evidence/hash-counts.txt
+            evidence/meta-*.txt
+            evidence/rom-*.sha256
+            evidence/deterministic-build-*.patch

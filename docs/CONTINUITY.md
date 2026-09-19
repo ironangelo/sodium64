@@ -6141,3 +6141,14 @@ Therefore a representative deterministic jump should model an actual B edge:
 The benchmark injection point in `game/src/gameloop.inc` is immediately before `InputBuffer.Process()`; player processing occurs later in the same loop and `WaitFrame__far` closes the frame. A guest-`frameCounter`-conditioned B pulse can therefore emulate normal controller semantics without changing player/collision state directly.
 
 This remains conditional design evidence only. Do not alter the Right+Run benchmark until the active direct-SNES reference closes the old-route question.
+
+
+## SRS x-regression authored-enemy hypothesis — source-backed but not yet dynamic 2026-09-19
+
+The safe Sodium64 boundary sequence contains a non-monotonic player-x sample: local x≈154 at the wall, then ≈103, then back to 154. A source-backed authored explanation exists and should be checked against the direct trace:
+
+- `a1a_entrance` spawns `cleaning_bot_slow` at local x=281, y=120, parameter=0.
+- project metadata defines `WalkAndTurn` parameter **0 = left**.
+- `cleaning_bot_slow` is in the `enemies` list, has knockback enabled, and speed `0x010000` = 1 px/frame.
+
+Thus an enemy moving left toward the trapped player could plausibly account for the later knockback/reset-like x regression. Classification: **HYPOTHESIS / supported static mechanism**, not proven cause; room vertical geometry/entity trajectory still matters. Use the active direct-SNES frame trace to test whether the same regression occurs at comparable guest `frameCounter`. If it does, it strengthens authored-route equivalence; if not, investigate the earliest semantic divergence.

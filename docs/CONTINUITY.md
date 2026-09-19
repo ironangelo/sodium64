@@ -6349,3 +6349,12 @@ Dynamic reading from the raw 600-row trace:
 - Falsifier: direct trace misses the lower platform, reaches x4554 or less, or otherwise enters another long non-progressing cycle.
 - Possible success: sustained x>4554 and preferably eventual authored room transition. If successful, inspect trace before declaring the route representative and pin exact patch/ROM identities.
 - **Do not measure Sodium64 yet.**
+
+
+## Gate B SRS representative route v3 build checkpoint — 2026-09-19 UTC
+
+- Candidate remains `phase3/gate-b-srs-representative@d3a101e4f0166bcdd3d0af68641cdfa3d0c074de`.
+- Same-head Build and Validate **`35421458147` SUCCESS**.
+- Direct-SFC route run **`35421458128`** remains in progress in the source-build/reference lane.
+- **What this proves:** no normal/PROFILE/emulator-smoke regression from the route-v3 branch revision.
+- **What it does not prove:** the modified SRS source patch has not yet completed its direct-SFC dynamic trace; no route acceptance or Sodium64 performance conclusion exists.

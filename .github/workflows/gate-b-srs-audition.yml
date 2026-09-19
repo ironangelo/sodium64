@@ -1,9 +1,9 @@
-name: Gate B SRS Audition
+name: Gate B SRS v5 Matched
 
 on:
   push:
     branches:
-      - phase3/gate-b-srs-audition
+      - phase3/gate-b-srs-v5-matched
     paths:
       - '.github/workflows/gate-b-srs-audition.yml'
       - 'src/main.S'
@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-b-srs-${{ github.ref }}
+  group: sodium64-gate-b-srs-v5-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -190,14 +190,82 @@ jobs:
           new = """        sep     #$30
               a8()
               i8()
-                  // Deterministic benchmark input: hold Right + Run.  Input still
-                  // flows through the normal player/entity/collision/game loop.
+                  // Deterministic representative-route candidate v5.
+                  // Right + Run stay held.  Keep v2's normal periodic jumps,
+                  // except suppress the absolute gf352 jump so the player drops
+                  // from the upper platform onto the authored lower platform.
+                  // Then issue one real B edge at gf378 and hold B for 16 frames.
+                  // Finally suppress only gf544..559 so the player falls into the
+                  // authored right-door opening instead of jumping into its header.
+                  // No position, momentum, collision or room state is modified.
                   stz.w   Controller.Joy1.current
                   stz.w   Controller.Joy1.pressed
                   stz.w   Controller.Joy1.pressed + 1
                   lda.b   #JOYH.right | JOYH.y
                   sta.w   Controller.Joy1.current + 1
 
+                  // Baseline periodic v2 pulse: phase 0x20, 16-frame hold.
+                  lda.w   frameCounter
+                  and.b   #$3f
+                  cmp.b   #$20
+                  bcc     Sodium64RouteV3_PeriodicDone
+                  cmp.b   #$30
+                  bcs     Sodium64RouteV3_PeriodicDone
+                      lda.b   #JOYH.right | JOYH.y | JOYH.b
+                      sta.w   Controller.Joy1.current + 1
+
+                      lda.w   frameCounter
+                      and.b   #$3f
+                      cmp.b   #$20
+                      bne     Sodium64RouteV3_PeriodicDone
+                          lda.b   #JOYH.b
+                          sta.w   Controller.Joy1.pressed + 1
+                  Sodium64RouteV3_PeriodicDone:
+
+                  // Suppress only absolute frameCounter 0x0160..0x016f
+                  // (the gf352 periodic jump and its hold).
+                  lda.w   frameCounter + 1
+                  cmp.b   #$01
+                  bne     Sodium64RouteV3_SpecialDone
+                      lda.w   frameCounter
+                      cmp.b   #$60
+                      bcc     Sodium64RouteV3_TargetJump
+                      cmp.b   #$70
+                      bcs     Sodium64RouteV3_TargetJump
+                          lda.b   #JOYH.right | JOYH.y
+                          sta.w   Controller.Joy1.current + 1
+                          stz.w   Controller.Joy1.pressed + 1
+
+                  Sodium64RouteV3_TargetJump:
+                      // Targeted lower-platform jump: gf378..393 (0x017a..0x0189).
+                      lda.w   frameCounter
+                      cmp.b   #$7a
+                      bcc     Sodium64RouteV3_SpecialDone
+                      cmp.b   #$8a
+                      bcs     Sodium64RouteV3_SpecialDone
+                          lda.b   #JOYH.right | JOYH.y | JOYH.b
+                          sta.w   Controller.Joy1.current + 1
+                          lda.w   frameCounter
+                          cmp.b   #$7a
+                          bne     Sodium64RouteV3_SpecialDone
+                              lda.b   #JOYH.b
+                              sta.w   Controller.Joy1.pressed + 1
+
+                  Sodium64RouteV3_SpecialDone:
+                  // Suppress only absolute frameCounter 0x0220..0x022f
+                  // (the gf544 periodic jump/hold at the right-door approach).
+                  lda.w   frameCounter + 1
+                  cmp.b   #$02
+                  bne     Sodium64RouteV5_DoorDone
+                      lda.w   frameCounter
+                      cmp.b   #$20
+                      bcc     Sodium64RouteV5_DoorDone
+                      cmp.b   #$30
+                      bcs     Sodium64RouteV5_DoorDone
+                          lda.b   #JOYH.right | JOYH.y
+                          sta.w   Controller.Joy1.current + 1
+                          stz.w   Controller.Joy1.pressed + 1
+                  Sodium64RouteV5_DoorDone:
                   lda.w   Controller.Joy1.pressed + 1
           """
           if text.count(old) != 1:
@@ -217,12 +285,12 @@ jobs:
           make -C "$root/game" bin/space-rescue-squad.sfc
           rom="$root/game/bin/space-rescue-squad.sfc"
           test -s "$rom"
-          echo "7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e  $rom" | sha256sum --check
-          echo "4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7  srs-benchmark.patch" | sha256sum --check
+          echo "2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46  $rom" | sha256sum --check
+          echo "b21d55df2d5fb949646c9a2124d5c062fa5e7f312264dabb2f354fdc67a27935  srs-benchmark.patch" | sha256sum --check
 
           {
             echo "upstream_sha=$SRS_SHA"
-            echo "benchmark=first authored level, deterministic Right+Run"
+            echo "benchmark=qualified v5 authored route a1a_entrance -> a1b_stairway via deterministic normal controller input"
             echo "modified_files=game/src/_main.asm,game/src/gameloop.inc"
             echo "benchmark_rom_size=$(stat -c '%s' "$rom")"
             echo "benchmark_rom_sha256=$(sha256sum "$rom" | awk '{print $1}')"
@@ -248,6 +316,9 @@ jobs:
           probe = r'''
           // SODIUM64 GATE-B COMPILE-TIME SYMBOL PROBE.
           // These print directives emit no guest instructions/data.
+          print "SODIUM64_SRS_FRAME_COUNTER_ADDR="
+          print_hex(6, frameCounter)
+          print "\n"
           print "SODIUM64_SRS_ROOM_ID_ADDR="
           print_hex(6, GameState.roomId)
           print "\n"
@@ -285,7 +356,7 @@ jobs:
           make -C "$root/game" bin/space-rescue-squad.sfc 2>&1 | tee srs-symbol-probe.log
           after_sha="$(sha256sum "$root/game/bin/space-rescue-squad.sfc" | awk '{print $1}')"
           test "$after_sha" = "$before_sha"
-          test "$after_sha" = "7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e"
+          test "$after_sha" = "2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46"
 
           probe() {
             key="$1"
@@ -295,6 +366,7 @@ jobs:
           }
 
           {
+            echo "SRS_GUEST_FRAME_COUNTER=$(probe FRAME_COUNTER_ADDR)"
             echo "SRS_GUEST_ROOM_ID=$(probe ROOM_ID_ADDR)"
             echo "SRS_GUEST_PLAYER_X=$(probe PLAYER_X_ADDR)"
             echo "SRS_GUEST_PLAYER_Y=$(probe PLAYER_Y_ADDR)"
@@ -451,15 +523,19 @@ jobs:
             printf '%08x' "$guest"
           }
 
+          srs_frame_counter_virtual=$(guest_virtual "$SRS_GUEST_FRAME_COUNTER")
           srs_room_id_virtual=$(guest_virtual "$SRS_GUEST_ROOM_ID")
           srs_player_x_virtual=$(guest_virtual "$SRS_GUEST_PLAYER_X")
           srs_player_y_virtual=$(guest_virtual "$SRS_GUEST_PLAYER_Y")
           srs_camera_x_virtual=$(guest_virtual "$SRS_GUEST_CAMERA_X")
           srs_camera_y_virtual=$(guest_virtual "$SRS_GUEST_CAMERA_Y")
 
-          # ares GDB treats 2-byte requests as CPU Half reads. These SRS fields
-          # are unaligned, so observe each byte independently at its exact
-          # guest virtual address and reconstruct the SNES little-endian word.
+          # ares GDB treats multi-byte requests as CPU Half/Word reads. These
+          # SRS fields may be unaligned or dirty in the virtual D-cache, so
+          # observe each byte independently at its exact guest virtual address.
+          srs_frame_counter_1=$(printf '%08x' "$((0x$srs_frame_counter_virtual + 1))")
+          srs_frame_counter_2=$(printf '%08x' "$((0x$srs_frame_counter_virtual + 2))")
+          srs_frame_counter_3=$(printf '%08x' "$((0x$srs_frame_counter_virtual + 3))")
           srs_player_x_hi=$(printf '%08x' "$((0x$srs_player_x_virtual + 1))")
           srs_player_y_hi=$(printf '%08x' "$((0x$srs_player_y_virtual + 1))")
           srs_camera_x_hi=$(printf '%08x' "$((0x$srs_camera_x_virtual + 1))")
@@ -493,6 +569,10 @@ jobs:
             echo "ARES_CPU_EXECUTE_ADDR=$cpu_execute"
             echo "ARES_UPDATE_FPS_ADDR=$update_fps"
             echo "ARES_CHECK_FRAME_ADDR=$check_frame"
+            echo "ARES_SRS_FRAME_COUNTER_ADDR=$srs_frame_counter_virtual"
+            echo "ARES_SRS_FRAME_COUNTER_1_ADDR=$srs_frame_counter_1"
+            echo "ARES_SRS_FRAME_COUNTER_2_ADDR=$srs_frame_counter_2"
+            echo "ARES_SRS_FRAME_COUNTER_3_ADDR=$srs_frame_counter_3"
             echo "ARES_SRS_ROOM_ID_ADDR=$srs_room_id_virtual"
             echo "ARES_SRS_PLAYER_X_ADDR=$srs_player_x_virtual"
             echo "ARES_SRS_PLAYER_X_HI_ADDR=$srs_player_x_hi"
@@ -580,6 +660,10 @@ jobs:
               --fps-emulate "0x$ARES_FPS_EMULATE_ADDR" \
               --fps-display "0x$ARES_FPS_DISPLAY_ADDR" \
               --frame-count "0x$ARES_FRAME_COUNT_ADDR" \
+              --srs-frame-counter "0x$ARES_SRS_FRAME_COUNTER_ADDR" \
+              --srs-frame-counter-1 "0x$ARES_SRS_FRAME_COUNTER_1_ADDR" \
+              --srs-frame-counter-2 "0x$ARES_SRS_FRAME_COUNTER_2_ADDR" \
+              --srs-frame-counter-3 "0x$ARES_SRS_FRAME_COUNTER_3_ADDR" \
               --srs-room-id "0x$ARES_SRS_ROOM_ID_ADDR" \
               --srs-player-x "0x$ARES_SRS_PLAYER_X_ADDR" \
               --srs-player-x-hi "0x$ARES_SRS_PLAYER_X_HI_ADDR" \
@@ -591,6 +675,7 @@ jobs:
               --srs-camera-y-hi "0x$ARES_SRS_CAMERA_Y_HI_ADDR" \
               --warmup-windows 2 \
               --measure-windows 5 \
+              --post-validation-windows 4 \
               --snapshot "$snapshot" \
               --state-output "$state" \
               > "$gdb_log" 2>&1; then
@@ -638,12 +723,14 @@ jobs:
               assert contract["vi_per_window"] == 60
               assert contract["warmup_windows"] == 2
               assert contract["measured_windows"] == 5
+              assert contract["post_validation_windows"] == 4
               assert run["configured"]["apu_clock"] == 21
               assert run["configured"]["skipped_set"] == 0
               assert run["configured"]["audio_set"] == 4
               assert run["configured"]["precision_set"] == 8
               assert len(run["warmup"]) == 2
               assert len(run["measured"]) == 5
+              assert len(run["post_validation"]) == 4
               assert run["summary"]["final_sample_count"] >= 800
 
           def plausible(st):
@@ -659,7 +746,7 @@ jobs:
           sequences = []
           frame_vectors = []
           for run in runs:
-              rows = run["warmup"] + run["measured"]
+              rows = run["warmup"] + run["measured"] + run["post_validation"]
               states = [row["guest"] for row in rows]
               assert all(plausible(st) for st in states), states
               sequences.append(states)
@@ -669,22 +756,29 @@ jobs:
           repeatable_frames = all(v == frame_vectors[0] for v in frame_vectors[1:])
 
           first = sequences[0]
+
+          def spatial(st):
+              return {k: v for k, v in st.items() if k != "frame_counter"}
+
           unique_states = []
           for st in first:
-              if not unique_states or st != unique_states[-1]:
-                  unique_states.append(st)
+              spatial_state = spatial(st)
+              if not unique_states or spatial_state != unique_states[-1]:
+                  unique_states.append(spatial_state)
 
           player_xs = [st["player_x"] for st in first]
           rooms = [st["room_id"] for st in first]
           activity = {
               "player_x_span": max(player_xs) - min(player_xs),
-              "distinct_boundary_states": len({tuple(sorted(st.items())) for st in first}),
+              "distinct_boundary_states": len(
+                  {tuple(sorted(spatial(st).items())) for st in first}
+              ),
               "room_transition_observed": len(set(rooms)) > 1,
               "stalled_suffix_windows": 0,
           }
           for n in range(1, len(first) + 1):
               suffix = first[-n:]
-              if all(st == suffix[0] for st in suffix):
+              if all(spatial(st) == spatial(suffix[0]) for st in suffix):
                   activity["stalled_suffix_windows"] = n
               else:
                   break
@@ -705,7 +799,7 @@ jobs:
               "# SRS safe matched-route characterization",
               "",
               "Road-valid settings are applied before first guest execution.",
-              "Guest state is sampled at two warmup + five measured exact 60-VI boundaries.",
+              "Guest state is sampled at two warmup + five measured exact 60-VI boundaries, then four state-only post-validation boundaries after the profile snapshot.",
               "",
           ]
           for i, (seq, frames) in enumerate(zip(sequences, frame_vectors), 1):
@@ -713,7 +807,8 @@ jobs:
               lines.append(f"- measured frame vector: {frames}")
               for j, st in enumerate(seq, 1):
                   lines.append(
-                      f"- boundary {j}: room={st['room_id']} player=({st['player_x']},{st['player_y']}) "
+                      f"- boundary {j}: gf={st['frame_counter']} room={st['room_id']} "
+                      f"player=({st['player_x']},{st['player_y']}) "
                       f"camera=({st['camera_x']},{st['camera_y']})"
                   )
               lines.append("")
@@ -750,7 +845,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-b-srs-ares-audition
+          name: gate-b-srs-v5-matched
           retention-days: 14
           if-no-files-found: ignore
           path: |

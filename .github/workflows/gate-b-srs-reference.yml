@@ -315,7 +315,21 @@ jobs:
           ares_rc=$?
           set -e
 
-          ppu_load_count="$(grep -c '^SODIUM64_SRS_REF_PPU_LOAD
+          ppu_load_count="$(grep -c "^SODIUM64_SRS_REF_PPU_LOAD" "$log" || true)"
+          trace_count="$(grep -c "^SODIUM64_SRS_REF host_frame=" "$log" || true)"
+          {
+            echo "ares_exit_code=$ares_rc"
+            echo "ppu_load_count=$ppu_load_count"
+            echo "trace_count=$trace_count"
+          } | tee reference/srs-direct-snes-harness.txt
+
+          grep "^SODIUM64_SRS_REF host_frame=" "$log" > reference/srs-direct-snes-trace.txt || true
+          if [ "$ares_rc" -ne 0 ] || [ "$ppu_load_count" -lt 1 ] || [ "$trace_count" -ne 600 ]; then
+            echo "Direct-SNES capture did not satisfy harness contract" >&2
+            tail -n 120 "$log" >&2 || true
+            exit 1
+          fi
+
           python3 - <<'PY'
           import json
           import re

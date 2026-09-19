@@ -6462,3 +6462,13 @@ Dynamic result:
 - Success criterion: x>4810 and preferably room id transition 1->a1b within the 600-frame direct trace.
 - Falsifier: still blocked at x4810 or another authored obstacle without transition.
 - Do not measure Sodium64 until this direct-SFC route qualification is resolved.
+
+
+## Gate B SRS route v5 build checkpoint — 2026-09-19 UTC
+
+- Candidate remains `phase3/gate-b-srs-representative@2255a6f1aca6c2f81e64c035d94f2a3b0f9a2ecd`.
+- Same-head Build and Validate **`35424126115` SUCCESS**.
+- Direct-SFC `35424126162` remains in progress in source-build/reference lane.
+- Branch audit: direct compare from safe Sodium64 authority `075068af92da1802aa3a2677c3d44f393215cc44` to current v5 is +13 commits but **only one added file** overall: `.github/workflows/gate-b-srs-reference.yml`. Sodium64 runtime, safe audition workflow and `gdb_matched_srs.py` remain tree-identical to the validated safe authority.
+- Consequence: if v5 qualifies, a matched Sodium64 candidate can branch from v5 without inheriting runtime changes; only the existing safe audition workflow/script need route+frameCounter observability edits.
+- Exact known SRS symbols for future same-frame matching: `frameCounter=7e1249`, room id `7e2200`, player x/y `7e0123/7e0127`, camera x/y `7e87b3/7e87b5`; `a1a=01`, `a1b=02`, map left/top `0x1000/0x1000`.

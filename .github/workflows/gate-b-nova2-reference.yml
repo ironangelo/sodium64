@@ -256,44 +256,38 @@ jobs:
           import re
 
           root = Path(os.environ["RUNNER_TEMP"]) / "nova-the-squirrel-2"
-          cfg = (root / "linker_template.cfg").read_text()
-          m = re.search(r"ZEROPAGE:\s+start\s*=\s*\$([0-9A-Fa-f]+)", cfg)
-          if not m:
-              raise SystemExit("could not resolve ZEROPAGE start")
-          addr = int(m.group(1), 16)
+          dbg = root / "nova-the-squirrel-2.dbg"
+          if not dbg.is_file():
+              raise SystemExit(f"missing linked debug symbols: {dbg}")
 
           wanted = {
               "framecount": "NOVA_FRAMECOUNT_WRAM",
+              "keynew": "NOVA_KEYNEW_WRAM",
               "ScrollX": "NOVA_SCROLLX_WRAM",
               "ScrollY": "NOVA_SCROLLY_WRAM",
               "PlayerPX": "NOVA_PLAYERX_WRAM",
               "PlayerPY": "NOVA_PLAYERY_WRAM",
+              "PlayerVY": "NOVA_PLAYERVY_WRAM",
               "PlayerHealth": "NOVA_HEALTH_WRAM",
+              "JumpGracePeriod": "NOVA_JUMP_GRACE_WRAM",
+              "PlayerWantsToJump": "NOVA_WANTS_JUMP_WRAM",
+              "PlayerOnGround": "NOVA_ON_GROUND_WRAM",
           }
           found = {}
-          inside = False
-          for raw in (root / "src/memory.s").read_text().splitlines():
-              stripped = raw.strip()
-              if stripped == '.segment "ZEROPAGE"':
-                  inside = True
+          for raw in dbg.read_text().splitlines():
+              if not raw.startswith("sym\t"):
                   continue
-              if inside and stripped.startswith(".segment "):
-                  break
-              if not inside:
+              name_m = re.search(r'(?:^|,)name="([^"]+)"', raw)
+              val_m = re.search(r'(?:^|,)val=0x([0-9A-Fa-f]+)', raw)
+              if not name_m or not val_m:
                   continue
-              code = raw.split(";", 1)[0].strip()
-              mm = re.match(r"^([A-Za-z_][A-Za-z0-9_]*):\s*\.res\s+(\$[0-9A-Fa-f]+|[0-9]+)\s*$", code)
-              if not mm:
-                  continue
-              name, size_s = mm.groups()
+              name = name_m.group(1)
               if name in wanted:
-                  found[name] = addr
-              size = int(size_s[1:], 16) if size_s.startswith("$") else int(size_s)
-              addr += size
+                  found[name] = int(val_m.group(1), 16)
 
           missing = set(wanted) - set(found)
           if missing:
-              raise SystemExit(f"missing WRAM symbols: {sorted(missing)}")
+              raise SystemExit(f"missing linked WRAM symbols: {sorted(missing)}")
           for name, env_name in wanted.items():
               value = found[name]
               if not 0 <= value < 0x2000:
@@ -343,11 +337,16 @@ jobs:
 
           offsets = {
               "fc": int(os.environ["NOVA_FRAMECOUNT_WRAM"]),
+              "kn": int(os.environ["NOVA_KEYNEW_WRAM"]),
               "px": int(os.environ["NOVA_PLAYERX_WRAM"]),
               "py": int(os.environ["NOVA_PLAYERY_WRAM"]),
+              "vy": int(os.environ["NOVA_PLAYERVY_WRAM"]),
               "sx": int(os.environ["NOVA_SCROLLX_WRAM"]),
               "sy": int(os.environ["NOVA_SCROLLY_WRAM"]),
               "hp": int(os.environ["NOVA_HEALTH_WRAM"]),
+              "grace": int(os.environ["NOVA_JUMP_GRACE_WRAM"]),
+              "wants": int(os.environ["NOVA_WANTS_JUMP_WRAM"]),
+              "ground": int(os.environ["NOVA_ON_GROUND_WRAM"]),
           }
 
           ppu = Path("ares/sfc/ppu/ppu.cpp")
@@ -372,15 +371,20 @@ jobs:
               }};
 
               auto s64fc = sodium64Read16({offsets['fc']});
+              auto s64kn = sodium64Read16({offsets['kn']});
               auto s64px = sodium64Read16({offsets['px']});
               auto s64py = sodium64Read16({offsets['py']});
+              auto s64vy = (s16)sodium64Read16({offsets['vy']});
               auto s64sx = sodium64Read16({offsets['sx']});
               auto s64sy = sodium64Read16({offsets['sy']});
               auto s64hp = (u32)cpu.wram[{offsets['hp']}];
+              auto s64grace = (u32)cpu.wram[{offsets['grace']}];
+              auto s64wants = (u32)cpu.wram[{offsets['wants']}];
+              auto s64ground = (u32)cpu.wram[{offsets['ground']}];
 
               std::fprintf(stderr,
-                "SODIUM64_NOVA2_REF host_frame=%u game_frame=%u player_x=%u player_y=%u scroll_x=%u scroll_y=%u health=%u\\n",
-                sodium64TraceFrame, s64fc, s64px, s64py, s64sx, s64sy, s64hp);
+                "SODIUM64_NOVA2_REF host_frame=%u game_frame=%u player_x=%u player_y=%u player_vy=%d scroll_x=%u scroll_y=%u health=%u keynew=%u jump_grace=%u wants_jump=%u on_ground=%u\\n",
+                sodium64TraceFrame, s64fc, s64px, s64py, s64vy, s64sx, s64sy, s64hp, s64kn, s64grace, s64wants, s64ground);
               std::fflush(stderr);
               if(sodium64TraceFrame >= 900) std::_Exit(0);
 
@@ -433,22 +437,29 @@ jobs:
 
           rx = re.compile(
               r"^SODIUM64_NOVA2_REF host_frame=(\d+) game_frame=(\d+) "
-              r"player_x=(\d+) player_y=(\d+) scroll_x=(\d+) scroll_y=(\d+) health=(\d+)$"
+              r"player_x=(\d+) player_y=(\d+) player_vy=(-?\d+) "
+              r"scroll_x=(\d+) scroll_y=(\d+) health=(\d+) keynew=(\d+) "
+              r"jump_grace=(\d+) wants_jump=(\d+) on_ground=(\d+)$"
           )
           rows = []
           for line in Path("reference/nova2-direct-snes-trace.txt").read_text().splitlines():
               m = rx.match(line)
               if not m:
                   raise SystemExit(f"bad trace line: {line}")
-              host, game, px, py, sx, sy, hp = map(int, m.groups())
+              host, game, px, py, vy, sx, sy, hp, keynew, grace, wants, ground = map(int, m.groups())
               rows.append({
                   "host_frame": host,
                   "game_frame": game,
                   "player_x": px,
                   "player_y": py,
+                  "player_vy": vy,
                   "scroll_x": sx,
                   "scroll_y": sy,
                   "health": hp,
+                  "keynew": keynew,
+                  "jump_grace": grace,
+                  "wants_jump": wants,
+                  "on_ground": ground,
               })
 
           assert len(rows) == 900
@@ -514,6 +525,7 @@ jobs:
             echo "ares_pin=$ARES_PIN"
             echo "reference_core=direct Super Famicom"
             echo "trace_contract=read-only pinned-WRAM observation after each rendered SNES frame; 900 frames"
+            echo "observer_fields=framecount,PlayerPX,PlayerPY,PlayerVY,ScrollX,ScrollY,PlayerHealth,keynew,JumpGracePeriod,PlayerWantsToJump,PlayerOnGround"
             echo "observer_does_not_write_guest_state=true"
           } > reference/reference-provenance.txt
 

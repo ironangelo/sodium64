@@ -57,6 +57,42 @@ jobs:
           test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
           echo "NOVA_ROOT=$root" >> "$GITHUB_ENV"
 
+      - name: Inspect source palette encoding
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$NOVA_ROOT"
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import struct
+
+          def plte_entries(path):
+              data = path.read_bytes()
+              assert data[:8] == b"\x89PNG\r\n\x1a\n"
+              p = 8
+              while p + 12 <= len(data):
+                  n = struct.unpack(">I", data[p:p+4])[0]
+                  typ = data[p+4:p+8]
+                  if typ == b"PLTE":
+                      return n // 3
+                  p += 12 + n
+              return None
+
+          files = sorted(Path("palettes").glob("*.png"))
+          print(f"regular_palette_files={len(files)}")
+          short = []
+          for path in files:
+              with Image.open(path) as im:
+                  pal = im.getpalette()
+                  plen = 0 if pal is None else len(pal) // 3
+                  plte = plte_entries(path)
+                  print(f"{path}: mode={im.mode} png_plte_entries={plte} pillow_palette_entries={plen}")
+                  if plte is None or plte < 16:
+                      short.append((str(path), plte, plen))
+          print("short_regular_palettes=", short)
+          PY
+
       - name: Build unmodified game from pinned source
         shell: bash
         run: |

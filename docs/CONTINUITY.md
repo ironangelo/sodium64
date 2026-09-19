@@ -5552,3 +5552,45 @@ Controlled repair:
 
 Acceptance remains:
 a clean ROM build from exact pinned upstream state, with all tracked upstream inputs unchanged and only provenance/logs uploaded.
+
+
+## Nova2 autonomous source-build gate — PASSED 2026-09-18
+
+Exact authority:
+- branch **`phase3/gate-b-nova2-audition@156b928191c130f13a19868e634c519647d91d59`**;
+- **Gate B Nova2 Audition `35410418476` SUCCESS**;
+- provenance artifact **`10573526773`**, digest **`sha256:ab46bf2dcc239b0cfc0b3eebda8c2497eaf61ff5f177eac5b92da1046a8da5ff`**.
+
+Pinned upstream:
+- `NovaSquirrel/NovaTheSquirrel2@94385f1812f3b322f939f79a29502a1a3ee6d87f`.
+
+Source-build identity:
+- ROM size: **1048576 bytes**;
+- ROM SHA-256: **`ecc61b2367a9261fe48131a61e5cf787b6409083827556109099a46a637d9b2f`**;
+- Python 3.8.18;
+- Pillow 7.1.2;
+- ca65/ld65 from Ubuntu cc65 2.19 package;
+- LZ4 1.9.4;
+- exact upstream BRR helper source precompiled with host GCC + `-lm` because upstream Linux rule omits the required math library;
+- no tracked upstream file mutated;
+- artifact contains provenance/hash/build log only; no ROM or restricted upstream asset bytes are uploaded.
+
+Interpretation:
+**Nova the Squirrel 2 PASSES the legal/autonomous-source + reproducible-build gates for continued SMW-like audition.**
+It is **not yet locked** into the corpus. Runtime correctness, deterministic meaningful gameplay progression and sustained aligned frame-budget characterization remain required.
+
+Preserved build knowledge:
+- modern Pillow is not valid for this pinned generator;
+- Pillow 7.1.2 reproduces the historical 256-entry palette padding required by compact PNG PLTE assets;
+- do not rediscover/re-litigate the earlier palette failures.
+
+### RESUME HERE — Nova2 deterministic gameplay route
+
+Next technical batch:
+1. inspect pinned game startup/level-selection/player-input paths;
+2. choose the smallest temporary benchmark patch or deterministic input route that enters a representative scrolling gameplay level;
+3. preserve normal player physics, collision, actor updates, scrolling, PPU uploads and active audio;
+4. record unmodified ROM identity separately from benchmark ROM identity;
+5. boot/progress in pinned ares lab before attaching Sodium64 performance meaning.
+
+Do **not** optimize Sodium64 from Nova2 yet.

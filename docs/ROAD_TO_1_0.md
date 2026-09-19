@@ -180,7 +180,7 @@ The milestone order may change if profiling reveals a better dependency order. T
 
 ## Current position
 
-**M0 and M1 are achieved; M2 / Gate B is active.**
+**M0, M1 and M2 / Gate B are achieved; M3 / Gate C is active.**
 
 M0 established the first representative real-N64 authority measurement. The Gothicvania survivability workload, with frameskip `0`, full-rate APU clock `21`, audio enabled and precision `8`, completed **48/60, 49/60, 48/60, 50/60 and 50/60** guest frames across five complete 60-VI windows (mean **49.0/60**). That capture had essentially no VI idle headroom and placed **61.83%** of R4300 samples in APU/JIT/DSP-audio work, making APU/audio the first measured M1 gate driver.
 
@@ -198,9 +198,11 @@ It is **not** justified to assign the entire M0 `49/60 -> 60/60` movement to the
 
 M1's material exit condition is satisfied: a measured base-core bottleneck was reduced without using frameskip, additional APU underclock, muted audio or an accepted timing regression, and the result materially improved the real-N64 frame budget.
 
-**Gate B remains open.** One representative workload does not establish a base-system performance corpus, sustained audiovisual synchronization, AI underrun behavior, long-run drift, broad compatibility or PCM fidelity. The next active task is therefore to define a small versioned base-system corpus with distinct CPU, PPU/HDMA/Mode-7 and audio characteristics, filter it through emulator labs, then use real N64 hardware as the performance authority for the resulting milestone.
+Gate B was subsequently closed with a three-workload versioned base-system corpus: **Gothicvania, Space Rescue Squad, and Nova the Squirrel 2**. After emulator-lab route/semantic qualification, the two remaining workloads were measured on real N64 hardware with the same Road-valid settings. Both SRS and Nova2 completed **60/60 in all five measured 60-VI windows** with frameskip `0`, APU clock `21`, audio `4`, and precision `8`; the returned captures contained 3,582 and 3,583 valid statistical samples respectively. Together with Gothicvania's prior real-hardware 60/60 ×5 result, the defined Gate-B corpus now sustains native-frame throughput on real hardware without frameskip or APU underclocking.
 
-Gothicvania should no longer be optimized by FPS alone: its measured 11.51% frame/VI wait makes it a regression workload, not the current performance gate driver. Likewise, `apu_read8`/`apu_write8`, DSP optimization and a 65C816 dynarec are no longer automatic next steps. The next architecture change should be selected by the first demonstrated Gate-B blocker in the broader corpus.
+The Nova2 hardware video was effectively silent, but this is not currently evidence of an emulator audio regression: the exact pinned benchmark level's upstream `levels/firstlevel.json` sets `"Music": null`, while the hardware capture still shows full-rate APU execution, DSP/audio activity, and audio setting `4`. Space Rescue Squad produced audible output in the hardware video and substantial DSP/audio execution in the profile. This evidence is sufficient for the measured Gate-B performance corpus; it is **not** a claim of full-library PCM fidelity, long-run drift immunity, or broad audio compatibility, which remain Gate-C/release-hardening concerns.
+
+**M2 / Gate B is therefore achieved.** Gothicvania, SRS and Nova2 become regression controls rather than automatic optimization targets. Do not resume S-CPU/APU/DSP optimization, a 65C816 dynarec, or other major performance architecture work unless a new measured workload demonstrates a real blocker. The active milestone is **M3 / Gate C: base-system fidelity and compatibility**, beginning from already-known PPU/compositor regressions and expanding deterministic compatibility evidence.
 
 ## Decision rule
 

@@ -5246,3 +5246,98 @@ SRS has autonomous source build, deterministic benchmark, repeatable sustained a
 
 If falsified:
 do not optimize Sodium64. Classify the remaining observation/route problem first. No hardware request.
+
+
+## Gate-B SRS guest-progression proof v4 — VALIDATED / CORPUS SLOT LOCKED 2026-09-18
+
+Exact authority:
+- audition branch **`phase3/gate-b-srs-audition@d00ce599563ee5a7be94356150bae73a018a4e52`**;
+- **Gate B SRS Audition `35407369415` SUCCESS**;
+- same-head **Build and Validate `35407369417` SUCCESS**, including normal/PROFILE builds and pinned Mupen smoke;
+- main audition artifact **`10573367249`**, digest **`sha256:9b98631ce14cc0c90e55b91d6579b739f8bb79183ec2c817efad7c66db38f833`**;
+- source-build provenance artifact **`10572508021`**, digest **`sha256:99a3d1742e9ed16bb17892c0c80059bd97c70c79120043f58c3825f0c6d7a66e`**.
+
+Benchmark identity remained unchanged:
+- upstream SRS `e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865`;
+- unmodified release ROM SHA-256 `d5bd7b17aa19a1b370efa38554b6ebfd77c4756e7184e9f2e848e8193bc9bed0`;
+- deterministic benchmark ROM SHA-256 **`7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`**;
+- benchmark patch SHA-256 **`4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`**;
+- patch still only enters the first authored gameplay level after normal initialization and supplies deterministic Right+Run input; audio, game state, room loading, entities, collisions, camera, metatile processing, animations, scripts and normal frame waiting remain active.
+
+Road-valid settings observed in all repeats:
+- frameskip `0`;
+- APU clock `21`;
+- audio `4`;
+- precision `8`.
+
+### Internally aligned 60-VI histories
+
+Three fresh ares-lab repeats:
+
+- r1: **`53,60,60,60,60,60,60,60 /60`** — 8 windows, mean 59.125;
+- r2: **13 x `60/60`** — mean 60.0;
+- r3: **`59,60,60,60,60,60,60,60,60,60,60,60 /60`** — 12 windows, mean 59.9167.
+
+The first diagnostic window is not stable across launches. After discarding only that first transient window, the common seven-window prefix is **exactly `60/60 x7` in all three repeats**.
+
+This is sustained emulator-lab throughput evidence, not real-N64 performance authority.
+
+### Guest progression proof
+
+The ares unaligned-half debugger limitation was avoided by reading each byte separately at the exact guest virtual WRAM addresses and reconstructing each SNES uint16 as `low | high << 8`.
+
+All three repeats ended with the same plausible guest state:
+- room ID **1 = authored `a1a_entrance`**;
+- player x **4250**;
+- player y **4259**;
+- camera x **4122**;
+- camera y **4096**.
+
+Authored initial player x is **4152**. The deterministic route therefore advanced the player **+98 px** through normal gameplay in every repeat, exceeding the predeclared >=64-px progression criterion.
+
+Comparator result:
+- plausible guest state: **true, true, true**;
+- progressed from a1a: **true, true, true**;
+- entered a1b by measurement end: false, false, false.
+
+The workload is therefore **not** a static/stuck low-activity state.
+
+### Profile context — do not normalize as subsystem cost
+
+Each repeat filled 4,096 statistical samples. Shares varied materially by repeat/measurement phase (for example VI wait 41.0%, 60.8%, 66.0%; APU static 26.9%, 25.2%, 23.6%). These shares are useful for locating activity but are **not** a stable normalized cross-run subsystem-cost claim for SRS.
+
+### Decision
+
+**Space Rescue Squad — LOCKED / GATE-B CORPUS SLOT / DKC-LIKE HEAVY PLATFORMER.**
+
+Why it earns the slot:
+- autonomous reproducible pinned source/toolchain build;
+- materially nontrivial game/engine rather than a single-purpose microtest;
+- independent engine/toolchain lineage from Gothicvania;
+- entities, collision, camera, room/metatile processing, HDMA/DMA budgeting, animated tiles and active SPC700/audio;
+- deterministic benchmark with meaningful guest progression;
+- repeatable sustained Road-valid 60/60 laboratory cadence after the first launch transient.
+
+What this does NOT establish:
+- real-N64 60 FPS/performance;
+- complete SRS playthrough/compatibility;
+- broad Gate-B compatibility;
+- audiovisual fidelity or long-run sync;
+- that SRS exposes the next blocker.
+
+Preserve **ARES DEBUGGER UNALIGNED-HALF LAB LIMITATION**: two-byte GDB reads from odd guest addresses are not trustworthy in the pinned lab; use byte-wise reads for such state observations.
+
+No new hardware session is justified now.
+
+### RESUME HERE — Gate-B corpus selection
+
+Current corpus:
+1. Gothicvania — existing representative regression workload;
+2. **Space Rescue Squad — LOCKED DKC-like/heavy-platformer slot**;
+3. SMW-like slot — OPEN;
+4. ALttP-like slot — OPEN.
+
+Next technical batch:
+select and audition the remaining SMW-like and ALttP-like workloads using the same gate order: legal/autonomous source+asset provenance -> reproducible build -> deterministic meaningful gameplay route -> emulator-lab progression/correctness -> sustained aligned frame-budget characterization. Do not optimize Sodium64 until the four-workload corpus identifies a real blocker.
+
+Do not merge the one-off SRS audition branch to master yet. It contains PROFILE-only VI-history instrumentation and candidate-specific workflow. Prefer consolidating corpus infrastructure after the remaining slots are selected rather than accumulating per-candidate diagnostic machinery in master.

@@ -5848,3 +5848,23 @@ This lane is **correctness/route evidence only**. Direct-ares wall-clock speed i
 
 Important follow-up:
 the current safe Sodium64 SRS run `35416459569` captures semantic state at exact 60-VI boundaries but does **not yet capture SRS `frameCounter`**. Do not modify its branch while that run is active. After checkpointing its result, add `frameCounter` to a follow-up safe capture only if the direct reference shows that exact cross-core alignment is needed.
+
+
+## SRS route source geometry clarification — 2026-09-19 UTC
+
+Pinned upstream source gives a concrete scale for the old +98px observation:
+- `game/resources/rooms/a1a-entrance.utroom` is a 48x14 authored room;
+- `start` entrance local x = **56**;
+- `right_door` entrance local x = **728**;
+- right-room transition trigger is at tile x=46;
+- old deterministic end state player x=4250 with map-left=4096 corresponds to local x=**154**, exactly +98px from the authored start.
+
+Therefore the old endpoint reached only an early portion of the first room and was **far from the authored right-door transition**. This strengthens the audit conclusion that +98px cannot establish sustained representative route coverage.
+
+It still does **not** prove why progression stopped. Competing explanations remain:
+- normal room geometry/enemy interaction requiring additional input (e.g. jump/attack);
+- benchmark-input limitation;
+- Sodium64 correctness divergence;
+- less likely remaining observation issue.
+
+The direct-SNES reference lane `35416567103` is the controlled discriminator; do not infer the cause from map geometry alone.

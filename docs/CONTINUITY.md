@@ -6113,3 +6113,17 @@ Current authorities:
 - Step **Build pinned direct-SNES ares with read-only frame tracer** is in progress; capture has not started yet.
 
 Therefore exact ROM/patch reconstruction and symbol observability have survived the PixelAccuracy repair unchanged. No direct-SNES dynamic route evidence exists yet; wait for the instrumented ares build/capture before judging the old Right+Run route.
+
+
+## Conditional SRS replacement-route input semantics — source preparation 2026-09-19
+
+No replacement benchmark has been launched. This is source preparation only, conditional on the direct reference confirming the old Right+Run wall.
+
+Pinned SRS input/movement source establishes:
+- `JOY_H_RUN_BUTTON = JOYH.y`; `JOY_H_JUMP_BUTTON = JOYH.b`.
+- `InputBuffer.Process` loads the 5-frame jump buffer only from **`Controller.Joy1.pressed + 1` B**, so merely holding B in `current` does not initiate a jump.
+- player movement reads B from **`Controller.Joy1.current + 1`** to select the lower “holding jump” gravity while the button remains held.
+- a valid buffered jump while coyote/standing state is available calls `SetJumpYVelocity__a8i16` and then the normal tile-collision path; no collision bypass is required.
+- `game/resources/movement-table.csv` gives both PlayerWalk and PlayerRun **JumpVelocity = 2.75 px/frame**.
+
+If the direct reference confirms the authored wall, a next route can therefore differ only in deterministic controller input: introduce a real B press/hold sequence while retaining Right+Run and all ordinary game/collision logic. Test that input first on direct SFC and require sustained semantic progression before accepting it as representative.

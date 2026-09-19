@@ -6448,3 +6448,17 @@ Dynamic result:
 - **Route-v5 hypothesis:** preserve v4 exactly, but suppress only the periodic B pulse/hold at absolute `frameCounter 0x0220..0x022f` (gf544..559). Let gravity carry the player toward the row8..10 doorway while Right+Run remains held. No game state manipulation.
 - Success criterion: x progresses beyond 4810 and ideally room id changes from a1a to a1b within the existing 600-frame trace.
 - Falsifier: player still blocks at x4810 or falls into another authored obstruction without transition; inspect resulting trace before any further input change.
+
+
+## Gate B SRS representative route v5 launch — 2026-09-19 UTC
+
+**Classification:** COMPATIBILITY PROOF / workload selection; experiment RUNNING.
+
+- Branch/HEAD: `phase3/gate-b-srs-representative@2255a6f1aca6c2f81e64c035d94f2a3b0f9a2ecd`.
+- Direct-SFC run: **`35424126162`**. Same-head Build/Validate: **`35424126115`**.
+- v4->v5 compare: one commit, one file `.github/workflows/gate-b-srs-reference.yml`; Sodium64 runtime untouched.
+- Controlled gameplay change: preserve the entire validated v4 route, including gf352 suppression and targeted gf378 lower-platform jump. Suppress only absolute `frameCounter 0x0220..0x022f` (gf544..559), the periodic jump that made v4 strike the solid upper right-door frame.
+- Source-backed target: authored right-door trigger is tile column46, rows8..10, and loads `a1b_stairway`. v4 reached local x714 / column45 while too high; v5 lets gravity lower the player toward the opening with Right+Run held.
+- Success criterion: x>4810 and preferably room id transition 1->a1b within the 600-frame direct trace.
+- Falsifier: still blocked at x4810 or another authored obstacle without transition.
+- Do not measure Sodium64 until this direct-SFC route qualification is resolved.

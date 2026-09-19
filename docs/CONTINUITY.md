@@ -6020,3 +6020,16 @@ Harness-only commit **`phase3/gate-b-srs-reference@ba5436747fd3f50a78af5790b1978
 GitHub run **`35418466127`** completed immediately as FAILURE with **zero jobs created**. Therefore this is a **HARNESS / workflow-definition false negative** and contains no ares/SRS/Sodium64 execution evidence. The older direct-reference run `35416725629` remained in progress because the invalid replacement workflow never instantiated a job capable of exercising concurrency cancellation.
 
 Decision: diagnose and correct workflow syntax only. Do not change the direct-reference experiment or benchmark while repairing this definition.
+
+
+## SRS direct-reference workflow validity restored — checkpoint 2026-09-19
+
+Second harness-definition attempt **`60c07376e7d8134f4048ae287e5f14ccd6038870`** was also rejected before job creation (run **`35418518058`** FAILURE). Like `ba543674...`, it is **REJECTED as execution evidence**; no direct-SFC guest code ran.
+
+Rather than continue patching an invalid definition, the workflow file was restored byte-for-byte to the last GitHub-accepted blob from `dd9eec47...`:
+- branch commit **`phase3/gate-b-srs-reference@17e0be6f17ccf2f47860f5b689ff34118afca5fc`**;
+- restored workflow blob **`67642e8430f0fda7d33bc641b1d3bec2266f07f2`**, exactly the known-valid `dd9eec47...` workflow content;
+- new direct-reference run **`35418552346`** was created as **Gate B SRS Direct SNES Reference** and is pending at checkpoint;
+- Build and Validate run **`35418552244`** is also pending.
+
+This proves the workflow-definition failure was introduced only by the attempted observability edit. The SRS benchmark experiment itself remains unchanged. Next batch: add a **single minimal harness variable** to the known-valid workflow, keeping the YAML structure simple, so capture duration is bounded without simultaneously changing tracer/source observability.

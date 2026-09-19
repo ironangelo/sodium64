@@ -295,12 +295,13 @@ jobs:
           mkdir -p "$home"
 
           HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            timeout --signal=TERM --kill-after=10s 300s \
             xvfb-run -a stdbuf -oL -eL "$ARES_SFC_BIN" \
               --no-file-prompt \
               --system "Super Famicom" \
               --settings-file "$settings" \
               --setting "Developer/DeterministicEntropy=true" \
-              "$rom" > "$log" 2>&1
+              "$rom" 2>&1 | tee "$log"
 
           grep '^SODIUM64_SRS_REF ' "$log" > reference/srs-direct-snes-trace.txt
           test "$(wc -l < reference/srs-direct-snes-trace.txt)" -eq 600

@@ -5414,3 +5414,31 @@ Falsifier / downgrade:
 - asset/license boundary cannot be respected without redistributing restricted content.
 
 If accepted, next controlled step is **not** immediate corpus lock: first design a temporary deterministic meaningful gameplay route that preserves normal game/PPU/audio/collision/entity work, then prove guest progression and sustained internally aligned frame-budget behavior in the pinned ares lab. Real N64 remains deferred until the four-workload corpus is assembled and one aggregated hardware session is justified.
+
+
+## Nova2 source-build attempt 1 — BUILD-ENVIRONMENT FALSE NEGATIVE 2026-09-18
+
+Exact failed authority:
+- **Gate B Nova2 Audition `35410094420` FAILED** @ `043950304a28aec583c5b1ba70ae12c99741e206`;
+- failure was in the upstream game-build step after checkout and dependency installation succeeded.
+
+Observed build progress:
+- exact upstream `94385f1812f3b322f939f79a29502a1a3ee6d87f` cloned successfully;
+- ca65 compilation began normally;
+- multiple Python graphics conversions completed;
+- failure occurred in upstream `tools/encodepalettes.py` at `pal.pop(0)` while generating palette data.
+
+Cause:
+the runner installed Ubuntu Pillow 10.2.0. The 2023 upstream palette generator assumes the older padded `Image.getpalette()` behavior and indexes a fixed set of palette entries. This is a host-library compatibility mismatch, not evidence of a missing Nova2 asset, bad source tree or Sodium64 incompatibility.
+
+Classification:
+**BUILD-ENVIRONMENT / HARNESS FALSE NEGATIVE.**
+Reject this run as candidate-quality evidence.
+
+Controlled repair:
+**`phase3/gate-b-nova2-audition@d1a3aacb0a724fb3ea8097f93b53c72aa56cc76b`** now reproduces an upstream-era Python stack with Python 3.11 + Pillow 9.4.0. No Nova2 source/assets and no Sodium64 runtime code are modified.
+
+Question remains unchanged:
+can the exact pinned game build autonomously from public source in a historically compatible environment?
+
+Acceptance/falsifiers remain unchanged. If the next build proceeds past palette generation but exposes another environment dependency, classify it before changing candidate status.

@@ -1,0 +1,423 @@
+name: Gate B Nova2 Direct Reference
+
+on:
+  push:
+    branches:
+      - phase3/gate-b-nova2-reference
+    paths:
+      - '.github/workflows/gate-b-nova2-reference.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-b-nova2-reference-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  direct-snes-reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    env:
+      NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
+      NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
+      ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+      ROUTE_ID: firstlevel-right-periodic-b-v1
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Reproduce upstream-era Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install Nova2 and ares dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cc65 \
+            ccache \
+            cmake \
+            git \
+            libgl1-mesa-dev \
+            libgl1-mesa-dri \
+            libgtk-3-dev \
+            libmsgsl-dev \
+            libsdl2-dev \
+            libvulkan1 \
+            lz4 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            qt6-base-dev \
+            xauth \
+            xvfb
+          python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
+
+      - name: Rebuild exact Nova2 firstlevel route from public source
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/nova-the-squirrel-2"
+          git clone --filter=blob:none "$NOVA_REPO" "$root"
+          git -C "$root" checkout --detach "$NOVA_SHA"
+          test "$(git -C "$root" rev-parse HEAD)" = "$NOVA_SHA"
+          echo "NOVA_ROOT=$root" >> "$GITHUB_ENV"
+
+          gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
+          mkdir -p "$root/obj/snes"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["RUNNER_TEMP"]) / "nova-the-squirrel-2"
+          main = root / "src/main.s"
+          text = main.read_text()
+
+          old = "\n".join([
+              "  .import OpenOverworld",
+              "  seta8",
+              "  lda #2*16",
+              "  sta OverworldPlayerX",
+              "  lda #10*16",
+              "  sta OverworldPlayerY",
+              "  stz OverworldMap",
+              "  stz OverworldDirection",
+              "  jml OpenOverworld",
+              "",
+          ])
+          new = "\n".join([
+              "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "  ; Enter the authored firstlevel through the game's normal StartLevel path.",
+              "  ; Only overworld/menu routing is skipped; level decompression, autotiling,",
+              "  ; graphics upload, checkpoint creation and GameMainLoop remain upstream code.",
+              "  .import level_firstlevel",
+              "  seta16",
+              "  lda #.loword(level_firstlevel)",
+              "  sta LevelHeaderPointer+0",
+              "  seta8",
+              "  lda #^level_firstlevel",
+              "  sta LevelHeaderPointer+2",
+              "  seta16",
+              "  lda #1",
+              "  jml StartLevel",
+              "",
+          ])
+          if text.count(old) != 1:
+              raise SystemExit(f"src/main.s entry anchor count={text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          old = "\n".join([
+              "  lda keydown",
+              "  sta keylast",
+              "  lda JOY1CUR",
+              "  sta keydown",
+              "  lda keylast",
+              "",
+          ])
+          new = "\n".join([
+              "  lda keydown",
+              "  sta keylast",
+              "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "  ; deterministic normal gameplay input: hold Right, plus a bounded 16-frame",
+              "  ; B hold once every 64 game frames. No player/camera/entity state is written.",
+              "  lda #KEY_RIGHT",
+              "  sta keydown",
+              "  lda framecount",
+              "  and #$003f",
+              "  cmp #$0010",
+              "  bcs :+",
+              "    lda keydown",
+              "    ora #KEY_B",
+              "    sta keydown",
+              "  :",
+              "  lda keylast",
+              "",
+          ])
+          if text.count(old) != 1:
+              raise SystemExit(f"src/main.s input anchor count={text.count(old)}")
+          main.write_text(text.replace(old, new, 1))
+          PY
+
+          git -C "$root" diff --check
+          changed="$(git -C "$root" diff --name-only)"
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 1
+          printf '%s\n' "$changed" | grep -Fxq 'src/main.s'
+          git -C "$root" diff -- src/main.s > nova2-firstlevel-benchmark.patch
+
+          make -C "$root" -j"$(nproc)" nova-the-squirrel-2.sfc 2>&1 | tee nova2-firstlevel-reference-build.log
+          rom="$root/nova-the-squirrel-2.sfc"
+          test -s "$rom"
+
+          route_patch_sha="$(sha256sum nova2-firstlevel-benchmark.patch | awk '{print $1}')"
+          route_rom_sha="$(sha256sum "$rom" | awk '{print $1}')"
+          echo "ROUTE_PATCH_SHA256=$route_patch_sha" >> "$GITHUB_ENV"
+          echo "ROUTE_ROM_SHA256=$route_rom_sha" >> "$GITHUB_ENV"
+          echo "route_id=$ROUTE_ID patch_sha256=$route_patch_sha rom_sha256=$route_rom_sha"
+
+      - name: Resolve read-only Nova2 WRAM observation offsets from pinned source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > nova2-wram.env
+          from pathlib import Path
+          import os
+          import re
+
+          root = Path(os.environ["RUNNER_TEMP"]) / "nova-the-squirrel-2"
+          cfg = (root / "linker_template.cfg").read_text()
+          m = re.search(r"ZEROPAGE:\s+start\s*=\s*\$([0-9A-Fa-f]+)", cfg)
+          if not m:
+              raise SystemExit("could not resolve ZEROPAGE start")
+          addr = int(m.group(1), 16)
+
+          wanted = {
+              "framecount": "NOVA_FRAMECOUNT_WRAM",
+              "ScrollX": "NOVA_SCROLLX_WRAM",
+              "ScrollY": "NOVA_SCROLLY_WRAM",
+              "PlayerPX": "NOVA_PLAYERX_WRAM",
+              "PlayerPY": "NOVA_PLAYERY_WRAM",
+              "PlayerHealth": "NOVA_HEALTH_WRAM",
+          }
+          found = {}
+          inside = False
+          for raw in (root / "src/memory.s").read_text().splitlines():
+              stripped = raw.strip()
+              if stripped == '.segment "ZEROPAGE"':
+                  inside = True
+                  continue
+              if inside and stripped.startswith(".segment "):
+                  break
+              if not inside:
+                  continue
+              code = raw.split(";", 1)[0].strip()
+              mm = re.match(r"^([A-Za-z_][A-Za-z0-9_]*):\s*\.res\s+(\$[0-9A-Fa-f]+|[0-9]+)\s*$", code)
+              if not mm:
+                  continue
+              name, size_s = mm.groups()
+              if name in wanted:
+                  found[name] = addr
+              size = int(size_s[1:], 16) if size_s.startswith("$") else int(size_s)
+              addr += size
+
+          missing = set(wanted) - set(found)
+          if missing:
+              raise SystemExit(f"missing WRAM symbols: {sorted(missing)}")
+          for name, env_name in wanted.items():
+              value = found[name]
+              if not 0 <= value < 0x2000:
+                  raise SystemExit(f"{name} resolved outside low WRAM: 0x{value:06x}")
+              print(f"{env_name}={value}")
+          PY
+          cat nova2-wram.env
+          cat nova2-wram.env >> "$GITHUB_ENV"
+
+      - name: Build pinned direct-SNES ares with read-only Nova2 frame tracer
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-sfc"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout "$ARES_PIN"
+          cd "$root"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          offsets = {
+              "fc": int(os.environ["NOVA_FRAMECOUNT_WRAM"]),
+              "px": int(os.environ["NOVA_PLAYERX_WRAM"]),
+              "py": int(os.environ["NOVA_PLAYERY_WRAM"]),
+              "sx": int(os.environ["NOVA_SCROLLX_WRAM"]),
+              "sy": int(os.environ["NOVA_SCROLLY_WRAM"]),
+              "hp": int(os.environ["NOVA_HEALTH_WRAM"]),
+          }
+
+          ppu = Path("ares/sfc/ppu/ppu.cpp")
+          s = ppu.read_text()
+          anchor = '#include <sfc/sfc.hpp>\n'
+          if s.count(anchor) != 1:
+              raise SystemExit("unexpected ppu include anchor")
+          ppu.write_text(s.replace(anchor, anchor + '#include <cstdio>\n#include <cstdlib>\n', 1))
+
+          main = Path("ares/sfc/ppu/main.cpp")
+          s = main.read_text()
+          anchor = "    screen->frame();\n    scheduler.exit(Event::Frame);"
+          if s.count(anchor) != 1:
+              raise SystemExit("unexpected frame anchor")
+          trace = f"""    screen->frame();
+
+              static u32 sodium64TraceFrame = 0;
+              sodium64TraceFrame++;
+
+              auto sodium64Read16 = [&](u32 p) -> u32 {{
+                return (u32)cpu.wram[p] | ((u32)cpu.wram[p + 1] << 8);
+              }};
+
+              auto s64fc = sodium64Read16({offsets['fc']});
+              auto s64px = sodium64Read16({offsets['px']});
+              auto s64py = sodium64Read16({offsets['py']});
+              auto s64sx = sodium64Read16({offsets['sx']});
+              auto s64sy = sodium64Read16({offsets['sy']});
+              auto s64hp = (u32)cpu.wram[{offsets['hp']}];
+
+              std::fprintf(stderr,
+                "SODIUM64_NOVA2_REF host_frame=%u game_frame=%u player_x=%u player_y=%u scroll_x=%u scroll_y=%u health=%u\\n",
+                sodium64TraceFrame, s64fc, s64px, s64py, s64sx, s64sy, s64hp);
+              std::fflush(stderr);
+              if(sodium64TraceFrame >= 900) std::_Exit(0);
+
+              scheduler.exit(Event::Frame);"""
+          main.write_text(s.replace(anchor, trace, 1))
+          print("Nova2 direct-reference WRAM offsets", offsets)
+          PY
+
+          ccache --zero-stats
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=sfc
+          cmake --build build --parallel "$(nproc)"
+          ccache --show-stats
+
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_SFC_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-sfc-version.txt"
+
+      - name: Capture direct-SNES Nova2 semantic trace
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reference
+          rom="$NOVA_ROOT/nova-the-squirrel-2.sfc"
+          log="reference/nova2-direct-snes.log"
+          home="$RUNNER_TEMP/ares-sfc-home"
+          settings="$RUNNER_TEMP/ares-sfc-settings.bml"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            timeout --signal=TERM --kill-after=10s 300s \
+            xvfb-run -a stdbuf -oL -eL "$ARES_SFC_BIN" \
+              --no-file-prompt \
+              --system "Super Famicom" \
+              --settings-file "$settings" \
+              --setting "Video/PixelAccuracy=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              "$rom" 2>&1 | tee "$log"
+
+          grep '^SODIUM64_NOVA2_REF ' "$log" > reference/nova2-direct-snes-trace.txt
+          test "$(wc -l < reference/nova2-direct-snes-trace.txt)" -eq 900
+
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          rx = re.compile(
+              r"^SODIUM64_NOVA2_REF host_frame=(\d+) game_frame=(\d+) "
+              r"player_x=(\d+) player_y=(\d+) scroll_x=(\d+) scroll_y=(\d+) health=(\d+)$"
+          )
+          rows = []
+          for line in Path("reference/nova2-direct-snes-trace.txt").read_text().splitlines():
+              m = rx.match(line)
+              if not m:
+                  raise SystemExit(f"bad trace line: {line}")
+              host, game, px, py, sx, sy, hp = map(int, m.groups())
+              rows.append({
+                  "host_frame": host,
+                  "game_frame": game,
+                  "player_x": px,
+                  "player_y": py,
+                  "scroll_x": sx,
+                  "scroll_y": sy,
+                  "health": hp,
+              })
+
+          assert len(rows) == 900
+          assert [r["host_frame"] for r in rows] == list(range(1, 901))
+
+          meaningful = [
+              r for r in rows
+              if 0 < r["game_frame"] < 10000
+              and 0x0100 <= r["player_x"] < 0xFF00
+              and 0x0100 <= r["player_y"] < 0xFF00
+              and 0 < r["health"] <= 16
+          ]
+          resets = sum(
+              1 for a, b in zip(meaningful, meaningful[1:])
+              if b["game_frame"] < a["game_frame"]
+          )
+          summary = {
+              "meaningful_rows": len(meaningful),
+              "game_frame_resets": resets,
+          }
+          if meaningful:
+              xs = [r["player_x"] for r in meaningful]
+              ys = [r["player_y"] for r in meaningful]
+              tail = meaningful[-120:]
+              summary.update({
+                  "first": meaningful[0],
+                  "last": meaningful[-1],
+                  "min_player_x": min(xs),
+                  "max_player_x": max(xs),
+                  "player_x_span": max(xs) - min(xs),
+                  "min_player_y": min(ys),
+                  "max_player_y": max(ys),
+                  "tail_120_x_span": max(r["player_x"] for r in tail) - min(r["player_x"] for r in tail),
+                  "tail_120_unique_positions": len({(r["player_x"], r["player_y"]) for r in tail}),
+              })
+
+          payload = {
+              "reference": "ares direct Super Famicom core",
+              "ares_pin": os.environ["ARES_PIN"],
+              "upstream_sha": os.environ["NOVA_SHA"],
+              "benchmark_rom_sha256": os.environ["ROUTE_ROM_SHA256"],
+              "route_id": os.environ["ROUTE_ID"],
+              "route_patch_sha256": os.environ["ROUTE_PATCH_SHA256"],
+              "deterministic_entropy": True,
+              "trace_frames": len(rows),
+              "summary": summary,
+              "rows": rows,
+          }
+          Path("reference/nova2-direct-snes.json").write_text(
+              json.dumps(payload, indent=2, sort_keys=True) + "\n"
+          )
+
+          print(json.dumps(summary, indent=2, sort_keys=True))
+          if len(meaningful) < 300:
+              raise SystemExit("insufficient meaningful Nova2 gameplay trace")
+          PY
+
+          {
+            echo "upstream_sha=$NOVA_SHA"
+            echo "route_id=$ROUTE_ID"
+            echo "benchmark_rom_sha256=$ROUTE_ROM_SHA256"
+            echo "benchmark_patch_sha256=$ROUTE_PATCH_SHA256"
+            echo "ares_pin=$ARES_PIN"
+            echo "reference_core=direct Super Famicom"
+            echo "trace_contract=read-only pinned-WRAM observation after each rendered SNES frame; 900 frames"
+            echo "observer_does_not_write_guest_state=true"
+          } > reference/reference-provenance.txt
+
+      - name: Upload non-ROM Nova2 direct-reference evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-nova2-firstlevel-direct-snes-reference
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            ares-sfc-version.txt
+            nova2-firstlevel-benchmark.patch
+            nova2-firstlevel-reference-build.log
+            nova2-wram.env
+            reference/

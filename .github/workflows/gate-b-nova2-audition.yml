@@ -142,7 +142,7 @@ jobs:
             nova2-provenance.txt
             nova2-build.log
 
-      - name: Create deterministic Nova2 hubworld walking benchmark
+      - name: Create deterministic Nova2 firstlevel gameplay benchmark
         shell: bash
         run: |
           set -euo pipefail
@@ -153,9 +153,9 @@ jobs:
           import os
 
           root = Path(os.environ["NOVA_ROOT"])
-
           main = root / "src/main.s"
           text = main.read_text()
+
           old = "\n".join([
               "  .import OpenOverworld",
               "  seta8",
@@ -170,65 +170,79 @@ jobs:
           ])
           new = "\n".join([
               "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
-              "  ; Enter the authored hubworld directly.  This skips only overworld/menu",
-              "  ; routing; hubworld initialization, PPU setup, rendering and frame pacing",
-              "  ; remain the game's own code.",
-              "  .import OpenHubworld",
-              "  jml OpenHubworld",
+              "  ; Enter the authored firstlevel through the game's normal StartLevel path.",
+              "  ; Only overworld/menu routing is skipped; level decompression, autotiling,",
+              "  ; graphics upload, checkpoint creation and GameMainLoop remain upstream code.",
+              "  .import level_firstlevel",
+              "  seta16",
+              "  lda #.loword(level_firstlevel)",
+              "  sta LevelHeaderPointer+0",
+              "  seta8",
+              "  lda #^level_firstlevel",
+              "  sta LevelHeaderPointer+2",
+              "  seta16",
+              "  lda #1",
+              "  jml StartLevel",
               "",
           ])
           if text.count(old) != 1:
-              raise SystemExit(f"src/main.s benchmark anchor count={text.count(old)}")
-          main.write_text(text.replace(old, new, 1))
+              raise SystemExit(f"src/main.s entry anchor count={text.count(old)}")
+          text = text.replace(old, new, 1)
 
-          hub = root / "src/hubworld.s"
-          text = hub.read_text()
           old = "\n".join([
               "  lda keydown",
               "  sta keylast",
               "  lda JOY1CUR",
               "  sta keydown",
+              "  lda keylast",
               "",
           ])
           new = "\n".join([
               "  lda keydown",
               "  sta keylast",
               "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
-              "  ; deterministic normal hubworld input: hold Right continuously.",
-              "  ; This exercises player drawing, scrolling, row/column map updates,",
-              "  ; VRAM/OAM DMA and WaitVblank without writing position/camera state.",
+              "  ; deterministic normal gameplay input: hold Right, plus a bounded 16-frame",
+              "  ; B hold once every 64 game frames. No player/camera/entity state is written.",
               "  lda #KEY_RIGHT",
               "  sta keydown",
+              "  lda framecount",
+              "  and #$003f",
+              "  cmp #$0010",
+              "  bcs :+",
+              "    lda keydown",
+              "    ora #KEY_B",
+              "    sta keydown",
+              "  :",
+              "  lda keylast",
               "",
           ])
           if text.count(old) != 1:
-              raise SystemExit(f"src/hubworld.s input anchor count={text.count(old)}")
-          hub.write_text(text.replace(old, new, 1))
+              raise SystemExit(f"src/main.s input anchor count={text.count(old)}")
+          main.write_text(text.replace(old, new, 1))
           PY
 
           git -C "$root" diff --check
           changed="$(git -C "$root" diff --name-only)"
-          test "$(printf '%s\n' "$changed" | wc -l)" -eq 2
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 1
           printf '%s\n' "$changed" | grep -Fxq 'src/main.s'
-          printf '%s\n' "$changed" | grep -Fxq 'src/hubworld.s'
 
-          git -C "$root" diff -- src/main.s src/hubworld.s | tee nova2-hubworld-benchmark.patch
+          git -C "$root" diff -- src/main.s | tee nova2-firstlevel-benchmark.patch
 
-          make -C "$root" -j"$(nproc)" nova-the-squirrel-2.sfc 2>&1 | tee nova2-hubworld-build.log
+          make -C "$root" -j"$(nproc)" nova-the-squirrel-2.sfc 2>&1 | tee nova2-firstlevel-build.log
           rom="$root/nova-the-squirrel-2.sfc"
           test -s "$rom"
 
           {
             echo "upstream_sha=$NOVA_SHA"
-            echo "benchmark=authored Nova2 hubworld, deterministic continuous Right input"
-            echo "modified_files=src/main.s,src/hubworld.s"
+            echo "benchmark=authored Nova2 firstlevel, deterministic Right plus periodic bounded B holds"
+            echo "modified_files=src/main.s"
             echo "benchmark_rom_size=$(stat -c '%s' "$rom")"
             echo "benchmark_rom_sha256=$(sha256sum "$rom" | awk '{print $1}')"
-            echo "benchmark_patch_sha256=$(sha256sum nova2-hubworld-benchmark.patch | awk '{print $1}')"
-            echo "preserved=hubworld initialization, PPU setup, player drawing, camera, row/column rendering, OAM/VRAM DMA, WaitVblank"
-            echo "disabled=overworld/menu routing only; physical controller input replaced with deterministic Right"
-            echo "scope_limit=no authored collision/enemy route and no active game audio at this upstream revision"
-          } | tee nova2-hubworld-provenance.txt
+            echo "benchmark_patch_sha256=$(sha256sum nova2-firstlevel-benchmark.patch | awk '{print $1}')"
+            echo "preserved=StartLevel, DecompressLevel, AutotileLevel, UploadLevelGraphics, MakeCheckpoint, GameMainLoop, collision, actors, camera, rendering, OAM/VRAM DMA, WaitVblank"
+            echo "disabled=overworld/menu routing only; physical controller input replaced with deterministic normal buttons"
+            echo "scope_limit=route timing not yet qualified; pinned upstream revision has game-audio boot disabled"
+          } | tee nova2-firstlevel-provenance.txt
 
       - name: Switch to current Python for Sodium64 tooling
         uses: actions/setup-python@v5
@@ -386,13 +400,13 @@ jobs:
             echo "ARES_AUDIO_SET_ADDR=$audio_set"
           } >> "$GITHUB_ENV"
 
-      - name: Run first Sodium64 Nova2 hubworld audition
+      - name: Run first Sodium64 Nova2 firstlevel audition
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p profiles
 
-          label="nova2-hubworld-r1"
+          label="nova2-firstlevel-r1"
           rom="workloads/ares/out/profile-nova2.z64"
           home="$RUNNER_TEMP/ares-home-$label"
           settings="$RUNNER_TEMP/ares-settings-$label.bml"
@@ -481,7 +495,7 @@ jobs:
 
           python3 - <<'PY'
           import json
-          state = json.load(open("profiles/nova2-hubworld-r1-state.json"))
+          state = json.load(open("profiles/nova2-firstlevel-r1-state.json"))
           obs = state["observations"]
           assert int(obs["skipped_set"]) == 0, obs
           assert int(obs["apu_clock"]) == 21, obs
@@ -494,27 +508,27 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/profile_matrix.py \
-            profiles/nova2-hubworld-r1.json \
-            --output profiles/nova2-hubworld-profile.md
+            profiles/nova2-firstlevel-r1.json \
+            --output profiles/nova2-firstlevel-profile.md
 
           python3 scripts/frame_budget_report.py \
-            profiles/nova2-hubworld-r1-state.json \
+            profiles/nova2-firstlevel-r1-state.json \
             --target-fps 60 \
-            --output profiles/nova2-hubworld-frame-budget.md
+            --output profiles/nova2-firstlevel-frame-budget.md
 
           {
-            echo '### Gate-B Nova2 first hubworld audition'
+            echo '### Gate-B Nova2 firstlevel gameplay audition'
             echo
             echo '- Pinned upstream Nova2 source; benchmark changes only entry routing and deterministic controller input.'
-            echo '- Route: authored hubworld, continuous Right; player/camera state is not directly written.'
-            echo '- Exercises player drawing, scrolling, row/column map updates, OAM/VRAM DMA and WaitVblank.'
-            echo '- This is a discovery workload, not yet a full-level compatibility or direct-SNES equivalence claim.'
+            echo '- Route: authored firstlevel, continuous Right plus bounded periodic B holds; player/camera/entity state is not directly written.'
+            echo '- Exercises normal level decompression/autotiling, collision, actors, camera, rendering, OAM/VRAM DMA and WaitVblank.'
+            echo '- This is a route-discovery workload; controller timing is not yet qualified against direct-SNES progress.'
             echo '- R4300 JIT + RSP interpreter due the documented ares RSP-JIT LAB LIMITATION.'
             echo '- Frameskip 0; APU clock 21; audio 4; precision 8.'
             echo
-            cat profiles/nova2-hubworld-profile.md
+            cat profiles/nova2-firstlevel-profile.md
             echo
-            cat profiles/nova2-hubworld-frame-budget.md
+            cat profiles/nova2-firstlevel-frame-budget.md
             echo
             echo '> ares host-lab throughput is not real-N64 FPS authority.'
           } >> "$GITHUB_STEP_SUMMARY"
@@ -523,13 +537,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-b-nova2-hubworld-audition
+          name: gate-b-nova2-firstlevel-audition
           retention-days: 14
           if-no-files-found: ignore
           path: |
             ares-version.txt
             profile-build.log
-            nova2-hubworld-benchmark.patch
-            nova2-hubworld-provenance.txt
-            nova2-hubworld-build.log
+            nova2-firstlevel-benchmark.patch
+            nova2-firstlevel-provenance.txt
+            nova2-firstlevel-build.log
             profiles/

@@ -238,16 +238,7 @@ jobs:
           s = ppu.read_text()
           anchor = '#include <sfc/sfc.hpp>\n'
           assert s.count(anchor) == 1
-          s = s.replace(anchor, anchor + '#include <cstdio>\n#include <cstdlib>\n', 1)
-          load_anchor = "auto PPU::load(Node::Object parent) -> void {\n"
-          assert s.count(load_anchor) == 1
-          s = s.replace(
-              load_anchor,
-              load_anchor + '  std::fprintf(stderr, "SODIUM64_SRS_REF_PPU_LOAD\\n");\n'
-              '  std::fflush(stderr);\n',
-              1,
-          )
-          ppu.write_text(s)
+          ppu.write_text(s.replace(anchor, anchor + '#include <cstdio>\n#include <cstdlib>\n', 1))
 
           main = Path("ares/sfc/ppu/main.cpp")
           s = main.read_text()
@@ -303,112 +294,16 @@ jobs:
           settings="$RUNNER_TEMP/ares-sfc-settings.bml"
           mkdir -p "$home"
 
-          set +e
           HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
-            timeout --signal=TERM --kill-after=10s 300s \
             xvfb-run -a stdbuf -oL -eL "$ARES_SFC_BIN" \
               --no-file-prompt \
               --system "Super Famicom" \
               --settings-file "$settings" \
               --setting "Developer/DeterministicEntropy=true" \
               "$rom" > "$log" 2>&1
-          ares_rc=$?
-          set -e
 
-          ppu_load_count="$(grep -c "^SODIUM64_SRS_REF_PPU_LOAD" "$log" || true)"
-          trace_count="$(grep -c "^SODIUM64_SRS_REF host_frame=" "$log" || true)"
-          {
-            echo "ares_exit_code=$ares_rc"
-            echo "ppu_load_count=$ppu_load_count"
-            echo "trace_count=$trace_count"
-          } | tee reference/srs-direct-snes-harness.txt
-
-          grep "^SODIUM64_SRS_REF host_frame=" "$log" > reference/srs-direct-snes-trace.txt || true
-          if [ "$ares_rc" -ne 0 ] || [ "$ppu_load_count" -lt 1 ] || [ "$trace_count" -ne 600 ]; then
-            echo "Direct-SNES capture did not satisfy harness contract" >&2
-            tail -n 120 "$log" >&2 || true
-            exit 1
-          fi
-
-          python3 - <<'PY'
-          import json
-          import re
-          from pathlib import Path
-
-          rx = re.compile(
-              r"^SODIUM64_SRS_REF host_frame=(\d+) game_frame=(\d+) room=(\d+) "
-              r"player_x=(\d+) player_y=(\d+) camera_x=(\d+) camera_y=(\d+)$"
-          )
-          rows = []
-          for line in Path("reference/srs-direct-snes-trace.txt").read_text().splitlines():
-              m = rx.match(line)
-              if not m:
-                  raise SystemExit(f"bad trace line: {line}")
-              host, game, room, px, py, cx, cy = map(int, m.groups())
-              rows.append({
-                  "host_frame": host,
-                  "game_frame": game,
-                  "room_id": room,
-                  "player_x": px,
-                  "player_y": py,
-                  "camera_x": cx,
-                  "camera_y": cy,
-              })
-
-          assert len(rows) == 600
-          assert [r["host_frame"] for r in rows] == list(range(1, 601))
-          payload = {
-              "reference": "ares direct Super Famicom core",
-              "ares_pin": "17813a3ccda21ab9bd45f09bfc2f91196dbf50ff",
-              "benchmark_rom_sha256": "7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e",
-              "deterministic_entropy": True,
-              "trace_frames": len(rows),
-              "rows": rows,
-          }
-          Path("reference/srs-direct-snes.json").write_text(
-              json.dumps(payload, indent=2, sort_keys=True) + "\n"
-          )
-
-          meaningful = [r for r in rows if 0x1000 <= r["player_x"] < 0x8000]
-          print(f"trace rows={len(rows)} plausible-gameplay rows={len(meaningful)}")
-          if meaningful:
-              print("first plausible", meaningful[0])
-              print("last plausible", meaningful[-1])
-          PY
-
-          {
-            echo "upstream_sha=$SRS_SHA"
-            echo "benchmark_rom_sha256=$BENCHMARK_ROM_SHA256"
-            echo "benchmark_patch_sha256=$BENCHMARK_PATCH_SHA256"
-            echo "ares_pin=$ARES_PIN"
-            echo "reference_core=direct Super Famicom"
-            echo "trace_contract=read-only WRAM observation after each rendered SNES frame; 600 frames"
-          } > reference/reference-provenance.txt
-
-      - name: Upload non-ROM direct-reference evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gate-b-srs-direct-snes-reference
-          retention-days: 14
-          path: |
-            ares-sfc-version.txt
-            srs-reference-symbols.log
-            reference/
- "$log" || true)"
-          trace_count="$(grep -c '^SODIUM64_SRS_REF ' "$log" || true)"
-          {
-            echo "ares_exit_code=$ares_rc"
-            echo "ppu_load_count=$ppu_load_count"
-            echo "trace_count=$trace_count"
-          } | tee reference/srs-direct-snes-harness.txt
-
-          grep '^SODIUM64_SRS_REF ' "$log" > reference/srs-direct-snes-trace.txt || true
-          if [ "$ares_rc" -ne 0 ] || [ "$ppu_load_count" -lt 1 ] || [ "$trace_count" -ne 600 ]; then
-            echo "Direct-SNES capture did not satisfy harness contract" >&2
-            tail -n 120 "$log" >&2 || true
-            exit 1
-          fi
+          grep '^SODIUM64_SRS_REF ' "$log" > reference/srs-direct-snes-trace.txt
+          test "$(wc -l < reference/srs-direct-snes-trace.txt)" -eq 600
 
           python3 - <<'PY'
           import json

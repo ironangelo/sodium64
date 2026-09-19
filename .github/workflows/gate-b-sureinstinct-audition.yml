@@ -68,7 +68,16 @@ jobs:
           cmake --build "$fma_root/build" --parallel "$(nproc)"
           cmake --install "$fma_root/build"
           test -x "$prefix/bin/fma"
+          test -f "$prefix/include/fma/output/DynamicBuffer.hpp"
+          test -f "$prefix/lib/libfma.so"
           echo "$prefix/bin" >> "$GITHUB_PATH"
+          {
+            echo "FMA_PREFIX=$prefix"
+            echo "CPATH=$prefix/include"
+            echo "LIBRARY_PATH=$prefix/lib"
+            echo "LD_LIBRARY_PATH=$prefix/lib"
+            echo "PKG_CONFIG_PATH=$prefix/share/pkgconfig"
+          } >> "$GITHUB_ENV"
           "$prefix/bin/fma" --help > fma-help.txt 2>&1 || true
 
       - name: Clone exact Sure Instinct source and verify license

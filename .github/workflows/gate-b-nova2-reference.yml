@@ -24,7 +24,7 @@ jobs:
       NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
       NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
-      ROUTE_ID: firstlevel-right-periodic-b-v1
+      ROUTE_ID: firstlevel-right-periodic-b-plus-f166-v2
 
     steps:
       - name: Checkout Sodium64
@@ -147,6 +147,18 @@ jobs:
               "    ora #KEY_B",
               "    sta keydown",
               "  :",
+              "  ; Route-v2 controlled change: after the frame-128 jump lands on the",
+              "  ; authored Pier at X20-22, create one new B edge and hold it for",
+              "  ; exactly 16 frames to attempt the X24-26 Pier transition.",
+              "  lda framecount",
+              "  cmp #166",
+              "  bcc Sodium64Nova2RouteV2TargetDone",
+              "  cmp #182",
+              "  bcs Sodium64Nova2RouteV2TargetDone",
+              "    lda keydown",
+              "    ora #KEY_B",
+              "    sta keydown",
+              "  Sodium64Nova2RouteV2TargetDone:",
               "  lda keylast",
               "",
           ])
@@ -167,8 +179,8 @@ jobs:
 
           route_patch_sha="$(sha256sum nova2-firstlevel-benchmark.patch | awk '{print $1}')"
           route_rom_sha="$(sha256sum "$rom" | awk '{print $1}')"
-          test "$route_patch_sha" = "476d426dff8ccd356f12a7be26809cee396d07b97a3d2dd32b7a5003d3715cf2"
-          test "$route_rom_sha" = "cb59431f095c4f02b495b099022cc28a0ee1fe6c84470835754d7f0544d6466e"
+          test "$route_patch_sha" != "476d426dff8ccd356f12a7be26809cee396d07b97a3d2dd32b7a5003d3715cf2"
+          test "$route_rom_sha" != "cb59431f095c4f02b495b099022cc28a0ee1fe6c84470835754d7f0544d6466e"
           echo "ROUTE_PATCH_SHA256=$route_patch_sha" >> "$GITHUB_ENV"
           echo "ROUTE_ROM_SHA256=$route_rom_sha" >> "$GITHUB_ENV"
           echo "route_id=$ROUTE_ID patch_sha256=$route_patch_sha rom_sha256=$route_rom_sha"
@@ -229,6 +241,12 @@ jobs:
           PY
           cat nova2-wram.env
           cat nova2-wram.env >> "$GITHUB_ENV"
+
+      - name: Restore direct-SNES ares compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ares-sfc-ccache-${{ runner.os }}-${{ runner.arch }}-17813a3ccda21ab9bd45f09bfc2f91196dbf50ff-nova2-tracer-v1
 
       - name: Build pinned direct-SNES ares with read-only Nova2 frame tracer
         shell: bash

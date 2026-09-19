@@ -156,43 +156,51 @@ jobs:
 
           main = root / "src/main.s"
           text = main.read_text()
-          old = """  .import OpenOverworld
-  seta8
-  lda #2*16
-  sta OverworldPlayerX
-  lda #10*16
-  sta OverworldPlayerY
-  stz OverworldMap
-  stz OverworldDirection
-  jml OpenOverworld
-"""
-          new = """  ; SODIUM64 GATE-B NOVA2 BENCHMARK:
-  ; Enter the authored hubworld directly.  This skips only overworld/menu
-  ; routing; hubworld initialization, PPU setup, rendering and frame pacing
-  ; remain the game's own code.
-  .import OpenHubworld
-  jml OpenHubworld
-"""
+          old = "\n".join([
+              "  .import OpenOverworld",
+              "  seta8",
+              "  lda #2*16",
+              "  sta OverworldPlayerX",
+              "  lda #10*16",
+              "  sta OverworldPlayerY",
+              "  stz OverworldMap",
+              "  stz OverworldDirection",
+              "  jml OpenOverworld",
+              "",
+          ])
+          new = "\n".join([
+              "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "  ; Enter the authored hubworld directly.  This skips only overworld/menu",
+              "  ; routing; hubworld initialization, PPU setup, rendering and frame pacing",
+              "  ; remain the game's own code.",
+              "  .import OpenHubworld",
+              "  jml OpenHubworld",
+              "",
+          ])
           if text.count(old) != 1:
               raise SystemExit(f"src/main.s benchmark anchor count={text.count(old)}")
           main.write_text(text.replace(old, new, 1))
 
           hub = root / "src/hubworld.s"
           text = hub.read_text()
-          old = """  lda keydown
-  sta keylast
-  lda JOY1CUR
-  sta keydown
-"""
-          new = """  lda keydown
-  sta keylast
-  ; SODIUM64 GATE-B NOVA2 BENCHMARK:
-  ; deterministic normal hubworld input: hold Right continuously.
-  ; This exercises player drawing, scrolling, row/column map updates,
-  ; VRAM/OAM DMA and WaitVblank without writing position/camera state.
-  lda #KEY_RIGHT
-  sta keydown
-"""
+          old = "\n".join([
+              "  lda keydown",
+              "  sta keylast",
+              "  lda JOY1CUR",
+              "  sta keydown",
+              "",
+          ])
+          new = "\n".join([
+              "  lda keydown",
+              "  sta keylast",
+              "  ; SODIUM64 GATE-B NOVA2 BENCHMARK:",
+              "  ; deterministic normal hubworld input: hold Right continuously.",
+              "  ; This exercises player drawing, scrolling, row/column map updates,",
+              "  ; VRAM/OAM DMA and WaitVblank without writing position/camera state.",
+              "  lda #KEY_RIGHT",
+              "  sta keydown",
+              "",
+          ])
           if text.count(old) != 1:
               raise SystemExit(f"src/hubworld.s input anchor count={text.count(old)}")
           hub.write_text(text.replace(old, new, 1))

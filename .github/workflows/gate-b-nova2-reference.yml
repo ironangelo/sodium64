@@ -24,7 +24,7 @@ jobs:
       NOVA_REPO: https://github.com/NovaSquirrel/NovaTheSquirrel2.git
       NOVA_SHA: 94385f1812f3b322f939f79a29502a1a3ee6d87f
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
-      ROUTE_ID: firstlevel-fixed-cost-table-v3
+      ROUTE_ID: firstlevel-fixed-cost-table-v2
       PYTHONHASHSEED: '0'
 
     steps:
@@ -143,7 +143,8 @@ jobs:
           # Build a fixed-size controller table. The executed guest instruction
           # sequence stays identical when the route changes; future route tuning
           # changes table words only. Index 0..511 maps directly to framecount
-          # modulo 512. Right is always held. B reproduces the v3 schedule.
+          # modulo 512. Right is always held. This schedule is the fixed-cost
+          # v2 control: periodic B plus the 166-181 targeted hold only.
           table = []
           for frame in range(512):
               keys = 0x0100  # KEY_RIGHT
@@ -151,8 +152,6 @@ jobs:
                   keys |= 0x8000  # KEY_B: periodic 16/64 hold
               if 166 <= frame < 182:
                   keys |= 0x8000  # route-v2 targeted hold
-              if 209 <= frame < 225:
-                  keys |= 0x8000  # route-v3 targeted hold
               table.append(keys)
 
           table_rows = []

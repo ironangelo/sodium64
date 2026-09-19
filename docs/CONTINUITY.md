@@ -6100,3 +6100,16 @@ This source-backed alignment contract is compatible with Astra's warning about h
 Direct compare **`075068af92da1802aa3a2677c3d44f393215cc44 -> c5f4c0310cc2334d3f4784517a24e27addfc9e96`** is isolated to exactly **one added file**: `.github/workflows/gate-b-srs-reference.yml` (373 lines). No Sodium64 runtime source, validated matched-profile script, or existing workflow is modified on the reference branch.
 
 Interpretation: the direct-reference lane is infrastructure-only relative to the safe SRS Sodium64 authority. Any direct-SFC trace result cannot be attributed to a Sodium64 code modification introduced by this branch.
+
+
+## SRS accurate-PPU reference pre-capture gates green — checkpoint 2026-09-19
+
+Exact candidate remains **`phase3/gate-b-srs-reference@c5f4c0310cc2334d3f4784517a24e27addfc9e96`**.
+
+Current authorities:
+- **Build and Validate `35418629406` SUCCESS** for the exact candidate.
+- Direct-reference run **`35418629393`** is still in progress.
+- In that run, dependency setup, **exact SRS benchmark rebuild**, and **semantic guest-symbol resolution** are all SUCCESS.
+- Step **Build pinned direct-SNES ares with read-only frame tracer** is in progress; capture has not started yet.
+
+Therefore exact ROM/patch reconstruction and symbol observability have survived the PixelAccuracy repair unchanged. No direct-SNES dynamic route evidence exists yet; wait for the instrumented ares build/capture before judging the old Right+Run route.

@@ -6084,3 +6084,12 @@ Runs:
 - **Build and Validate `35418629406`** — pending at checkpoint.
 
 The superseded known-valid and bounded runs were cancelled through branch concurrency; this is intentional. Current question: with the instrumented accurate PPU selected, does the direct SFC core emit the expected 600 semantic frame records and exit cleanly? If yes, compare route progression against Sodium64; if no, use the now-visible partial log to isolate the remaining harness issue before touching guest input.
+
+
+## SRS direct/reference alignment contract — source-backed checkpoint 2026-09-19
+
+Pinned SRS source **`undisbeliever/space-rescue-squad@e08333a6cbdf5ac5f9e8deb052fe6a9fd9a54865`** defines `frameCounter` in `engine/vblank/_common.inc` as a 32-bit low-RAM counter “updated on every WaitFrame call” and explicitly states that lag frames are included while NMI is enabled. `WaitFrame__far` adds `NmiHandler.counter` into `frameCounter`; upstream unit tests exercise the same lag-frame behavior.
+
+Measurement consequence: direct-SNES vs Sodium64 state should be aligned primarily by **game-owned `frameCounter`**, not host elapsed time or ares host-frame index. The direct tracer samples every rendered SFC frame, so repeated semantic rows for one `frameCounter` are possible around game-loop boundaries; comparison should collapse/group rows by guest counter and locate the earliest same-`frameCounter` divergence in room/player/camera state.
+
+This source-backed alignment contract is compatible with Astra's warning about host-timed checkpoints and will be used once `35418629393` produces the direct trace. No benchmark behavior was changed by this batch.

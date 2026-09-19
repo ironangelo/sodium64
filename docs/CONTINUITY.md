@@ -5522,3 +5522,33 @@ uses Python 3.8 + Pillow 7.1.2 (contemporary with the generator's last substanti
 Expected discriminator:
 - if raw PLTE remains compact but Pillow-visible entries expand enough for the generator and build proceeds, historical palette semantics are confirmed;
 - if Pillow 7.1.2 still exposes compact entries, do not keep version-hunting: reproduce the required padding explicitly in a harness compatibility layer and prove its generated palette semantics before accepting the workload.
+
+
+## Nova2 source-build attempt 5 — historical palette semantics confirmed; next blocker isolated 2026-09-18
+
+Exact authority:
+- **Gate B Nova2 Audition `35410355265` FAILED** @ `3e691f0fea59ab289a054768f5f0879e8336a504`.
+
+Important confirmed result:
+Python 3.8 + Pillow 7.1.2 reproduced the historical palette behavior:
+- raw PNG PLTE counts remained compact (same 4-16 entry source assets);
+- Pillow-visible palette count became **256 for every inspected palette**;
+- `tools/encodepalettes.py` therefore completed successfully.
+
+This **confirms** the supported interpretation that the upstream generator relies on older Pillow palette padding. The earlier modern-Pillow failures are now understood and should not be revisited.
+
+The build then advanced through extensive graphics/background/palette/level/Mode-7 generation and failed later while building the upstream BRR helper:
+`gcc audio/brr/gssbrr.c -o audio/brr/gssbrr`
+with undefined `sin`, `cos`, and `floor`.
+
+Cause:
+the upstream Linux Makefile rule omits `-lm` even though the exact helper source uses libm symbols.
+
+Classification:
+**SMALL UPSTREAM BUILD-SCRIPT COMPATIBILITY DEFECT**, not a missing/private dependency and not candidate runtime evidence.
+
+Controlled repair:
+**`phase3/gate-b-nova2-audition@156b928191c130f13a19868e634c519647d91d59`** prebuilds the exact upstream `audio/brr/gssbrr.c` with public host GCC + `-lm`, then invokes the unchanged ROM target. No upstream source/assets and no Sodium64 runtime files are edited.
+
+Acceptance remains:
+a clean ROM build from exact pinned upstream state, with all tracked upstream inputs unchanged and only provenance/logs uploaded.

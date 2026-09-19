@@ -5442,3 +5442,24 @@ Question remains unchanged:
 can the exact pinned game build autonomously from public source in a historically compatible environment?
 
 Acceptance/falsifiers remain unchanged. If the next build proceeds past palette generation but exposes another environment dependency, classify it before changing candidate status.
+
+
+## Nova2 source-build attempt 2 — Pillow pin still too new / superseded 2026-09-18
+
+Exact failed authority:
+- **Gate B Nova2 Audition `35410166557` FAILED** @ `d1a3aacb0a724fb3ea8097f93b53c72aa56cc76b`;
+- Python 3.11 + Pillow 9.4.0 installed successfully;
+- upstream build failed at the same `tools/encodepalettes.py -> pal.pop(0)` point.
+
+This does **not** falsify the build-environment hypothesis. Pillow 9.2 changed `getpalette()` to account for actual palette size; therefore 9.4 still has the behavior incompatible with this older fixed-index generator.
+
+Classification:
+**SUPERSEDED HARNESS REPAIR / no candidate evidence.**
+
+Controlled repair now running:
+**`phase3/gate-b-nova2-audition@60ec5caca750af20e7a3c35baacaa03db3744186`**
+uses Python 3.10 + Pillow 9.1.1, i.e. the pre-9.2 padded-palette behavior. No upstream or Sodium64 runtime files are modified.
+
+Diagnostic expectation:
+- if `encodepalettes.py` proceeds, the host-library diagnosis is confirmed;
+- if it fails identically, stop version guessing and inspect exact PNG palette encoding / build-history assumptions before another change.

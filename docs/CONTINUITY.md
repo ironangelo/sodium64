@@ -6152,3 +6152,40 @@ The safe Sodium64 boundary sequence contains a non-monotonic player-x sample: lo
 - `cleaning_bot_slow` is in the `enemies` list, has knockback enabled, and speed `0x010000` = 1 px/frame.
 
 Thus an enemy moving left toward the trapped player could plausibly account for the later knockback/reset-like x regression. Classification: **HYPOTHESIS / supported static mechanism**, not proven cause; room vertical geometry/entity trajectory still matters. Use the active direct-SNES frame trace to test whether the same regression occurs at comparable guest `frameCounter`. If it does, it strengthens authored-route equivalence; if not, investigate the earliest semantic divergence.
+
+
+## Gate B SRS direct-SNES dynamic reference closes old-route ambiguity — 2026-09-19
+
+Authority:
+- candidate **`phase3/gate-b-srs-reference@c5f4c0310cc2334d3f4784517a24e27addfc9e96`**
+- direct-reference run **`35418629393`**, job **`105832026639`**
+- same-head **Build and Validate `35418629406` SUCCESS**
+- pinned SRS benchmark ROM SHA256 `7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`
+- pinned benchmark patch SHA256 `4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`
+- pinned ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`
+- direct SFC explicitly uses `Video/PixelAccuracy=true`, selecting the instrumented accurate PPU.
+
+**MEASURED direct-SNES guest evidence:** the capture emitted all **600/600** tracer rows. The process then segfaulted during teardown, so GitHub marks the step/run FAILURE and artifact upload was skipped; however the complete 600-row semantic trace is present in the completed job log. Treat the exit-139 as a **HARNESS TEARDOWN DEFECT**, not guest execution failure.
+
+Meaningful direct-reference route:
+- authored gameplay becomes plausible after startup; `frameCounter` then advances normally through the trace to **game_frame=594**;
+- first exact wall state `room=1 player=(4250,4259) camera=(4122,4096)` occurs at **game_frame=94**;
+- exact wall intervals observed: **94–127**, **218–370**, and **377–594**;
+- after the first wall interval the player moves left beginning at game_frame 128, then returns right and reaches the wall again;
+- final row host_frame=600/game_frame=594 is the same exact wall state;
+- no room transition occurs.
+
+This dynamically confirms that the old deterministic Right+Run benchmark stalls against authored gameplay geometry on a direct SNES reference too. It is **not a Sodium64-specific gameplay stall**.
+
+Cross-check against the seven safe Sodium64 60-VI boundary states from `35416459569`:
+- sampling the direct trace at guest frames **37,97,157,217,277,337,397** reproduces **6/7 states exactly**;
+- the only miss is guest frame 217: player is already exact at (4250,4259), but camera_x is 4120 rather than Sodium's 4122; the direct reference enters the exact wall state on the following guest frame 218.
+- Because the existing Sodium capture does not yet record SRS `frameCounter`, do not overstate this as perfect same-frame equivalence; it is nevertheless strong dynamic route equivalence on top of the prior map/collision source proof.
+
+Decision:
+- classify old **Right+Run SRS route as REJECTED for representativeness**: it spends most of the measured horizon blocked by normal authored geometry.
+- retain it as a useful deterministic **collision/enemy/regression probe**; its old 60/60 throughput is valid only for this limited route.
+- do **not** optimize Sodium64 from this route.
+- next representative SRS route must differ only by realistic controller input (B edge/hold semantics already documented), be validated on direct SFC first, and demonstrate sustained progression beyond local x=154, preferably reaching the authored `a1b_stairway` room transition.
+
+Harness follow-up: repair termination so a complete 600-row trace exits green and uploads evidence. The guest trace itself is complete; do not rerun merely to answer the old-route semantic question.

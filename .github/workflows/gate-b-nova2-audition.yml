@@ -230,6 +230,11 @@ jobs:
             echo "scope_limit=no authored collision/enemy route and no active game audio at this upstream revision"
           } | tee nova2-hubworld-provenance.txt
 
+      - name: Switch to current Python for Sodium64 tooling
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Setup Node.js for Sodium64 profile build
         uses: actions/setup-node@v4
         with:

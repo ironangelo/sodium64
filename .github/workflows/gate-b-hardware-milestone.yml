@@ -571,7 +571,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gate-b-hardware-milestone-prep
-          retention-days: 14
+          retention-days: 90
           path: |
             hardware/base/
             hardware/gate-b-hardware-manifest.txt

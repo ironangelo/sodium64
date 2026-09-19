@@ -264,7 +264,7 @@ jobs:
                 "SODIUM64_SRS_REF host_frame=%u game_frame=%u room=%u player_x=%u player_y=%u camera_x=%u camera_y=%u\\n",
                 sodium64TraceFrame, s64fc, s64room, s64px, s64py, s64cx, s64cy);
               std::fflush(stderr);
-              if(sodium64TraceFrame >= 600) std::exit(0);
+              if(sodium64TraceFrame >= 600) std::_Exit(0);
 
               scheduler.exit(Event::Frame);"""
           main.write_text(s.replace(anchor, trace, 1))

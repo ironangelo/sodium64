@@ -6560,3 +6560,33 @@ Dynamic result:
 - **SUPPORTED INTERPRETATION:** v5 is a deterministic, authored, normal-input gameplay route that traverses multiple obstacle/platform/collision segments and executes an actual scripted room transition. It is materially representative compared with the rejected Right+Run wall probe.
 - **Decision:** stop route tuning. Do not create v6 unless matched Sodium64 exposes a semantic divergence attributable to input/route rather than emulator behavior.
 - Next gate question: on exact v5 ROM/input, does Sodium64 preserve the route semantics and what full-rate 60-VI frame budget/profile does it deliver under the already-validated safe configuration contract?
+
+
+## Gate B SRS v5 matched Sodium64 launch — 2026-09-19 UTC
+
+**Classification:** GATE DRIVER / COMPATIBILITY + MEASUREMENT PROOF; experiment RUNNING.
+
+- Safe matched branch created from validated old-route authority `075068af92da1802aa3a2677c3d44f393215cc44`: current HEAD **`phase3/gate-b-srs-v5-matched@4ece04a4430b99f7ea00d26967cfa601812e8d15`**.
+- Direct compare from `075068af...`: only `.github/workflows/gate-b-srs-audition.yml` and `scripts/gdb_matched_srs.py` change. No Sodium64 emulator/runtime core file changed in this v5 port.
+- Exact route guardrails in workflow:
+  - qualified direct-SNES route id `door-transition-v5-suppress-gf544`;
+  - patch SHA-256 must equal `b21d55df2d5fb949646c9a2124d5c062fa5e7f312264dabb2f354fdc67a27935`;
+  - built SRS ROM SHA-256 must equal `2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46`.
+- Matched settings/measurement contract is intentionally preserved: configure at first `cpu_execute` before guest work, frameskip0/APU21/audio4/precision8, 2 warmup boundaries + **5 measured exact 60-VI windows**, three repeats. Profile snapshot is frozen immediately after measured window5.
+- New read-only semantic observability:
+  - 32-bit game-owned `frameCounter` compile-time address probe;
+  - four separate guest-virtual WRAM byte reads, avoiding unaligned/alias-cache ambiguity;
+  - four additional **post-profile state-only 60-VI boundaries** after snapshot so route semantics can reach the direct reference room transition without changing the 5-window performance budget.
+- Summary stall/activity comparisons explicitly exclude `frameCounter` from spatial-state equality so advancing time alone cannot hide a spatial stall.
+- Exact CI:
+  - Gate B SRS v5 Matched **`35425597914`** — in progress at checkpoint;
+  - same-head Build and Validate **`35425597920`** — pending at checkpoint.
+- Experimental questions:
+  1. Does the rebuilt benchmark reproduce the exact qualified v5 ROM/patch identities?
+  2. Across three repeats, does Sodium64 preserve deterministic guest-state/frameCounter progression and reach room2 in the post-validation horizon?
+  3. What are the five measured completed-frame vectors and profile distribution under the unchanged Road-valid settings?
+- Readings:
+  - exact route hash + deterministic semantics + room2 transition => route equivalence supported; interpret 5-window throughput/profile.
+  - exact route hash but semantic divergence => compatibility/timing bug to localize before performance optimization.
+  - source/hash/harness failure => no Sodium64 conclusion; repair harness only.
+  - frame budget below 60/60 on this qualified route => profile becomes the next optimization evidence.

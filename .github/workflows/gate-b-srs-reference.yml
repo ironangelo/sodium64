@@ -105,11 +105,15 @@ jobs:
           a16()
 
               // SODIUM64 GATE-B BENCHMARK PATCH:
+              // Keep normal audio/game-state initialization, then enter the first
+              // authored gameplay level without title/menu input latency.
               jsr     GameState.LoadInitialGameState
               LevelNameScreen.ResetLevelNumber()
+
               lda.w   #Project.RoomList.a1a_entrance
               sta.w   GameState.roomId
               stz.w   GameState.entranceId
+
               lda.w   #Mode.GAME
               jmp     SwitchMode
 
@@ -129,6 +133,8 @@ jobs:
           new = """        sep     #$30
               a8()
               i8()
+                  // Deterministic benchmark input: hold Right + Run.  Input still
+                  // flows through the normal player/entity/collision/game loop.
                   stz.w   Controller.Joy1.current
                   stz.w   Controller.Joy1.pressed
                   stz.w   Controller.Joy1.pressed + 1

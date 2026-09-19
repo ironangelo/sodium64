@@ -39,6 +39,7 @@ jobs:
             build-essential \
             cmake \
             git \
+            libboost-all-dev \
             libfreetype6-dev \
             libsamplerate0-dev \
             libyaml-cpp-dev \

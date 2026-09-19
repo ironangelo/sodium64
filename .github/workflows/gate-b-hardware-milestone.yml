@@ -188,7 +188,8 @@ jobs:
                           sta.w   Controller.Joy1.pressed + 1
                   Sodium64RouteV3_PeriodicDone:
 
-                  // Suppress only absolute frameCounter 0x0160..0x016f.
+                  // Suppress only absolute frameCounter 0x0160..0x016f
+                  // (the gf352 periodic jump and its hold).
                   lda.w   frameCounter + 1
                   cmp.b   #$01
                   bne     Sodium64RouteV3_SpecialDone
@@ -217,7 +218,8 @@ jobs:
                               sta.w   Controller.Joy1.pressed + 1
 
                   Sodium64RouteV3_SpecialDone:
-                  // Suppress only absolute frameCounter 0x0220..0x022f.
+                  // Suppress only absolute frameCounter 0x0220..0x022f
+                  // (the gf544 periodic jump/hold at the right-door approach).
                   lda.w   frameCounter + 1
                   cmp.b   #$02
                   bne     Sodium64RouteV5_DoorDone

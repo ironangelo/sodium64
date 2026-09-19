@@ -92,6 +92,48 @@ jobs:
           grep -Fq "MIT License" "$root/LICENSE.md"
           echo "SI_ROOT=$root" >> "$GITHUB_ENV"
 
+      - name: Apply one guarded FMA API compatibility shim
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          root = Path(os.environ["SI_ROOT"])
+          edits = {
+              "aoba-build/src/libaobascript/include/aoba/script/ScriptMemorySymbolMap.hpp": (
+                  "void addEmulatorBreakpoint(const FMA::symbol::SymbolReferencePtr &, bool notifyOnly, const std::string &comment) override;",
+                  "void addEmulatorBreakpoint(const FMA::symbol::ReferencePtr &, bool notifyOnly, const std::string &comment) override;",
+              ),
+              "aoba-build/src/libaobascript/src/script/ScriptMemorySymbolMap.cpp": (
+                  "void ScriptMemorySymbolMap::addEmulatorBreakpoint(const SymbolReferencePtr &, bool, const std::string &) {",
+                  "void ScriptMemorySymbolMap::addEmulatorBreakpoint(const ReferencePtr &, bool, const std::string &) {",
+              ),
+          }
+          for rel, (old, new) in edits.items():
+              p = root / rel
+              text = p.read_text()
+              if text.count(old) != 1:
+                  raise SystemExit(f"{rel}: compatibility anchor count={text.count(old)}")
+              p.write_text(text.replace(old, new, 1))
+          PY
+
+          git -C "$SI_ROOT" diff --check
+          changed="$(git -C "$SI_ROOT" diff --name-only)"
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 2
+          printf '%s\n' "$changed" | grep -Fxq 'aoba-build/src/libaobascript/include/aoba/script/ScriptMemorySymbolMap.hpp'
+          printf '%s\n' "$changed" | grep -Fxq 'aoba-build/src/libaobascript/src/script/ScriptMemorySymbolMap.cpp'
+
+          patch="$GITHUB_WORKSPACE/sureinstinct-fma-api-compat.patch"
+          git -C "$SI_ROOT" diff -- \
+            aoba-build/src/libaobascript/include/aoba/script/ScriptMemorySymbolMap.hpp \
+            aoba-build/src/libaobascript/src/script/ScriptMemorySymbolMap.cpp > "$patch"
+          test -s "$patch"
+          patch_sha="$(sha256sum "$patch" | awk '{print $1}')"
+          echo "SI_COMPAT_PATCH_SHA256=$patch_sha" >> "$GITHUB_ENV"
+          echo "sureinstinct_fma_api_compat_patch_sha256=$patch_sha"
+
       - name: Build Sure Instinct host asset libraries
         shell: bash
         run: |
@@ -143,11 +185,18 @@ jobs:
           echo "sureinstinct_rom_size=$size"
           echo "sureinstinct_rom_sha256=$sha"
 
-          # The build may create ignored/generated products, but must not mutate
-          # any tracked source/assets from the exact upstream pin.
-          git -C "$root" diff --exit-code
+          # Only the two-line, predeclared host API compatibility shim may
+          # differ from the exact upstream pin. Generated/ignored products are fine.
+          changed="$(git -C "$root" diff --name-only)"
+          test "$(printf '%s\n' "$changed" | wc -l)" -eq 2
+          printf '%s\n' "$changed" | grep -Fxq 'aoba-build/src/libaobascript/include/aoba/script/ScriptMemorySymbolMap.hpp'
+          printf '%s\n' "$changed" | grep -Fxq 'aoba-build/src/libaobascript/src/script/ScriptMemorySymbolMap.cpp'
+          current_patch="$GITHUB_WORKSPACE/sureinstinct-fma-api-compat-current.patch"
+          git -C "$root" diff -- \
+            aoba-build/src/libaobascript/include/aoba/script/ScriptMemorySymbolMap.hpp \
+            aoba-build/src/libaobascript/src/script/ScriptMemorySymbolMap.cpp > "$current_patch"
+          test "$(sha256sum "$current_patch" | awk '{print $1}')" = "$SI_COMPAT_PATCH_SHA256"
           git -C "$root" diff --cached --exit-code
-          test -z "$(git -C "$root" status --porcelain --untracked-files=no)"
 
           {
             echo "sureinstinct_repo=$SI_REPO"
@@ -155,10 +204,11 @@ jobs:
             echo "license=MIT (upstream LICENSE.md)"
             echo "fma_repo=$FMA_REPO"
             echo "fma_sha=$FMA_SHA"
+            echo "fma_api_compat_patch_sha256=$SI_COMPAT_PATCH_SHA256"
             echo "target=ntsc"
             echo "rom_size=$size"
             echo "rom_sha256=$sha"
-            echo "tracked_tree_mutated=false"
+            echo "tracked_tree_mutated=guarded-two-line-fma-api-compat-only"
             echo "rom_uploaded=false"
           } > sureinstinct-build-provenance.txt
 
@@ -171,6 +221,7 @@ jobs:
           if-no-files-found: ignore
           path: |
             fma-help.txt
+            sureinstinct-fma-api-compat.patch
             sureinstinct-assets-build.log
             sureinstinct-audio-build.log
             sureinstinct-rom-build.log

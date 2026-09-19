@@ -164,7 +164,8 @@ jobs:
               table_rows.append("  .word " + ", ".join(f"$" + f"{v:04x}" for v in table[i:i+8]))
           table_source = "\n".join([
               "; SODIUM64 GATE-B NOVA2 BENCHMARK:",
-              "; fixed-size, data-only controller schedule.",
+              "; fixed-size, data-only controller schedule. Keep the driver code",
+              "; identical between route variants; change only these table words.",
               ".pushseg",
               '.segment "C_BenchmarkInput"',
               "Sodium64Nova2InputTable:",

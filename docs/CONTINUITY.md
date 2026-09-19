@@ -5965,3 +5965,33 @@ The direct-SNES reference experiment is now the gate-driving discriminator. Do n
 
 If direct SNES stalls at the same early location/state under the identical benchmark, classify the route as inadequate and design a richer deterministic input sequence.
 If direct SNES progresses materially beyond it, add `frameCounter` to a follow-up safe Sodium64 capture and locate the earliest guest-aligned divergence.
+
+
+## SRS stall source correlation — SUPPORTED STATIC ROUTE CAUSE 2026-09-19 UTC
+
+After the safe matched stall was measured, pinned SRS source was inspected specifically at the observed endpoint.
+
+Authored room facts:
+- `a1a-entrance.utroom` start local x = 56;
+- measured stall global x=4250 with map-left 4096 -> local x = **154**;
+- base64 room row data decodes to metatile **167** beginning at column x=10 in the relevant lower collision row -> world/local pixel boundary **160**.
+
+Pinned station tileset:
+- `game/resources/metatiles/station.utmt` declares:
+  **`<tile t="167" collision="solid"/>`**.
+
+Pinned real player metasprite:
+- `game/resources/metasprites/player.utsi` has grid origin x=16 and tile hitbox
+  `x=10 width=12`, i.e. horizontal extent **-6..+6 relative to the player origin**.
+
+At measured player x=154 local:
+**154 + 6 = 160**, exactly the leading edge of the authored solid metatile.
+
+Vertical state also remains at the authored start-ground height, consistent with the character pushing horizontally into the raised solid geometry rather than traversing it.
+
+Classification:
+**SUPPORTED STATIC — the deterministic Right+Run route is expected to collide with authored solid geometry at exactly the measured stall coordinate.**
+
+This very strongly supports **benchmark input deficiency / normal game collision** rather than a Sodium64-specific stall, but retain the already-running direct-SNES lane as independent dynamic confirmation before closing the route cause.
+
+If direct SNES confirms the same stop, mark the old Right+Run route REJECTED as representative coverage and replace it with a deterministic route including the required jump/action sequence. Preserve the old benchmark hash as a useful collision/regression probe rather than deleting its evidence.

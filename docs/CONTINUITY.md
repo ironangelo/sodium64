@@ -2,6 +2,17 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## RESUME HERE — current audited state (2026-09-19 UTC)
+
+**Read this entry and the final "Independent autonomy, corpus and oracle audit" before older RESUME HERE entries.** The chronology below retains superseded snapshots as evidence.
+
+- **M0/M1 ACHIEVED; M2 / Gate B OPEN.** Integrated master: `ac1ce74740d974b70206fcb6ba842e492b5d7272` (PR #12 MERGED-CONSUMED; exact-master gates green). No open PR or running candidate experiment found at audit time.
+- SRS candidate: `phase3/gate-b-srs-audition@d00ce599563ee5a7be94356150bae73a018a4e52`, run `35407369415` SUCCESS. **Selected game/build/initial movement retained; representative route coverage REOPENED.** +98px endpoint movement does not establish sustained activity. Artifact `10573367249` independently inspected and ZIP hash verified.
+- Nova2 candidate: `phase3/gate-b-nova2-audition@156b928191c130f13a19868e634c519647d91d59`, source-build run `35410418476` SUCCESS. Gameplay audition pending; do not repeat resolved Pillow/libm troubleshooting.
+- **Immediate batch:** reuse safe full-rate startup and compare the existing SRS route against a direct SNES reference at fixed guest checkpoints. The SRS audition currently changes APU clock/JIT state at a host-timed interrupt and only observes gameplay state at capture end. Separate route limitation, observability and Sodium64 divergence.
+- Then resume Nova2 route audition and bounded top-down corpus search. Do not optimize Gothicvania FPS or preselect a new architecture. No commercial ROM upload or always-on Iron PC dependency; hardware remains an aggregated milestone.
+- Audit is direction/documentation only: no runtime/workflow/other-doc changes or experiments launched.
+
 ## Operating protocol
 Authority: **current Iron instruction > repo/artifact evidence > canonical docs > continuity > chats/memory/inference**. `master` is integrated truth; phase branches are candidates only.
 
@@ -9,7 +20,7 @@ Cadence: **technical batch -> continuity checkpoint -> technical batch -> contin
 
 Iron delegates technical direction toward Road to 1.0 to the assistant. Expose useful technical reasoning in chat (hypothesis, evidence, what it proves/does not, rejects, next controlled change, expected result, falsifier) without exposing private chain-of-thought verbatim.
 
-## Target / current gate
+## Historical opening snapshot — SUPERSEDED by current RESUME HERE
 Current milestone: **M0 ACHIEVED / M1 — faster base core, APU/audio first**.
 Perfect target: real N64, correct native cadence, no required frameskip/frame generation, full-rate SPC700/APU and correct audio, high CPU/PPU/DMA/HDMA/timing fidelity, broad compatibility, no per-game modes, DSP-1 family, SuperFX/2 and SA-1. N64-alone first; cartridge assistance only after a quantified N64 ceiling.
 
@@ -5594,3 +5605,146 @@ Next technical batch:
 5. boot/progress in pinned ares lab before attaching Sodium64 performance meaning.
 
 Do **not** optimize Sodium64 from Nova2 yet.
+
+
+## Independent autonomy, corpus and oracle audit — 2026-09-19
+
+Scope: requested read-only project/direction audit. The only authorized repository mutation is this file on `continuity`. No Sodium64 runtime, workflows, other canonical docs, PRs, branch candidates, merges or experiment launches are changed by this audit. Dates here are UTC (the latest CI completed on September 19 UTC / September 18 Chile). Perfect target and N64-alone priority remain unchanged.
+
+### 1. Evidence reconciliation and overall verdict
+
+**SUPPORTED INTERPRETATION: direction is sound, but corpus admission currently overstates what the SRS route proves. Correctness/progression oracles are now more valuable than another optimization.**
+
+Verified repository state:
+- Integrated master: **`ac1ce74740d974b70206fcb6ba842e492b5d7272`**; PR **#12 MERGED-CONSUMED**. Exact-SHA master runs **35387454297** (Build and Validate), **35387454371** (APU Cycle And Span Proof), **35387454367** (Ares Profile Validation) all SUCCESS. Later cancelled runs with this SHA on newly created audition branches do not invalidate these completed master gates.
+- No open PRs at audit time.
+- Continuity before this audit: branch **`ae0c818c638d5dbd75bf9801bf758cd7c197aea2`**, file blob **`bcf47ceae9cb4182a658e48058406f53281618a0`**. Its final Nova2 checkpoint agrees with current branch/CI. Its opening M0/M1 snapshot is historical and dangerously stale if read alone; the new top RESUME HERE resolves that without deleting the history.
+- SRS audition: **`phase3/gate-b-srs-audition@d00ce599563ee5a7be94356150bae73a018a4e52`**, audition **35407369415** SUCCESS and Build/Validate **35407369417** SUCCESS.
+- Nova2 audition: **`phase3/gate-b-nova2-audition@156b928191c130f13a19868e634c519647d91d59`**, source-build **35410418476** SUCCESS and Build/Validate **35410418324** SUCCESS. No Nova2 gameplay result exists at this head.
+- No in-progress experiment was found among the current candidate runs. Resume from completed evidence, not the earlier Pillow failures.
+- All five canonical docs were read. Historical M1 hardware **60/60 x5**, full-rate APU, frameskip0 and 11.51% VI wait remain accepted previously audited hardware evidence; the original hardware SRAM was **not re-decoded in this audit**.
+
+Independent new inspection:
+- Read exact-SHA SRS workflow and its three-file diff from master (`.github/workflows/gate-b-srs-audition.yml`, PROFILE-only `src/main.S`, `src/profile.S`); read Nova2 workflow and exact job logs.
+- Downloaded SRS artifact **10573367249**, recomputed ZIP SHA-256 **`9b98631ce14cc0c90e55b91d6579b739f8bb79183ec2c817efad7c66db38f833`**, inspected its provenance, benchmark patch, state/history JSON and reports. This matches Actions metadata. The ZIP contains no ROM, screenshot or PCM output. Raw profiler samples were not independently reclassified against an ELF in this audit.
+- SRS source provenance artifact **10572508021** and Nova2 artifact **10573526773** were independently checked in metadata; Nova2 exact job **105808791825** confirms the recorded 1 MiB ROM hash, tool versions and successful unchanged-tree build. SRS exact job **105799802927** agrees with downloaded history/state evidence.
+- No emulator/game was newly executed by this audit. New conclusions below are artifact/source interpretation, not new performance measurements.
+
+### 2. Autonomy is compatible with the Road; commercial ROM upload is unnecessary
+
+**DIRECTION / reaffirmed user constraint:** routine development must not require Iron's powered-on PC, locally supplied commercial ROMs or continuous manual feedback. Keep all commercial ROM bytes out of GitHub, Actions uploads and project artifacts. No private-ROM hosting workaround is proposed.
+
+Separate three needs:
+1. **Autonomous development corpus:** original homebrew games with reproducible source/assets and bounded deterministic routes, plus targeted original tests. Homebrew is real software; it need not be commercially released or visually polished to expose actual emulator bugs.
+2. **Commercial representativeness:** eventual checks of the actual commercial workloads before making claims about their compatibility. Open games can expose missing behavior, but passing them does not prove SMW, DKC or ALttP pass. Keep this uncertainty explicit; commercial testing can remain an occasional supplemental/local milestone.
+3. **Real-N64 authority:** required for final N64 performance/hardware claims, not every change. Prepare one build/procedure covering multiple questions when evidence warrants it. Absence of a hardware session leaves hardware claims pending; it must not halt all autonomous correctness work.
+
+**REJECTED premise:** a game must have its original source available to test emulator correctness. The same ROM with the same power-on state and frame-indexed inputs can be executed in a reference SNES emulator and in Sodium64; compare selected observable state, graphics and audio. Source helps locate state and explain failures, but is not the required oracle.
+
+**REJECTED inference:** no commercial ROM in CI means no meaningful progress is possible. Current M1 hardware evidence and autonomous game builds already refute that.
+
+### 3. GATE DRIVER / MEASUREMENT PROOF: SRS route coverage is not yet established
+
+**MEASURED, independently reproduced from the artifact:**
+- unmodified SRS ROM **`d5bd7b17aa19a1b370efa38554b6ebfd77c4756e7184e9f2e848e8193bc9bed0`**;
+- benchmark ROM **`7d307bfec23d566cb33d265590269e9e67196104c6c2db2ad274f1efbc8b132e`**;
+- patch **`4c472a0986dfe4f7678c3234e57aeae611c77df44e7a38341b0756ee160024e7`**;
+- window vectors: r1 **53,60,60,60,60,60,60,60**; r2 **13 x60**; r3 **59 followed by 11 x60**;
+- final state in all three runs: room1, player **(4250,4259)**, camera **(4122,4096)**; initial authored x4152, thus +98px;
+- no run ended in a1b; each has only one endpoint gameplay-state observation;
+- Right+Run are held continuously. No jump/attack/door sequence is scripted.
+
+The pinned authored `game/resources/rooms/a1a-entrance.utroom` starts at local (56,164), contains terrain steps and one initial cleaning-bot entity at (281,120), with the outgoing trigger near the far right. Final player local position is (154,163). This is compatible with an early obstacle/route stall, but collision causality has **not** been dynamically proven.
+
+**REJECTED prior inference:** “therefore not a static/stuck low-activity state.” +98px from spawn proves some initial movement, not sustained movement/activity during the measured windows. The identical endpoint across 8/13/12 windows increases the concern but does not prove a freeze; a stationary player can coexist with active simulation/audio.
+
+**Corrected status:** retain SRS as **SELECTED GAME / BUILD AND INITIAL PROGRESSION VALIDATED**. Reopen the benchmark route as **CANDIDATE — SUSTAINED REPRESENTATIVE ACTIVITY UNKNOWN**. The prior “LOCKED DKC-like/heavy-platformer” claim is **SUPERSEDED only as a claim of measured representative coverage**. Do not discard valid 60/60 observations or drop the game to make the corpus look better.
+
+Small decisive experiment, before more optimization:
+- Run the **same existing benchmark ROM** directly in a pinned SNES reference and through Sodium64.
+- At fixed guest-frame checkpoints, record player/camera/room plus one or two meaningful activity signals (entity state, transition, relevant upload activity). Observe before, within and near the end of the measured interval, not only after it.
+- If the reference also stops at the same obstacle: **WORKLOAD/INPUT ROUTE LIMITATION**; author a bounded input script including the required jumps/actions while retaining normal physics/collisions/audio. Keep the old workload identity and hash the new one separately.
+- If only Sodium64 stalls or diverges: reduce to the earliest mismatch; distinguish reference/harness mapping from actual Sodium64 error before fixing runtime.
+- If both show sustained representative activity despite stationary player x: record that activity and accept the route on the evidence actually observed.
+- Falsifier for “heavy representative segment”: mostly idle simulation, absent expected entities/uploads, a short initial burst followed by a stall, or unexplained reference divergence. Source features existing somewhere in the game do not show they ran in this segment.
+
+### 4. HYGIENE-BLOCKER: the SRS audition revived unsafe preparation/phase ambiguity
+
+Exact workflow uses **1 host second warmup -> arbitrary debugger interrupt -> zero JIT lookup -> write APU clock21 and reset JIT pointer -> 1 host second settle -> reset counters -> 20 host seconds capture**. `scripts/gdb_rsp_dump.py` implements these stops with timed continue/interrupt; this call does not establish the previously proven safe guest configuration boundary. Integrated `src/apu.S` initializes `apu_clock` to **APU_CYCLE * 2**, so this is an actual rate transition, not necessarily an idempotent write.
+
+**LAB LIMITATION / source-backed risk:** an arbitrary halt can occur in generated code; reusing the JIT buffer/resetting lookup and changing the clock there does not prove the current block/cycle state transitioned safely. No corruption is proven in the successful SRS run. Endpoint APU21 proves the endpoint setting, not clean full-rate startup and all history.
+
+The internal 60-VI history is a useful improvement: later entries do span full internal VI windows. However, equal-length VI windows are not automatically the same game checkpoints. Reset is host-phase-selected; varying collected window counts and sample-ring coverage remain unsuitable for absolute cross-run subsystem-cost comparisons.
+
+**TODO / bounded repair:** reuse the existing matched-window preparation contract already used in M1, or establish diagnostic Road-valid settings before first guest execution at a verified boundary. Do not introduce a new general profiler. Record exact start checkpoint, full warmup windows and a fixed guest-frame/VI horizon. Clear/arm history and profiling together at the intended boundary.
+
+Do not explain the first 53/60 window as a proven “one-frame queue transient”: it is seven frames below60. A startup/phase transient is a hypothesis; its precise cause is unknown. Predetermine warmup exclusion and preserve all raw windows.
+
+The comparator calculates `steady_common_prefix_equal` but does **not assert it**. Green CI here means the configured checks passed, not a persistent repeatability regression gate. During discovery, valid below-target results should remain evidence, not be suppressed by requiring60. If an accepted route later becomes a regression gate, make its actual progression/repeatability expectations explicit.
+
+### 5. REQUIRED SUPPORT: a minimal autonomous reference lane
+
+Do not build a second emulator. Use an existing pinned SNES implementation as a process/library dependency, with a small adapter to the existing harness. Candidate references include ares's **SNES** core or a Mesen-family SNES core; the current ares workflow builds **N64-only**, so a direct-SNES comparison is **TODO**, not already available. Prefer an independent core lineage for resolving disputed behavior; two N64 hosts running the same Sodium64 SNES core are not two independent SNES correctness oracles.
+
+Minimum first deliverable is one SRS route comparison:
+- exact upstream/patch/ROM hashes, reference version/settings and Sodium64 SHA;
+- deterministic startup, RNG/SRAM state and input indexed by **guest frame**, not CI wall time;
+- semantic RAM subset: room, player, camera and demonstrated activity;
+- a few aligned image checkpoints and a bounded audio/synchronization check when capture is supported;
+- machine-readable expected/observed values and earliest divergence.
+
+Compare logical SNES state at the same phase, not whole N64 memory against SNES memory. Exclude uninitialized/scratch state only with documented reasons. Use SNES source pixels/palette-aware checks where available; N64 output scaling/filtering can invalidate naive whole-image hashes. Audio comparisons need sample-rate/latency alignment and declared tolerances; audio4 alone is not proof of non-silent correct PCM. Reference disagreement remains a question to resolve, not permission to choose the convenient output.
+
+Separate correctness capture from performance capture where debugger stops/tracing would perturb measurement. Use a second reference or hardware only to investigate a concrete discrepancy, not as an endless mandatory matrix for every commit.
+
+### 6. Corpus selection and coverage: preserve diversity without searching forever
+
+| Workload | Audited status | Next useful evidence |
+| --- | --- | --- |
+| Gothicvania | M1 hardware regression authority | Preserve its achieved result and use as regression control |
+| Space Rescue Squad | Source build and initial movement validated; measured-route coverage reopened | Reference-checked sustained activity and safe preparation |
+| Nova the Squirrel 2 | Autonomous build passed; runtime audition pending | Clean repeat build identity, then a reference-checked scrolling gameplay route |
+| ALttP-like/top-down slot | OPEN | Bounded search for eligible independent game with actual area/state/transition work |
+
+**Nova2 nuance:** run35410418476 proves one successful autonomous build, not independent bit-for-bit repeatability across clean environments. Preserve Python3.8.18/Pillow7.1.2 and exact BRR source prebuild with `-lm`; do not revisit the resolved palette/version guesses. Verify the ROM hash **`ecc61b2367a9261fe48131a61e5cf787b6409083827556109099a46a637d9b2f`** in the next clean audition build. Record the relevant moving tool versions; a pinned source plus unpinned apt/latest tooling is not a fully frozen toolchain.
+
+**Eligibility terminology:** SRS code is zlib and Nova2 code GPLv3, but their assets have game-specific reuse restrictions in upstream LICENSE/README. Describe them as **open code / source-available game assets**, not unrestricted fully open assets. Preserve current build-this-game-in-runner/no-ROM-or-asset-upload boundary; no extraction into a new workload/game. Before broadening redistribution, review the exact asset terms. A public repository or a successful compile alone does not resolve every reuse right.
+
+**Furry RPG:** keep previously recorded eligibility blocker; do not call it admitted because its README says freeware. Castle Platformer / unnamed-snes-engine remain auxiliary/fallbacks, not newly promoted full commercial-family proxies. This audit found no verified superior licensed top-down game to substitute; do not invent one.
+
+Selection should record **observed per-segment coverage**: CPU/game-state work, sprite/entity density, scrolling/tile uploads, DMA/HDMA/windows/color math/Mode7 where actually used, cartridge mapping, audio-driver lineage and duration. “SMW-like/DKC-like/ALttP-like” remains shorthand for desired behaviors, not equivalent stress or compatibility proof. Three platformer engines can still leave important gaps.
+
+Bound the remaining candidate search to one focused batch with an explicit shortlist and rejection reasons. If no adequate fourth game is found, report the coverage gap, use a smaller eligible demo/targeted test for that missing behavior and continue diagnosing demonstrated blockers in the admitted games. Do not quietly declare the fourth representative slot filled, weaken Gate B or write a new large game to satisfy a count. A concrete correctness failure need not wait for an arbitrary fourth title to be fixed.
+
+Targeted auxiliary sources verified during this audit:
+- [gilyon/snes-tests](https://github.com/gilyon/snes-tests): 65C816/SPC700 test ROMs, generated expected register/memory results; repository declares MIT. Audit exact selected test/license/pin before adoption.
+- [undisbeliever/snes-test-roms](https://github.com/undisbeliever/snes-test-roms): zlib LICENSE and source examples/tests for HDMA, VMAIN remapping, Mode7 tilemaps, windows, joypad and timing behavior. Choose only the small test answering a real gap.
+These are **COMPATIBILITY/CAUSAL PROBES**, not substitutes for sustained game performance. Do not import an entire test ecosystem merely because it exists.
+
+### 7. Decompilations/recompilations: useful research, limited oracle authority
+
+Iron's proposal is worth using in a bounded, question-led way. Verified research references:
+
+- [snesrev/smw](https://github.com/snesrev/smw/tree/eae20c65c58930c8b62c76188d259579ad4130f1), inspected `README.md` and `src/smw_cpu_infra.c` (blob `ab6e0ea7edd1903a3765b502bbe051d185c76712`). Provides named game state, replay/state-comparison ideas and identifiable PPU/audio paths.
+- [snesrev/zelda3](https://github.com/snesrev/zelda3/tree/fbbb3f967a51fafe642e6140d0753979e73b4090), README blob `14c8366fccbdf7fd4d0f0d13361d169e4fe75874`. Documents optional original-machine-code comparison, per-frame RAM checks and replayable input histories.
+- [elliotttate/DKC1Recomp](https://github.com/elliotttate/DKC1Recomp/tree/3eb9a10c49cb210df2bd63addafe2a78cf9f4e22), README blob `1a3175b9d59f875d635bd2390810818c62eceb39`. This is a **static recompilation** project, not interchangeable with a matching disassembly. Its documentation identifies structural metadata, deterministic input/headless validation and disassembly provenance.
+
+All three require the original ROM or extracted game data for the complete runtime path. They therefore do **not** provide a ROM-free autonomous substitute for the commercial game.
+
+**New concrete oracle caution:** SMW's `SmwCpuInitialize` patches out a wait-for-HBlank routine; `PatchBugs_SMW1` fixes game behavior; `SmwFixSnapshotForCompare` copies selected memory regions before comparison; `SmwRunOneFrameOfGame_Emulated` manually controls NMI/frame sequencing. Thus even a successful native-vs-emulated comparison there is not unmodified-SNES bus/timing proof. Do not transplant its exemptions or timing shortcuts into Sodium64.
+
+Useful research output should be: **specific routine/state -> hardware behavior it depends on -> existing open workload/test covering it -> remaining gap**. For example, study tile-streaming queues, object state machines, audio upload protocols or indirect dispatch to improve test coverage. Implement original minimal probes when necessary; retain provenance/licensing if adapting actual code.
+
+Do not build a port of DKC/SMW/Zelda, integrate their native renderer, copy extracted assets, or revive the SNES64/AOT second-project path. Native desktop FPS/code size is not Sodium64/N64 cost evidence.
+
+### 8. RESUME HERE — next technical batches after this audit
+
+**Current milestone: M0/M1 ACHIEVED; M2 / Gate B OPEN.** No runtime architecture is preselected.
+
+1. **MEASUREMENT PROOF:** repair/reuse safe Road-valid startup in the audition harness and compare the existing SRS benchmark in direct SNES reference vs Sodium64 at a few fixed guest checkpoints. This resolves “normal route obstacle / observability issue / Sodium64 divergence” before re-locking its measured segment.
+2. **Continuity checkpoint:** preserve reference identity, ROM/input/checkpoint hashes, raw vectors and outcome. If the route is inadequate, record why and introduce a separately hashed input-only route revision; do not overwrite old evidence.
+3. **COMPATIBILITY PROOF:** resume Nova2 from its successful source-build head, not the old failures. Reconfirm build hash and audition a bounded meaningful route using the same reference method. No claim that its Mode7/audio/complex engine features are exercised until observed.
+4. **Corpus completion:** bounded independent top-down search with explicit eligibility/coverage decision; document any gap. Consolidate only reusable corpus infrastructure after concrete routes justify it; keep one-off diagnostic branches out of master.
+5. **Gate-driven intervention:** investigate the first demonstrated correctness/performance blocker, preserve failing cases and regression-check achieved workloads. Reserve N64 hardware for a prepared multi-question milestone. No commercial ROM upload, no always-on user PC requirement, no immediate dynarec/RSP/renderer rewrite.
+
+This audit changes interpretation and next-action priority; it does not claim a new emulator fix, a new hardware result or Gate-B closure.

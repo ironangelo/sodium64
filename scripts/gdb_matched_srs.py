@@ -176,6 +176,7 @@ def main() -> int:
 
     parser.add_argument("--warmup-windows", type=int, default=2)
     parser.add_argument("--measure-windows", type=int, default=5)
+    parser.add_argument("--post-validation-windows", type=int, default=4)
     parser.add_argument("--chunk-size", type=parse_int, default=0x400)
     parser.add_argument("--snapshot", type=Path, required=True)
     parser.add_argument("--state-output", type=Path, required=True)
@@ -185,6 +186,8 @@ def main() -> int:
         parser.error("profile/JIT/chunk sizes must be positive")
     if args.warmup_windows < 1 or args.measure_windows < 1:
         parser.error("warmup/measure windows must be positive")
+    if args.post_validation_windows < 0:
+        parser.error("post-validation windows must be non-negative")
 
     client = connect_with_retry(
         args.host, args.port, args.connect_timeout, args.response_timeout
@@ -255,9 +258,23 @@ def main() -> int:
             if index != args.measure_windows:
                 advance_from_update_fps(client, args, f"measured check_frame #{index}")
 
+        # Freeze the profiling evidence exactly at the existing five-window
+        # measurement boundary before any longer semantic-route validation.
         data = client.read_memory(args.profile_address, args.profile_size, args.chunk_size)
         args.snapshot.parent.mkdir(parents=True, exist_ok=True)
         args.snapshot.write_bytes(data)
+
+        post_validation: list[dict[str, object]] = []
+        for index in range(1, args.post_validation_windows + 1):
+            advance_from_update_fps(
+                client, args, f"post-validation check_frame #{index}"
+            )
+            continue_to_breakpoint(
+                client, args.update_fps, f"post-validation update_fps #{index}"
+            )
+            state = boundary_state(client, args, "post_validation", index)
+            post_validation.append(state)
+            print("Post-validation boundary: " + json.dumps(state, sort_keys=True))
 
         frame_counts = [int(row["completed_frames"]) for row in measured]
         result = {
@@ -267,11 +284,14 @@ def main() -> int:
                 "vi_per_window": 60,
                 "warmup_windows": args.warmup_windows,
                 "measured_windows": args.measure_windows,
+                "post_validation_windows": args.post_validation_windows,
+                "profile_snapshot_boundary": "immediately after final measured update_fps before post-validation",
                 "guest_state_sampling": "byte-wise at every complete 60-VI boundary",
             },
             "configured": configured,
             "warmup": warmup,
             "measured": measured,
+            "post_validation": post_validation,
             "summary": {
                 "frame_counts": frame_counts,
                 "mean_frames_per_60_vi": statistics.fmean(frame_counts),

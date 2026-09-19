@@ -6317,3 +6317,17 @@ Dynamic reading from the raw 600-row trace:
 - v1 max x4554 around gf378; v2 max x4554 around gf402. **SUPPORTED INTERPRETATION:** moving the entire 64-frame jump phase +24 changes trajectory/timing but not the limiting obstacle.
 - **REJECTED hypothesis:** a whole-pattern phase shift alone is sufficient to traverse the column29 barrier.
 - Immediate next action: decode/correlate the exact authored barrier and use the v1/v2 trajectories to design a targeted normal-controller sequence. Do not launch another blind phase sweep and do not measure Sodium64 yet.
+
+
+## Gate B SRS authored-geometry correlation before route v3 — 2026-09-19 UTC
+
+**Classification:** COMPATIBILITY PROOF / source-backed route design.
+
+- Decoded pinned `a1a-entrance.utroom` exactly as its 48x14 metatile map; no ROM/runtime modification.
+- At the v1/v2 limiting coordinate, player center global x4554 => local center x458; the +6 tile-hitbox edge touches local x464, exactly **metatile column29**.
+- Column29 contains solid station metatiles continuously at rows **5,6,7,8,9,10** (tiles 168/184 alternating). This is a tall authored wall, not a single ground obstacle.
+- The route approaches from the upper structure: columns20–21 have solid tiles beginning at row5; columns22–24 provide a lower landing structure beginning at row7; columns25–28 form the horizontal gap before column29.
+- v2 dynamic trace shows the periodic B edge at guest frame352 occurs at `x=4449 y=4160`, immediately after leaving the upper platform edge, then apexes near y4140 and reaches the wall at gf402 already far below its top. v1 is the same local trajectory shifted earlier.
+- **SUPPORTED INTERPRETATION:** whole-pattern phase shifts synchronize back to essentially the same upper-platform launch state. The missing route action is not “jump a little earlier/later” from that upper ledge; it is to **skip that jump, land on the authored lower platform, then jump from its right edge**, shortening the required horizontal gap.
+- Route-v3 controlled input hypothesis: preserve all earlier v2 periodic jumps; suppress only the gf352 B pulse/hold, allow the player to drop onto columns22–24, then inject one normal B edge/hold around the expected lower-platform traversal before resuming normal periodic pulses. No player position, momentum, collision or room state will be written.
+- Falsifier: the player misses the lower platform or the targeted lower-platform jump still cannot exceed x4554. If so, inspect the resulting direct trace and adjust only the targeted controller timing.

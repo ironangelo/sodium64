@@ -99,6 +99,11 @@ jobs:
           set -euo pipefail
           root="$NOVA_ROOT"
 
+          # The upstream Linux rule for this generated helper omits libm even
+          # though gssbrr.c uses sin/cos/floor. Build the exact upstream helper
+          # source with the required system math library, without editing source.
+          gcc "$root/audio/brr/gssbrr.c" -lm -o "$root/audio/brr/gssbrr"
+
           # The upstream default target launches an emulator after building.
           # Build only the ROM target so the proof stays autonomous/headless.
           mkdir -p "$root/obj/snes"
@@ -121,6 +126,9 @@ jobs:
             echo "ca65_version=$(ca65 --version 2>&1 | head -n1)"
             echo "ld65_version=$(ld65 --version 2>&1 | head -n1)"
             echo "lz4_version=$(lz4 --version 2>&1 | head -n1)"
+            echo "python_version=$(python3 --version 2>&1)"
+            echo "pillow_version=$(python3 -c 'import PIL; print(PIL.__version__)')"
+            echo "gssbrr_bootstrap=gcc exact upstream source with -lm; no source edit"
             echo "asset_boundary=assets used only to build this upstream game; no ROM/assets uploaded"
           } | tee nova2-provenance.txt
 

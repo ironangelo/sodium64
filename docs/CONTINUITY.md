@@ -6433,3 +6433,18 @@ Dynamic result:
 - Visited room ids remain **[1]**; no `a1b_stairway` transition within this 600-host-frame horizon.
 - **SUPPORTED INTERPRETATION:** v4 validates the source-backed route design. The previous x4554 limit was purely input/level traversal, not Sodium64 or direct-SFC inability.
 - **Next action before Sodium64:** inspect gf480..594 against authored door geometry. Decide whether x4810 is another input-induced stall near the right-door opening or merely horizon-limited progression. Prefer one more targeted input correction if it can produce the authored room transition without state manipulation.
+
+
+## Gate B SRS door-approach correlation before route v5 — 2026-09-19 UTC
+
+**Classification:** COMPATIBILITY PROOF / source-backed route design.
+
+- v4 trace shows stable lower-platform/ground traversal around gf529..543: y=4195 while x advances 4728->4749.
+- The periodic phase-0x20 pulse fires again at **gf544**. The trace immediately moves upward: gf544 `x4751 y4193`, then rises to y4151 while advancing toward the right edge.
+- At gf572 the player reaches max x4810 and remains there through gf594 while descending only from y4151 to y4184.
+- Coordinate correlation: global x4810 => local center x714; +6 right hitbox edge = local x720, exactly authored **column45**.
+- Authored map: column45 is solid across rows2..7. Column46 (local x736) contains the right-door opening at rows8..10; room script trigger is `x=46 y=8 width=1 height=3` and loads `a1b_stairway`.
+- At the v4 collision, local center y55 (global4151) places the player hitbox in the solid upper-door region, not the opening. The route is therefore input-induced: gf544 makes the player jump into the upper door frame.
+- **Route-v5 hypothesis:** preserve v4 exactly, but suppress only the periodic B pulse/hold at absolute `frameCounter 0x0220..0x022f` (gf544..559). Let gravity carry the player toward the row8..10 doorway while Right+Run remains held. No game state manipulation.
+- Success criterion: x progresses beyond 4810 and ideally room id changes from a1a to a1b within the existing 600-frame trace.
+- Falsifier: player still blocks at x4810 or falls into another authored obstruction without transition; inspect resulting trace before any further input change.

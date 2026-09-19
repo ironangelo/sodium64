@@ -6093,3 +6093,10 @@ Pinned SRS source **`undisbeliever/space-rescue-squad@e08333a6cbdf5ac5f9e8deb052
 Measurement consequence: direct-SNES vs Sodium64 state should be aligned primarily by **game-owned `frameCounter`**, not host elapsed time or ares host-frame index. The direct tracer samples every rendered SFC frame, so repeated semantic rows for one `frameCounter` are possible around game-loop boundaries; comparison should collapse/group rows by guest counter and locate the earliest same-`frameCounter` divergence in room/player/camera state.
 
 This source-backed alignment contract is compatible with Astra's warning about host-timed checkpoints and will be used once `35418629393` produces the direct trace. No benchmark behavior was changed by this batch.
+
+
+## SRS direct-reference branch isolation check — checkpoint 2026-09-19
+
+Direct compare **`075068af92da1802aa3a2677c3d44f393215cc44 -> c5f4c0310cc2334d3f4784517a24e27addfc9e96`** is isolated to exactly **one added file**: `.github/workflows/gate-b-srs-reference.yml` (373 lines). No Sodium64 runtime source, validated matched-profile script, or existing workflow is modified on the reference branch.
+
+Interpretation: the direct-reference lane is infrastructure-only relative to the safe SRS Sodium64 authority. Any direct-SFC trace result cannot be attributed to a Sodium64 code modification introduced by this branch.

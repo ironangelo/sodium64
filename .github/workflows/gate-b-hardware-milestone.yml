@@ -6,6 +6,7 @@ on:
       - phase3/gate-b-hardware-milestone
     paths:
       - '.github/workflows/gate-b-hardware-milestone.yml'
+      - 'scripts/rebuild_gate_b_hardware_roms.py'
   workflow_dispatch:
 
 permissions:
@@ -259,7 +260,11 @@ jobs:
           python-version: '3.8'
 
       - name: Install Nova2 pinned Python dependency
-        run: python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "NOVA_PYTHON38=$(command -v python3)" >> "$GITHUB_ENV"
+          python3 -m pip install --disable-pip-version-check 'Pillow==7.1.2'
 
       - name: Rebuild exact qualified Nova the Squirrel 2 route
         shell: bash
@@ -538,6 +543,29 @@ jobs:
           # boundary: CI proves exact guest/wrapper identities, while artifacts
           # contain only Sodium64, patches, provenance and the matching symbols.
           rm -rf hardware/wrap
+
+      - name: Restore current Python for local-rebuild validation
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate exact local hardware-ROM reconstruction helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          local_out="$RUNNER_TEMP/gate-b-local-rebuild"
+          python3 scripts/rebuild_gate_b_hardware_roms.py \
+            "$GITHUB_WORKSPACE" \
+            "$local_out" \
+            --nova-python "$NOVA_PYTHON38"
+
+          echo "58cc069fd5e78f27cbaf464341cfb2d32c992168356412ff6a482577f6069ffc  $local_out/gate-b-srs-v5.z64" | sha256sum --check
+          echo "74039aafafd17d17dc7bf6c8bb1084c5fb8e7367eeab766a70c5381cd4f78975  $local_out/gate-b-nova2.z64" | sha256sum --check
+          test -s "$local_out/LOCAL_REBUILD_MANIFEST.txt"
+
+          # Preserve the no-ROM-upload boundary: this step proves the exact
+          # local reconstruction path and then removes guest/wrapped bytes.
+          rm -rf "$local_out"
 
       - name: Upload non-guest hardware preparation artifact
         uses: actions/upload-artifact@v4

@@ -6033,3 +6033,27 @@ Rather than continue patching an invalid definition, the workflow file was resto
 - Build and Validate run **`35418552244`** is also pending.
 
 This proves the workflow-definition failure was introduced only by the attempted observability edit. The SRS benchmark experiment itself remains unchanged. Next batch: add a **single minimal harness variable** to the known-valid workflow, keeping the YAML structure simple, so capture duration is bounded without simultaneously changing tracer/source observability.
+
+
+## SRS direct-reference bounded capture experiment launched — checkpoint 2026-09-19
+
+Exact harness-only HEAD: **`phase3/gate-b-srs-reference@4a753b6e866e41fc603d24ff21ef5d152bac1429`**.
+
+Controlled change from the restored known-valid workflow:
+- no tracer/source changes;
+- no SRS benchmark/input/ROM changes;
+- wrap only the direct ares execution in GNU `timeout --signal=TERM --kill-after=10s 300s`;
+- pipe ares stdout/stderr through `tee` so partial `SODIUM64_SRS_REF` frame records survive in the GitHub job log if the command is bounded.
+
+Runs:
+- **Gate B SRS Direct SNES Reference `35418579758`** — pending at checkpoint;
+- **Build and Validate `35418579750`** — pending at checkpoint.
+
+Question: does pinned direct-SFC ares reach rendered frames under the exact benchmark?
+Possible readings:
+- 600 trace rows + clean exit => reference capture valid; parse semantic route immediately;
+- some trace rows before 300-second bound => direct core progresses but unexpectedly slowly in this CI lab; partial rows are diagnostic, not a complete reference authority;
+- zero trace rows before bound => startup/load/frame scheduling path is blocked before the PPU frame tracer; diagnose direct-ares invocation rather than SRS/Sodium64;
+- workflow/build failure before capture => harness issue only.
+
+Do not optimize Sodium64 or redesign the SRS route until this reference-lane ambiguity is resolved.

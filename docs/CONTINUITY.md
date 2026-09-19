@@ -6590,3 +6590,19 @@ Dynamic result:
   - exact route hash but semantic divergence => compatibility/timing bug to localize before performance optimization.
   - source/hash/harness failure => no Sodium64 conclusion; repair harness only.
   - frame budget below 60/60 on this qualified route => profile becomes the next optimization evidence.
+
+
+## Gate B SRS v5 matched — identity/build checkpoint — 2026-09-19 UTC
+
+- Exact candidate remains `phase3/gate-b-srs-v5-matched@4ece04a4430b99f7ea00d26967cfa601812e8d15`.
+- Build and Validate **`35425597920` SUCCESS**: normal build, PROFILE build and pinned Mupen emulator-smoke all green.
+- Gate B SRS v5 Matched **`35425597914`** has completed successfully through:
+  - exact pinned SRS/submodule checkout;
+  - upstream CLI toolchain build;
+  - unmodified release build/provenance;
+  - deterministic v5 benchmark creation;
+  - semantic symbol resolution with ROM-byte preservation.
+- Because the benchmark-creation step contains hard assertions for patch `b21d55df...` and ROM `2455da2b...`, its SUCCESS establishes that the Sodium64 matched run is using the **same qualified v5 route bytes** as direct-SNES authority.
+- The symbol-probe rebuild also passed its before/after ROM identity assertion, so adding `frameCounter` observability did not mutate guest bytes.
+- Current step: build Sodium64 PROFILE runtime inside the matched workflow, before pinned ares N64 lab build and three safe repeats.
+- No throughput/compatibility interpretation yet; exact-route identity is proven, measurement still pending.

@@ -14,7 +14,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **SRS representative route v2 REJECTED as final workload:** `phase3/gate-b-srs-representative@982f7b1058b09077a47ad069efa03751ffadfc9e`. Direct-SFC run **`35420515333` SUCCESS**, Build/Validate **`35420515316` SUCCESS**. Exact route identities: patch `sha256:175ed8495cfdf8a53a0b3906269b4096b1c2f43b428a37618414eed63ba64b5c`, ROM `sha256:d534bbc62286304edfe6871621f3ee569acb51d811a36486fecf6cd8c293eee2`; artifact **`10576927974`**, digest `sha256:b2fb8708d6fdf2ebcc51803b3fda6a312c3e58dc5487ed237513e688a559ea61`. Corrected summary reports 587 gameplay rows, max/final `x=4554`, room1 only. v2 reaches the same barrier later (first x4554 at gf402) and never exceeds it. Therefore global phase shift `0x08 -> 0x20` is **REJECTED** as the needed fix; next route must be informed by the exact barrier geometry/approach rather than another blind whole-pattern phase shift.
 - **SRS representative route v3 REJECTED, but geometry hypothesis validated:** `phase3/gate-b-srs-representative@d3a101e4f0166bcdd3d0af68641cdfa3d0c074de`; direct-SFC `35421458128` SUCCESS, Build/Validate `35421458147` SUCCESS. Patch `e6cbc9478c79e21084fa748c1761068db23bb841fafbc39c25fd878cc584bc63`, ROM `354100d8f6dc14465cd8d06ba6bc9ba558c8d28c188a4387182569a37b6568a8`, artifact `10576984161` digest `sha256:4940fe564e9acbbbd85e81b480facf14517acc08835455e9b5f5374038ed1120`. Suppressing gf352 successfully makes the player land on the intended lower platform: y=4195 from gf377..384 while moving right. The targeted gf374 B edge expired just before standing state, so v3 still maxes at x4554. This **validates the lower-platform route concept** and isolates timing rather than geometry as the remaining issue.
 - **SRS representative route v4 SUCCESS for wall traversal / PARTIAL for final route:** `phase3/gate-b-srs-representative@7932bc0cf44722990815685ed0f1d1e4e1951d92`. Direct-SFC **`35422018484` SUCCESS**, Build/Validate **`35422018496` SUCCESS**. Exact identities: patch `sha256:e47e1fa2bc5aaeba290a5a9fea367b9abdc35146f708b15b4afdd15800f71250`, ROM `sha256:b5a5e7cba7a8560264e39cab10727974dc5330f0500400ff2b2d3fa53c1e8391`, artifact **`10576884824`**, digest `sha256:6d52b4853c04cd9cf33165ff9231cf2be93dd81e301895bfa56135d52418c0ef`. The gf378 B edge produces an immediate authentic jump from lower-platform y4195: gf378 y4192, then sustained upward motion. It crosses the former x4554 wall at **gf403 x4556** and continues to **max/final x4810** by gf572/594, room1. This validates the lower-platform route mechanism and yields +256 px beyond the old hard stall. Route qualification is not closed yet because no room transition occurs inside 600 frames; inspect the final door approach before matched Sodium64 measurement.
-- **SRS representative route v5 QUALIFIED on direct SNES:** current direct-reference branch `phase3/gate-b-srs-representative@d4c7d6ba1ca7a9a6233973560bfd2c7268fad661`. v5 changes only controller timing relative to v4 by suppressing the periodic gf544..559 B hold at the authored right-door approach; all player/physics/collision/room state remains untouched. Exact route identities are patch `sha256:b21d55df2d5fb949646c9a2124d5c062fa5e7f312264dabb2f354fdc67a27935`, ROM `sha256:2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46`. The 600-frame v5 direct run `35424126162` SUCCESS proves descent to the door floor and reaches x4815; Build/Validate `35424126115` SUCCESS. A read-only horizon extension to 720 frames at `d4c7d6ba...` changes no route ROM/input and produces direct run **`35424563879` SUCCESS**, Build/Validate **`35424563888` SUCCESS**, artifact **`10578072520`**, digest `sha256:98375a8b9b1ed8df9b3899ec246e531f51360d0776b0783dc8d8040c42b284cf`. It observes the authored transition from room1 to **room2/a1b_stairway at host_frame=621, game_frame=616**, then the new room initializes and progresses. **Route qualification is closed. Immediate next action:** port this exact v5 source patch/ROM identity into the validated safe Sodium64 matched-window harness, add read-only 32-bit `frameCounter` observability for differential alignment, and measure three identical 2-warmup + 5x60-VI repeats before any optimization.
+- **SRS representative route v5 QUALIFIED on direct SNES:** current direct-reference branch `phase3/gate-b-srs-representative@d4c7d6ba1ca7a9a6233973560bfd2c7268fad661`. v5 changes only controller timing relative to v4 by suppressing the periodic gf544..559 B hold at the authored right-door approach; all player/physics/collision/room state remains untouched. Exact route identities are patch `sha256:b21d55df2d5fb949646c9a2124d5c062fa5e7f312264dabb2f354fdc67a27935`, ROM `sha256:2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46`. The 600-frame v5 direct run `35424126162` SUCCESS proves descent to the door floor and reaches x4815; Build/Validate `35424126115` SUCCESS. A read-only horizon extension to 720 frames at `d4c7d6ba...` changes no route ROM/input and produces direct run **`35424563879` SUCCESS**, Build/Validate **`35424563888` SUCCESS**, artifact **`10578072520`**, digest `sha256:98375a8b9b1ed8df9b3899ec246e531f51360d0776b0783dc8d8040c42b284cf`. It observes the authored transition from room1 to **room2/a1b_stairway at host_frame=621, game_frame=616**, then the new room initializes and progresses. **Route qualification is closed.** This exact v5 route is now also validated through Sodium64 as recorded in the next bullet.
+- **SRS representative matched Sodium64 = VALIDATED HOST-LAB Gate-B evidence:** `phase3/gate-b-srs-v5-matched@4ece04a4430b99f7ea00d26967cfa601812e8d15`. Gate B SRS v5 Matched **`35425597914` SUCCESS**, job `105850864586`; same-head Build/Validate **`35425597920` SUCCESS**. The workflow rebuilt the exact qualified patch/ROM identities above, then ran three safe repeats with Road-valid settings before guest execution. All three measured vectors are **[60,60,60,60,60]/60**, 3584 profile samples each, and identical semantic boundary sequences. Four post-profile state-only windows prove the same authored room1→room2 transition. Same-`frameCounter` direct-SNES comparison is exact at 4/11 boundaries and differs only 1–3 px at the others; searching ±1 guest tick yields **10/11 exact spatial matches**, with the remaining first boundary only 1 px different. Final room2 state is byte-exact at the same `frameCounter=520`. **SUPPORTED INTERPRETATION:** deterministic route semantics match the direct SNES reference; residual pre-transition differences are consistent with observation-phase placement around `frameCounter`, not route divergence. Do not claim intraframe byte-perfect equivalence. Profile is identical across repeats: S-CPU 8.1%, Memory/I-O 0.1%, APU JIT 4.5%, APU static 30.5%, DSP 14.3%, PPU 5.1%, DMA 1.5%, VRAM/RSP wait 0.1%, RSP wait 0.0%, VI wait **35.7%**, other 0.1%. Artifact **`10579185638`**, digest `sha256:7e2a046ba6de1f147cd169d62203571966641b90bbf07947c9722e664ffbc6b6`. **LIMIT:** ares host-lab 60/60 is not real-N64 FPS authority. **Next Gate-B action: Nova2 gameplay audition; do not optimize Sodium64 from this non-failing SRS route.**
 - **Nova2 remains resolved at source-build level:** `phase3/gate-b-nova2-audition@156b928191c130f13a19868e634c519647d91d59`, source-build run `35410418476` SUCCESS. Gameplay audition remains pending; do not repeat resolved Pillow/source-build troubleshooting.
 - Continue the autonomous open/homebrew corpus path; no commercial ROM upload or always-on Iron PC dependency. Commercial software and real N64 remain later representativeness/final-authority milestones, not daily CI prerequisites.
 
@@ -6606,3 +6607,114 @@ Dynamic result:
 - The symbol-probe rebuild also passed its before/after ROM identity assertion, so adding `frameCounter` observability did not mutate guest bytes.
 - Current step: build Sodium64 PROFILE runtime inside the matched workflow, before pinned ares N64 lab build and three safe repeats.
 - No throughput/compatibility interpretation yet; exact-route identity is proven, measurement still pending.
+
+
+## Gate B SRS v5 matched Sodium64 closure — 2026-09-19 UTC
+
+**Classification:** COMPATIBILITY PROOF + MEASUREMENT PROOF = **VALIDATED in host laboratory**. This closes the current SRS Gate-B question; it does not replace real-N64 authority.
+
+### Exact authorities
+
+- Integrated runtime base: `master@ac1ce74740d974b70206fcb6ba842e492b5d7272`.
+- Matched harness candidate: `phase3/gate-b-srs-v5-matched@4ece04a4430b99f7ea00d26967cfa601812e8d15`.
+- Safe-lane base: `075068af92da1802aa3a2677c3d44f393215cc44`; direct compare to matched HEAD changes only the SRS workflow + GDB observer, not emulator core runtime.
+- Build and Validate `35425597920`: **SUCCESS** (normal, PROFILE, pinned Mupen smoke).
+- Gate B SRS v5 Matched `35425597914` / job `105850864586`: **SUCCESS**.
+- Matched artifact `10579185638`, 33,026 bytes, digest `sha256:7e2a046ba6de1f147cd169d62203571966641b90bbf07947c9722e664ffbc6b6`.
+- Source-build-proof artifact `10578974288`, digest `sha256:9d6ab8d3f3b1ff1bacac24efb862a5bb329bb5267eec4432b1502f3d721c7e43`.
+- Qualified guest route is byte-identity guarded:
+  - patch `b21d55df2d5fb949646c9a2124d5c062fa5e7f312264dabb2f354fdc67a27935`;
+  - ROM `2455da2b775a04b0e07775b39327d98b1de6a26f2da50bb1a8080e6e2ffffc46`.
+  Benchmark build + compile-time symbol-probe rebuild both passed identity assertions.
+
+### Measurement contract and repeatability
+
+Settings are applied at first `cpu_execute` before guest CPU/APU execution:
+- `apu_clock=21`;
+- frameskip `0`;
+- audio `4`;
+- precision `8`;
+- JIT lookup/pointer reset.
+
+Each of three repeats:
+- 2 warmup exact 60-VI boundaries;
+- 5 measured exact 60-VI boundaries;
+- profile snapshot frozen immediately after measured boundary5;
+- 4 additional state-only 60-VI post-validation boundaries after the snapshot.
+
+All three repeats are byte-for-byte repeatable in the observed boundary state and profile distribution.
+
+**Measured frame vector, all three repeats:** `[60,60,60,60,60]`.
+- mean = **60.0/60**;
+- min=max=60;
+- profile samples = **3584** each repeat.
+The final post-validation room-transition window reports 59 completed frames, but it occurs **after the profile snapshot** and therefore does not alter the fixed five-window throughput measurement.
+
+### Observed Sodium64 guest sequence
+
+All three repeats:
+1. gf39 room1 player(4160,4241) camera(4096,4096)
+2. gf99 room1 player(4250,4251) camera(4122,4096)
+3. gf159 room1 player(4299,4243) camera(4171,4096)
+4. gf219 room1 player(4394,4211) camera(4266,4096)
+5. gf279 room1 player(4410,4195) camera(4282,4096)
+6. gf339 room1 player(4432,4163) camera(4304,4096)
+7. gf399 room1 player(4545,4153) camera(4417,4096)
+8. gf459 room1 player(4680,4211) camera(4552,4096)
+9. gf519 room1 player(4715,4173) camera(4587,4096)
+10. gf579 room1 player(4810,4244) camera(4608,4096)
+11. gf520 room2 player(4136,4467) camera(4096,4355)
+
+Summary assertions:
+- state sequence identical across repeats: **true**;
+- measured frame vector identical across repeats: **true**;
+- x-span across observed boundary sequence: **674 px**;
+- 11 distinct spatial boundary states;
+- room transition observed: **true**;
+- identical spatial suffix = 1 boundary.
+
+The generated summary text still says “across seven observed boundaries”; that wording is stale after extending the observer to 11 boundaries. **POLISH-OPTIONAL only**; the computed span/state data are correct and no rerun is justified for wording.
+
+### Differential direct-SNES check with game-owned frameCounter
+
+Direct authority is `d4c7d6ba...` / run `35424563879` / job `105848170976`.
+
+At identical `(room_id, frameCounter)`:
+- **4/11** boundaries are exact for player+camera state.
+- Remaining seven differ only by 1–3 px total on individual axes; no room/path/camera-scale divergence occurs.
+- Examples: gf219, gf279, gf339 are exact in room1; room2 gf520 is **byte-exact** `player(4136,4467) camera(4096,4355)`.
+
+Allowing only the adjacent direct guest tick (±1):
+- **10/11** Sodium spatial states appear exactly in the direct trace.
+- The first boundary is the only non-exact adjacent-tick match and differs by just 1 px.
+- Most non-same-counter exact matches correspond to the direct state at `frameCounter - 1`.
+
+**SUPPORTED INTERPRETATION:** Sodium64 deterministically executes the same authored v5 route, including the lower-platform jump, door approach, script trigger and room2 load. The tiny pre-transition discrepancy pattern is consistent with the two observers sampling on different intra-frame sides of SRS's `frameCounter` update. This evidence does **not** prove intraframe byte-perfect CPU/PPU equivalence; do not manufacture such a claim.
+
+### Profile — identical in all three repeats
+
+3584 samples:
+- S-CPU interpreter: **8.1%**
+- Memory/I-O: **0.1%**
+- APU JIT generated: **4.5%**
+- APU/SPC700 static: **30.5%**
+- DSP/audio: **14.3%**
+- PPU/events/frame prep: **5.1%**
+- DMA/HDMA: **1.5%**
+- VRAM/RSP semaphore wait: **0.1%**
+- RSP wait: **0.0%**
+- frame/VI wait: **35.7%**
+- profiler: **0.0%**
+- other: **0.1%**
+
+Representative v5 therefore uses more of the lab frame budget than the rejected wall probe (old VI wait ~39.8%, APU static28.1%, DSP12.8%, DMA1.3%) while still delivering five complete 60/60 measured windows.
+
+**LIMIT:** this is ares N64 laboratory evidence, not a real-N64 performance result. Wall-clock/runtime speed in ares does not establish hardware FPS.
+
+### Decision
+
+- **SRS current Gate-B host-lab question: VALIDATED / CLOSED.**
+- Do not optimize APU/PPU/etc. merely because they are large profile categories here: the qualified workload is not failing and has ~35.7% lab VI wait.
+- Retain old Right+Run SRS as a collision/regression probe only.
+- Retain v5 as the representative SRS compatibility/throughput workload.
+- **Immediate Gate-B action:** move to Nova2 gameplay audition using its already-resolved source-build authority `phase3/gate-b-nova2-audition@156b928191c130f13a19868e634c519647d91d59` / run `35410418476 SUCCESS`. Do not redo Pillow/source-build work. The next optimization target should be selected only if Nova2 or another representative workload exposes a real throughput or semantic failure.

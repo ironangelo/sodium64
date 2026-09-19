@@ -1,0 +1,162 @@
+name: Gate B Sure Instinct Audition
+
+on:
+  push:
+    branches:
+      - phase3/gate-b-sureinstinct-audition
+    paths:
+      - '.github/workflows/gate-b-sureinstinct-audition.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-b-sureinstinct-audition-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-build-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    env:
+      SI_REPO: https://github.com/BenjaminSchulte/SureInstinct.git
+      SI_SHA: 90d70d4bfbf2921b2f8fee0c652523e2365598a7
+      FMA_REPO: https://github.com/BenjaminSchulte/fma.git
+      FMA_SHA: 1df2842d5746639fe4bb1492dfd20a363fbf6e98
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Install public build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libfreetype6-dev \
+            libsamplerate0-dev \
+            libyaml-cpp-dev \
+            pkg-config \
+            qtbase5-dev \
+            qttools5-dev
+
+      - name: Build exact pinned FMA assembler
+        shell: bash
+        run: |
+          set -euo pipefail
+          fma_root="$RUNNER_TEMP/fma"
+          prefix="$RUNNER_TEMP/fma-prefix"
+          git clone --filter=blob:none "$FMA_REPO" "$fma_root"
+          git -C "$fma_root" checkout --detach "$FMA_SHA"
+          test "$(git -C "$fma_root" rev-parse HEAD)" = "$FMA_SHA"
+
+          cmake -S "$fma_root" -B "$fma_root/build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$prefix"
+          cmake --build "$fma_root/build" --parallel "$(nproc)"
+          cmake --install "$fma_root/build"
+          test -x "$prefix/bin/fma"
+          echo "$prefix/bin" >> "$GITHUB_PATH"
+          "$prefix/bin/fma" --help > fma-help.txt 2>&1 || true
+
+      - name: Clone exact Sure Instinct source and verify license
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/sure-instinct"
+          git clone --filter=blob:none "$SI_REPO" "$root"
+          git -C "$root" checkout --detach "$SI_SHA"
+          test "$(git -C "$root" rev-parse HEAD)" = "$SI_SHA"
+          test -f "$root/LICENSE.md"
+          grep -Fq "MIT License" "$root/LICENSE.md"
+          echo "SI_ROOT=$root" >> "$GITHUB_ENV"
+
+      - name: Build Sure Instinct host asset libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$SI_ROOT"
+
+          cmake -S "$root/aoba-libsft" -B "$root/aoba-libsft/build" \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$root/aoba-libsft/build" --parallel "$(nproc)"
+
+          cmake -S "$root/aoba-build" -B "$root/aoba-build/build" \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$root/aoba-build/build" --parallel "$(nproc)"
+
+          test -x "$root/aoba-build/build/src/cli/cli"
+
+      - name: Build NTSC ROM without launching emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$SI_ROOT"
+          mkdir -p "$root/sureinstinct/obj" "$root/sureinstinct/dist"
+
+          AOBA_MODULE_PATH="$root/aoba-engine" \
+            "$root/aoba-build/build/src/cli/cli" "$root/sureinstinct" ntsc \
+            2>&1 | tee sureinstinct-assets-build.log
+
+          test -s "$root/sureinstinct/obj/build.fma"
+          test -s "$root/sureinstinct/obj/compile-flags.txt"
+
+          (
+            cd "$root"
+            ./bin/audio-compile sureinstinct ci-audition
+          ) 2>&1 | tee sureinstinct-audio-build.log
+
+          flags="$(cat "$root/sureinstinct/obj/compile-flags.txt")"
+          # Upstream si-run/si-release invoke fma this way; intentionally stop
+          # before the bsnes launch so CI remains build-only and autonomous.
+          (
+            cd "$root"
+            fma -l 65816 -o./sureinstinct/dist/sureinstinct-ci-ntsc.sfc \
+              $flags ./sureinstinct/obj/build.fma
+          ) 2>&1 | tee sureinstinct-rom-build.log
+
+          rom="$root/sureinstinct/dist/sureinstinct-ci-ntsc.sfc"
+          test -s "$rom"
+          size="$(stat -c '%s' "$rom")"
+          sha="$(sha256sum "$rom" | awk '{print $1}')"
+          echo "sureinstinct_rom_size=$size"
+          echo "sureinstinct_rom_sha256=$sha"
+
+          # The build may create ignored/generated products, but must not mutate
+          # any tracked source/assets from the exact upstream pin.
+          git -C "$root" diff --exit-code
+          git -C "$root" diff --cached --exit-code
+          test -z "$(git -C "$root" status --porcelain --untracked-files=no)"
+
+          {
+            echo "sureinstinct_repo=$SI_REPO"
+            echo "sureinstinct_sha=$SI_SHA"
+            echo "license=MIT (upstream LICENSE.md)"
+            echo "fma_repo=$FMA_REPO"
+            echo "fma_sha=$FMA_SHA"
+            echo "target=ntsc"
+            echo "rom_size=$size"
+            echo "rom_sha256=$sha"
+            echo "tracked_tree_mutated=false"
+            echo "rom_uploaded=false"
+          } > sureinstinct-build-provenance.txt
+
+      - name: Upload provenance and build logs only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-b-sureinstinct-source-build-proof
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            fma-help.txt
+            sureinstinct-assets-build.log
+            sureinstinct-audio-build.log
+            sureinstinct-rom-build.log
+            sureinstinct-build-provenance.txt

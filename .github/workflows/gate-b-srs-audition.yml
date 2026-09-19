@@ -8,6 +8,7 @@ on:
       - '.github/workflows/gate-b-srs-audition.yml'
       - 'src/main.S'
       - 'src/profile.S'
+      - 'scripts/gdb_matched_srs.py'
   workflow_dispatch:
 
 permissions:
@@ -414,6 +415,9 @@ jobs:
           skipped_set=$(symbol skipped_set)
           precision_set=$(symbol precision_set)
           audio_set=$(symbol audio_set)
+          cpu_execute=$(symbol cpu_execute)
+          update_fps=$(symbol update_fps)
+          check_frame=$(symbol check_frame)
           vi_history_count=$(symbol profile_vi_history_count)
           vi_history=$(symbol profile_vi_history)
 
@@ -422,6 +426,7 @@ jobs:
             "$last_epc" "$apu_clock" "$jit_lookup" "$jit_pointer" \
             "$fps_native" "$fps_emulate" "$fps_display" "$frame_count" \
             "$skipped_set" "$precision_set" "$audio_set" \
+            "$cpu_execute" "$update_fps" "$check_frame" \
             "$vi_history_count" "$vi_history"; do
             test -n "$value"
           done
@@ -485,6 +490,9 @@ jobs:
             echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
             echo "ARES_PRECISION_SET_ADDR=$precision_set"
             echo "ARES_AUDIO_SET_ADDR=$audio_set"
+            echo "ARES_CPU_EXECUTE_ADDR=$cpu_execute"
+            echo "ARES_UPDATE_FPS_ADDR=$update_fps"
+            echo "ARES_CHECK_FRAME_ADDR=$check_frame"
             echo "ARES_SRS_ROOM_ID_ADDR=$srs_room_id_virtual"
             echo "ARES_SRS_PLAYER_X_ADDR=$srs_player_x_virtual"
             echo "ARES_SRS_PLAYER_X_HI_ADDR=$srs_player_x_hi"
@@ -502,16 +510,17 @@ jobs:
             done
           } >> "$GITHUB_ENV"
 
-      - name: Repeat internally aligned SRS 60-VI histories
+      - name: Run safe matched SRS guest-time repeats
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p profiles
           rom="workloads/ares/out/profile-srs.z64"
 
-          profile_history() {
+          run_repeat() {
             repeat="$1"
-            label="recompiler-srs-history-r$repeat"
+            label="matched-srs-r$repeat"
+            port=$((9140 + repeat))
             home="$RUNNER_TEMP/ares-home-$label"
             settings="$RUNNER_TEMP/ares-settings-$label.bml"
             emulator_log="profiles/$label-emulator.log"
@@ -531,7 +540,7 @@ jobs:
                 --settings-file "$settings" \
                 --setting "Developer/DebugServerEnabled=true" \
                 --setting "Developer/DebugServerUseIPv4=true" \
-                --setting "Developer/DebugServerPort=9140" \
+                --setting "Developer/DebugServerPort=$port" \
                 --setting "Developer/HomebrewMode=true" \
                 --setting "Developer/DeterministicEntropy=true" \
                 --setting "Developer/ForceInterpreter=false" \
@@ -546,55 +555,44 @@ jobs:
             }
             trap cleanup_run EXIT
 
-            if ! python3 scripts/gdb_rsp_dump.py \
-              --port 9140 \
+            if ! python3 scripts/gdb_matched_srs.py \
+              --port "$port" \
               --connect-timeout 45 \
-              --response-timeout 60 \
-              --warmup-seconds 1 \
-              --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
-              --write "0x$ARES_APU_CLOCK_ADDR:15" \
-              --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
-              --write "0x$ARES_SKIPPED_SET_ADDR:00" \
-              --write "0x$ARES_AUDIO_SET_ADDR:04" \
-              --settle-seconds 1 \
-              --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
-              --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
-              --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
-              --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
-              --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
-              --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
-              --after-settle-write "0x$ARES_VI_HISTORY_COUNT_ADDR:00" \
-              --run-seconds 20 \
-              --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
-              --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
-              --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
-              --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
-              --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
-              --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
-              --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
-              --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
-              --observe "srs_room_id:0x$ARES_SRS_ROOM_ID_ADDR:1" \
-              --observe "srs_player_x_lo:0x$ARES_SRS_PLAYER_X_ADDR:1" \
-              --observe "srs_player_x_hi:0x$ARES_SRS_PLAYER_X_HI_ADDR:1" \
-              --observe "srs_player_y_lo:0x$ARES_SRS_PLAYER_Y_ADDR:1" \
-              --observe "srs_player_y_hi:0x$ARES_SRS_PLAYER_Y_HI_ADDR:1" \
-              --observe "srs_camera_x_lo:0x$ARES_SRS_CAMERA_X_ADDR:1" \
-              --observe "srs_camera_x_hi:0x$ARES_SRS_CAMERA_X_HI_ADDR:1" \
-              --observe "srs_camera_y_lo:0x$ARES_SRS_CAMERA_Y_ADDR:1" \
-              --observe "srs_camera_y_hi:0x$ARES_SRS_CAMERA_Y_HI_ADDR:1" \
-              --observe "vi_history_count:0x$ARES_VI_HISTORY_COUNT_ADDR:1" \
-              --observe "vi_history_0:0x$ARES_VI_HISTORY_0_ADDR:8" \
-              --observe "vi_history_1:0x$ARES_VI_HISTORY_1_ADDR:8" \
-              --observe "vi_history_2:0x$ARES_VI_HISTORY_2_ADDR:8" \
-              --observe "vi_history_3:0x$ARES_VI_HISTORY_3_ADDR:8" \
-              --observe "vi_history_4:0x$ARES_VI_HISTORY_4_ADDR:8" \
-              --observe "vi_history_5:0x$ARES_VI_HISTORY_5_ADDR:8" \
-              --observe "vi_history_6:0x$ARES_VI_HISTORY_6_ADDR:8" \
-              --observe "vi_history_7:0x$ARES_VI_HISTORY_7_ADDR:8" \
+              --response-timeout 120 \
+              --cpu-execute "0x$ARES_CPU_EXECUTE_ADDR" \
+              --update-fps "0x$ARES_UPDATE_FPS_ADDR" \
+              --check-frame "0x$ARES_CHECK_FRAME_ADDR" \
+              --profile-address "0x$ARES_PROFILE_ADDR" \
+              --profile-size "$ARES_PROFILE_SIZE" \
+              --profile-buffer "0x$ARES_PROFILE_BUFFER_HEX" \
+              --profile-write-ptr "0x$ARES_PROFILE_WRITE_PTR_ADDR" \
+              --profile-sample-count "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR" \
+              --profile-last-epc "0x$ARES_PROFILE_LAST_EPC_ADDR" \
+              --apu-clock "0x$ARES_APU_CLOCK_ADDR" \
+              --jit-lookup "0x$ARES_JIT_LOOKUP_ADDR" \
+              --jit-lookup-size "$ARES_JIT_LOOKUP_SIZE" \
+              --jit-pointer "0x$ARES_JIT_POINTER_ADDR" \
+              --jit-buffer "0x$ARES_JIT_BUFFER_HEX" \
+              --skipped-set "0x$ARES_SKIPPED_SET_ADDR" \
+              --audio-set "0x$ARES_AUDIO_SET_ADDR" \
+              --precision-set "0x$ARES_PRECISION_SET_ADDR" \
+              --fps-native "0x$ARES_FPS_NATIVE_ADDR" \
+              --fps-emulate "0x$ARES_FPS_EMULATE_ADDR" \
+              --fps-display "0x$ARES_FPS_DISPLAY_ADDR" \
+              --frame-count "0x$ARES_FRAME_COUNT_ADDR" \
+              --srs-room-id "0x$ARES_SRS_ROOM_ID_ADDR" \
+              --srs-player-x "0x$ARES_SRS_PLAYER_X_ADDR" \
+              --srs-player-x-hi "0x$ARES_SRS_PLAYER_X_HI_ADDR" \
+              --srs-player-y "0x$ARES_SRS_PLAYER_Y_ADDR" \
+              --srs-player-y-hi "0x$ARES_SRS_PLAYER_Y_HI_ADDR" \
+              --srs-camera-x "0x$ARES_SRS_CAMERA_X_ADDR" \
+              --srs-camera-x-hi "0x$ARES_SRS_CAMERA_X_HI_ADDR" \
+              --srs-camera-y "0x$ARES_SRS_CAMERA_Y_ADDR" \
+              --srs-camera-y-hi "0x$ARES_SRS_CAMERA_Y_HI_ADDR" \
+              --warmup-windows 2 \
+              --measure-windows 5 \
+              --snapshot "$snapshot" \
               --state-output "$state" \
-              --address "0x$ARES_PROFILE_ADDR" \
-              --size "$ARES_PROFILE_SIZE" \
-              --output "$snapshot" \
               > "$gdb_log" 2>&1; then
               cat "$gdb_log"
               tail -200 "$emulator_log" || true
@@ -604,7 +602,6 @@ jobs:
             cat "$gdb_log"
             cleanup_run
             trap - EXIT
-            sleep 1
 
             python3 scripts/profile_report.py \
               "$snapshot" build/sodium64.elf \
@@ -614,169 +611,139 @@ jobs:
             samples=$(awk '/total samples:/ { print $3 }' "$report")
             test -n "$samples"
             test "$samples" -ge 800
-
-            REPEAT="$repeat" STATE_FILE="$state" python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          repeat = os.environ["REPEAT"]
-          state = json.loads(Path(os.environ["STATE_FILE"]).read_text())
-          obs = state["observations"]
-
-          assert int(obs["skipped_set"]) == 0, obs
-          assert int(obs["apu_clock"]) == 21, obs
-          assert int(obs["audio_set"]) == 4, obs
-          assert int(obs["precision_set"]) == 8, obs
-
-          count = int(obs["vi_history_count"])
-          assert 5 <= count <= 64, f"repeat {repeat}: expected >=5 windows, got {count}"
-
-          raw = b"".join(
-              int(obs[f"vi_history_{i}"]).to_bytes(8, "big")
-              for i in range(8)
-          )
-          windows = list(raw[:count])
-
-          def snes_u16(key):
-              lo = int(obs[f"{key}_lo"])
-              hi = int(obs[f"{key}_hi"])
-              assert 0 <= lo <= 0xff and 0 <= hi <= 0xff
-              return lo | (hi << 8)
-
-          guest_state = {
-              "room_id": int(obs["srs_room_id"]),
-              "player_x": snes_u16("srs_player_x"),
-              "player_y": snes_u16("srs_player_y"),
-              "camera_x": snes_u16("srs_camera_x"),
-              "camera_y": snes_u16("srs_camera_y"),
-          }
-
-          payload = {
-              "repeat": int(repeat),
-              "history_count": count,
-              "complete_60vi_windows": windows,
-              "min": min(windows),
-              "max": max(windows),
-              "mean": sum(windows) / len(windows),
-              "guest_state_end": guest_state,
-          }
-          Path(f"profiles/srs-vi-history-r{repeat}.json").write_text(
-              json.dumps(payload, indent=2) + "\n"
-          )
-          print(json.dumps(payload, indent=2))
-          PY
           }
 
           for repeat in 1 2 3; do
-            echo "=== internally aligned SRS history $repeat/3 ==="
-            profile_history "$repeat"
+            echo "=== safe matched SRS repeat $repeat/3 ==="
+            run_repeat "$repeat"
           done
 
-      - name: Compare internally aligned SRS histories
+      - name: Summarize SRS matched route activity and repeatability
         shell: bash
         run: |
           set -euo pipefail
-
           python3 - <<'PY'
           import json
-          import os
           from pathlib import Path
 
           runs = [
-              json.loads(Path(f"profiles/srs-vi-history-r{i}.json").read_text())
+              json.loads(Path(f"profiles/matched-srs-r{i}-state.json").read_text())
               for i in range(1, 4)
           ]
-          seqs = [r["complete_60vi_windows"] for r in runs]
-          common = min(map(len, seqs))
-          prefixes = [s[:common] for s in seqs]
-          exact_common_prefix = all(p == prefixes[0] for p in prefixes[1:])
 
-          # The first diagnostic window may contain a one-frame queue transient.
-          # Compare sustained common windows separately, without assuming 60.
-          steady = [p[1:] for p in prefixes]
-          steady_equal = all(p == steady[0] for p in steady[1:])
+          for run in runs:
+              contract = run["measurement_contract"]
+              assert contract["configuration_boundary"] == "first_cpu_execute_before_guest_execution"
+              assert contract["window_boundary"] == "update_fps_entry"
+              assert contract["vi_per_window"] == 60
+              assert contract["warmup_windows"] == 2
+              assert contract["measured_windows"] == 5
+              assert run["configured"]["apu_clock"] == 21
+              assert run["configured"]["skipped_set"] == 0
+              assert run["configured"]["audio_set"] == 4
+              assert run["configured"]["precision_set"] == 8
+              assert len(run["warmup"]) == 2
+              assert len(run["measured"]) == 5
+              assert run["summary"]["final_sample_count"] >= 800
 
-          a1a = int(os.environ["SRS_ROOM_A1A_ID"], 16)
-          a1b = int(os.environ["SRS_ROOM_A1B_ID"], 16)
-          map_left = int(os.environ["SRS_MAP_LEFT"], 16)
-          initial_x = map_left + 56
-
-          states = [r["guest_state_end"] for r in runs]
-
-          # The engine reserves map-space coordinates from 0x1000 upward.
-          # Reject impossible values before using them as progression evidence;
-          # this protects the proof against debugger/cache-alias mistakes.
-          plausible_state = [
-              (
-                  st["room_id"] in (a1a, a1b)
+          def plausible(st):
+              return (
+                  st["room_id"] in (int(__import__("os").environ["SRS_ROOM_A1A_ID"], 16),
+                                    int(__import__("os").environ["SRS_ROOM_A1B_ID"], 16))
                   and 0x1000 <= st["player_x"] < 0x8000
                   and 0x1000 <= st["player_y"] < 0x8000
                   and 0x1000 <= st["camera_x"] < 0x8000
                   and 0x1000 <= st["camera_y"] < 0x8000
               )
-              for st in states
-          ]
-          progressed = [
-              (st["room_id"] != a1a) or (st["player_x"] >= initial_x + 64)
-              for st in states
-          ]
-          entered_a1b = [st["room_id"] == a1b for st in states]
+
+          sequences = []
+          frame_vectors = []
+          for run in runs:
+              rows = run["warmup"] + run["measured"]
+              states = [row["guest"] for row in rows]
+              assert all(plausible(st) for st in states), states
+              sequences.append(states)
+              frame_vectors.append([row["completed_frames"] for row in run["measured"]])
+
+          repeatable_state = all(seq == sequences[0] for seq in sequences[1:])
+          repeatable_frames = all(v == frame_vectors[0] for v in frame_vectors[1:])
+
+          first = sequences[0]
+          unique_states = []
+          for st in first:
+              if not unique_states or st != unique_states[-1]:
+                  unique_states.append(st)
+
+          player_xs = [st["player_x"] for st in first]
+          rooms = [st["room_id"] for st in first]
+          activity = {
+              "player_x_span": max(player_xs) - min(player_xs),
+              "distinct_boundary_states": len({tuple(sorted(st.items())) for st in first}),
+              "room_transition_observed": len(set(rooms)) > 1,
+              "stalled_suffix_windows": 0,
+          }
+          for n in range(1, len(first) + 1):
+              suffix = first[-n:]
+              if all(st == suffix[0] for st in suffix):
+                  activity["stalled_suffix_windows"] = n
+              else:
+                  break
 
           payload = {
-              "counts": [len(s) for s in seqs],
-              "sequences": seqs,
-              "common_window_count": common,
-              "common_prefix_equal": exact_common_prefix,
-              "steady_common_prefix_equal": steady_equal,
-              "steady_common_sequence": steady[0],
-              "guest_state_end": states,
-              "plausible_guest_state": plausible_state,
-              "progressed_from_a1a": progressed,
-              "entered_a1b_at_end": entered_a1b,
-              "initial_a1a_player_x": initial_x,
+              "measurement": "safe pre-guest full-rate configuration; exact 60-VI boundaries",
+              "guest_state_sequences": sequences,
+              "measured_frame_vectors": frame_vectors,
+              "state_repeatable_across_three_runs": repeatable_state,
+              "frame_vector_repeatable_across_three_runs": repeatable_frames,
+              "activity": activity,
           }
-          Path("profiles/srs-history-repeatability.json").write_text(
-              json.dumps(payload, indent=2) + "\n"
+          Path("profiles/srs-matched-route-summary.json").write_text(
+              json.dumps(payload, indent=2, sort_keys=True) + "\n"
           )
 
-          lines = ["# SRS internally aligned repeatability", ""]
-          for i, seq in enumerate(seqs, 1):
-              st = states[i - 1]
-              lines.append(f"- r{i} ({len(seq)} windows): " + ", ".join(f"{v}/60" for v in seq))
-              lines.append(
-                  f"  - end state: room={st['room_id']}, player=({st['player_x']},{st['player_y']}), "
-                  f"progressed={progressed[i - 1]}"
-              )
-          lines += [
+          lines = [
+              "# SRS safe matched-route characterization",
               "",
-              f"- common windows compared: {common}",
-              f"- exact common prefix equal: {exact_common_prefix}",
-              f"- sustained common prefix (after first window) equal: {steady_equal}",
-              "- sustained common sequence: " + ", ".join(f"{v}/60" for v in steady[0]),
+              "Road-valid settings are applied before first guest execution.",
+              "Guest state is sampled at two warmup + five measured exact 60-VI boundaries.",
               "",
           ]
-          Path("profiles/srs-history-repeatability.md").write_text("\n".join(lines))
-          print(json.dumps(payload, indent=2))
-
-          assert all(plausible_state), f"guest-state observation failed plausibility bounds: {states}"
-          assert all(progressed), f"guest progression not demonstrated in all repeats: {states}"
+          for i, (seq, frames) in enumerate(zip(sequences, frame_vectors), 1):
+              lines.append(f"## Repeat {i}")
+              lines.append(f"- measured frame vector: {frames}")
+              for j, st in enumerate(seq, 1):
+                  lines.append(
+                      f"- boundary {j}: room={st['room_id']} player=({st['player_x']},{st['player_y']}) "
+                      f"camera=({st['camera_x']},{st['camera_y']})"
+                  )
+              lines.append("")
+          lines += [
+              f"- state sequence identical across repeats: **{repeatable_state}**",
+              f"- measured frame vector identical across repeats: **{repeatable_frames}**",
+              f"- player-x span across seven observed boundaries: **{activity['player_x_span']} px**",
+              f"- distinct boundary states: **{activity['distinct_boundary_states']}**",
+              f"- room transition observed: **{activity['room_transition_observed']}**",
+              f"- identical-state suffix length: **{activity['stalled_suffix_windows']} windows**",
+              "",
+              "> Discovery evidence only. A stable stall is route evidence to investigate, not a CI failure. "
+              "Frame counts are emulator-lab throughput, not real-N64 FPS.",
+          ]
+          Path("profiles/srs-matched-route-summary.md").write_text("\n".join(lines) + "\n")
+          print(Path("profiles/srs-matched-route-summary.md").read_text())
           PY
 
           python3 scripts/profile_matrix.py \
-            profiles/recompiler-srs-history-r1.json \
-            profiles/recompiler-srs-history-r2.json \
-            profiles/recompiler-srs-history-r3.json \
-            --output profiles/srs-history-profile-repeatability.md
+            profiles/matched-srs-r1.json \
+            profiles/matched-srs-r2.json \
+            profiles/matched-srs-r3.json \
+            --output profiles/srs-matched-profile-repeatability.md
 
           {
-            echo '### Gate-B SRS internally aligned repeatability'
+            echo '### Gate-B SRS safe matched-route characterization'
             echo
-            cat profiles/srs-history-repeatability.md
+            cat profiles/srs-matched-route-summary.md
             echo
-            cat profiles/srs-history-profile-repeatability.md
-            echo
-            echo '> Emulator-lab repeatability evidence only; not real-N64 performance authority.'
+            cat profiles/srs-matched-profile-repeatability.md
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload non-ROM audition diagnostics

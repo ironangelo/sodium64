@@ -5490,3 +5490,35 @@ The upstream tree remains unmodified. The build still runs afterward only to pre
 Decision map:
 - if one or more committed PNGs encode <16 PLTE entries, investigate the upstream author's palette-padding/build assumption and reproduce it narrowly rather than version-guessing;
 - if all encode >=16, the failure is elsewhere in palette interpretation and must be isolated before another build repair.
+
+
+## Nova2 palette assumption isolated — 2026-09-18
+
+Exact diagnostic authority:
+- **Gate B Nova2 Audition `35410283981` FAILED as expected after diagnostic** @ `af5602d91fff3658e083959b019138772c024f68`;
+- the new palette-inspection step itself succeeded before the unchanged build failure.
+
+Measured source encoding:
+- `31` regular `palettes/*.png` files inspected;
+- **21/31 encode fewer than 16 raw PNG PLTE entries**;
+- examples: `BGForest=5`, `BGGlass=5`, `InventoryBG2=4`, `OWStone=7`, `SPNova=13`;
+- Pillow 9.1.1 exposed exactly those raw entry counts, so `encodepalettes.py` exhausts the list after skipping entry zero and unconditionally reading 15 more colors.
+
+This proves the failure is not missing source/assets. The committed source assets themselves intentionally contain compact palettes while the generator depends on a historical palette-padding behavior.
+
+Build-history evidence:
+- `tools/encodepalettes.py` originated **2019-05-03**;
+- meaningful palette-system update **2020-02-22**;
+- last source change was only the Python-3 shebang conversion on **2020-05-08**;
+- affected palette assets also date mainly from 2019-2021.
+
+Supported interpretation:
+the correct compatibility target is therefore the **2019/2020 Pillow era**, not merely “pre-9.2”.
+
+Next controlled repair:
+**`phase3/gate-b-nova2-audition@3e691f0fea59ab289a054768f5f0879e8336a504`**
+uses Python 3.8 + Pillow 7.1.2 (contemporary with the generator's last substantive era) and retains the raw-PLTE/Pillow-visible diagnostic.
+
+Expected discriminator:
+- if raw PLTE remains compact but Pillow-visible entries expand enough for the generator and build proceeds, historical palette semantics are confirmed;
+- if Pillow 7.1.2 still exposes compact entries, do not keep version-hunting: reproduce the required padding explicitly in a harness compatibility layer and prove its generated palette semantics before accepting the workload.

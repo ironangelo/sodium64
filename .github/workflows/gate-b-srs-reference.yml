@@ -27,7 +27,7 @@ jobs:
       UNTECH_EDITOR_SHA: 4c72dc69619c0c246aa7e6325b18b6fb3c219821
       TAD_SHA: 17823e5a55893e8442917abadb4e84feb216e5ad
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
-      ROUTE_ID: targeted-lower-platform-v4-gf378
+      ROUTE_ID: door-transition-v5-suppress-gf544
 
     steps:
       - name: Checkout Sodium64
@@ -132,11 +132,13 @@ jobs:
           new = """        sep     #$30
               a8()
               i8()
-                  // Deterministic representative-route candidate v4.
+                  // Deterministic representative-route candidate v5.
                   // Right + Run stay held.  Keep v2's normal periodic jumps,
                   // except suppress the absolute gf352 jump so the player drops
                   // from the upper platform onto the authored lower platform.
                   // Then issue one real B edge at gf378 and hold B for 16 frames.
+                  // Finally suppress only gf544..559 so the player falls into the
+                  // authored right-door opening instead of jumping into its header.
                   // No position, momentum, collision or room state is modified.
                   stz.w   Controller.Joy1.current
                   stz.w   Controller.Joy1.pressed
@@ -192,6 +194,20 @@ jobs:
                               sta.w   Controller.Joy1.pressed + 1
 
                   Sodium64RouteV3_SpecialDone:
+                  // Suppress only absolute frameCounter 0x0220..0x022f
+                  // (the gf544 periodic jump/hold at the right-door approach).
+                  lda.w   frameCounter + 1
+                  cmp.b   #$02
+                  bne     Sodium64RouteV5_DoorDone
+                      lda.w   frameCounter
+                      cmp.b   #$20
+                      bcc     Sodium64RouteV5_DoorDone
+                      cmp.b   #$30
+                      bcs     Sodium64RouteV5_DoorDone
+                          lda.b   #JOYH.right | JOYH.y
+                          sta.w   Controller.Joy1.current + 1
+                          stz.w   Controller.Joy1.pressed + 1
+                  Sodium64RouteV5_DoorDone:
                   lda.w   Controller.Joy1.pressed + 1
           """
           assert text.count(old) == 1

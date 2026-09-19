@@ -5748,3 +5748,52 @@ Do not build a port of DKC/SMW/Zelda, integrate their native renderer, copy extr
 5. **Gate-driven intervention:** investigate the first demonstrated correctness/performance blocker, preserve failing cases and regression-check achieved workloads. Reserve N64 hardware for a prepared multi-question milestone. No commercial ROM upload, no always-on user PC requirement, no immediate dynarec/RSP/renderer rewrite.
 
 This audit changes interpretation and next-action priority; it does not claim a new emulator fix, a new hardware result or Gate-B closure.
+
+
+## Gate-B SRS safe matched-route capture — RUNNING 2026-09-19 UTC
+
+Audit direction has been reconciled against the live repo before this batch:
+- `master@ac1ce74740d974b70206fcb6ba842e492b5d7272` remains integrated truth;
+- no open PR;
+- Nova2 source build is already resolved at `phase3/gate-b-nova2-audition@156b928191c130f13a19868e634c519647d91d59`, run `35410418476` SUCCESS;
+- SRS representative-route status remains **REOPENED** despite successful old audition `35407369415`;
+- old SRS +98px end observation is insufficient to establish sustained representative gameplay.
+
+### Controlled measurement repair
+
+Current SRS diagnostic head:
+**`phase3/gate-b-srs-audition@075068af92da1802aa3a2677c3d44f393215cc44`**.
+
+Changes in this batch are harness-only:
+- new `scripts/gdb_matched_srs.py`;
+- SRS audition workflow now uses the already-validated M1 configuration boundary:
+  **first `cpu_execute` before any guest execution**;
+- Road-valid settings are written and verified there: frameskip0/APU21/audio4/precision8;
+- JIT lookup/pointer reset occurs before guest CPU/APU execution, eliminating the old host-timed in-flight-JIT ambiguity;
+- two complete 60-VI windows are predetermined warmup;
+- profiler state is reset only at the exact following `update_fps` boundary;
+- five complete 60-VI windows are then measured;
+- SRS room/player/camera state is sampled byte-wise at **every** warmup/measured boundary, avoiding the pinned ares unaligned-half debugger limitation;
+- discovery does **not** assert 60/60 or route progression. Below-target throughput or a stable stall must remain evidence rather than be hidden by CI acceptance logic.
+
+No Sodium64 production/runtime optimization is introduced. Existing PROFILE-only SRS diagnostic instrumentation remains branch-local.
+
+Exact runs now started for this head:
+- **Gate B SRS Audition `35416459569`** — in progress at checkpoint;
+- **Build and Validate `35416459565`** — queued/pending at checkpoint.
+
+An intermediate script-only commit `97e81e1f...` launched Build and Validate `35416434504`; it is superseded for interpretation by the complete workflow head above.
+
+### Question / readings
+
+Primary question:
+Does the existing deterministic Right+Run SRS benchmark continue changing meaningful guest state over fixed guest-time windows once startup is prepared safely?
+
+Useful readings:
+1. **Repeated sustained progression:** route remains viable; proceed to direct-SNES reference comparison at the same guest checkpoints.
+2. **Deterministic stable stall:** route is inadequate or encounters a real gameplay divergence. Compare direct SNES before changing input; if direct SNES stalls identically, revise route only. If reference progresses and Sodium64 stalls, preserve first divergence as a compatibility blocker.
+3. **Non-repeatable guest vectors:** measurement/observability remains suspect; do not interpret performance or route behavior.
+4. **Build/harness failure:** classify separately; no candidate/runtime conclusion.
+
+Next action after this run:
+checkpoint exact window/state vectors first, then build the minimal direct-SNES reference lane. Do not resume Nova2 or optimize Sodium64 until this SRS ambiguity is separated.

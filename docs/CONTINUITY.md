@@ -6057,3 +6057,17 @@ Possible readings:
 - workflow/build failure before capture => harness issue only.
 
 Do not optimize Sodium64 or redesign the SRS route until this reference-lane ambiguity is resolved.
+
+
+## SRS direct-reference tracer bypass root cause — static source proof 2026-09-19
+
+Pinned ares source **`17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`** explains the apparent endless capture without invoking any SRS/Sodium64 defect:
+
+- `desktop-ui/settings/settings.hpp`: **`settings.video.pixelAccuracy = false` by default**.
+- `desktop-ui/emulator/super-famicom.cpp`: loading Super Famicom calls `ares::SuperFamicom::option("Pixel Accuracy", settings.video.pixelAccuracy)`.
+- `ares/sfc/ppu/ppu.cpp`: `PPUBase::setAccurate(false)` selects **`ppuPerformanceImpl`**; true selects `ppuImpl`.
+- the current direct-reference tracer is injected only into **`ares/sfc/ppu/main.cpp`**, which is compiled into `ppuImpl`, not the default `ppuPerformanceImpl`.
+
+Therefore the default direct-SFC run can execute the game indefinitely while never incrementing `sodium64TraceFrame` or reaching the tracer's `std::exit(0)` at 600 frames. This is a **SUPPORTED STATIC ROOT CAUSE / LAB HARNESS DEFECT** for the hanging reference run. It does **not** demonstrate a guest stall.
+
+Decision: make the reference mode explicit by launching pinned ares with **`Video/PixelAccuracy=true`**, matching the instrumented accurate PPU and strengthening reference fidelity. Keep SRS ROM/input/source bytes unchanged. The bounded `4a753b6e...` run is diagnostic-only and may be superseded/cancelled by this repair; no need to wait out 300 seconds solely to rediscover a statically proven tracer bypass.

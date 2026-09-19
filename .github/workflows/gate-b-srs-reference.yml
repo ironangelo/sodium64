@@ -300,6 +300,7 @@ jobs:
               --no-file-prompt \
               --system "Super Famicom" \
               --settings-file "$settings" \
+              --setting "Video/PixelAccuracy=true" \
               --setting "Developer/DeterministicEntropy=true" \
               "$rom" 2>&1 | tee "$log"
 

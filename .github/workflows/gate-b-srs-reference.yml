@@ -27,7 +27,7 @@ jobs:
       UNTECH_EDITOR_SHA: 4c72dc69619c0c246aa7e6325b18b6fb3c219821
       TAD_SHA: 17823e5a55893e8442917abadb4e84feb216e5ad
       ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
-      ROUTE_ID: periodic-jump-v2-phase32
+      ROUTE_ID: targeted-lower-platform-v3
 
     steps:
       - name: Checkout Sodium64
@@ -132,34 +132,66 @@ jobs:
           new = """        sep     #$30
               a8()
               i8()
-                  // Deterministic representative-route candidate v2.
-                  // Hold Right + Run.  Every 64 guest frames, press B once and
-                  // hold it for 16 frames.  B is present in pressed only on the
-                  // true edge; all movement still flows through normal input,
-                  // player/entity, gravity and collision code.
+                  // Deterministic representative-route candidate v3.
+                  // Right + Run stay held.  Keep v2's normal periodic jumps,
+                  // except suppress the absolute gf352 jump so the player drops
+                  // from the upper platform onto the authored lower platform.
+                  // Then issue one real B edge at gf374 and hold B for 16 frames.
+                  // No position, momentum, collision or room state is modified.
                   stz.w   Controller.Joy1.current
                   stz.w   Controller.Joy1.pressed
                   stz.w   Controller.Joy1.pressed + 1
                   lda.b   #JOYH.right | JOYH.y
                   sta.w   Controller.Joy1.current + 1
 
+                  // Baseline periodic v2 pulse: phase 0x20, 16-frame hold.
                   lda.w   frameCounter
                   and.b   #$3f
                   cmp.b   #$20
-                  bcc     +
+                  bcc     Sodium64RouteV3_PeriodicDone
                   cmp.b   #$30
-                  bcs     +
+                  bcs     Sodium64RouteV3_PeriodicDone
                       lda.b   #JOYH.right | JOYH.y | JOYH.b
                       sta.w   Controller.Joy1.current + 1
 
                       lda.w   frameCounter
                       and.b   #$3f
                       cmp.b   #$20
-                      bne     +
+                      bne     Sodium64RouteV3_PeriodicDone
                           lda.b   #JOYH.b
                           sta.w   Controller.Joy1.pressed + 1
-                  +
+                  Sodium64RouteV3_PeriodicDone:
 
+                  // Suppress only absolute frameCounter 0x0160..0x016f
+                  // (the gf352 periodic jump and its hold).
+                  lda.w   frameCounter + 1
+                  cmp.b   #$01
+                  bne     Sodium64RouteV3_SpecialDone
+                      lda.w   frameCounter
+                      cmp.b   #$60
+                      bcc     Sodium64RouteV3_TargetJump
+                      cmp.b   #$70
+                      bcs     Sodium64RouteV3_TargetJump
+                          lda.b   #JOYH.right | JOYH.y
+                          sta.w   Controller.Joy1.current + 1
+                          stz.w   Controller.Joy1.pressed + 1
+
+                  Sodium64RouteV3_TargetJump:
+                      // Targeted lower-platform jump: gf374..389 (0x0176..0x0185).
+                      lda.w   frameCounter
+                      cmp.b   #$76
+                      bcc     Sodium64RouteV3_SpecialDone
+                      cmp.b   #$86
+                      bcs     Sodium64RouteV3_SpecialDone
+                          lda.b   #JOYH.right | JOYH.y | JOYH.b
+                          sta.w   Controller.Joy1.current + 1
+                          lda.w   frameCounter
+                          cmp.b   #$76
+                          bne     Sodium64RouteV3_SpecialDone
+                              lda.b   #JOYH.b
+                              sta.w   Controller.Joy1.pressed + 1
+
+                  Sodium64RouteV3_SpecialDone:
                   lda.w   Controller.Joy1.pressed + 1
           """
           assert text.count(old) == 1

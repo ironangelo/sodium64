@@ -6380,3 +6380,17 @@ Dynamic result:
 - **SUPPORTED INTERPRETATION:** the route-design geometry was correct; v3 reaches the intended lower platform. The failure is targeted-input timing, not inability to reach that platform.
 - **Next controlled experiment v4:** keep every v3 input decision identical except move the one targeted B edge/hold start from gf374 (`0x0176`) to **gf378 (`0x017a`)**, when the trace shows the player is already standing on the lower platform. Preserve 16-frame hold, Right+Run, suppression of gf352 pulse, and all periodic pulses.
 - Falsifier: gf378 jump is visibly executed but still cannot cross x4554, or no jump occurs despite standing evidence.
+
+
+## Gate B SRS representative route v4 launch — 2026-09-19 UTC
+
+**Classification:** COMPATIBILITY PROOF / workload selection; experiment RUNNING.
+
+- Branch/HEAD: `phase3/gate-b-srs-representative@7932bc0cf44722990815685ed0f1d1e4e1951d92`.
+- Direct-SFC run: **`35422018484`**. Same-head Build/Validate: **`35422018496`**.
+- v3->v4 direct compare: one commit, one file `.github/workflows/gate-b-srs-reference.yml`, +7/-7; Sodium64 runtime untouched.
+- Controlled gameplay change: keep the gf352 suppression and every other input identical to v3; move only the targeted lower-platform B edge/hold from gf374..389 to **gf378..393** (`0x017a..0x0189`).
+- Evidence basis: v3 trace shows the player first reaches standing lower-platform height y4195 at gf377 and remains there through gf384. The gf374 edge expired before the next-frame standing/coyote test. gf378 is the first trace-backed safe standing frame for an immediate normal jump.
+- Hypothesis: the gf378 edge triggers a genuine jump from the lower platform, shortening the gap to the column29 wall enough to exceed x4554.
+- Falsifier: no upward jump after gf378, or an executed jump still stalls at/before x4554.
+- If v4 crosses, inspect sustained progression/room transition and only then promote the route to matched Sodium64 measurement.

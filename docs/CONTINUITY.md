@@ -6358,3 +6358,25 @@ Dynamic reading from the raw 600-row trace:
 - Direct-SFC route run **`35421458128`** remains in progress in the source-build/reference lane.
 - **What this proves:** no normal/PROFILE/emulator-smoke regression from the route-v3 branch revision.
 - **What it does not prove:** the modified SRS source patch has not yet completed its direct-SFC dynamic trace; no route acceptance or Sodium64 performance conclusion exists.
+
+
+## Gate B SRS representative route v3 result — 2026-09-19 UTC
+
+**Classification:** COMPATIBILITY PROOF / workload selection. Route v3 = **REJECTED as final workload, hypothesis refined**.
+
+Authority:
+- `phase3/gate-b-srs-representative@d3a101e4f0166bcdd3d0af68641cdfa3d0c074de`.
+- Direct-SFC `35421458128` / job `105839822295`: **SUCCESS**.
+- Build/Validate `35421458147`: **SUCCESS**.
+- Route patch SHA-256: `e6cbc9478c79e21084fa748c1761068db23bb841fafbc39c25fd878cc584bc63`.
+- Route ROM SHA-256: `354100d8f6dc14465cd8d06ba6bc9ba558c8d28c188a4387182569a37b6568a8`.
+- Artifact `10576984161`, digest `sha256:4940fe564e9acbbbd85e81b480facf14517acc08835455e9b5f5374038ed1120`.
+
+Dynamic result:
+- 600 raw rows / 587 gameplay rows; room1 only; max/final x **4554**.
+- Suppressing the gf352 upper-platform jump works as intended. The player descends normally: gf352 `x4449 y4163`; gf374 `x4491 y4187`; gf377 reaches `x4497 y4195`.
+- **MEASURED landing evidence:** y remains exactly **4195** from gf377 through gf384 while x advances across the lower platform/edge. This is the expected standing center height for the authored row7 platform.
+- The targeted B edge at gf374 does **not** produce a jump. Source-backed interpretation: `InputBuffer.jump` is a 5-frame shift buffer; the edge is consumed/aged while still airborne, and the landing occurs during movement after the frame's jump test. By the next standing frame the buffer has expired.
+- **SUPPORTED INTERPRETATION:** the route-design geometry was correct; v3 reaches the intended lower platform. The failure is targeted-input timing, not inability to reach that platform.
+- **Next controlled experiment v4:** keep every v3 input decision identical except move the one targeted B edge/hold start from gf374 (`0x0176`) to **gf378 (`0x017a`)**, when the trace shows the player is already standing on the lower platform. Preserve 16-frame hold, Right+Run, suppression of gf352 pulse, and all periodic pulses.
+- Falsifier: gf378 jump is visibly executed but still cannot cross x4554, or no jump occurs despite standing evidence.

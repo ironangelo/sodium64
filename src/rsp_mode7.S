@@ -485,7 +485,7 @@ next_layer:
     addi s3, s3, 1
     bltz t0, draw_obj
     li t1, 0x40
-    beq t0, t1, draw_mode7
+    beq t0, t1, draw_mode7_entry
     andi t1, s7, 0x1 // Enable
     bnez t0, draw_bg
     andi t3, t0, 0x3 // Index
@@ -496,7 +496,8 @@ next_layer:
     andi s3, s3, 0xF0
     b next_layer
 
-
+    // Fixed renderer overlay begins on a 64-bit DMA boundary.
+    .align 3
 draw_bg:
 get_offsets:
 decode_tile4:
@@ -508,7 +509,7 @@ decode_tile256:
     nop
 
 
-draw_mode7:
+draw_mode7_impl:
     // Skip the layer if the BG is disabled
     // TODO: implement windows for mode 7
     beqz t1, next_layer
@@ -838,6 +839,13 @@ finish_tile7:
     blt s1, k1, draw_row7
     add t9, t9, t0
     b next_layer
+
+    // Keep the externally visible Mode 7 entry fixed at the far edge of the
+    // renderer slot; branch back into the variant-local implementation.
+    .align 3
+draw_mode7_entry:
+    b draw_mode7_impl
+    nop
 
 
 draw_obj:

@@ -485,7 +485,7 @@ next_layer:
     addi s3, s3, 1
     bltz t0, draw_obj
     li t1, 0x40
-    beq t0, t1, draw_mode7
+    beq t0, t1, draw_mode7_entry
     andi t1, s7, 0x1 // Enable
     bnez t0, draw_bg
     andi t3, t0, 0x3 // Index
@@ -496,7 +496,8 @@ next_layer:
     andi s3, s3, 0xF0
     b next_layer
 
-
+    // Fixed renderer overlay begins on a 64-bit DMA boundary.
+    .align 3
 draw_bg:
     // Skip the layer if the BG is disabled
     lbu a3, SHIFT_TABLE(t3) // Mask
@@ -869,7 +870,9 @@ skip_upload:
     b finish_tile
 
 
-draw_mode7:
+    // Keep the inactive Mode 7 entry at an invariant, DMA-aligned offset.
+    .align 3
+draw_mode7_entry:
     // ARCHITECTURE PROOF ONLY: omit Mode 7 to measure how much RSP IMEM
     // a future microcode split/overlay could recover. This branch is never a
     // correctness/release candidate and must not be merged in this form.

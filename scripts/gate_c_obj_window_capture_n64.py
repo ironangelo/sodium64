@@ -71,6 +71,61 @@ def wait_for_phase(
     raise RuntimeError(f"did not observe phase 0x{target:02X}")
 
 
+def wait_for_fresh_display(
+    client: RSPClient,
+    *,
+    phase_address: int,
+    target: int,
+    framebuffer_address: int,
+    poll_seconds: float,
+    attempts: int,
+    transitions_required: int = 3,
+) -> None:
+    """Flush pre-phase triple-buffered frames before semantic capture."""
+
+    last_pointer = read_u(client, framebuffer_address, 4)
+    transitions = 0
+    for attempt in range(1, attempts + 1):
+        validate_stop(
+            client.continue_then_interrupt(poll_seconds),
+            f"Phase {target:02x} display-settle #{attempt}",
+        )
+        phase = read_u(client, phase_address, 1)
+        if phase != target:
+            print(
+                f"display settle left phase 0x{target:02X} at 0x{phase:02X}; "
+                "waiting for the next occurrence"
+            )
+            wait_for_phase(
+                client,
+                phase_address=phase_address,
+                target=target,
+                poll_seconds=poll_seconds,
+                attempts=attempts,
+            )
+            last_pointer = read_u(client, framebuffer_address, 4)
+            transitions = 0
+            continue
+
+        pointer = read_u(client, framebuffer_address, 4)
+        if pointer == last_pointer:
+            continue
+
+        transitions += 1
+        last_pointer = pointer
+        print(
+            f"phase 0x{target:02X} fresh-display transition "
+            f"{transitions}/{transitions_required}: 0x{pointer:08X}"
+        )
+        if transitions >= transitions_required:
+            return
+
+    raise RuntimeError(
+        f"did not observe {transitions_required} displayed-frame transitions "
+        f"while phase 0x{target:02X} remained active"
+    )
+
+
 def capture_nonblank_phase(
     client: RSPClient,
     *,
@@ -87,6 +142,14 @@ def capture_nonblank_phase(
         client,
         phase_address=phase_address,
         target=target,
+        poll_seconds=poll_seconds,
+        attempts=attempts,
+    )
+    wait_for_fresh_display(
+        client,
+        phase_address=phase_address,
+        target=target,
+        framebuffer_address=framebuffer_address,
         poll_seconds=poll_seconds,
         attempts=attempts,
     )

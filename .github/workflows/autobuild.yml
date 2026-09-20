@@ -54,6 +54,8 @@ jobs:
             sodium64.z64
             rom-converter.py
             build/sodium64.elf
+            build/src/rsp_main.elf
+            build/src/rsp_mode7.elf
             build/*.map
             build.log
             build-metrics.txt
@@ -97,6 +99,8 @@ jobs:
             sodium64.z64
             rom-converter.py
             build/sodium64.elf
+            build/src/rsp_main.elf
+            build/src/rsp_mode7.elf
             build/*.map
             profile-build.log
             profile-build-metrics.txt

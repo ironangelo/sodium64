@@ -12,6 +12,10 @@ WIDTH = 280
 HEIGHT = 240
 EXPECTED_BYTES = WIDTH * HEIGHT * 2
 
+# Sodium64's regular tile path adds the 12-pixel framebuffer border. The two
+# outer diagnostic OBJ probes therefore render around these framebuffer centers.
+OUTER_PROBE_CENTERS = ((31.5, 99.5), (239.5, 99.5))
+
 
 def decode_rgba5551(data: bytes) -> list[tuple[int, int, int]]:
     if len(data) != EXPECTED_BYTES:
@@ -23,9 +27,9 @@ def decode_rgba5551(data: bytes) -> list[tuple[int, int, int]]:
     return pixels
 
 
-def component_boxes(mask: list[bool], *, min_area: int) -> list[dict[str, int]]:
+def component_boxes(mask: list[bool], *, min_area: int) -> list[dict[str, float]]:
     seen = bytearray(len(mask))
-    boxes: list[dict[str, int]] = []
+    boxes: list[dict[str, float]] = []
     for start, enabled in enumerate(mask):
         if not enabled or seen[start]:
             continue
@@ -61,9 +65,15 @@ def component_boxes(mask: list[bool], *, min_area: int) -> list[dict[str, int]]:
                     "y1": max_y,
                     "width": max_x - min_x + 1,
                     "height": max_y - min_y + 1,
+                    "cx": (min_x + max_x) / 2,
+                    "cy": (min_y + max_y) / 2,
                 }
             )
     return boxes
+
+
+def _near(component: dict[str, float], center: tuple[float, float]) -> bool:
+    return abs(component["cx"] - center[0]) <= 3 and abs(component["cy"] - center[1]) <= 3
 
 
 def analyze(path: Path) -> dict[str, object]:
@@ -72,6 +82,10 @@ def analyze(path: Path) -> dict[str, object]:
     green = [g >= 24 and r <= 7 and b <= 7 for r, g, b in pixels]
     red_components = component_boxes(red, min_area=16)
     green_components = component_boxes(green, min_area=64)
+    outer_present = [
+        any(_near(component, center) for component in red_components)
+        for center in OUTER_PROBE_CENTERS
+    ]
     return {
         "path": str(path),
         "red_pixels": sum(red),
@@ -79,19 +93,20 @@ def analyze(path: Path) -> dict[str, object]:
         "red_components": red_components,
         "green_components": green_components,
         "red_component_count": len(red_components),
+        "outer_present": outer_present,
     }
 
 
 def classify(control: dict[str, object], treatment: dict[str, object]) -> str:
-    c = int(control["red_component_count"])
-    t = int(treatment["red_component_count"])
-    if c != 3:
-        return "INDETERMINATE_CONTROL_NOT_THREE_PROBES"
-    if t == 1:
+    c_outer = list(control["outer_present"])
+    t_outer = list(treatment["outer_present"])
+    if c_outer != [True, True]:
+        return f"INDETERMINATE_CONTROL_OUTER_{c_outer}"
+    if t_outer == [False, False]:
         return "H_OBJ_FALSIFIED_SODIUM64_MASKS_OUTER_OBJ"
-    if t == 3:
+    if t_outer == [True, True]:
         return "H_OBJ_SUPPORTED_SODIUM64_IGNORES_OBJ_WINDOW"
-    return f"INDETERMINATE_TREATMENT_RED_COMPONENTS_{t}"
+    return f"INDETERMINATE_TREATMENT_OUTER_{t_outer}"
 
 
 def main() -> int:

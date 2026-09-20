@@ -42,13 +42,13 @@ jobs:
           sodium64_base=5b7134930a0ca859f6aa24e54102de116948e3ed
           diagnostic_source_sha=$GITHUB_SHA
           mode=SNES Mode1
-          main=BG2 RGB5(16,0,0)
-          sub=BG1 RGB5(0,16,0)
-          tm=0x02
-          ts=0x01
-          cgwsel=0x02
-          control_cgadsub=0x02
-          treatment_cgadsub=0x42
+          main=BG1 RGB5(16,0,0)
+          second_operand=fixed RGB5(0,16,0)
+          tm=0x01
+          ts=0x00
+          cgwsel=0x00
+          control_cgadsub=0x01
+          treatment_cgadsub=0x41
           control_expected_rgb5=16,16,0
           treatment_expected_rgb5=8,8,0
           windows=disabled
@@ -125,8 +125,9 @@ jobs:
           tm=$(symbol tm)
           ts=$(symbol ts)
           bg_mode=$(symbol bg_mode)
+          coldata=$(symbol coldata)
 
-          for value in "$wram" "$framebuffer" "$cgadsub" "$cgwsel" "$tm" "$ts" "$bg_mode"; do
+          for value in "$wram" "$framebuffer" "$cgadsub" "$cgwsel" "$tm" "$ts" "$bg_mode" "$coldata"; do
             test -n "$value"
           done
 
@@ -138,6 +139,7 @@ jobs:
             echo "TM_ADDR=0x$tm"
             echo "TS_ADDR=0x$ts"
             echo "BG_MODE_ADDR=0x$bg_mode"
+            echo "COLDATA_ADDR=0x$coldata"
           } | tee -a "$GITHUB_ENV"
 
       - name: Install pinned ares dependencies
@@ -187,7 +189,7 @@ jobs:
           }
           trap cleanup EXIT
 
-          python3 scripts/gate_c_h_comp_half_capture_n64.py             --port 9147             --phase-address "$PHASE_ADDR"             --framebuffer-address "$FRAMEBUFFER_ADDR"             --observe "cgadsub:$CGADSUB_ADDR:1"             --observe "cgwsel:$CGWSEL_ADDR:1"             --observe "tm:$TM_ADDR:1"             --observe "ts:$TS_ADDR:1"             --observe "bg_mode:$BG_MODE_ADDR:1"             --output-dir captures
+          python3 scripts/gate_c_h_comp_half_capture_n64.py             --port 9147             --phase-address "$PHASE_ADDR"             --framebuffer-address "$FRAMEBUFFER_ADDR"             --observe "cgadsub:$CGADSUB_ADDR:1"             --observe "cgwsel:$CGWSEL_ADDR:1"             --observe "tm:$TM_ADDR:1"             --observe "ts:$TS_ADDR:1"             --observe "bg_mode:$BG_MODE_ADDR:1"             --observe "coldata:$COLDATA_ADDR:2"             --output-dir captures
 
           python3 scripts/gate_c_h_comp_half_analyze_fb.py             captures/control.rgba5551 captures/treatment.rgba5551             --output captures/analysis.json | tee captures/analysis.txt
 
@@ -198,15 +200,16 @@ jobs:
           state = json.loads(Path('captures/state.json').read_text())
           result = json.loads(Path('captures/analysis.json').read_text())
 
-          assert state['control']['phase'] == 0x02, state
-          assert state['treatment']['phase'] == 0x42, state
-          assert state['control']['cgadsub'] == 0x02, state
-          assert state['treatment']['cgadsub'] == 0x42, state
+          assert state['control']['phase'] == 0x01, state
+          assert state['treatment']['phase'] == 0x41, state
+          assert state['control']['cgadsub'] == 0x01, state
+          assert state['treatment']['cgadsub'] == 0x41, state
           for phase in ('control', 'treatment'):
-              assert state[phase]['cgwsel'] == 0x02, state
-              assert state[phase]['tm'] == 0x02, state
-              assert state[phase]['ts'] == 0x01, state
+              assert state[phase]['cgwsel'] == 0x00, state
+              assert state[phase]['tm'] == 0x01, state
+              assert state[phase]['ts'] == 0x00, state
               assert state[phase]['bg_mode'] == 0x01, state
+              assert state[phase]['coldata'] == 0x0200, state
 
           assert result['control']['mode_fraction'] >= 0.80, result
           assert result['treatment']['mode_fraction'] >= 0.80, result

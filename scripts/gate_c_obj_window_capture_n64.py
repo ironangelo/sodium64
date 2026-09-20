@@ -233,6 +233,9 @@ def main() -> int:
     parser.add_argument("--response-timeout", type=float, default=30.0)
     parser.add_argument("--phase-address", required=True, type=parse_int)
     parser.add_argument("--framebuffer-address", required=True, type=parse_int)
+    parser.add_argument("--control-target", type=parse_int, default=CONTROL)
+    parser.add_argument("--treatment-target", type=parse_int, default=TREATMENT)
+    parser.add_argument("--capture-return-control", action="store_true")
     parser.add_argument(
         "--observe",
         action="append",
@@ -262,7 +265,13 @@ def main() -> int:
             raise RuntimeError("target rejected QPassSignals")
 
         states = {}
-        for name, target in (("control", CONTROL), ("treatment", TREATMENT)):
+        sequence = [
+            ("control", args.control_target),
+            ("treatment", args.treatment_target),
+        ]
+        if args.capture_return_control:
+            sequence.append(("return_control", args.control_target))
+        for name, target in sequence:
             states[name] = capture_nonblank_phase(
                 client,
                 name=name,

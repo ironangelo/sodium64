@@ -913,6 +913,65 @@ start_objects:
     add a1, a1, t0
     jal dma_read
     li a2, 0x1FF
+
+    // Preserve the existing no-window fast path. Sodium64 currently combines
+    // main/sub window-enable masks for BGs, so OBJ follows the same renderer
+    // contract here; screen-specific TMW/TSW separation remains a later Gate-C
+    // compositor repair rather than a game-specific special case.
+    lbu t0, TMW
+    lbu t1, TSW
+    or t0, t0, t1
+    andi t0, t0, 0x10
+    beqz t0, obj_no_windows
+    li t8, 0 // Window-bound index
+
+    // Calculate the generic OBJ W1 visible spans using the same window helper
+    // already used by BG rendering. W2/combine modes remain explicitly outside
+    // this controlled repair and retain their pre-existing behavior.
+    lbu a0, WOBJSEL
+    jal calc_windows
+    andi a0, a0, 0xF
+
+    // An empty first span is represented by a zero upper bound.
+    lbu t0, WIN_BOUNDS + 1
+    beqz t0, obj_advance_segment
+    nop
+    b obj_window_segment
+    nop
+
+obj_no_windows:
+    // Negative bound index marks the unwindowed fast path at list completion.
+    b obj_restart_objects
+    li t8, -1
+
+obj_window_segment:
+    // Restrict RDP drawing to the current visible OBJ span while preserving
+    // this section's Y bounds. RDP scissoring clips boundary-crossing tiles
+    // without introducing a per-pixel RSP mask.
+    lw t0, FILLREC_MASK
+    lw t6, RDP_FILL + 8
+    lw t7, RDP_FILL + 12
+    and t6, t6, t0
+    and t7, t7, t0
+    lbu t2, WIN_BOUNDS + 0(t8)
+    lbu t3, WIN_BOUNDS + 1(t8)
+
+    sltu t0, zero, t2
+    addi t2, t2, 12
+    add t2, t2, t0
+    sll t2, t2, 14
+    or t0, t6, t2
+    sw t0, RDP_WINDOW + 8
+    addi t3, t3, 13
+    sll t3, t3, 14
+    or t0, t7, t3
+    sw t0, RDP_WINDOW + 12
+
+    li a0, RDP_WINDOW
+    jal rdp_send
+    li a1, RDP_TILE
+
+obj_restart_objects:
     b next_object
     li a3, TILE_TABLE + 0x200 // Cache index
 
@@ -1069,6 +1128,25 @@ next_object:
     bne t1, t2, check_object
     addi a3, a3, 4
 
+    // The unwindowed path is still a single object-list traversal.
+    bltz t8, obj_finish_objects
+    nop
+
+obj_advance_segment:
+    // Move to the next visible W1 span. A value of 255 terminates the span list.
+    lbu t2, WIN_BOUNDS + 2(t8)
+    beq t2, 255, obj_windows_done
+    addi t8, t8, 2
+    b obj_window_segment
+    nop
+
+obj_windows_done:
+    // Restore this section's full scissor bounds before later layers render.
+    li a0, RDP_FILL
+    jal rdp_send
+    li a1, RDP_FILL + 16
+
+obj_finish_objects:
     // Update the object tile cache status when finished
     li a0, TILE_TABLE
     lw a1, CACHE_PTRS + 12

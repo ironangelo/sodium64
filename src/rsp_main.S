@@ -498,8 +498,12 @@ next_layer:
 
 
 draw_bg:
-    // ARCHITECTURE PROOF ONLY: omit regular tile BG rendering to measure how
-    // much RSP IMEM a Mode7-side variant/overlay could recover. Never merge.
+get_offsets:
+decode_tile4:
+decode_tile16:
+decode_tile256:
+    // ARCHITECTURE PROOF ONLY: aliases satisfy retained DMEM jump tables while
+    // regular tile BG rendering remains fully omitted. Never merge this stub.
     b next_layer
     nop
 

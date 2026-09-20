@@ -398,8 +398,8 @@ jobs:
           result = json.loads(Path('reference/analysis.json').read_text())
           classification = result['classification']
           print(f'Gate-C OBJ-window direct SNES reference: {classification}')
-          if classification != 'REFERENCE_CONFIRMS_CONTROL_3_TREATMENT_1':
-              raise SystemExit('direct SNES reference capture did not establish 3->1 semantics')
+          if classification != 'REFERENCE_CONFIRMS_OUTER_OBJ_MASK_2_TO_0':
+              raise SystemExit('direct SNES reference capture did not establish outer-OBJ 2->0 semantics')
           PY
 
       - name: Upload direct-SNES reference evidence

@@ -877,11 +877,9 @@ skip_upload:
     // Keep the inactive Mode 7 entry at an invariant, DMA-aligned offset.
     .align 3
 draw_mode7_entry:
-    // ARCHITECTURE PROOF ONLY: omit Mode 7 to measure how much RSP IMEM
-    // a future microcode split/overlay could recover. This branch is never a
-    // correctness/release candidate and must not be merged in this form.
-    b next_layer
-    or zero, zero, zero // semantic NOP; byte-distinct only inside fixed slot
+    // Fault stub: request the real Mode7 renderer only when dispatch needs it.
+    b overlay_load_mode7
+    or zero, zero, zero // semantic delay-slot NOP; twin remains unused here
 
 
 draw_obj:
@@ -1170,12 +1168,12 @@ skip_objdecode:
 
 
 next_frame:
-    // Preserve the original 16-byte footprint so every existing resident
-    // helper keeps its validated address; the loader itself is appended.
-    b self_swap
-    nop
-    nop
-    nop
+    // Halt until the next frame can be drawn. Renderer payload now persists
+    // until a fixed-entry fault stub requests the opposite overlay.
+    li t0, 0x2 // Set halt
+    mtc0 t0, COP0_SP_STATUS
+    b draw_frame
+    xori sp, sp, 4
 
 
 clear_cache:
@@ -1398,28 +1396,26 @@ ret_jump:
     jr ra
     nop
 
-
-// Gate-C architecture proof: replace only the fixed renderer slot from RSP
-// code while executing entirely outside that slot. The semantic-twin payloads
-// differ at one inert word, so this isolates self-DMA mechanics from rendering.
-self_swap:
-    andi t0, sp, 0x4
-    bnez t0, self_swap_main
-    nop
-    lw a1, OVERLAY_SWAP_SRC
-    b self_swap_selected
-    nop
-
-self_swap_main:
-    lw a1, OVERLAY_MAIN_SRC
-
-self_swap_selected:
+// Gate-C architecture proof: fault-driven renderer overlay loads execute
+// entirely from the resident suffix outside [0x3A8,0x790).
+overlay_load_mode7:
+    lw a1, OVERLAY_MODE7_SRC
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
+    lbu t0, OVERLAY_PROOF
+    ori t0, t0, 0x2
+    sb t0, OVERLAY_PROOF
+    b draw_mode7_entry
+    nop
 
-    // Preserve the pre-proof halt/resume contract exactly after DMA completion.
-    li t0, 0x2
-    mtc0 t0, COP0_SP_STATUS
-    b draw_frame
-    xori sp, sp, 4
+overlay_load_main:
+    lw a1, OVERLAY_MAIN_SRC
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    lbu t0, OVERLAY_PROOF
+    ori t0, t0, 0x1
+    sb t0, OVERLAY_PROOF
+    b draw_bg
+    move t0, v0

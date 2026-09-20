@@ -566,6 +566,7 @@ rsp_wait:
     // this proves binary replacement/ABI safety, not final BGMODE selection.
     andi t0, t5, 0x4
     beqz t0, rsp_reload_regular
+    nop
     la a1, rsp_mode7_text_start
     b rsp_reload_selected
     nop

@@ -561,10 +561,17 @@ rsp_wait:
     beqz t0, rsp_wait
     xori t6, t5, 0x4
 
-    // Gate-C architecture proof: reload the same complete IMEM image only while
-    // the RSP is halted. This isolates the safety of the runtime upload primitive;
-    // it does not yet select between regular and Mode7 renderer images.
+    // Gate-C architecture proof: alternate between two distinct IMEM images
+    // only while the RSP is halted. The queue bit is already frame-alternating;
+    // this proves binary replacement/ABI safety, not final BGMODE selection.
+    andi t0, t5, 0x4
+    beqz t0, rsp_reload_regular
+    la a1, rsp_mode7_text_start
+    b rsp_reload_selected
+    nop
+rsp_reload_regular:
     la a1, rsp_main_text_start
+rsp_reload_selected:
     jal rsp_upload
     li a0, 0x1000
 

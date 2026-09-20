@@ -73,20 +73,22 @@ Important rejected paths remain knowledge:
 
 Exit condition: **achieved**. M1 does not claim Gate B or complete SPC700 fidelity; it establishes a validated base-core performance architecture and a real-hardware native-frame result for the representative M1 workload.
 
-## Phase 3 — M2 / Gate B corpus discovery and next bottleneck — ACTIVE
+## Phase 3 — M2 / Gate B corpus discovery and hardware closure — ACHIEVED
 
-Goal: determine whether the recovered budget generalizes across representative ordinary SNES software and identify the first demonstrated blocker to Gate B.
+Goal: determine whether the recovered budget generalizes across representative ordinary SNES software and identify any remaining Gate-B performance blocker.
 
-Immediate route:
+Achieved evidence:
 
-1. define a small, versioned base-system corpus whose measured segments intentionally differ in CPU pressure, PPU/HDMA/Mode-7 behavior and audio activity;
-2. record ROM hash/region, checkpoint, deterministic or documented input sequence, expected progression, visual/audio expectations and measurement window for each entry;
-3. use ares/Mupen as filtering and differential laboratories, not N64 performance authority;
-4. take the fixed corpus to real N64 in **one milestone batch**, recording frame budget, settings, sample density, profile distribution and concrete audiovisual failures;
-5. keep failing entries in the corpus rather than changing membership to improve results;
-6. choose the next optimization or accuracy repair from the first measured gate blocker.
+1. the versioned base-system corpus converged on **Gothicvania + Space Rescue Squad + Nova the Squirrel 2**;
+2. SRS and Nova2 were rebuilt from pinned public source, assigned deterministic representative gameplay routes, and qualified against direct/reference semantics before hardware measurement;
+3. the valid ares decision laboratory was used only as a filter; real N64 remained performance authority;
+4. exact HW_PROFILE hardware builds forced frameskip `0`, APU `21`, audio `4`, precision `8`, with two warmup and five measured 60-VI windows;
+5. Gothicvania, SRS and Nova2 all completed **60/60 × 5** on real N64 hardware at their authoritative measurement stage;
+6. SRS and Nova2 hardware captures retained substantial VI wait/headroom, so neither exposed a new base-system throughput blocker.
 
-Possible next architectures remain evidence-dependent:
+Gate-B conclusion: **M2 / Gate B ACHIEVED.** The three workloads are now regression controls. No S-CPU/APU/DSP optimization, dynarec, or other major performance architecture is justified until a new measured workload demonstrates a real blocker.
+
+Possible future performance architectures remain evidence-dependent:
 
 - further APU/DSP work if another corpus entry demonstrates it as a blocker;
 - S-CPU interpreter fast paths or a 65C816-to-MIPS dynarec if recoverable S-CPU cost becomes gate-driving;
@@ -108,18 +110,19 @@ If the Gate-B corpus justifies a dynarec:
 - generate MIPS suitable for Sodium64's existing runtime rather than building a second portable emulator around it;
 - integrate only if representative savings justify the complexity.
 
-Exit condition: the corpus identifies the next real Gate-B blocker and a validated intervention materially reduces that blocker without regressing the achieved M1 workload.
+Exit condition: **achieved**. The defined Gate-B corpus sustains native cadence on real N64 with no required frameskip or APU underclocking; no remaining Gate-B performance blocker is demonstrated.
 
-## Phase 4 — base-system native-frame and fidelity convergence
+## Phase 4 — M3 / Gate C base-system fidelity and compatibility — ACTIVE
 
-Goal: convert isolated performance wins into a base SNES implementation that sustains correct native temporal cadence across a representative corpus.
+Goal: convert the achieved base-system performance headroom into broader SNES fidelity and compatibility without giving back native cadence.
 
-- frameskip remains `0` for target measurements;
-- APU/SPC700 remains full-rate;
-- audio synchronization and DSP timing remain correct enough for the validation corpus;
-- remove inherited timing/accuracy compromises as recovered budget allows;
-- expand PPU, DMA/HDMA, interrupt, memory and audio regression coverage;
-- validate meaningful milestones on real N64 hardware.
+- keep the achieved Gate-B workloads as regression controls at frameskip `0`, APU `21`, audio enabled and precision `8`;
+- reproduce and isolate the known **SMW iris/window/color-math** regression with deterministic/reference evidence;
+- reproduce and isolate the known **ALttP rain/tree layer-compositor** regression with deterministic/reference evidence;
+- remove inherited PPU/timing/accuracy compromises using controlled fixes rather than game-specific modes;
+- expand PPU, DMA/HDMA, interrupt, memory and audio regression coverage around each repaired behavior;
+- preserve SPC700/DSP timing and native cadence while accuracy work proceeds;
+- validate only milestone-level questions on real N64 hardware when host/emulator evidence cannot resolve them.
 
 Exit condition: representative ordinary SNES titles meet the native-frame target with no major visual/audio/gameplay regression and no manual per-game execution modes.
 
@@ -164,13 +167,13 @@ Goal: turn architectural success into an emulator that is pleasant and dependabl
 
 ## Current immediate batch
 
-**M1 integration and Gate-B corpus definition.**
+**M3 / Gate C fidelity isolation.**
 
-The validated M1 runtime is the corrected SPC700 timing foundation plus clobber-safe guest-cycle-bounded APU JIT. Do not resume Gothicvania FPS optimization: the real-N64 M1 capture is already **60/60 x5** and contains measurable frame/VI wait.
+Gate B is closed on real N64: Gothicvania, SRS and Nova2 all sustain **60/60 × 5** at Road-valid settings. Treat those workloads as regression controls, not as invitations for more FPS optimization.
 
-The durable SPC700 cycle proof protects the new architecture's key boundary: exact 32-cycle blocks, guest-access accounting, conditional runtime debit, cached replay and covered-tag invalidation. Its scope is deliberately bounded; observable dummy-read I/O effects and intra-block self-modifying code remain separate accuracy questions rather than reasons to turn validation tooling into a second project.
+The next technical batch is to reproduce the first known base-system fidelity failure with a deterministic/reference oracle, beginning with **SMW iris/window/color-math** and then **ALttP rain/tree layer-compositor** behavior. The purpose is to isolate the smallest incorrect PPU/compositor semantics, implement one controlled repair, and prove that the repair improves correctness without regressing Gate-B cadence or unrelated rendering.
 
-The next technical batch is to define the small base-system Gate-B corpus and discover the next blocker. No subsystem is preselected.
+Do not begin DSP-1, Super FX, or SA-1 implementation before the active Gate-C base-system fidelity blockers are characterized and the reusable cartridge-device boundary is ready to advance. Once Gate C reaches its exit condition, Phase 5 / Gate D becomes the path toward **DSP-1-family support (including Super Mario Kart)**, followed by **Super FX / Super FX 2 (including Star Fox and Yoshi's Island)** and then **SA-1**.
 
 The question for each batch remains: **does this move a Road-to-1.0 gate?** If a tool, profiler or architecture branch stops reducing a gate-relevant uncertainty, stop expanding it.
 

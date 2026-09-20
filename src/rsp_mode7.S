@@ -167,6 +167,16 @@ main:
     jal rdp_send
     li a1, RDP_FRAME
     li sp, 0 // Frame index
+    b draw_frame
+    nop
+
+// Common frame-boundary halt trampoline. Both renderer images keep this block
+// at the same address so a full IMEM swap cannot change the resume instruction.
+frame_halt:
+    li t0, 0x2 // Set halt
+    mtc0 t0, COP0_SP_STATUS
+    b draw_frame
+    xori sp, sp, 4
 
 draw_frame:
     // Set initial values for copying VRAM
@@ -1125,11 +1135,9 @@ skip_objdecode:
 
 
 next_frame:
-    // Halt until the next frame can be drawn
-    li t0, 0x2 // Set halt
-    mtc0 t0, COP0_SP_STATUS
-    b draw_frame
-    xori sp, sp, 4
+    // Enter the address-stable common halt trampoline before any IMEM swap.
+    b frame_halt
+    nop
 
 
 clear_cache:

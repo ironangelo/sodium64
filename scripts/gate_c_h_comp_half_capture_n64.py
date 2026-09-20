@@ -24,8 +24,8 @@ from gdb_rsp_dump import (  # noqa: E402
 )
 
 
-CONTROL = 0x02
-TREATMENT = 0x42
+CONTROL = 0x01
+TREATMENT = 0x41
 FB_WIDTH = 280
 FB_HEIGHT = 240
 FB_BYTES = FB_WIDTH * FB_HEIGHT * 2

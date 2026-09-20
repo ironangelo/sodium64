@@ -131,12 +131,13 @@ fillrec_mask: .word 0xFF000FFF
 ldblk_bits: .word 0x01000200
 mode7_mask: .word 0x0003FFFF
 
-// Gap to align vector data to the end of DMEM. Reserve two source
-// pointers explicitly so future scratch growth cannot silently overlap them.
+// Gap to align vector data to the end of DMEM. Reserve overlay metadata
+// explicitly so every renderer image has the same compiled DMEM ABI.
 .byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
 overlay_main_src: .word 0
-overlay_swap_src: .word 0
-.byte 0:(VEC_DATA - (OVERLAY_SWAP_SRC + 4))
+overlay_mode7_src: .word 0
+overlay_proof: .word 0
+.byte 0:(VEC_DATA - (OVERLAY_PROOF + 4))
 
 vec_data:
     // Constants that are always kept in vector registers

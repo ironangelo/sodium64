@@ -80,6 +80,7 @@ def wait_for_guest_freshness(
     poll_seconds: float,
     attempts: int,
     guest_frames_required: int = 3,
+    require_display_transition: bool = True,
 ) -> int:
     """Wait for guest NMI progress plus at least one displayed-buffer change.
 
@@ -134,12 +135,23 @@ def wait_for_guest_freshness(
             f"{guest_delta}/{guest_frames_required} "
             f"(counter=0x{counter:02X}, baseline=0x{baseline_counter:02X})"
         )
-        if guest_delta >= guest_frames_required and saw_pointer_transition:
+        display_ok = saw_pointer_transition or not require_display_transition
+        if guest_delta >= guest_frames_required and display_ok:
+            if not saw_pointer_transition:
+                print(
+                    f"phase 0x{target:02X} accepted state-only freshness "
+                    "without a displayed-buffer transition"
+                )
             return counter
 
+    if require_display_transition:
+        raise RuntimeError(
+            f"did not observe {guest_frames_required} fresh guest frames plus a "
+            f"displayed-buffer transition for phase 0x{target:02X}"
+        )
     raise RuntimeError(
-        f"did not observe {guest_frames_required} fresh guest frames plus a "
-        f"displayed-buffer transition for phase 0x{target:02X}"
+        f"did not observe {guest_frames_required} fresh guest frames "
+        f"for phase 0x{target:02X}"
     )
 
 
@@ -155,6 +167,7 @@ def capture_nonblank_phase(
     poll_seconds: float,
     attempts: int,
     allow_blank: bool = False,
+    allow_static_display: bool = False,
 ) -> dict[str, object]:
     wait_for_phase(
         client,
@@ -170,6 +183,7 @@ def capture_nonblank_phase(
         framebuffer_address=framebuffer_address,
         poll_seconds=poll_seconds,
         attempts=attempts,
+        require_display_transition=not allow_static_display,
     )
 
     # The control phase is already active during emulator startup, so a first
@@ -238,6 +252,7 @@ def main() -> int:
     parser.add_argument("--treatment-target", type=parse_int, default=TREATMENT)
     parser.add_argument("--capture-return-control", action="store_true")
     parser.add_argument("--allow-blank", action="store_true")
+    parser.add_argument("--allow-static-display", action="store_true")
     parser.add_argument(
         "--observe",
         action="append",
@@ -285,6 +300,7 @@ def main() -> int:
                 poll_seconds=args.poll_seconds,
                 attempts=args.attempts,
                 allow_blank=args.allow_blank,
+                allow_static_display=args.allow_static_display,
             )
 
         (args.output_dir / "state.json").write_text(

@@ -30,6 +30,8 @@ HEADER = 0x7FC0
 LOAD_ADDRESS = 0x8000
 GAMEPLAY_NMI_ADDRESS = 0x8100
 GAMEPLAY_NMI_OFFSET = GAMEPLAY_NMI_ADDRESS - LOAD_ADDRESS
+GAMEPLAY_WINDOW_NMI_ADDRESS = 0x8200
+GAMEPLAY_WINDOW_NMI_OFFSET = GAMEPLAY_WINDOW_NMI_ADDRESS - LOAD_ADDRESS
 GAMEPLAY_WINDOW_TABLE_ADDRESS = 0x9400
 
 
@@ -441,7 +443,7 @@ def workload_gameplay_window_hdma() -> bytes:
 
     # Place the NMI handler at a fixed address so the LoROM vectors are stable
     # and trivially testable. NOP padding is never executed in normal flow.
-    asm.pad_to(GAMEPLAY_NMI_OFFSET)
+    asm.pad_to(GAMEPLAY_WINDOW_NMI_OFFSET)
     asm.label("nmi")
 
     # Preserve the registers touched by the frame handler and acknowledge NMI.
@@ -493,8 +495,8 @@ def workload_gameplay_window_hdma() -> bytes:
     asm.emit(0x7A, 0xFA, 0x68, 0x40)        # PLY; PLX; PLA; RTI
 
     program = asm.finish()
-    if asm.labels["nmi"] != GAMEPLAY_NMI_OFFSET:
-        raise ValueError("gameplay NMI handler moved away from its fixed vector")
+    if asm.labels["nmi"] != GAMEPLAY_WINDOW_NMI_OFFSET:
+        raise ValueError("gameplay-window-hdma NMI handler moved away from its fixed vector")
     return program
 
 
@@ -551,12 +553,15 @@ def build_rom(name: str) -> bytes:
     for offset in (0x7FF4, 0x7FF6, 0x7FF8, 0x7FFA, 0x7FFC, 0x7FFE):
         write_vector(rom, offset, LOAD_ADDRESS)
 
-    if name in ("gameplay-balanced", "gameplay-window-hdma"):
+    if name == "gameplay-balanced":
         # The workload enables NMI only after entering native mode and finishing
         # startup. Set both vectors defensively; the native vector is the one
         # used during the measured frame loop.
         write_vector(rom, 0x7FEA, GAMEPLAY_NMI_ADDRESS)
         write_vector(rom, 0x7FFA, GAMEPLAY_NMI_ADDRESS)
+    elif name == "gameplay-window-hdma":
+        write_vector(rom, 0x7FEA, GAMEPLAY_WINDOW_NMI_ADDRESS)
+        write_vector(rom, 0x7FFA, GAMEPLAY_WINDOW_NMI_ADDRESS)
 
     # For a checksum/complement pair where the words XOR to $FFFF, the four
     # checksum bytes always contribute $1FE to the byte sum.

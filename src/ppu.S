@@ -567,33 +567,11 @@ rsp_wait:
     beqz t0, rsp_wait
     xori t6, t5, 0x4
 
-    // Gate-C self-overlay proof: the RSP performed the slot DMA before
-    // halting. The CPU only observes the discriminator word and records which
-    // byte-distinct payloads have actually appeared in IMEM.
-    lw t0, 0xA400178C
-    beqz t0, rsp_slot_observed_regular
-    nop
-    li t1, 0x25
-    beq t0, t1, rsp_slot_observed_swap
-    nop
-
-rsp_slot_verify_fail:
-    lbu t0, rsp_slot_proof
-    ori t0, t0, 0x80
-    sb t0, rsp_slot_proof
-    b rsp_slot_verify_done
-    nop
-
-rsp_slot_observed_regular:
-    lbu t0, rsp_slot_proof
-    ori t0, t0, 0x1
-    sb t0, rsp_slot_proof
-    b rsp_slot_verify_done
-    nop
-
-rsp_slot_observed_swap:
-    lbu t0, rsp_slot_proof
-    ori t0, t0, 0x2
+    // Gate-C real-renderer overlay proof: RSP fault loaders set bit0 after a
+    // completed regular-slot DMA and bit1 after a completed Mode7-slot DMA.
+    // Mirror the raw byte for the diagnostic harness; exactly 0x03 means both
+    // demand-driven directions have actually completed at least once.
+    lbu t0, DMEM(OVERLAY_PROOF)
     sb t0, rsp_slot_proof
 
 rsp_slot_verify_done:

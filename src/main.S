@@ -28,6 +28,7 @@
 .globl frame_count
 
 .globl _start
+.globl rsp_upload
 
 .data
 

@@ -31,6 +31,18 @@ def analyze_capture(capture: dict[str, object]) -> dict[str, object]:
     probe = [int(x) for x in capture.get("probe_bytes", [])]
     expected_probe = list(range(VISIBLE_LINES))
     probe_matches = probe == expected_probe
+    probe_mismatches = [
+        {"index": index, "expected": expected, "actual": actual}
+        for index, (expected, actual) in enumerate(zip(expected_probe, probe))
+        if actual != expected
+    ]
+    if len(probe) != len(expected_probe):
+        for index in range(min(len(probe), len(expected_probe)), max(len(probe), len(expected_probe))):
+            probe_mismatches.append({
+                "index": index,
+                "expected": expected_probe[index] if index < len(expected_probe) else None,
+                "actual": probe[index] if index < len(probe) else None,
+            })
     precision = int(capture.get("precision_set", -1))
     frame_counter = int(capture.get("frame_counter", 0))
 
@@ -65,6 +77,11 @@ def analyze_capture(capture: dict[str, object]) -> dict[str, object]:
         "frame_counter": frame_counter,
         "precision_set": precision,
         "probe_matches_0_to_223": probe_matches,
+        "probe_length": len(probe),
+        "probe_mismatch_count": len(probe_mismatches),
+        "probe_mismatches_first_32": probe_mismatches[:32],
+        "probe_head_32": probe[:32],
+        "probe_tail_32": probe[-32:] if probe else [],
         "final_section_seen": final_seen,
         "record_count": len(records),
         "unique_wh0_count": len(unique_wh0),

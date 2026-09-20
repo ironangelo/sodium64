@@ -160,14 +160,15 @@ pi_wait1:
     jal rsp_upload
     li a0, 0x0000 // DMEM address
 
-    // Gate-C self-overlay proof: publish the two aligned renderer-slot sources
-    // after boot DMEM upload and before the RSP starts executing.
+    // Gate-C real-renderer overlay proof: publish aligned regular and Mode7
+    // slot sources after boot DMEM upload and clear the RSP-side proof bits.
     la t0, rsp_main_text_start
     addi t0, t0, 0x3A8
     sw t0, DMEM(OVERLAY_MAIN_SRC)
-    la t0, rsp_swap_text_start
+    la t0, rsp_mode7_text_start
     addi t0, t0, 0x3A8
-    sw t0, DMEM(OVERLAY_SWAP_SRC)
+    sw t0, DMEM(OVERLAY_MODE7_SRC)
+    sw zero, DMEM(OVERLAY_PROOF)
 
     sw zero, 0xA4080000 // SP_PC
 

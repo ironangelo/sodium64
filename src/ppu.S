@@ -22,6 +22,7 @@
 .globl ppu_event
 .globl section_init
 .globl menu_return
+.globl rsp_slot_proof
 .globl read_mpyl
 .globl read_mpym
 .globl read_mpyh
@@ -185,6 +186,11 @@ section_vals: .word 0x000401, 0x010801, 0x021001, 0x000400, 0x000200, 0x000100
 .align 4
 vram_funcs: .word 0, vram_trans8, vram_trans9, vram_trans10 // VRAM address translation functions
 vram_incrs: .byte 1, 32, 128, 128 // VRAM access address increments
+
+// Gate-C proof-only bitmask: bit0 regular slot read back, bit1 swap slot
+// read back, bit7 any readback mismatch. Kept outside the 0x40 section block.
+.align 4
+rsp_slot_proof: .byte 0
 
 .text
 .set noreorder
@@ -577,6 +583,35 @@ rsp_slot_selected:
     jal rsp_upload_slot
     li a0, 0x13A8
 
+    // Prove that the byte-distinct payload actually reached IMEM. The only
+    // intended twin difference is the last word of the fixed slot at 0x178C:
+    // regular assembler nop = 0x00000000, swap semantic NOP = 0x00000025.
+    andi t2, t5, 0x4
+    lw t0, 0xA400178C
+    beqz t2, rsp_slot_verify_regular
+    nop
+    li t1, 0x25
+    bne t0, t1, rsp_slot_verify_fail
+    nop
+    lbu t0, rsp_slot_proof
+    ori t0, t0, 0x2
+    b rsp_slot_verify_done
+    sb t0, rsp_slot_proof
+
+rsp_slot_verify_regular:
+    bnez t0, rsp_slot_verify_fail
+    nop
+    lbu t0, rsp_slot_proof
+    ori t0, t0, 0x1
+    b rsp_slot_verify_done
+    sb t0, rsp_slot_proof
+
+rsp_slot_verify_fail:
+    lbu t0, rsp_slot_proof
+    ori t0, t0, 0x80
+    sb t0, rsp_slot_proof
+
+rsp_slot_verify_done:
     // Update the software-rendered UI
     lw a0, DMEM(FRAMEBUFFER)(t6)
     j update_menu

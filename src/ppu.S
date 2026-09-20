@@ -595,16 +595,18 @@ rsp_slot_selected:
     nop
     lbu t0, rsp_slot_proof
     ori t0, t0, 0x2
-    b rsp_slot_verify_done
     sb t0, rsp_slot_proof
+    b rsp_slot_verify_done
+    nop
 
 rsp_slot_verify_regular:
     bnez t0, rsp_slot_verify_fail
     nop
     lbu t0, rsp_slot_proof
     ori t0, t0, 0x1
-    b rsp_slot_verify_done
     sb t0, rsp_slot_proof
+    b rsp_slot_verify_done
+    nop
 
 rsp_slot_verify_fail:
     lbu t0, rsp_slot_proof

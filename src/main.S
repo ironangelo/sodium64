@@ -29,6 +29,7 @@
 
 .globl _start
 .globl rsp_upload
+.globl rsp_upload_slot
 
 .data
 
@@ -179,11 +180,21 @@ pi_wait1:
 
 .align 5
 rsp_upload: // a0: RSP address, a1: DRAM address
-    // Transfer data to the RSP via DMA
+    // Transfer the full 4 KiB RSP image via DMA
     lui t0, 0xA404 // SP register upper address
     sw a0, 0x0000(t0) // SP_MEM_ADDR
     sw a1, 0x0004(t0) // SP_DRAM_ADDR
-    li t1, 0x00000FFF // Data size
+    li t1, 0x00000FFF // 4096 bytes - 1
+    sw t1, 0x0008(t0) // SP_RD_LEN
+    b dma_wait
+    nop
+
+rsp_upload_slot: // a0: aligned IMEM address, a1: aligned DRAM slot address
+    // Gate-C fixed renderer slot: [0x3A8,0x790) = 1000 bytes.
+    lui t0, 0xA404 // SP register upper address
+    sw a0, 0x0000(t0) // SP_MEM_ADDR
+    sw a1, 0x0004(t0) // SP_DRAM_ADDR
+    li t1, 0x000003E7 // 1000 bytes - 1
     sw t1, 0x0008(t0) // SP_RD_LEN
 
 dma_wait:

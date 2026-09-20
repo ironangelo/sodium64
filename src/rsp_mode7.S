@@ -503,10 +503,10 @@ get_offsets:
 decode_tile4:
 decode_tile16:
 decode_tile256:
-    // ARCHITECTURE PROOF ONLY: aliases satisfy retained DMEM jump tables while
-    // regular tile BG rendering remains fully omitted. Never merge this stub.
-    b next_layer
-    nop
+    // Fault stub: regular BG state has live t0. Preserve it across resident
+    // dma_read in v0, then the loader restores it before re-entering draw_bg.
+    b overlay_load_main
+    move v0, t0
 
 
 draw_mode7_impl:
@@ -1359,3 +1359,27 @@ rdp_send: // a0: start address, a1: end address
 ret_jump:
     jr ra
     nop
+
+// Gate-C architecture proof: fault-driven renderer overlay loads execute
+// entirely from the resident suffix outside [0x3A8,0x790).
+overlay_load_mode7:
+    lw a1, OVERLAY_MODE7_SRC
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    lbu t0, OVERLAY_PROOF
+    ori t0, t0, 0x2
+    sb t0, OVERLAY_PROOF
+    b draw_mode7_entry
+    nop
+
+overlay_load_main:
+    lw a1, OVERLAY_MAIN_SRC
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    lbu t0, OVERLAY_PROOF
+    ori t0, t0, 0x1
+    sb t0, OVERLAY_PROOF
+    b draw_bg
+    move t0, v0

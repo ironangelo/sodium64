@@ -1,0 +1,291 @@
+name: Gate C Mode7 Midframe Overlay
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-rsp-overlay-clean-midframe-validation
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-mode7-midframe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diagnostic-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate mid-frame Mode7 generator
+        run: python3 scripts/test_gate_c_mode7_midframe.py -v
+
+      - name: Generate deterministic original SNES diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_mode7_midframe.py diagnostic/gate-c-mode7-midframe.smc \
+            | tee diagnostic/generator.log
+          sha256sum diagnostic/gate-c-mode7-midframe.smc | tee diagnostic/sha256.txt
+
+          cat > diagnostic/MANIFEST.txt <<EOF
+          purpose=Gate C clean visible mid-frame regular-Mode7-regular regression
+          diagnostic_source_sha=$GITHUB_SHA
+          pretest_bgmode=0x01
+          midframe_bgmode=0x07
+          final_bgmode=0x01
+          pretest_frames=30
+          irq1_line=80
+          irq2_line=160
+          oracle=two V-count IRQs in same NMI interval + clean final slot + continued framebuffer publication
+          pixel_semantics=not_authoritative
+          EOF
+
+      - name: Upload original diagnostic artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-mode7-midframe-diagnostic
+          retention-days: 30
+          path: |
+            diagnostic/gate-c-mode7-midframe.smc
+            diagnostic/MANIFEST.txt
+            diagnostic/generator.log
+            diagnostic/sha256.txt
+
+  sodium64-n64-semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    needs:
+      - diagnostic-build
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Run mid-frame Mode7 host tests
+        run: python3 scripts/test_gate_c_mode7_midframe.py -v
+
+      - name: Build exact Sodium64 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Generate and wrap exact original diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workload
+          python3 scripts/make_gate_c_mode7_midframe.py workload/gate-c-mode7-midframe.smc \
+            | tee workload/generator.log
+
+          mkdir -p wrap
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp workload/gate-c-mode7-midframe.smc wrap/gate-c-mode7-midframe.smc
+          (
+            cd wrap
+            python3 rom-converter.py </dev/null
+          )
+          test -s wrap/out/gate-c-mode7-midframe.z64
+
+          dd if=wrap/out/gate-c-mode7-midframe.z64 of=workload/embedded.smc \
+            bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          cmp workload/gate-c-mode7-midframe.smc workload/embedded.smc
+          rm workload/embedded.smc
+
+      - name: Locate Sodium64 and guest diagnostic state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          wram=$(symbol wram)
+          framebuffer=$(symbol framebuffer)
+          bg_mode=$(symbol bg_mode)
+          frame_count=$(symbol frame_count)
+          for value in "$wram" "$framebuffer" "$bg_mode" "$frame_count"; do
+            test -n "$value"
+          done
+
+          addr() { printf '%08x' "$((0x$wram + $1))"; }
+          phase=$(addr 1)
+          irq_count=$(addr 2)
+          guest_mode=$(addr 3)
+          test_done=$(addr 4)
+          irq1_frame=$(addr 5)
+          irq2_frame=$(addr 6)
+
+          {
+            echo "PHASE_ADDR=0x$phase"
+            echo "FRAMEBUFFER_ADDR=0x$framebuffer"
+            echo "BG_MODE_ADDR=0x$bg_mode"
+            echo "FRAME_COUNT_ADDR=0x$frame_count"
+            echo "IRQ_COUNT_ADDR=0x$irq_count"
+            echo "GUEST_MODE_ADDR=0x$guest_mode"
+            echo "TEST_DONE_ADDR=0x$test_done"
+            echo "IRQ1_FRAME_ADDR=0x$irq1_frame"
+            echo "IRQ2_FRAME_ADDR=0x$irq2_frame"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            git \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Capture pre-test and post-test mid-frame state
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          home="$RUNNER_TEMP/ares-home-gate-c-mode7-midframe"
+          settings="$RUNNER_TEMP/ares-gate-c-mode7-midframe-settings.bml"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9140" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              wrap/out/gate-c-mode7-midframe.z64 \
+              > captures/ares-n64.log 2>&1 &
+          ares_pid=$!
+
+          cleanup() {
+            kill "$ares_pid" 2>/dev/null || true
+            wait "$ares_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          python3 scripts/gate_c_obj_window_capture_n64.py \
+            --port 9140 \
+            --phase-address "$PHASE_ADDR" \
+            --framebuffer-address "$FRAMEBUFFER_ADDR" \
+            --control-target 0x01 \
+            --treatment-target 0x33 \
+            --allow-blank \
+            --allow-static-display \
+            --observe "bg_mode:$BG_MODE_ADDR:1" \
+            --observe "frame_count:$FRAME_COUNT_ADDR:1" \
+            --observe "slot_word:0xA40013A8:4" \
+            --observe "irq_count:$IRQ_COUNT_ADDR:1" \
+            --observe "guest_mode:$GUEST_MODE_ADDR:1" \
+            --observe "test_done:$TEST_DONE_ADDR:1" \
+            --observe "irq1_frame:$IRQ1_FRAME_ADDR:1" \
+            --observe "irq2_frame:$IRQ2_FRAME_ADDR:1" \
+            --output-dir captures
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          state = json.loads(Path('captures/state.json').read_text())
+          control = state['control']
+          post = state['treatment']
+
+          assert control['phase'] == 0x01, state
+          assert control['bg_mode'] == 0x01, state
+          assert control['guest_mode'] == 0x01, state
+          assert control['irq_count'] == 0, state
+          assert control['test_done'] == 0, state
+          assert control['slot_word'] == 0x91670E64, state
+          assert control['guest_frame_counter'] < 30, state
+
+          assert post['phase'] == 0x33, state
+          assert post['bg_mode'] == 0x01, state
+          assert post['guest_mode'] == 0x01, state
+          assert post['irq_count'] == 2, state
+          assert post['test_done'] == 1, state
+          assert post['irq1_frame'] == 30, state
+          assert post['irq2_frame'] == 30, state
+          assert post['irq1_frame'] == post['irq2_frame'], state
+          assert post['slot_word'] == 0x91670E64, state
+          assert post['framebuffer'] != control['framebuffer'], state
+
+          print(
+              'Gate-C clean Mode7 mid-frame PASS: '
+              f"irq_count={post['irq_count']} "
+              f"irq_frames={post['irq1_frame']}/{post['irq2_frame']} "
+              f"final_slot=0x{post['slot_word']:08X} "
+              f"framebuffer=0x{post['framebuffer']:08X} "
+              f"guest_counter={post['guest_frame_counter']}"
+          )
+          PY
+
+      - name: Upload mid-frame Mode7 overlay evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-mode7-midframe-sodium64-evidence
+          retention-days: 30
+          path: |
+            captures/
+            ares-version.txt
+            sodium64-build.log
+            workload/generator.log

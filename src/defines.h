@@ -208,7 +208,8 @@
 #define WIN_BOUNDS (PRIO_CHECKS + 0x8)
 // Gate-C overlay metadata lives in the audited scratch gap before vector data.
 #define OVERLAY_MAIN_SRC 0xE90
-#define OVERLAY_SWAP_SRC 0xE94
+#define OVERLAY_MODE7_SRC 0xE94
+#define OVERLAY_PROOF 0xE98
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached

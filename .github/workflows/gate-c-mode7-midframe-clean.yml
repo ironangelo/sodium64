@@ -267,14 +267,14 @@ jobs:
           assert post['irq2_frame'] == 30, state
           assert post['irq1_frame'] == post['irq2_frame'], state
           assert post['slot_word'] == 0x91670E64, state
-          assert post['framebuffer'] != control['framebuffer'], state
+          assert post['framebuffer_pointer'] != control['framebuffer_pointer'], state
 
           print(
               'Gate-C clean Mode7 mid-frame PASS: '
               f"irq_count={post['irq_count']} "
               f"irq_frames={post['irq1_frame']}/{post['irq2_frame']} "
               f"final_slot=0x{post['slot_word']:08X} "
-              f"framebuffer=0x{post['framebuffer']:08X} "
+              f"framebuffer=0x{post['framebuffer_pointer']:08X} "
               f"guest_counter={post['guest_frame_counter']}"
           )
           PY

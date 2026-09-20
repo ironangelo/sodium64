@@ -140,8 +140,9 @@ jobs:
           whx=$(symbol whx)
           tm=$(symbol tm)
           ts=$(symbol ts)
+          rsp_slot_proof=$(symbol rsp_slot_proof)
 
-          for value in "$wram" "$framebuffer" "$tmw" "$wobjsel" "$whx" "$tm" "$ts"; do
+          for value in "$wram" "$framebuffer" "$tmw" "$wobjsel" "$whx" "$tm" "$ts" "$rsp_slot_proof"; do
             test -n "$value"
           done
 
@@ -154,6 +155,7 @@ jobs:
             echo "WHX_ADDR=0x$whx"
             echo "TM_ADDR=0x$tm"
             echo "TS_ADDR=0x$ts"
+            echo "RSP_SLOT_PROOF_ADDR=0x$rsp_slot_proof"
           } | tee -a "$GITHUB_ENV"
 
       - name: Install pinned ares dependencies
@@ -243,6 +245,7 @@ jobs:
             --observe "whx:$WHX_ADDR:4" \
             --observe "tm:$TM_ADDR:1" \
             --observe "ts:$TS_ADDR:1" \
+            --observe "rsp_slot_proof:$RSP_SLOT_PROOF_ADDR:1" \
             --output-dir captures
 
           python3 scripts/gate_c_obj_window_analyze_fb.py \
@@ -271,6 +274,7 @@ jobs:
           for phase in ('control', 'treatment'):
               for key, expected in expected_common.items():
                   assert state[phase][key] == expected, (phase, key, state)
+              assert state[phase]['rsp_slot_proof'] == 0x03, (phase, state)
 
           classification = analysis['classification']
           if classification.startswith('INDETERMINATE'):

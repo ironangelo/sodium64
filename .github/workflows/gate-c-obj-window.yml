@@ -3,7 +3,7 @@ name: Gate C OBJ Window Diagnostic
 on:
   push:
     branches:
-      - phase4/gate-c-rsp-partial-slot-proof
+      - phase4/gate-c-rsp-self-overlay-proof
   workflow_dispatch:
 
 permissions:

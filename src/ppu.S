@@ -561,13 +561,13 @@ rsp_wait:
     beqz t0, rsp_wait
     xori t6, t5, 0x4
 
-    // Gate-C architecture proof: alternate between two distinct IMEM images
+    // Gate-C architecture proof: alternate between two byte-distinct, semantically equivalent IMEM images
     // only while the RSP is halted. The queue bit is already frame-alternating;
-    // this proves binary replacement/ABI safety, not final BGMODE selection.
+    // this isolates binary replacement/ABI safety without changing renderer semantics.
     andi t0, t5, 0x4
     beqz t0, rsp_reload_regular
     nop
-    la a1, rsp_mode7_text_start
+    la a1, rsp_swap_text_start
     b rsp_reload_selected
     nop
 rsp_reload_regular:

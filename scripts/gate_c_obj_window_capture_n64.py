@@ -154,6 +154,7 @@ def capture_nonblank_phase(
     output_dir: Path,
     poll_seconds: float,
     attempts: int,
+    allow_blank: bool = False,
 ) -> dict[str, object]:
     wait_for_phase(
         client,
@@ -195,7 +196,7 @@ def capture_nonblank_phase(
             raise RuntimeError(f"unexpected framebuffer pointer 0x{fb_pointer:08X}")
         raw = client.read_memory(fb_pointer, FB_BYTES, 0x400)
 
-        if any(raw) and read_u(client, phase_address, 1) == target:
+        if (allow_blank or any(raw)) and read_u(client, phase_address, 1) == target:
             output_dir.mkdir(parents=True, exist_ok=True)
             (output_dir / f"{name}.rgba5551").write_bytes(raw)
 
@@ -236,6 +237,7 @@ def main() -> int:
     parser.add_argument("--control-target", type=parse_int, default=CONTROL)
     parser.add_argument("--treatment-target", type=parse_int, default=TREATMENT)
     parser.add_argument("--capture-return-control", action="store_true")
+    parser.add_argument("--allow-blank", action="store_true")
     parser.add_argument(
         "--observe",
         action="append",
@@ -282,6 +284,7 @@ def main() -> int:
                 output_dir=args.output_dir,
                 poll_seconds=args.poll_seconds,
                 attempts=args.attempts,
+                allow_blank=args.allow_blank,
             )
 
         (args.output_dir / "state.json").write_text(

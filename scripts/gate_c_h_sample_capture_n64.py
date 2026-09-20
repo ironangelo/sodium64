@@ -60,6 +60,12 @@ def main() -> int:
     parser.add_argument("--section-ptr-address", required=True, type=parse_int)
     parser.add_argument("--queue-id-address", required=True, type=parse_int)
     parser.add_argument("--precision-address", required=True, type=parse_int)
+    parser.add_argument(
+        "--force-precision",
+        type=parse_int,
+        choices=(0, 4, 8, 12, 16, 20),
+        help="optional diagnostic-only precision_set byte to patch before guest execution",
+    )
     parser.add_argument("--cur-line-address", required=True, type=parse_int)
     parser.add_argument("--whx-address", required=True, type=parse_int)
     parser.add_argument("--cooldown-address", required=True, type=parse_int)
@@ -81,6 +87,18 @@ def main() -> int:
 
         initial = client.request("?")
         print(f"Initial target state: {initial.decode('ascii', errors='replace')}")
+
+        initial_precision = read_uint(client, args.precision_address, 1)
+        print(f"Initial precision_set: {initial_precision}")
+        if args.force_precision is not None:
+            client.write_memory(args.precision_address, bytes([args.force_precision]))
+            forced = read_uint(client, args.precision_address, 1)
+            if forced != args.force_precision:
+                raise RuntimeError(
+                    f"precision patch failed: expected {args.force_precision}, got {forced}"
+                )
+            print(f"Forced precision_set={forced} before guest execution")
+
         validate_stop(
             client.continue_then_interrupt(args.warmup_seconds),
             "H-SAMPLE warmup stop",
@@ -114,6 +132,8 @@ def main() -> int:
             "completed_queue_index": completed_index,
             "completed_queue_base": completed_base,
             "queue_id": read_uint(client, args.queue_id_address, 1),
+            "initial_precision_set": initial_precision,
+            "forced_precision_set": args.force_precision,
             "precision_set": read_uint(client, args.precision_address, 1),
             "cur_line": read_uint(client, args.cur_line_address, 2),
             "live_wh0": read_uint(client, args.whx_address, 1),

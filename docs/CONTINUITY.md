@@ -2,7 +2,9 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
-## RESUME HERE — current audited state (2026-09-19 UTC)
+## RESUME HERE — current audited state (2026-09-20 UTC)
+
+- **2026-09-20 Gate-C read-only audit / batch A1 persisted — IN PROGRESS:** audited `master@9441818dd8457a27bbd617a0f32c6d484550661f`, starting `continuity@1914269d0279e50787c6a49536fd9d10c08976dd`. M0/M1/M2 achieved; M3/Gate C active. Exact-head Build and Validate 35483428361 and Ares Profile Validation 35483428330 succeeded; no open PRs at inspection. Source inspection finds explicit window-2/combination and OBJ-window omissions, combined TMW/TSW, and a backdrop-only color-window workaround in the RSP→RDP renderer. These are **SUPPORTED INTERPRETATION of implementation gaps**, not a measured explanation of Iron's SMW/ALttP observations. No commercial ROM, new runtime experiment, implementation or workflow change. See “Gate-C audit 2026-09-20 — batch A1” below. Next: verify public SMW iris register use and SNES reference semantics, then save the next batch.
 
 - **Road convergence checkpoint — M2/Gate B closed, M3/Gate C active and canonical docs synchronized:** `master@9441818dd8457a27bbd617a0f32c6d484550661f`. `ROAD_TO_1_0.md` marks M0/M1/M2 achieved and M3/Gate C active; `ROADMAP.md` now also marks Phase 3 / Gate B **ACHIEVED** and Phase 4 / Gate C **ACTIVE**. These master changes are documentation-only; no emulator/runtime source changed. The three Gate-B workloads are regression controls. Immediate Gate-C direction: reproduce and isolate the known **SMW iris/window/color-math** and **ALttP rain/tree layer-compositor** fidelity failures using deterministic/reference evidence before touching performance architecture again. After Gate C, the route remains Gate D / DSP-1-family (including Super Mario Kart), then Super FX / Super FX 2 (including Star Fox and Yoshi's Island), then SA-1.
 
@@ -6806,3 +6808,27 @@ Representative v5 therefore uses more of the lab frame budget than the rejected 
 - Retain old Right+Run SRS as a collision/regression probe only.
 - Retain v5 as the representative SRS compatibility/throughput workload.
 - **Immediate Gate-B action:** move to Nova2 gameplay audition using its already-resolved source-build authority `phase3/gate-b-nova2-audition@156b928191c130f13a19868e634c519647d91d59` / run `35410418476 SUCCESS`. Do not redo Pillow/source-build work. The next optimization target should be selected only if Nova2 or another representative workload exposes a real throughput or semantic failure.
+
+## Gate-C audit 2026-09-20 — batch A1: canonical state and first source findings
+
+**Scope / authorization:** only this file on branch `continuity` may change. This checkpoint is partial by design so an interrupted audit leaves useful evidence. No emulator/core/runtime/master/workflow edits, technical PRs, commercial-ROM downloads or lab experiments.
+
+### Canonical state and evidence boundaries
+- **VALIDATED (repository inspection):** master `9441818dd8457a27bbd617a0f32c6d484550661f`; initial continuity `1914269d0279e50787c6a49536fd9d10c08976dd`. Read this file and master ROAD_TO_1_0, ROADMAP, PROFILING, VALIDATION. Both roadmap authorities close M2/Gate B and activate M3/Gate C. Comparison from `ac1ce74740d974b70206fcb6ba842e492b5d7272` to audited master changes only ROADMAP and ROAD_TO_1_0. No open PRs at inspection.
+- Exact-head public CI: [Build and Validate 35483428361](https://github.com/ironangelo/sodium64/actions/runs/35483428361), [Ares Profile Validation 35483428330](https://github.com/ironangelo/sodium64/actions/runs/35483428330), both success. This is not proof of PPU correctness.
+- **MEASURED (inherited hardware evidence, not remeasured/redecoded in this audit):** the prior canonical checkpoint records Gothicvania, SRS and Nova2 each 60/60 ×5 with frameskip 0, APU21, audio enabled, precision8. Preserve exact workload identities and captures above. No reason to repeat Gate B merely because Gate C begins. The milestone covers those workloads, not all titles/effects or full audio/PPU fidelity.
+- **Documentation discrepancy:** PROFILING still contains an older post-M1/next-Gate-B framing. ROAD_TO_1_0, ROADMAP and the newest hardware checkpoint supersede that milestone framing. Older “hardware pending” bullets lower in RESUME HERE are historical, superseded by the achieved checkpoint above; they do not reopen M2.
+- **LAB LIMITATION:** no commercial SMW/ALttP asset or deterministic reproduction is available here. All new findings so far are static inspection.
+
+### Code findings at the exact audited master
+Permalinks below pin the audited source; line ranges are locator hints.
+1. **SUPPORTED INTERPRETATION — incomplete window boolean semantics:** [src/rsp_main.S, calc_windows, L1503–1542](https://github.com/ironangelo/sodium64/blob/9441818dd8457a27bbd617a0f32c6d484550661f/src/rsp_main.S#L1503-L1542) explicitly TODOs window 2 and combine logic. Only nibble values 2/3 select window1 normal/inverted; every other value falls through win_none. WH2/WH3 and WBGLOG/WOBJLOG are not consumed by this routine. This proves unsupported states, not that SMW iris uses those unsupported states.
+2. **SUPPORTED INTERPRETATION — layer masks lose main/sub independence:** BG path [rsp_main.S L620–642](https://github.com/ironangelo/sodium64/blob/9441818dd8457a27bbd617a0f32c6d484550661f/src/rsp_main.S#L620-L642) ORs TMW and TSW before testing a BG. Hardware masks must be selected separately for the main/sub candidate. A TODO acknowledges the combination shortcut.
+3. **SUPPORTED INTERPRETATION — OBJ windows omitted:** `draw_obj`, rsp_main.S L1204–1209 explicitly TODOs object windows and only checks the screen layer-enable bit before rendering sprites.
+4. **SUPPORTED INTERPRETATION — color math is a backdrop approximation, not a full compositor:** `not_blank/fill_main/fill_win/fill_notwin`, rsp_main.S L382–416 uses CGADSUB bit5 and CGWSEL bits4–5 to choose fills. The source says “Fill backdrop based on math window settings so SMW transitions work” and TODOs proper color math. L469–478 flattens TM/TS into ordered passes with shared layers on top; this cannot generally represent two independently selected source pixels and SNES add/subtract/half. Need reference comparison before proposing a specific correction.
+5. **SUPPORTED INTERPRETATION — scanline state can be coalesced:** `ppu_event/run_line`, ppu.S L193–246 uses dirty state plus cooldown before `make_section`; precision8 selects an adaptive cooldown, not an unconditional snapshot on each HDMA change. `make_section/section_init` L353–407 copies 64-byte PPU sections. Whether this contributes to the observed iris is **HYPOTHESIS**, not measured timing error.
+6. **SUPPORTED INTERPRETATION — source ownership matters:** R4300 executes CPU/DMA/PPU event handling and packs state; RSP decodes/caches tiles and emits RDP commands; RDP rasterizes/composes into a single target framebuffer. Do not describe RSP as the sole pixel compositor or assume R4300 currently performs full SNES color math.
+7. Further risks to verify: frame-end palette/VRAM snapshot, bounded OAM snapshots, window endpoint conventions, priority shortcuts. Preserve these as separate candidates instead of forcing one shared cause.
+
+### Next audit batch
+Trace reference window/color arithmetic semantics and public SMW transition routines; classify which missing features SMW actually requests. Investigate ALttP source separately. First future experiment must isolate one major uncertainty with original diagnostic assets and stable register state before adding HDMA; **do not implement or run it during this audit**.

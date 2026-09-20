@@ -54,15 +54,23 @@ def analyze_frame(path: Path) -> dict[str, object]:
     width, height = image.size
     pix = list(image.getdata())
 
-    green_mask = [g >= 140 and r <= 120 and b <= 120 and g > r * 1.5 and g > b * 1.5 for r, g, b in pix]
-    red_mask = [r >= 140 and g <= 120 and b <= 120 and r > g * 1.5 and r > b * 1.5 for r, g, b in pix]
+    green_mask = [
+        g >= 140 and r <= 120 and b <= 120 and g > r * 1.5 and g > b * 1.5
+        for r, g, b in pix
+    ]
+    red_mask = [
+        r >= 140 and g <= 120 and b <= 120 and r > g * 1.5 and r > b * 1.5
+        for r, g, b in pix
+    ]
 
     green = components(green_mask, width, height, min_area=500)
     if not green:
         return {"path": str(path), "status": "NO_GREEN_VIEWPORT", "red_component_count": None}
     main_green = max(green, key=lambda c: c["area"])
 
-    # The diagnostic's visible BG window is exactly 128 SNES pixels wide.
+    # The visible BG window is 128 SNES pixels wide. The center diagnostic OBJ
+    # lies behind opaque BG1 at the chosen priority, so the useful oracle is the
+    # two *outer* OBJ probes: control shows both; treatment masks both.
     scale = float(main_green["width"]) / 128.0
     if not 0.5 <= scale <= 8.0:
         return {
@@ -102,15 +110,17 @@ def analyze_frame(path: Path) -> dict[str, object]:
 
 
 def classify(frames: list[dict[str, object]]) -> str:
-    good = [(i, f) for i, f in enumerate(frames) if f.get("status") == "OK"]
-    counts = [(i, int(f["red_component_count"])) for i, f in good]
-    first_three = next((i for i, count in counts if count == 3), None)
-    first_one_after = next(
-        (i for i, count in counts if count == 1 and first_three is not None and i > first_three),
-        None,
-    )
-    if first_three is not None and first_one_after is not None:
-        return "REFERENCE_CONFIRMS_CONTROL_3_TREATMENT_1"
+    counts = [
+        int(f["red_component_count"])
+        for f in frames
+        if f.get("status") == "OK" and f.get("red_component_count") is not None
+    ]
+    # The ROM's only alternating PPU variable is TMW bit 4. Seeing both stable
+    # states in the same pinned reference sequence therefore establishes the
+    # object-window semantic oracle without assuming which wall-clock sample was
+    # captured first.
+    if 2 in counts and 0 in counts:
+        return "REFERENCE_CONFIRMS_OUTER_OBJ_MASK_2_TO_0"
     return "REFERENCE_INDETERMINATE"
 
 

@@ -51,8 +51,9 @@ class GateCMode7MidframeTests(unittest.TestCase):
         irq1_frame_store = bytes((0x8F, 0x05, 0x00, 0x7E))
         irq2_frame_store = bytes((0x8F, 0x06, 0x00, 0x7E))
         post_phase = bytes((0xA9, diag.POSTTEST_PHASE, 0x8F, 0x01, 0x00, 0x7E))
-        self.assertEqual(program.count(irq1_frame_store), 1)
-        self.assertEqual(program.count(irq2_frame_store), 1)
+        # Each slot is zero-initialized once, then written once by its IRQ.
+        self.assertEqual(program.count(irq1_frame_store), 2)
+        self.assertEqual(program.count(irq2_frame_store), 2)
         self.assertEqual(program.count(post_phase), 1)
 
     def test_pretest_hold_is_long_enough_for_fresh_control_capture(self) -> None:

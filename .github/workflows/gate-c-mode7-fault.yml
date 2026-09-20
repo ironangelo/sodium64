@@ -121,9 +121,10 @@ jobs:
           wram=$(symbol wram)
           framebuffer=$(symbol framebuffer)
           bg_mode=$(symbol bg_mode)
+          frame_count=$(symbol frame_count)
           rsp_slot_proof=$(symbol rsp_slot_proof)
 
-          for value in "$wram" "$framebuffer" "$bg_mode" "$rsp_slot_proof"; do
+          for value in "$wram" "$framebuffer" "$bg_mode" "$frame_count" "$rsp_slot_proof"; do
             test -n "$value"
           done
 
@@ -132,6 +133,7 @@ jobs:
             echo "PHASE_ADDR=0x$phase"
             echo "FRAMEBUFFER_ADDR=0x$framebuffer"
             echo "BG_MODE_ADDR=0x$bg_mode"
+            echo "FRAME_COUNT_ADDR=0x$frame_count"
             echo "RSP_SLOT_PROOF_ADDR=0x$rsp_slot_proof"
           } | tee -a "$GITHUB_ENV"
 
@@ -219,7 +221,9 @@ jobs:
             --treatment-target 0x07 \
             --capture-return-control \
             --allow-blank \
+            --allow-static-display \
             --observe "bg_mode:$BG_MODE_ADDR:1" \
+            --observe "frame_count:$FRAME_COUNT_ADDR:1" \
             --observe "rsp_slot_proof:$RSP_SLOT_PROOF_ADDR:1" \
             --output-dir captures
 

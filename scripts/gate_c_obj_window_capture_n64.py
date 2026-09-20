@@ -71,6 +71,78 @@ def wait_for_phase(
     raise RuntimeError(f"did not observe phase 0x{target:02X}")
 
 
+def wait_for_guest_freshness(
+    client: RSPClient,
+    *,
+    phase_address: int,
+    target: int,
+    framebuffer_address: int,
+    poll_seconds: float,
+    attempts: int,
+    guest_frames_required: int = 3,
+) -> int:
+    """Wait for guest NMI progress plus at least one displayed-buffer change.
+
+    The diagnostic stores its NMI frame counter immediately before the phase
+    mirror in WRAM ($7E0000/$7E0001). Guest-frame progress is the authoritative
+    freshness clock; a framebuffer-pointer change only confirms that display
+    output also advanced. Requiring three pointer rotations was too strict for
+    the sampled treatment window and could reject valid fresh frames.
+    """
+
+    frame_counter_address = phase_address - 1
+    baseline_counter = read_u(client, frame_counter_address, 1)
+    last_pointer = read_u(client, framebuffer_address, 4)
+    saw_pointer_transition = False
+
+    for attempt in range(1, attempts + 1):
+        validate_stop(
+            client.continue_then_interrupt(poll_seconds),
+            f"Phase {target:02x} guest-settle #{attempt}",
+        )
+        phase = read_u(client, phase_address, 1)
+        if phase != target:
+            print(
+                f"guest settle left phase 0x{target:02X} at 0x{phase:02X}; "
+                "waiting for the next occurrence"
+            )
+            wait_for_phase(
+                client,
+                phase_address=phase_address,
+                target=target,
+                poll_seconds=poll_seconds,
+                attempts=attempts,
+            )
+            baseline_counter = read_u(client, frame_counter_address, 1)
+            last_pointer = read_u(client, framebuffer_address, 4)
+            saw_pointer_transition = False
+            continue
+
+        counter = read_u(client, frame_counter_address, 1)
+        pointer = read_u(client, framebuffer_address, 4)
+        if pointer != last_pointer:
+            saw_pointer_transition = True
+            print(
+                f"phase 0x{target:02X} displayed-buffer advanced: "
+                f"0x{last_pointer:08X} -> 0x{pointer:08X}"
+            )
+            last_pointer = pointer
+
+        guest_delta = (counter - baseline_counter) & 0xFF
+        print(
+            f"phase 0x{target:02X} guest-frame freshness "
+            f"{guest_delta}/{guest_frames_required} "
+            f"(counter=0x{counter:02X}, baseline=0x{baseline_counter:02X})"
+        )
+        if guest_delta >= guest_frames_required and saw_pointer_transition:
+            return counter
+
+    raise RuntimeError(
+        f"did not observe {guest_frames_required} fresh guest frames plus a "
+        f"displayed-buffer transition for phase 0x{target:02X}"
+    )
+
+
 def capture_nonblank_phase(
     client: RSPClient,
     *,
@@ -87,6 +159,14 @@ def capture_nonblank_phase(
         client,
         phase_address=phase_address,
         target=target,
+        poll_seconds=poll_seconds,
+        attempts=attempts,
+    )
+    fresh_counter = wait_for_guest_freshness(
+        client,
+        phase_address=phase_address,
+        target=target,
+        framebuffer_address=framebuffer_address,
         poll_seconds=poll_seconds,
         attempts=attempts,
     )
@@ -123,6 +203,7 @@ def capture_nonblank_phase(
                 "phase": target,
                 "framebuffer_pointer": fb_pointer,
                 "render_attempt": render_attempt,
+                "guest_frame_counter": fresh_counter,
             }
             for label, address, size in observations:
                 state[label] = read_u(client, address, size)

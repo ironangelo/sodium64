@@ -260,7 +260,7 @@ jobs:
 
           expected_common = {
               'wobjsel': 0x03,
-              'whx': 0x40BF0000,
+              'whx': 0x000040BF,
               'tm': 0x11,
               'ts': 0x00,
           }
@@ -371,7 +371,7 @@ jobs:
 
             # Allow the window and first rendered frames to appear, then sample
             # across >2 full 120-frame control/treatment cycles. Analysis finds
-            # the phase transition from the actual 3->1 OBJ pattern; no wall-clock
+            # the two stable outer-OBJ states (2->0); no wall-clock
             # sample is itself treated as authoritative.
             sleep 1
             for i in $(seq -w 0 23); do

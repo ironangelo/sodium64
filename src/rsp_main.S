@@ -131,8 +131,11 @@ fillrec_mask: .word 0xFF000FFF
 ldblk_bits: .word 0x01000200
 mode7_mask: .word 0x0003FFFF
 
-// Gap to align vector data to the end of DMEM
-.byte 0:(VEC_DATA - PRIO_CHECKS)
+// Reserve renderer overlay source pointers without moving vector data.
+.byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
+overlay_main_src: .word 0
+overlay_mode7_src: .word 0
+.byte 0:(VEC_DATA - (OVERLAY_MODE7_SRC + 4))
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -485,7 +488,7 @@ next_layer:
     addi s3, s3, 1
     bltz t0, draw_obj
     li t1, 0x40
-    beq t0, t1, draw_mode7
+    beq t0, t1, draw_mode7_entry
     andi t1, s7, 0x1 // Enable
     bnez t0, draw_bg
     andi t3, t0, 0x3 // Index
@@ -496,7 +499,8 @@ next_layer:
     andi s3, s3, 0xF0
     b next_layer
 
-
+    // Fixed renderer overlay begins on a 64-bit DMA boundary.
+    .align 3
 draw_bg:
     // Skip the layer if the BG is disabled
     lbu a3, SHIFT_TABLE(t3) // Mask
@@ -869,336 +873,12 @@ skip_upload:
     b finish_tile
 
 
-draw_mode7:
-    // Skip the layer if the BG is disabled
-    // TODO: implement windows for mode 7
-    beqz t1, next_layer
-    move s1, k0 // Tile Y-coordinate
-
-    // Calculate the initial screen X-coordinate
-    lh t0, M7HOFS
-    lh t2, M7X
-    sub t0, t0, t2
-
-    // Calculate the initial screen Y-coordinate
-    lh t1, M7VOFS
-    lh t3, M7Y
-    add t1, t1, s1
-    sub t1, t1, t3
-    addi t1, t1, 1
-
-    // Calculate the initial VRAM X-coordinate
-    lh s2, M7A
-    sll t2, t2, 8
-    move a0, t0
-    jal multiply
-    move a1, s2
-    add t2, t2, v0
-    lh s4, M7B
-    move a0, t1
-    jal multiply
-    move a1, s4
-    add t8, t2, v0
-
-    // Calculate the initial VRAM Y-coordinate
-    lh s5, M7C
-    sll t3, t3, 8
-    move a0, t0
-    jal multiply
-    move a1, s5
-    add t3, t3, v0
-    lh s6, M7D
-    move a0, t1
-    jal multiply
-    move a1, s6
-    add t9, t3, v0
-
-    // Update the RDP texture parameters with rotscale values
-    sra t0, s2, 3
-    sh t0, RDP_TILE7 + 64 // S-gradient along X (int)
-    sra t1, s5, 3
-    sh t1, RDP_TILE7 + 66 // T-gradient along X (int)
-    sll t0, s2, 13
-    sh t0, RDP_TILE7 + 80 // S-gradient along X (frac)
-    sll t1, s5, 13
-    sh t1, RDP_TILE7 + 82 // T-gradient along X (frac)
-    sra t0, s4, 3
-    sh t0, RDP_TILE7 + 88 // S-gradient along Y (int)
-    sra t1, s6, 3
-    sh t1, RDP_TILE7 + 90 // T-gradient along Y (int)
-    sll t0, s4, 13
-    sh t0, RDP_TILE7 + 96 // S-gradient along Y (frac)
-    sll t1, s6, 13
-    sh t1, RDP_TILE7 + 98 // T-gradient along Y (frac)
-
-    // Draw 8-pixel or 16-pixel mode 7 tiles based on horizontal scaling
-    addi t0, s2, 0x100
-    sltiu t0, t0, 0x200
-    addi t1, s5, 0x100
-    sltiu t1, t1, 0x200
-    and t0, t0, t1
-
-    // Determine mode 7 tile height from the lower section bound
-    sub a3, k1, s1
-    addi a3, a3, -1
-    bltu a3, 7, calc_bounds
-    addi t7, t0, 3 // Width shift
-    li a3, 7
-
-calc_bounds:
-    // Calculate the min and max X-offsets within a mode 7 tile
-    move a0, a3
-    jal multiply
-    move a1, s4
-    move a0, v0
-    sll a1, s2, t7
-    jal min_max
-    sub a1, a1, s2
-    sw v0, MODE7_BOUNDS + 0
-    sw v1, MODE7_BOUNDS + 4
-
-    // Calculate the min and max Y-offsets within a mode 7 tile
-    move a0, a3
-    jal multiply
-    move a1, s6
-    move a0, v0
-    sll a1, s5, t7
-    jal min_max
-    sub a1, a1, s5
-    sw v0, MODE7_BOUNDS + 8
-    b bounds_skip
-    sw v1, MODE7_BOUNDS + 12
-
-draw_row7:
-    // Recalculate bounds if the tile height can be reduced
-    sub a3, k1, s1
-    addi a3, a3, -1
-    bltu a3, 7, calc_bounds
-
-bounds_skip:
-    // Set the initial tile X-coordinate
-    li s0, 0
-
-    // Update the RDP draw command with the tile's Y-coordinate
-    lw t0, FB_OFFSET(sp)
-    add t0, t0, s1
-    sll t0, t0, 2
-    addi t1, t0, 8 << 2
-    sh t1, RDP_TILE7 + 26 // y3
-    sh t0, RDP_TILE7 + 28 // y2
-    sh t0, RDP_TILE7 + 30 // y1
-
-next_tile7:
-    // Update the RDP draw command with the tile's X-coordinate
-    lbu t0, SHIFT_TABLE(t7)
-    add t0, t0, s0
-    addi t0, t0, 12
-    sh t0, RDP_TILE7 + 32 // x1
-    addi t1, s0, 12
-    sh t1, RDP_TILE7 + 40 // x3
-    sh t1, RDP_TILE7 + 48 // x2
-
-    // Calculate the S-offset of the top-left tile within the texture
-    lw t0, MODE7_BOUNDS + 0
-    sra t1, t8, 11
-    add t2, t0, t8
-    sra t0, t2, 11
-    sub s8, t1, t0
-
-    // Calculate how many tiles wide the texture should be
-    lw t0, MODE7_BOUNDS + 4
-    add t3, t0, t8
-    sra t0, t3, 11
-    sub v0, t0, t1
-    add v0, v0, s8
-    blt v0, 4, calc_tofs
-    addi v0, v0, 1
-    li v0, 4 // Max
-
-calc_tofs:
-    // Calculate the T-offset of the top-left tile within the texture
-    lw t0, MODE7_BOUNDS + 8
-    sra t1, t9, 11
-    add t4, t0, t9
-    sra t0, t4, 11
-    sub gp, t1, t0 // Offset T
-
-    // Calculate how many tiles high the texture should be
-    lw t0, MODE7_BOUNDS + 12
-    add t5, t0, t9
-    sra t0, t5, 11
-    sub v1, t0, t1
-    add v1, v1, gp
-    blt v1, 4, check_wrap
-    addi v1, v1, 1
-    li v1, 4 // Max
-
-check_wrap:
-    // Check if areas out of bounds should be empty
-    // TODO: handle this better and use screen flip bits
-    lbu t0, M7SEL
-    li t1, 0x80 // Empty
-    andi t6, t0, 0xC0
-    bne t6, t1, set_texels
-    lw t1, MODE7_MASK
-
-    // Skip the tile if it's out of bounds and empty
-    or t2, t2, t4
-    sltu t2, t1, t2
-    or t3, t3, t5
-    sltu t3, t1, t3
-    and t0, t2, t3
-    bnez t0, finish_tile7
-
-set_texels:
-    // Update the amount of texels the RDP should load to TMEM
-    sll t1, v1, 7
-    addi t1, t1, -1
-    lw t0, LDBLK_BITS
-    sll t1, t1, 12
-    or t0, t0, t1
-    sw t0, RDP_TILE7 + 20
-
-    // Update the RDP texture parameters with current coordinates
-    srl t4, t8, 3
-    andi t4, t4, 0xFF
-    sll t0, s8, 8
-    add t4, t4, t0
-    sh t4, RDP_TILE7 + 56 // S-coordinate (int)
-    srl t4, t9, 3
-    andi t4, t4, 0xFF
-    sll t0, gp, 8
-    add t4, t4, t0
-    sh t4, RDP_TILE7 + 58 // T-coordinate (int)
-    sll t4, t8, 13
-    sh t4, RDP_TILE7 + 72 // S-coordinate (frac)
-    sll t4, t9, 13
-    sh t4, RDP_TILE7 + 74 // T-coordinate (frac)
-
-    // Set some values for loading BG entries
-    li a0, SCRN_DATA
-    lw t1, VRAM_ADDRS
-    li a2, 0x7
-    move t5, v1
-
-    // Calculate offsets for the texture's first tile row
-    sra t2, t9, 3
-    sll t0, gp, 8
-    sub t2, t2, t0 // Y-offset
-    sra t3, t8, 10
-    sll t0, s8, 1
-    sub t3, t3, t0 // X-offset
-
-entry_row:
-    // Load a row of mode 7 BG entries for the texture
-    jal mode7_read
-    sra t4, t2, 15
-    addi a0, a0, 0x8
-    jal mode7_read
-    addi t3, t3, 0x8
-
-    // Move to the next row and loop until complete
-    addi t2, t2, 0x100
-    addi t3, t3, -0x8
-    addi t5, t5, -1
-    bnez t5, entry_row
-    addi a0, a0, 0x8
-
-    // Set some values for building the texture
-    andi a3, t3, 0x6 // DMA offset
-    move t5, v0 // Row width
-    sll t3, v1, 8 // Texture size
-
-next_subrow:
-    // Move to the next row within the texture
-    addi v1, v1, -1
-
-next_subtile:
-    // Move to the next tile within the texture
-    addi v0, v0, -1
-
-    // Get the BG entry for the current tile
-    sll t0, v0, 1
-    sll t1, v1, 4
-    add t0, t0, t1
-    add t0, t0, a3
-    lbu t6, SCRN_DATA + 1(t0)
-
-    // Load the tile's character data from VRAM
-    li a0, CHAR_DATA
-    lw a1, VRAM_ADDRS
-    sll t0, t6, 7
-    add a1, a1, t0
-    jal dma_read
-    li a2, 0x7F
-
-    // Copy the character data into vector registers
-    lqv $v00, 0, 0x00, a0
-    lqv $v01, 0, 0x10, a0
-    lqv $v02, 0, 0x20, a0
-    lqv $v03, 0, 0x30, a0
-    lqv $v04, 0, 0x40, a0
-    lqv $v05, 0, 0x50, a0
-    lqv $v06, 0, 0x60, a0
-    lqv $v07, 0, 0x70, a0
-
-    // Get the tile's texture offset
-    sll t0, v0, 3
-    sll t1, v1, 8
-    add t0, t0, t1
-
-    // Copy bytes containing pixels into the texture
-    spv $v00, 0, 0x00, t0
-    spv $v01, 0, 0x20, t0
-    spv $v02, 0, 0x40, t0
-    spv $v03, 0, 0x60, t0
-    spv $v04, 0, 0x80, t0
-    spv $v05, 0, 0xA0, t0
-    spv $v06, 0, 0xC0, t0
-
-    // Loop through tiles until the texture is complete
-    bnez v0, next_subtile
-    spv $v07, 0, 0xE0, t0
-    move v0, t5
-    bnez v1, next_subrow
-
-    // DMA the texture to alternating RDRAM locations
-    li a0, TEXTURE
-    li a1, MODE7_TEXTURE
-    andi t0, s0, 0x18
-    sll t0, t0, 8
-    add a1, a1, t0
-    sw a1, RDP_TILE7 + 4
-    jal dma_write
-    addi a2, t3, -1
-
-    // Run the RDP to draw a tile
-    li a0, RDP_TILE7
-    jal rdp_send
-    li a1, TILE_PARAMS
-
-finish_tile7:
-    // Move to the next tile, adjusting the VRAM coordinates
-    lbu t0, SHIFT_TABLE(t7)
-    sll t1, s2, t7
-    add s0, s0, t0
-    add t8, t8, t1
-    sll t0, s5, t7
-    blt s0, 256, next_tile7
-    add t9, t9, t0
-
-    // Move to the next row, adjusting the VRAM coordinates
-    addi s1, s1, 8
-    sll t0, s2, 8
-    sub t8, t8, t0
-    sll t0, s5, 8
-    sub t9, t9, t0
-    sll t0, s4, 3
-    add t8, t8, t0
-    sll t0, s6, 3
-    blt s1, k1, draw_row7
-    add t9, t9, t0
-    b next_layer
+    // Keep the inactive Mode 7 entry at an invariant, DMA-aligned offset.
+    .align 3
+draw_mode7_entry:
+    // Fault stub: request the real Mode7 renderer only when dispatch needs it.
+    b overlay_load_mode7
+    nop
 
 
 draw_obj:
@@ -1237,6 +917,65 @@ start_objects:
     add a1, a1, t0
     jal dma_read
     li a2, 0x1FF
+
+    // Preserve the existing no-window fast path. Sodium64 currently combines
+    // main/sub window-enable masks for BGs, so OBJ follows the same renderer
+    // contract here; screen-specific TMW/TSW separation remains a later Gate-C
+    // compositor repair rather than a game-specific special case.
+    lbu t0, TMW
+    lbu t1, TSW
+    or t0, t0, t1
+    andi t0, t0, 0x10
+    beqz t0, obj_no_windows
+    li t8, 0 // Window-bound index
+
+    // Calculate the generic OBJ W1 visible spans using the same window helper
+    // already used by BG rendering. W2/combine modes remain explicitly outside
+    // this controlled repair and retain their pre-existing behavior.
+    lbu a0, WOBJSEL
+    jal calc_windows
+    andi a0, a0, 0xF
+
+    // An empty first span is represented by a zero upper bound.
+    lbu t0, WIN_BOUNDS + 1
+    beqz t0, obj_advance_segment
+    nop
+    b obj_window_segment
+    nop
+
+obj_no_windows:
+    // Negative bound index marks the unwindowed fast path at list completion.
+    b obj_restart_objects
+    li t8, -1
+
+obj_window_segment:
+    // Restrict RDP drawing to the current visible OBJ span while preserving
+    // this section's Y bounds. RDP scissoring clips boundary-crossing tiles
+    // without introducing a per-pixel RSP mask.
+    lw t0, FILLREC_MASK
+    lw t6, RDP_FILL + 8
+    lw t7, RDP_FILL + 12
+    and t6, t6, t0
+    and t7, t7, t0
+    lbu t2, WIN_BOUNDS + 0(t8)
+    lbu t3, WIN_BOUNDS + 1(t8)
+
+    sltu t0, zero, t2
+    addi t2, t2, 12
+    add t2, t2, t0
+    sll t2, t2, 14
+    or t0, t6, t2
+    sw t0, RDP_WINDOW + 8
+    addi t3, t3, 13
+    sll t3, t3, 14
+    or t0, t7, t3
+    sw t0, RDP_WINDOW + 12
+
+    li a0, RDP_WINDOW
+    jal rdp_send
+    li a1, RDP_TILE
+
+obj_restart_objects:
     b next_object
     li a3, TILE_TABLE + 0x200 // Cache index
 
@@ -1393,6 +1132,25 @@ next_object:
     bne t1, t2, check_object
     addi a3, a3, 4
 
+    // The unwindowed path is still a single object-list traversal.
+    bltz t8, obj_finish_objects
+    nop
+
+obj_advance_segment:
+    // Move to the next visible W1 span. A value of 255 terminates the span list.
+    lbu t2, WIN_BOUNDS + 2(t8)
+    beq t2, 255, obj_windows_done
+    addi t8, t8, 2
+    b obj_window_segment
+    nop
+
+obj_windows_done:
+    // Restore this section's full scissor bounds before later layers render.
+    li a0, RDP_FILL
+    jal rdp_send
+    li a1, RDP_FILL + 16
+
+obj_finish_objects:
     // Update the object tile cache status when finished
     li a0, TILE_TABLE
     lw a1, CACHE_PTRS + 12
@@ -1409,7 +1167,8 @@ skip_objdecode:
 
 
 next_frame:
-    // Halt until the next frame can be drawn
+    // Halt until the next frame can be drawn. Renderer payload now persists
+    // until a fixed-entry fault stub requests the opposite overlay.
     li t0, 0x2 // Set halt
     mtc0 t0, COP0_SP_STATUS
     b draw_frame
@@ -1635,3 +1394,20 @@ rdp_send: // a0: start address, a1: end address
 ret_jump:
     jr ra
     nop
+
+// Demand-load the missing renderer slot from resident suffix code.
+overlay_load_mode7:
+    lw a1, OVERLAY_MODE7_SRC
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    b draw_mode7_entry
+    nop
+
+overlay_load_main:
+    lw a1, OVERLAY_MAIN_SRC
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    b draw_bg
+    move t0, v0

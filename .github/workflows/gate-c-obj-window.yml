@@ -1,0 +1,67 @@
+name: Gate C OBJ Window Diagnostic
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-obj-window-diagnostic
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-obj-window-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diagnostic-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate diagnostic generator
+        run: python3 scripts/test_gate_c_obj_window.py -v
+
+      - name: Generate deterministic original SNES diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_obj_window.py diagnostic/gate-c-obj-window.smc \
+            | tee diagnostic/generator.log
+          echo "b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77  diagnostic/gate-c-obj-window.smc" \
+            | sha256sum --check
+
+          cat > diagnostic/MANIFEST.txt <<EOF
+          purpose=Gate C H-OBJ discriminator
+          sodium64_base=9441818dd8457a27bbd617a0f32c6d484550661f
+          diagnostic_source_sha=$GITHUB_SHA
+          guest_rom_sha256=b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77
+          mode=SNES Mode1
+          tm=0x11
+          ts=0x00
+          w12sel=0x03
+          wobjsel=0x03
+          wh0=64
+          wh1=191
+          control_tmw=0x01
+          treatment_tmw=0x11
+          hdma=disabled
+          color_math=disabled
+          probe_x=16,96,224
+          probe_y=96
+          phase_frames=120
+          EOF
+
+      - name: Upload original diagnostic artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-obj-window-diagnostic
+          retention-days: 30
+          path: |
+            diagnostic/gate-c-obj-window.smc
+            diagnostic/MANIFEST.txt
+            diagnostic/generator.log

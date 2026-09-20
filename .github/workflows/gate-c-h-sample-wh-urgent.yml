@@ -1,0 +1,223 @@
+name: Gate C H-SAMPLE WH Urgent Validation
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-h-sample-wh-urgent-validation
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-h-sample-wh-urgent-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate H-SAMPLE guest generator
+        run: python3 scripts/test_gate_c_h_sample.py -v
+
+      - name: Build exact WH-urgent candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Generate and wrap exact original diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workload wrap
+          python3 scripts/make_gate_c_h_sample.py workload/gate-c-h-sample.smc
+          echo "347e177ceef12a04b51b7e6958bb81b09d741acf4db8edb5aea2bea8fa82af8e  workload/gate-c-h-sample.smc" \
+            | sha256sum --check
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp workload/gate-c-h-sample.smc wrap/gate-c-h-sample.smc
+          (cd wrap && python3 rom-converter.py </dev/null)
+          test -s wrap/out/gate-c-h-sample.z64
+          dd if=wrap/out/gate-c-h-sample.z64 of=workload/embedded.smc \
+            bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          echo "347e177ceef12a04b51b7e6958bb81b09d741acf4db8edb5aea2bea8fa82af8e  workload/embedded.smc" \
+            | sha256sum --check
+          rm workload/embedded.smc
+
+      - name: Locate H-SAMPLE runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
+          wram=$(symbol wram)
+          sect_queues=$(symbol sect_queues)
+          section_ptr=$(symbol section_ptr)
+          queue_id=$(symbol queue_id)
+          precision_set=$(symbol precision_set)
+          cur_line=$(symbol cur_line)
+          whx=$(symbol whx)
+          cooldown=$(symbol cooldown)
+          sect_status=$(symbol sect_status)
+          for value in "$wram" "$sect_queues" "$section_ptr" "$queue_id" \
+                       "$precision_set" "$cur_line" "$whx" "$cooldown" "$sect_status"; do
+            test -n "$value"
+          done
+          {
+            echo "SECT_QUEUES_ADDR=0x$sect_queues"
+            echo "SECTION_PTR_ADDR=0x$section_ptr"
+            echo "QUEUE_ID_ADDR=0x$queue_id"
+            echo "PRECISION_ADDR=0x$precision_set"
+            echo "CUR_LINE_ADDR=0x$cur_line"
+            echo "WHX_ADDR=0x$whx"
+            echo "COOLDOWN_ADDR=0x$cooldown"
+            echo "SECT_STATUS_ADDR=0x$sect_status"
+            echo "FRAME_COUNTER_ADDR=0x$(printf '%08x' "$((0x$wram))")"
+            echo "PROBE_ADDR=0x$(printf '%08x' "$((0x$wram + 0x100))")"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Capture default-MEDIUM completed section queue
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          home="$RUNNER_TEMP/ares-home-h-sample-wh"
+          settings="$RUNNER_TEMP/ares-h-sample-wh-settings.bml"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9146" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              wrap/out/gate-c-h-sample.z64 \
+              > captures/ares-n64.log 2>&1 &
+          pid=$!
+          cleanup() {
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          python3 scripts/gate_c_h_sample_capture_n64.py \
+            --port 9146 \
+            --warmup-seconds 3 \
+            --sect-queues-address "$SECT_QUEUES_ADDR" \
+            --section-ptr-address "$SECTION_PTR_ADDR" \
+            --queue-id-address "$QUEUE_ID_ADDR" \
+            --precision-address "$PRECISION_ADDR" \
+            --cur-line-address "$CUR_LINE_ADDR" \
+            --whx-address "$WHX_ADDR" \
+            --cooldown-address "$COOLDOWN_ADDR" \
+            --sect-status-address "$SECT_STATUS_ADDR" \
+            --frame-counter-address "$FRAME_COUNTER_ADDR" \
+            --probe-address "$PROBE_ADDR" \
+            --output captures/capture.json
+
+      - name: Assert per-line WH0 preservation at MEDIUM
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' | tee captures/result.txt
+          import json
+          from pathlib import Path
+
+          c = json.loads(Path('captures/capture.json').read_text())
+          records = []
+          for r in c['records']:
+              records.append(r)
+              if int(r['end_line']) >= 224:
+                  break
+
+          wh = [int(r['wh0']) for r in records]
+          ends = [int(r['end_line']) for r in records]
+          unique = sorted(set(wh))
+          expected = list(range(224))
+          steps = [b - a for a, b in zip(ends, ends[1:])]
+
+          result = {
+              'classification': 'H_SAMPLE_WH_URGENT_PASS'
+                  if unique == expected and c['precision_set'] == 8
+                     and ends and ends[-1] >= 224
+                     and all(0 <= step <= 1 for step in steps)
+                  else 'H_SAMPLE_WH_URGENT_FAIL',
+              'precision_set': c['precision_set'],
+              'record_count': len(records),
+              'unique_wh0_count': len(unique),
+              'unique_wh0_exact_0_to_223': unique == expected,
+              'first_records': records[:8],
+              'last_records': records[-8:],
+              'max_end_line_step': max(steps, default=0),
+          }
+          Path('captures/result.json').write_text(
+              json.dumps(result, indent=2, sort_keys=True) + '\n'
+          )
+          print(json.dumps(result, indent=2, sort_keys=True))
+          assert result['classification'] == 'H_SAMPLE_WH_URGENT_PASS', result
+          PY
+
+      - name: Upload WH-urgent semantic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-h-sample-wh-urgent-evidence
+          retention-days: 30
+          path: |
+            captures/
+            ares-version.txt
+            sodium64-build.log
+            workload/gate-c-h-sample.smc

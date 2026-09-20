@@ -65,3 +65,225 @@ jobs:
             diagnostic/gate-c-obj-window.smc
             diagnostic/MANIFEST.txt
             diagnostic/generator.log
+
+
+  sodium64-n64-semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    needs:
+      - diagnostic-build
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Run Gate-C host tests
+        run: |
+          python3 scripts/test_gate_c_obj_window.py -v
+          python3 scripts/test_gate_c_obj_window_analyze_fb.py -v
+
+      - name: Build exact Sodium64 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Generate and wrap exact original diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workload
+          python3 scripts/make_gate_c_obj_window.py workload/gate-c-obj-window.smc
+          echo "b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77  workload/gate-c-obj-window.smc" \
+            | sha256sum --check
+
+          mkdir -p wrap
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp workload/gate-c-obj-window.smc wrap/gate-c-obj-window.smc
+          (
+            cd wrap
+            python3 rom-converter.py </dev/null
+          )
+          test -s wrap/out/gate-c-obj-window.z64
+
+          dd if=wrap/out/gate-c-obj-window.z64 of=workload/embedded.smc \
+            bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          echo "b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77  workload/embedded.smc" \
+            | sha256sum --check
+          rm workload/embedded.smc
+
+      - name: Locate Sodium64 diagnostic state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          wram=$(symbol wram)
+          framebuffer=$(symbol framebuffer)
+          tmw=$(symbol tmw)
+          wobjsel=$(symbol wobjsel)
+          whx=$(symbol whx)
+          tm=$(symbol tm)
+          ts=$(symbol ts)
+
+          for value in "$wram" "$framebuffer" "$tmw" "$wobjsel" "$whx" "$tm" "$ts"; do
+            test -n "$value"
+          done
+
+          phase=$(printf '%08x' "$((0x$wram + 1))")
+          {
+            echo "PHASE_ADDR=0x$phase"
+            echo "FRAMEBUFFER_ADDR=0x$framebuffer"
+            echo "TMW_ADDR=0x$tmw"
+            echo "WOBJSEL_ADDR=0x$wobjsel"
+            echo "WHX_ADDR=0x$whx"
+            echo "TM_ADDR=0x$tm"
+            echo "TS_ADDR=0x$ts"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            git \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+
+          # Existing LAB LIMITATION: this pinned ares RSP recompiler is invalid
+          # for Sodium64 custom RSP ucode. Preserve R4300 JIT and force RSP interp.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Capture synchronized Sodium64 control and treatment framebuffers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          home="$RUNNER_TEMP/ares-home-gate-c-obj"
+          settings="$RUNNER_TEMP/ares-gate-c-obj-settings.bml"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9140" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              wrap/out/gate-c-obj-window.z64 \
+              > captures/ares-n64.log 2>&1 &
+          ares_pid=$!
+
+          cleanup() {
+            kill "$ares_pid" 2>/dev/null || true
+            wait "$ares_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          python3 scripts/gate_c_obj_window_capture_n64.py \
+            --port 9140 \
+            --phase-address "$PHASE_ADDR" \
+            --framebuffer-address "$FRAMEBUFFER_ADDR" \
+            --observe "tmw:$TMW_ADDR:1" \
+            --observe "wobjsel:$WOBJSEL_ADDR:1" \
+            --observe "whx:$WHX_ADDR:4" \
+            --observe "tm:$TM_ADDR:1" \
+            --observe "ts:$TS_ADDR:1" \
+            --output-dir captures
+
+          python3 scripts/gate_c_obj_window_analyze_fb.py \
+            captures/control.rgba5551 \
+            captures/treatment.rgba5551 \
+            --output captures/analysis.json \
+            | tee captures/analysis.txt
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          state = json.loads(Path('captures/state.json').read_text())
+          analysis = json.loads(Path('captures/analysis.json').read_text())
+
+          expected_common = {
+              'wobjsel': 0x03,
+              'whx': 0x40BF0000,
+              'tm': 0x11,
+              'ts': 0x00,
+          }
+          assert state['control']['phase'] == 0x01, state
+          assert state['treatment']['phase'] == 0x11, state
+          assert state['control']['tmw'] == 0x01, state
+          assert state['treatment']['tmw'] == 0x11, state
+          for phase in ('control', 'treatment'):
+              for key, expected in expected_common.items():
+                  assert state[phase][key] == expected, (phase, key, state)
+
+          classification = analysis['classification']
+          if classification.startswith('INDETERMINATE'):
+              raise SystemExit(f'indeterminate framebuffer result: {classification}')
+          print(f'Gate-C H-OBJ Sodium64 classification: {classification}')
+          PY
+
+      - name: Upload Gate-C Sodium64 semantic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-obj-window-sodium64-evidence
+          retention-days: 30
+          path: |
+            captures/
+            ares-version.txt
+            sodium64-build.log

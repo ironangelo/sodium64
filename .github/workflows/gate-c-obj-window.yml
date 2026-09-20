@@ -287,3 +287,125 @@ jobs:
             captures/
             ares-version.txt
             sodium64-build.log
+
+
+  snes-reference-semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs:
+      - diagnostic-build
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Install pinned ares reference dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            git \
+            imagemagick \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            python3-pil \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Generate exact original diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reference
+          python3 scripts/make_gate_c_obj_window.py reference/gate-c-obj-window.smc
+          echo "b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77  reference/gate-c-obj-window.smc" \
+            | sha256sum --check
+
+      - name: Build pinned ares Super Famicom reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-sfc-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=sfc
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_SFC_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/reference/ares-version.txt"
+
+      - name: Capture direct-SNES control and treatment sequence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reference/frames
+          export ROM="$GITHUB_WORKSPACE/reference/gate-c-obj-window.smc"
+          export FRAME_DIR="$GITHUB_WORKSPACE/reference/frames"
+          export ARES_LOG="$GITHUB_WORKSPACE/reference/ares-sfc.log"
+          export ARES_SETTINGS="$RUNNER_TEMP/ares-sfc-settings.bml"
+          export ARES_HOME="$RUNNER_TEMP/ares-sfc-home"
+          mkdir -p "$ARES_HOME"
+
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            HOME="$ARES_HOME" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              "$ARES_SFC_BIN" \
+                --no-file-prompt \
+                --system "Super Famicom" \
+                --settings-file "$ARES_SETTINGS" \
+                --setting "Developer/DeterministicEntropy=true" \
+                "$ROM" > "$ARES_LOG" 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true; wait $pid 2>/dev/null || true" EXIT
+
+            # Allow the window and first rendered frames to appear, then sample
+            # across >2 full 120-frame control/treatment cycles. Analysis finds
+            # the phase transition from the actual 3->1 OBJ pattern; no wall-clock
+            # sample is itself treated as authoritative.
+            sleep 1
+            for i in $(seq -w 0 23); do
+              import -window root "$FRAME_DIR/frame-$i.png"
+              sleep 0.25
+            done
+          '
+
+          test "$(find reference/frames -name 'frame-*.png' | wc -l)" -eq 24
+
+      - name: Analyze pinned SNES reference semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/gate_c_obj_window_analyze_reference.py \
+            reference/frames/frame-*.png \
+            --output reference/analysis.json \
+            | tee reference/analysis.txt
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('reference/analysis.json').read_text())
+          classification = result['classification']
+          print(f'Gate-C OBJ-window direct SNES reference: {classification}')
+          if classification != 'REFERENCE_CONFIRMS_CONTROL_3_TREATMENT_1':
+              raise SystemExit('direct SNES reference capture did not establish 3->1 semantics')
+          PY
+
+      - name: Upload direct-SNES reference evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-obj-window-snes-reference
+          retention-days: 30
+          path: |
+            reference/

@@ -561,6 +561,13 @@ rsp_wait:
     beqz t0, rsp_wait
     xori t6, t5, 0x4
 
+    // Gate-C architecture proof: reload the same complete IMEM image only while
+    // the RSP is halted. This isolates the safety of the runtime upload primitive;
+    // it does not yet select between regular and Mode7 renderer images.
+    la a1, rsp_main_text_start
+    jal rsp_upload
+    li a0, 0x1000
+
     // Update the software-rendered UI
     lw a0, DMEM(FRAMEBUFFER)(t6)
     j update_menu

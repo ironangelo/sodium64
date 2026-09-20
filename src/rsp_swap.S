@@ -131,8 +131,12 @@ fillrec_mask: .word 0xFF000FFF
 ldblk_bits: .word 0x01000200
 mode7_mask: .word 0x0003FFFF
 
-// Gap to align vector data to the end of DMEM
-.byte 0:(VEC_DATA - PRIO_CHECKS)
+// Gap to align vector data to the end of DMEM. Reserve two source
+// pointers explicitly so future scratch growth cannot silently overlap them.
+.byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
+overlay_main_src: .word 0
+overlay_swap_src: .word 0
+.byte 0:(VEC_DATA - (OVERLAY_SWAP_SRC + 4))
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -1166,11 +1170,12 @@ skip_objdecode:
 
 
 next_frame:
-    // Halt until the next frame can be drawn
-    li t0, 0x2 // Set halt
-    mtc0 t0, COP0_SP_STATUS
-    b draw_frame
-    xori sp, sp, 4
+    // Preserve the original 16-byte footprint so every existing resident
+    // helper keeps its validated address; the loader itself is appended.
+    b self_swap
+    nop
+    nop
+    nop
 
 
 clear_cache:
@@ -1392,3 +1397,29 @@ rdp_send: // a0: start address, a1: end address
 ret_jump:
     jr ra
     nop
+
+
+// Gate-C architecture proof: replace only the fixed renderer slot from RSP
+// code while executing entirely outside that slot. The semantic-twin payloads
+// differ at one inert word, so this isolates self-DMA mechanics from rendering.
+self_swap:
+    andi t0, sp, 0x4
+    bnez t0, self_swap_main
+    nop
+    lw a1, OVERLAY_SWAP_SRC
+    b self_swap_selected
+    nop
+
+self_swap_main:
+    lw a1, OVERLAY_MAIN_SRC
+
+self_swap_selected:
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+
+    // Preserve the pre-proof halt/resume contract exactly after DMA completion.
+    li t0, 0x2
+    mtc0 t0, COP0_SP_STATUS
+    b draw_frame
+    xori sp, sp, 4

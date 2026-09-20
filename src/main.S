@@ -159,6 +159,16 @@ pi_wait1:
     la a1, rsp_main_data_start
     jal rsp_upload
     li a0, 0x0000 // DMEM address
+
+    // Gate-C self-overlay proof: publish the two aligned renderer-slot sources
+    // after boot DMEM upload and before the RSP starts executing.
+    la t0, rsp_main_text_start
+    addi t0, t0, 0x3A8
+    sw t0, DMEM(OVERLAY_MAIN_SRC)
+    la t0, rsp_swap_text_start
+    addi t0, t0, 0x3A8
+    sw t0, DMEM(OVERLAY_SWAP_SRC)
+
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_PROFILE

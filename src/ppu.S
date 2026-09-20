@@ -567,50 +567,33 @@ rsp_wait:
     beqz t0, rsp_wait
     xori t6, t5, 0x4
 
-    // Gate-C architecture proof: alternate only the fixed 1000-byte renderer
-    // slot while the RSP is halted. Both payloads are semantically equivalent;
-    // rsp_swap differs by one semantic-NOP encoding strictly inside the slot.
-    andi t0, t5, 0x4
-    beqz t0, rsp_slot_regular
-    nop
-    la a1, rsp_swap_text_start
-    b rsp_slot_selected
-    addi a1, a1, 0x3A8
-rsp_slot_regular:
-    la a1, rsp_main_text_start
-    addi a1, a1, 0x3A8
-rsp_slot_selected:
-    jal rsp_upload_slot
-    li a0, 0x13A8
-
-    // Prove that the byte-distinct payload actually reached IMEM. The only
-    // intended twin difference is the last word of the fixed slot at 0x178C:
-    // regular assembler nop = 0x00000000, swap semantic NOP = 0x00000025.
-    andi t2, t5, 0x4
+    // Gate-C self-overlay proof: the RSP performed the slot DMA before
+    // halting. The CPU only observes the discriminator word and records which
+    // byte-distinct payloads have actually appeared in IMEM.
     lw t0, 0xA400178C
-    beqz t2, rsp_slot_verify_regular
+    beqz t0, rsp_slot_observed_regular
     nop
     li t1, 0x25
-    bne t0, t1, rsp_slot_verify_fail
+    beq t0, t1, rsp_slot_observed_swap
     nop
+
+rsp_slot_verify_fail:
     lbu t0, rsp_slot_proof
-    ori t0, t0, 0x2
+    ori t0, t0, 0x80
     sb t0, rsp_slot_proof
     b rsp_slot_verify_done
     nop
 
-rsp_slot_verify_regular:
-    bnez t0, rsp_slot_verify_fail
-    nop
+rsp_slot_observed_regular:
     lbu t0, rsp_slot_proof
     ori t0, t0, 0x1
     sb t0, rsp_slot_proof
     b rsp_slot_verify_done
     nop
 
-rsp_slot_verify_fail:
+rsp_slot_observed_swap:
     lbu t0, rsp_slot_proof
-    ori t0, t0, 0x80
+    ori t0, t0, 0x2
     sb t0, rsp_slot_proof
 
 rsp_slot_verify_done:

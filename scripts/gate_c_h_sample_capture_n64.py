@@ -64,7 +64,7 @@ def main() -> int:
         "--force-precision",
         type=parse_int,
         choices=(0, 4, 8, 12, 16, 20),
-        help="optional diagnostic-only precision_set byte to patch before guest execution",
+        help="optional diagnostic-only precision_set byte to patch after runtime initialization",
     )
     parser.add_argument("--cur-line-address", required=True, type=parse_int)
     parser.add_argument("--whx-address", required=True, type=parse_int)
@@ -87,22 +87,28 @@ def main() -> int:
 
         initial = client.request("?")
         print(f"Initial target state: {initial.decode('ascii', errors='replace')}")
+        boot_precision = read_uint(client, args.precision_address, 1)
+        print(f"Pre-init precision_set: {boot_precision}")
+
+        validate_stop(
+            client.continue_then_interrupt(args.warmup_seconds),
+            "H-SAMPLE initialization warmup stop",
+        )
 
         initial_precision = read_uint(client, args.precision_address, 1)
-        print(f"Initial precision_set: {initial_precision}")
+        print(f"Initialized precision_set: {initial_precision}")
         if args.force_precision is not None:
             client.write_memory(args.precision_address, bytes([args.force_precision]))
             forced = read_uint(client, args.precision_address, 1)
             if forced != args.force_precision:
                 raise RuntimeError(
-                    f"precision patch failed: expected {args.force_precision}, got {forced}"
+                    f"precision patch failed after init: expected {args.force_precision}, got {forced}"
                 )
-            print(f"Forced precision_set={forced} before guest execution")
-
-        validate_stop(
-            client.continue_then_interrupt(args.warmup_seconds),
-            "H-SAMPLE warmup stop",
-        )
+            print(f"Forced precision_set={forced} after runtime initialization")
+            validate_stop(
+                client.continue_then_interrupt(args.warmup_seconds),
+                "H-SAMPLE forced-precision settle stop",
+            )
 
         queue_table = client.read_memory(args.sect_queues_address, 8, 8)
         queue_bases = [
@@ -132,6 +138,7 @@ def main() -> int:
             "completed_queue_index": completed_index,
             "completed_queue_base": completed_base,
             "queue_id": read_uint(client, args.queue_id_address, 1),
+            "boot_precision_set": boot_precision,
             "initial_precision_set": initial_precision,
             "forced_precision_set": args.force_precision,
             "precision_set": read_uint(client, args.precision_address, 1),

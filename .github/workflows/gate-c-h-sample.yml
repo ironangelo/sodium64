@@ -1,0 +1,289 @@
+name: Gate C H-SAMPLE Diagnostic
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-h-sample-diagnostic
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-h-sample-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diagnostic-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate H-SAMPLE harness
+        run: |
+          python3 scripts/test_gate_c_h_sample.py -v
+          python3 scripts/test_gate_c_h_sample_analyze.py -v
+
+      - name: Generate deterministic original SNES diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_h_sample.py diagnostic/gate-c-h-sample.smc \
+            | tee diagnostic/generator.log
+          echo "347e177ceef12a04b51b7e6958bb81b09d741acf4db8edb5aea2bea8fa82af8e  diagnostic/gate-c-h-sample.smc" \
+            | sha256sum --check
+
+          cat > diagnostic/MANIFEST.txt <<EOF
+          purpose=Gate C H-SAMPLE per-line section preservation discriminator
+          sodium64_core=84ecafad7cc3505d82f134b2672d9ed1146fedc0
+          diagnostic_source_sha=$GITHUB_SHA
+          guest_rom_sha256=347e177ceef12a04b51b7e6958bb81b09d741acf4db8edb5aea2bea8fa82af8e
+          visible_lines=224
+          channel0=direct HDMA WH0 0..223
+          channel1=direct HDMA WMDATA mirror 0..223 to WRAM 0x0100
+          expected_precision_set=8
+          primary_oracle=completed Sodium64 section queue
+          EOF
+
+      - name: Upload original diagnostic artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-h-sample-diagnostic
+          retention-days: 30
+          path: |
+            diagnostic/gate-c-h-sample.smc
+            diagnostic/MANIFEST.txt
+            diagnostic/generator.log
+
+  sodium64-section-semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    needs:
+      - diagnostic-build
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Run H-SAMPLE host tests
+        run: |
+          python3 scripts/test_gate_c_h_sample.py -v
+          python3 scripts/test_gate_c_h_sample_analyze.py -v
+
+      - name: Build exact unchanged Sodium64 core
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Generate and wrap exact original diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workload
+          python3 scripts/make_gate_c_h_sample.py workload/gate-c-h-sample.smc
+          echo "347e177ceef12a04b51b7e6958bb81b09d741acf4db8edb5aea2bea8fa82af8e  workload/gate-c-h-sample.smc" \
+            | sha256sum --check
+
+          mkdir -p wrap
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp workload/gate-c-h-sample.smc wrap/gate-c-h-sample.smc
+          (
+            cd wrap
+            python3 rom-converter.py </dev/null
+          )
+          test -s wrap/out/gate-c-h-sample.z64
+
+          dd if=wrap/out/gate-c-h-sample.z64 of=workload/embedded.smc \
+            bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          echo "347e177ceef12a04b51b7e6958bb81b09d741acf4db8edb5aea2bea8fa82af8e  workload/embedded.smc" \
+            | sha256sum --check
+          rm workload/embedded.smc
+
+      - name: Locate Sodium64 H-SAMPLE state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          wram=$(symbol wram)
+          sect_queues=$(symbol sect_queues)
+          section_ptr=$(symbol section_ptr)
+          queue_id=$(symbol queue_id)
+          precision_set=$(symbol precision_set)
+          cur_line=$(symbol cur_line)
+          whx=$(symbol whx)
+          cooldown=$(symbol cooldown)
+          sect_status=$(symbol sect_status)
+
+          for value in "$wram" "$sect_queues" "$section_ptr" "$queue_id" \
+                       "$precision_set" "$cur_line" "$whx" "$cooldown" "$sect_status"; do
+            test -n "$value"
+          done
+
+          frame_counter=$(printf '%08x' "$((0x$wram))")
+          probe=$(printf '%08x' "$((0x$wram + 0x100))")
+          {
+            echo "SECT_QUEUES_ADDR=0x$sect_queues"
+            echo "SECTION_PTR_ADDR=0x$section_ptr"
+            echo "QUEUE_ID_ADDR=0x$queue_id"
+            echo "PRECISION_ADDR=0x$precision_set"
+            echo "CUR_LINE_ADDR=0x$cur_line"
+            echo "WHX_ADDR=0x$whx"
+            echo "COOLDOWN_ADDR=0x$cooldown"
+            echo "SECT_STATUS_ADDR=0x$sect_status"
+            echo "FRAME_COUNTER_ADDR=0x$frame_counter"
+            echo "PROBE_ADDR=0x$probe"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            git \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+
+          # Known lab limitation: the pinned ares RSP recompiler is invalid for
+          # Sodium64 custom ucode. Keep R4300 JIT, force only RSP interpreter.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Capture and classify completed section queue
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          home="$RUNNER_TEMP/ares-home-gate-c-h-sample"
+          settings="$RUNNER_TEMP/ares-gate-c-h-sample-settings.bml"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9142" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              wrap/out/gate-c-h-sample.z64 \
+              > captures/ares-n64.log 2>&1 &
+          ares_pid=$!
+
+          cleanup() {
+            kill "$ares_pid" 2>/dev/null || true
+            wait "$ares_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          python3 scripts/gate_c_h_sample_capture_n64.py \
+            --port 9142 \
+            --sect-queues-address "$SECT_QUEUES_ADDR" \
+            --section-ptr-address "$SECTION_PTR_ADDR" \
+            --queue-id-address "$QUEUE_ID_ADDR" \
+            --precision-address "$PRECISION_ADDR" \
+            --cur-line-address "$CUR_LINE_ADDR" \
+            --whx-address "$WHX_ADDR" \
+            --cooldown-address "$COOLDOWN_ADDR" \
+            --sect-status-address "$SECT_STATUS_ADDR" \
+            --frame-counter-address "$FRAME_COUNTER_ADDR" \
+            --probe-address "$PROBE_ADDR" \
+            --output captures/capture.json
+
+          python3 scripts/gate_c_h_sample_analyze.py \
+            captures/capture.json \
+            --output captures/analysis.json \
+            | tee captures/analysis.txt
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('captures/analysis.json').read_text())
+          expected = 'H_SAMPLE_CONFIRMED_SECTION_COALESCING'
+          classification = result['classification']
+          if classification != expected:
+              raise SystemExit(
+                  f'H-SAMPLE diagnostic expected {expected}, got {classification}: {result}'
+              )
+          assert result['probe_matches_0_to_223'] is True, result
+          assert result['precision_set'] == 8, result
+          assert result['final_section_seen'] is True, result
+          assert result['unique_wh0_count'] < 224, result
+          print(
+              'Gate-C H-SAMPLE CONFIRMED: '
+              f"records={result['record_count']} "
+              f"unique_wh0={result['unique_wh0_count']} "
+              f"missing={result['missing_wh0_count']} "
+              f"max_line_step={result['max_end_line_step']} "
+              f"max_wh0_step={result['max_wh0_forward_step']}"
+          )
+          PY
+
+      - name: Upload H-SAMPLE evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-h-sample-sodium64-evidence
+          retention-days: 30
+          path: |
+            captures/
+            ares-version.txt
+            sodium64-build.log
+            workload/gate-c-h-sample.smc

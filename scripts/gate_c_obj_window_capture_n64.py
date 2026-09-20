@@ -2,9 +2,10 @@
 """Capture control/treatment Sodium64 framebuffers for the Gate-C OBJ-window test.
 
 The target is a pinned N64 ares instance running the wrapped original diagnostic.
-This client synchronizes on the diagnostic's WRAM phase mirror, lets the selected
-phase settle for several guest frames, then captures the currently displayed
-Sodium64 framebuffer and selected emulator state through ares' N64 GDB server.
+This client synchronizes on the diagnostic's WRAM phase mirror and captures a
+non-blank displayed Sodium64 framebuffer plus selected emulator state through
+ares' N64 GDB server. A blank framebuffer is treated as startup/stale lab state,
+never as semantic evidence.
 """
 
 from __future__ import annotations
@@ -40,9 +41,7 @@ def parse_observation(text: str) -> tuple[str, int, int]:
         address = int(address_text, 0)
         size = int(size_text, 0)
     except ValueError as exc:
-        raise argparse.ArgumentTypeError(
-            "observations use LABEL:ADDRESS:SIZE"
-        ) from exc
+        raise argparse.ArgumentTypeError("observations use LABEL:ADDRESS:SIZE") from exc
     if size not in (1, 2, 4):
         raise argparse.ArgumentTypeError("observation size must be 1, 2, or 4")
     return label, address, size
@@ -58,36 +57,21 @@ def wait_for_phase(
     phase_address: int,
     target: int,
     poll_seconds: float,
-    settle_seconds: float,
     attempts: int,
-) -> int:
+) -> None:
     for attempt in range(1, attempts + 1):
         validate_stop(
             client.continue_then_interrupt(poll_seconds),
             f"Phase {target:02x} poll #{attempt}",
         )
         phase = read_u(client, phase_address, 1)
-        if phase != target:
-            print(f"phase mirror=0x{phase:02X}, waiting for 0x{target:02X}")
-            continue
-
-        # Let rendering consume the new PPU state, then require the phase still
-        # to match so the capture cannot straddle the 120-frame transition.
-        validate_stop(
-            client.continue_then_interrupt(settle_seconds),
-            f"Phase {target:02x} settle",
-        )
-        phase = read_u(client, phase_address, 1)
         if phase == target:
-            return attempt
-        print(
-            f"phase changed during settle: got 0x{phase:02X}, "
-            f"retrying target 0x{target:02X}"
-        )
-    raise RuntimeError(f"did not observe stable phase 0x{target:02X}")
+            return
+        print(f"phase mirror=0x{phase:02X}, waiting for 0x{target:02X}")
+    raise RuntimeError(f"did not observe phase 0x{target:02X}")
 
 
-def capture_phase(
+def capture_nonblank_phase(
     client: RSPClient,
     *,
     name: str,
@@ -97,7 +81,6 @@ def capture_phase(
     observations: list[tuple[str, int, int]],
     output_dir: Path,
     poll_seconds: float,
-    settle_seconds: float,
     attempts: int,
 ) -> dict[str, object]:
     wait_for_phase(
@@ -105,32 +88,60 @@ def capture_phase(
         phase_address=phase_address,
         target=target,
         poll_seconds=poll_seconds,
-        settle_seconds=settle_seconds,
         attempts=attempts,
     )
 
-    phase = read_u(client, phase_address, 1)
-    fb_pointer = read_u(client, framebuffer_address, 4)
-    if not (0x80000000 <= fb_pointer <= 0xBFFFFFFF):
-        raise RuntimeError(f"unexpected framebuffer pointer 0x{fb_pointer:08X}")
+    # The control phase is already active during emulator startup, so a first
+    # displayed-buffer pointer can legitimately refer to a not-yet-rendered
+    # cleared buffer. Require actual rendered pixels while the guest remains in
+    # the requested phase. This removes wall-clock startup races from evidence.
+    for render_attempt in range(1, attempts + 1):
+        phase = read_u(client, phase_address, 1)
+        if phase != target:
+            print(
+                f"{name}: phase changed to 0x{phase:02X} before a rendered "
+                "frame was captured; waiting for next occurrence"
+            )
+            wait_for_phase(
+                client,
+                phase_address=phase_address,
+                target=target,
+                poll_seconds=poll_seconds,
+                attempts=attempts,
+            )
 
-    raw = client.read_memory(fb_pointer, FB_BYTES, 0x400)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    fb_path = output_dir / f"{name}.rgba5551"
-    fb_path.write_bytes(raw)
+        fb_pointer = read_u(client, framebuffer_address, 4)
+        if not (0x80000000 <= fb_pointer <= 0xBFFFFFFF):
+            raise RuntimeError(f"unexpected framebuffer pointer 0x{fb_pointer:08X}")
+        raw = client.read_memory(fb_pointer, FB_BYTES, 0x400)
 
-    state: dict[str, int] = {
-        "phase": phase,
-        "framebuffer_pointer": fb_pointer,
-    }
-    for label, address, size in observations:
-        state[label] = read_u(client, address, size)
+        if any(raw) and read_u(client, phase_address, 1) == target:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            (output_dir / f"{name}.rgba5551").write_bytes(raw)
 
-    print(
-        f"{name}: phase=0x{phase:02X} framebuffer=0x{fb_pointer:08X} "
-        f"bytes={len(raw)} state={state}"
-    )
-    return state
+            state: dict[str, int] = {
+                "phase": target,
+                "framebuffer_pointer": fb_pointer,
+                "render_attempt": render_attempt,
+            }
+            for label, address, size in observations:
+                state[label] = read_u(client, address, size)
+            print(
+                f"{name}: phase=0x{target:02X} framebuffer=0x{fb_pointer:08X} "
+                f"bytes={len(raw)} render_attempt={render_attempt} state={state}"
+            )
+            return state
+
+        print(
+            f"{name}: blank/stale framebuffer 0x{fb_pointer:08X} on "
+            f"render attempt {render_attempt}; continuing"
+        )
+        validate_stop(
+            client.continue_then_interrupt(poll_seconds),
+            f"{name} render poll #{render_attempt}",
+        )
+
+    raise RuntimeError(f"no non-blank framebuffer captured for phase 0x{target:02X}")
 
 
 def main() -> int:
@@ -149,8 +160,7 @@ def main() -> int:
         metavar="LABEL:ADDRESS:SIZE",
     )
     parser.add_argument("--poll-seconds", type=float, default=0.20)
-    parser.add_argument("--settle-seconds", type=float, default=0.20)
-    parser.add_argument("--attempts", type=int, default=40)
+    parser.add_argument("--attempts", type=int, default=50)
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args()
 
@@ -170,32 +180,20 @@ def main() -> int:
         if client.request(f"QPassSignals:{ARES_N64_GUEST_SIGNALS}") != b"OK":
             raise RuntimeError("target rejected QPassSignals")
 
-        states = {
-            "control": capture_phase(
+        states = {}
+        for name, target in (("control", CONTROL), ("treatment", TREATMENT)):
+            states[name] = capture_nonblank_phase(
                 client,
-                name="control",
-                target=CONTROL,
+                name=name,
+                target=target,
                 phase_address=args.phase_address,
                 framebuffer_address=args.framebuffer_address,
                 observations=args.observe,
                 output_dir=args.output_dir,
                 poll_seconds=args.poll_seconds,
-                settle_seconds=args.settle_seconds,
                 attempts=args.attempts,
-            ),
-            "treatment": capture_phase(
-                client,
-                name="treatment",
-                target=TREATMENT,
-                phase_address=args.phase_address,
-                framebuffer_address=args.framebuffer_address,
-                observations=args.observe,
-                output_dir=args.output_dir,
-                poll_seconds=args.poll_seconds,
-                settle_seconds=args.settle_seconds,
-                attempts=args.attempts,
-            ),
-        }
+            )
+
         (args.output_dir / "state.json").write_text(
             json.dumps(states, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",

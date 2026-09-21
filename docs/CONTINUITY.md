@@ -232,6 +232,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### Forward architecture finding — real two-target traversal must stop suppressing shared layers
+- Source audit at the existing screen-pass boundary found a production-relevant constraint for the discriminator **after** E2a.
+- Current section setup builds the two traversal masks as follows: load one of TS/TM according to `MASK_SEL`; load the other; compute `shared = first & second`; then **subtract shared layers from the first pass** before packing the other mask into the high byte. The later `srl s7,s7,8` boundary therefore draws shared layers only once, on the second traversal.
+- That behavior is intentional for the historical **single-framebuffer / no-blending workaround**, where drawing shared layers twice would be redundant or harmful. It is **not valid for true independent main/sub operands**: a layer enabled on both SNES screens must contribute to both raw target images.
+- Therefore a future real-renderer two-target proof must change two things together as one architecture contract: (1) switch Color Image target at the natural traversal boundary, and (2) preserve shared-layer membership in **both** screen masks. It must not interpret the current shared-layer suppression as reusable production semantics.
+- This finding does not alter E2a's synthetic Color Image rebasing question and requires no change while semantic run `35657048671` is active.
+- Proposed next discriminator if E2a passes: a tightly controlled **E2b real-traversal target-switch proof** using the existing renderer/cache path, with distinct main-only, sub-only and shared-layer content so failure can distinguish target switching from mask membership.
+- Classification: **SUPPORTED SOURCE FINDING / NEXT-ARCHITECTURE CONSTRAINT**, not implemented.
+
 ### E2a batch 11 — semantic workflow retargeted as workflow-only delta
 - E2a branch advanced to **`67c18c9ab4baf7531db8384eef8df59e9641ab86`** with one workflow-only commit: `proof: dispatch E2a color strip semantic validation`.
 - Runtime/source/classifier are unchanged from generic-green `0f588c69...`. Only `.github/workflows/gate-c-h-comp-e1-z-tag.yml` metadata changed:

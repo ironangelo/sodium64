@@ -2,7 +2,9 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
-## RESUME HERE — current audited state (2026-09-20 UTC)
+## RESUME HERE — current audited state (2026-09-21 UTC)
+
+- **2026-09-21 focused auditor / checkpoint 0 — IN PROGRESS:** master5b713493 verified; PR14 integrated; PR13 open at84ecafad. Five requested batches will be persisted sequentially below under “Gate-C focused audit 2026-09-21”. Source-disjoint PR13/14 is not combined-runtime validation. Next: PR13 loader/ABI and semantic evidence. Only this file changes.
 
 - **2026-09-21 master post-merge Ares discrepancy — LAB LIMITATION / exact rerun GREEN:** original push Ares run `35543805220` had one collapsed `recompiler-gameplay-balanced` instance (0 samples/0 frames, `SP_PC=0`) after all preceding workloads progressed. Exact failed job was re-run **without any source/workflow change**; replacement `ares-smoke` job **`106184119278 SUCCESS`** completed the entire matrix. On the previously collapsed workload it produced **1015 valid samples**, `fps_display=60/60`, partial `fps_native=24`, `fps_emulate=25`, `frame_count=2`, `SP_PC=3480`, at frameskip0/APU21/audio4/precision8. The rerun's frame-budget report classifies gameplay-balanced at the virtual target. **Decision:** original zero-state instance is a **LAB LIMITATION / runner-emulator boot flake**, not reproduced evidence of a PR14/WH regression. Do not change runtime for it. Integrated `master@5b713493...` remains best-known state. This unblocks H-COMP architecture work.
 
@@ -7475,3 +7477,13 @@ No performance numbers were measured for a proposed correction. Gate B's current
 - **BLOCKED:** attribution to Iron's exact SMW/ALttP scenes until legal private assets/route evidence are available. **Not blocked:** original deterministic masks/math tests, source audit, repair design and open-homebrew regression automation.
 - **DEFERRED:** commercial infrastructure provisioning, actual ROM use, core changes, experiments, performance requalification and real-hardware milestone until separately authorized work. No new code is marked IMPLEMENTED.
 - **Project direction:** public asset-free diagnostics + private optional game qualification + occasional batched real-hardware gates is compatible with Iron's autonomy goal. Commercial ROMs are not required in public GitHub; a native port's source is useful evidence, not a substitute for independently validating SNES hardware semantics.
+
+## Gate-C focused audit 2026-09-21 — checkpoint 0: verified baseline
+
+Scope: read-only runtime/code/workflows/PRs; only this continuity file is writable. Audit requested in five sequential batches (PR13, PR14, H-COMP architecture, exact math, direction). No implementation or experiment execution.
+
+- **VALIDATED repository identity:** master `5b7134930a0ca859f6aa24e54102de116948e3ed`; starting continuity `723bced2bc6ca6ce72532946280bdc2e87e91883`. Read RESUME HERE and master ROAD_TO_1_0, ROADMAP, PROFILING, VALIDATION. M0/M1/M2 achieved, M3/Gate C active. Latest continuity agrees with repository identity; old pending entries are historical.
+- PR14 **MERGED-CONSUMED**, exact candidate `8be82f5fb3a02f6390d5dfbaf3d94addc8f4e1ec`, merge is current master; integrated ppu.S blob `1085f2a253e1522268c6ebb430086fd318ddfa6e` matches candidate. PR13 **OPEN / UNMERGED** at `phase4/gate-c-rsp-overlay-clean@84ecafad7cc3505d82f134b2672d9ed1146fedc0`.
+- **VALIDATED CI metadata:** master Ares run35543805220 is success at attempt2; #13 exact-head Build35530189781 success. Overlay whole-frame35530604792, same-frame35533933132 and H-OBJ35530449506 jobs are success. WH mixed35541332012 and H-COMP BG35549088629 jobs are success. Green status alone does not independently establish the attached semantic claims; source/log review follows.
+- **SUPPORTED INTERPRETATION — integration evidence boundary:** PR13's frozen source still derives from pre-PR14 master9441818..., and includes the H-OBJ repair in addition to overlay infrastructure. Source-disjoint does not mean the combined urgent-WH producer plus overlay consumer was dynamically qualified. Its previous virtual and future hardware evidence must name the exact integrated candidate; don't silently transfer timing claims to a future composition.
+- No reopening of M2 or PR14 on generic precaution. No current reason to change runtime for the successful identical-source Ares rerun. Audit batch1 is next.

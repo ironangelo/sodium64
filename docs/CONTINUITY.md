@@ -124,6 +124,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Precomputed E1g half-sub oracle for later use: `0000,000F,01E0,3C00,0000,0000,0000,0000,000F,01E0,1084,0421,3C0F,01EF,1405,0009`.
 - **Status:** source-derived / oracle precommitted; no E1f branch or runtime change yet.
 
+### Production H-COMP integration risk — master brightness is not explicit in the 0x40-byte section ABI
+- Source audit found `write_inidisp` stores master brightness in the global `brightness` byte and calls `update_fill`; the 0x40-byte section snapshot copied from `bghofs` contains brightness-scaled `sub_color/main_color` but **no explicit brightness field**.
+- `rsp_frame:update_dpal` also loads the current global `brightness` once while converting CGRAM into the frame palette queue. Thus exact “raw color math first, master brightness last” cannot simply replace the existing section colors with raw RGB555 and assume brightness is recoverable for every historical section.
+- **OPEN QUESTION / potential Gate-C fidelity debt:** whether mid-frame INIDISP brightness changes are currently represented correctly for normal layer palette colors is not established by this audit. Existing fixed/backdrop colors can encode brightness in their already-scaled values, but the palette queue appears frame-level. Do not label this a bug until a focused raster-brightness test proves it.
+- **Integration implication:** any production raw-operand design must explicitly account for per-section master brightness (new/repacked section state or another proven mechanism) rather than losing raster-sensitive brightness history. This is a design constraint, not a reason to widen the ABI yet.
+
 ### Post-arithmetic gating audit — existing section ABI already carries the needed control registers
 - Master source audit while E1f runs: each 0x40-byte frame section already snapshots `WOBJSEL`, `CGWSEL`, `CGADSUB`, `TS/TM/TSW/TMW` and window edges alongside colors/layer state. Therefore later color-math gating does **not** need a second CPU→RSP control pipeline merely to transport these registers.
 - Current RSP backdrop path already consumes `CGADSUB & 0x20` (backdrop math enable), `CGWSEL` and `WOBJSEL` to choose/swap fill colors across color-window segments, but explicitly says `TODO: implement color math properly`; it substitutes/switches already brightness-scaled `MAIN_COLOR/SUB_COLOR` rather than performing SNES arithmetic.

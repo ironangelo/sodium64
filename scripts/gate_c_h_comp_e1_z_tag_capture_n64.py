@@ -28,6 +28,9 @@ Z_PREFIX_SIZE = Z_BASE - Z_COMMAND_ADDR
 Z_SUFFIX_SIZE = 64
 STATUS_ADDR = 0xA00E1000
 STATUS_MARKER = 0xE1F00D01
+STATUS_SIZE = 8
+SP_STATUS_ADDR = 0xA4040010
+DP_STATUS_ADDR = 0xA410000C
 
 PREFIX_BYTE = 0xC3
 SENTINEL_WORD = 0x55AA
@@ -53,12 +56,12 @@ def initialize_proof_memory(client: RSPClient) -> None:
     write_pattern(client, Z_COMMAND_ADDR, bytes([PREFIX_BYTE]) * Z_PREFIX_SIZE)
     write_pattern(client, Z_BASE, SENTINEL_WORD.to_bytes(2, "big") * (Z_SIZE // 2))
     write_pattern(client, Z_BASE + Z_SIZE, bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE)
-    client.write_memory(STATUS_ADDR, bytes(4))
+    client.write_memory(STATUS_ADDR, bytes(STATUS_SIZE))
 
     assert client.read_memory(Z_COMMAND_ADDR, Z_PREFIX_SIZE, 0x400) == bytes([PREFIX_BYTE]) * Z_PREFIX_SIZE
     assert client.read_memory(Z_BASE, Z_SIZE, 0x400) == SENTINEL_WORD.to_bytes(2, "big") * (Z_SIZE // 2)
     assert client.read_memory(Z_BASE + Z_SIZE, Z_SUFFIX_SIZE, 0x100) == bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE
-    assert read_u(client, STATUS_ADDR, 4) == 0
+    assert client.read_memory(STATUS_ADDR, STATUS_SIZE, STATUS_SIZE) == bytes(STATUS_SIZE)
 
 
 def wait_for_proof(
@@ -95,6 +98,52 @@ def wait_for_proof(
                 "counter_delta": 0 if delta is None else delta,
             }
     raise RuntimeError("E1a proof marker/fresh guest frame was not observed")
+
+
+def set_breakpoint(client: RSPClient, address: int, enabled: bool) -> None:
+    command = "Z0" if enabled else "z0"
+    reply = client.request(f"{command},{address:x},4")
+    if reply != b"OK":
+        action = "insert" if enabled else "remove"
+        raise RuntimeError(
+            f"target rejected software breakpoint {action} at 0x{address:08X}: "
+            f"{reply.decode('ascii', errors='replace')}"
+        )
+
+
+def read_quiescent_state(client: RSPClient) -> dict[str, int]:
+    marker = read_u(client, STATUS_ADDR, 4)
+    framebuffer_pointer = read_u(client, STATUS_ADDR + 4, 4)
+    sp_status = read_u(client, SP_STATUS_ADDR, 4)
+    dp_status = read_u(client, DP_STATUS_ADDR, 4)
+    return {
+        "status": marker,
+        "proof_framebuffer_pointer": framebuffer_pointer,
+        "sp_status": sp_status,
+        "dp_status": dp_status,
+    }
+
+
+def validate_quiescent_state(state: dict[str, int], *, require_marker: bool) -> None:
+    if (state["sp_status"] & 0x1) == 0:
+        raise RuntimeError(
+            f"capture breakpoint reached without RSP HALT: SP_STATUS=0x{state['sp_status']:08X}"
+        )
+    if state["dp_status"] & 0x70:
+        raise RuntimeError(
+            f"capture breakpoint reached with DP busy: DP_STATUS=0x{state['dp_status']:08X}"
+        )
+    if require_marker and state["status"] != STATUS_MARKER:
+        raise RuntimeError(
+            f"capture breakpoint reached without fresh proof marker: 0x{state['status']:08X}"
+        )
+    if require_marker and not (
+        0x80000000 <= state["proof_framebuffer_pointer"] <= 0xBFFFFFFF
+    ):
+        raise RuntimeError(
+            "proof marker contains invalid framebuffer pointer "
+            f"0x{state['proof_framebuffer_pointer']:08X}"
+        )
 
 
 def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> dict[str, object]:
@@ -204,6 +253,7 @@ def main() -> int:
     parser.add_argument("--response-timeout", type=float, default=30.0)
     parser.add_argument("--guest-counter-address", required=True, type=parse_int)
     parser.add_argument("--framebuffer-address", required=True, type=parse_int)
+    parser.add_argument("--capture-ready-address", required=True, type=parse_int)
     parser.add_argument("--poll-seconds", type=float, default=0.20)
     parser.add_argument("--attempts", type=int, default=80)
     parser.add_argument("--output-dir", required=True, type=Path)
@@ -236,24 +286,48 @@ def main() -> int:
             minimum_counter=5,
         )
 
-        # Establish a clean ownership epoch after warm-up, while execution is stopped
-        # after the producer fence. Now any non-sentinel word comes from fresh frames.
+        # Stop at the CPU's post-rsp_wait point. Sodium64 reaches this PC only
+        # after observing SP_STATUS.HALT, so both producer and DP can be checked
+        # at a deterministic between-frame boundary rather than a timed host poll.
+        set_breakpoint(client, args.capture_ready_address, True)
+        validate_stop(client.request("c"), "E1a clean-epoch breakpoint")
+        anchor = read_quiescent_state(client)
+        validate_quiescent_state(anchor, require_marker=True)
+
+        # Create the clean epoch only now, between frames with the RSP halted.
         initialize_proof_memory(client)
         baseline_counter = read_u(client, args.guest_counter_address, 1)
-        state = wait_for_proof(
-            client,
-            guest_counter_address=args.guest_counter_address,
-            poll_seconds=args.poll_seconds,
-            attempts=args.attempts,
-            baseline_counter=baseline_counter,
-        )
-        state["warmup_counter"] = warmup["guest_counter"]
-        state["baseline_counter"] = baseline_counter
 
-        fb_pointer = read_u(client, args.framebuffer_address, 4)
-        if not (0x80000000 <= fb_pointer <= 0xBFFFFFFF):
-            raise RuntimeError(f"unexpected framebuffer pointer 0x{fb_pointer:08X}")
+        # Step over the breakpoint once, reinstall it behind the PC, and let one
+        # complete subsequent RSP frame reach the same quiescent boundary.
+        set_breakpoint(client, args.capture_ready_address, False)
+        validate_stop(client.request("s"), "E1a breakpoint step-over")
+        set_breakpoint(client, args.capture_ready_address, True)
+        validate_stop(client.request("c"), "E1a fenced capture breakpoint")
 
+        quiescent = read_quiescent_state(client)
+        validate_quiescent_state(quiescent, require_marker=True)
+        counter = read_u(client, args.guest_counter_address, 1)
+        delta = (counter - baseline_counter) & 0xFF
+        if delta < 1:
+            raise RuntimeError(
+                "capture breakpoint did not include a fresh guest frame: "
+                f"baseline=0x{baseline_counter:02X} current=0x{counter:02X}"
+            )
+
+        state = {
+            "attempt": 1,
+            "guest_counter": counter,
+            "status": quiescent["status"],
+            "counter_delta": delta,
+            "warmup_counter": warmup["guest_counter"],
+            "baseline_counter": baseline_counter,
+            "sp_status": quiescent["sp_status"],
+            "dp_status": quiescent["dp_status"],
+        }
+
+        fb_pointer = quiescent["proof_framebuffer_pointer"]
+        display_fb_pointer = read_u(client, args.framebuffer_address, 4)
         framebuffer = client.read_memory(fb_pointer, FB_BYTES, 0x400)
         prefix = client.read_memory(Z_COMMAND_ADDR, Z_PREFIX_SIZE, 0x400)
         depth = client.read_memory(Z_BASE, Z_SIZE, 0x400)
@@ -268,6 +342,8 @@ def main() -> int:
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),
+            "display_framebuffer_pointer": hex(display_fb_pointer),
+            "capture_ready_address": hex(args.capture_ready_address),
         }
         (out / "result.json").write_text(
             json.dumps(result, indent=2, sort_keys=True) + "\n",

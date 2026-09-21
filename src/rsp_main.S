@@ -170,9 +170,9 @@ main:
     jal rdp_send
     li a1, RDP_FRAME
 
-    // E1 proof: bind a separate depth surface through the real RDP command path.
+    // E1 color control: retain the proof slot/layout but do not bind a Z surface.
     li a0, RDP_TILE7
-    jal rdp_send
+    nop
     li a1, RDP_TILE7 + 8
     li sp, 0 // Frame index
 

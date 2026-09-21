@@ -58,6 +58,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1f prep — half-color semantics source-grounded, no code yet
+- Pinned SNES reference: `ares-emulator/ares@17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`, both `ares/sfc/ppu-performance/dac.cpp` and accurate `ares/sfc/ppu/dac.cpp`.
+- **Half-add arithmetic:** reference uses `(x + y - ((x ^ y) & 0x0421)) >> 1`; this is exactly independent per-channel `floor((A+B)/2)` for RGB555, with cross-channel carry suppression. No saturate-to-31 step is needed because averaging two 5-bit channels is already <=31.
+- **Half-sub arithmetic:** reference first performs per-channel floor-at-zero subtraction, then masks `0x7BDE` before shifting; equivalently each channel is `floor(max(A-B,0)/2)`.
+- **Half gating:** when fixed color is the second operand (`blendMode=0`), half applies when the half bit is set and the above/color-window permits math. When subscreen is selected (`blendMode=1`), half is suppressed if the below operand is transparent/backdrop (`Source::COL`); accurate implementation falls back to fixed color and forces `colorHalve=false` in that case. Window/color-enable gating is therefore a separate semantic layer from the arithmetic itself.
+- **Decision:** split the next work into at least two discriminators: **E1f = half-add arithmetic only** and **E1g = half-sub arithmetic only**. Do not mix operand-selection/window suppression into those kernels. A later E1h-style discriminator should cover CGADSUB/blendMode/window half-enable gating.
+- Reusing E1d/E1e's 16 A/B operands, exact E1f half-add oracle is: `0000,0010,0200,4000,7FFF,000F,01E0,3C00,000F,01E0,318C,0C63,3DEF,3DEF,3DEF,2AAA`.
+- Precomputed E1g half-sub oracle for later use: `0000,000F,01E0,3C00,0000,0000,0000,0000,000F,01E0,1084,0421,3C0F,01EF,1405,0009`.
+- **Status:** source-derived / oracle precommitted; no E1f branch or runtime change yet.
+
 ### Immediate next uncertainty
 - **NEXT: half-color semantics, source-grounded before code.**
 - Do **not** implement “just shift the final RGB555 result right one” from intuition. Derive exact SNES half behavior from pinned/reference implementation first, including:

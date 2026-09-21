@@ -1259,9 +1259,9 @@ e1c_restore_wait:
     bnez t0, e1c_restore_wait
     nop
 
-    // E1e proof: raw RGB555 floor-at-zero subtraction microkernel. Host owns
-    // the operand/guard initialization at the quiescent frame boundary. This
-    // reuses the exact E1d staging contract; only arithmetic semantics change.
+    // E1g proof: raw RGB555 half-sub using the exact packed identity from
+    // pinned ares. This preserves the validated E1e staging/fence contract;
+    // only arithmetic semantics change.
     li a0, TEXTURE
     li a1, 0xA00E2020
     jal dma_read
@@ -1274,51 +1274,36 @@ e1c_restore_wait:
     li s0, TEXTURE
     li s1, TEXTURE + 0x20
     li s2, 16
-e1e_sub_loop:
+e1g_half_sub_loop:
     lhu t0, 0(s0)
     lhu t1, 0(s1)
 
-    // R: bits 0..4, subtract independently and clamp underflow to zero.
-    andi t2, t0, 0x001F
-    andi t3, t1, 0x001F
-    sub t2, t2, t3
-    bgez t2, e1e_r_ok
-    nop
-    move t2, zero
-e1e_r_ok:
-    move t7, t2
+    // diff = x - y + 0x8420
+    sub t3, t0, t1
+    li t2, 0x8420
+    add t3, t3, t2
 
-    // G: bits 5..9, subtract independently and clamp underflow to zero.
-    srl t2, t0, 5
-    andi t2, t2, 0x001F
-    srl t3, t1, 5
-    andi t3, t3, 0x001F
-    sub t2, t2, t3
-    bgez t2, e1e_g_ok
-    nop
-    move t2, zero
-e1e_g_ok:
-    sll t2, t2, 5
-    or t7, t7, t2
+    // borrow = (diff - ((x ^ y) & 0x8420)) & 0x8420
+    xor t4, t0, t1
+    andi t4, t4, 0x8420
+    sub t5, t3, t4
+    andi t5, t5, 0x8420
 
-    // B: bits 10..14, subtract independently and clamp underflow to zero.
-    srl t2, t0, 10
-    andi t2, t2, 0x001F
-    srl t3, t1, 10
-    andi t3, t3, 0x001F
-    sub t2, t2, t3
-    bgez t2, e1e_b_ok
-    nop
-    move t2, zero
-e1e_b_ok:
-    sll t2, t2, 10
-    or t7, t7, t2
-    sh t7, 0(s0)
+    // base = (diff - borrow) & (borrow - (borrow >> 5))
+    srl t6, t5, 5
+    sub t6, t5, t6
+    sub t3, t3, t5
+    and t3, t3, t6
+
+    // Half the already floor-at-zero per-channel result.
+    andi t3, t3, 0x7BDE
+    srl t3, t3, 1
+    sh t3, 0(s0)
 
     addi s0, s0, 2
     addi s1, s1, 2
     addi s2, s2, -1
-    bnez s2, e1e_sub_loop
+    bnez s2, e1g_half_sub_loop
     nop
 
     li a0, TEXTURE

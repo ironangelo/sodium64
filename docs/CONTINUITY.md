@@ -35,6 +35,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Explicitly NOT E2b:** shared-layer membership (E2c), sections longer than the strip/band subloop, compositor arithmetic, raw palette/brightness production plumbing, color-window truth tables, PR #13 overlay integration, throughput or real-N64 cadence claims.
 - Status: **HYPOTHESIS / PRECOMMITTED**. Immediate next action: create the exact child branch, make the guest-only TM/TS + VIRQ/WH0 section-carrier delta first, checkpoint it, then alter the RSP target ownership as a separate technical batch.
 
+### E2b batch 2 — deterministic no-shared carrier guest IMPLEMENTED; runtime unchanged
+- Exact branch head **`0f41914ee000181210192926d87ff22fa2397f85`**.
+- Only **`scripts/make_gate_c_h_comp_e1_z_tag.py`** changed; `src/rsp_main.S`, capture logic and workflow are still byte-identical to frozen E2a at this checkpoint.
+- Carrier now uses **BG1 opaque red** (palette index 1 / SNES BGR555 `0x001F`) on **TM=0x01 main-only** and **BG2 opaque green** (index 2 / `0x03E0`) on **TS=0x02 sub-only**. No shared layers, OBJ, color math or active windows.
+- Added one direct-HDMA WH0 table using the already validated H-SAMPLE encoding: first 8 visible transfers write `0x00`, remaining visible transfers write `0x01`. Window enables remain zero, so WH0 is a section-boundary carrier only.
+- HDMA table lives at SNES ROM address **`0xB000`**, disjoint from the program/tilemaps/tiles and LoROM header; generator retains 32 KiB ROM size and deterministic construction by design.
+- **IMPLEMENTED, not yet validated.** Do not edit RSP target ownership until the harness captures both section queues and proves the first real section is exactly 8 lines with `TM=01 / TS=02`.
+- Next controlled delta: host/capture-only section-queue discriminator; runtime remains frozen.
+- Classification: **ARCHITECTURE PROOF / MEASUREMENT PREP**.
+
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.
 - **E1b VALIDATED:** two-BG winner-layer metadata can be encoded/read correctly. Validated head `8ec1362dd62f117e53b37eaf6523c7bdf00b75bf`.

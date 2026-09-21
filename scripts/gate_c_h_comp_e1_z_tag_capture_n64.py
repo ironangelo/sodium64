@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E1b two-BG winner metadata proof in pinned N64 ares."""
+"""Capture/classify Gate-C E1c within-frame compact Z-scratch reuse proof."""
 
 from __future__ import annotations
 
@@ -53,6 +53,16 @@ BG2_TAG_WORD = 0x1400
 BG1_BLACK_RGBA5551 = 0x0001
 BG2_GREEN_RGBA5551 = 0x07C1
 
+E1C_Z_SCRATCH_ADDR = 0xA00C0000
+E1C_Z_SCRATCH_SIZE = 0x1180
+E1C_ARCHIVE_A_ADDR = 0xA00C2000
+E1C_PREFIX_GUARD_ADDR = 0xA00BFFC0
+E1C_SUFFIX_GUARD_ADDR = 0xA00C1180
+E1C_GUARD_SIZE = 64
+E1C_ROWS = 8
+E1C_ACTIVE_X0 = 12
+E1C_ACTIVE_X1 = 268
+
 
 def parse_int(text: str) -> int:
     return int(text, 0)
@@ -91,7 +101,7 @@ def wait_for_proof(
     for attempt in range(1, attempts + 1):
         validate_stop(
             client.continue_then_interrupt(poll_seconds),
-            f"E1b proof poll #{attempt}",
+            f"E1c proof poll #{attempt}",
         )
         counter = read_u(client, guest_counter_address, 1)
         marker = read_u(client, STATUS_ADDR, 4)
@@ -112,7 +122,7 @@ def wait_for_proof(
                 "status": marker,
                 "counter_delta": 0 if delta is None else delta,
             }
-    raise RuntimeError("E1b proof marker/fresh guest frame was not observed")
+    raise RuntimeError("E1c proof marker/fresh guest frame was not observed")
 
 
 def set_breakpoint(client: RSPClient, address: int, enabled: bool) -> None:
@@ -182,143 +192,106 @@ def decode_section_queue(data: bytes) -> list[dict[str, int]]:
     return records
 
 
-def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> dict[str, object]:
-    assert len(framebuffer) == FB_BYTES
-    assert len(depth) == Z_SIZE
+def classify(
+    archive_a: bytes,
+    final_b: bytes,
+    prefix_guard: bytes,
+    suffix_guard: bytes,
+) -> dict[str, object]:
+    assert len(archive_a) == E1C_Z_SCRATCH_SIZE
+    assert len(final_b) == E1C_Z_SCRATCH_SIZE
+    assert len(prefix_guard) == E1C_GUARD_SIZE
+    assert len(suffix_guard) == E1C_GUARD_SIZE
 
-    fb_words = [
-        int.from_bytes(framebuffer[i:i + 2], "big")
-        for i in range(0, len(framebuffer), 2)
-    ]
-    z_words = [
-        int.from_bytes(depth[i:i + 2], "big")
-        for i in range(0, len(depth), 2)
-    ]
+    def words(data: bytes) -> list[int]:
+        return [
+            int.from_bytes(data[i:i + 2], "big")
+            for i in range(0, len(data), 2)
+        ]
 
-    fb_hist = collections.Counter(fb_words)
-    z_hist = collections.Counter(z_words)
+    a_words = words(archive_a)
+    b_words = words(final_b)
+    a_hist = collections.Counter(a_words)
+    b_hist = collections.Counter(b_words)
 
-    bg1_pixels = 0
-    bg2_pixels = 0
-    border_pixels = 0
-    bg1_wrong: list[dict[str, int]] = []
-    bg2_wrong: list[dict[str, int]] = []
-    border_wrong: list[dict[str, int]] = []
-    unexpected_color: list[dict[str, int]] = []
-    unexpected_depth: list[dict[str, int]] = []
-    bg1_tag_on_other: list[dict[str, int]] = []
-    bg2_tag_on_other: list[dict[str, int]] = []
-
-    for index, (fb, z) in enumerate(zip(fb_words, z_words)):
+    a_wrong: list[dict[str, int]] = []
+    b_wrong: list[dict[str, int]] = []
+    for index, (za, zb) in enumerate(zip(a_words, b_words)):
         y, x = divmod(index, FB_WIDTH)
+        active = E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1
+        expected_a = BG1_TAG_WORD if active else SENTINEL_WORD
+        expected_b = BG2_TAG_WORD if active else SENTINEL_WORD
+        if za != expected_a and len(a_wrong) < 64:
+            a_wrong.append({"x": x, "y": y, "actual": za, "expected": expected_a})
+        if zb != expected_b and len(b_wrong) < 64:
+            b_wrong.append({"x": x, "y": y, "actual": zb, "expected": expected_b})
 
-        if fb == BG1_BLACK_RGBA5551:
-            bg1_pixels += 1
-            if z != BG1_TAG_WORD and len(bg1_wrong) < 64:
-                bg1_wrong.append({"x": x, "y": y, "fb": fb, "z": z})
-        elif fb == BG2_GREEN_RGBA5551:
-            bg2_pixels += 1
-            if z != BG2_TAG_WORD and len(bg2_wrong) < 64:
-                bg2_wrong.append({"x": x, "y": y, "fb": fb, "z": z})
-        elif fb == 0:
-            border_pixels += 1
-            if z != SENTINEL_WORD and len(border_wrong) < 64:
-                border_wrong.append({"x": x, "y": y, "fb": fb, "z": z})
-        elif len(unexpected_color) < 64:
-            unexpected_color.append({"x": x, "y": y, "fb": fb, "z": z})
-
-        if z not in (
-            SENTINEL_WORD,
-            BACKDROP_TAG_WORD,
-            BG1_TAG_WORD,
-            BG2_TAG_WORD,
-        ) and len(unexpected_depth) < 64:
-            unexpected_depth.append({"x": x, "y": y, "fb": fb, "z": z})
-
-        if z == BG1_TAG_WORD and fb != BG1_BLACK_RGBA5551 and len(bg1_tag_on_other) < 64:
-            bg1_tag_on_other.append({"x": x, "y": y, "fb": fb, "z": z})
-        if z == BG2_TAG_WORD and fb != BG2_GREEN_RGBA5551 and len(bg2_tag_on_other) < 64:
-            bg2_tag_on_other.append({"x": x, "y": y, "fb": fb, "z": z})
-
-    prefix_ok = prefix == bytes([PREFIX_BYTE]) * Z_PREFIX_SIZE
-    suffix_ok = suffix == bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE
-
-    expected_active_half = 256 * 224 // 2
-    expected_border = FB_WIDTH * FB_HEIGHT - 256 * 224
+    prefix_ok = prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+    suffix_ok = suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
+    expected_active = (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) * E1C_ROWS
+    expected_border = (FB_WIDTH - (E1C_ACTIVE_X1 - E1C_ACTIVE_X0)) * E1C_ROWS
 
     passed = (
         prefix_ok
         and suffix_ok
-        and bg1_pixels == expected_active_half
-        and bg2_pixels == expected_active_half
-        and border_pixels == expected_border
-        and not bg1_wrong
-        and not bg2_wrong
-        and not border_wrong
-        and not unexpected_color
-        and not unexpected_depth
-        and not bg1_tag_on_other
-        and not bg2_tag_on_other
-        and z_hist[BG1_TAG_WORD] == bg1_pixels
-        and z_hist[BG2_TAG_WORD] == bg2_pixels
-        and z_hist[BACKDROP_TAG_WORD] == 0
-        and z_hist[SENTINEL_WORD] == border_pixels
+        and not a_wrong
+        and not b_wrong
+        and a_hist[BG1_TAG_WORD] == expected_active
+        and a_hist[SENTINEL_WORD] == expected_border
+        and b_hist[BG2_TAG_WORD] == expected_active
+        and b_hist[SENTINEL_WORD] == expected_border
+        and b_hist[BG1_TAG_WORD] == 0
+        and len(a_words) == FB_WIDTH * E1C_ROWS
+        and len(b_words) == FB_WIDTH * E1C_ROWS
     )
 
     return {
         "classification": (
-            "E1B_Z_WINNER_TAG_CONTRACT_VALIDATED"
+            "E1C_STRIP_REUSE_CONTRACT_VALIDATED"
             if passed
-            else "E1B_Z_WINNER_TAG_CONTRACT_FAILED"
+            else "E1C_STRIP_REUSE_CONTRACT_FAILED"
         ),
         "passed": passed,
         "constants": {
             "width": FB_WIDTH,
-            "height": FB_HEIGHT,
-            "z_command_address": hex(Z_COMMAND_ADDR),
-            "z_base": hex(Z_BASE),
-            "z_size": Z_SIZE,
-            "status_address": hex(STATUS_ADDR),
-            "status_marker": hex(STATUS_MARKER),
+            "rows": E1C_ROWS,
+            "scratch_address": hex(E1C_Z_SCRATCH_ADDR),
+            "scratch_size": E1C_Z_SCRATCH_SIZE,
+            "archive_a_address": hex(E1C_ARCHIVE_A_ADDR),
+            "prefix_guard_address": hex(E1C_PREFIX_GUARD_ADDR),
+            "suffix_guard_address": hex(E1C_SUFFIX_GUARD_ADDR),
+            "guard_size": E1C_GUARD_SIZE,
+            "active_x0": E1C_ACTIVE_X0,
+            "active_x1_exclusive": E1C_ACTIVE_X1,
             "sentinel_word": hex(SENTINEL_WORD),
-            "backdrop_tag_word": hex(BACKDROP_TAG_WORD),
-            "bg1_tag_word": hex(BG1_TAG_WORD),
-            "bg2_tag_word": hex(BG2_TAG_WORD),
-            "bg1_black_rgba5551": hex(BG1_BLACK_RGBA5551),
-            "bg2_green_rgba5551": hex(BG2_GREEN_RGBA5551),
-            "expected_active_half": expected_active_half,
-            "expected_border": expected_border,
+            "band_a_tag_word": hex(BG1_TAG_WORD),
+            "band_b_tag_word": hex(BG2_TAG_WORD),
+            "expected_active_words": expected_active,
+            "expected_border_words": expected_border,
         },
         "counts": {
-            "bg1_black_pixels": bg1_pixels,
-            "bg2_green_pixels": bg2_pixels,
-            "border_pixels": border_pixels,
-            "bg1_tag_words": z_hist[BG1_TAG_WORD],
-            "bg2_tag_words": z_hist[BG2_TAG_WORD],
-            "backdrop_tag_words": z_hist[BACKDROP_TAG_WORD],
-            "sentinel_words": z_hist[SENTINEL_WORD],
-            "total_pixels": len(z_words),
+            "archive_a_tag_words": a_hist[BG1_TAG_WORD],
+            "archive_a_sentinel_words": a_hist[SENTINEL_WORD],
+            "final_b_tag_words": b_hist[BG2_TAG_WORD],
+            "final_b_sentinel_words": b_hist[SENTINEL_WORD],
+            "final_b_stale_a_words": b_hist[BG1_TAG_WORD],
+            "words_per_compact_strip": len(a_words),
         },
         "guards": {
             "prefix_ok": prefix_ok,
             "suffix_ok": suffix_ok,
         },
-        "framebuffer_histogram_top": [
+        "archive_a_histogram_top": [
             {"word": hex(word), "count": count}
-            for word, count in fb_hist.most_common(12)
+            for word, count in a_hist.most_common(8)
         ],
-        "depth_histogram_top": [
+        "final_b_histogram_top": [
             {"word": hex(word), "count": count}
-            for word, count in z_hist.most_common(12)
+            for word, count in b_hist.most_common(8)
         ],
         "mismatches": {
-            "bg1_wrong": bg1_wrong,
-            "bg2_wrong": bg2_wrong,
-            "border_wrong": border_wrong,
-            "unexpected_color": unexpected_color,
-            "unexpected_depth": unexpected_depth,
-            "bg1_tag_on_other": bg1_tag_on_other,
-            "bg2_tag_on_other": bg2_tag_on_other,
+            "archive_a_wrong": a_wrong,
+            "final_b_wrong": b_wrong,
         },
     }
 
@@ -368,7 +341,7 @@ def main() -> int:
         # after observing SP_STATUS.HALT, so both producer and DP can be checked
         # at a deterministic between-frame boundary rather than a timed host poll.
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E1b clean-epoch breakpoint")
+        validate_stop(client.request("c"), "E1c clean-epoch breakpoint")
         anchor = read_quiescent_state(client)
         validate_quiescent_state(anchor, require_marker=True)
 
@@ -379,9 +352,9 @@ def main() -> int:
         # Step over the breakpoint once, reinstall it behind the PC, and let one
         # complete subsequent RSP frame reach the same quiescent boundary.
         set_breakpoint(client, args.capture_ready_address, False)
-        validate_stop(client.request("s"), "E1b breakpoint step-over")
+        validate_stop(client.request("s"), "E1c breakpoint step-over")
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E1b fenced capture breakpoint")
+        validate_stop(client.request("c"), "E1c fenced capture breakpoint")
 
         quiescent = read_quiescent_state(client)
         validate_quiescent_state(quiescent, require_marker=True)
@@ -407,32 +380,26 @@ def main() -> int:
         fb_pointer = quiescent["proof_framebuffer_pointer"]
         display_fb_pointer = read_u(client, args.framebuffer_address, 4)
         framebuffer = client.read_memory(fb_pointer, FB_BYTES, 0x400)
-        prefix = client.read_memory(Z_COMMAND_ADDR, Z_PREFIX_SIZE, 0x400)
-        depth = client.read_memory(Z_BASE, Z_SIZE, 0x400)
-        suffix = client.read_memory(Z_BASE + Z_SIZE, Z_SUFFIX_SIZE, 0x100)
-        section_queue1 = client.read_memory(
-            SECTION_QUEUE1_ADDR, SECTION_CAPTURE_SIZE, 0x400
+        archive_a = client.read_memory(
+            E1C_ARCHIVE_A_ADDR, E1C_Z_SCRATCH_SIZE, 0x400
         )
-        section_queue2 = client.read_memory(
-            SECTION_QUEUE2_ADDR, SECTION_CAPTURE_SIZE, 0x400
+        final_b = client.read_memory(
+            E1C_Z_SCRATCH_ADDR, E1C_Z_SCRATCH_SIZE, 0x400
+        )
+        prefix_guard = client.read_memory(
+            E1C_PREFIX_GUARD_ADDR, E1C_GUARD_SIZE, E1C_GUARD_SIZE
+        )
+        suffix_guard = client.read_memory(
+            E1C_SUFFIX_GUARD_ADDR, E1C_GUARD_SIZE, E1C_GUARD_SIZE
         )
 
         (out / "framebuffer.rgba5551").write_bytes(framebuffer)
-        (out / "depth.bin").write_bytes(depth)
-        (out / "prefix_guard.bin").write_bytes(prefix)
-        (out / "suffix_guard.bin").write_bytes(suffix)
-        (out / "section_queue1.bin").write_bytes(section_queue1)
-        (out / "section_queue2.bin").write_bytes(section_queue2)
+        (out / "archive_a.bin").write_bytes(archive_a)
+        (out / "final_b.bin").write_bytes(final_b)
+        (out / "prefix_guard.bin").write_bytes(prefix_guard)
+        (out / "suffix_guard.bin").write_bytes(suffix_guard)
 
-        result = classify(framebuffer, depth, prefix, suffix)
-        result["section_queues"] = {
-            "queue1_address": hex(SECTION_QUEUE1_ADDR),
-            "queue2_address": hex(SECTION_QUEUE2_ADDR),
-            "record_size": SECTION_RECORD_SIZE,
-            "records": SECTION_RECORD_COUNT,
-            "queue1": decode_section_queue(section_queue1),
-            "queue2": decode_section_queue(section_queue2),
-        }
+        result = classify(archive_a, final_b, prefix_guard, suffix_guard)
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),
@@ -445,7 +412,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E1b semantic classifier failed; see result.json")
+            raise RuntimeError("E1c semantic classifier failed; see result.json")
 
         try:
             client.request("D")

@@ -222,6 +222,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 11 — semantic workflow retargeted as workflow-only delta
+- E2a branch advanced to **`67c18c9ab4baf7531db8384eef8df59e9641ab86`** with one workflow-only commit: `proof: dispatch E2a color strip semantic validation`.
+- Runtime/source/classifier are unchanged from generic-green `0f588c69...`. Only `.github/workflows/gate-c-h-comp-e1-z-tag.yml` metadata changed:
+  - workflow name -> **Gate C H-COMP E2a Color Strip-Reuse Proof**
+  - push branch filter -> **`phase4/gate-c-h-comp-e2a-color-strip-reuse`**
+  - concurrency group -> E2a
+  - evidence artifact name -> E2a
+- The deterministic carrier guest, pinned ares commit/lab mode, exact-ELF capture boundary, E1c Z control, E2a color classifier and all proof addresses/oracles remain byte-identical to the generic-green candidate.
+- **Expected dispatch:** this push should start both standard Build/Validate and E2a semantic workflow. Semantic result is the first authority for compact Color Image strip rebasing/reuse.
+- **Decision rule:** pass only if E1c Z control remains valid, color archive A and reused final B match their complete 280x8 contracts with sentinels/guards, B contains zero stale A words, and the real main snapshot is written identically before/after. Any failure must be classified by sub-contract; do not collapse it into “Color Image impossible.”
+- Classification: semantic dispatch delta **IMPLEMENTED / WORKFLOW-ONLY**; result **PENDING**.
+
 ### E2a batch 10 — delay-slot repair dynamically CONFIRMED; generic validation GREEN
 - Exact repaired head **`0f588c698cd46cc01d618d2eb98e6c3e209f5225`**, **Build and Validate `35656638964 SUCCESS`** across normal build, PROFILE build and pinned Mupen/LLE smoke.
 - Smoke artifact **`10665935859`**, digest `sha256:d7a59eb0cd9fbc3adadb73fb76b01d48521d7d98902a2798aa40184ec4ec1818`.

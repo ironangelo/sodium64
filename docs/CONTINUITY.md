@@ -222,6 +222,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 10 — delay-slot repair dynamically CONFIRMED; generic validation GREEN
+- Exact repaired head **`0f588c698cd46cc01d618d2eb98e6c3e209f5225`**, **Build and Validate `35656638964 SUCCESS`** across normal build, PROFILE build and pinned Mupen/LLE smoke.
+- Smoke artifact **`10665935859`**, digest `sha256:d7a59eb0cd9fbc3adadb73fb76b01d48521d7d98902a2798aa40184ec4ec1818`.
+- Direct smoke inspection: normal run reaches **`PC 0x80009138`** after the 2 s run instead of remaining at the failing first-task state; profile run also reaches `0x80009138`.
+- Statistical snapshot is valid again: 32-bit word-swapped S64P v1, interval 65521, **4769 total / 4096 valid samples**, last EPC `0x8000AB04`; decoder succeeds. The prior all-`AA55AA55` snapshot is therefore a consequence of the control-flow hang, not evidence of a profiler/scratch overlap.
+- This is a clean cause/fix confirmation: failing `0bb47e8a...` → repaired `0f588c69...` differs by exactly one `nop`, and the previously red generic smoke becomes fully green.
+- **REJECTED explanations:** direct E2a scratch/profile range collision; profiler decoder defect; compact Color Image rebasing as cause of the generic hang. The actual blocker was the exposed `jr ra` delay slot in `dma_wait`.
+- E2a compact-color semantics are still **UNKNOWN**: generic validation proves only compile/boot/runtime health. The inherited semantic workflow remains branch-filtered to E1c and has not tested E2a yet.
+- **Next controlled batch:** retarget only the existing pinned-ares semantic workflow metadata/branch/evidence naming from E1c to E2a while preserving its guest, capture boundary and exact E2a classifier; dispatch by push and interpret the resulting exact-head semantic artifact.
+- Classification: delay-slot defect **VALIDATED / FIXED**; repaired E2a runtime **GENERIC GREEN**; architecture proof **OPEN**.
+
 ### E2a batch 9 — repaired exact build fits; dynamic smoke still running
 - Exact repaired head **`0f588c698cd46cc01d618d2eb98e6c3e209f5225`** auto-dispatched **Build and Validate `35656638964`**.
 - Build job **SUCCESS**; PROFILE build job **SUCCESS**. Exact normal artifact **`10665131259`**, digest `sha256:28b8ee6765662c21321332d1e46a9dcc01e7d500ff34a99dbce6d3799948818e`; profile artifact **`10665041424`**, digest `sha256:43dc651c607c0a6528afbc1e5447a2739fe351192579ab8e49f34315fb7bf0af`.

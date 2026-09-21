@@ -1507,6 +1507,7 @@ dma_wait:
     bnez t0, dma_wait
     nop
     jr ra
+    nop
 
 
 e2a_fill_strip: // s0: destination, TEXTURE contains one repeated 64-byte line

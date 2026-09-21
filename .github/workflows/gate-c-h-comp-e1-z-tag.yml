@@ -83,7 +83,10 @@ jobs:
           test -n "$wram"
           test -n "$framebuffer"
           test -n "$rsp_wait"
-          capture_ready=$(printf '%08x' "$((16#$rsp_wait + 0x10))")
+          # rsp_wait starts with a pseudo-op "lw absolute" that expands to
+          # lui+lw, so +0x10 is the branch delay slot. +0x14 is the first PC
+          # reachable only after the HALT-observed branch falls through.
+          capture_ready=$(printf '%08x' "$((16#$rsp_wait + 0x14))")
           {
             echo "GUEST_COUNTER_ADDR=0x$wram"
             echo "FRAMEBUFFER_ADDR=0x$framebuffer"

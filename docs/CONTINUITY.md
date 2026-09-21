@@ -58,6 +58,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1f batch 2 — packed half-add runtime + host oracle IMPLEMENTED; semantic workflow still dormant
+- Exact implementation head **`5a5e390700aab8835e9b6229965c7bccc24081ba`** on `phase4/gate-c-h-comp-e1f-half-add-kernel`.
+- Runtime keeps the validated E1d DMA/staging/memory/fence contract and replaces only the scalar arithmetic loop with pinned-reference packed half-add: `xor -> &0x0421 -> add -> subtract carry-isolation mask -> >>1`.
+- Host keeps the exact same 16 A/B operands and guards, changing only the expected vector to the precommitted E1f oracle and classifier identity **`E1F_RGB555_HALF_ADD_VALIDATED`**.
+- No half-enable/window/CGADSUB gating is modeled here; this is arithmetic only.
+- Inherited semantic workflow remains filtered to E1d, so E1f cannot accidentally produce semantic authority yet.
+- **IMPLEMENTED, not validated.** Next: inspect exact-head normal/PROFILE build and IMEM size before retargeting the semantic workflow.
+
 ### E1f batch 1 — child branch created from exact validated E1d add boundary
 - New validation-only branch **`phase4/gate-c-h-comp-e1f-half-add-kernel`** created exactly from E1d validated head `763218735489aa68e2c87115d9183a404c96a11c`.
 - Rationale: E1f half-add is most cleanly isolated against the validated add path, not against E1e subtraction. Same 16 A/B operands, proof block `0xA00E2000..20FF`, DMA staging, guards and capture boundary are inherited unchanged.

@@ -1105,7 +1105,7 @@ skip_objdecode:
 
 
 next_frame:
-    // E1 proof: Sync Full, then establish explicit DP -> RSP -> host ownership.
+    // E1 proof: Sync Full, then establish explicit DP -> RSP ownership.
     li a0, RDP_TILE7 + 16
     jal rdp_send
     li a1, RDP_TILE7 + 24
@@ -1115,9 +1115,152 @@ e1_dp_wait:
     bnez t0, e1_dp_wait
     nop
 
-    // Publish proof completion only after the DP fence above has passed.
-    // Include the exact framebuffer target for the frame that just completed;
-    // the CPU-visible presentation pointer is not authoritative under triple buffering.
+    // E1c proof: reset one compact 280x8 Z16 scratch after the normal frame
+    // is fully fenced. The old full-frame E1 depth surface is disposable now.
+    li t0, 0x55AA55AA
+    jal e1c_make_pattern
+    nop
+    li s0, 0xA00C0000
+    li s1, 70 // 0x1180 bytes / 64 bytes
+e1c_clear_scratch:
+    li a0, TEXTURE
+    move a1, s0
+    jal dma_write
+    li a2, 0x3F
+    addi s0, s0, 0x40
+    addi s1, s1, -1
+    bnez s1, e1c_clear_scratch
+    nop
+
+    // Guard one DMA line immediately before and after the compact scratch.
+    li t0, 0xC3C3C3C3
+    jal e1c_make_pattern
+    nop
+    li a0, TEXTURE
+    li a1, 0xA00BFFC0
+    jal dma_write
+    li a2, 0x3F
+    li t0, 0x3C3C3C3C
+    jal e1c_make_pattern
+    nop
+    li a0, TEXTURE
+    li a1, 0xA00C1180
+    jal dma_write
+    li a2, 0x3F
+
+    // Band A: global y=8..15 maps onto physical scratch row 0..7.
+    // Color scratch is disposable; width remains the real Sodium64 280 pixels.
+    li t0, 0x000C2E80 // 0xC4000 - 8*560
+    sw t0, RDP_FRAME + 4
+    li t0, 0x000BEE80 // 0xC0000 - 8*560
+    sw t0, RDP_TILE7 + 4
+    li t0, 0x2D030020 // Scissor x=12, y=8
+    sw t0, RDP_FILL + 8
+    li t0, 0x00430040 // Scissor x=268, y=16
+    sw t0, RDP_FILL + 12
+    li t0, 0x3642F040 // Fill max x=267.75, y=16
+    sw t0, RDP_FILL + 32
+    li t0, 0x00030020 // Fill min x=12, y=8
+    sw t0, RDP_FILL + 36
+    li t0, 0x000000FF // Opaque primitive color
+    sw t0, RDP_FILL + 20
+
+    li a0, RDP_FRAME
+    jal rdp_send
+    li a1, RDP_FRAME + 8
+    li a0, RDP_TILE7
+    jal rdp_send
+    li a1, RDP_TILE7 + 8
+    li a2, 0x1800 // Stored Z tag 0x0C00
+    jal e1_set_prim_depth
+    nop
+    li a0, RDP_FILL
+    jal rdp_send
+    li a1, RDP_WINDOW
+    li a0, RDP_TILE7 + 16
+    jal rdp_send
+    li a1, RDP_TILE7 + 24
+e1c_a_wait:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x70
+    bnez t0, e1c_a_wait
+    nop
+
+    // Archive band A only after its DP fence. This exact 0x1180-byte copy is
+    // proof-only and uses the existing 64-byte DMEM TEXTURE staging area.
+    li s0, 0xA00C0000
+    li s1, 0xA00C2000
+    li s2, 70
+e1c_archive_a:
+    li a0, TEXTURE
+    move a1, s0
+    jal dma_read
+    li a2, 0x3F
+    li a0, TEXTURE
+    move a1, s1
+    jal dma_write
+    li a2, 0x3F
+    addi s0, s0, 0x40
+    addi s1, s1, 0x40
+    addi s2, s2, -1
+    bnez s2, e1c_archive_a
+    nop
+
+    // Band B: global y=16..23 reuses the same physical color/Z scratch.
+    // Do not clear Z: every active A tag must be overwritten by B, while the
+    // untouched horizontal borders must retain the original sentinel.
+    li t0, 0x000C1D00 // 0xC4000 - 16*560
+    sw t0, RDP_FRAME + 4
+    li t0, 0x000BDD00 // 0xC0000 - 16*560
+    sw t0, RDP_TILE7 + 4
+    li t0, 0x2D030040 // Scissor x=12, y=16
+    sw t0, RDP_FILL + 8
+    li t0, 0x00430060 // Scissor x=268, y=24
+    sw t0, RDP_FILL + 12
+    li t0, 0x3642F060 // Fill max x=267.75, y=24
+    sw t0, RDP_FILL + 32
+    li t0, 0x00030040 // Fill min x=12, y=16
+    sw t0, RDP_FILL + 36
+
+    li a0, RDP_FRAME
+    jal rdp_send
+    li a1, RDP_FRAME + 8
+    li a0, RDP_TILE7
+    jal rdp_send
+    li a1, RDP_TILE7 + 8
+    li a2, 0x2800 // Stored Z tag 0x1400
+    jal e1_set_prim_depth
+    nop
+    li a0, RDP_FILL
+    jal rdp_send
+    li a1, RDP_WINDOW
+    li a0, RDP_TILE7 + 16
+    jal rdp_send
+    li a1, RDP_TILE7 + 24
+e1c_b_wait:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x70
+    bnez t0, e1c_b_wait
+    nop
+
+    // Restore the full-frame E1 Z-image state for the next normal frame and
+    // fence the state command before publishing proof completion.
+    li t0, 0x000BEE80
+    sw t0, RDP_TILE7 + 4
+    li a0, RDP_TILE7
+    jal rdp_send
+    li a1, RDP_TILE7 + 8
+    li a0, RDP_TILE7 + 16
+    jal rdp_send
+    li a1, RDP_TILE7 + 24
+e1c_restore_wait:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x70
+    bnez t0, e1c_restore_wait
+    nop
+
+    // Publish proof completion only after all E1c DP/RSP ownership transitions.
+    // Keep the exact normal framebuffer identity for the host boundary contract.
     li t0, 0xE1F00D01
     sw t0, TEXTURE
     lw t1, FRAMEBUFFER(sp)
@@ -1341,6 +1484,18 @@ dma_wait:
     bnez t0, dma_wait
     nop
     jr ra
+
+
+e1c_make_pattern: // t0: repeated 32-bit word -> TEXTURE[0..63]
+    li t1, TEXTURE
+    addi t2, t1, 0x40
+e1c_pattern_loop:
+    sw t0, 0(t1)
+    addi t1, t1, 4
+    bne t1, t2, e1c_pattern_loop
+    nop
+    jr ra
+    nop
 
 
 e1_set_prim_depth: // a2: 15-bit primitive-depth tag

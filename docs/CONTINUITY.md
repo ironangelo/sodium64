@@ -222,6 +222,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 3 — PROFILE compile/IMEM gate PASSED, only 76 B headroom
+- Build/Validate run **`35647142587`** for implementation head `0bb47e8a...` is active.
+- PROFILE build job is SUCCESS; exact artifact **`10660414623`**, digest `sha256:1ab2c88dc272ad2dd19c8ca91cd50426db40c980ac49e94459552e4c46e87393`, inspected directly.
+- RSP `.text = 0xFB4 = 4,020 B`, leaving only **76 B IMEM free**; ROM/ELF build completed successfully.
+- Delta versus validated E1c (`0xED0=3,792 B`) is +228 B despite adding color strip + framebuffer-integrity evidence, because proof loops were factored into shared helpers.
+- **Interpretation:** E2a fits as an architecture/measurement proof, but the resident proof body is already at the same “near-full IMEM” warning level as E1d-g. This strongly reinforces that production composition cannot simply accumulate scalar/proof logic in the resident renderer; later overlay/placement must be earned separately.
+- Do not dispatch semantic yet. Wait for normal build + pinned Mupen/LLE smoke from `35647142587`; then retarget workflow only.
+
 ### E2a batch 2 — compact RGB16 strip runtime/classifier IMPLEMENTED; workflow still dormant
 - Exact implementation head **`0bb47e8a0d226eb12946f26be613aceee26b5036`** on `phase4/gate-c-h-comp-e2a-color-strip-reuse`.
 - Runtime extends validated E1c without touching production/master: dedicated `0xA00E4000` 280×8 RGB16 scratch, color guards, band-A color archive, and real-framebuffer before/after snapshots.

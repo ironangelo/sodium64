@@ -56,6 +56,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Next controlled delta: change only the deterministic carrier guest to create the no-shared 8-row TM/TS section and verify its captured section queue before any RSP target-switch edit.
 - Classification: **ARCHITECTURE PROOF / CANDIDATE**.
 
+### E2b batch 1 — runtime target switch IMPLEMENTED, guest/oracle still unchanged
+- E2b branch advanced to **`phase4/gate-c-h-comp-e2b-real-target-switch@af1ad807b3a2890e8f60501e2bffc2e834f4d65a`**.
+- Runtime-only delta:
+  - frame start programs `RDP_FRAME.address=0x000E2E80`, mapping global y=8 onto compact RGB16 scratch `0xA00E4000`;
+  - at the existing real `TS -> TM` traversal boundary, only when `k0==0`, `RDP_FRAME` is switched back to `FRAMEBUFFER(sp)-8*560` before the second screen traversal;
+  - later sections keep the real framebuffer target and therefore retain the historical traversal behavior;
+  - E2a's consumed synthetic fill/copy proof block and E2a-only DMA helpers were removed; the end-of-frame DP fence + proof marker/pointer publication remain.
+- No TM/TS masks, shared-layer suppression, tile renderer, cache behavior, section producer, guest ROM or host classifier changed in this batch.
+- This commit intentionally cannot yet prove E2b semantics because the inherited guest still has both BGs on main and no real 8-line section. Its first authority is **compile/IMEM/boot only**.
+- **Next:** inspect exact-head Build/Validate and RSP map. If generic green, then change only the deterministic carrier + E2b host oracle to exercise BG1 main-only red / BG2 sub-only green with a WH0-created 8-line section.
+- Classification: **IMPLEMENTED / CANDIDATE**, semantic evidence not yet meaningful.
+
 ### E2b precommit — real renderer target switch, one variable only
 - **Purpose / GATE DRIVER:** move from E2a's synthetic RDP Color Image proof to the existing real BG traversal. E2b asks only whether Sodium64's already-existing TS→TM dual traversal can render the first screen into the compact RGB16 operand strip, switch Color Image at the natural `srl s7,s7,8` boundary, then render the second screen into the normal framebuffer.
 - Planned child branch: **`phase4/gate-c-h-comp-e2b-real-target-switch`**, based exactly on E2a validated head `67c18c9ab4baf7531db8384eef8df59e9641ab86`. E2a remains frozen evidence.

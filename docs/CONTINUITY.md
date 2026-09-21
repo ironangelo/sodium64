@@ -58,6 +58,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1g batch 2 — packed half-sub runtime + host oracle IMPLEMENTED; semantic workflow intentionally dormant
+- Exact implementation head **`233279dcd1574dfba7f1e5439a655f9315f71f41`** on `phase4/gate-c-h-comp-e1g-half-sub-kernel`.
+- Runtime preserves E1e's exact proof memory/DMA/fence contract and replaces only the per-channel subtraction body with the precommitted pinned-ares packed half-sub sequence: `diff=x-y+0x8420`; derive `borrow`; clamp packed channels; `&0x7BDE >> 1`.
+- Host keeps the same 16 A/B vectors and guards, changing only the expected oracle to `0000,000F,01E0,3C00,0000,0000,0000,0000,000F,01E0,1084,0421,3C0F,01EF,1405,0009` and classifier identity **`E1G_RGB555_HALF_SUB_VALIDATED`**.
+- No CGADSUB/CGWSEL/window gating is modeled here; E1g is arithmetic only.
+- Inherited semantic workflow remains filtered/named for E1e, so this implementation cannot accidentally generate E1g semantic authority.
+- **IMPLEMENTED, not validated.** Next: exact-head Build/Validate + artifact IMEM check; only then isolate/retarget the semantic workflow.
+
 ### E1g batch 1 — child branch created from exact validated E1e subtraction boundary
 - New validation-only branch **`phase4/gate-c-h-comp-e1g-half-sub-kernel`** created exactly from E1e validated head `3c4972f4e58ab89b8e8a2628ca322d353c069049`.
 - Rationale: half-sub is cleanly isolated against the already validated floor-at-zero subtraction path. Same 16 A/B operands, `0xA00E2000..20FF` proof memory, DMA staging, guards and capture boundary are inherited unchanged.

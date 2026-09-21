@@ -222,6 +222,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 7 — root cause found: new helper occupies `dma_wait` return delay slot
+- Exact source comparison E1c `994a1fd5...` → E2a `0bb47e8a...` identifies a deterministic RSP control-flow bug. `dma_wait` ends with **`jr ra` and no explicit delay-slot instruction** under `.set noreorder`.
+- In validated E1c, the next physical instruction was `e1c_make_pattern: li t1, TEXTURE`; therefore every DMA return executed that incidental clobber in the `jr ra` delay slot, but it did not redirect control and E1c remained semantically valid.
+- E2a inserted `e2a_fill_strip` immediately after `dma_wait`; its first instruction is **`move s3, ra`**. That instruction is therefore executed in the return delay slot of every `dma_read/dma_write`.
+- Inside `e2a_fill_strip`, `s3` is intended to preserve the helper caller's return address. The nested `jal dma_write` changes `ra`; then `dma_wait -> jr ra` executes `move s3, ra` in its delay slot and overwrites the saved outer return with the inner DMA continuation. The helper's final `jr s3` consequently jumps back inside itself instead of returning to `next_frame`. `e2a_copy_strip` is exposed to the same mechanism.
+- This mechanism directly explains the first-task hang and is independent of compact Color Image semantics, scratch addresses, RDP rebasing, profiler layout or Mupen timing. It also explains why chasing the `AA55` raw snapshot as a memory writer was misleading.
+- **Controlled repair precommitted:** add exactly one explicit `nop` as the `dma_wait` `jr ra` delay slot on the E2a proof branch. Do not change addresses, loop counts, RDP commands, sentinels, oracle, workflow or compositor semantics. Expected code cost: +4 B, keeping E2a within 4 KiB IMEM.
+- **Falsifier:** if exact repaired head still fails generic smoke/frame progress, the delay-slot defect was real but not sufficient; inspect the next earliest runtime boundary rather than broadening the compositor.
+- Classification: delay-slot cause **SUPPORTED/STATICALLY DETERMINISTIC**; repair **TODO**; E2a architecture still **OPEN** pending exact-head generic + semantic evidence.
+
 ### E2a batch 6 — key correction: E2a generic failure is PRE-SODIUM64 BOOT, not runtime DMA corruption
 - Direct inspection of the uploaded Mupen logs changes the interpretation materially. In E2a normal smoke, after the 3-second run/pause the debugger reports **`PC: A4000040`** — the same IPL3/boot address printed at emulator start. Sodium64 never reached its `0x8000....` runtime.
 - Control E1g normal smoke at the same 3-second boundary reports **`PC: 8000AAE4`** and the profile control reaches `0x80009138`; it therefore leaves IPL3 and executes Sodium64 normally.

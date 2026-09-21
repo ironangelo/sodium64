@@ -22,6 +22,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Pinned SNES reference semantics establish per-channel RGB5 arithmetic with clipping. Brightness is conceptually later than the main/sub arithmetic.
 - A production design must still solve operand preservation, selection/gating, half rules, windows, throughput, and integration. The scalar proof kernels below are semantic discriminators, **not production compositor architecture**.
 
+### ACTIVE / RESUME HERE — E2a compact Color Image strip reuse
+- Validation branch: **`phase4/gate-c-h-comp-e2a-color-strip-reuse@67c18c9ab4baf7531db8384eef8df59e9641ab86`**.
+- Candidate runtime itself is **`0f588c698cd46cc01d618d2eb98e6c3e209f5225`**; `67c18c9a...` adds only semantic-workflow retargeting.
+- **Question:** can a second raw RGB16 screen operand use one compact **280x8** Color Image scratch, rebase that same physical strip to two different global-Y bands within one frame, preserve complete A/B contents + guards, and leave the real main framebuffer byte-identical?
+- Generic runtime is **GREEN / VALIDATED at lab level:** Build and Validate **`35656638964 SUCCESS`**; exact RSP `.text=0xFB8=4024 B` (**72 B free**); normal/profile Mupen reach `PC 0x80009138`; profile 4769 total / 4096 valid samples.
+- Important fixed blocker: failing head `0bb47e8a...` exposed `e2a_fill_strip: move s3,ra` as the delay slot of `dma_wait: jr ra`, corrupting the helper's saved outer return on nested DMA calls. One explicit `nop` fixes it. Do not revisit scratch/profile collision as the primary cause.
+- Semantic workflow **Gate C H-COMP E2a Color Strip-Reuse Proof run `35657048671`** is currently in progress for exact head `67c18c9a...`. Standard Build/Validate `35657048665` is also in progress for the workflow-only head.
+- **Immediate next action:** inspect semantic `35657048671` artifact/result. Pass requires E1c Z control + full color A archive + full reused B strip + intact guards + zero stale A in B + written and equal main-before/main-after snapshots. Classify any red result by failed sub-contract before changing runtime.
+- Status: **GATE DRIVER / ARCHITECTURE PROOF — RUNNING**. No production H-COMP integration yet.
+
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.
 - **E1b VALIDATED:** two-BG winner-layer metadata can be encoded/read correctly. Validated head `8ec1362dd62f117e53b37eaf6523c7bdf00b75bf`.

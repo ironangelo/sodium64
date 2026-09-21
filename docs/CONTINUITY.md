@@ -4,6 +4,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-21 UTC)
 
+- **2026-09-21 audit checkpoint 4A — limit the RDP rejection to what was tested.** Texture RGB5 expansion and framebuffer-memory RGB5 input differ in the pinned RDP model. The earlier naive HALF surrogate failure does not reject every possible RDP sequence. Keep exact RGB5 oracle, reject unproven blender substitution, and avoid an open-ended RDP optimization search.
+
 - **2026-09-21 audit batch 3 complete.** Strips remain a reasonable bounded direction; primitive-Z and framebuffer-alpha validity are still conditional. At the existing 280-pixel pitch, a conservative 8-row sub+two-tag design is 13,440 B; a one-Z reuse design is 8,960 B but adds a validity/ownership obligation. Define raw-color/brightness epochs and DP→SP ownership before kernel work. See batch 3 COMPLETE.
 
 - **2026-09-21 audit checkpoint 3B — raw operands and brightness are prerequisites.** Current palette/backdrop conversion applies brightness before composition; a final exact path must preserve raw colors and apply brightness after math. Separate TM/TS targets must also separate TMW/TSW. A Z tag records current draw order, not proof of SNES priority. See batch 3B.
@@ -7626,3 +7628,15 @@ Two extra full RGB16 active surfaces remain **REJECTED as capacity-unsafe**: the
 - Lossless no-math fast paths are worth keeping only when clip, separate screen visibility, brightness and hires conditions establish equivalence. Do not reintroduce TM/TS flattening merely because CGADSUB happens to be zero.
 
 **Next batch:** audit exact math/oracle and kernel placement. No architecture is selected as production-fast by these storage estimates.
+
+
+## Gate-C focused audit 2026-09-21 — batch 4A: oracle scope and RDP rejection boundary
+
+Immediate checkpoint before choosing a kernel location.
+
+- **SUPPORTED INTERPRETATION — oracle cross-check:** directly inspected both pinned ares `ares/sfc/ppu-performance/dac.cpp` and accurate `ares/sfc/ppu/dac.cpp`. The packed ADD/SUB/HALF formulas agree. Accurate `DAC::above` explicitly selects fixed color and disables half when blendMode requests sub but sub is transparent; color-window main clipping suppresses half. This strengthens the ordinary low-resolution contract, but two implementations in one project are not independent hardware evidence. Accurate DAC also documents unconfirmed hardware initialization of the first hires pixel; do not extend this proof to every hires boundary.
+- **Important narrowing / SUPERSEDED overbroad interpretation:** the earlier 32×32 expanded-8-bit HALF sanity check rejects that algebraic surrogate; it is not exhaustive proof that every possible RDP path is incapable of exact HALF. At the same pinned ares revision, texture decoding `texture.h:77–78` expands RGB5 by bit replication, whereas framebuffer memory input `memory_interfacing.h:decode_memory_color` supplies RGBA5551 components with low three bits zero. The blender also quantizes weights and uses its own normalization/rounding (`blender.h`). An experiment that expands BOTH inputs as textures does not describe texture-plus-framebuffer blending. **REJECTED remains:** unproven generic 50% blending as a finished solution, and special Blender ADD as a general saturated ADD. **UNKNOWN remains:** whether a particular explicitly encoded RDP command sequence can exactly implement a useful restricted operation.
+- **Concrete falsifier:** specify texture or memory origin of each operand, muxes, cycle type, alpha/coverage modes, dither, signed intermediate/clamp and final RGB5 packing; compare all channel pairs and adversarial packed colors. If any one expected result differs, reject that sequence only. Do not launch a broad search for clever RDP algebra before the operand/tag proof.
+- **LAB LIMITATION — “bit exact” must name its domain.** Exact RGB5 math can be checked before brightness/host display conversion. Pinned `ares/sfc/ppu/color.cpp` uses a separate luma/output mapping (including an analog-inspired dim-level behavior and optional display transform). Screenshot RGB after that mapping is not a neutral arithmetic oracle. Compare raw SNES RGB5 plus brightness first; validate Sodium64's final RGB5551 conversion separately with declared settings.
+
+Sources: [accurate DAC](https://github.com/ares-emulator/ares/blob/17813a3ccda21ab9bd45f09bfc2f91196dbf50ff/ares/sfc/ppu/dac.cpp), [RDP texture decode](https://github.com/ares-emulator/ares/blob/17813a3ccda21ab9bd45f09bfc2f91196dbf50ff/ares/n64/vulkan/parallel-rdp/parallel-rdp/shaders/texture.h), [RDP memory input](https://github.com/ares-emulator/ares/blob/17813a3ccda21ab9bd45f09bfc2f91196dbf50ff/ares/n64/vulkan/parallel-rdp/parallel-rdp/shaders/memory_interfacing.h). No new arithmetic experiment was run.

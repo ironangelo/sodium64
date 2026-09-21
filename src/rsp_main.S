@@ -1264,11 +1264,11 @@ e1c_restore_wait:
     // deliberately reuses TEXTURE as 64 bytes of staging and computes output
     // in place over operand A; it is semantic evidence, not a throughput path.
     li a0, TEXTURE
-    li a1, 0xA00C6020
+    li a1, 0xA00E2020
     jal dma_read
     li a2, 0x1F
     li a0, TEXTURE + 0x20
-    li a1, 0xA00C6040
+    li a1, 0xA00E2040
     jal dma_read
     li a2, 0x1F
 
@@ -1326,7 +1326,7 @@ e1d_b_ok:
     nop
 
     li a0, TEXTURE
-    li a1, 0xA00C6060
+    li a1, 0xA00E2060
     jal dma_write
     li a2, 0x1F
 

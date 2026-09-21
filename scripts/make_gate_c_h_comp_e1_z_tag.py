@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Generate the deterministic original SNES guest for Gate-C E1a Z-tag proof.
+"""Generate the deterministic original SNES guest for Gate-C E1b winner-tag proof.
 
-The 32 KiB LoROM renders BG1 in Mode 0 with two identical 2bpp checkerboard
-tiles whose character numbers alternate across the tilemap. Palette index 0 is
-transparent and palette index 1 is opaque black. CGRAM color 0 is a visible red
-backdrop. The alternating IDs preserve the same expected image while avoiding
-the renderer's consecutive-same-tile fast path.
+The 32 KiB LoROM renders two Mode-0 backgrounds using alternating character IDs
+to avoid the consecutive-same-tile fast path. BG2 is fully opaque green across
+the active area. BG1 is a transparent/opaque-black checkerboard above it.
+Therefore every active pixel has a deterministic winner: BG1 on black cells and
+BG2 through BG1's transparent holes.
 """
 
 from __future__ import annotations
@@ -19,8 +19,10 @@ HEADER = 0x7FC0
 LOAD_ADDRESS = 0x8000
 NMI_ADDRESS = 0x8200
 NMI_OFFSET = NMI_ADDRESS - LOAD_ADDRESS
-TILEMAP_ADDRESS = 0x9000
-TILE_ADDRESS = 0x9800
+BG1_TILEMAP_ADDRESS = 0x9000
+BG2_TILEMAP_ADDRESS = 0x9800
+BG1_TILE_ADDRESS = 0xA000
+BG2_TILE_ADDRESS = 0xA020
 TILEMAP_SIZE = 0x800
 FRAME_COUNTER = 0x7E0000
 
@@ -98,21 +100,26 @@ def build_program() -> bytes:
     lda_sta_abs(a, 0x80, 0x2100)    # forced blank
     lda_sta_abs(a, 0x00, 0x2105)    # Mode 0
     lda_sta_abs(a, 0x00, 0x2107)    # BG1 tilemap at VRAM $0000
-    lda_sta_abs(a, 0x01, 0x210B)    # BG1 tile data at VRAM $1000
+    lda_sta_abs(a, 0x08, 0x2108)    # BG2 tilemap at VRAM $0800 (word address)
+    lda_sta_abs(a, 0x21, 0x210B)    # BG1 chars $1000, BG2 chars $2000
     lda_sta_abs(a, 0x80, 0x2115)    # increment VRAM after high byte
 
-    dma_to_vram(a, source=TILEMAP_ADDRESS, vram_word=0x0000, length=TILEMAP_SIZE)
-    dma_to_vram(a, source=TILE_ADDRESS, vram_word=0x1000, length=32)
+    dma_to_vram(a, source=BG1_TILEMAP_ADDRESS, vram_word=0x0000, length=TILEMAP_SIZE)
+    dma_to_vram(a, source=BG2_TILEMAP_ADDRESS, vram_word=0x0800, length=TILEMAP_SIZE)
+    dma_to_vram(a, source=BG1_TILE_ADDRESS, vram_word=0x1000, length=32)
+    dma_to_vram(a, source=BG2_TILE_ADDRESS, vram_word=0x2000, length=32)
 
-    # CGRAM 0: visible medium red backdrop. CGRAM 1: RGB black, but as a
-    # non-zero palette index Sodium64 converts it to RGBA5551 alpha=1.
+    # CGRAM 0: visible medium red backdrop. CGRAM 1: RGB black for BG1.
+    # CGRAM 2: full green for the opaque BG2 underlay.
     lda_sta_abs(a, 0x00, 0x2121)
     lda_sta_abs(a, 0x10, 0x2122)    # color 0 low: BGR555 0x0010
     lda_sta_abs(a, 0x00, 0x2122)    # color 0 high
     lda_sta_abs(a, 0x00, 0x2122)    # color 1 low: black
     lda_sta_abs(a, 0x00, 0x2122)    # color 1 high
+    lda_sta_abs(a, 0xE0, 0x2122)    # color 2 low: green BGR555 0x03E0
+    lda_sta_abs(a, 0x03, 0x2122)    # color 2 high
 
-    lda_sta_abs(a, 0x01, 0x212C)    # TM: BG1 on main
+    lda_sta_abs(a, 0x03, 0x212C)    # TM: BG1 + BG2 on main
     lda_sta_abs(a, 0x00, 0x212D)    # TS: no subscreen layers
     lda_sta_abs(a, 0x00, 0x2130)    # CGWSEL
     lda_sta_abs(a, 0x00, 0x2131)    # CGADSUB
@@ -150,12 +157,17 @@ def build_tilemap() -> bytes:
     )
 
 
-def build_tile() -> bytes:
-    # 2bpp checkerboard. Plane 0 alternates bits; plane 1 stays zero.
+def build_bg1_tile() -> bytes:
+    # 2bpp checkerboard: palette index 0 is transparent, index 1 is black.
     rows = []
     for y in range(8):
         rows.extend((0xAA if (y & 1) == 0 else 0x55, 0x00))
     return bytes(rows)
+
+
+def build_bg2_tile() -> bytes:
+    # 2bpp solid palette index 2: plane 0 clear, plane 1 set.
+    return bytes((0x00, 0xFF) * 8)
 
 
 def write_vector(rom: bytearray, offset: int, address: int) -> None:
@@ -165,23 +177,32 @@ def write_vector(rom: bytearray, offset: int, address: int) -> None:
 def build_rom() -> bytes:
     program = build_program()
     tilemap = build_tilemap()
-    tile = build_tile() * 2         # tile 0 and tile 1 are visually identical
-    tilemap_offset = TILEMAP_ADDRESS - LOAD_ADDRESS
-    tile_offset = TILE_ADDRESS - LOAD_ADDRESS
+    bg1_tiles = build_bg1_tile() * 2
+    bg2_tiles = build_bg2_tile() * 2
+    bg1_map_offset = BG1_TILEMAP_ADDRESS - LOAD_ADDRESS
+    bg2_map_offset = BG2_TILEMAP_ADDRESS - LOAD_ADDRESS
+    bg1_tile_offset = BG1_TILE_ADDRESS - LOAD_ADDRESS
+    bg2_tile_offset = BG2_TILE_ADDRESS - LOAD_ADDRESS
 
-    if len(program) > tilemap_offset:
-        raise ValueError("program overlaps tilemap")
-    if tilemap_offset + len(tilemap) > tile_offset:
-        raise ValueError("tilemap overlaps tile")
-    if tile_offset + len(tile) >= HEADER:
-        raise ValueError("tile overlaps header")
+    if len(program) > bg1_map_offset:
+        raise ValueError("program overlaps BG1 tilemap")
+    if bg1_map_offset + len(tilemap) > bg2_map_offset:
+        raise ValueError("BG1 tilemap overlaps BG2 tilemap")
+    if bg2_map_offset + len(tilemap) > bg1_tile_offset:
+        raise ValueError("BG2 tilemap overlaps BG1 tiles")
+    if bg1_tile_offset + len(bg1_tiles) > bg2_tile_offset:
+        raise ValueError("BG1 tiles overlap BG2 tiles")
+    if bg2_tile_offset + len(bg2_tiles) >= HEADER:
+        raise ValueError("BG2 tiles overlap header")
 
     rom = bytearray([0xEA]) * ROM_SIZE
     rom[:len(program)] = program
-    rom[tilemap_offset:tilemap_offset + len(tilemap)] = tilemap
-    rom[tile_offset:tile_offset + len(tile)] = tile
+    rom[bg1_map_offset:bg1_map_offset + len(tilemap)] = tilemap
+    rom[bg2_map_offset:bg2_map_offset + len(tilemap)] = tilemap
+    rom[bg1_tile_offset:bg1_tile_offset + len(bg1_tiles)] = bg1_tiles
+    rom[bg2_tile_offset:bg2_tile_offset + len(bg2_tiles)] = bg2_tiles
 
-    rom[HEADER:HEADER + 21] = b"S64 E1 Z TAG".ljust(21, b" ")
+    rom[HEADER:HEADER + 21] = b"S64 E1B WIN TAG".ljust(21, b" ")
     rom[0x7FD5] = 0x20               # LoROM
     rom[0x7FD6] = 0x00
     rom[0x7FD7] = 0x05

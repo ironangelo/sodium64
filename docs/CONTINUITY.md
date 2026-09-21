@@ -58,6 +58,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1f batch 5 — complete exact-head half-add discriminator DISPATCHED
+- Final E1f head **`07c5f27b2d6e881c43d0844214376c59a2248036`** adds only workflow isolation/retargeting on top of implementation `5a5e3907...`; runtime and host oracle are byte-unchanged.
+- Exact semantic run **`35639124824`** — **Gate C H-COMP E1f RGB555 Half-Add Proof** — is IN_PROGRESS.
+- Exact-head generic Build/Validate **`35639124728`** is also IN_PROGRESS; implementation-head `35638793678` is already fully SUCCESS including Mupen/LLE.
+- Semantic pass authority remains artifact-only: `E1F_RGB555_HALF_ADD_VALIDATED / passed=true`, all 16 expected words exact, no mismatches, all guards intact, one fresh guest frame, RSP HALT and DP-idle at the established boundary.
+- No E1g half-sub or gating implementation while these exact-head runs are active. Resume by inspecting `35639124824` and its artifact first.
+
 ### E1f batch 4 — exact compile/IMEM check PASSED; packed half-add materially smaller
 - Exact implementation head `5a5e390700aab8835e9b6229965c7bccc24081ba`; normal and PROFILE build jobs in `35638793678` are green.
 - Exact normal artifact **`10657132935`**, digest `sha256:e73ece0618e99ba11c29eff3e3578ec9fb56f544383e366669e5223c791b5c54`, inspected directly.

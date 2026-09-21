@@ -35,7 +35,7 @@ framebuffer: .word FRAMEBUFFER1, FRAMEBUFFER2
 
 rdp_init:
     // RDP commands that only need to run once
-    .dword 0x2F0088FF00040025 // E1 proof: alpha test + primitive depth + Z update; no Z compare
+    .dword 0x2F0088FF00040001 // E1 color control: integrated OtherModes; no primitive-depth selection or Z update
     .dword 0x39000000FFFFFFFF // Set Blend Color
     .dword 0x3510810000000000 // Set Tile (palette)
     .dword 0x3550000001054150 // Set Tile (block)

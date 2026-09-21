@@ -531,9 +531,11 @@ draw_bg:
     sll t9, s4, 2 // Jump index
     addi s4, s4, 3 // Character shift
 
-    // E1 proof: every accepted regular-BG fragment stamps one encoded Z tag.
-    // Alpha-zero texels must leave the host-initialized sentinel untouched.
-    li a2, 0x1800
+    // E1b proof: encode the regular-BG winner identity in primitive depth.
+    // BG1(index 0): 0x1800 -> stored 0x0C00.
+    // BG2(index 1): 0x2800 -> stored 0x1400.
+    sll a2, t3, 12
+    addi a2, a2, 0x1800
     jal e1_set_prim_depth
     nop
 

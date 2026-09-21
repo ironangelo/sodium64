@@ -74,7 +74,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Precommitted repaired oracle: same carrier/guards/main red, but compact active changes **only** from 2,048× black `0x0001` to **2,048× red `0xF801`**. That directly proves the same BG1 contributes to both independent operands.
 - This remains **ARCHITECTURE PROOF / HYPOTHESIS** until both E2c baseline + one-variable repair are measured. It does not yet prove production performance, shared OBJ behavior, priorities, color math or band reuse.
 - **IMPLEMENTED host/workflow baseline formalization `20a078274753100e2c706e3d5d341641f82e77a6`:** only the capture classifier and semantic workflow changed vs guest-only head `69e8f5fd...`; `src/rsp_main.S` and guest are byte-identical. Classifier now requires carrier `TS=1/TM=1` at 8/224, compact active 2,048× black `0x0001` + 192× sentinel with both guards intact, and main active rows 8..15 2,048× red `0xF801`. Workflow is retargeted to the E2c branch.
-- Exact-head runs dispatched: **E2c Shared Baseline Proof `35667183732`** and **Build and Validate `35667183723`**.
+- Exact-head **Build and Validate `35667183723 SUCCESS`** on `20a07827...`; host/workflow baseline formalization leaves the frozen E2b runtime build path green. **E2c Shared Baseline Proof `35667183732`** remains in progress.
 - **Immediate E2c action:** inspect exact-head baseline semantic result. If it matches the frozen black-compact/red-main oracle, checkpoint historical shared suppression as MEASURED; only then replace the single `sub s7,s7,t1` suppression instruction and change the host oracle from compact black to compact red.
 
 ### Pre-kernel architecture proofs — CLOSED

@@ -4,6 +4,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-21 UTC)
 
+- **2026-09-21 audit batch 4 complete.** Accurate/performance ares agree on ordinary low-resolution math and half-suppression policy. A CPU post-pass can prove semantics without PR #13; RSP resident/third-overlay placement requires a complete compiled size/DMEM/ABI proof. Forty free bytes do not establish fit or impossibility. No production location selected by intuition.
+
 - **2026-09-21 audit checkpoint 4A — limit the RDP rejection to what was tested.** Texture RGB5 expansion and framebuffer-memory RGB5 input differ in the pinned RDP model. The earlier naive HALF surrogate failure does not reject every possible RDP sequence. Keep exact RGB5 oracle, reject unproven blender substitution, and avoid an open-ended RDP optimization search.
 
 - **2026-09-21 audit batch 3 complete.** Strips remain a reasonable bounded direction; primitive-Z and framebuffer-alpha validity are still conditional. At the existing 280-pixel pitch, a conservative 8-row sub+two-tag design is 13,440 B; a one-Z reuse design is 8,960 B but adds a validity/ownership obligation. Define raw-color/brightness epochs and DP→SP ownership before kernel work. See batch 3 COMPLETE.
@@ -7640,3 +7642,50 @@ Immediate checkpoint before choosing a kernel location.
 - **LAB LIMITATION — “bit exact” must name its domain.** Exact RGB5 math can be checked before brightness/host display conversion. Pinned `ares/sfc/ppu/color.cpp` uses a separate luma/output mapping (including an analog-inspired dim-level behavior and optional display transform). Screenshot RGB after that mapping is not a neutral arithmetic oracle. Compare raw SNES RGB5 plus brightness first; validate Sodium64's final RGB5551 conversion separately with declared settings.
 
 Sources: [accurate DAC](https://github.com/ares-emulator/ares/blob/17813a3ccda21ab9bd45f09bfc2f91196dbf50ff/ares/sfc/ppu/dac.cpp), [RDP texture decode](https://github.com/ares-emulator/ares/blob/17813a3ccda21ab9bd45f09bfc2f91196dbf50ff/ares/n64/vulkan/parallel-rdp/parallel-rdp/shaders/texture.h), [RDP memory input](https://github.com/ares-emulator/ares/blob/17813a3ccda21ab9bd45f09bfc2f91196dbf50ff/ares/n64/vulkan/parallel-rdp/parallel-rdp/shaders/memory_interfacing.h). No new arithmetic experiment was run.
+
+
+## Gate-C focused audit 2026-09-21 — batch 4 COMPLETE: exact math and kernel placement
+
+### Oracle and operation order
+
+**SUPPORTED INTERPRETATION:** the pinned accurate/performance SNES DAC implementations agree on these ordinary low-resolution per-channel operations, for raw five-bit channels `a,b in [0,31]`:
+
+| Operation | Required channel result | Trap |
+|---|---|---|
+| ADD | min(31, a+b) | RDP special Blender ADD lacks the required general saturation. |
+| SUB | max(0, a-b) | Signed wrap is not clamp-to-zero. |
+| HALF-ADD | floor((a+b)/2) | Do not clamp the sum to 31 before halving; 31+31 must yield 31, not 15. |
+| HALF-SUB | floor(max(0,a-b)/2) | Clamp negative differences before unsigned packing; mask channel boundaries before packed shifts. |
+
+The oracle's packed constants isolate channel carry/borrow; a scalar/vector implementation must preserve that property. Simply adding packed RGB5551 words permits inter-channel carries and includes coverage/alpha in the arithmetic. It is possible to remove the low metadata bit and retain N64's reversed channel order internally because the same operation applies independently to every channel; a per-pixel R/B swap is not intrinsically required. This is an optimization candidate, with conversion tests required at input/output boundaries.
+
+Policy precedes arithmetic: apply main color-window black clipping; stop math if color-window math permission is false or CGADSUB disables the actual main winner; choose fixed color directly when CGWSEL requests fixed; otherwise select real sub winner or fixed fallback. Half is enabled only when requested and main is not clipped, and is additionally suppressed for a transparent/backdrop sub fallback when sub mode was requested. Direct fixed-color mode can still halve. Main backdrop uses CGRAM0 and CGADSUB bit5; a real opaque-black sub is not the transparent fallback. OBJ math depends on palette class as recorded in batch 3. Apply brightness afterward. Preserve forced blank.
+
+**Proof proposal, not executed:** 1,024 pairs for each of four single-channel operations; asymmetric mixed-channel colors that expose cross-channel carry/borrow, R/B reversal and alpha-bit leakage; endpoint/equal/underflow/saturation cases; then a separate policy matrix for source enable, main clip, math window, fixed/sub, sub-validity, half and blank. An exhaustive channel table establishes channel arithmetic, not complete SNES pixel policy or all packed RGB pairs. Compare compiled kernel output with raw RGB5 oracle and policy state, not a display-transformed screenshot.
+
+### Placement alternatives and bounded discriminators
+
+| Location | Concrete constraints / supporting evidence | Minimum next discriminator after operand proof |
+|---|---|---|
+| **R4300 scalar post-pass** | Can express the oracle with ordinary integer operations; no dependence on PR #13 or spare RSP IMEM. Reuses RDP-rendered pixels and does not duplicate tile/OBJ rendering. Costs CPU time, memory ownership transitions and possibly frame overlap. | Bounded exact strip output under fixed inputs, then existing profiler on the correct path. If correct but slow, retain its oracle and move only the hot arithmetic/transfer stage. |
+| **RSP scalar or vector kernel** | Parallel lanes and contiguous SP DMA are useful possibilities. Packed scalar formulas require safe intermediate widths; vector VADD/VSUB saturation/carry is not automatically RGB5 saturation. Unpacking channels into lanes or explicit masks/carry logic needs instruction, register and DMEM accounting. Rendering constants/live vectors and DMA helpers form an ABI, not free scratch. | Compile the complete callable kernel including loads, packing, policy, DMA, entry/exit and spills; inspect text/DMEM map; compare actual output with the oracle. Instruction count for arithmetic alone is not total footprint or throughput. |
+| **RDP-only exact sequence** | Existing draw pipeline avoids an extra processor readback only if it can express arithmetic AND source/policy selection exactly. Texture and framebuffer inputs, signed combiner clamp, blender normalization, coverage and dithering differ. Blender ADD/naive HALF failures do not prove every combiner sequence impossible. | One fully specified sequence for one operation, tested against all channel pairs through actual commands. Stop that candidate on a mismatch; do not expand into a general shader-search project. |
+| **RDP winners + RSP/CPU exact math** | Cleanest current division of responsibility: keep rasterization/cache/priority machinery, move only resolved operands and compact policy to math. Small strips bound RDRAM; transfer/sync cost remains real. | First metadata/ownership proof, then exact output, then matched profiling. Choice between CPU and RSP is deferred to compiled size and measured cost. |
+
+**IMEM decision:** master monolithic text is 4,056 B, only 40 B / ten 32-bit instruction words unallocated. There is no compiled complete new kernel proving it fits. Conversely, an impossibility theorem cannot be inferred from “40 B free”: a small operation, existing helper reuse or controlled refactor can change the bound. Treat a general drop-in kernel as **UNPROVEN**, not “certainly fits” or “PR #13 mathematically required.”
+
+PR #13's 3,328 B resident+active image leaves 768 B; the overlay slot itself is 1,000 B. Those are different budgets. A complete math kernel might fit appended resident space, or might be a third slot payload, but neither fit is measured. A third payload must enter from resident code at a completed draw boundary, keep its loader/continuation outside the overwritten range, preserve the renderer state needed to resume, and restore the regular/Mode7 slot before dispatching an entry that needs it. The current two fault stubs alone do not define an arbitrary nested-call math-overlay ABI.
+
+**Derived conditional cost:** if a math overlay replaces the entire 1,000 B slot and each eight-row strip requires loading math then restoring a renderer, 224 lines / 8 = 28 strips imply 56,000 B/frame of slot-load traffic, before extra section/mode transitions. This is not measured performance, and may not apply to a resident kernel, retained math phase, different chunking or partial slot design. With many one-line state sections, naive switching may be much worse. Do not consume overlays as an automatic speed win.
+
+A separate CPU-dispatched microcode task would also avoid a merge dependency on #13, but full code/state reload and task ownership could be more intrusive; not the recommended first proof. CPU arithmetic can establish exact output without that detour. **Conclusion on dependency:** reuse #13 if a measured complete kernel footprint and ownership design justify it; do not merge it merely to make room for an unmeasured kernel.
+
+### Cheap representation optimizations, not architecture commitments
+
+- Policy/window spans per state epoch can select no-math/add/sub/half routines once; per-pixel tags still choose eligibility and transparent fallback.
+- A channel lookup for one operation costs 32×32 = 1,024 bytes at one byte/result; all four cost 4,096 bytes, the entire RSP DMEM before any existing state. Per-channel CPU tables are a possible control, not a free vector gather. Avoid a full RGB-pair table.
+- Brightness mapping can be cached per active level rather than recomputed with a general multiply at every pixel, but preserve the chosen output quantization and raster epoch. Raw RGB5 math proof remains separate from display conversion.
+- Reuse decoded textures and independent-screen draw traversal. Do not optimize away source identity, sub-validity, window permission or unclamped HALF-ADD intermediates.
+- Measure DMA bytes/waits, DP drain time, CPU stalls, overlay faults and section/strip counts on the correct implementation. A faster standalone math loop can lose overall through extra synchronization.
+
+**Status:** batches 0–4 complete; all kernel location/size/performance results above are source constraints or proposed experiments, not implementations or newly measured runs. Next: Gate-C direction and final bounded experiment order.

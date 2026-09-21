@@ -1,0 +1,269 @@
+name: Gate C H-COMP Add-Subtract Diagnostic
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-h-comp-diagnostic
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-h-comp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate H-COMP diagnostic scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            scripts/make_gate_c_h_comp.py \
+            scripts/gate_c_h_comp_capture_n64.py
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_h_comp.py diagnostic/gate-c-h-comp-a.smc
+          python3 scripts/make_gate_c_h_comp.py diagnostic/gate-c-h-comp-b.smc
+          cmp diagnostic/gate-c-h-comp-a.smc diagnostic/gate-c-h-comp-b.smc
+          test "$(stat -c %s diagnostic/gate-c-h-comp-a.smc)" -eq 32768
+          sha256sum diagnostic/gate-c-h-comp-a.smc | tee diagnostic/guest.sha256
+
+      - name: Build exact unchanged integrated Sodium64 core
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Wrap exact original diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wrap workload
+          cp diagnostic/gate-c-h-comp-a.smc workload/gate-c-h-comp.smc
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp workload/gate-c-h-comp.smc wrap/gate-c-h-comp.smc
+          (cd wrap && python3 rom-converter.py </dev/null)
+          test -s wrap/out/gate-c-h-comp.z64
+          dd if=wrap/out/gate-c-h-comp.z64 of=workload/embedded.smc \
+            bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          cmp workload/gate-c-h-comp.smc workload/embedded.smc
+          sha256sum workload/gate-c-h-comp.smc | tee workload/guest.sha256
+          rm workload/embedded.smc
+
+      - name: Locate H-COMP runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
+          wram=$(symbol wram)
+          framebuffer=$(symbol framebuffer)
+          cgwsel=$(symbol cgwsel)
+          cgadsub=$(symbol cgadsub)
+          main_color=$(symbol main_color)
+          sub_color=$(symbol sub_color)
+          precision_set=$(symbol precision_set)
+          for value in "$wram" "$framebuffer" "$cgwsel" "$cgadsub" \
+                       "$main_color" "$sub_color" "$precision_set"; do
+            test -n "$value"
+          done
+          phase=$(printf '%08x' "$((0x$wram + 1))")
+          {
+            echo "PHASE_ADDR=0x$phase"
+            echo "FRAMEBUFFER_ADDR=0x$framebuffer"
+            echo "CGWSEL_ADDR=0x$cgwsel"
+            echo "CGADSUB_ADDR=0x$cgadsub"
+            echo "MAIN_COLOR_ADDR=0x$main_color"
+            echo "SUB_COLOR_ADDR=0x$sub_color"
+            echo "PRECISION_ADDR=0x$precision_set"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Capture disabled, ADD, and SUBTRACT framebuffers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          home="$RUNNER_TEMP/ares-home-h-comp"
+          settings="$RUNNER_TEMP/ares-h-comp-settings.bml"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9147" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              wrap/out/gate-c-h-comp.z64 \
+              > captures/ares-n64.log 2>&1 &
+          pid=$!
+          cleanup() {
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          python3 scripts/gate_c_h_comp_capture_n64.py \
+            --port 9147 \
+            --phase-address "$PHASE_ADDR" \
+            --framebuffer-address "$FRAMEBUFFER_ADDR" \
+            --observe "cgwsel:$CGWSEL_ADDR:1" \
+            --observe "cgadsub:$CGADSUB_ADDR:1" \
+            --observe "main_color:$MAIN_COLOR_ADDR:2" \
+            --observe "sub_color:$SUB_COLOR_ADDR:2" \
+            --observe "precision_set:$PRECISION_ADDR:1" \
+            --output-dir captures
+
+      - name: Classify add-subtract compositor semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' | tee captures/result.txt
+          import hashlib
+          import json
+          from pathlib import Path
+
+          width = 280
+          height = 240
+
+          def load(name):
+              data = Path(f'captures/{name}.rgba5551').read_bytes()
+              assert len(data) == width * height * 2, (name, len(data))
+              offset = ((height // 2) * width + (width // 2)) * 2
+              center = int.from_bytes(data[offset:offset + 2], 'big')
+              return data, hashlib.sha256(data).hexdigest(), center
+
+          states = json.loads(Path('captures/state.json').read_text())
+          disabled_raw, disabled_sha, disabled_center = load('disabled')
+          add_raw, add_sha, add_center = load('add')
+          sub_raw, sub_sha, sub_center = load('subtract')
+
+          assert states['disabled']['phase'] == 0x01, states
+          assert states['add']['phase'] == 0x02, states
+          assert states['subtract']['phase'] == 0x03, states
+          assert states['disabled']['cgadsub'] == 0x00, states
+          assert states['add']['cgadsub'] == 0x20, states
+          assert states['subtract']['cgadsub'] == 0xA0, states
+          assert states['disabled']['cgwsel'] == 0, states
+          assert states['add']['cgwsel'] == 0, states
+          assert states['subtract']['cgwsel'] == 0, states
+          assert states['disabled']['precision_set'] == 8, states
+          assert states['add']['precision_set'] == 8, states
+          assert states['subtract']['precision_set'] == 8, states
+
+          colors = {
+              (states[name]['main_color'], states[name]['sub_color'])
+              for name in ('disabled', 'add', 'subtract')
+          }
+          assert len(colors) == 1, states
+          main_color, sub_color = next(iter(colors))
+          assert main_color != 0 and sub_color != 0 and main_color != sub_color, states
+
+          disabled_vs_add = disabled_raw != add_raw
+          add_vs_sub_equal = add_raw == sub_raw
+          disabled_vs_sub = disabled_raw != sub_raw
+
+          if disabled_vs_add and add_vs_sub_equal and disabled_vs_sub:
+              classification = 'H_COMP_CONFIRMED_ADD_SUB_IGNORED'
+          elif add_raw != sub_raw:
+              classification = 'H_COMP_FALSIFIED_FOR_ADD_SUB_PATH'
+          else:
+              classification = 'H_COMP_INDETERMINATE_MATH_PATH_NOT_DISTINGUISHED'
+
+          result = {
+              'classification': classification,
+              'guest_relation_expected_on_correct_snes': 'disabled == subtract; add differs',
+              'sodium64_relation_observed': {
+                  'disabled_vs_add_different': disabled_vs_add,
+                  'add_vs_subtract_equal': add_vs_sub_equal,
+                  'disabled_vs_subtract_different': disabled_vs_sub,
+              },
+              'frame_sha256': {
+                  'disabled': disabled_sha,
+                  'add': add_sha,
+                  'subtract': sub_sha,
+              },
+              'center_rgba5551': {
+                  'disabled': disabled_center,
+                  'add': add_center,
+                  'subtract': sub_center,
+              },
+              'main_color_runtime': main_color,
+              'sub_color_runtime': sub_color,
+              'states': states,
+          }
+          Path('captures/result.json').write_text(
+              json.dumps(result, indent=2, sort_keys=True) + '\n'
+          )
+          print(json.dumps(result, indent=2, sort_keys=True))
+          assert classification == 'H_COMP_CONFIRMED_ADD_SUB_IGNORED', result
+          PY
+
+      - name: Upload H-COMP semantic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-h-comp-add-sub-evidence
+          retention-days: 30
+          path: |
+            captures/
+            diagnostic/guest.sha256
+            workload/guest.sha256
+            workload/gate-c-h-comp.smc
+            ares-version.txt
+            sodium64-build.log

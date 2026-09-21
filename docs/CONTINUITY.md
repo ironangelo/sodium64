@@ -56,6 +56,27 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Next controlled delta: change only the deterministic carrier guest to create the no-shared 8-row TM/TS section and verify its captured section queue before any RSP target-switch edit.
 - Classification: **ARCHITECTURE PROOF / CANDIDATE**.
 
+### E2b precommit — real renderer target switch, one variable only
+- **Purpose / GATE DRIVER:** move from E2a's synthetic RDP Color Image proof to the existing real BG traversal. E2b asks only whether Sodium64's already-existing TS→TM dual traversal can render the first screen into the compact RGB16 operand strip, switch Color Image at the natural `srl s7,s7,8` boundary, then render the second screen into the normal framebuffer.
+- Planned child branch: **`phase4/gate-c-h-comp-e2b-real-target-switch`**, based exactly on E2a validated head `67c18c9ab4baf7531db8384eef8df59e9641ab86`. E2a remains frozen evidence.
+- Deterministic carrier change is deliberately no-shared:
+  - BG1 = fully opaque **red**, `TM=0x01` (main only);
+  - BG2 = fully opaque **green**, `TS=0x02` (sub only);
+  - no OBJ, no color math, no windows affecting pixels.
+- The carrier will use harmless WH0 HDMA solely to create a **real first section of 8 visible lines**: WH0 stays 0 for the first 8 lines, changes to 1 at line 8, then remains 1. Because WH0 is already validated raster-urgent on current master lineage, this produces a true section boundary without inventing `k0/k1` in the proof runtime.
+- Default `layer_set=0` makes the current RSP traverse **TS first, TM second**. Therefore E2b can keep mask semantics untouched: first/sub traversal -> compact target, boundary switch -> second/main traversal -> normal framebuffer.
+- Compact target reuses validated E2a geometry: `0xA00E4000`, 280×8×2 = `0x1180` B, programmed as `0x000E2E80 = scratch - 8*560` under the renderer's existing global-coordinate convention.
+- Expected raw output for the first section:
+  - compact/sub active x=12..267: **RGBA5551 green `0x07C1`**, 2,048 words;
+  - compact horizontal borders: untouched `0x55AA` sentinel, 192 words; prefix/suffix guards intact;
+  - normal/main active x=12..267: **RGBA5551 red `0xF801`**, 2,048 words.
+- Runtime delta must be minimal: remove E2a's now-consumed synthetic next-frame proof machinery, start the frame's Color Image on the compact target for the first section, and on the first real screen-pass boundary switch `RDP_FRAME` back to `FRAMEBUFFER(sp)-8*560`. Later sections remain on the normal target and retain the historical single-target traversal, so band iteration is not introduced here.
+- Host capture keeps the established fresh-frame/quiescent breakpoint contract. It initializes only the compact scratch/guards between frames, then reads the compact strip and the exact proof framebuffer pointer after one fresh frame.
+- **Pass authority:** exact compact green/sentinel contract + intact guards + exact main red active region + fresh guest frame + SP HALT + DP idle. No synthetic fill rectangles are allowed to create these E2b pixels.
+- **Falsifier:** if real traversal cannot produce separated expected operands with this target-only switch, diagnose target command ordering/cache/scissor/state before adding band loops or shared-layer changes.
+- **Explicitly deferred:** sections >8 rows / section→band loop, shared TM+TS layers, arithmetic/compositor, brightness ABI, windows/gating, throughput and real-N64 cost.
+- Classification: **ARCHITECTURE PROOF / PRECOMMITTED / TODO**.
+
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.
 - **E1b VALIDATED:** two-BG winner-layer metadata can be encoded/read correctly. Validated head `8ec1362dd62f117e53b37eaf6523c7bdf00b75bf`.

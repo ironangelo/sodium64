@@ -64,6 +64,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - As a static/control check, the pinned packed half-add and half-sub identities were compared against explicit per-channel definitions over **117,649 structured RGB555 color pairs** built from channel values `{0,1,2,15,16,30,31}`; zero mismatches for either formula. This deliberately covers zero, odd/even rounding, midpoints, near-max and max values on all three channels plus cross-channel carry/borrow combinations.
 - This is host-side algebra/control evidence, not an N64 semantic run. **Do not create or implement E1g until E1f's exact semantic run closes.**
 
+### E1f batch 6 — complete exact-head generic validation GREEN while semantic lab builds
+- Final E1f head `07c5f27b2d6e881c43d0844214376c59a2248036`, **Build and Validate `35639124728 SUCCESS`** across normal build, PROFILE build and pinned Mupen/LLE smoke; update-release skipped as expected.
+- Because the final E1f commit is workflow-only, the already measured implementation artifact/code size remains authoritative: RSP `.text=0xF4C=3,916 B`, 180 B free.
+- Exact semantic `35639124824` has passed deterministic guest generation, exact runtime build/wrap/symbol discovery and pinned-ares dependency setup; pinned ares itself is currently building.
+- E1f semantics remain **OPEN** until evidence artifact inspection. No runtime edit while this run is active.
+
 ### E1f batch 5 — complete exact-head half-add discriminator DISPATCHED
 - Final E1f head **`07c5f27b2d6e881c43d0844214376c59a2248036`** adds only workflow isolation/retargeting on top of implementation `5a5e3907...`; runtime and host oracle are byte-unchanged.
 - Exact semantic run **`35639124824`** — **Gate C H-COMP E1f RGB555 Half-Add Proof** — is IN_PROGRESS.

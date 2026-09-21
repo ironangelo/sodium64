@@ -222,6 +222,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 4 — generic Mupen profile decode red; cause OPEN
+- Implementation-head Build and Validate **`35647142587 FAILURE`**, but the failure is narrowly localized: normal build SUCCESS, PROFILE build SUCCESS, normal headless Mupen/LLE execution SUCCESS, profiling Mupen run + memory dump SUCCESS; only **Decode statistical profile** failed.
+- Failing emulator-smoke job: **`106490744106`**. Smoke artifact **`10660612301`**, digest `sha256:457100f3227307bdec9fa9c4c6afd32766a98a99f1a20593e7d084bdf28bf4e3`.
+- Exact decoder error: **`bad profiler magic 0xAA55AA55; expected 0x53363450`** (or canonical 32-bit word-swapped form). Profile snapshot region reported by workflow: `PROFILE_ADDR=0x800B76E0`, size `0x4020`.
+- The observed word is the N64/Mupen-visible byte/word ordering of the proof sentinel `0x55AA55AA`, so this is not being dismissed as random profiler noise.
+- **OPEN QUESTION:** determine whether E2a/E1c RDP rebasing actually overwrote the profiler snapshot region, or whether the profiling workload never initialized its header and happened to expose sentinel-filled RDRAM. Generic CI red is not yet evidence against compact Color Image rebasing itself.
+- **Do not dispatch E2a semantic workflow** until this is separated. Next controlled diagnosis: compare successful E1g generic profiler address/header, inspect the E2a smoke snapshot byte distribution, and map any `AA55/55AA` run against E2a/E1c RDP target geometry.
+- Classification at this checkpoint: compile/IMEM **MEASURED/PASS**; normal emulator boot **PASS**; profiler decoder **FAIL / OPEN QUESTION**; E2a color-strip semantics **NOT YET VALIDATED**.
+
 ### E2a batch 3 — PROFILE compile/IMEM gate PASSED, only 76 B headroom
 - Build/Validate run **`35647142587`** for implementation head `0bb47e8a...` is active.
 - PROFILE build job is SUCCESS; exact artifact **`10660414623`**, digest `sha256:1ab2c88dc272ad2dd19c8ca91cd50426db40c980ac49e94459552e4c46e87393`, inspected directly.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E1c within-frame compact Z-scratch reuse proof."""
+"""Capture/classify Gate-C E2a compact Color Image + Z strip reuse proof."""
 
 from __future__ import annotations
 
@@ -63,6 +63,19 @@ E1C_ROWS = 8
 E1C_ACTIVE_X0 = 12
 E1C_ACTIVE_X1 = 268
 
+E2A_COLOR_SCRATCH_ADDR = 0xA00E4000
+E2A_COLOR_SCRATCH_SIZE = 0x1180
+E2A_COLOR_ARCHIVE_A_ADDR = 0xA00E6000
+E2A_COLOR_PREFIX_GUARD_ADDR = 0xA00E3FC0
+E2A_COLOR_SUFFIX_GUARD_ADDR = 0xA00E5180
+E2A_MAIN_BEFORE_ADDR = 0xA00E8000
+E2A_MAIN_AFTER_ADDR = 0xA00EA000
+E2A_COLOR_A_WORD = BG1_BLACK_RGBA5551
+E2A_COLOR_B_WORD = BG2_GREEN_RGBA5551
+E2A_MAIN_BEFORE_INIT = 0xA6
+E2A_MAIN_AFTER_INIT = 0x5B
+E2A_ARCHIVE_INIT = 0xCC
+
 
 def parse_int(text: str) -> int:
     return int(text, 0)
@@ -87,6 +100,26 @@ def initialize_proof_memory(client: RSPClient) -> None:
     assert client.read_memory(Z_BASE, Z_SIZE, 0x400) == SENTINEL_WORD.to_bytes(2, "big") * (Z_SIZE // 2)
     assert client.read_memory(Z_BASE + Z_SIZE, Z_SUFFIX_SIZE, 0x100) == bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE
     assert client.read_memory(STATUS_ADDR, STATUS_SIZE, STATUS_SIZE) == bytes(STATUS_SIZE)
+
+    color_prefix = bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+    color_scratch = SENTINEL_WORD.to_bytes(2, "big") * (E2A_COLOR_SCRATCH_SIZE // 2)
+    color_suffix = bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
+    color_archive = bytes([E2A_ARCHIVE_INIT]) * E2A_COLOR_SCRATCH_SIZE
+    main_before = bytes([E2A_MAIN_BEFORE_INIT]) * E2A_COLOR_SCRATCH_SIZE
+    main_after = bytes([E2A_MAIN_AFTER_INIT]) * E2A_COLOR_SCRATCH_SIZE
+    write_pattern(client, E2A_COLOR_PREFIX_GUARD_ADDR, color_prefix)
+    write_pattern(client, E2A_COLOR_SCRATCH_ADDR, color_scratch)
+    write_pattern(client, E2A_COLOR_SUFFIX_GUARD_ADDR, color_suffix)
+    write_pattern(client, E2A_COLOR_ARCHIVE_A_ADDR, color_archive)
+    write_pattern(client, E2A_MAIN_BEFORE_ADDR, main_before)
+    write_pattern(client, E2A_MAIN_AFTER_ADDR, main_after)
+
+    assert client.read_memory(E2A_COLOR_PREFIX_GUARD_ADDR, E1C_GUARD_SIZE, 0x100) == color_prefix
+    assert client.read_memory(E2A_COLOR_SCRATCH_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == color_scratch
+    assert client.read_memory(E2A_COLOR_SUFFIX_GUARD_ADDR, E1C_GUARD_SIZE, 0x100) == color_suffix
+    assert client.read_memory(E2A_COLOR_ARCHIVE_A_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == color_archive
+    assert client.read_memory(E2A_MAIN_BEFORE_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == main_before
+    assert client.read_memory(E2A_MAIN_AFTER_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == main_after
 
 
 def wait_for_proof(
@@ -192,7 +225,7 @@ def decode_section_queue(data: bytes) -> list[dict[str, int]]:
     return records
 
 
-def classify(
+def classify_z(
     archive_a: bytes,
     final_b: bytes,
     prefix_guard: bytes,
@@ -296,6 +329,117 @@ def classify(
     }
 
 
+def classify_e2a(
+    z_archive_a: bytes,
+    z_final_b: bytes,
+    z_prefix_guard: bytes,
+    z_suffix_guard: bytes,
+    color_archive_a: bytes,
+    color_final_b: bytes,
+    color_prefix_guard: bytes,
+    color_suffix_guard: bytes,
+    main_before: bytes,
+    main_after: bytes,
+) -> dict[str, object]:
+    z = classify_z(z_archive_a, z_final_b, z_prefix_guard, z_suffix_guard)
+
+    def words(data: bytes) -> list[int]:
+        return [
+            int.from_bytes(data[i:i + 2], "big")
+            for i in range(0, len(data), 2)
+        ]
+
+    a_words = words(color_archive_a)
+    b_words = words(color_final_b)
+    a_hist = collections.Counter(a_words)
+    b_hist = collections.Counter(b_words)
+    a_wrong: list[dict[str, int]] = []
+    b_wrong: list[dict[str, int]] = []
+    for index, (ca, cb) in enumerate(zip(a_words, b_words)):
+        y, x = divmod(index, FB_WIDTH)
+        active = E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1
+        expected_a = E2A_COLOR_A_WORD if active else SENTINEL_WORD
+        expected_b = E2A_COLOR_B_WORD if active else SENTINEL_WORD
+        if ca != expected_a and len(a_wrong) < 64:
+            a_wrong.append({"x": x, "y": y, "actual": ca, "expected": expected_a})
+        if cb != expected_b and len(b_wrong) < 64:
+            b_wrong.append({"x": x, "y": y, "actual": cb, "expected": expected_b})
+
+    expected_active = (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) * E1C_ROWS
+    expected_border = (FB_WIDTH - (E1C_ACTIVE_X1 - E1C_ACTIVE_X0)) * E1C_ROWS
+    prefix_ok = color_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+    suffix_ok = color_suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
+    main_equal = main_before == main_after
+    main_before_written = main_before != bytes([E2A_MAIN_BEFORE_INIT]) * len(main_before)
+    main_after_written = main_after != bytes([E2A_MAIN_AFTER_INIT]) * len(main_after)
+
+    color_passed = (
+        prefix_ok
+        and suffix_ok
+        and not a_wrong
+        and not b_wrong
+        and a_hist[E2A_COLOR_A_WORD] == expected_active
+        and a_hist[SENTINEL_WORD] == expected_border
+        and b_hist[E2A_COLOR_B_WORD] == expected_active
+        and b_hist[SENTINEL_WORD] == expected_border
+        and b_hist[E2A_COLOR_A_WORD] == 0
+        and len(a_words) == FB_WIDTH * E1C_ROWS
+        and len(b_words) == FB_WIDTH * E1C_ROWS
+        and main_equal
+        and main_before_written
+        and main_after_written
+    )
+    passed = bool(z["passed"] and color_passed)
+
+    return {
+        "classification": (
+            "E2A_COLOR_STRIP_REUSE_VALIDATED"
+            if passed
+            else "E2A_COLOR_STRIP_REUSE_FAILED"
+        ),
+        "passed": passed,
+        "z_control": z,
+        "color_contract": {
+            "passed": color_passed,
+            "constants": {
+                "scratch_address": hex(E2A_COLOR_SCRATCH_ADDR),
+                "scratch_size": E2A_COLOR_SCRATCH_SIZE,
+                "archive_a_address": hex(E2A_COLOR_ARCHIVE_A_ADDR),
+                "prefix_guard_address": hex(E2A_COLOR_PREFIX_GUARD_ADDR),
+                "suffix_guard_address": hex(E2A_COLOR_SUFFIX_GUARD_ADDR),
+                "main_before_address": hex(E2A_MAIN_BEFORE_ADDR),
+                "main_after_address": hex(E2A_MAIN_AFTER_ADDR),
+                "band_a_color": hex(E2A_COLOR_A_WORD),
+                "band_b_color": hex(E2A_COLOR_B_WORD),
+                "sentinel_word": hex(SENTINEL_WORD),
+                "expected_active_words": expected_active,
+                "expected_border_words": expected_border,
+            },
+            "counts": {
+                "archive_a_color_words": a_hist[E2A_COLOR_A_WORD],
+                "archive_a_sentinel_words": a_hist[SENTINEL_WORD],
+                "final_b_color_words": b_hist[E2A_COLOR_B_WORD],
+                "final_b_sentinel_words": b_hist[SENTINEL_WORD],
+                "final_b_stale_a_words": b_hist[E2A_COLOR_A_WORD],
+                "words_per_compact_strip": len(a_words),
+            },
+            "guards": {
+                "prefix_ok": prefix_ok,
+                "suffix_ok": suffix_ok,
+            },
+            "main_frame": {
+                "before_after_equal": main_equal,
+                "before_snapshot_written": main_before_written,
+                "after_snapshot_written": main_after_written,
+            },
+            "mismatches": {
+                "archive_a_wrong": a_wrong,
+                "final_b_wrong": b_wrong,
+            },
+        },
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1")
@@ -341,7 +485,7 @@ def main() -> int:
         # after observing SP_STATUS.HALT, so both producer and DP can be checked
         # at a deterministic between-frame boundary rather than a timed host poll.
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E1c clean-epoch breakpoint")
+        validate_stop(client.request("c"), "E2a clean-epoch breakpoint")
         anchor = read_quiescent_state(client)
         validate_quiescent_state(anchor, require_marker=True)
 
@@ -352,9 +496,9 @@ def main() -> int:
         # Step over the breakpoint once, reinstall it behind the PC, and let one
         # complete subsequent RSP frame reach the same quiescent boundary.
         set_breakpoint(client, args.capture_ready_address, False)
-        validate_stop(client.request("s"), "E1c breakpoint step-over")
+        validate_stop(client.request("s"), "E2a breakpoint step-over")
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E1c fenced capture breakpoint")
+        validate_stop(client.request("c"), "E2a fenced capture breakpoint")
 
         quiescent = read_quiescent_state(client)
         validate_quiescent_state(quiescent, require_marker=True)
@@ -392,14 +536,49 @@ def main() -> int:
         suffix_guard = client.read_memory(
             E1C_SUFFIX_GUARD_ADDR, E1C_GUARD_SIZE, E1C_GUARD_SIZE
         )
+        color_archive_a = client.read_memory(
+            E2A_COLOR_ARCHIVE_A_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400
+        )
+        color_final_b = client.read_memory(
+            E2A_COLOR_SCRATCH_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400
+        )
+        color_prefix_guard = client.read_memory(
+            E2A_COLOR_PREFIX_GUARD_ADDR, E1C_GUARD_SIZE, E1C_GUARD_SIZE
+        )
+        color_suffix_guard = client.read_memory(
+            E2A_COLOR_SUFFIX_GUARD_ADDR, E1C_GUARD_SIZE, E1C_GUARD_SIZE
+        )
+        main_before = client.read_memory(
+            E2A_MAIN_BEFORE_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400
+        )
+        main_after = client.read_memory(
+            E2A_MAIN_AFTER_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400
+        )
 
         (out / "framebuffer.rgba5551").write_bytes(framebuffer)
-        (out / "archive_a.bin").write_bytes(archive_a)
-        (out / "final_b.bin").write_bytes(final_b)
-        (out / "prefix_guard.bin").write_bytes(prefix_guard)
-        (out / "suffix_guard.bin").write_bytes(suffix_guard)
+        (out / "z_archive_a.bin").write_bytes(archive_a)
+        (out / "z_final_b.bin").write_bytes(final_b)
+        (out / "z_prefix_guard.bin").write_bytes(prefix_guard)
+        (out / "z_suffix_guard.bin").write_bytes(suffix_guard)
+        (out / "color_archive_a.bin").write_bytes(color_archive_a)
+        (out / "color_final_b.bin").write_bytes(color_final_b)
+        (out / "color_prefix_guard.bin").write_bytes(color_prefix_guard)
+        (out / "color_suffix_guard.bin").write_bytes(color_suffix_guard)
+        (out / "main_before.bin").write_bytes(main_before)
+        (out / "main_after.bin").write_bytes(main_after)
 
-        result = classify(archive_a, final_b, prefix_guard, suffix_guard)
+        result = classify_e2a(
+            archive_a,
+            final_b,
+            prefix_guard,
+            suffix_guard,
+            color_archive_a,
+            color_final_b,
+            color_prefix_guard,
+            color_suffix_guard,
+            main_before,
+            main_after,
+        )
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),
@@ -412,7 +591,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E1c semantic classifier failed; see result.json")
+            raise RuntimeError("E2a semantic classifier failed; see result.json")
 
         try:
             client.request("D")

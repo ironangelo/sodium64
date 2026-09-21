@@ -1259,6 +1259,77 @@ e1c_restore_wait:
     bnez t0, e1c_restore_wait
     nop
 
+    // E1d proof: raw RGB555 saturating-add microkernel. Host owns the
+    // operand/guard initialization at the quiescent frame boundary. This proof
+    // deliberately reuses TEXTURE as 64 bytes of staging and computes output
+    // in place over operand A; it is semantic evidence, not a throughput path.
+    li a0, TEXTURE
+    li a1, 0xA00C6020
+    jal dma_read
+    li a2, 0x1F
+    li a0, TEXTURE + 0x20
+    li a1, 0xA00C6040
+    jal dma_read
+    li a2, 0x1F
+
+    li s0, TEXTURE
+    li s1, TEXTURE + 0x20
+    li s2, 16
+e1d_add_loop:
+    lhu t0, 0(s0)
+    lhu t1, 0(s1)
+
+    // R: bits 0..4, saturate independently to 31.
+    andi t2, t0, 0x001F
+    andi t3, t1, 0x001F
+    add t2, t2, t3
+    sltiu t4, t2, 32
+    bnez t4, e1d_r_ok
+    nop
+    li t2, 31
+e1d_r_ok:
+    move t7, t2
+
+    // G: bits 5..9, saturate independently to 31.
+    srl t2, t0, 5
+    andi t2, t2, 0x001F
+    srl t3, t1, 5
+    andi t3, t3, 0x001F
+    add t2, t2, t3
+    sltiu t4, t2, 32
+    bnez t4, e1d_g_ok
+    nop
+    li t2, 31
+e1d_g_ok:
+    sll t2, t2, 5
+    or t7, t7, t2
+
+    // B: bits 10..14, saturate independently to 31.
+    srl t2, t0, 10
+    andi t2, t2, 0x001F
+    srl t3, t1, 10
+    andi t3, t3, 0x001F
+    add t2, t2, t3
+    sltiu t4, t2, 32
+    bnez t4, e1d_b_ok
+    nop
+    li t2, 31
+e1d_b_ok:
+    sll t2, t2, 10
+    or t7, t7, t2
+    sh t7, 0(s0)
+
+    addi s0, s0, 2
+    addi s1, s1, 2
+    addi s2, s2, -1
+    bnez s2, e1d_add_loop
+    nop
+
+    li a0, TEXTURE
+    li a1, 0xA00C6060
+    jal dma_write
+    li a2, 0x1F
+
     // Publish proof completion only after all E1c DP/RSP ownership transitions.
     // Keep the exact normal framebuffer identity for the host boundary contract.
     li t0, 0xE1F00D01

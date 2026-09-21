@@ -36,6 +36,20 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Immediate next action:** E2b should isolate only the real traversal target-switch question using a no-shared carrier: BG1 main-only (`TM=0x01`) and BG2 sub-only (`TS=0x02`), with one short 8-row section so compact-band slicing is not yet another variable. Preserve E2a as frozen evidence.
 - Status: **GATE DRIVER / ARCHITECTURE PROOF — E2a VALIDATED; E2b NEXT**.
 
+### E2b precommit — real renderer traversal into distinct main/compact targets; NO code yet
+- **Question:** can Sodium64's existing real regular-BG traversal render one SNES screen into the normal framebuffer and the second SNES screen into the compact 280×8 RGB16 target, using the existing first-screen→second-screen boundary rather than synthetic RDP fills?
+- **Carrier guest:** derive from the deterministic E1b/E2a Mode-0 guest, but use **no shared layers**: `TM=0x01` (BG1 main-only), `TS=0x02` (BG2 sub-only). BG1 remains black/transparent checkerboard; BG2 remains opaque green. This keeps both outputs visually and structurally distinguishable.
+- **Carrier vertical scope:** materialize exactly one 8-row active section (planned global renderer rows **8..15**) so band slicing/reuse over a long section is explicitly **not** part of E2b.
+- `write_tm`/`write_ts` call ordinary `update_frame`, which is cooldown-sensitive. To make both carrier boundaries deterministic without changing global precision, pair the HDMA state changes with an otherwise-inert **WH0 write while windows are disabled**. The integrated WH urgent path sets `sect_status=0x100`; because section creation precedes HDMA on each line, the HDMA table must be scheduled one scanline before the desired new section start. Verify the captured section queue rather than trusting this timing derivation.
+- **Boundary under test:** current RSP already packs first/second screen masks into `s7` and switches traversal at `srl s7,s7,8`. E2b should switch only Color Image ownership/fencing at that natural boundary; it must not clone `next_layer` or build a second renderer.
+- E2b intentionally avoids shared-layer semantics. Current code removes `first & second` from the first traversal; that workaround is irrelevant with BG1-only/BG2-only and will be tested separately after target separation works.
+- **Target convention:** E2a validated `target_base - band_start*560`; for rows 8..15 the compact Color Image base is therefore `0x000E2E80` for physical scratch `0xA00E4000`. Preserve existing global tile/scissor coordinates.
+- **Precommitted oracle:** main target rows 8..15 must contain only the BG1 carrier result expected from the existing guest; compact target rows 8..15 must contain BG2 green across the active x-range with untouched sentinels outside it. The two targets must be observably different; cross-target leakage, stale data or framebuffer mutation outside the carrier fails.
+- Keep the established E1/E2 capture authority: explicit DP completion before readback/restore, fresh guest frame, RSP HALT, DP idle, guards around compact target, and exact section-queue capture proving `TM=01 / TS=02` on the carrier.
+- **Falsifier:** real BG traversal produces wrong physical rows/stride under compact Color Image rebasing, target switch corrupts normal framebuffer/state, or correct separation requires invasive duplicate traversal logic. Any of these rejects this compact-target production direction before compositor integration.
+- **Not in E2b:** long-section band loop, OBJ, shared TM+TS layers, color math arithmetic/gating, raw palette/brightness redesign, Window 2, PR #13 overlays, throughput/cadence claims or master integration.
+- Classification: **ARCHITECTURE PROOF / PRECOMMITTED**.
+
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.
 - **E1b VALIDATED:** two-BG winner-layer metadata can be encoded/read correctly. Validated head `8ec1362dd62f117e53b37eaf6523c7bdf00b75bf`.

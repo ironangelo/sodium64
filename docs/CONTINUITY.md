@@ -58,6 +58,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1g batch 4 — complete exact-head half-sub discriminator DISPATCHED
+- Final E1g head **`8bdec1f3cf580e23bd662dda47ffb5c9201bcbca`** adds only workflow isolation/retargeting on top of implementation `233279dc...`; runtime and host oracle are byte-unchanged.
+- Exact semantic run **`35640776537`** — **Gate C H-COMP E1g RGB555 Half-Sub Proof** — is QUEUED at checkpoint.
+- Exact-head generic Build/Validate **`35640776778`** is also QUEUED; implementation-head `35640340728` is already fully SUCCESS including Mupen/LLE.
+- Semantic pass authority is artifact-only: `E1G_RGB555_HALF_SUB_VALIDATED / passed=true`, all 16 expected outputs exact, no mismatches, prefix/suffix/reserve guards intact, one fresh guest frame, RSP HALT and DP-idle at the established capture boundary.
+- No gating/window or brightness-ABI implementation while these exact-head runs are active. **Resume first with `35640776537` and inspect its artifact before closing E1g or starting the next discriminator.**
+
 ### E1g batch 3 — exact generic validation + IMEM check PASSED
 - Exact implementation head `233279dcd1574dfba7f1e5439a655f9315f71f41`, **Build and Validate `35640340728 SUCCESS`** across normal build, PROFILE build and pinned Mupen/LLE smoke; update-release skipped as expected.
 - Exact normal artifact **`10658450370`**, digest `sha256:a7a121a29e32f8f5e2ea79221723ace56d0bb3ff65384c620df4ff72bc0f7664`, inspected directly.

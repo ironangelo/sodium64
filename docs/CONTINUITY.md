@@ -22,7 +22,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Pinned SNES reference semantics establish per-channel RGB5 arithmetic with clipping. Brightness is conceptually later than the main/sub arithmetic.
 - A production design must still solve operand preservation, selection/gating, half rules, windows, throughput, and integration. The scalar proof kernels below are semantic discriminators, **not production compositor architecture**.
 
-### ACTIVE / RESUME HERE — E2b CLOSED / VALIDATED; E2c shared-membership baseline next
+### ACTIVE / RESUME HERE — E2c shared-membership baseline guest implemented
 - **E2a remains CLOSED / VALIDATED** on `phase4/gate-c-h-comp-e2a-color-strip-reuse@67c18c9ab4baf7531db8384eef8df59e9641ab86`; semantic run `35657048671 SUCCESS`, artifact `10665172832`, digest `sha256:043f5f76ec87fed5603e6289e7d3617fde147227139f4618de8b3b7c13133471`. Preserve it as frozen evidence.
 - E2b validation branch is now **`phase4/gate-c-h-comp-e2b-real-target-switch@115b32aab183fe18bc4d4011277816c2f8f1c888`**.
 - Runtime candidate remains exactly parent **`af1ad807b3a2890e8f60501e2bffc2e834f4d65a`**: first real TS traversal begins on compact RGB16 Color Image `0x000E2E80`; at the existing `srl s7,s7,8` boundary and only for `k0==0`, Color Image is restored to `FRAMEBUFFER(sp)-8*560` before the TM traversal. E2a synthetic fill/copy machinery is removed; end-of-frame Sync Full + DP-idle fence and status/framebuffer marker remain.
@@ -63,13 +63,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Status: **E2B CLOSED / VALIDATED**.
 - Immediate next action: begin **E2c baseline only** from validated E2b head `115b32aa...`: create a child proof branch, change only the guest to `TM=0x01 / TS=0x01` (BG1 red shared), keep E2b RSP runtime byte-identical, and measure the precommitted historical-suppression baseline (compact active black `0x0001`, main active red `0xF801`). Do not remove shared suppression until that baseline is measured.
 
-### PRECOMMITTED E2c shared-membership discriminator — DO NOT START UNTIL E2b CLOSES
+### E2c shared-membership discriminator — ACTIVE
 - **Question:** after validated two-target separation, can a layer enabled on both SNES screens be preserved in both raw operands instead of being suppressed from the first traversal by the historical single-framebuffer workaround?
+- **E2c branch created from exact validated E2b head:** `phase4/gate-c-h-comp-e2c-shared-membership` from `115b32aab183fe18bc4d4011277816c2f8f1c888`.
+- **IMPLEMENTED guest-only baseline commit `69e8f5fdd9da0c7be44d66f61cfa446e3468cfcf`:** only `scripts/make_gate_c_h_comp_e1_z_tag.py` differs from E2b. The sole rendering-semantic delta is `TS 0x02 -> 0x01`, so BG1 red is shared on TM+TS; comments/title were updated accordingly. `src/rsp_main.S` and the validated E2b target-switch runtime are byte-identical. Exact-head **Build and Validate `35666996028`** dispatched; semantic intentionally not dispatched yet because the inherited E2b host classifier expects `TS=2`/green compact.
+
 - Reuse E2b's exact 8-line WH0 carrier, compact target, target-switch runtime, capture boundary and red BG1 tile. Change the child guest only to **BG1 shared on both screens: `TM=0x01`, `TS=0x01`**; no BG2 dependency, no color math/windows.
 - **Baseline first / guest-only:** with current mask code unchanged, `shared=1` and `sub s7,s7,t1` removes BG1 from the first traversal. Precommitted baseline oracle: carrier remains 8/224; compact active x=12..267 = **2,048× backdrop black RGBA5551 `0x0001`** with 192× `0x55AA` border and guards intact; main rows 8..15 active x=12..267 = **2,048× red `0xF801`**.
 - Only after that baseline measures the historical suppression, make a **one-instruction membership delta** in the child runtime: stop subtracting the shared mask from first-pass `s7` (the existing `and t1,t0,s7` may remain as dead proof-local work; do not combine this experiment with target/fence/band/compositor changes).
 - Precommitted repaired oracle: same carrier/guards/main red, but compact active changes **only** from 2,048× black `0x0001` to **2,048× red `0xF801`**. That directly proves the same BG1 contributes to both independent operands.
-- This is **ARCHITECTURE PROOF / HYPOTHESIS** until E2b closes and both baseline + one-variable repair are measured. It does not yet prove production performance, shared OBJ behavior, priorities, color math or band reuse.
+- This remains **ARCHITECTURE PROOF / HYPOTHESIS** until both E2c baseline + one-variable repair are measured. It does not yet prove production performance, shared OBJ behavior, priorities, color math or band reuse.
+- **Immediate E2c action:** after the guest-only generic build is green, change only the host classifier/workflow for the precommitted baseline: section records must become `TS=1/TM=1` at 8/224; compact active must be 2,048× black `0x0001` + 192× sentinel with guards intact; main active remains 2,048× red. Keep `src/rsp_main.S` frozen. Only after that baseline is measured may shared suppression be removed.
 
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.

@@ -58,6 +58,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1f batch 4 — exact compile/IMEM check PASSED; packed half-add materially smaller
+- Exact implementation head `5a5e390700aab8835e9b6229965c7bccc24081ba`; normal and PROFILE build jobs in `35638793678` are green.
+- Exact normal artifact **`10657132935`**, digest `sha256:e73ece0618e99ba11c29eff3e3578ec9fb56f544383e366669e5223c791b5c54`, inspected directly.
+- RSP `.text = 0xF4C = 3,916 B`, leaving **180 B IMEM free**; DMEM remains exactly `0x1000`.
+- This is **100 B smaller than E1d saturating-add** (`0xFB0`) and 88 B smaller than E1e subtraction (`0xFA4`), because the exact packed half-add identity avoids per-channel extract/clamp sequences.
+- Interpretation: source-derived packed arithmetic is not only semantically well-defined but substantially more compact in this proof. This is code-size evidence, **not throughput or production-placement evidence**.
+- Generic Mupen/LLE smoke for `35638793678` is still running at checkpoint. Do not retarget semantic workflow until the full generic run is green.
+
 ### E1f batch 3 — static single-variable/oracle audit CLEAN while build runs
 - Compare E1d validated head `76321873...` -> E1f implementation `5a5e3907...` is exactly one commit touching only `src/rsp_main.S` and the host classifier: runtime +11/-46 lines, host +11/-11. No workflow, guest, address, guard or fence change.
 - Exact runtime source implements the pinned ares identity literally: `t2=(A^B)&0x0421; t3=A+B-t2; t3>>=1`.

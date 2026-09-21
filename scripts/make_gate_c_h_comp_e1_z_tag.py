@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Generate the deterministic original SNES guest for Gate-C E2b target switching.
 
-The 32 KiB LoROM renders two distinct Mode-0 backgrounds with no shared screen
-layers: BG1 is fully opaque red on the main screen and BG2 is fully opaque green
-on the sub screen. A harmless direct-HDMA WH0 stream changes only after the first
+The 32 KiB LoROM renders a controlled Mode-0 shared-layer baseline: BG1 is
+fully opaque red and enabled on both main and sub screens. BG2 remains loaded
+but disabled from both screen masks. A harmless direct-HDMA WH0 stream changes
+only after the first
 8 visible lines; windows are disabled, so the write exists solely to force the
 already-validated urgent section boundary used by the E2b carrier.
 """
@@ -136,8 +137,8 @@ def build_program() -> bytes:
     lda_sta_abs(a, 0xE0, 0x2122)    # color 2 low: green BGR555 0x03E0
     lda_sta_abs(a, 0x03, 0x2122)    # color 2 high
 
-    lda_sta_abs(a, 0x01, 0x212C)    # TM: BG1 main-only
-    lda_sta_abs(a, 0x02, 0x212D)    # TS: BG2 sub-only
+    lda_sta_abs(a, 0x01, 0x212C)    # TM: BG1 shared
+    lda_sta_abs(a, 0x01, 0x212D)    # TS: BG1 shared
     lda_sta_abs(a, 0x00, 0x212E)    # TMW disabled
     lda_sta_abs(a, 0x00, 0x212F)    # TSW disabled
     lda_sta_abs(a, 0x00, 0x2130)    # CGWSEL
@@ -234,7 +235,7 @@ def build_rom() -> bytes:
     rom[bg2_tile_offset:bg2_tile_offset + len(bg2_tiles)] = bg2_tiles
     rom[hdma_table_offset:hdma_table_offset + len(hdma_table)] = hdma_table
 
-    rom[HEADER:HEADER + 21] = b"S64 E2B TARGET".ljust(21, b" ")
+    rom[HEADER:HEADER + 21] = b"S64 E2C SHARED".ljust(21, b" ")
     rom[0x7FD5] = 0x20               # LoROM
     rom[0x7FD6] = 0x00
     rom[0x7FD7] = 0x05

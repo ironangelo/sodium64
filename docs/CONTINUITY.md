@@ -117,6 +117,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Precomputed E1g half-sub oracle for later use: `0000,000F,01E0,3C00,0000,0000,0000,0000,000F,01E0,1084,0421,3C0F,01EF,1405,0009`.
 - **Status:** source-derived / oracle precommitted; no E1f branch or runtime change yet.
 
+### Post-arithmetic gating audit — existing section ABI already carries the needed control registers
+- Master source audit while E1f runs: each 0x40-byte frame section already snapshots `WOBJSEL`, `CGWSEL`, `CGADSUB`, `TS/TM/TSW/TMW` and window edges alongside colors/layer state. Therefore later color-math gating does **not** need a second CPU→RSP control pipeline merely to transport these registers.
+- Current RSP backdrop path already consumes `CGADSUB & 0x20` (backdrop math enable), `CGWSEL` and `WOBJSEL` to choose/swap fill colors across color-window segments, but explicitly says `TODO: implement color math properly`; it substitutes/switches already brightness-scaled `MAIN_COLOR/SUB_COLOR` rather than performing SNES arithmetic.
+- **SUPPORTED direction:** a later gating discriminator can reuse the existing section/window ABI and established `calc_windows` segmentation. The unresolved production problem is primarily exact raw operand preservation/identity + compositor execution, not transport of CGADSUB/CGWSEL themselves.
+- **Do not infer integration readiness:** existing fill-window behavior covers backdrop approximation only and does not establish per-layer main/sub operand availability or exact half suppression semantics.
+
 ### Immediate next uncertainty
 - **NEXT: half-color semantics, source-grounded before code.**
 - Do **not** implement “just shift the final RGB555 result right one” from intuition. Derive exact SNES half behavior from pinned/reference implementation first, including:

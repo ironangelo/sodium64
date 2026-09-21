@@ -39,6 +39,8 @@ SECTION_RECORD_COUNT = 16
 SECTION_CAPTURE_SIZE = SECTION_RECORD_SIZE * SECTION_RECORD_COUNT
 SECTION_BGNBA_OFFSET = 0x10
 SECTION_BG1SC_OFFSET = 0x2A
+SECTION_WH0_OFFSET = 0x2E
+SECTION_TS_OFFSET = 0x39
 SECTION_TM_OFFSET = 0x3A
 SECTION_BG_MODE_OFFSET = 0x3D
 SECTION_STAT_FLAGS_OFFSET = 0x3E
@@ -217,12 +219,68 @@ def decode_section_queue(data: bytes) -> list[dict[str, int]]:
                 record[SECTION_BGNBA_OFFSET:SECTION_BGNBA_OFFSET + 2], "big"
             ),
             "bg1sc": record[SECTION_BG1SC_OFFSET],
+            "wh0": record[SECTION_WH0_OFFSET],
+            "ts": record[SECTION_TS_OFFSET],
             "tm": record[SECTION_TM_OFFSET],
             "bg_mode": record[SECTION_BG_MODE_OFFSET],
             "stat_flags": record[SECTION_STAT_FLAGS_OFFSET],
             "split_line": record[SECTION_SPLIT_LINE_OFFSET],
         })
     return records
+
+
+def classify_e2b_carrier_sections(
+    queue1: bytes,
+    queue2: bytes,
+) -> dict[str, object]:
+    decoded = {
+        "queue1": decode_section_queue(queue1),
+        "queue2": decode_section_queue(queue2),
+    }
+
+    expected = [
+        {"index": 0, "wh0": 0x00, "ts": 0x02, "tm": 0x01, "split_line": 8},
+        {"index": 1, "wh0": 0x01, "ts": 0x02, "tm": 0x01, "split_line": 224},
+    ]
+
+    matches: list[str] = []
+    observations: dict[str, object] = {}
+    for name, records in decoded.items():
+        first_two = records[:2]
+        ok = True
+        checks: list[dict[str, object]] = []
+        for exp, actual in zip(expected, first_two):
+            fields = {
+                key: actual[key] == value
+                for key, value in exp.items()
+            }
+            checks.append({
+                "expected": exp,
+                "actual": actual,
+                "field_matches": fields,
+                "passed": all(fields.values()),
+            })
+            ok = ok and all(fields.values())
+        observations[name] = {
+            "passed": ok,
+            "checks": checks,
+            "first_four_records": records[:4],
+        }
+        if ok:
+            matches.append(name)
+
+    passed = bool(matches)
+    return {
+        "classification": (
+            "E2B_CARRIER_SECTION_VALIDATED"
+            if passed
+            else "E2B_CARRIER_SECTION_FAILED"
+        ),
+        "passed": passed,
+        "matching_queues": matches,
+        "expected_records": expected,
+        "queues": observations,
+    }
 
 
 def classify_z(
@@ -554,6 +612,12 @@ def main() -> int:
         main_after = client.read_memory(
             E2A_MAIN_AFTER_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400
         )
+        section_queue1 = client.read_memory(
+            SECTION_QUEUE1_ADDR, SECTION_CAPTURE_SIZE, 0x400
+        )
+        section_queue2 = client.read_memory(
+            SECTION_QUEUE2_ADDR, SECTION_CAPTURE_SIZE, 0x400
+        )
 
         (out / "framebuffer.rgba5551").write_bytes(framebuffer)
         (out / "z_archive_a.bin").write_bytes(archive_a)
@@ -566,6 +630,8 @@ def main() -> int:
         (out / "color_suffix_guard.bin").write_bytes(color_suffix_guard)
         (out / "main_before.bin").write_bytes(main_before)
         (out / "main_after.bin").write_bytes(main_after)
+        (out / "section_queue1.bin").write_bytes(section_queue1)
+        (out / "section_queue2.bin").write_bytes(section_queue2)
 
         result = classify_e2a(
             archive_a,
@@ -579,6 +645,14 @@ def main() -> int:
             main_before,
             main_after,
         )
+        carrier = classify_e2b_carrier_sections(section_queue1, section_queue2)
+        result["e2b_carrier_section"] = carrier
+        result["passed"] = bool(result["passed"] and carrier["passed"])
+        result["classification"] = (
+            "E2B_CARRIER_SECTION_VALIDATED"
+            if result["passed"]
+            else "E2B_CARRIER_SECTION_FAILED"
+        )
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),
@@ -591,7 +665,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2a semantic classifier failed; see result.json")
+            raise RuntimeError("E2b carrier-section classifier failed; see result.json")
 
         try:
             client.request("D")

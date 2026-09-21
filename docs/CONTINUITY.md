@@ -222,6 +222,26 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a precommit — compact Color Image strip reuse, exact controlled proof frozen before code
+- **Purpose / GATE DRIVER:** extend validated E1c from compact Z metadata to the missing **RGB16 second-screen operand surface**. This is an architecture proof, not production integration or performance evidence.
+- Planned proof branch: `phase4/gate-c-h-comp-e2a-color-strip-reuse`, based exactly on validated E1c head `994a1fd502f97424e7a5a8dc32e985490b0d39c7`. E1c's Z rebasing/fences remain the control; the only new semantic variable is compact **Color Image** target rebasing/reuse.
+- Dedicated proof memory in the verified free gap below `FRAMEBUFFER1=0xA00F2300`:
+  - color scratch: **`0xA00E4000..0xA00E517F`** = 280×8×2 = `0x1180` B;
+  - prefix guard: `0xA00E3FC0..0xA00E3FFF` = 64 B, `0xC3`;
+  - suffix guard: `0xA00E5180..0xA00E51BF` = 64 B, `0x3C`;
+  - archived band A: **`0xA00E6000..0xA00E717F`**;
+  - main-frame before snapshot: **`0xA00E8000..0xA00E917F`**;
+  - main-frame after snapshot: **`0xA00EA000..0xA00EB17F`**.
+  These regions are disjoint from E1 status `0xA00E1000`, E1d-g proof block `0xA00E2000..20FF`, E1c Z scratch/archive, and the first real Sodium64 framebuffer.
+- Scratch initialization remains `0x55AA` per RGB16 word. Active x range is the established `12..267` (256 pixels), with 12-pixel borders untouched on each side.
+- **Band A:** global y=8..15 maps to physical color-strip rows 0..7 via Color Image base `0x000E4000 - 8*560 = 0x000E2E80`; draw opaque black, expected RGB16 **`0x0001`** on 2,048 active pixels and `0x55AA` on 192 border pixels; DP-fence, then archive.
+- **Band B:** global y=16..23 reuses the same physical strip via Color Image base `0x000E4000 - 16*560 = 0x000E1D00`; draw opaque green, expected RGB16 **`0x07C1`** on 2,048 active pixels and `0x55AA` on 192 borders; **zero stale `0x0001` active pixels** after reuse.
+- Before changing Color Image ownership, archive the first 8 rows of the actual `FRAMEBUFFER(sp)`; after the second band, restore the normal Color Image address, fence, archive the same 4,480 B again. **Main-before must equal main-after byte-for-byte.**
+- Keep E1c's validated compact-Z path active in the same proof so the new color strip and existing metadata strip are shown to coexist under the same ownership fences. Do not change Z semantics/oracle.
+- **Pass authority:** color A/B exact histograms + per-pixel checks; color guards intact; no stale A color in B; main framebuffer snapshot byte-identical; inherited E1c Z contract still exact; one fresh guest frame; RSP HALT; DP busy mask clear.
+- **Not in E2a:** production palette/raw conversion, TS/TM renderer pass switch, brightness application, CGADSUB arithmetic, E1h gating, Window 2, PR #13 overlays, throughput/cadence claims. Those remain later discriminators.
+- **Falsifier:** wrong/rebased rows, guard corruption, stale A color, main framebuffer mutation, or inability to restore/fence Color Image deterministically. Any such result blocks the compact-color-strip hypothesis before production work.
+
 ### Immediate next uncertainty
 - **NEXT GATE DRIVER: prove or falsify compact second-screen color-target rebasing with the existing renderer/RDP contract.**
 - Do not spend the next batch merely proving E1h's six-row boolean selector unless the production architecture needs it; its oracle is already source-grounded and can become a regression proof later.

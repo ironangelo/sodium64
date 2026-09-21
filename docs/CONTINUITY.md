@@ -236,9 +236,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Source audit at the existing screen-pass boundary found a production-relevant constraint for the discriminator **after** E2a.
 - Current section setup builds the two traversal masks as follows: load one of TS/TM according to `MASK_SEL`; load the other; compute `shared = first & second`; then **subtract shared layers from the first pass** before packing the other mask into the high byte. The later `srl s7,s7,8` boundary therefore draws shared layers only once, on the second traversal.
 - That behavior is intentional for the historical **single-framebuffer / no-blending workaround**, where drawing shared layers twice would be redundant or harmful. It is **not valid for true independent main/sub operands**: a layer enabled on both SNES screens must contribute to both raw target images.
-- Therefore a future real-renderer two-target proof must change two things together as one architecture contract: (1) switch Color Image target at the natural traversal boundary, and (2) preserve shared-layer membership in **both** screen masks. It must not interpret the current shared-layer suppression as reusable production semantics.
-- This finding does not alter E2a's synthetic Color Image rebasing question and requires no change while semantic run `35657048671` is active.
-- Proposed next discriminator if E2a passes: a tightly controlled **E2b real-traversal target-switch proof** using the existing renderer/cache path, with distinct main-only, sub-only and shared-layer content so failure can distinguish target switching from mask membership.
+- Therefore production eventually needs both (1) Color Image target switching at the natural traversal boundary and (2) shared-layer membership preserved in **both** screen masks. However, experimental discipline says **do not change/test both at once**.
+- The existing deterministic carrier already has two visually distinct real renderer inputs (BG1 black/checker, BG2 opaque green) and writes TM/TS directly. A minimal child guest can set **BG1 main-only (`TM=0x01`) and BG2 sub-only (`TS=0x02`)**, making `shared=0` so the historical subtraction is inert.
+- Refined sequence if E2a passes:
+  1. **E2b target-switch only:** use that no-shared carrier and the real `next_layer` traversal; change only Color Image ownership at the existing `srl s7,s7,8` boundary and prove distinct main/sub outputs.
+  2. **E2c shared-membership only:** after E2b closes target switching, introduce a controlled shared-layer case and remove/replace the historical shared suppression, proving the layer contributes to both operands.
+- This finding does not alter E2a's synthetic Color Image rebasing question and requires no runtime change while semantic run `35657048671` is active.
 - Classification: **SUPPORTED SOURCE FINDING / NEXT-ARCHITECTURE CONSTRAINT**, not implemented.
 
 ### E2a batch 11 — semantic workflow retargeted as workflow-only delta

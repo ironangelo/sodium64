@@ -181,6 +181,20 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **SUPPORTED direction:** a later gating discriminator can reuse the existing section/window ABI and established `calc_windows` segmentation. The unresolved production problem is primarily exact raw operand preservation/identity + compositor execution, not transport of CGADSUB/CGWSEL themselves.
 - **Do not infer integration readiness:** existing fill-window behavior covers backdrop approximation only and does not establish per-layer main/sub operand availability or exact half suppression semantics.
 
+### E1h prep — isolate half suppression / second-operand selection after E1g; NO branch/code
+- Pinned accurate ares defines the key post-arithmetic gating in `PPU::DAC::above()`: if the winning main layer is not color-math-enabled or the below color-window mask disables math, return the main color unchanged; otherwise choose the second operand from fixed color (`CGWSEL blendMode=0`) or subscreen (`blendMode=1`). If subscreen is selected but its winner is transparent/backdrop, ares falls back to fixed color **and forces half off**. Otherwise `CGADSUB bit6` enables half only when the above color-window output allows main color.
+- Keep this separate from color-window truth-table testing. Proposed **E1h** semantic discriminator: add mode only, color math otherwise enabled, above/below window allows color, one fixed main color `X=0x4210`, subscreen `S=0x0842`, fixed color `F=0x2108`; vary only `blendMode`, `belowTransparent`, and `halfRequested`.
+- Precommitted six-row oracle:
+  1. fixed, half=0 -> full add `X+F = 0x6318`;
+  2. fixed, half=1 -> half-add `(X+F)/2 = 0x318C`;
+  3. subscreen present, half=0 -> full add `X+S = 0x4A52`;
+  4. subscreen present, half=1 -> half-add `(X+S)/2 = 0x2529`;
+  5. subscreen transparent, half=0 -> fixed fallback full add `X+F = 0x6318`;
+  6. subscreen transparent, half=1 -> **same fixed fallback full add `0x6318`**, proving half suppression rather than merely operand fallback.
+- This matrix deliberately makes fixed/subscreen and full/half results distinct, so a wrong selector or failure to suppress half cannot pass accidentally.
+- A later **E1i** should isolate CGWSEL color-window above/below masks + WOBJSEL/WHx logic using the already established section/window ABI. Do not combine E1h and E1i.
+- **Blocked on E1g closure:** do not create E1h branch or code until exact E1g semantic artifact is validated.
+
 ### Immediate next uncertainty
 - **NEXT: half-color semantics, source-grounded before code.**
 - Do **not** implement “just shift the final RGB555 result right one” from intuition. Derive exact SNES half behavior from pinned/reference implementation first, including:

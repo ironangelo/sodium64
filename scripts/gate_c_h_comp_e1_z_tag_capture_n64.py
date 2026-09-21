@@ -47,6 +47,7 @@ SECTION_SPLIT_LINE_OFFSET = 0x3F
 PREFIX_BYTE = 0xC3
 SENTINEL_WORD = 0x55AA
 SUFFIX_BYTE = 0x3C
+BACKDROP_TAG_WORD = 0x0400
 TAG_WORD = 0x0C00
 OPAQUE_BLACK_RGBA5551 = 0x0001
 
@@ -199,6 +200,7 @@ def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> 
     visible_backdrop_pixels = 0
     opaque_wrong: list[dict[str, int]] = []
     backdrop_wrong: list[dict[str, int]] = []
+    border_wrong: list[dict[str, int]] = []
     unexpected_depth: list[dict[str, int]] = []
     tag_on_nonblack: list[dict[str, int]] = []
 
@@ -210,10 +212,12 @@ def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> 
                 opaque_wrong.append({"x": x, "y": y, "fb": fb, "z": z})
         elif fb != 0:
             visible_backdrop_pixels += 1
-            if z != SENTINEL_WORD and len(backdrop_wrong) < 64:
+            if z != BACKDROP_TAG_WORD and len(backdrop_wrong) < 64:
                 backdrop_wrong.append({"x": x, "y": y, "fb": fb, "z": z})
+        elif z != SENTINEL_WORD and len(border_wrong) < 64:
+            border_wrong.append({"x": x, "y": y, "fb": fb, "z": z})
 
-        if z not in (SENTINEL_WORD, TAG_WORD) and len(unexpected_depth) < 64:
+        if z not in (SENTINEL_WORD, BACKDROP_TAG_WORD, TAG_WORD) and len(unexpected_depth) < 64:
             unexpected_depth.append({"x": x, "y": y, "fb": fb, "z": z})
         if z == TAG_WORD and fb != OPAQUE_BLACK_RGBA5551 and len(tag_on_nonblack) < 64:
             tag_on_nonblack.append({"x": x, "y": y, "fb": fb, "z": z})
@@ -230,9 +234,11 @@ def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> 
         and enough_backdrop
         and not opaque_wrong
         and not backdrop_wrong
+        and not border_wrong
         and not unexpected_depth
         and not tag_on_nonblack
         and z_hist[TAG_WORD] == opaque_pixels
+        and z_hist[BACKDROP_TAG_WORD] == visible_backdrop_pixels
     )
 
     return {
@@ -247,6 +253,7 @@ def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> 
             "status_address": hex(STATUS_ADDR),
             "status_marker": hex(STATUS_MARKER),
             "sentinel_word": hex(SENTINEL_WORD),
+            "expected_backdrop_tag_word": hex(BACKDROP_TAG_WORD),
             "expected_tag_word": hex(TAG_WORD),
             "opaque_black_rgba5551": hex(OPAQUE_BLACK_RGBA5551),
         },
@@ -254,6 +261,7 @@ def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> 
             "opaque_black_pixels": opaque_pixels,
             "visible_backdrop_pixels": visible_backdrop_pixels,
             "tag_words": z_hist[TAG_WORD],
+            "backdrop_tag_words": z_hist[BACKDROP_TAG_WORD],
             "sentinel_words": z_hist[SENTINEL_WORD],
             "total_pixels": len(z_words),
         },
@@ -272,6 +280,7 @@ def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> 
         "mismatches": {
             "opaque_wrong": opaque_wrong,
             "backdrop_wrong": backdrop_wrong,
+            "border_wrong": border_wrong,
             "unexpected_depth": unexpected_depth,
             "tag_on_nonblack": tag_on_nonblack,
         },

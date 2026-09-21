@@ -58,6 +58,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1g implementation precommit — exact packed MIPS sequence frozen, still NO branch/code
+- If E1f validates, E1g should branch from validated E1e subtraction head `3c4972f4...`, preserving the same proof memory/DMA/fences/oracle harness and changing only subtraction arithmetic + expected outputs.
+- Proposed scalar RSP sequence mirrors pinned ares literally for each `x=A, y=B`: `diff=x-y+0x8420`; `borrow=(diff-((x^y)&0x8420))&0x8420`; `base=(diff-borrow)&(borrow-(borrow>>5))`; `out=(base&0x7BDE)>>1`.
+- MIPS implementation can use ordinary 32-bit register arithmetic because the reference itself is `u32`; all masks/constants fit immediate operations. No branches or per-channel extraction are required.
+- Expected consequence to test, not assume: E1g should be materially smaller than E1e's 4,004-B scalar per-channel kernel. Code size is secondary evidence only; exact 16-word semantics remain the primary discriminator.
+- This precommit exists to prevent adapting the implementation after seeing results. **Do not instantiate it until E1f closes.**
+
 ### E1g prep — half-sub packed reference equivalence checked while E1f runs; NO E1g code
 - Pinned ares half-sub formula remains the authority: compute packed saturated subtraction via `diff=x-y+0x8420`, derive per-channel borrow mask, clamp, then `&0x7BDE >> 1`.
 - Independent host derivation rechecked the precommitted 16-word E1g oracle exactly: `0000,000F,01E0,3C00,0000,0000,0000,0000,000F,01E0,1084,0421,3C0F,01EF,1405,0009`.

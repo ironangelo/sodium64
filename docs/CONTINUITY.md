@@ -60,6 +60,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Status: **E2B TARGET SEPARATION MEASURED PASS / FINAL HOST-ASSERTION CI IN FLIGHT**.
 - Immediate next action: inspect exact-head semantic run `35666240359`. Require `E2B_REAL_TARGET_SEPARATION_VALIDATED`, unchanged carrier 8/224, compact 2,048×green + 192×sentinel with both guards intact, and main rows 8..15 2,048×red. If green, close E2b and begin a separate E2c shared-layer discriminator design batch with the validated E2b runtime frozen.
 
+### PRECOMMITTED E2c shared-membership discriminator — DO NOT START UNTIL E2b CLOSES
+- **Question:** after validated two-target separation, can a layer enabled on both SNES screens be preserved in both raw operands instead of being suppressed from the first traversal by the historical single-framebuffer workaround?
+- Reuse E2b's exact 8-line WH0 carrier, compact target, target-switch runtime, capture boundary and red BG1 tile. Change the child guest only to **BG1 shared on both screens: `TM=0x01`, `TS=0x01`**; no BG2 dependency, no color math/windows.
+- **Baseline first / guest-only:** with current mask code unchanged, `shared=1` and `sub s7,s7,t1` removes BG1 from the first traversal. Precommitted baseline oracle: carrier remains 8/224; compact active x=12..267 = **2,048× backdrop black RGBA5551 `0x0001`** with 192× `0x55AA` border and guards intact; main rows 8..15 active x=12..267 = **2,048× red `0xF801`**.
+- Only after that baseline measures the historical suppression, make a **one-instruction membership delta** in the child runtime: stop subtracting the shared mask from first-pass `s7` (the existing `and t1,t0,s7` may remain as dead proof-local work; do not combine this experiment with target/fence/band/compositor changes).
+- Precommitted repaired oracle: same carrier/guards/main red, but compact active changes **only** from 2,048× black `0x0001` to **2,048× red `0xF801`**. That directly proves the same BG1 contributes to both independent operands.
+- This is **ARCHITECTURE PROOF / HYPOTHESIS** until E2b closes and both baseline + one-variable repair are measured. It does not yet prove production performance, shared OBJ behavior, priorities, color math or band reuse.
+
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.
 - **E1b VALIDATED:** two-BG winner-layer metadata can be encoded/read correctly. Validated head `8ec1362dd62f117e53b37eaf6523c7bdf00b75bf`.

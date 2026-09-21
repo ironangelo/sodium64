@@ -225,10 +225,9 @@ def main() -> int:
         if client.request(f"QPassSignals:{ARES_N64_GUEST_SIGNALS}") != b"OK":
             raise RuntimeError("target rejected QPassSignals")
 
-        # Warm the guest/runtime first. A startup frame must never be allowed to
-        # seed the evidence scratch, because E1a is explicitly testing stale-data
-        # absence. The marker means the DP fence has passed while the target is stopped.
-        initialize_proof_memory(client)
+        # Warm the guest/runtime before touching the evidence scratch. The initial
+        # GDB stop can occur while startup ownership is still unstable; E1a only needs
+        # guest progress plus the post-DP-fence marker to establish a stable epoch.
         warmup = wait_for_proof(
             client,
             guest_counter_address=args.guest_counter_address,

@@ -124,6 +124,11 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Precomputed E1g half-sub oracle for later use: `0000,000F,01E0,3C00,0000,0000,0000,0000,000F,01E0,1084,0421,3C0F,01EF,1405,0009`.
 - **Status:** source-derived / oracle precommitted; no E1f branch or runtime change yet.
 
+### Section ABI capacity check — 0x40 bytes are fully occupied
+- Exact `defines.h` offset walk confirms the section layout consumes all **64/64 bytes**: `BGHOFS` starts at section +0; after scroll/Mode7/window/color/layer state, `BG_MODE` is +61, `STAT_FLAGS` +62, and `SPLIT_LINE` +63. `MASK_SEL` begins immediately after the section.
+- Therefore there is **no existing spare byte** for per-section brightness. A production solution must either prove a safe bit/field repack, replace/reinterpret existing stored state, widen/restructure section records and measure its cost, or derive brightness by another exact mechanism.
+- Do not widen `SECTION_SIZE` speculatively: queue sizing, DMA volume, section count/cooldown and RSP DMEM layout make that a performance-sensitive architectural change that needs its own evidence.
+
 ### Production H-COMP integration risk — master brightness is not explicit in the 0x40-byte section ABI
 - Source audit found `write_inidisp` stores master brightness in the global `brightness` byte and calls `update_fill`; the 0x40-byte section snapshot copied from `bghofs` contains brightness-scaled `sub_color/main_color` but **no explicit brightness field**.
 - `rsp_frame:update_dpal` also loads the current global `brightness` once while converting CGRAM into the frame palette queue. Thus exact “raw color math first, master brightness last” cannot simply replace the existing section colors with raw RGB555 and assume brightness is recoverable for every historical section.

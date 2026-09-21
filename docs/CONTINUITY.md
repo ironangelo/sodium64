@@ -50,6 +50,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Not in E2b:** long-section band loop, OBJ, shared TM+TS layers, color math arithmetic/gating, raw palette/brightness redesign, Window 2, PR #13 overlays, throughput/cadence claims or master integration.
 - Classification: **ARCHITECTURE PROOF / PRECOMMITTED**.
 
+### E2b batch 1 — validation branch created from frozen E2a evidence
+- New validation-only branch **`phase4/gate-c-h-comp-e2b-real-target-switch`** created exactly from E2a validated head **`67c18c9ab4baf7531db8384eef8df59e9641ab86`**.
+- No code changed in this batch. E2a artifact/run remain the frozen parent evidence.
+- Next controlled delta: change only the deterministic carrier guest to create the no-shared 8-row TM/TS section and verify its captured section queue before any RSP target-switch edit.
+- Classification: **ARCHITECTURE PROOF / CANDIDATE**.
+
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.
 - **E1b VALIDATED:** two-BG winner-layer metadata can be encoded/read correctly. Validated head `8ec1362dd62f117e53b37eaf6523c7bdf00b75bf`.

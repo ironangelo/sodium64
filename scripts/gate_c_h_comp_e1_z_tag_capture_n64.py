@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E1c within-frame compact Z-scratch reuse proof."""
+"""Capture/classify Gate-C E1d raw RGB555 saturating-add proof."""
 
 from __future__ import annotations
 
@@ -53,15 +53,32 @@ BG2_TAG_WORD = 0x1400
 BG1_BLACK_RGBA5551 = 0x0001
 BG2_GREEN_RGBA5551 = 0x07C1
 
-E1C_Z_SCRATCH_ADDR = 0xA00C0000
-E1C_Z_SCRATCH_SIZE = 0x1180
-E1C_ARCHIVE_A_ADDR = 0xA00C2000
-E1C_PREFIX_GUARD_ADDR = 0xA00BFFC0
-E1C_SUFFIX_GUARD_ADDR = 0xA00C1180
-E1C_GUARD_SIZE = 64
-E1C_ROWS = 8
-E1C_ACTIVE_X0 = 12
-E1C_ACTIVE_X1 = 268
+E1D_BASE_ADDR = 0xA00C6000
+E1D_PREFIX_GUARD_ADDR = E1D_BASE_ADDR
+E1D_A_ADDR = E1D_BASE_ADDR + 0x20
+E1D_B_ADDR = E1D_BASE_ADDR + 0x40
+E1D_OUTPUT_ADDR = E1D_BASE_ADDR + 0x60
+E1D_SUFFIX_GUARD_ADDR = E1D_BASE_ADDR + 0x80
+E1D_RESERVE_ADDR = E1D_BASE_ADDR + 0xA0
+E1D_WORD_BYTES = 32
+E1D_GUARD_BYTES = 32
+E1D_RESERVE_BYTES = 0x60
+E1D_PREFIX_BYTE = 0xA5
+E1D_SUFFIX_BYTE = 0x5A
+E1D_RESERVE_BYTE = 0xD7
+E1D_OUTPUT_BYTE = 0xCC
+E1D_A_WORDS = [
+    0x0000, 0x001F, 0x03E0, 0x7C00, 0x7FFF, 0x0010, 0x0200, 0x4000,
+    0x001F, 0x03E0, 0x4210, 0x1084, 0x7C1F, 0x03FF, 0x5555, 0x1234,
+]
+E1D_B_WORDS = [
+    0x0000, 0x0001, 0x0020, 0x0400, 0x7FFF, 0x000F, 0x01E0, 0x3C00,
+    0x0020, 0x0400, 0x2108, 0x0842, 0x03E0, 0x7C00, 0x2AAA, 0x4321,
+]
+E1D_EXPECTED_WORDS = [
+    0x0000, 0x001F, 0x03E0, 0x7C00, 0x7FFF, 0x001F, 0x03E0, 0x7C00,
+    0x003F, 0x07E0, 0x6318, 0x18C6, 0x7FFF, 0x7FFF, 0x7FFF, 0x53F5,
+]
 
 
 def parse_int(text: str) -> int:
@@ -77,17 +94,27 @@ def write_pattern(client: RSPClient, address: int, data: bytes, chunk: int = 0x4
         client.write_memory(address + offset, data[offset:offset + chunk])
 
 
+def words_to_bytes(words: list[int]) -> bytes:
+    return b"".join(word.to_bytes(2, "big") for word in words)
+
+
 def initialize_proof_memory(client: RSPClient) -> None:
-    write_pattern(client, Z_COMMAND_ADDR, bytes([PREFIX_BYTE]) * Z_PREFIX_SIZE)
-    write_pattern(client, Z_BASE, SENTINEL_WORD.to_bytes(2, "big") * (Z_SIZE // 2))
-    write_pattern(client, Z_BASE + Z_SIZE, bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE)
+    prefix = bytes([E1D_PREFIX_BYTE]) * E1D_GUARD_BYTES
+    a = words_to_bytes(E1D_A_WORDS)
+    b = words_to_bytes(E1D_B_WORDS)
+    output = bytes([E1D_OUTPUT_BYTE]) * E1D_WORD_BYTES
+    suffix = bytes([E1D_SUFFIX_BYTE]) * E1D_GUARD_BYTES
+    reserve = bytes([E1D_RESERVE_BYTE]) * E1D_RESERVE_BYTES
+    write_pattern(client, E1D_PREFIX_GUARD_ADDR, prefix + a + b + output + suffix + reserve)
     client.write_memory(STATUS_ADDR, bytes(STATUS_SIZE))
 
-    assert client.read_memory(Z_COMMAND_ADDR, Z_PREFIX_SIZE, 0x400) == bytes([PREFIX_BYTE]) * Z_PREFIX_SIZE
-    assert client.read_memory(Z_BASE, Z_SIZE, 0x400) == SENTINEL_WORD.to_bytes(2, "big") * (Z_SIZE // 2)
-    assert client.read_memory(Z_BASE + Z_SIZE, Z_SUFFIX_SIZE, 0x100) == bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE
+    assert client.read_memory(E1D_PREFIX_GUARD_ADDR, E1D_GUARD_BYTES, 0x100) == prefix
+    assert client.read_memory(E1D_A_ADDR, E1D_WORD_BYTES, 0x100) == a
+    assert client.read_memory(E1D_B_ADDR, E1D_WORD_BYTES, 0x100) == b
+    assert client.read_memory(E1D_OUTPUT_ADDR, E1D_WORD_BYTES, 0x100) == output
+    assert client.read_memory(E1D_SUFFIX_GUARD_ADDR, E1D_GUARD_BYTES, 0x100) == suffix
+    assert client.read_memory(E1D_RESERVE_ADDR, E1D_RESERVE_BYTES, 0x100) == reserve
     assert client.read_memory(STATUS_ADDR, STATUS_SIZE, STATUS_SIZE) == bytes(STATUS_SIZE)
-
 
 def wait_for_proof(
     client: RSPClient,
@@ -101,7 +128,7 @@ def wait_for_proof(
     for attempt in range(1, attempts + 1):
         validate_stop(
             client.continue_then_interrupt(poll_seconds),
-            f"E1c proof poll #{attempt}",
+            f"E1d proof poll #{attempt}",
         )
         counter = read_u(client, guest_counter_address, 1)
         marker = read_u(client, STATUS_ADDR, 4)
@@ -122,7 +149,7 @@ def wait_for_proof(
                 "status": marker,
                 "counter_delta": 0 if delta is None else delta,
             }
-    raise RuntimeError("E1c proof marker/fresh guest frame was not observed")
+    raise RuntimeError("E1d proof marker/fresh guest frame was not observed")
 
 
 def set_breakpoint(client: RSPClient, address: int, enabled: bool) -> None:
@@ -193,108 +220,67 @@ def decode_section_queue(data: bytes) -> list[dict[str, int]]:
 
 
 def classify(
-    archive_a: bytes,
-    final_b: bytes,
+    output: bytes,
     prefix_guard: bytes,
     suffix_guard: bytes,
+    reserve: bytes,
 ) -> dict[str, object]:
-    assert len(archive_a) == E1C_Z_SCRATCH_SIZE
-    assert len(final_b) == E1C_Z_SCRATCH_SIZE
-    assert len(prefix_guard) == E1C_GUARD_SIZE
-    assert len(suffix_guard) == E1C_GUARD_SIZE
-
-    def words(data: bytes) -> list[int]:
-        return [
-            int.from_bytes(data[i:i + 2], "big")
-            for i in range(0, len(data), 2)
-        ]
-
-    a_words = words(archive_a)
-    b_words = words(final_b)
-    a_hist = collections.Counter(a_words)
-    b_hist = collections.Counter(b_words)
-
-    a_wrong: list[dict[str, int]] = []
-    b_wrong: list[dict[str, int]] = []
-    for index, (za, zb) in enumerate(zip(a_words, b_words)):
-        y, x = divmod(index, FB_WIDTH)
-        active = E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1
-        expected_a = BG1_TAG_WORD if active else SENTINEL_WORD
-        expected_b = BG2_TAG_WORD if active else SENTINEL_WORD
-        if za != expected_a and len(a_wrong) < 64:
-            a_wrong.append({"x": x, "y": y, "actual": za, "expected": expected_a})
-        if zb != expected_b and len(b_wrong) < 64:
-            b_wrong.append({"x": x, "y": y, "actual": zb, "expected": expected_b})
-
-    prefix_ok = prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
-    suffix_ok = suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
-    expected_active = (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) * E1C_ROWS
-    expected_border = (FB_WIDTH - (E1C_ACTIVE_X1 - E1C_ACTIVE_X0)) * E1C_ROWS
-
+    actual = [
+        int.from_bytes(output[i:i + 2], "big")
+        for i in range(0, len(output), 2)
+    ]
+    mismatches = [
+        {
+            "index": i,
+            "a": hex(E1D_A_WORDS[i]),
+            "b": hex(E1D_B_WORDS[i]),
+            "actual": hex(actual[i]),
+            "expected": hex(E1D_EXPECTED_WORDS[i]),
+        }
+        for i in range(len(E1D_EXPECTED_WORDS))
+        if actual[i] != E1D_EXPECTED_WORDS[i]
+    ]
+    prefix_ok = prefix_guard == bytes([E1D_PREFIX_BYTE]) * E1D_GUARD_BYTES
+    suffix_ok = suffix_guard == bytes([E1D_SUFFIX_BYTE]) * E1D_GUARD_BYTES
+    reserve_ok = reserve == bytes([E1D_RESERVE_BYTE]) * E1D_RESERVE_BYTES
     passed = (
-        prefix_ok
+        len(output) == E1D_WORD_BYTES
+        and not mismatches
+        and prefix_ok
         and suffix_ok
-        and not a_wrong
-        and not b_wrong
-        and a_hist[BG1_TAG_WORD] == expected_active
-        and a_hist[SENTINEL_WORD] == expected_border
-        and b_hist[BG2_TAG_WORD] == expected_active
-        and b_hist[SENTINEL_WORD] == expected_border
-        and b_hist[BG1_TAG_WORD] == 0
-        and len(a_words) == FB_WIDTH * E1C_ROWS
-        and len(b_words) == FB_WIDTH * E1C_ROWS
+        and reserve_ok
     )
-
     return {
         "classification": (
-            "E1C_STRIP_REUSE_CONTRACT_VALIDATED"
+            "E1D_RGB555_SAT_ADD_VALIDATED"
             if passed
-            else "E1C_STRIP_REUSE_CONTRACT_FAILED"
+            else "E1D_RGB555_SAT_ADD_FAILED"
         ),
         "passed": passed,
         "constants": {
-            "width": FB_WIDTH,
-            "rows": E1C_ROWS,
-            "scratch_address": hex(E1C_Z_SCRATCH_ADDR),
-            "scratch_size": E1C_Z_SCRATCH_SIZE,
-            "archive_a_address": hex(E1C_ARCHIVE_A_ADDR),
-            "prefix_guard_address": hex(E1C_PREFIX_GUARD_ADDR),
-            "suffix_guard_address": hex(E1C_SUFFIX_GUARD_ADDR),
-            "guard_size": E1C_GUARD_SIZE,
-            "active_x0": E1C_ACTIVE_X0,
-            "active_x1_exclusive": E1C_ACTIVE_X1,
-            "sentinel_word": hex(SENTINEL_WORD),
-            "band_a_tag_word": hex(BG1_TAG_WORD),
-            "band_b_tag_word": hex(BG2_TAG_WORD),
-            "expected_active_words": expected_active,
-            "expected_border_words": expected_border,
+            "base_address": hex(E1D_BASE_ADDR),
+            "a_address": hex(E1D_A_ADDR),
+            "b_address": hex(E1D_B_ADDR),
+            "output_address": hex(E1D_OUTPUT_ADDR),
+            "word_count": len(E1D_EXPECTED_WORDS),
         },
-        "counts": {
-            "archive_a_tag_words": a_hist[BG1_TAG_WORD],
-            "archive_a_sentinel_words": a_hist[SENTINEL_WORD],
-            "final_b_tag_words": b_hist[BG2_TAG_WORD],
-            "final_b_sentinel_words": b_hist[SENTINEL_WORD],
-            "final_b_stale_a_words": b_hist[BG1_TAG_WORD],
-            "words_per_compact_strip": len(a_words),
-        },
+        "vectors": [
+            {
+                "index": i,
+                "a": hex(E1D_A_WORDS[i]),
+                "b": hex(E1D_B_WORDS[i]),
+                "expected": hex(E1D_EXPECTED_WORDS[i]),
+                "actual": hex(actual[i]),
+            }
+            for i in range(len(E1D_EXPECTED_WORDS))
+        ],
         "guards": {
             "prefix_ok": prefix_ok,
             "suffix_ok": suffix_ok,
+            "reserve_ok": reserve_ok,
         },
-        "archive_a_histogram_top": [
-            {"word": hex(word), "count": count}
-            for word, count in a_hist.most_common(8)
-        ],
-        "final_b_histogram_top": [
-            {"word": hex(word), "count": count}
-            for word, count in b_hist.most_common(8)
-        ],
-        "mismatches": {
-            "archive_a_wrong": a_wrong,
-            "final_b_wrong": b_wrong,
-        },
+        "mismatches": mismatches,
     }
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -341,7 +327,7 @@ def main() -> int:
         # after observing SP_STATUS.HALT, so both producer and DP can be checked
         # at a deterministic between-frame boundary rather than a timed host poll.
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E1c clean-epoch breakpoint")
+        validate_stop(client.request("c"), "E1d clean-epoch breakpoint")
         anchor = read_quiescent_state(client)
         validate_quiescent_state(anchor, require_marker=True)
 
@@ -352,9 +338,9 @@ def main() -> int:
         # Step over the breakpoint once, reinstall it behind the PC, and let one
         # complete subsequent RSP frame reach the same quiescent boundary.
         set_breakpoint(client, args.capture_ready_address, False)
-        validate_stop(client.request("s"), "E1c breakpoint step-over")
+        validate_stop(client.request("s"), "E1d breakpoint step-over")
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E1c fenced capture breakpoint")
+        validate_stop(client.request("c"), "E1d fenced capture breakpoint")
 
         quiescent = read_quiescent_state(client)
         validate_quiescent_state(quiescent, require_marker=True)
@@ -380,26 +366,24 @@ def main() -> int:
         fb_pointer = quiescent["proof_framebuffer_pointer"]
         display_fb_pointer = read_u(client, args.framebuffer_address, 4)
         framebuffer = client.read_memory(fb_pointer, FB_BYTES, 0x400)
-        archive_a = client.read_memory(
-            E1C_ARCHIVE_A_ADDR, E1C_Z_SCRATCH_SIZE, 0x400
-        )
-        final_b = client.read_memory(
-            E1C_Z_SCRATCH_ADDR, E1C_Z_SCRATCH_SIZE, 0x400
-        )
+        output = client.read_memory(E1D_OUTPUT_ADDR, E1D_WORD_BYTES, 0x100)
         prefix_guard = client.read_memory(
-            E1C_PREFIX_GUARD_ADDR, E1C_GUARD_SIZE, E1C_GUARD_SIZE
+            E1D_PREFIX_GUARD_ADDR, E1D_GUARD_BYTES, E1D_GUARD_BYTES
         )
         suffix_guard = client.read_memory(
-            E1C_SUFFIX_GUARD_ADDR, E1C_GUARD_SIZE, E1C_GUARD_SIZE
+            E1D_SUFFIX_GUARD_ADDR, E1D_GUARD_BYTES, E1D_GUARD_BYTES
+        )
+        reserve = client.read_memory(
+            E1D_RESERVE_ADDR, E1D_RESERVE_BYTES, E1D_RESERVE_BYTES
         )
 
         (out / "framebuffer.rgba5551").write_bytes(framebuffer)
-        (out / "archive_a.bin").write_bytes(archive_a)
-        (out / "final_b.bin").write_bytes(final_b)
+        (out / "output.rgb555").write_bytes(output)
         (out / "prefix_guard.bin").write_bytes(prefix_guard)
         (out / "suffix_guard.bin").write_bytes(suffix_guard)
+        (out / "reserve.bin").write_bytes(reserve)
 
-        result = classify(archive_a, final_b, prefix_guard, suffix_guard)
+        result = classify(output, prefix_guard, suffix_guard, reserve)
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),
@@ -412,7 +396,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E1c semantic classifier failed; see result.json")
+            raise RuntimeError("E1d semantic classifier failed; see result.json")
 
         try:
             client.request("D")

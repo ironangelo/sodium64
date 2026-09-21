@@ -166,6 +166,7 @@ def build_program() -> bytes:
     a.label("nmi")
     a.emit(0x48)                     # PHA
     a.emit(0xAD, 0x10, 0x42)        # acknowledge NMI
+    lda_sta_abs(a, 0x00, 0x2126)    # restore WH0 before next frame section_init
     lda_long(a, FRAME_COUNTER)
     a.emit(0x1A)                     # INC A
     sta_long(a, FRAME_COUNTER)

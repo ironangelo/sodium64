@@ -211,10 +211,10 @@ table_loop:
     bne t1, t2, table_loop
     addi t1, t1, 16
 
-    // Update the RDP framebuffer and palette addresses
-    lw t0, FRAMEBUFFER(sp)
+    // E2b proof: start the first real screen traversal on the compact
+    // 280x8 RGB16 sub-screen target. Global y=8 maps to scratch row 0.
+    li t0, 0x000E2E80 // 0xE4000 - 8*560
     lw t1, PALETTE_PTR(sp)
-    addi t0, t0, 280 * -16 // Underflow offset
     sw t0, RDP_FRAME + 4
     sw t1, RDP_FRAME + 12
 
@@ -504,11 +504,23 @@ next_layer:
     bnez t0, draw_bg
     andi t3, t0, 0x3 // Index
 
-    // Move to the next screen's layers until the section is finished
+    // Move to the next screen's layers until the section is finished.
+    // E2b: default layer_set traverses TS first and TM second. For the first
+    // real 8-line section only, switch Color Image from compact sub scratch
+    // back to the normal main framebuffer before the second traversal.
     srl s7, s7, 8
     beqz s7, next_section
     andi s3, s3, 0xF0
+    bnez k0, next_layer
+    nop
+    lw t0, FRAMEBUFFER(sp)
+    addi t0, t0, 280 * -16
+    sw t0, RDP_FRAME + 4
+    li a0, RDP_FRAME
+    jal rdp_send
+    li a1, RDP_FRAME + 8
     b next_layer
+    nop
 
 
 draw_bg:
@@ -1105,185 +1117,17 @@ skip_objdecode:
 
 
 next_frame:
-    // E1 proof: Sync Full, then establish explicit DP -> RSP ownership.
+    // E2b proof boundary: finish all RDP work before publishing the exact
+    // framebuffer pointer for host-side readback.
     li a0, RDP_TILE7 + 16
     jal rdp_send
     li a1, RDP_TILE7 + 24
-e1_dp_wait:
-    mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x70 // TMEM busy | pipe busy | command-buffer busy
-    bnez t0, e1_dp_wait
-    nop
-
-    // E2a control: retain E1c's compact Z16 scratch, and initialize a
-    // separate compact RGB16 Color Image scratch for the same 280x8 geometry.
-    li t0, 0x55AA55AA
-    jal e1c_make_pattern
-    nop
-    li s0, 0xA00C0000
-    jal e2a_fill_strip
-    nop
-    li s0, 0xA00E4000
-    jal e2a_fill_strip
-    nop
-
-    // Guard one DMA line immediately before and after the compact Z scratch.
-    li t0, 0xC3C3C3C3
-    jal e1c_make_pattern
-    nop
-    li a0, TEXTURE
-    li a1, 0xA00BFFC0
-    jal dma_write
-    li a2, 0x3F
-    li t0, 0x3C3C3C3C
-    jal e1c_make_pattern
-    nop
-    li a0, TEXTURE
-    li a1, 0xA00C1180
-    jal dma_write
-    li a2, 0x3F
-
-    // E2a Color Image guards use the same sentinels as the validated Z proof.
-    li t0, 0xC3C3C3C3
-    jal e1c_make_pattern
-    nop
-    li a0, TEXTURE
-    li a1, 0xA00E3FC0
-    jal dma_write
-    li a2, 0x3F
-    li t0, 0x3C3C3C3C
-    jal e1c_make_pattern
-    nop
-    li a0, TEXTURE
-    li a1, 0xA00E5180
-    jal dma_write
-    li a2, 0x3F
-
-    // Snapshot the first 280x8 RGB16 rows of the real framebuffer before any
-    // Color Image rebasing. This is proof-only and happens after the DP fence.
-    lw s0, FRAMEBUFFER(sp)
-    li s1, 0xA00E8000
-    jal e2a_copy_strip
-    nop
-
-    // Band A: global y=8..15 maps onto physical scratch row 0..7.
-    // Color scratch is disposable; width remains the real Sodium64 280 pixels.
-    li t0, 0x000E2E80 // 0xE4000 - 8*560
-    sw t0, RDP_FRAME + 4
-    li t0, 0x000BEE80 // 0xC0000 - 8*560
-    sw t0, RDP_TILE7 + 4
-    li t0, 0x2D030020 // Scissor x=12, y=8
-    sw t0, RDP_FILL + 8
-    li t0, 0x00430040 // Scissor x=268, y=16
-    sw t0, RDP_FILL + 12
-    li t0, 0x3642F040 // Fill max x=267.75, y=16
-    sw t0, RDP_FILL + 32
-    li t0, 0x00030020 // Fill min x=12, y=8
-    sw t0, RDP_FILL + 36
-    li t0, 0x000000FF // Opaque primitive color
-    sw t0, RDP_FILL + 20
-
-    li a0, RDP_FRAME
-    jal rdp_send
-    li a1, RDP_FRAME + 8
-    li a0, RDP_TILE7
-    jal rdp_send
-    li a1, RDP_TILE7 + 8
-    li a2, 0x1800 // Stored Z tag 0x0C00
-    jal e1_set_prim_depth
-    nop
-    li a0, RDP_FILL
-    jal rdp_send
-    li a1, RDP_WINDOW
-    li a0, RDP_TILE7 + 16
-    jal rdp_send
-    li a1, RDP_TILE7 + 24
-e1c_a_wait:
+e2b_dp_wait:
     mfc0 t0, COP0_DP_STATUS
     andi t0, t0, 0x70
-    bnez t0, e1c_a_wait
+    bnez t0, e2b_dp_wait
     nop
 
-    // Archive both validated Z metadata and the new Color Image operand only
-    // after band A's DP fence.
-    li s0, 0xA00C0000
-    li s1, 0xA00C2000
-    jal e2a_copy_strip
-    nop
-    li s0, 0xA00E4000
-    li s1, 0xA00E6000
-    jal e2a_copy_strip
-    nop
-
-    // Band B: global y=16..23 reuses the same physical color/Z scratch.
-    // Do not clear Z: every active A tag must be overwritten by B, while the
-    // untouched horizontal borders must retain the original sentinel.
-    li t0, 0x000E1D00 // 0xE4000 - 16*560
-    sw t0, RDP_FRAME + 4
-    li t0, 0x000BDD00 // 0xC0000 - 16*560
-    sw t0, RDP_TILE7 + 4
-    li t0, 0x2D030040 // Scissor x=12, y=16
-    sw t0, RDP_FILL + 8
-    li t0, 0x00430060 // Scissor x=268, y=24
-    sw t0, RDP_FILL + 12
-    li t0, 0x3642F060 // Fill max x=267.75, y=24
-    sw t0, RDP_FILL + 32
-    li t0, 0x00030040 // Fill min x=12, y=16
-    sw t0, RDP_FILL + 36
-    li t0, 0x00FF00FF // Opaque green -> RGBA5551 0x07C1
-    sw t0, RDP_FILL + 20
-
-    li a0, RDP_FRAME
-    jal rdp_send
-    li a1, RDP_FRAME + 8
-    li a0, RDP_TILE7
-    jal rdp_send
-    li a1, RDP_TILE7 + 8
-    li a2, 0x2800 // Stored Z tag 0x1400
-    jal e1_set_prim_depth
-    nop
-    li a0, RDP_FILL
-    jal rdp_send
-    li a1, RDP_WINDOW
-    li a0, RDP_TILE7 + 16
-    jal rdp_send
-    li a1, RDP_TILE7 + 24
-e1c_b_wait:
-    mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x70
-    bnez t0, e1c_b_wait
-    nop
-
-    // Restore the real framebuffer Color Image target and the full-frame E1
-    // Z-image state, then fence both state transitions before readback.
-    lw t0, FRAMEBUFFER(sp)
-    addi t0, t0, 280 * -16
-    sw t0, RDP_FRAME + 4
-    li a0, RDP_FRAME
-    jal rdp_send
-    li a1, RDP_FRAME + 8
-    li t0, 0x000BEE80
-    sw t0, RDP_TILE7 + 4
-    li a0, RDP_TILE7
-    jal rdp_send
-    li a1, RDP_TILE7 + 8
-    li a0, RDP_TILE7 + 16
-    jal rdp_send
-    li a1, RDP_TILE7 + 24
-e1c_restore_wait:
-    mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x70
-    bnez t0, e1c_restore_wait
-    nop
-
-    // The proof must not mutate the real main framebuffer.
-    lw s0, FRAMEBUFFER(sp)
-    li s1, 0xA00EA000
-    jal e2a_copy_strip
-    nop
-
-    // Publish proof completion only after all E2a DP/RSP ownership transitions.
-    // Keep the exact normal framebuffer identity for the host boundary contract.
     li t0, 0xE1F00D01
     sw t0, TEXTURE
     lw t1, FRAMEBUFFER(sp)
@@ -1505,55 +1349,6 @@ dma_wait:
     // Wait for the DMA to complete
     mfc0 t0, COP0_DMA_BUSY
     bnez t0, dma_wait
-    nop
-    jr ra
-    nop
-
-
-e2a_fill_strip: // s0: destination, TEXTURE contains one repeated 64-byte line
-    move s3, ra
-    li s2, 70
-e2a_fill_strip_loop:
-    li a0, TEXTURE
-    move a1, s0
-    jal dma_write
-    li a2, 0x3F
-    addi s0, s0, 0x40
-    addi s2, s2, -1
-    bnez s2, e2a_fill_strip_loop
-    nop
-    jr s3
-    nop
-
-
-e2a_copy_strip: // s0: source, s1: destination, exact 0x1180 bytes
-    move s3, ra
-    li s2, 70
-e2a_copy_strip_loop:
-    li a0, TEXTURE
-    move a1, s0
-    jal dma_read
-    li a2, 0x3F
-    li a0, TEXTURE
-    move a1, s1
-    jal dma_write
-    li a2, 0x3F
-    addi s0, s0, 0x40
-    addi s1, s1, 0x40
-    addi s2, s2, -1
-    bnez s2, e2a_copy_strip_loop
-    nop
-    jr s3
-    nop
-
-
-e1c_make_pattern: // t0: repeated 32-bit word -> TEXTURE[0..63]
-    li t1, TEXTURE
-    addi t2, t1, 0x40
-e1c_pattern_loop:
-    sw t0, 0(t1)
-    addi t1, t1, 4
-    bne t1, t2, e1c_pattern_loop
     nop
     jr ra
     nop

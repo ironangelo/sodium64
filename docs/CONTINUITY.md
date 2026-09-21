@@ -209,18 +209,27 @@ Canonical live handoff for `ironangelo/sodium64`.
 - A later **E1i** should isolate CGWSEL color-window above/below masks + WOBJSEL/WHx logic using the already established section/window ABI. Do not combine E1h and E1i.
 - **Blocked on E1g closure:** do not create E1h branch or code until exact E1g semantic artifact is validated.
 
+### Post-E1g production architecture audit — operand/state transport is now the gate driver
+- **Arithmetic is closed:** E1d/E1e/E1f/E1g prove exact raw RGB555 add/sub/half-add/half-sub in the pinned RSP lab. The next uncertainty is no longer arithmetic; it is how to feed a production compositor exact main/sub operands and raster-sensitive state without duplicating the renderer or exploding memory/bus cost.
+- The existing 64-byte section record is fully occupied as fields, but **`STAT_FLAGS` only consumes bits 7 (`force blank`) and 6 (`OAM dirty`) in current source**. Bits 0..5 are unused by both CPU and RSP paths. Therefore the original 4-bit INIDISP master-brightness value can fit in bits 0..3 **without changing `SECTION_SIZE`**. The current internal multiplier `0,2..16` can be reconstructed from that raw nibble later.
+- Existing section fields `SUB_COLOR` and `MAIN_COLOR` are 16-bit values currently filled by `update_fill` with brightness-scaled N64-packed COLDATA and CGRAM[0]. **SUPPORTED design option:** repurpose those same slots to preserve raw RGB555 fixed color (COLDATA) and raw RGB555 backdrop (CGRAM[0]); this would also avoid section growth. Not implemented/proven yet.
+- Conservative queue-capacity check: each `SECTION_QUEUE` reserves `0x5000` bytes. Even an upper-bound 242 records × 64 B consumes only `0x3C80`, leaving at least **`0x1380` bytes**. A sideband fallback is physically possible if repacking later proves insufficient, but it is not needed yet and should not be introduced speculatively.
+- Current `rsp_frame:update_dpal` converts all 256 CGRAM entries once per rendered frame using the **current global brightness**, then writes the brightness-scaled N64 palette queue. This frame-global palette conversion is incompatible with a general “raw operands first, master brightness last” compositor unless changed.
+- **OPEN QUESTION / pre-existing Gate-C debt:** writes to CGRAM entry 0 call `update_fill` and can affect sections, but nonzero mid-frame CGRAM writes do not call `update_frame`; the palette queue is rebuilt later from final/current CGRAM. A focused raster-palette test is required before labeling observable behavior wrong. Do not attribute this possible debt to H-COMP.
+- Current renderer does not truly compose main/sub screens. `MASK_SEL` (fed by the menu's **SUB LAYER ORDER: BACK/FRONT**) chooses whether the same renderer traverses TS then TM or TM then TS into one framebuffer. This is the historical no-blending workaround and cannot remain semantically necessary for the 1.0 no-manual-mode target.
+- Crucially, the RSP already has a **natural pass boundary** after finishing the first screen mask: `srl s7,s7,8` then the second layer traversal starts. This supports a production hypothesis that reuses the same renderer, switching RDP color target between main and sub passes rather than building a second renderer.
+- **SUPPORTED architecture hypothesis:** render one screen raw into the normal full framebuffer; render the other screen raw into a compact reusable color strip; keep/reuse winner metadata from the E1a–E1c path; run exact compositor arithmetic over the band; then apply section brightness. This aligns with E1c strip ownership and avoids the previously rejected full-frame extra-surface design.
+- Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
+- Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
+
 ### Immediate next uncertainty
-- **NEXT: half-color semantics, source-grounded before code.**
-- Do **not** implement “just shift the final RGB555 result right one” from intuition. Derive exact SNES half behavior from pinned/reference implementation first, including:
-  - add vs subtract;
-  - per-channel rounding/truncation order;
-  - whether half applies before/after clipping;
-  - backdrop/fixed-color/subscreen cases;
-  - the CGADSUB half-enable suppression rules (notably when sub-screen/fixed-color selection changes the second operand);
-  - interaction with color-window gating.
-- Only after an exact oracle is written should a child proof branch be created. Keep half separate from CGWSEL/window selection if possible so one semantic variable changes at a time.
-- E1d and E1e are frozen evidence; do not mutate their validated branches.
-- Do **not** merge scalar proof code into master simply because semantics pass.
+- **NEXT GATE DRIVER: prove or falsify compact second-screen color-target rebasing with the existing renderer/RDP contract.**
+- Do not spend the next batch merely proving E1h's six-row boolean selector unless the production architecture needs it; its oracle is already source-grounded and can become a regression proof later.
+- The next architecture proof should change one thing: demonstrate that a second render pass can target a compact RGB16 strip representing a chosen global y-band, while the normal/full target remains intact and explicit DP fences make ownership/readback deterministic.
+- Prefer reusing E1c's already validated strip rebasing/fence machinery. No production palette rewrite, no brightness application, no CGADSUB arithmetic, no Window-2 work, no PR #13 overlay integration in this first two-target proof.
+- **Expected pass evidence:** deterministic main/full target pattern remains intact outside its intended writes; compact color strip contains exactly the second-pass expected pixels for at least two distinct global y-bands using the same physical strip; guards remain intact; stale-band data is absent after reuse; SP/DP quiescent at capture.
+- **Falsifier:** if RDP Color Image/scissor/tile coordinate semantics cannot rebase the second pass onto a compact strip without invasive duplicate rendering logic or unacceptable target/stride constraints, abandon this compact-color-strip architecture before production integration.
+- E1h (fixed vs subscreen selection + transparent-sub half suppression) and later color-window truth-table proofs remain **DEFERRED semantic regressions**, not discarded.
 
 ### H-COMP capacity / integration constraint
 - Scalar E1d/E1e nearly fill current resident 4 KiB RSP IMEM; this is useful semantic evidence and a warning against a resident scalar production compositor.

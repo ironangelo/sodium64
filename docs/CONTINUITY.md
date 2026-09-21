@@ -222,6 +222,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 9 — repaired exact build fits; dynamic smoke still running
+- Exact repaired head **`0f588c698cd46cc01d618d2eb98e6c3e209f5225`** auto-dispatched **Build and Validate `35656638964`**.
+- Build job **SUCCESS**; PROFILE build job **SUCCESS**. Exact normal artifact **`10665131259`**, digest `sha256:28b8ee6765662c21321332d1e46a9dcc01e7d500ff34a99dbce6d3799948818e`; profile artifact **`10665041424`**, digest `sha256:43dc651c607c0a6528afbc1e5447a2739fe351192579ab8e49f34315fb7bf0af`.
+- Direct artifact inspection measures **RSP `.text = 0xFB8 = 4,024 B`**, exactly +4 B versus failing E2a `0xFB4`; `.data = 0x1000`. This leaves **72 B IMEM free**. Final base ROM remains **98,304 B**.
+- Therefore the controlled `dma_wait` delay-slot repair has no compile/link/IMEM-capacity blocker. This does **not** yet prove the first-task hang is dynamically repaired.
+- At checkpoint, `emulator-smoke` job `106522338904` is still running. **Next authority:** normal smoke PC/progress plus valid PROFILE snapshot/decoder on this exact SHA. Semantic E2a remains gated behind that result.
+- Classification: repair **IMPLEMENTED / BUILD-VALIDATED**; runtime recovery **PENDING**; architecture **OPEN**.
+
 ### E2a batch 8 — one-instruction delay-slot repair IMPLEMENTED
 - E2a proof branch advanced to **`phase4/gate-c-h-comp-e2a-color-strip-reuse@0f588c698cd46cc01d618d2eb98e6c3e209f5225`**.
 - Controlled delta from failing `0bb47e8a...`: exactly one explicit **`nop`** inserted after `dma_wait: jr ra`, making the DMA return delay slot intentional and preventing `e2a_fill_strip: move s3, ra` from executing on nested DMA returns.

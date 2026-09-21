@@ -58,6 +58,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1g batch 3 — exact generic validation + IMEM check PASSED
+- Exact implementation head `233279dcd1574dfba7f1e5439a655f9315f71f41`, **Build and Validate `35640340728 SUCCESS`** across normal build, PROFILE build and pinned Mupen/LLE smoke; update-release skipped as expected.
+- Exact normal artifact **`10658450370`**, digest `sha256:a7a121a29e32f8f5e2ea79221723ace56d0bb3ff65384c620df4ff72bc0f7664`, inspected directly.
+- RSP `.text = 0xF6C = 3,948 B`, leaving **148 B of 4,096-byte IMEM free**; DMEM `.data = 0x1000` exactly.
+- Code-size comparison: E1g packed half-sub is **56 B smaller than E1e** floor-zero per-channel subtraction (`0xFA4=4,004 B`), but 32 B larger than E1f packed half-add (`0xF4C=3,916 B`). This is compactness evidence only, not throughput evidence.
+- Generic compile/boot/smoke risk is closed for this implementation. Next controlled delta is workflow-only: isolate/retarget the inherited E1e semantic workflow to E1g, leaving runtime/oracle byte-unchanged, then dispatch pinned-ares evidence.
+
 ### E1g batch 2 — packed half-sub runtime + host oracle IMPLEMENTED; semantic workflow intentionally dormant
 - Exact implementation head **`233279dcd1574dfba7f1e5439a655f9315f71f41`** on `phase4/gate-c-h-comp-e1g-half-sub-kernel`.
 - Runtime preserves E1e's exact proof memory/DMA/fence contract and replaces only the per-channel subtraction body with the precommitted pinned-ares packed half-sub sequence: `diff=x-y+0x8420`; derive `borrow`; clamp packed channels; `&0x7BDE >> 1`.

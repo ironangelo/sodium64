@@ -32,6 +32,18 @@ STATUS_SIZE = 8
 SP_STATUS_ADDR = 0xA4040010
 DP_STATUS_ADDR = 0xA410000C
 
+SECTION_QUEUE1_ADDR = 0xA016C600
+SECTION_QUEUE2_ADDR = 0xA0171600
+SECTION_RECORD_SIZE = 0x40
+SECTION_RECORD_COUNT = 16
+SECTION_CAPTURE_SIZE = SECTION_RECORD_SIZE * SECTION_RECORD_COUNT
+SECTION_BGNBA_OFFSET = 0x10
+SECTION_BG1SC_OFFSET = 0x2A
+SECTION_TM_OFFSET = 0x3A
+SECTION_BG_MODE_OFFSET = 0x3D
+SECTION_STAT_FLAGS_OFFSET = 0x3E
+SECTION_SPLIT_LINE_OFFSET = 0x3F
+
 PREFIX_BYTE = 0xC3
 SENTINEL_WORD = 0x55AA
 SUFFIX_BYTE = 0x3C
@@ -144,6 +156,27 @@ def validate_quiescent_state(state: dict[str, int], *, require_marker: bool) -> 
             "proof marker contains invalid framebuffer pointer "
             f"0x{state['proof_framebuffer_pointer']:08X}"
         )
+
+
+def decode_section_queue(data: bytes) -> list[dict[str, int]]:
+    if len(data) != SECTION_CAPTURE_SIZE:
+        raise ValueError(f"unexpected section capture size: {len(data)}")
+    records: list[dict[str, int]] = []
+    for index in range(SECTION_RECORD_COUNT):
+        base = index * SECTION_RECORD_SIZE
+        record = data[base:base + SECTION_RECORD_SIZE]
+        records.append({
+            "index": index,
+            "bgnba": int.from_bytes(
+                record[SECTION_BGNBA_OFFSET:SECTION_BGNBA_OFFSET + 2], "big"
+            ),
+            "bg1sc": record[SECTION_BG1SC_OFFSET],
+            "tm": record[SECTION_TM_OFFSET],
+            "bg_mode": record[SECTION_BG_MODE_OFFSET],
+            "stat_flags": record[SECTION_STAT_FLAGS_OFFSET],
+            "split_line": record[SECTION_SPLIT_LINE_OFFSET],
+        })
+    return records
 
 
 def classify(framebuffer: bytes, depth: bytes, prefix: bytes, suffix: bytes) -> dict[str, object]:
@@ -332,13 +365,29 @@ def main() -> int:
         prefix = client.read_memory(Z_COMMAND_ADDR, Z_PREFIX_SIZE, 0x400)
         depth = client.read_memory(Z_BASE, Z_SIZE, 0x400)
         suffix = client.read_memory(Z_BASE + Z_SIZE, Z_SUFFIX_SIZE, 0x100)
+        section_queue1 = client.read_memory(
+            SECTION_QUEUE1_ADDR, SECTION_CAPTURE_SIZE, 0x400
+        )
+        section_queue2 = client.read_memory(
+            SECTION_QUEUE2_ADDR, SECTION_CAPTURE_SIZE, 0x400
+        )
 
         (out / "framebuffer.rgba5551").write_bytes(framebuffer)
         (out / "depth.bin").write_bytes(depth)
         (out / "prefix_guard.bin").write_bytes(prefix)
         (out / "suffix_guard.bin").write_bytes(suffix)
+        (out / "section_queue1.bin").write_bytes(section_queue1)
+        (out / "section_queue2.bin").write_bytes(section_queue2)
 
         result = classify(framebuffer, depth, prefix, suffix)
+        result["section_queues"] = {
+            "queue1_address": hex(SECTION_QUEUE1_ADDR),
+            "queue2_address": hex(SECTION_QUEUE2_ADDR),
+            "record_size": SECTION_RECORD_SIZE,
+            "records": SECTION_RECORD_COUNT,
+            "queue1": decode_section_queue(section_queue1),
+            "queue2": decode_section_queue(section_queue2),
+        }
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),

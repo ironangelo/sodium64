@@ -71,6 +71,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 - As a static/control check, the pinned packed half-add and half-sub identities were compared against explicit per-channel definitions over **117,649 structured RGB555 color pairs** built from channel values `{0,1,2,15,16,30,31}`; zero mismatches for either formula. This deliberately covers zero, odd/even rounding, midpoints, near-max and max values on all three channels plus cross-channel carry/borrow combinations.
 - This is host-side algebra/control evidence, not an N64 semantic run. **Do not create or implement E1g until E1f's exact semantic run closes.**
 
+### E1f CLOSED / VALIDATED — raw RGB555 half-add arithmetic proven dynamically
+- Exact validated head **`07c5f27b2d6e881c43d0844214376c59a2248036`**.
+- Exact semantic **`35639124824 SUCCESS`**, job **`106463842354`**.
+- Evidence artifact **`10657453837`**, digest **`sha256:b9932fbdd5e9e2a2d5254a9c028552a64f52d0a02ca413f8bac8012f0b523f0d`**.
+- Artifact inspected directly: **`E1F_RGB555_HALF_ADD_VALIDATED / passed=true`**, all **16/16** actual words equal the precommitted oracle, `mismatches=[]`.
+- Exact outputs: `0000,0010,0200,4000,7FFF,000F,01E0,3C00,000F,01E0,318C,0C63,3DEF,3DEF,3DEF,2AAA`.
+- Raw guards independently inspected: prefix is 32×`A5`, suffix 32×`5A`, reserve 96×`D7`; classifier reports all three true.
+- Fresh/quiescent boundary: warmup counter 6, baseline 7 -> guest 8 (`counter_delta=1`), `SP_STATUS=1`, `DP_STATUS=129` with busy mask clear, capture-ready `0x8000AAF8`.
+- Exact-head generic **Build and Validate `35639124728 SUCCESS`**. Implementation artifact `10657132935` measured RSP `.text=0xF4C=3,916 B`, **180 B free**.
+- **Meaning:** the pinned-ares packed identity `(A+B-((A^B)&0x0421))>>1` exactly reproduces independent-channel RGB555 floor-average under the established fenced RSP DMA contract, including cross-channel carry traps.
+- **Does NOT prove:** half-sub (E1g), CGADSUB/CGWSEL half gating/suppression, raw production operand plumbing, per-section brightness solution, vector throughput, or real-N64 cost/cadence.
+- Freeze E1f as evidence. Next controlled semantic delta may now instantiate the already-precommitted E1g packed half-sub proof from validated E1e.
+
 ### E1f batch 6 — complete exact-head generic validation GREEN while semantic lab builds
 - Final E1f head `07c5f27b2d6e881c43d0844214376c59a2248036`, **Build and Validate `35639124728 SUCCESS`** across normal build, PROFILE build and pinned Mupen/LLE smoke; update-release skipped as expected.
 - Because the final E1f commit is workflow-only, the already measured implementation artifact/code size remains authoritative: RSP `.text=0xF4C=3,916 B`, 180 B free.

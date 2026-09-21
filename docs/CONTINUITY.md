@@ -271,6 +271,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Decision rule:** pass only if E1c Z control remains valid, color archive A and reused final B match their complete 280x8 contracts with sentinels/guards, B contains zero stale A words, and the real main snapshot is written identically before/after. Any failure must be classified by sub-contract; do not collapse it into “Color Image impossible.”
 - Classification: semantic dispatch delta **IMPLEMENTED / WORKFLOW-ONLY**; result **PENDING**.
 
+### Focused RSP return-delay audit after E2a root cause — two latent adjacency hazards, no current repair
+- A bounded audit of `jr ra` in current `rsp_main.S` found that almost all returns either have an explicit useful delay-slot instruction or explicit `nop`.
+- Two additional returns rely on the **next function's first physical instruction** as an implicit delay slot:
+  - `clear_cache: jr ra` executes `shared_mirror: srl t2,t6,11`;
+  - `mode7_out: jr ra` executes `mode7_read: andi t0,t2,0x7F00`.
+- Current callers treat those temporaries as scratch / overwrite them before authoritative use, and there is no observed regression attributable to either path. **Do not “fix” them speculatively in the active E2a experiment.**
+- Operational lesson from the validated E2a bug: future edits must not insert a new first instruction after either return without first making the delay slot explicit. Treat adjacency there as a **HYGIENE RISK**, not as intentional API.
+- No other hidden `jr ra` adjacency of the same form was found in this file.
+- Classification: **SOURCE AUDIT / HYGIENE RISK**, current behavior unchanged.
+
 ### E2a batch 10 — delay-slot repair dynamically CONFIRMED; generic validation GREEN
 - Exact repaired head **`0f588c698cd46cc01d618d2eb98e6c3e209f5225`**, **Build and Validate `35656638964 SUCCESS`** across normal build, PROFILE build and pinned Mupen/LLE smoke.
 - Smoke artifact **`10665935859`**, digest `sha256:d7a59eb0cd9fbc3adadb73fb76b01d48521d7d98902a2798aa40184ec4ec1818`.

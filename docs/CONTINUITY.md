@@ -4,6 +4,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-21 UTC)
 
+- **2026-09-21 focused audit COMPLETE — batches 1–5 persisted; M3/Gate C active.** Audited master `5b7134930a0ca859f6aa24e54102de116948e3ed`; #13 remains open at `84ecafad7cc3505d82f134b2672d9ed1146fedc0`, #14 merged-consumed. **Immediate next action: E1 exact-command RDP tag/sub-validity/fenced-strip proof**, before kernel work. Key risks: compressed Z/280-wide scratch ownership; raw-color/brightness and independent-mask semantics; unmeasured integration/overlay/fence cost. #13 is reasonable but not hardware-qualified, and its current same-frame test does not prove transition-frame pixel bands. #14 stays closed with a concrete cooldown-coupling follow-up. See final checkpoint below for conclusions, three ordered experiments, falsifiers and limits. Only this file changed.
+
 - **2026-09-21 audit batch 4 complete.** Accurate/performance ares agree on ordinary low-resolution math and half-suppression policy. A CPU post-pass can prove semantics without PR #13; RSP resident/third-overlay placement requires a complete compiled size/DMEM/ABI proof. Forty free bytes do not establish fit or impossibility. No production location selected by intuition.
 
 - **2026-09-21 audit checkpoint 4A — limit the RDP rejection to what was tested.** Texture RGB5 expansion and framebuffer-memory RGB5 input differ in the pinned RDP model. The earlier naive HALF surrogate failure does not reject every possible RDP sequence. Keep exact RGB5 oracle, reject unproven blender substitution, and avoid an open-ended RDP optimization search.
@@ -7689,3 +7691,83 @@ A separate CPU-dispatched microcode task would also avoid a merge dependency on 
 - Measure DMA bytes/waits, DP drain time, CPU stalls, overlay faults and section/strip counts on the correct implementation. A faster standalone math loop can lose overall through extra synchronization.
 
 **Status:** batches 0–4 complete; all kernel location/size/performance results above are source constraints or proposed experiments, not implementations or newly measured runs. Next: Gate-C direction and final bounded experiment order.
+
+
+## Gate-C focused audit 2026-09-21 — batch 5 COMPLETE / final checkpoint
+
+### Canonical state rechecked at close
+
+- **M3 / Gate C ACTIVE**; M0/M1/M2 achieved. Audited and re-read remote master: **`5b7134930a0ca859f6aa24e54102de116948e3ed`**.
+- **PR #13 OPEN / UNMERGED**, `phase4/gate-c-rsp-overlay-clean@84ecafad7cc3505d82f134b2672d9ed1146fedc0`; API base remains `9441818dd8457a27bbd617a0f32c6d484550661f`. Source package includes the H-OBJ repair as well as overlays. A future combined #13 + integrated #14 build needs its own identity and evidence; this audit did not create it.
+- **PR #14 MERGED-CONSUMED**; technical head `8be82f5fb3a02f6390d5dfbaf3d94addc8f4e1ec`, merge is current master. Changed-WH urgency is integrated.
+- Master Build/Validate **35543805198 success, attempt1**, master Ares **35543805220 success, attempt2**, both exact master SHA; rechecked at close. Attempt2 success does not erase the recorded attempt1 lab collapse. No new run was dispatched.
+- Road/roadmap agree on achieved Gate B and active Gate C. **Documentation lag:** the end of `PROFILING.md` still says the next target is corpus discovery/ranking; ROAD_TO_1_0/ROADMAP and recorded three-workload hardware closure supersede that old next-step prose. It is not authority to resume automatic CPU/APU optimization. Runtime/docs outside this file were left unchanged.
+
+### Executive technical decision
+
+**H-COMP is a real Gate-C driver.** The BG diagnostic and renderer source establish a generic missing color-composition feature, without requiring commercial assets. It does not establish that every historical SMW/ALttP symptom has this cause, nor does fixing H-COMP close Gate C. Continue toward independent main/sub winners and exact color policy using the current tile/RDP architecture.
+
+Change the next-step emphasis from “write an exact vector kernel” to **“prove the smallest operand/tag/ownership contract through the actual RDP path.”** Arithmetic is independently specifiable; the more fragile assumption is that the proposed metadata survives alpha/coverage/encoding/stride and can be safely consumed. Keep CPU as an admissible bounded semantic carrier until actual RSP footprint and measured cost justify moving the kernel. Do not start a general compositor framework, new software rasterizer, broad RDP algebra search or extra commercial-ROM infrastructure for this proof.
+
+### Conclusions on the two PRs and H-COMP
+
+- **PR #13:** fixed-slot demand loading is reasonable for further isolated Gate-C work. Source review found no demonstrated executing-code overwrite or missing SP-DMA completion in its current tail-dispatch ABI. Existing compiled layout evidence and whole-frame virtual behavior support feasibility. **Qualification still missing:** actual mixed-frame pixel bands (the current same-frame test captures frame37 after IRQs in frame30), a combined candidate with #14, and real-N64 DMA/bus/cadence. Do not declare it hardware-qualified or merge it just to unlock hypothetical kernel space. A third math overlay requires a new explicit entry/exit/DMEM contract.
+- **PR #14:** keep closed for its narrow demonstrated WH change-retention repair. The localized changed-value path is conceptually appropriate for that defect. A concrete residual coupling is that urgent sections advance the shared adaptive cooldown, potentially delaying a later unrelated generic register change; measure that with the specific burst→generic control if future color-state work depends on it. Also distinguish retained state count from visible-line alignment. Neither uncertainty is evidence that the fix should be reverted.
+- **H-COMP strip proposal:** retain as a bounded candidate, with **raw operands + separate screen masks + main eligibility + sub-validity + post-math brightness + explicit ownership**. Primitive-Z is an encoded candidate channel, not a validated one; framebuffer alpha is not automatically opacity; last-draw tagging is not a priority fix. Small scratch remains feasible despite the correction from 256 to the existing 280-pixel pitch. Exact kernel placement/performance remains **UNKNOWN**.
+
+### Three most important risks
+
+1. **Silent metadata corruption or unsafe scratch reuse:** compressed Z code collisions/DZ contamination, coverage mistaken for transparency, wrong 280-wide/global-Y addressing, or SP/CPU reads before RDP writes finish. Any one can make a mathematically perfect kernel wrong or corrupt memory.
+2. **Incomplete semantic inputs:** pre-applied brightness, flattened/OR-combined masks, missing palette/color epochs, ineligible OBJ classes and approximate priority. A good ADD test at full brightness can hide all of these. Record explicit scope instead of generalizing a synthetic pass.
+3. **Integration cost and false performance confidence:** fine WH sections can amplify clears, fences, repeated draw work and overlay faults; virtual 60/60 and a 768-byte IMEM margin do not prove real-N64 cadence or complete-kernel fit. The actual #13+#14 composition has not been qualified as one candidate.
+
+### Three next experiments, in dependency order (not parallel workstreams)
+
+**E1 — immediate, highest information gain: exact RDP tag/sub-validity/readback proof.**
+
+Question: can the existing draw-command path produce trustworthy winner/presence tags in bounded scratch, ready for a consumer after an explicit completion handshake?
+
+Use the existing diagnostic/capture infrastructure and a tiny original tile pattern; no commercial ROM or Iron-at-PC dependency. Keep SNES math out of this test. Freeze command words, codebook/DZ, OtherModes, combiner, TLUT, target width, physical addresses, scissor and completion protocol. Compare a control with depth stamping disabled against the one controlled stamping change. Include:
+- two visibly different overlapping source tags, an eligible background covered by a noneligible foreground;
+- transparent foreground holes versus opaque black, plus clear/backdrop sentinel;
+- two strips reusing the same allocation with deliberately different occupancy, first/last active X, different global Y and a short final strip;
+- exact native RGB/Z bytes, decoded tags, guard bytes and DP/SP completion order; capture the producing frame, not a later recovered frame.
+
+**Pass:** every opaque accepted fragment writes the expected encoded tag; holes retain the underlying tag; clear/no-sub remains distinct; tags decode without collisions; reuse leaves no stale values or guard changes; readback occurs after proven completion. **Falsifier:** any wrong tag, ambiguous presence bit, stale pixel or out-of-bounds write with otherwise known-good geometry. If only the alpha-presence shortcut fails, use explicit sub-validity; if primitive-Z fails under the required command path, test the bounded color-metadata fallback rather than forcing Z into production. A Mode7 triangle subcase is required before extending the claim to Mode7, not before learning the initial rectangle result.
+
+**Stop condition:** one small pass/fail evidence package with command/build identity. Do not build the full compositor to answer this question.
+
+**E2 — only after a viable operand contract: exact math + complete footprint.**
+
+Feed known raw main/sub/tag strips through the smallest CPU or RSP candidate and compare with the raw RGB5/policy oracle from batch4. Include saturation, odd HALF sums, negative SUB, fixed versus empty sub, opaque black, OBJ palette eligibility, color-window clip/disable, and brightness-after-math. Inspect the complete callable footprint including DMA/policy/spills; decide CPU, resident RSP or overlay from that evidence. **Falsifier:** any policy/arithmetic mismatch or an undeclared IMEM/DMEM overlap. A mismatch is a semantic failure, not something to hide with scene-specific output. No need for real N64 to reject a bad formula or overflowing binary layout.
+
+**E3 — only after exact output: integrated strip/section/mode regression and cadence milestone.**
+
+Freeze an integration candidate based on current master plus only required qualified components. Compare against baseline on an original mixed workload with WH changes, independent screen masks, two color-state epochs, overlapping BG/OBJ, and a captured actual regular→Mode7→regular transition frame. Include section/strip boundary and reuse checks. Use the specific WH-burst then generic-state control to distinguish cooldown delay from a compositor error. Measure commands, DMA/fence/overlay counts and existing profiler categories; then run the exact versioned Gothicvania/SRS/Nova2 controls. After lower-level output and virtual progression gates pass, request one prepared real-N64 milestone for low-level behavior and native cadence, rather than a manual test after each small batch.
+
+**Performance contract remains:** frameskip0, APU21, audio enabled (4), precision8; exact runtime/workload/wrapped-ROM hashes and matching ELF/map; two warmup and five complete 60-VI windows for the established hardware capture protocol. Preserve audio/progression checks and the corrected graphics oracle alongside 60/60×5. If a correct path is slower: **correctness → measure regression → profile the correct path → optimize without changing semantics → recover cadence**. Do not revert to flattened operands, underclock audio, skip frames or weaken fixtures.
+
+### What needs hardware; what does not
+
+- **Can proceed autonomously now:** source/ABI guards, assembled size/layout, exact integer/policy tests, deterministic original diagnostics, register/section trace analysis, frame-aligned pixel evidence and emulator readback experiments. These reduce uncertainty without commercial assets.
+- **Needs real N64 authority later:** overlay DMA execution/bus/cache assumptions that emulators may mask, actual DP/SP handoff behavior, representative cadence and audio stability at the milestone. Ares/Mupen are useful lower-level filters, not substitutes for that authority.
+- **LAB LIMITATION:** pinned ares RSP-interpreter mode remains the established valid custom-microcode laboratory; do not treat its problematic RSP-JIT route as an emulator-core regression. Vulkan RDP source inspection is not proof of the exact backend dynamically exercised by every existing CI job. Cross-backend agreement is helpful but still not hardware.
+- **UNKNOWN:** actual historical SMW/ALttP failure-to-cause mapping; complete Mode7/hires/direct-color/palette-raster fidelity; production kernel size and hardware cost. No ROM acquisition or commercial-game reproduction occurred here.
+
+### Preserved rejected explanations / bounded decisions
+
+**REJECTED:** two new full RGB16 surfaces as capacity-safe; generic special Blender ADD as exact saturated SNES ADD; naive expanded-8-bit average as general HALF; raw Z word equals layer ID; nonblack means valid sub pixel; CI success implies visual correctness; post-transition capture proves mixed-frame bands; retained WH count proves all raster registers or exact pixel phase; 60/60 virtual means real-N64 performance.
+
+**Not rejected:** strips; primitive-Z with an encoded/proven contract; all possible RDP exact sequences; CPU post-composition as a bounded control; fixed-slot overlays as an architecture. Their limits and falsifiers are recorded above rather than converted into unsupported impossibility claims.
+
+### Completion and persistence record
+
+**Completed:** initial canonical reconciliation plus requested batches **1, 2, 3, 4, 5**. Findings were persisted between batches and immediately at material discoveries. Earlier checkpoints this audit: `30f76f99`, `d40e170c`, `2696781c`, `88a35f40`, `52fa949c`, `86111add`, `08b048c1`, `715e91fc`, `0ee34035`.
+
+**Not performed / TODO, not an unfinished audit batch:** runtime implementation, new experiments/builds/benchmarks, new hardware captures, final kernel assembly sizing, fresh binary artifact extraction, commercial ROM experiments. Existing logs/API/source were inspected; prior compiled/hardware evidence retains its original authority and is not relabeled as newly measured.
+
+**Last material finding:** the HALF surrogate rejection is narrower than all RDP paths because texture and framebuffer operands are represented differently; the exact low-resolution SNES formulas are independently cross-checked within pinned ares.
+
+**Next exact action:** E1, a single bounded original diagnostic for encoded primitive-Z tags, sub-validity and fenced scratch reuse through Sodium64's actual rectangle command path. Do not start the kernel or merge #13 before this discriminator resolves the current architecture assumption. This sequencing does not prevent already-authorized read-only analysis or a separately prepared hardware qualification of #13.
+
+Only `continuity:docs/CONTINUITY.md` was written. No core/runtime/workflow/technical branch modifications, PR creation/merge, destructive experiment or ROM handling.

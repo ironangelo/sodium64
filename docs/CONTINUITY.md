@@ -232,6 +232,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### Forward architecture finding — compact production target needs a section→band subloop, not section-sized scratch
+- E2a proves/asks about an **8-row** reusable physical strip, but the real renderer's screen-pass boundary occurs inside each raster **section**, whose `SPLIT_LINE` may be much farther than 8 rows. Merely switching Color Image at `srl s7,s7,8` would therefore overrun an 8-row scratch for long sections.
+- Source audit shows the vertical section bounds are concentrated in `k0/k1`: backdrop/scissor bounds, BG initial row + `blt s1,k1` termination, and OBJ section-intersection clipping. This is favorable for a bounded subloop rather than renderer duplication.
+- **SUPPORTED production direction:** retain the true section end separately, then iterate **section → fixed-height bands**; for each band set `k0=band_start`, `k1=min(section_end, band_start+strip_rows)`, render the required screen operands into their targets, compose/consume the compact operand, then advance until the section end. Section state itself is loaded once and reused across its bands.
+- This still needs a controlled dynamic proof. It does **not** establish performance, cache correctness across repeated band traversals, OBJ behavior at band boundaries, or real-N64 bus cost.
+- Refined E2 sequence if E2a passes: E2b should first prove the real target switch on a deliberately **8-row/no-shared** carrier section (one variable); a later band-reuse proof then exercises a section longer than the strip before production integration.
+- Classification: **SUPPORTED SOURCE FINDING / ARCHITECTURE REQUIREMENT**, not implemented.
+
 ### Forward architecture finding — real two-target traversal must stop suppressing shared layers
 - Source audit at the existing screen-pass boundary found a production-relevant constraint for the discriminator **after** E2a.
 - Current section setup builds the two traversal masks as follows: load one of TS/TM according to `MASK_SEL`; load the other; compute `shared = first & second`; then **subtract shared layers from the first pass** before packing the other mask into the high byte. The later `srl s7,s7,8` boundary therefore draws shared layers only once, on the second traversal.

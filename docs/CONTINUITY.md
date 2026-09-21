@@ -222,6 +222,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 8 — one-instruction delay-slot repair IMPLEMENTED
+- E2a proof branch advanced to **`phase4/gate-c-h-comp-e2a-color-strip-reuse@0f588c698cd46cc01d618d2eb98e6c3e209f5225`**.
+- Controlled delta from failing `0bb47e8a...`: exactly one explicit **`nop`** inserted after `dma_wait: jr ra`, making the DMA return delay slot intentional and preventing `e2a_fill_strip: move s3, ra` from executing on nested DMA returns.
+- No proof addresses, loop counts, scratch layout, RDP command words, sentinel values, capture/classifier code or workflow files changed.
+- Expected RSP text delta is +4 B from failing E2a `0xFB4=4020`, i.e. **`0xFB8=4024` / 72 B free** if link layout is otherwise unchanged; exact artifact remains authority.
+- **Next:** inspect exact-head Build/Validate. Required recovery signs are normal smoke PC leaving the initial boot address / sustained runtime progress plus a valid PROFILE snapshot. Only then dispatch/interpret E2a semantic evidence.
+- Classification: repair **IMPLEMENTED / CANDIDATE**, validation pending.
+
 ### E2a batch 7 — root cause found: new helper occupies `dma_wait` return delay slot
 - Exact source comparison E1c `994a1fd5...` → E2a `0bb47e8a...` identifies a deterministic RSP control-flow bug. `dma_wait` ends with **`jr ra` and no explicit delay-slot instruction** under `.set noreorder`.
 - In validated E1c, the next physical instruction was `e1c_make_pattern: li t1, TEXTURE`; therefore every DMA return executed that incidental clobber in the `jr ra` delay slot, but it did not redirect control and E1c remained semantically valid.

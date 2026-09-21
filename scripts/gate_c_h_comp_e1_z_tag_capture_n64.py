@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E1d raw RGB555 saturating-add proof."""
+"""Capture/classify Gate-C E1e raw RGB555 floor-at-zero subtraction proof."""
 
 from __future__ import annotations
 
@@ -76,8 +76,8 @@ E1D_B_WORDS = [
     0x0020, 0x0400, 0x2108, 0x0842, 0x03E0, 0x7C00, 0x2AAA, 0x4321,
 ]
 E1D_EXPECTED_WORDS = [
-    0x0000, 0x001F, 0x03E0, 0x7C00, 0x7FFF, 0x001F, 0x03E0, 0x7C00,
-    0x003F, 0x07E0, 0x6318, 0x18C6, 0x7FFF, 0x7FFF, 0x7FFF, 0x53F5,
+    0x0000, 0x001E, 0x03C0, 0x7800, 0x0000, 0x0001, 0x0020, 0x0400,
+    0x001F, 0x03E0, 0x2108, 0x0842, 0x7C1F, 0x03FF, 0x2C0B, 0x0013,
 ]
 
 
@@ -128,7 +128,7 @@ def wait_for_proof(
     for attempt in range(1, attempts + 1):
         validate_stop(
             client.continue_then_interrupt(poll_seconds),
-            f"E1d proof poll #{attempt}",
+            f"E1e proof poll #{attempt}",
         )
         counter = read_u(client, guest_counter_address, 1)
         marker = read_u(client, STATUS_ADDR, 4)
@@ -149,7 +149,7 @@ def wait_for_proof(
                 "status": marker,
                 "counter_delta": 0 if delta is None else delta,
             }
-    raise RuntimeError("E1d proof marker/fresh guest frame was not observed")
+    raise RuntimeError("E1e proof marker/fresh guest frame was not observed")
 
 
 def set_breakpoint(client: RSPClient, address: int, enabled: bool) -> None:
@@ -252,9 +252,9 @@ def classify(
     )
     return {
         "classification": (
-            "E1D_RGB555_SAT_ADD_VALIDATED"
+            "E1E_RGB555_SUB_FLOOR0_VALIDATED"
             if passed
-            else "E1D_RGB555_SAT_ADD_FAILED"
+            else "E1E_RGB555_SUB_FLOOR0_FAILED"
         ),
         "passed": passed,
         "constants": {
@@ -327,7 +327,7 @@ def main() -> int:
         # after observing SP_STATUS.HALT, so both producer and DP can be checked
         # at a deterministic between-frame boundary rather than a timed host poll.
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E1d clean-epoch breakpoint")
+        validate_stop(client.request("c"), "E1e clean-epoch breakpoint")
         anchor = read_quiescent_state(client)
         validate_quiescent_state(anchor, require_marker=True)
 
@@ -338,9 +338,9 @@ def main() -> int:
         # Step over the breakpoint once, reinstall it behind the PC, and let one
         # complete subsequent RSP frame reach the same quiescent boundary.
         set_breakpoint(client, args.capture_ready_address, False)
-        validate_stop(client.request("s"), "E1d breakpoint step-over")
+        validate_stop(client.request("s"), "E1e breakpoint step-over")
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E1d fenced capture breakpoint")
+        validate_stop(client.request("c"), "E1e fenced capture breakpoint")
 
         quiescent = read_quiescent_state(client)
         validate_quiescent_state(quiescent, require_marker=True)
@@ -396,7 +396,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E1d semantic classifier failed; see result.json")
+            raise RuntimeError("E1e semantic classifier failed; see result.json")
 
         try:
             client.request("D")

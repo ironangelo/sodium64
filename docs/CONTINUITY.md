@@ -247,6 +247,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Refined E2 sequence if E2a passes: E2b should first prove the real target switch on a deliberately **8-row/no-shared** carrier section (one variable); a later band-reuse proof then exercises a section longer than the strip before production integration.
 - Classification: **SUPPORTED SOURCE FINDING / ARCHITECTURE REQUIREMENT**, not implemented.
 
+### Forward architecture finding — two screen traversals already exist; target separation is not a wholesale duplicate-render cost
+- Current renderer packs two screen masks into `s7` (low/high byte) and, when both are nonzero, already walks `next_layer` once for the first screen then `srl s7,s7,8` and walks it again for the second screen.
+- Therefore the supported two-target H-COMP direction does **not** require inventing a second renderer or doubling all exclusive-layer traversal versus Sodium64's existing TM/TS workaround. The existing dual traversal is the machinery to reuse.
+- Incremental production costs relative to the current path are instead: Color/Z target state switches/fences, compact operand bandwidth/readback/composition, fixed-band handling, and **re-rendering layers shared by TM+TS** that current code deliberately suppresses from the first pass.
+- This materially strengthens the target-switch architecture hypothesis, but is **not performance proof**. Real-N64 profiling remains required because extra target traffic/compositor work and shared-layer duplication may still exceed the frame budget.
+- Classification: **SUPPORTED SOURCE FINDING / ARCHITECTURE PROOF SUPPORT**.
+
 ### Forward architecture finding — real two-target traversal must stop suppressing shared layers
 - Source audit at the existing screen-pass boundary found a production-relevant constraint for the discriminator **after** E2a.
 - Current section setup builds the two traversal masks as follows: load one of TS/TM according to `MASK_SEL`; load the other; compute `shared = first & second`; then **subtract shared layers from the first pass** before packing the other mask into the high byte. The later `srl s7,s7,8` boundary therefore draws shared layers only once, on the second traversal.

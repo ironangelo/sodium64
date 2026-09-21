@@ -1,16 +1,16 @@
-name: Gate C H-COMP E1c Strip-Reuse Proof
+name: Gate C H-COMP E2a Color Strip-Reuse Proof
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e1c-strip-reuse
+      - phase4/gate-c-h-comp-e2a-color-strip-reuse
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e1c-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e2a-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -167,7 +167,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e1c-strip-reuse-evidence
+          name: gate-c-h-comp-e2a-color-strip-reuse-evidence
           retention-days: 30
           path: |
             captures/

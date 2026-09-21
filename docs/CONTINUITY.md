@@ -58,6 +58,20 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1g CLOSED / VALIDATED — raw RGB555 half-sub arithmetic proven dynamically
+- Exact validated head **`8bdec1f3cf580e23bd662dda47ffb5c9201bcbca`**.
+- Exact semantic run **`35640776537 SUCCESS`**, job **`106469271771`**.
+- Evidence artifact **`10658152381`**, digest **`sha256:da061dc1d46a3cec962043f5a3171f73b7bf5e9ac829cf6cd05fac6aeff839f3`**, inspected directly.
+- Classifier: **`E1G_RGB555_HALF_SUB_VALIDATED / passed=true`**; **16/16 exact**, `mismatches=[]`.
+- Exact output vector: `0000,000F,01E0,3C00,0000,0000,0000,0000,000F,01E0,1084,0421,3C0F,01EF,1405,0009`.
+- Guards independently inspected: prefix 32×`A5`, suffix 32×`5A`, reserve 96×`D7`.
+- Fresh/quiescent capture: baseline `8` -> guest `9` (`counter_delta=1`), `SP_STATUS=1`, `DP_STATUS=129` with busy mask clear, capture boundary `0x8000AAF8`.
+- Exact-head generic **Build and Validate `35640776778 SUCCESS`**, including Mupen/LLE smoke.
+- RSP map in semantic artifact: `.text=0xF6C=3,948 B`, **148 B IMEM free**; DMEM `.data=0x1000`.
+- **Meaning:** packed half-sub semantics `floor(max(A-B,0)/2)` per RGB5 channel are proven under the same fenced RSP DMA/readback contract as E1d/E1e/E1f.
+- **Does NOT prove:** second-operand selection, half suppression, CGADSUB/CGWSEL/window gating, production raw operand plumbing, per-section brightness transport, throughput, or real-N64 cadence.
+- With E1d/E1e/E1f/E1g closed, the basic raw RGB555 arithmetic family is no longer the next uncertainty. Freeze these proof branches; do not merge scalar proof kernels into master.
+
 ### E1g batch 4 — complete exact-head half-sub discriminator DISPATCHED
 - Final E1g head **`8bdec1f3cf580e23bd662dda47ffb5c9201bcbca`** adds only workflow isolation/retargeting on top of implementation `233279dc...`; runtime and host oracle are byte-unchanged.
 - Exact semantic run **`35640776537`** — **Gate C H-COMP E1g RGB555 Half-Sub Proof** — is QUEUED at checkpoint.

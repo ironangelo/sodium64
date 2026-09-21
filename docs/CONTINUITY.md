@@ -58,6 +58,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1f batch 3 — static single-variable/oracle audit CLEAN while build runs
+- Compare E1d validated head `76321873...` -> E1f implementation `5a5e3907...` is exactly one commit touching only `src/rsp_main.S` and the host classifier: runtime +11/-46 lines, host +11/-11. No workflow, guest, address, guard or fence change.
+- Exact runtime source implements the pinned ares identity literally: `t2=(A^B)&0x0421; t3=A+B-t2; t3>>=1`.
+- Oracle was independently recomputed per channel and agrees with the packed reference expression for all 16 vectors.
+- Existing operands include cross-channel carry traps: e.g. `001F+0020 -> half 000F` and `03E0+0400 -> half 01E0`; naïve packed `(A+B)>>1` cannot pass these accidentally.
+- 15-bit operands keep the 32-bit MIPS `add/sub` sequence far from signed overflow. Static audit found no endian/DMA-order change relative to validated E1d.
+- Build/Validate `35638793678` is active; do not retarget semantic workflow until exact artifact/map confirms fit.
+
 ### E1f batch 2 — packed half-add runtime + host oracle IMPLEMENTED; semantic workflow still dormant
 - Exact implementation head **`5a5e390700aab8835e9b6229965c7bccc24081ba`** on `phase4/gate-c-h-comp-e1f-half-add-kernel`.
 - Runtime keeps the validated E1d DMA/staging/memory/fence contract and replaces only the scalar arithmetic loop with pinned-reference packed half-add: `xor -> &0x0421 -> add -> subtract carry-isolation mask -> >>1`.

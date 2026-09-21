@@ -424,6 +424,12 @@ use_window:
     lbu t8, WIN_BOUNDS + 1
 
 fill_backdrop:
+    // E1 proof: backdrop writes an explicit metadata code distinct from BG.
+    // prim_depth 0x0800 encodes to stored Z word 0x0400 under the pinned RDP oracle.
+    li a2, 0x0800
+    jal e1_set_prim_depth
+    nop
+
     // Update the RDP fill bounds for a window segment
     sltu t0, zero, t7
     addi t1, t7, 12

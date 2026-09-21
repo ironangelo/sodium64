@@ -232,6 +232,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### Forward architecture finding — E2a rebasing matches the renderer's existing framebuffer coordinate convention
+- The normal RSP renderer already starts each frame by programming `RDP_FRAME.address = FRAMEBUFFER - 280*16` bytes. At RGB16 stride 560 B/row this is an **8-row negative base offset**, so global RDP y=8 maps to the physical framebuffer base.
+- E2a uses the identical transform for its first compact band: `scratch - 8*560`; later bands generalize it as **`scratch_base - band_start*560`**.
+- Therefore a future real-traversal target switch can preserve the renderer's global tile/scissor coordinates and change only the Color Image base for the compact operand; no separate tile-coordinate rewrite is implied by E2a.
+- This is source/layout evidence only. E2b still has to prove that the real BG/OBJ traversal behaves correctly when the target changes.
+- Classification: **SUPPORTED SOURCE FINDING**.
+
 ### Forward architecture finding — compact production target needs a section→band subloop, not section-sized scratch
 - E2a proves/asks about an **8-row** reusable physical strip, but the real renderer's screen-pass boundary occurs inside each raster **section**, whose `SPLIT_LINE` may be much farther than 8 rows. Merely switching Color Image at `srl s7,s7,8` would therefore overrun an 8-row scratch for long sections.
 - Source audit shows the vertical section bounds are concentrated in `k0/k1`: backdrop/scissor bounds, BG initial row + `blt s1,k1` termination, and OBJ section-intersection clipping. This is favorable for a bounded subloop rather than renderer duplication.

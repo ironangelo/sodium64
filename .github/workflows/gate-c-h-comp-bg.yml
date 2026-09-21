@@ -1,0 +1,265 @@
+name: Gate C H-COMP BG Main-Sub Diagnostic
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-h-comp-bg-diagnostic
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-h-comp-bg-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate BG H-COMP diagnostic scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            scripts/make_gate_c_h_comp_bg.py \
+            scripts/gate_c_h_comp_bg_capture_n64.py
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_h_comp_bg.py diagnostic/gate-c-h-comp-bg-a.smc
+          python3 scripts/make_gate_c_h_comp_bg.py diagnostic/gate-c-h-comp-bg-b.smc
+          cmp diagnostic/gate-c-h-comp-bg-a.smc diagnostic/gate-c-h-comp-bg-b.smc
+          test "$(stat -c %s diagnostic/gate-c-h-comp-bg-a.smc)" -eq 32768
+          sha256sum diagnostic/gate-c-h-comp-bg-a.smc | tee diagnostic/guest.sha256
+
+      - name: Build exact unchanged integrated Sodium64 core
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Wrap exact original BG diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wrap workload
+          cp diagnostic/gate-c-h-comp-bg-a.smc workload/gate-c-h-comp-bg.smc
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp workload/gate-c-h-comp-bg.smc wrap/gate-c-h-comp-bg.smc
+          (cd wrap && python3 rom-converter.py </dev/null)
+          test -s wrap/out/gate-c-h-comp-bg.z64
+          dd if=wrap/out/gate-c-h-comp-bg.z64 of=workload/embedded.smc \
+            bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          cmp workload/gate-c-h-comp-bg.smc workload/embedded.smc
+          sha256sum workload/gate-c-h-comp-bg.smc | tee workload/guest.sha256
+          rm workload/embedded.smc
+
+      - name: Locate BG H-COMP runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
+          wram=$(symbol wram)
+          framebuffer=$(symbol framebuffer)
+          cgwsel=$(symbol cgwsel)
+          cgadsub=$(symbol cgadsub)
+          tm=$(symbol tm)
+          ts=$(symbol ts)
+          bg_mode=$(symbol bg_mode)
+          precision_set=$(symbol precision_set)
+          for value in "$wram" "$framebuffer" "$cgwsel" "$cgadsub" \
+                       "$tm" "$ts" "$bg_mode" "$precision_set"; do
+            test -n "$value"
+          done
+          phase=$(printf '%08x' "$((0x$wram + 1))")
+          {
+            echo "PHASE_ADDR=0x$phase"
+            echo "FRAMEBUFFER_ADDR=0x$framebuffer"
+            echo "CGWSEL_ADDR=0x$cgwsel"
+            echo "CGADSUB_ADDR=0x$cgadsub"
+            echo "TM_ADDR=0x$tm"
+            echo "TS_ADDR=0x$ts"
+            echo "BG_MODE_ADDR=0x$bg_mode"
+            echo "PRECISION_ADDR=0x$precision_set"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Capture RAW, ADD, and HALF-ADD BG framebuffers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          home="$RUNNER_TEMP/ares-home-h-comp-bg"
+          settings="$RUNNER_TEMP/ares-h-comp-bg-settings.bml"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9148" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              wrap/out/gate-c-h-comp-bg.z64 \
+              > captures/ares-n64.log 2>&1 &
+          pid=$!
+          cleanup() {
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          python3 scripts/gate_c_h_comp_bg_capture_n64.py \
+            --port 9148 \
+            --phase-address "$PHASE_ADDR" \
+            --framebuffer-address "$FRAMEBUFFER_ADDR" \
+            --observe "cgwsel:$CGWSEL_ADDR:1" \
+            --observe "cgadsub:$CGADSUB_ADDR:1" \
+            --observe "tm:$TM_ADDR:1" \
+            --observe "ts:$TS_ADDR:1" \
+            --observe "bg_mode:$BG_MODE_ADDR:1" \
+            --observe "precision_set:$PRECISION_ADDR:1" \
+            --output-dir captures
+
+      - name: Classify BG main-sub color math
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' | tee captures/result.txt
+          import hashlib
+          import json
+          from pathlib import Path
+
+          width = 280
+          height = 240
+
+          def load(name):
+              data = Path(f'captures/{name}.rgba5551').read_bytes()
+              assert len(data) == width * height * 2, (name, len(data))
+              offset = ((height // 2) * width + (width // 2)) * 2
+              center = int.from_bytes(data[offset:offset + 2], 'big')
+              return data, hashlib.sha256(data).hexdigest(), center
+
+          states = json.loads(Path('captures/state.json').read_text())
+          raw_data, raw_sha, raw_center = load('raw')
+          add_data, add_sha, add_center = load('add')
+          half_data, half_sha, half_center = load('half')
+
+          assert states['raw']['phase'] == 0x01, states
+          assert states['add']['phase'] == 0x02, states
+          assert states['half']['phase'] == 0x03, states
+          assert states['raw']['cgadsub'] == 0x00, states
+          assert states['add']['cgadsub'] == 0x01, states
+          assert states['half']['cgadsub'] == 0x41, states
+
+          for name in ('raw', 'add', 'half'):
+              assert states[name]['cgwsel'] == 0x02, states
+              assert states[name]['tm'] == 0x01, states
+              assert states[name]['ts'] == 0x01, states
+              assert states[name]['bg_mode'] == 0x00, states
+              assert states[name]['precision_set'] == 8, states
+
+          assert raw_center not in (0, 1), (raw_center, states)
+
+          all_equal = raw_data == add_data == half_data
+          correct_relation = raw_data == half_data and add_data != raw_data
+
+          if all_equal:
+              classification = 'H_COMP_CONFIRMED_BG_MAIN_SUB_MATH_IGNORED'
+          elif correct_relation:
+              classification = 'H_COMP_BG_MAIN_SUB_PATH_MATCHES_EXPECTED'
+          else:
+              classification = 'H_COMP_BG_MAIN_SUB_INDETERMINATE'
+
+          result = {
+              'classification': classification,
+              'guest_relation_expected_on_correct_snes': 'raw == half; add differs',
+              'sodium64_relation_observed': {
+                  'all_three_equal': all_equal,
+                  'raw_equals_half': raw_data == half_data,
+                  'raw_equals_add': raw_data == add_data,
+                  'add_equals_half': add_data == half_data,
+              },
+              'frame_sha256': {
+                  'raw': raw_sha,
+                  'add': add_sha,
+                  'half': half_sha,
+              },
+              'center_rgba5551': {
+                  'raw': raw_center,
+                  'add': add_center,
+                  'half': half_center,
+              },
+              'states': states,
+          }
+          Path('captures/result.json').write_text(
+              json.dumps(result, indent=2, sort_keys=True) + '\n'
+          )
+          print(json.dumps(result, indent=2, sort_keys=True))
+          assert classification == 'H_COMP_CONFIRMED_BG_MAIN_SUB_MATH_IGNORED', result
+          PY
+
+      - name: Upload BG H-COMP semantic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-h-comp-bg-main-sub-evidence
+          retention-days: 30
+          path: |
+            captures/
+            diagnostic/guest.sha256
+            workload/guest.sha256
+            workload/gate-c-h-comp-bg.smc
+            ares-version.txt
+            sodium64-build.log

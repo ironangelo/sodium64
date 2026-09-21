@@ -212,8 +212,8 @@ table_loop:
     addi t1, t1, 16
 
     // E2b proof: start the first real screen traversal on the compact
-    // 280x8 RGB16 sub-screen target. Global y=8 maps to scratch row 0.
-    li t0, 0x000E2E80 // 0xE4000 - 8*560
+    // 280x8 RGB16 sub-screen target. Global y=16 maps to scratch row 0.
+    li t0, 0x000E1D00 // 0xE4000 - 16*560
     lw t1, PALETTE_PTR(sp)
     sw t0, RDP_FRAME + 4
     sw t1, RDP_FRAME + 12

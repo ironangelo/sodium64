@@ -1,16 +1,16 @@
-name: Gate C H-COMP E1d RGB555 Saturating-Add Proof
+name: Gate C H-COMP E1f RGB555 Half-Add Proof
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e1d-color-add-kernel
+      - phase4/gate-c-h-comp-e1f-half-add-kernel
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e1d-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e1f-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
-      - name: Validate deterministic E1d carrier guest
+      - name: Validate deterministic E1f carrier guest
         shell: bash
         run: |
           set -euo pipefail
@@ -37,13 +37,13 @@ jobs:
             scripts/make_gate_c_h_comp_e1_z_tag.py \
             scripts/gate_c_h_comp_e1_z_tag_capture_n64.py
           mkdir -p diagnostic
-          python3 scripts/make_gate_c_h_comp_e1_z_tag.py diagnostic/e1d-a.smc
-          python3 scripts/make_gate_c_h_comp_e1_z_tag.py diagnostic/e1d-b.smc
-          cmp diagnostic/e1d-a.smc diagnostic/e1d-b.smc
-          test "$(stat -c %s diagnostic/e1d-a.smc)" -eq 32768
-          sha256sum diagnostic/e1d-a.smc | tee diagnostic/guest.sha256
+          python3 scripts/make_gate_c_h_comp_e1_z_tag.py diagnostic/e1f-a.smc
+          python3 scripts/make_gate_c_h_comp_e1_z_tag.py diagnostic/e1f-b.smc
+          cmp diagnostic/e1f-a.smc diagnostic/e1f-b.smc
+          test "$(stat -c %s diagnostic/e1f-a.smc)" -eq 32768
+          sha256sum diagnostic/e1f-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build exact E1d proof runtime
+      - name: Build exact E1f proof runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -54,24 +54,24 @@ jobs:
           sha256sum sodium64.z64 build/sodium64.elf | tee build-sha256.txt
           grep -E '(^|[[:space:]])(text|\.text)' build/rsp_main.map || true
 
-      - name: Wrap exact E1d carrier guest
+      - name: Wrap exact E1f carrier guest
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p wrap workload
-          cp diagnostic/e1d-a.smc workload/e1d.smc
+          cp diagnostic/e1f-a.smc workload/e1f.smc
           cp sodium64.z64 wrap/sodium64.z64
           cp rom-converter.py wrap/rom-converter.py
-          cp workload/e1d.smc wrap/e1d.smc
+          cp workload/e1f.smc wrap/e1f.smc
           (cd wrap && python3 rom-converter.py </dev/null)
-          test -s wrap/out/e1d.z64
-          dd if=wrap/out/e1d.z64 of=workload/embedded.smc \
+          test -s wrap/out/e1f.z64
+          dd if=wrap/out/e1f.z64 of=workload/embedded.smc \
             bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
-          cmp workload/e1d.smc workload/embedded.smc
-          sha256sum workload/e1d.smc wrap/out/e1d.z64 | tee workload/hashes.sha256
+          cmp workload/e1f.smc workload/embedded.smc
+          sha256sum workload/e1f.smc wrap/out/e1f.z64 | tee workload/hashes.sha256
           rm workload/embedded.smc
 
-      - name: Locate E1d runtime state
+      - name: Locate E1f runtime state
         shell: bash
         run: |
           set -euo pipefail
@@ -126,13 +126,13 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run fenced RGB555 saturating-add proof
+      - name: Run fenced RGB555 half-add proof
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p captures
-          home="$RUNNER_TEMP/ares-home-e1d"
-          settings="$RUNNER_TEMP/ares-e1d-settings.bml"
+          home="$RUNNER_TEMP/ares-home-e1f"
+          settings="$RUNNER_TEMP/ares-e1f-settings.bml"
           mkdir -p "$home"
 
           HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
@@ -147,7 +147,7 @@ jobs:
               --setting "Developer/DeterministicEntropy=true" \
               --setting "Developer/ForceInterpreter=false" \
               --setting "Boot/AwaitGDBClient=true" \
-              wrap/out/e1d.z64 \
+              wrap/out/e1f.z64 \
               > captures/ares-n64.log 2>&1 &
           pid=$!
           cleanup() {
@@ -163,17 +163,17 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E1d evidence
+      - name: Upload E1f evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e1d-rgb555-sat-add-evidence
+          name: gate-c-h-comp-e1f-rgb555-half-add-evidence
           retention-days: 30
           path: |
             captures/
             diagnostic/guest.sha256
             workload/hashes.sha256
-            workload/e1d.smc
+            workload/e1f.smc
             ares-version.txt
             sodium64-build.log
             build-sha256.txt

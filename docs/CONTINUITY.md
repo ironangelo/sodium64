@@ -22,72 +22,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Pinned SNES reference semantics establish per-channel RGB5 arithmetic with clipping. Brightness is conceptually later than the main/sub arithmetic.
 - A production design must still solve operand preservation, selection/gating, half rules, windows, throughput, and integration. The scalar proof kernels below are semantic discriminators, **not production compositor architecture**.
 
-### ACTIVE / RESUME HERE — E2a CLOSED; next discriminator is E2b real-traversal target switch
-- **E2a CLOSED / VALIDATED** on `phase4/gate-c-h-comp-e2a-color-strip-reuse@67c18c9ab4baf7531db8384eef8df59e9641ab86`.
-- Exact semantic run **`35657048671 SUCCESS`**; evidence artifact **`10665172832`**, digest **`sha256:043f5f76ec87fed5603e6289e7d3617fde147227139f4618de8b3b7c13133471`**, inspected directly.
-- Classifier: **`E2A_COLOR_STRIP_REUSE_VALIDATED / passed=true`**. E1c Z control simultaneously remains **VALIDATED**.
-- Color strip is exactly **280×8 RGB16 = 4,480 B / 2,240 words**. Band A archive contains 2,048 expected active black words + 192 sentinel words; reused Band B contains 2,048 expected green words + 192 sentinels; **0 stale A words**, no mismatches.
-- Color prefix/suffix guards are intact. Main-frame snapshots were both written and are **byte-identical before/after**, so the compact Color Image proof did not mutate the real main framebuffer.
-- Capture is fresh/quiescent: baseline counter **7 -> 8** (`delta=1`), `SP_STATUS=1`, `DP_STATUS=129` with busy mask clear, capture-ready `0x8000AAF8`.
-- Exact-head generic **Build and Validate `35657048665 SUCCESS`**. Candidate runtime `0f588c69...` measures RSP `.text=0xFB8=4024 B`, **72 B IMEM free**.
-- Important closed blocker: failing E2a head `0bb47e8a...` exposed `e2a_fill_strip: move s3,ra` as the delay slot of `dma_wait: jr ra`; one explicit `nop` at `0f588c69...` fixed the first-task hang. Direct scratch/profile collision and profiler-decoder failure are **REJECTED** as primary explanations.
-- **Meaning:** in the pinned virtual lab, one compact RGB16 Color Image strip can be rebased to different global-y bands and physically reused inside a frame under explicit DP/RSP fencing while preserving the real main target.
-- **Does NOT prove:** that the existing real BG/OBJ traversal can switch between full main and compact second-screen targets, shared-layer semantics, sections longer than the strip, compositor arithmetic over renderer-produced operands, throughput, or real-N64 bus/cadence.
-- **Immediate next action:** E2b should isolate only the real traversal target-switch question using a no-shared carrier: BG1 main-only (`TM=0x01`) and BG2 sub-only (`TS=0x02`), with one short 8-row section so compact-band slicing is not yet another variable. Preserve E2a as frozen evidence.
-- Status: **GATE DRIVER / ARCHITECTURE PROOF — E2a VALIDATED; E2b NEXT**.
-
-### E2b precommit — real renderer traversal into distinct main/compact targets; NO code yet
-- **Question:** can Sodium64's existing real regular-BG traversal render one SNES screen into the normal framebuffer and the second SNES screen into the compact 280×8 RGB16 target, using the existing first-screen→second-screen boundary rather than synthetic RDP fills?
-- **Carrier guest:** derive from the deterministic E1b/E2a Mode-0 guest, but use **no shared layers**: `TM=0x01` (BG1 main-only), `TS=0x02` (BG2 sub-only). BG1 remains black/transparent checkerboard; BG2 remains opaque green. This keeps both outputs visually and structurally distinguishable.
-- **Carrier vertical scope:** materialize exactly one 8-row active section (planned global renderer rows **8..15**) so band slicing/reuse over a long section is explicitly **not** part of E2b.
-- `write_tm`/`write_ts` call ordinary `update_frame`, which is cooldown-sensitive. To make both carrier boundaries deterministic without changing global precision, pair the HDMA state changes with an otherwise-inert **WH0 write while windows are disabled**. The integrated WH urgent path sets `sect_status=0x100`; because section creation precedes HDMA on each line, the HDMA table must be scheduled one scanline before the desired new section start. Verify the captured section queue rather than trusting this timing derivation.
-- **Boundary under test:** current RSP already packs first/second screen masks into `s7` and switches traversal at `srl s7,s7,8`. E2b should switch only Color Image ownership/fencing at that natural boundary; it must not clone `next_layer` or build a second renderer.
-- E2b intentionally avoids shared-layer semantics. Current code removes `first & second` from the first traversal; that workaround is irrelevant with BG1-only/BG2-only and will be tested separately after target separation works.
-- **Target convention:** E2a validated `target_base - band_start*560`; for rows 8..15 the compact Color Image base is therefore `0x000E2E80` for physical scratch `0xA00E4000`. Preserve existing global tile/scissor coordinates.
-- **Precommitted oracle:** main target rows 8..15 must contain only the BG1 carrier result expected from the existing guest; compact target rows 8..15 must contain BG2 green across the active x-range with untouched sentinels outside it. The two targets must be observably different; cross-target leakage, stale data or framebuffer mutation outside the carrier fails.
-- Keep the established E1/E2 capture authority: explicit DP completion before readback/restore, fresh guest frame, RSP HALT, DP idle, guards around compact target, and exact section-queue capture proving `TM=01 / TS=02` on the carrier.
-- **Falsifier:** real BG traversal produces wrong physical rows/stride under compact Color Image rebasing, target switch corrupts normal framebuffer/state, or correct separation requires invasive duplicate traversal logic. Any of these rejects this compact-target production direction before compositor integration.
-- **Not in E2b:** long-section band loop, OBJ, shared TM+TS layers, color math arithmetic/gating, raw palette/brightness redesign, Window 2, PR #13 overlays, throughput/cadence claims or master integration.
-- Classification: **ARCHITECTURE PROOF / PRECOMMITTED**.
-
-### E2b batch 1 — validation branch created from frozen E2a evidence
-- New validation-only branch **`phase4/gate-c-h-comp-e2b-real-target-switch`** created exactly from E2a validated head **`67c18c9ab4baf7531db8384eef8df59e9641ab86`**.
-- No code changed in this batch. E2a artifact/run remain the frozen parent evidence.
-- Next controlled delta: change only the deterministic carrier guest to create the no-shared 8-row TM/TS section and verify its captured section queue before any RSP target-switch edit.
-- Classification: **ARCHITECTURE PROOF / CANDIDATE**.
-
-### E2b batch 1 — runtime target switch IMPLEMENTED, guest/oracle still unchanged
-- E2b branch advanced to **`phase4/gate-c-h-comp-e2b-real-target-switch@af1ad807b3a2890e8f60501e2bffc2e834f4d65a`**.
-- Runtime-only delta:
-  - frame start programs `RDP_FRAME.address=0x000E2E80`, mapping global y=8 onto compact RGB16 scratch `0xA00E4000`;
-  - at the existing real `TS -> TM` traversal boundary, only when `k0==0`, `RDP_FRAME` is switched back to `FRAMEBUFFER(sp)-8*560` before the second screen traversal;
-  - later sections keep the real framebuffer target and therefore retain the historical traversal behavior;
-  - E2a's consumed synthetic fill/copy proof block and E2a-only DMA helpers were removed; the end-of-frame DP fence + proof marker/pointer publication remain.
-- No TM/TS masks, shared-layer suppression, tile renderer, cache behavior, section producer, guest ROM or host classifier changed in this batch.
-- This commit intentionally cannot yet prove E2b semantics because the inherited guest still has both BGs on main and no real 8-line section. Its first authority is **compile/IMEM/boot only**.
-- **Next:** inspect exact-head Build/Validate and RSP map. If generic green, then change only the deterministic carrier + E2b host oracle to exercise BG1 main-only red / BG2 sub-only green with a WH0-created 8-line section.
-- Classification: **IMPLEMENTED / CANDIDATE**, semantic evidence not yet meaningful.
-
-### E2b precommit — real renderer target switch, one variable only
-- **Purpose / GATE DRIVER:** move from E2a's synthetic RDP Color Image proof to the existing real BG traversal. E2b asks only whether Sodium64's already-existing TS→TM dual traversal can render the first screen into the compact RGB16 operand strip, switch Color Image at the natural `srl s7,s7,8` boundary, then render the second screen into the normal framebuffer.
-- Planned child branch: **`phase4/gate-c-h-comp-e2b-real-target-switch`**, based exactly on E2a validated head `67c18c9ab4baf7531db8384eef8df59e9641ab86`. E2a remains frozen evidence.
-- Deterministic carrier change is deliberately no-shared:
-  - BG1 = fully opaque **red**, `TM=0x01` (main only);
-  - BG2 = fully opaque **green**, `TS=0x02` (sub only);
-  - no OBJ, no color math, no windows affecting pixels.
-- The carrier will use harmless WH0 HDMA solely to create a **real first section of 8 visible lines**: WH0 stays 0 for the first 8 lines, changes to 1 at line 8, then remains 1. Because WH0 is already validated raster-urgent on current master lineage, this produces a true section boundary without inventing `k0/k1` in the proof runtime.
-- Default `layer_set=0` makes the current RSP traverse **TS first, TM second**. Therefore E2b can keep mask semantics untouched: first/sub traversal -> compact target, boundary switch -> second/main traversal -> normal framebuffer.
-- Compact target reuses validated E2a geometry: `0xA00E4000`, 280×8×2 = `0x1180` B, programmed as `0x000E2E80 = scratch - 8*560` under the renderer's existing global-coordinate convention.
-- Expected raw output for the first section:
-  - compact/sub active x=12..267: **RGBA5551 green `0x07C1`**, 2,048 words;
-  - compact horizontal borders: untouched `0x55AA` sentinel, 192 words; prefix/suffix guards intact;
-  - normal/main active x=12..267: **RGBA5551 red `0xF801`**, 2,048 words.
-- Runtime delta must be minimal: remove E2a's now-consumed synthetic next-frame proof machinery, start the frame's Color Image on the compact target for the first section, and on the first real screen-pass boundary switch `RDP_FRAME` back to `FRAMEBUFFER(sp)-8*560`. Later sections remain on the normal target and retain the historical single-target traversal, so band iteration is not introduced here.
-- Host capture keeps the established fresh-frame/quiescent breakpoint contract. It initializes only the compact scratch/guards between frames, then reads the compact strip and the exact proof framebuffer pointer after one fresh frame.
-- **Pass authority:** exact compact green/sentinel contract + intact guards + exact main red active region + fresh guest frame + SP HALT + DP idle. No synthetic fill rectangles are allowed to create these E2b pixels.
-- **Falsifier:** if real traversal cannot produce separated expected operands with this target-only switch, diagnose target command ordering/cache/scissor/state before adding band loops or shared-layer changes.
-- **Explicitly deferred:** sections >8 rows / section→band loop, shared TM+TS layers, arithmetic/compositor, brightness ABI, windows/gating, throughput and real-N64 cost.
-- Classification: **ARCHITECTURE PROOF / PRECOMMITTED / TODO**.
+### ACTIVE / RESUME HERE — E2b PRECOMMITTED; create child branch next
+- **E2a remains CLOSED / VALIDATED** on `phase4/gate-c-h-comp-e2a-color-strip-reuse@67c18c9ab4baf7531db8384eef8df59e9641ab86`; semantic run `35657048671 SUCCESS`, artifact `10665172832`, digest `sha256:043f5f76ec87fed5603e6289e7d3617fde147227139f4618de8b3b7c13133471`. Preserve it as frozen evidence.
+- **NEXT GATE DRIVER / ARCHITECTURE PROOF: E2b real-traversal Color Image target switch.** Planned child branch: `phase4/gate-c-h-comp-e2b-real-target-switch`, based exactly on the validated E2a head above. E2b must replace/reduce E2a proof-only runtime rather than stack more diagnostics onto its 4,024-B RSP text / 72-B IMEM margin.
+- **One-variable carrier:** change the deterministic guest to BG1 main-only (`TM=0x01`) and BG2 sub-only (`TS=0x02`). Thus `shared=0`; the historical shared-layer subtraction is inert and is explicitly deferred to E2c.
+- **Exact 8-row real section without RSP slicing:** program VTIME=8, enable V-IRQ + NMI and `CLI`; native IRQ reads TIMEUP then toggles disabled-window edge WH0 between two values each frame. Sodium64 redirects to the IRQ before `run_line`, executes the guest handler later during line 8, and on line 9 `update_window_frame` forces `make_section`, which stores `cur_line-1 = 8`. With TMW/TSW=0 the WH0 toggle has no visual masking effect. The classifier must confirm a queued section with `SPLIT_LINE=8`, `TM=1`, `TS=2`.
+- **Existing traversal/order is reused, not rewritten:** default `layer_set=0` yields `MASK_SEL=0`, so the current dual traversal draws **TS/sub first, TM/main second**. The normal section backdrop remains on the full main framebuffer. Only for the exact `k0=0,k1=8` section, issue an explicit RDP pipe sync then switch Color Image to the proven compact RGB16 target `0x000E4000 - 8*560 = 0x000E2E80` before the first (sub) traversal. At the existing `srl s7,s7,8` pass boundary, pipe-sync and restore `FRAMEBUFFER(sp) - 8*560` before the second (main) traversal.
+- **Precommitted oracle:** compact active x=12..267 must be 2,048 words of BG2 green `0x07C1`; its 192 horizontal-border words remain sentinel `0x55AA`; prefix/suffix guards remain `0xC3/0x3C`. The corresponding first 280x8 main-frame band must contain only the carrier's BG1 black `0x0001` and backdrop red `0x8001`, with 1,024 active words of each and **zero green `0x07C1`**. Exact checker parity is not the E2b discriminator; separation/counts are.
+- At `next_frame`, use the already-established Sync Full + DP-idle ownership fence before archiving the compact strip/main band for host readback. Reinitialize proof scratch only after archival so the captured result is not destroyed.
+- **Pass means only:** the existing real `next_layer` traversal can render distinct no-shared main/sub operands to full + compact Color Images in one real 8-row raster section, restore main target at the natural screen-pass boundary, and finish quiescently with guards intact.
+- **Falsifier:** wrong/missing `SPLIT_LINE=8`; sub green lands in main or fails to fill compact active pixels; compact borders/guards corrupt; main contains green or loses both black/backdrop populations; target restoration breaks later sections/frame progress; SP/DP cannot reach the established quiescent capture boundary.
+- **Explicitly NOT E2b:** shared-layer membership (E2c), sections longer than the strip/band subloop, compositor arithmetic, raw palette/brightness production plumbing, color-window truth tables, PR #13 overlay integration, throughput or real-N64 cadence claims.
+- Status: **HYPOTHESIS / PRECOMMITTED**. Immediate next action: create the exact child branch, make the guest-only TM/TS + VIRQ/WH0 section-carrier delta first, checkpoint it, then alter the RSP target ownership as a separate technical batch.
 
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.

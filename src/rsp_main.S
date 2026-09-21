@@ -35,7 +35,7 @@ framebuffer: .word FRAMEBUFFER1, FRAMEBUFFER2
 
 rdp_init:
     // RDP commands that only need to run once
-    .dword 0x2F0088FF00040001 // E1 color control: integrated OtherModes; no primitive-depth selection or Z update
+    .dword 0x2F0088FF00040025 // E1 proof: alpha test + primitive depth + Z update; no Z compare
     .dword 0x39000000FFFFFFFF // Set Blend Color
     .dword 0x3510810000000000 // Set Tile (palette)
     .dword 0x3550000001054150 // Set Tile (block)
@@ -170,9 +170,9 @@ main:
     jal rdp_send
     li a1, RDP_FRAME
 
-    // E1 color control: retain the proof slot/layout but do not bind a Z surface.
+    // E1 proof: bind a separate depth surface through the real RDP command path.
     li a0, RDP_TILE7
-    nop
+    jal rdp_send
     li a1, RDP_TILE7 + 8
     li sp, 0 // Frame index
 

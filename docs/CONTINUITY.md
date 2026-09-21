@@ -222,6 +222,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 2 — compact RGB16 strip runtime/classifier IMPLEMENTED; workflow still dormant
+- Exact implementation head **`0bb47e8a0d226eb12946f26be613aceee26b5036`** on `phase4/gate-c-h-comp-e2a-color-strip-reuse`.
+- Runtime extends validated E1c without touching production/master: dedicated `0xA00E4000` 280×8 RGB16 scratch, color guards, band-A color archive, and real-framebuffer before/after snapshots.
+- Band A rebases global y=8..15 to the color scratch and uses opaque black (`0x0001` expected); band B rebases y=16..23 onto the same physical scratch and uses opaque green (`0x07C1` expected). Existing E1c Z metadata rebasing remains active as the control.
+- Normal framebuffer Color Image state is restored and DP-fenced before the after-snapshot. The classifier requires main-before == main-after and initializes those snapshots to different sentinels so a missing copy cannot pass by equality.
+- Proof-only repeated 4,480-byte fill/copy loops were factored into shared helpers to stay within 4 KiB IMEM; no throughput claim can be drawn from these diagnostic DMA copies.
+- Host classifier now requires **both** inherited E1c Z contract and new E2a color contract. Semantic workflow remains E1c-filtered, so E2a cannot accidentally become VALIDATED before exact build/IMEM inspection.
+- **IMPLEMENTED, not validated.** Next: inspect the automatically dispatched exact-head Build/Validate; if IMEM fits and smoke is green, retarget the semantic workflow only.
+
 ### E2a batch 1 — proof branch created from exact validated E1c boundary
 - New validation-only branch **`phase4/gate-c-h-comp-e2a-color-strip-reuse`** created exactly from `994a1fd502f97424e7a5a8dc32e985490b0d39c7`.
 - This intentionally inherits the already validated E1c compact-Z strip, guest, fences and capture boundary. No production/master code changed.

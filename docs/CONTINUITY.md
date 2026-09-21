@@ -22,15 +22,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Pinned SNES reference semantics establish per-channel RGB5 arithmetic with clipping. Brightness is conceptually later than the main/sub arithmetic.
 - A production design must still solve operand preservation, selection/gating, half rules, windows, throughput, and integration. The scalar proof kernels below are semantic discriminators, **not production compositor architecture**.
 
-### ACTIVE / RESUME HERE — E2a compact Color Image strip reuse
-- Validation branch: **`phase4/gate-c-h-comp-e2a-color-strip-reuse@67c18c9ab4baf7531db8384eef8df59e9641ab86`**.
-- Candidate runtime itself is **`0f588c698cd46cc01d618d2eb98e6c3e209f5225`**; `67c18c9a...` adds only semantic-workflow retargeting.
-- **Question:** can a second raw RGB16 screen operand use one compact **280x8** Color Image scratch, rebase that same physical strip to two different global-Y bands within one frame, preserve complete A/B contents + guards, and leave the real main framebuffer byte-identical?
-- Generic runtime is **GREEN / VALIDATED at lab level:** Build and Validate **`35656638964 SUCCESS`**; exact RSP `.text=0xFB8=4024 B` (**72 B free**); normal/profile Mupen reach `PC 0x80009138`; profile 4769 total / 4096 valid samples.
-- Important fixed blocker: failing head `0bb47e8a...` exposed `e2a_fill_strip: move s3,ra` as the delay slot of `dma_wait: jr ra`, corrupting the helper's saved outer return on nested DMA calls. One explicit `nop` fixes it. Do not revisit scratch/profile collision as the primary cause.
-- Semantic workflow **Gate C H-COMP E2a Color Strip-Reuse Proof run `35657048671`** is currently in progress for exact head `67c18c9a...`. Standard Build/Validate `35657048665` is also in progress for the workflow-only head.
-- **Immediate next action:** inspect semantic `35657048671` artifact/result. Pass requires E1c Z control + full color A archive + full reused B strip + intact guards + zero stale A in B + written and equal main-before/main-after snapshots. Classify any red result by failed sub-contract before changing runtime.
-- Status: **GATE DRIVER / ARCHITECTURE PROOF — RUNNING**. No production H-COMP integration yet.
+### ACTIVE / RESUME HERE — E2a CLOSED; next discriminator is E2b real-traversal target switch
+- **E2a CLOSED / VALIDATED** on `phase4/gate-c-h-comp-e2a-color-strip-reuse@67c18c9ab4baf7531db8384eef8df59e9641ab86`.
+- Exact semantic run **`35657048671 SUCCESS`**; evidence artifact **`10665172832`**, digest **`sha256:043f5f76ec87fed5603e6289e7d3617fde147227139f4618de8b3b7c13133471`**, inspected directly.
+- Classifier: **`E2A_COLOR_STRIP_REUSE_VALIDATED / passed=true`**. E1c Z control simultaneously remains **VALIDATED**.
+- Color strip is exactly **280×8 RGB16 = 4,480 B / 2,240 words**. Band A archive contains 2,048 expected active black words + 192 sentinel words; reused Band B contains 2,048 expected green words + 192 sentinels; **0 stale A words**, no mismatches.
+- Color prefix/suffix guards are intact. Main-frame snapshots were both written and are **byte-identical before/after**, so the compact Color Image proof did not mutate the real main framebuffer.
+- Capture is fresh/quiescent: baseline counter **7 -> 8** (`delta=1`), `SP_STATUS=1`, `DP_STATUS=129` with busy mask clear, capture-ready `0x8000AAF8`.
+- Exact-head generic **Build and Validate `35657048665 SUCCESS`**. Candidate runtime `0f588c69...` measures RSP `.text=0xFB8=4024 B`, **72 B IMEM free**.
+- Important closed blocker: failing E2a head `0bb47e8a...` exposed `e2a_fill_strip: move s3,ra` as the delay slot of `dma_wait: jr ra`; one explicit `nop` at `0f588c69...` fixed the first-task hang. Direct scratch/profile collision and profiler-decoder failure are **REJECTED** as primary explanations.
+- **Meaning:** in the pinned virtual lab, one compact RGB16 Color Image strip can be rebased to different global-y bands and physically reused inside a frame under explicit DP/RSP fencing while preserving the real main target.
+- **Does NOT prove:** that the existing real BG/OBJ traversal can switch between full main and compact second-screen targets, shared-layer semantics, sections longer than the strip, compositor arithmetic over renderer-produced operands, throughput, or real-N64 bus/cadence.
+- **Immediate next action:** E2b should isolate only the real traversal target-switch question using a no-shared carrier: BG1 main-only (`TM=0x01`) and BG2 sub-only (`TS=0x02`), with one short 8-row section so compact-band slicing is not yet another variable. Preserve E2a as frozen evidence.
+- Status: **GATE DRIVER / ARCHITECTURE PROOF — E2a VALIDATED; E2b NEXT**.
 
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.

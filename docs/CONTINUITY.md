@@ -222,6 +222,11 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current color-window control transport is already present per section (`CGWSEL/CGADSUB/WOBJSEL/WHx`), but `calc_windows` explicitly supports only Window 1 and has `TODO: support window 2 and combine logic`. The four CGWSEL color-mask modes themselves map coherently onto the existing `FILL_JUMPS` approximation; Window-2/combine fidelity is a separate debt.
 - Mode 7 windows are also explicitly TODO and BG windows currently combine TMW/TSW approximately. These remain Gate-C debts but are not yet the smallest architecture discriminator for H-COMP.
 
+### E2a batch 1 — proof branch created from exact validated E1c boundary
+- New validation-only branch **`phase4/gate-c-h-comp-e2a-color-strip-reuse`** created exactly from `994a1fd502f97424e7a5a8dc32e985490b0d39c7`.
+- This intentionally inherits the already validated E1c compact-Z strip, guest, fences and capture boundary. No production/master code changed.
+- Next controlled delta is the precommitted color-strip scratch/archive + main-before/main-after integrity evidence. E1c Z behavior must remain byte-for-byte semantically equivalent.
+
 ### E2a precommit — compact Color Image strip reuse, exact controlled proof frozen before code
 - **Purpose / GATE DRIVER:** extend validated E1c from compact Z metadata to the missing **RGB16 second-screen operand surface**. This is an architecture proof, not production integration or performance evidence.
 - Planned proof branch: `phase4/gate-c-h-comp-e2a-color-strip-reuse`, based exactly on validated E1c head `994a1fd502f97424e7a5a8dc32e985490b0d39c7`. E1c's Z rebasing/fences remain the control; the only new semantic variable is compact **Color Image** target rebasing/reuse.

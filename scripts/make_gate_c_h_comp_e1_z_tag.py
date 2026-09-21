@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Generate the deterministic original SNES guest for Gate-C E1b winner-tag proof.
+"""Generate the deterministic original SNES guest for Gate-C E2b target switching.
 
-The 32 KiB LoROM renders two Mode-0 backgrounds using alternating character IDs
-to avoid the consecutive-same-tile fast path. BG2 is fully opaque green across
-the active area. BG1 is a transparent/opaque-black checkerboard above it.
-Therefore every active pixel has a deterministic winner: BG1 on black cells and
-BG2 through BG1's transparent holes.
+The 32 KiB LoROM renders two distinct Mode-0 backgrounds with no shared screen
+layers: BG1 is fully opaque red on the main screen and BG2 is fully opaque green
+on the sub screen. A harmless direct-HDMA WH0 stream changes only after the first
+8 visible lines; windows are disabled, so the write exists solely to force the
+already-validated urgent section boundary used by the E2b carrier.
 """
 
 from __future__ import annotations
@@ -23,7 +23,9 @@ BG1_TILEMAP_ADDRESS = 0x9000
 BG2_TILEMAP_ADDRESS = 0x9800
 BG1_TILE_ADDRESS = 0xA000
 BG2_TILE_ADDRESS = 0xA020
+HDMA_WINDOW_TABLE_ADDRESS = 0xB000
 TILEMAP_SIZE = 0x800
+VISIBLE_LINES = 224
 FRAME_COUNTER = 0x7E0000
 
 
@@ -91,6 +93,21 @@ def dma_to_vram(a: Assembler, *, source: int, vram_word: int, length: int) -> No
     lda_sta_abs(a, 0x01, 0x420B)
 
 
+def build_hdma_window_table() -> bytes:
+    # Reuse the proven direct-HDMA form from H-SAMPLE: bit 7 set means one
+    # source byte is transferred on every line in the block.
+    values = bytes([0x00] * 8 + [0x01] * (VISIBLE_LINES - 8))
+    table = bytearray()
+    offset = 0
+    while offset < len(values):
+        count = min(127, len(values) - offset)
+        table.append(0x80 | count)
+        table.extend(values[offset:offset + count])
+        offset += count
+    table.append(0)
+    return bytes(table)
+
+
 def build_program() -> bytes:
     a = Assembler()
     a.emit(0x78, 0x18, 0xFB, 0xD8)  # SEI; CLC; XCE; CLD
@@ -109,21 +126,33 @@ def build_program() -> bytes:
     dma_to_vram(a, source=BG1_TILE_ADDRESS, vram_word=0x1000, length=32)
     dma_to_vram(a, source=BG2_TILE_ADDRESS, vram_word=0x2000, length=32)
 
-    # CGRAM 0: visible medium red backdrop. CGRAM 1: RGB black for BG1.
-    # CGRAM 2: full green for the opaque BG2 underlay.
+    # CGRAM 0: black backdrop. CGRAM 1: full red for opaque BG1.
+    # CGRAM 2: full green for opaque BG2.
     lda_sta_abs(a, 0x00, 0x2121)
-    lda_sta_abs(a, 0x10, 0x2122)    # color 0 low: BGR555 0x0010
+    lda_sta_abs(a, 0x00, 0x2122)    # color 0 low: black
     lda_sta_abs(a, 0x00, 0x2122)    # color 0 high
-    lda_sta_abs(a, 0x00, 0x2122)    # color 1 low: black
+    lda_sta_abs(a, 0x1F, 0x2122)    # color 1 low: red BGR555 0x001F
     lda_sta_abs(a, 0x00, 0x2122)    # color 1 high
     lda_sta_abs(a, 0xE0, 0x2122)    # color 2 low: green BGR555 0x03E0
     lda_sta_abs(a, 0x03, 0x2122)    # color 2 high
 
-    lda_sta_abs(a, 0x03, 0x212C)    # TM: BG1 + BG2 on main
-    lda_sta_abs(a, 0x00, 0x212D)    # TS: no subscreen layers
+    lda_sta_abs(a, 0x01, 0x212C)    # TM: BG1 main-only
+    lda_sta_abs(a, 0x02, 0x212D)    # TS: BG2 sub-only
+    lda_sta_abs(a, 0x00, 0x212E)    # TMW disabled
+    lda_sta_abs(a, 0x00, 0x212F)    # TSW disabled
     lda_sta_abs(a, 0x00, 0x2130)    # CGWSEL
     lda_sta_abs(a, 0x00, 0x2131)    # CGADSUB
     lda_sta_abs(a, 0x00, 0x2133)    # 224-line mode / centered 8px border
+
+    # Harmless WH0 HDMA creates one urgent section boundary after the first
+    # 8 visible lines. Window enables remain zero, so WH0 cannot mask pixels.
+    lda_sta_abs(a, 0x00, 0x2126)
+    lda_sta_abs(a, 0x00, 0x4300)    # direct HDMA, mode 0
+    lda_sta_abs(a, 0x26, 0x4301)    # WH0
+    lda_sta_abs(a, HDMA_WINDOW_TABLE_ADDRESS & 0xFF, 0x4302)
+    lda_sta_abs(a, (HDMA_WINDOW_TABLE_ADDRESS >> 8) & 0xFF, 0x4303)
+    lda_sta_abs(a, 0x00, 0x4304)    # bank 00
+    lda_sta_abs(a, 0x01, 0x420C)    # enable HDMA channel 0
 
     lda_sta_long(a, 0x00, FRAME_COUNTER)
     lda_sta_abs(a, 0x0F, 0x2100)    # full brightness, display on
@@ -158,11 +187,8 @@ def build_tilemap() -> bytes:
 
 
 def build_bg1_tile() -> bytes:
-    # 2bpp checkerboard: palette index 0 is transparent, index 1 is black.
-    rows = []
-    for y in range(8):
-        rows.extend((0xAA if (y & 1) == 0 else 0x55, 0x00))
-    return bytes(rows)
+    # 2bpp solid palette index 1: plane 0 set, plane 1 clear.
+    return bytes((0xFF, 0x00) * 8)
 
 
 def build_bg2_tile() -> bytes:
@@ -179,10 +205,12 @@ def build_rom() -> bytes:
     tilemap = build_tilemap()
     bg1_tiles = build_bg1_tile() * 2
     bg2_tiles = build_bg2_tile() * 2
+    hdma_table = build_hdma_window_table()
     bg1_map_offset = BG1_TILEMAP_ADDRESS - LOAD_ADDRESS
     bg2_map_offset = BG2_TILEMAP_ADDRESS - LOAD_ADDRESS
     bg1_tile_offset = BG1_TILE_ADDRESS - LOAD_ADDRESS
     bg2_tile_offset = BG2_TILE_ADDRESS - LOAD_ADDRESS
+    hdma_table_offset = HDMA_WINDOW_TABLE_ADDRESS - LOAD_ADDRESS
 
     if len(program) > bg1_map_offset:
         raise ValueError("program overlaps BG1 tilemap")
@@ -192,8 +220,10 @@ def build_rom() -> bytes:
         raise ValueError("BG2 tilemap overlaps BG1 tiles")
     if bg1_tile_offset + len(bg1_tiles) > bg2_tile_offset:
         raise ValueError("BG1 tiles overlap BG2 tiles")
-    if bg2_tile_offset + len(bg2_tiles) >= HEADER:
-        raise ValueError("BG2 tiles overlap header")
+    if bg2_tile_offset + len(bg2_tiles) > hdma_table_offset:
+        raise ValueError("BG2 tiles overlap HDMA table")
+    if hdma_table_offset + len(hdma_table) >= HEADER:
+        raise ValueError("HDMA table overlaps header")
 
     rom = bytearray([0xEA]) * ROM_SIZE
     rom[:len(program)] = program
@@ -201,8 +231,9 @@ def build_rom() -> bytes:
     rom[bg2_map_offset:bg2_map_offset + len(tilemap)] = tilemap
     rom[bg1_tile_offset:bg1_tile_offset + len(bg1_tiles)] = bg1_tiles
     rom[bg2_tile_offset:bg2_tile_offset + len(bg2_tiles)] = bg2_tiles
+    rom[hdma_table_offset:hdma_table_offset + len(hdma_table)] = hdma_table
 
-    rom[HEADER:HEADER + 21] = b"S64 E1B WIN TAG".ljust(21, b" ")
+    rom[HEADER:HEADER + 21] = b"S64 E2B TARGET".ljust(21, b" ")
     rom[0x7FD5] = 0x20               # LoROM
     rom[0x7FD6] = 0x00
     rom[0x7FD7] = 0x05

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2a compact Color Image + Z strip reuse proof."""
+"""Capture/classify Gate-C E2b real TS/TM target-separation proof."""
 
 from __future__ import annotations
 
@@ -54,6 +54,9 @@ BG1_TAG_WORD = 0x0C00
 BG2_TAG_WORD = 0x1400
 BG1_BLACK_RGBA5551 = 0x0001
 BG2_GREEN_RGBA5551 = 0x07C1
+E2B_MAIN_RED_RGBA5551 = 0xF801
+E2B_MAIN_ROW0 = 8
+E2B_MAIN_ROW1 = 16
 
 E1C_Z_SCRATCH_ADDR = 0xA00C0000
 E1C_Z_SCRATCH_SIZE = 0x1180
@@ -280,6 +283,122 @@ def classify_e2b_carrier_sections(
         "matching_queues": matches,
         "expected_records": expected,
         "queues": observations,
+    }
+
+
+def classify_e2b_target_separation(
+    queue1: bytes,
+    queue2: bytes,
+    color_final: bytes,
+    color_prefix_guard: bytes,
+    color_suffix_guard: bytes,
+    framebuffer: bytes,
+) -> dict[str, object]:
+    carrier = classify_e2b_carrier_sections(queue1, queue2)
+
+    def words(data: bytes) -> list[int]:
+        return [
+            int.from_bytes(data[i:i + 2], "big")
+            for i in range(0, len(data), 2)
+        ]
+
+    compact_words = words(color_final)
+    compact_wrong: list[dict[str, int]] = []
+    for index, actual in enumerate(compact_words):
+        y, x = divmod(index, FB_WIDTH)
+        active = E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1
+        expected = BG2_GREEN_RGBA5551 if active else SENTINEL_WORD
+        if actual != expected and len(compact_wrong) < 64:
+            compact_wrong.append({
+                "x": x,
+                "y": y,
+                "actual": actual,
+                "expected": expected,
+            })
+
+    expected_active = (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) * E1C_ROWS
+    expected_border = (
+        FB_WIDTH - (E1C_ACTIVE_X1 - E1C_ACTIVE_X0)
+    ) * E1C_ROWS
+    compact_hist = collections.Counter(compact_words)
+    prefix_ok = color_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+    suffix_ok = color_suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
+
+    framebuffer_words = words(framebuffer)
+    main_wrong: list[dict[str, int]] = []
+    main_active_words: list[int] = []
+    for y in range(E2B_MAIN_ROW0, E2B_MAIN_ROW1):
+        row = framebuffer_words[y * FB_WIDTH:(y + 1) * FB_WIDTH]
+        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
+            actual = row[x]
+            main_active_words.append(actual)
+            if actual != E2B_MAIN_RED_RGBA5551 and len(main_wrong) < 64:
+                main_wrong.append({
+                    "x": x,
+                    "y": y,
+                    "actual": actual,
+                    "expected": E2B_MAIN_RED_RGBA5551,
+                })
+    main_hist = collections.Counter(main_active_words)
+
+    compact_passed = (
+        len(compact_words) == FB_WIDTH * E1C_ROWS
+        and not compact_wrong
+        and compact_hist[BG2_GREEN_RGBA5551] == expected_active
+        and compact_hist[SENTINEL_WORD] == expected_border
+        and prefix_ok
+        and suffix_ok
+    )
+    main_passed = (
+        len(main_active_words) == expected_active
+        and not main_wrong
+        and main_hist[E2B_MAIN_RED_RGBA5551] == expected_active
+        and main_hist[BG2_GREEN_RGBA5551] == 0
+    )
+    pixels_passed = compact_passed and main_passed
+    passed = bool(carrier["passed"] and pixels_passed)
+
+    return {
+        "classification": (
+            "E2B_REAL_TARGET_SEPARATION_VALIDATED"
+            if passed
+            else "E2B_REAL_TARGET_SEPARATION_FAILED"
+        ),
+        "passed": passed,
+        "carrier": carrier,
+        "pixel_contract": {
+            "passed": pixels_passed,
+            "constants": {
+                "width": FB_WIDTH,
+                "compact_rows": E1C_ROWS,
+                "compact_address": hex(E2A_COLOR_SCRATCH_ADDR),
+                "compact_size": E2A_COLOR_SCRATCH_SIZE,
+                "compact_active_x0": E1C_ACTIVE_X0,
+                "compact_active_x1_exclusive": E1C_ACTIVE_X1,
+                "compact_color": hex(BG2_GREEN_RGBA5551),
+                "compact_border": hex(SENTINEL_WORD),
+                "main_row0": E2B_MAIN_ROW0,
+                "main_row1_exclusive": E2B_MAIN_ROW1,
+                "main_color": hex(E2B_MAIN_RED_RGBA5551),
+                "expected_active_words": expected_active,
+                "expected_border_words": expected_border,
+            },
+            "compact": {
+                "passed": compact_passed,
+                "active_green_words": compact_hist[BG2_GREEN_RGBA5551],
+                "sentinel_border_words": compact_hist[SENTINEL_WORD],
+                "prefix_guard_ok": prefix_ok,
+                "suffix_guard_ok": suffix_ok,
+                "mismatches": compact_wrong,
+            },
+            "main": {
+                "passed": main_passed,
+                "active_red_words": main_hist[E2B_MAIN_RED_RGBA5551],
+                "active_green_words": main_hist[BG2_GREEN_RGBA5551],
+                "active_words": len(main_active_words),
+                "mismatches": main_wrong,
+            },
+        },
     }
 
 
@@ -633,12 +752,18 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # Carrier-gate authority is intentionally section-only. E2b removed
-        # E2a's synthetic fill/archive runtime, so those old E2a pixel oracles
-        # are no longer valid pass criteria here. Pixel buffers are still
-        # captured for later inspection, but must not be interpreted until
-        # this geometry discriminator is green.
-        result = classify_e2b_carrier_sections(section_queue1, section_queue2)
+        # E2b authority combines the already-validated carrier geometry with
+        # the exact same-SHA pixel contract measured after correcting the compact
+        # Color Image base. This remains host-only validation: runtime and guest
+        # produce the evidence; the classifier only asserts the frozen oracle.
+        result = classify_e2b_target_separation(
+            section_queue1,
+            section_queue2,
+            color_final_b,
+            color_prefix_guard,
+            color_suffix_guard,
+            framebuffer,
+        )
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),
@@ -651,7 +776,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2b carrier-section classifier failed; see result.json")
+            raise RuntimeError("E2b target-separation classifier failed; see result.json")
 
         try:
             client.request("D")

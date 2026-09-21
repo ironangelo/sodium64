@@ -543,7 +543,7 @@ def main() -> int:
         # after observing SP_STATUS.HALT, so both producer and DP can be checked
         # at a deterministic between-frame boundary rather than a timed host poll.
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E2a clean-epoch breakpoint")
+        validate_stop(client.request("c"), "E2b clean-epoch breakpoint")
         anchor = read_quiescent_state(client)
         validate_quiescent_state(anchor, require_marker=True)
 
@@ -554,9 +554,9 @@ def main() -> int:
         # Step over the breakpoint once, reinstall it behind the PC, and let one
         # complete subsequent RSP frame reach the same quiescent boundary.
         set_breakpoint(client, args.capture_ready_address, False)
-        validate_stop(client.request("s"), "E2a breakpoint step-over")
+        validate_stop(client.request("s"), "E2b breakpoint step-over")
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "E2a fenced capture breakpoint")
+        validate_stop(client.request("c"), "E2b fenced capture breakpoint")
 
         quiescent = read_quiescent_state(client)
         validate_quiescent_state(quiescent, require_marker=True)
@@ -633,26 +633,12 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        result = classify_e2a(
-            archive_a,
-            final_b,
-            prefix_guard,
-            suffix_guard,
-            color_archive_a,
-            color_final_b,
-            color_prefix_guard,
-            color_suffix_guard,
-            main_before,
-            main_after,
-        )
-        carrier = classify_e2b_carrier_sections(section_queue1, section_queue2)
-        result["e2b_carrier_section"] = carrier
-        result["passed"] = bool(result["passed"] and carrier["passed"])
-        result["classification"] = (
-            "E2B_CARRIER_SECTION_VALIDATED"
-            if result["passed"]
-            else "E2B_CARRIER_SECTION_FAILED"
-        )
+        # Carrier-gate authority is intentionally section-only. E2b removed
+        # E2a's synthetic fill/archive runtime, so those old E2a pixel oracles
+        # are no longer valid pass criteria here. Pixel buffers are still
+        # captured for later inspection, but must not be interpreted until
+        # this geometry discriminator is green.
+        result = classify_e2b_carrier_sections(section_queue1, section_queue2)
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),

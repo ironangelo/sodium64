@@ -1108,12 +1108,16 @@ e1_dp_wait:
     nop
 
     // Publish proof completion only after the DP fence above has passed.
+    // Include the exact framebuffer target for the frame that just completed;
+    // the CPU-visible presentation pointer is not authoritative under triple buffering.
     li t0, 0xE1F00D01
     sw t0, TEXTURE
+    lw t1, FRAMEBUFFER(sp)
+    sw t1, TEXTURE + 4
     li a0, TEXTURE
     li a1, 0xA00E1000
     jal dma_write
-    li a2, 3
+    li a2, 7
 
     // Halt until the next frame can be drawn
     li t0, 0x2 // Set halt

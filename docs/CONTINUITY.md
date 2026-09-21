@@ -58,6 +58,11 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Meaning:** independent-channel RGB555 `max(A-B,0)` semantics are dynamically proven in the same pinned lab and same memory/fence contract as E1d.
 - **Not proven:** half-color semantics, CGADSUB selection/gating, window/color-window interaction, fixed-color special cases, production raw operand plumbing, vector throughput, or real-N64 performance.
 
+### E1g batch 1 — child branch created from exact validated E1e subtraction boundary
+- New validation-only branch **`phase4/gate-c-h-comp-e1g-half-sub-kernel`** created exactly from E1e validated head `3c4972f4e58ab89b8e8a2628ca322d353c069049`.
+- Rationale: half-sub is cleanly isolated against the already validated floor-at-zero subtraction path. Same 16 A/B operands, `0xA00E2000..20FF` proof memory, DMA staging, guards and capture boundary are inherited unchanged.
+- E1e and E1f remain frozen validated evidence. Next controlled change is exactly the precommitted packed half-sub arithmetic + E1g expected oracle/classifier; no gating/window work in this branch.
+
 ### E1g implementation precommit — exact packed MIPS sequence frozen, still NO branch/code
 - If E1f validates, E1g should branch from validated E1e subtraction head `3c4972f4...`, preserving the same proof memory/DMA/fences/oracle harness and changing only subtraction arithmetic + expected outputs.
 - Proposed scalar RSP sequence mirrors pinned ares literally for each `x=A, y=B`: `diff=x-y+0x8420`; `borrow=(diff-((x^y)&0x8420))&0x8420`; `base=(diff-borrow)&(borrow-(borrow>>5))`; `out=(base&0x7BDE)>>1`.

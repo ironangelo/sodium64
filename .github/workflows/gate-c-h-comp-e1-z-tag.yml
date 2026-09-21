@@ -79,13 +79,18 @@ jobs:
           symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
           wram=$(symbol wram)
           framebuffer=$(symbol framebuffer)
+          rsp_wait=$(symbol rsp_wait)
           test -n "$wram"
           test -n "$framebuffer"
+          test -n "$rsp_wait"
+          capture_ready=$(printf '%08x' "$((16#$rsp_wait + 0x10))")
           {
             echo "GUEST_COUNTER_ADDR=0x$wram"
             echo "FRAMEBUFFER_ADDR=0x$framebuffer"
+            echo "CAPTURE_READY_ADDR=0x$capture_ready"
           } | tee -a "$GITHUB_ENV"
-          printf 'wram=0x%s framebuffer=0x%s\n' "$wram" "$framebuffer"
+          printf 'wram=0x%s framebuffer=0x%s rsp_wait=0x%s capture_ready=0x%s\n' \
+            "$wram" "$framebuffer" "$rsp_wait" "$capture_ready"
 
       - name: Install pinned ares dependencies
         run: |
@@ -152,6 +157,7 @@ jobs:
             --port 9149 \
             --guest-counter-address "$GUEST_COUNTER_ADDR" \
             --framebuffer-address "$FRAMEBUFFER_ADDR" \
+            --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
       - name: Upload E1a evidence

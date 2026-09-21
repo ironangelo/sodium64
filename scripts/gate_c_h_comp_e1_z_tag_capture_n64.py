@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2b real TS/TM target-separation proof."""
+"""Capture/classify Gate-C E2c shared-layer suppression baseline proof."""
 
 from __future__ import annotations
 
@@ -232,7 +232,7 @@ def decode_section_queue(data: bytes) -> list[dict[str, int]]:
     return records
 
 
-def classify_e2b_carrier_sections(
+def classify_e2c_carrier_sections(
     queue1: bytes,
     queue2: bytes,
 ) -> dict[str, object]:
@@ -242,8 +242,8 @@ def classify_e2b_carrier_sections(
     }
 
     expected = [
-        {"index": 0, "wh0": 0x00, "ts": 0x02, "tm": 0x01, "split_line": 8},
-        {"index": 1, "wh0": 0x01, "ts": 0x02, "tm": 0x01, "split_line": 224},
+        {"index": 0, "wh0": 0x00, "ts": 0x01, "tm": 0x01, "split_line": 8},
+        {"index": 1, "wh0": 0x01, "ts": 0x01, "tm": 0x01, "split_line": 224},
     ]
 
     matches: list[str] = []
@@ -275,9 +275,9 @@ def classify_e2b_carrier_sections(
     passed = bool(matches)
     return {
         "classification": (
-            "E2B_CARRIER_SECTION_VALIDATED"
+            "E2C_SHARED_CARRIER_VALIDATED"
             if passed
-            else "E2B_CARRIER_SECTION_FAILED"
+            else "E2C_SHARED_CARRIER_FAILED"
         ),
         "passed": passed,
         "matching_queues": matches,
@@ -286,7 +286,7 @@ def classify_e2b_carrier_sections(
     }
 
 
-def classify_e2b_target_separation(
+def classify_e2c_shared_baseline(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -294,7 +294,7 @@ def classify_e2b_target_separation(
     color_suffix_guard: bytes,
     framebuffer: bytes,
 ) -> dict[str, object]:
-    carrier = classify_e2b_carrier_sections(queue1, queue2)
+    carrier = classify_e2c_carrier_sections(queue1, queue2)
 
     def words(data: bytes) -> list[int]:
         return [
@@ -307,7 +307,7 @@ def classify_e2b_target_separation(
     for index, actual in enumerate(compact_words):
         y, x = divmod(index, FB_WIDTH)
         active = E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1
-        expected = BG2_GREEN_RGBA5551 if active else SENTINEL_WORD
+        expected = BG1_BLACK_RGBA5551 if active else SENTINEL_WORD
         if actual != expected and len(compact_wrong) < 64:
             compact_wrong.append({
                 "x": x,
@@ -344,7 +344,7 @@ def classify_e2b_target_separation(
     compact_passed = (
         len(compact_words) == FB_WIDTH * E1C_ROWS
         and not compact_wrong
-        and compact_hist[BG2_GREEN_RGBA5551] == expected_active
+        and compact_hist[BG1_BLACK_RGBA5551] == expected_active
         and compact_hist[SENTINEL_WORD] == expected_border
         and prefix_ok
         and suffix_ok
@@ -360,9 +360,9 @@ def classify_e2b_target_separation(
 
     return {
         "classification": (
-            "E2B_REAL_TARGET_SEPARATION_VALIDATED"
+            "E2C_SHARED_BASELINE_VALIDATED"
             if passed
-            else "E2B_REAL_TARGET_SEPARATION_FAILED"
+            else "E2C_SHARED_BASELINE_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
@@ -375,7 +375,7 @@ def classify_e2b_target_separation(
                 "compact_size": E2A_COLOR_SCRATCH_SIZE,
                 "compact_active_x0": E1C_ACTIVE_X0,
                 "compact_active_x1_exclusive": E1C_ACTIVE_X1,
-                "compact_color": hex(BG2_GREEN_RGBA5551),
+                "compact_color": hex(BG1_BLACK_RGBA5551),
                 "compact_border": hex(SENTINEL_WORD),
                 "main_row0": E2B_MAIN_ROW0,
                 "main_row1_exclusive": E2B_MAIN_ROW1,
@@ -385,7 +385,7 @@ def classify_e2b_target_separation(
             },
             "compact": {
                 "passed": compact_passed,
-                "active_green_words": compact_hist[BG2_GREEN_RGBA5551],
+                "active_black_words": compact_hist[BG1_BLACK_RGBA5551],
                 "sentinel_border_words": compact_hist[SENTINEL_WORD],
                 "prefix_guard_ok": prefix_ok,
                 "suffix_guard_ok": suffix_ok,
@@ -752,11 +752,11 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2b authority combines the already-validated carrier geometry with
-        # the exact same-SHA pixel contract measured after correcting the compact
-        # Color Image base. This remains host-only validation: runtime and guest
-        # produce the evidence; the classifier only asserts the frozen oracle.
-        result = classify_e2b_target_separation(
+        # E2c baseline authority keeps the E2b target-switch runtime frozen and
+        # measures the historical shared-layer suppression before any RSP fix.
+        # With BG1 shared on TM+TS, the first compact pass must contain only the
+        # black backdrop while the second/main pass contains opaque red BG1.
+        result = classify_e2c_shared_baseline(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -776,7 +776,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2b target-separation classifier failed; see result.json")
+            raise RuntimeError("E2c shared baseline classifier failed; see result.json")
 
         try:
             client.request("D")

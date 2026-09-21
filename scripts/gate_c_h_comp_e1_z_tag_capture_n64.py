@@ -67,6 +67,8 @@ def wait_for_proof(
     guest_counter_address: int,
     poll_seconds: float,
     attempts: int,
+    minimum_counter: int | None = None,
+    baseline_counter: int | None = None,
 ) -> dict[str, int]:
     for attempt in range(1, attempts + 1):
         validate_stop(
@@ -75,12 +77,23 @@ def wait_for_proof(
         )
         counter = read_u(client, guest_counter_address, 1)
         marker = read_u(client, STATUS_ADDR, 4)
+        delta = None if baseline_counter is None else ((counter - baseline_counter) & 0xFF)
         print(
             f"poll {attempt}: guest_counter=0x{counter:02X} "
-            f"status=0x{marker:08X}"
+            f"delta={delta} status=0x{marker:08X}"
         )
-        if counter >= 5 and marker == STATUS_MARKER:
-            return {"attempt": attempt, "guest_counter": counter, "status": marker}
+        counter_ok = True
+        if minimum_counter is not None:
+            counter_ok = counter >= minimum_counter
+        if baseline_counter is not None:
+            counter_ok = delta is not None and delta >= 1
+        if counter_ok and marker == STATUS_MARKER:
+            return {
+                "attempt": attempt,
+                "guest_counter": counter,
+                "status": marker,
+                "counter_delta": 0 if delta is None else delta,
+            }
     raise RuntimeError("E1a proof marker/fresh guest frame was not observed")
 
 
@@ -212,13 +225,31 @@ def main() -> int:
         if client.request(f"QPassSignals:{ARES_N64_GUEST_SIGNALS}") != b"OK":
             raise RuntimeError("target rejected QPassSignals")
 
+        # Warm the guest/runtime first. A startup frame must never be allowed to
+        # seed the evidence scratch, because E1a is explicitly testing stale-data
+        # absence. The marker means the DP fence has passed while the target is stopped.
         initialize_proof_memory(client)
+        warmup = wait_for_proof(
+            client,
+            guest_counter_address=args.guest_counter_address,
+            poll_seconds=args.poll_seconds,
+            attempts=args.attempts,
+            minimum_counter=5,
+        )
+
+        # Establish a clean ownership epoch after warm-up, while execution is stopped
+        # after the producer fence. Now any non-sentinel word comes from fresh frames.
+        initialize_proof_memory(client)
+        baseline_counter = read_u(client, args.guest_counter_address, 1)
         state = wait_for_proof(
             client,
             guest_counter_address=args.guest_counter_address,
             poll_seconds=args.poll_seconds,
             attempts=args.attempts,
+            baseline_counter=baseline_counter,
         )
+        state["warmup_counter"] = warmup["guest_counter"]
+        state["baseline_counter"] = baseline_counter
 
         fb_pointer = read_u(client, args.framebuffer_address, 4)
         if not (0x80000000 <= fb_pointer <= 0xBFFFFFFF):

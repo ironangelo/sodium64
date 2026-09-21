@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Generate the deterministic original SNES guest for Gate-C E1a Z-tag proof.
 
-The 32 KiB LoROM renders BG1 in Mode 0 with one 2bpp checkerboard tile:
-palette index 0 is transparent and palette index 1 is opaque black. CGRAM
-color 0 is a visible red backdrop. The resulting frame therefore distinguishes
-transparent holes from opaque-black texels without any commercial ROM.
+The 32 KiB LoROM renders BG1 in Mode 0 with two identical 2bpp checkerboard
+tiles whose character numbers alternate across the tilemap. Palette index 0 is
+transparent and palette index 1 is opaque black. CGRAM color 0 is a visible red
+backdrop. The alternating IDs preserve the same expected image while avoiding
+the renderer's consecutive-same-tile fast path.
 """
 
 from __future__ import annotations
@@ -101,7 +102,7 @@ def build_program() -> bytes:
     lda_sta_abs(a, 0x80, 0x2115)    # increment VRAM after high byte
 
     dma_to_vram(a, source=TILEMAP_ADDRESS, vram_word=0x0000, length=TILEMAP_SIZE)
-    dma_to_vram(a, source=TILE_ADDRESS, vram_word=0x1000, length=16)
+    dma_to_vram(a, source=TILE_ADDRESS, vram_word=0x1000, length=32)
 
     # CGRAM 0: visible medium red backdrop. CGRAM 1: RGB black, but as a
     # non-zero palette index Sodium64 converts it to RGBA5551 alpha=1.
@@ -141,7 +142,12 @@ def build_program() -> bytes:
 
 
 def build_tilemap() -> bytes:
-    return bytes(TILEMAP_SIZE)       # all entries tile 0
+    # Alternate character IDs 0/1. A 32-tile row has even width, so every row
+    # starts at tile 0 and no horizontally adjacent entries are identical.
+    return b"".join(
+        (index & 1).to_bytes(2, "little")
+        for index in range(TILEMAP_SIZE // 2)
+    )
 
 
 def build_tile() -> bytes:
@@ -159,7 +165,7 @@ def write_vector(rom: bytearray, offset: int, address: int) -> None:
 def build_rom() -> bytes:
     program = build_program()
     tilemap = build_tilemap()
-    tile = build_tile()
+    tile = build_tile() * 2         # tile 0 and tile 1 are visually identical
     tilemap_offset = TILEMAP_ADDRESS - LOAD_ADDRESS
     tile_offset = TILE_ADDRESS - LOAD_ADDRESS
 

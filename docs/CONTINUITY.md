@@ -117,6 +117,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - This baseline is **MEASUREMENT PROOF / HYPOTHESIS** until captured. If the exact overrun signature measures, the next controlled runtime proof must preserve the loaded section state while iterating it as two 8-row bands, rebasing compact row 0 for global y=16 and y=24 (second compact base **`0xE0B80 = 0xE4000 - 24*560`**) and consuming/archiving band 1 before reuse. Do not implement the band subloop before measuring this baseline.
 - Scope: this proves only the need/geometry for bounded band reuse. It does not yet prove compositor arithmetic, production throughput, OBJ boundary behavior or real-N64 bus ownership.
 
+### PRECOMMITTED E2e real-traversal compact-Z band alignment — NEXT
+- **Question:** can the real 16-line section→two-band traversal keep winner metadata in the same bounded 8-row geometry as the validated compact color operand?
+- Planned child branch: **`phase4/gate-c-h-comp-e2e-z-band-alignment`** from exact validated E2d head `ba130e23f67f4cc3b669b7b19e817d544b2e46bd`. Keep guest, TM/TS shared BG1, WH0 16-line carrier, color target switching, shared-membership repair and section→band control byte-identical.
+- **Controlled runtime delta only:** at every `draw_frame`, program Set Z Image to **`0x000BDD00 = 0xC0000 - 16*560`** so global y=16..23 maps to compact-Z rows 0..7; when advancing to band 2, program **`0x000BCB80 = 0xC0000 - 24*560`** so global y=24..31 reuses those rows; after the banded first section finishes, restore the inherited safe **`0x000BEE80`** target before later sections. Do not change primitive-depth tag encoding or Z compare/update modes.
+- The per-frame reprogram is required because RDP init runs once while semantic capture warms across multiple guest frames; a source-only initial constant would not survive the proof's later-frame capture after restore.
+- **Precommitted host oracle:** all E2d carrier/color/main contracts remain exact. Add compact-Z final oracle at `0xA00C0000..C117F`: active x=12..267 = **2,048× BG1 tag `0x0C00`**, border = **192× sentinel `0x55AA`**, compact-Z prefix `0xA00BFFC0` and suffix `0xA00C1180` guards intact. The current measured signature (scratch untouched + suffix tags) must disappear.
+- Scope: because this guest uses the same shared BG1 on both traversals, this proves **bounded real-traversal Z geometry/reuse**, not independent main-vs-sub metadata identity. Screen-specific metadata ownership, compositor arithmetic, brightness and performance remain later questions.
+- **Falsifier:** any compact-Z guard corruption, wrong row/tag counts, color/main regression, or inability to restore later-section Z ownership blocks lockstep color+metadata operand transport before raw-brightness integration.
+
 ### Pre-kernel architecture proofs — CLOSED
 - **E1a VALIDATED:** primitive-Z can carry deterministic alpha/presence metadata through the tested RDP path in pinned ares. Validated head `aef1643c0be3b6dd758bdd226ddef97e554ffec9`.
 - **E1b VALIDATED:** two-BG winner-layer metadata can be encoded/read correctly. Validated head `8ec1362dd62f117e53b37eaf6523c7bdf00b75bf`.

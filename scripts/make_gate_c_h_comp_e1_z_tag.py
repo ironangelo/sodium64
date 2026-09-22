@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Generate the deterministic SNES guest for Gate-C E2g BG metadata proof.
 
-The 32 KiB LoROM renders complementary Mode-0 winner masks: BG1 red is
-main-only with even unique IDs opaque, while BG2 green is sub-only with odd
-unique IDs opaque; CGRAM[0] remains full blue. CGADSUB enables BG1 math only,
-creating independent main-eligibility vs sub-presence metadata discriminators.
+The 32 KiB LoROM renders four Mode-0 winner combinations per 4 unique IDs:
+0=neither, 1=main BG1 only, 2=sub BG2 only, 3=both. CGRAM[0] remains full
+blue and CGADSUB enables BG1 math only, so the four pixels encode all
+(main_math_eligible, sub_present) states 00/10/01/11 without repeated tile IDs.
 A harmless direct-HDMA WH0 stream keeps the validated 16-line carrier geometry.
 """
 
@@ -212,11 +212,11 @@ def build_rom() -> bytes:
     bg1_opaque = build_bg1_tile()
     bg2_opaque = build_bg2_tile()
     bg1_tiles = b"".join(
-        bg1_opaque if (index & 1) == 0 else transparent_tile
+        bg1_opaque if (index & 1) else transparent_tile
         for index in range(TILE_COUNT)
     )
     bg2_tiles = b"".join(
-        transparent_tile if (index & 1) == 0 else bg2_opaque
+        bg2_opaque if (index & 2) else transparent_tile
         for index in range(TILE_COUNT)
     )
     hdma_table = build_hdma_window_table()
@@ -247,7 +247,7 @@ def build_rom() -> bytes:
     rom[bg2_tile_offset:bg2_tile_offset + len(bg2_tiles)] = bg2_tiles
     rom[hdma_table_offset:hdma_table_offset + len(hdma_table)] = hdma_table
 
-    rom[HEADER:HEADER + 21] = b"S64 E2G BGMETA".ljust(21, b" ")
+    rom[HEADER:HEADER + 21] = b"S64 E2G META4".ljust(21, b" ")
     rom[0x7FD5] = 0x20               # LoROM
     rom[0x7FD6] = 0x00
     rom[0x7FD7] = 0x05

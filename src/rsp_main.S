@@ -610,9 +610,26 @@ e4b_vis_dp_wait:
     bnez t0, e4b_vis_dp_wait
     nop
 
-    // Fence-only discriminator: deliberately no SP DMA and no framebuffer
-    // writeback here. Final framebuffer bytes isolate the effect of the new
-    // per-band SyncFull boundary itself.
+    // Main-Z visibility discriminator: color framebuffer remains untouched.
+    // Read the exact same physical 8x8 Main boolean-Z block after each band
+    // and archive it contiguously for host authority.
+    li a0, SCRN_DATA
+    li a1, 0xA00C2018
+    li a2, 0x2200700F
+    jal dma_read
+    nop
+
+    li a0, SCRN_DATA
+    beqz k0, e4b_z_archive_first
+    li a2, 0x7F
+    li a1, 0xA00EA000
+    b e4b_z_archive_store
+    nop
+e4b_z_archive_first:
+    li a1, 0xA00E8000
+e4b_z_archive_store:
+    jal dma_write
+    nop
 
 e4b_band_comp_done:
     // Only the controlled first 0..16 section is subdivided. If its true end

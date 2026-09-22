@@ -591,9 +591,10 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## Current exact repo state
 - `master@5b7134930a0ca859f6aa24e54102de116948e3ed` — integrated truth.
-- `phase4/gate-c-h-comp-e1e-color-sub-kernel@3c4972f4e58ab89b8e8a2628ca322d353c069049` — **VALIDATED proof branch**, not integrated.
-- PR #13 `phase4/gate-c-rsp-overlay-clean@84ecafad7cc3505d82f134b2672d9ed1146fedc0` — **OPEN / CANDIDATE**, not integrated.
-- No long semantic experiment is currently required before starting the half-rule source audit.
+- Active proof branch: `phase4/gate-c-h-comp-e2f-screen-backdrop@c79fef8418343d0cf17021b180f40ce56f95b3d1` — **CANDIDATE / exact-head E2f repair under semantic validation**, not integrated. Build/profile/Mupen smoke are green; ares semantic run `35681180521` is in progress with the deliberately stale baseline oracle.
+- E2f validated baseline boundary remains `ab135b3351dcec22d4dada6c0d13ee55931a133a` — **VALIDATED** evidence that only the first/TS target had an independent backdrop baseline before the repair.
+- PR #13 `phase4/gate-c-rsp-overlay-clean@84ecafad7cc3505d82f134b2672d9ed1146fedc0` — **OPEN / CANDIDATE**, mergeable, not integrated; real N64 remains authority for overlay DMA/bus/cadence.
+- **Experiment in progress:** do not start the metadata-encoding discriminator or another runtime proof until `35681180521` is interpreted from its exact artifact. Next action is artifact-first inspection; only if the precommitted repaired signature appears should the host oracle change.
 
 ## Operating protocol
 Authority: **current Iron instruction > repo/artifact evidence > canonical docs > continuity > chats/memory/inference**. `master` is integrated truth; phase branches are candidates/proofs only.

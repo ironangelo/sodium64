@@ -1336,6 +1336,27 @@ e3a_comp_next:
     nop
 
 e3a_comp_done:
+    // E4a proof: validate SP 2D DMA gather/scatter semantics using the
+    // already-rendered Main rows 16..23. LEN=0x2200700F means 16 bytes,
+    // eight rows total, and 544 bytes of DRAM skip between rows.
+    li a0, SCRN_DATA
+    lw a1, FRAMEBUFFER(sp)
+    addi a1, a1, 0x2318 // Main y=16, x=12
+    jal dma_read
+    li a2, 0x2200700F
+
+    // Archive the gathered 8x8 block contiguously for host authority.
+    li a0, SCRN_DATA
+    li a1, 0xA00E8000
+    jal dma_write
+    li a2, 0x7F
+
+    // Scatter the same rows into the existing captured after-buffer at x=12.
+    li a0, SCRN_DATA
+    li a1, 0xA00EA018
+    jal dma_write
+    li a2, 0x2200700F
+
     li t0, 0xE1F00D01
     sw t0, TEXTURE
     lw t1, FRAMEBUFFER(sp)

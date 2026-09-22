@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2g four-state shared-Z baseline proof."""
+"""Capture/classify Gate-C E2g-B four-state screen-boolean proof."""
 
 from __future__ import annotations
 
@@ -52,6 +52,8 @@ SUFFIX_BYTE = 0x3C
 BACKDROP_TAG_WORD = 0x0400
 BG1_TAG_WORD = 0x0C00
 BG2_TAG_WORD = 0x1400
+BOOL_FALSE_TAG_WORD = 0x0400
+BOOL_TRUE_TAG_WORD = 0x0C00
 BG1_BLACK_RGBA5551 = 0x0001
 BG2_GREEN_RGBA5551 = 0x07C1
 E2B_MAIN_RED_RGBA5551 = 0xF801
@@ -366,7 +368,7 @@ def classify_e2f_carrier_sections(
     }
 
 
-def classify_e2g_a_z_ownership(
+def classify_e2g_b_screen_booleans(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -413,8 +415,8 @@ def classify_e2g_a_z_ownership(
                 E2B_MAIN_RED_RGBA5551 if state in (1, 3)
                 else E2F_BACKDROP_BLUE_RGBA5551
             )
-            expected_sub_tag = BG2_TAG_WORD if state in (2, 3) else BACKDROP_TAG_WORD
-            expected_main_tag = BG1_TAG_WORD if state in (1, 3) else BACKDROP_TAG_WORD
+            expected_sub_tag = BOOL_TRUE_TAG_WORD if state in (2, 3) else BOOL_FALSE_TAG_WORD
+            expected_main_tag = BOOL_TRUE_TAG_WORD if state in (1, 3) else BOOL_FALSE_TAG_WORD
 
             actual_sub_color = compact_words[y * FB_WIDTH + x]
             actual_main_color = framebuffer_words[main_y * FB_WIDTH + x]
@@ -508,18 +510,18 @@ def classify_e2g_a_z_ownership(
         and color_guards_ok
     )
     expected_pairs = collections.Counter({
-        (BACKDROP_TAG_WORD, BACKDROP_TAG_WORD): expected_state,
-        (BG1_TAG_WORD, BACKDROP_TAG_WORD): expected_state,
-        (BACKDROP_TAG_WORD, BG2_TAG_WORD): expected_state,
-        (BG1_TAG_WORD, BG2_TAG_WORD): expected_state,
+        (BOOL_FALSE_TAG_WORD, BOOL_FALSE_TAG_WORD): expected_state,
+        (BOOL_TRUE_TAG_WORD, BOOL_FALSE_TAG_WORD): expected_state,
+        (BOOL_FALSE_TAG_WORD, BOOL_TRUE_TAG_WORD): expected_state,
+        (BOOL_TRUE_TAG_WORD, BOOL_TRUE_TAG_WORD): expected_state,
     })
     metadata_passed = (
         not sub_z_wrong
         and not main_z_wrong
-        and sub_hist[BACKDROP_TAG_WORD] == expected_state * 2
-        and sub_hist[BG2_TAG_WORD] == expected_state * 2
-        and main_z_hist[BACKDROP_TAG_WORD] == expected_state * 2
-        and main_z_hist[BG1_TAG_WORD] == expected_state * 2
+        and sub_hist[BOOL_FALSE_TAG_WORD] == expected_state * 2
+        and sub_hist[BOOL_TRUE_TAG_WORD] == expected_state * 2
+        and main_z_hist[BOOL_FALSE_TAG_WORD] == expected_state * 2
+        and main_z_hist[BOOL_TRUE_TAG_WORD] == expected_state * 2
         and sub_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
         and main_z_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
         and sub_guards_ok
@@ -534,8 +536,8 @@ def classify_e2g_a_z_ownership(
 
     return {
         "classification": (
-            "E2G_A_SCREEN_Z_OWNERSHIP_VALIDATED"
-            if passed else "E2G_A_SCREEN_Z_OWNERSHIP_FAILED"
+            "E2G_B_SCREEN_BOOLEAN_METADATA_VALIDATED"
+            if passed else "E2G_B_SCREEN_BOOLEAN_METADATA_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
@@ -549,15 +551,15 @@ def classify_e2g_a_z_ownership(
             "main_mismatches": main_wrong,
         },
         "sub_z": {
-            "backdrop_words": sub_hist[BACKDROP_TAG_WORD],
-            "bg2_words": sub_hist[BG2_TAG_WORD],
+            "false_words": sub_hist[BOOL_FALSE_TAG_WORD],
+            "true_words": sub_hist[BOOL_TRUE_TAG_WORD],
             "border_sentinel_words": sub_border[SENTINEL_WORD],
             "guards_ok": sub_guards_ok,
             "mismatches": sub_z_wrong,
         },
         "main_z": {
-            "backdrop_words": main_z_hist[BACKDROP_TAG_WORD],
-            "bg1_words": main_z_hist[BG1_TAG_WORD],
+            "false_words": main_z_hist[BOOL_FALSE_TAG_WORD],
+            "true_words": main_z_hist[BOOL_TRUE_TAG_WORD],
             "border_sentinel_words": main_z_border[SENTINEL_WORD],
             "guards_ok": main_guards_ok,
             "mismatches": main_z_wrong,
@@ -571,9 +573,8 @@ def classify_e2g_a_z_ownership(
             "expected_each": expected_state,
         },
         "constants": {
-            "backdrop_tag": hex(BACKDROP_TAG_WORD),
-            "bg1_tag": hex(BG1_TAG_WORD),
-            "bg2_tag": hex(BG2_TAG_WORD),
+            "boolean_false_tag": hex(BOOL_FALSE_TAG_WORD),
+            "boolean_true_tag": hex(BOOL_TRUE_TAG_WORD),
             "sub_z_address": hex(E1C_Z_SCRATCH_ADDR),
             "main_z_address": hex(E2G_SECOND_Z_ADDR),
         },
@@ -1106,9 +1107,9 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2g-A authority keeps the four-state guest and color path frozen while
-        # requiring independent identity metadata in the TS/sub and TM/main Z strips.
-        result = classify_e2g_a_z_ownership(
+        # E2g-B authority keeps the four-state guest and color path frozen while
+        # requiring independent boolean metadata in the TS/sub and TM/main Z strips.
+        result = classify_e2g_b_screen_booleans(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -1134,7 +1135,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2g-A screen-Z ownership classifier failed; see result.json")
+            raise RuntimeError("E2g-B screen-boolean classifier failed; see result.json")
 
         try:
             client.request("D")

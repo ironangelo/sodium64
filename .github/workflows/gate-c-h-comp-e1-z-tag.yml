@@ -1,4 +1,4 @@
-name: Gate C H-COMP E2g-A Z Ownership Proof
+name: Gate C H-COMP E2g-B Screen Boolean Proof
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e2g-a-z-ownership-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e2g-b-screen-boolean-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build exact E2g-A Z-ownership runtime
+      - name: Build exact E2g-B screen-boolean runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run fenced E2g-A Z-ownership proof
+      - name: Run fenced E2g-B screen-boolean proof
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E2g-A Z-ownership evidence
+      - name: Upload E2g-B screen-boolean evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e2g-a-z-ownership-evidence
+          name: gate-c-h-comp-e2g-b-screen-boolean-evidence
           retention-days: 30
           path: |
             captures/

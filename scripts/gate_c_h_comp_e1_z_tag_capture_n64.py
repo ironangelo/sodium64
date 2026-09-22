@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2f per-screen backdrop baseline proof."""
+"""Capture/classify Gate-C E2f per-screen backdrop repair proof."""
 
 from __future__ import annotations
 
@@ -349,7 +349,7 @@ def classify_e2f_carrier_sections(
     }
 
 
-def classify_e2f_backdrop_baseline(
+def classify_e2f_backdrop_repair(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -417,7 +417,7 @@ def classify_e2f_backdrop_baseline(
         for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
             actual = row[x]
             main_active.append(actual)
-            if actual not in (E2B_MAIN_RED_RGBA5551, E2F_MAIN_SENTINEL_WORD):
+            if actual not in (E2B_MAIN_RED_RGBA5551, E2F_BACKDROP_BLUE_RGBA5551):
                 if len(main_wrong) < 64:
                     main_wrong.append({"x": x, "y": y, "actual": actual})
     main_hist = collections.Counter(main_active)
@@ -425,8 +425,8 @@ def classify_e2f_backdrop_baseline(
         len(main_active) == expected_main_half * 2
         and not main_wrong
         and main_hist[E2B_MAIN_RED_RGBA5551] == expected_main_half
-        and main_hist[E2F_MAIN_SENTINEL_WORD] == expected_main_half
-        and main_hist[E2F_BACKDROP_BLUE_RGBA5551] == 0
+        and main_hist[E2F_MAIN_SENTINEL_WORD] == 0
+        and main_hist[E2F_BACKDROP_BLUE_RGBA5551] == expected_main_half
         and main_hist[BG2_GREEN_RGBA5551] == 0
     )
 
@@ -441,9 +441,9 @@ def classify_e2f_backdrop_baseline(
     )
     return {
         "classification": (
-            "E2F_SCREEN_BACKDROP_BASELINE_VALIDATED"
+            "E2F_SCREEN_BACKDROP_REPAIR_VALIDATED"
             if passed
-            else "E2F_SCREEN_BACKDROP_BASELINE_FAILED"
+            else "E2F_SCREEN_BACKDROP_REPAIR_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
@@ -475,8 +475,8 @@ def classify_e2f_backdrop_baseline(
             "expected_compact_green": expected_compact_half,
             "expected_compact_blue": expected_compact_half,
             "expected_main_red": expected_main_half,
-            "expected_main_seed_sentinel": expected_main_half,
-            "expected_main_blue": 0,
+            "expected_main_seed_sentinel": 0,
+            "expected_main_blue": expected_main_half,
         },
     }
 
@@ -999,10 +999,10 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2f baseline measures the historical one-fill behavior before any
-        # runtime repair: TS holes must reveal blue CGRAM0, while TM holes keep
-        # the clean-epoch framebuffer sentinel because main was never filled.
-        result = classify_e2f_backdrop_baseline(
+        # E2f repair authority keeps the validated transparent-hole guest and
+        # clean-epoch framebuffer seed frozen while requiring the main-target
+        # backdrop replay to replace every TM sentinel hole with CGRAM0 blue.
+        result = classify_e2f_backdrop_repair(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -1024,7 +1024,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2f screen-backdrop baseline classifier failed; see result.json")
+            raise RuntimeError("E2f screen-backdrop repair classifier failed; see result.json")
 
         try:
             client.request("D")

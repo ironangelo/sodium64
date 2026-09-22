@@ -1,4 +1,4 @@
-name: Gate C H-COMP E2f Screen Backdrop Baseline
+name: Gate C H-COMP E2f Screen Backdrop Repair
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e2f-backdrop-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e2f-backdrop-repair-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build exact E2f backdrop-baseline runtime
+      - name: Build exact E2f backdrop-repair runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run fenced E2f screen-backdrop baseline
+      - name: Run fenced E2f screen-backdrop repair
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E2f backdrop evidence
+      - name: Upload E2f backdrop-repair evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e2f-backdrop-evidence
+          name: gate-c-h-comp-e2f-backdrop-repair-evidence
           retention-days: 30
           path: |
             captures/

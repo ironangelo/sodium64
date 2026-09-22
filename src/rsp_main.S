@@ -487,7 +487,7 @@ fill_backdrop:
     xori t0, t0, 0x1
     lbu t0, TS(t0)
     and t1, t0, s7 // Shared
-    sub s7, s7, t1
+    nop // E2c proof: preserve shared layers in the first traversal
     sll t0, t0, 8
     or s7, s7, t0
 

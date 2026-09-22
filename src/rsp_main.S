@@ -382,6 +382,10 @@ finish_cache:
     addi t7, t7, -0x1000
 
 oam_skip:
+    // E2g-B proof: every loaded section/reused band begins on semantic TS.
+    // MODE7_BOUNDS+8 is proof-local phase state; 0=TS, 1=TM.
+    sw zero, MODE7_BOUNDS + 8
+
     // Update the RDP scissor and fill bounds for the section
     lw t0, FB_OFFSET(sp)
     add t1, t0, k0
@@ -534,6 +538,12 @@ next_layer:
     srl s7, s7, 8
     beqz s7, e2d_band_done
     andi s3, s3, 0xF0
+
+    // E2g-B proof: the second real traversal is semantic TM regardless of
+    // the historical MASK_SEL presentation preference.
+    li t0, 1
+    sw t0, MODE7_BOUNDS + 8
+
     lw t0, MODE7_BOUNDS + 4
     bnez t0, next_layer
     nop
@@ -630,11 +640,20 @@ draw_bg:
     sll t9, s4, 2 // Jump index
     addi s4, s4, 3 // Character shift
 
-    // E1b proof: encode the regular-BG winner identity in primitive depth.
-    // BG1(index 0): 0x1800 -> stored 0x0C00.
-    // BG2(index 1): 0x2800 -> stored 0x1400.
-    sll a2, t3, 12
-    addi a2, a2, 0x1800
+    // E2g-B proof: reduce regular-BG winner identity to the two semantic
+    // booleans needed by normal-width color math. TS: any real BG winner means
+    // sub_present=true. TM: main_math_eligible follows this BG's CGADSUB bit.
+    // Reuse validated depth inputs: 0x1800 -> true/0x0C00, 0x0800 -> false/0x0400.
+    li a2, 0x1800
+    lw t0, MODE7_BOUNDS + 8
+    beqz t0, e2g_bg_boolean_ready
+    nop
+    lbu t0, CGADSUB
+    and t0, t0, a3
+    bnez t0, e2g_bg_boolean_ready
+    nop
+    li a2, 0x0800
+e2g_bg_boolean_ready:
     jal e1_set_prim_depth
     nop
 

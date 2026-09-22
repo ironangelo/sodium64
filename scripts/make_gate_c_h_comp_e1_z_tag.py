@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Generate the deterministic SNES guest for Gate-C E2g BG metadata proof.
+"""Generate the deterministic SNES guest for Gate-C E3a ADD-compositor proof.
 
 The 32 KiB LoROM renders four Mode-0 winner combinations per 4 unique IDs:
 0=neither, 1=main BG1 only, 2=sub BG2 only, 3=both. CGRAM[0] remains full
 blue and CGADSUB enables BG1 math only, so the four pixels encode all
 (main_math_eligible, sub_present) states 00/10/01/11 without repeated tile IDs.
+CGWSEL selects the subscreen operand and fixed color is explicitly black.
 A harmless direct-HDMA WH0 stream keeps the validated 16-line carrier geometry.
 """
 
@@ -143,8 +144,9 @@ def build_program() -> bytes:
     lda_sta_abs(a, 0x02, 0x212D)    # TS: BG2 sub-only
     lda_sta_abs(a, 0x00, 0x212E)    # TMW disabled
     lda_sta_abs(a, 0x00, 0x212F)    # TSW disabled
-    lda_sta_abs(a, 0x00, 0x2130)    # CGWSEL
+    lda_sta_abs(a, 0x02, 0x2130)    # CGWSEL: use subscreen as second operand
     lda_sta_abs(a, 0x01, 0x2131)    # CGADSUB: BG1 math eligible only
+    lda_sta_abs(a, 0xE0, 0x2132)    # COLDATA: deterministic fixed black fallback
     lda_sta_abs(a, 0x00, 0x2133)    # 224-line mode / centered 8px border
 
     # Harmless WH0 HDMA creates one urgent section boundary after the first

@@ -1244,6 +1244,11 @@ e2b_dp_wait:
     andi t0, t0, 0xC0
     bnez t0, e3a_comp_done
     nop
+    lbu s5, STAT_FLAGS
+    andi s5, s5, 0x1F
+    li t0, 8
+    bne s5, t0, e3a_comp_done
+    nop
 
     lw s0, FRAMEBUFFER(sp)
     addi s0, s0, 0x2318 // Main physical row 16, x=12
@@ -1278,27 +1283,32 @@ e3a_comp_chunk:
     li t4, 8
 
 e3a_comp_pixel:
+    // Start from raw Main for every pixel. Only true/true performs color math.
+    lhu t8, 0(t0)
+    srl t8, t8, 1
     lhu t5, 0(t2)
-    bne t5, v0, e3a_comp_next
+    bne t5, v0, e3b_apply_brightness
     lhu t6, 0(t3)
-    bne t6, v0, e3a_comp_next
+    bne t6, v0, e3b_apply_brightness
     nop
 
-    // Full saturating ADD on the three contiguous RGB5 fields obtained by
-    // removing RGBA5551 alpha. The packed identity is pinned to ares.
-    lhu t5, 0(t0)
-    lhu t6, 0(t1)
+    // Full saturating ADD on raw RGB555, before master brightness.
+    lhu t5, 0(t1)
     srl t5, t5, 1
-    srl t6, t6, 1
-    xor t7, t5, t6
+    xor t7, t8, t5
     andi t7, t7, 0x0421
-    add t8, t5, t6
-    sub t9, t8, t7
+    add t6, t8, t5
+    sub t9, t6, t7
     andi t9, t9, 0x8420
-    sub t8, t8, t9
+    sub t6, t6, t9
     srl t7, t9, 5
     sub t9, t9, t7
-    or t8, t8, t9
+    or t8, t6, t9
+
+e3b_apply_brightness:
+    // E3b discriminator: coefficient 8 is exactly one-half after color math.
+    andi t8, t8, 0x7BDE
+    srl t8, t8, 1
     sll t8, t8, 1
     ori t8, t8, 1
     sh t8, 0(t0)

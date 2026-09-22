@@ -431,8 +431,8 @@ update_fill:
     la t5, main_color
 
 set_fill:
-    // Space out the color's components and multiply with current brightness
-    lbu t0, brightness
+    // E3b proof: keep fill operands raw; brightness belongs after color math.
+    li t0, 16
     andi t2, t1, 0x1F // R
     andi t3, t1, 0x3E0 // G
     sll t3, t3, 5
@@ -500,8 +500,8 @@ skip_reset:
     sw t0, section_ptr
     sw t1, oam_ptr
 
-    // Set initial values for palette conversion
-    lbu t0, brightness
+    // E3b proof: keep palette operands raw; brightness belongs after color math.
+    li t0, 16
     lw v1, pal_queues(t5)
     addi v1, v1, 0x7F8
     li t6, 0x1FE
@@ -883,11 +883,24 @@ write_inidisp: // a1: value
     b rsp_frame
 
 set_bright:
-    // Set the master brightness
+    // Set the master brightness coefficient (0 or INIDISP[3:0]+1).
     andi t0, a1, 0xF
     sgtu t1, t0, zero
     add t0, t0, t1
+
+    // E3b proof: brightness is raster state. Snapshot it in free
+    // STAT_FLAGS[4:0] while preserving OAM-dirty/force-blank bits.
+    lbu t2, brightness
+    beq t2, t0, bright_store_flags
     sb t0, brightness
+    li t2, 0x1
+    sb t2, sect_status
+
+bright_store_flags:
+    lbu t1, stat_flags
+    andi t1, t1, 0xE0
+    or t1, t1, t0
+    sb t1, stat_flags
     j update_fill
     nop
 

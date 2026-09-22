@@ -53,6 +53,10 @@ jobs:
           test -s build/sodium64.elf
           sha256sum sodium64.z64 build/sodium64.elf | tee build-sha256.txt
           grep -E '(^|[[:space:]])(text|\.text)' build/rsp_main.map || true
+          {
+            echo "# RSP proof-local symbols"
+            nm -an build/src/rsp_main.o | grep -E 'e2d_band_done|e4b_dp_wait_start|e4b_dp_wait_done' || true
+          } | tee diagnostic/rsp-symbols.txt
 
       - name: Wrap exact E4b same-band guest
         shell: bash
@@ -178,3 +182,4 @@ jobs:
             sodium64-build.log
             build-sha256.txt
             build/rsp_main.map
+            diagnostic/rsp-symbols.txt

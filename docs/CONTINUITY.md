@@ -22,7 +22,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Pinned SNES reference semantics establish per-channel RGB5 arithmetic with clipping. Brightness is conceptually later than the main/sub arithmetic.
 - A production design must still solve operand preservation, selection/gating, half rules, windows, throughput, and integration. The scalar proof kernels below are semantic discriminators, **not production compositor architecture**.
 
-### ACTIVE / RESUME HERE — E2f per-screen backdrop baseline in flight; metadata audit retained
+### ACTIVE / RESUME HERE — E2f per-screen backdrop repair semantic in flight; artifact-first next
 - **E2a remains CLOSED / VALIDATED** on `phase4/gate-c-h-comp-e2a-color-strip-reuse@67c18c9ab4baf7531db8384eef8df59e9641ab86`; semantic run `35657048671 SUCCESS`, artifact `10665172832`, digest `sha256:043f5f76ec87fed5603e6289e7d3617fde147227139f4618de8b3b7c13133471`. Preserve it as frozen evidence.
 - E2b validation branch is now **`phase4/gate-c-h-comp-e2b-real-target-switch@115b32aab183fe18bc4d4011277816c2f8f1c888`**.
 - Runtime candidate remains exactly parent **`af1ad807b3a2890e8f60501e2bffc2e834f4d65a`**: first real TS traversal begins on compact RGB16 Color Image `0x000E2E80`; at the existing `srl s7,s7,8` boundary and only for `k0==0`, Color Image is restored to `FRAMEBUFFER(sp)-8*560` before the TM traversal. E2a synthetic fill/copy machinery is removed; end-of-frame Sync Full + DP-idle fence and status/framebuffer marker remain.

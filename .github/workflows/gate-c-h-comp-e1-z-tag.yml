@@ -1,9 +1,9 @@
-name: Gate C H-COMP E4b Guest Baseline
+name: Gate C H-COMP E4b No-Fence Clean Epoch
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-same-band-ownership
+      - phase4/gate-c-h-comp-e4b-no-fence-clean-epoch
   workflow_dispatch:
 
 permissions:
@@ -167,7 +167,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-guest-baseline-evidence
+          name: gate-c-h-comp-e4b-no-fence-clean-epoch-evidence
           retention-days: 30
           path: |
             captures/

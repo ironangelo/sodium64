@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Angrylion Crosscheck
+name: Gate C H-COMP E4b Mupen Angrylion RDP Call Trace
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-angrylion-crosscheck
+      - phase4/gate-c-h-comp-e4b-mupen-angrylion-rdp-call-trace
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-angrylion-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-angrylion-rdp-trace-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -123,6 +123,47 @@ jobs:
           git clone https://github.com/mupen64plus/mupen64plus-rsp-cxd4.git
           git -C mupen64plus-rsp-cxd4 checkout 00906a92641c540a64e4e7505012157315314810
 
+          # Host-lab trace only: preserve cxd4 semantics and bracket the exact
+          # synchronous callback that hands DPC_END work to the gfx RDP plugin.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("mupen64plus-rsp-cxd4/su.c")
+          s = p.read_text()
+          old = """static void MT_CMD_END(unsigned int rt)
+{
+    if (GET_RCP_REG(DPC_BUFBUSY_REG))
+        message("MTC0\\nCMD_END"); /* This is just CA-related. */
+    GET_RCP_REG(DPC_END_REG) = SR[rt] & 0xFFFFFFF8ul;
+    GBI_phase();
+    return;
+}
+"""
+          new = """static void MT_CMD_END(unsigned int rt)
+{
+    if (GET_RCP_REG(DPC_BUFBUSY_REG))
+        message("MTC0\\nCMD_END"); /* This is just CA-related. */
+    GET_RCP_REG(DPC_END_REG) = SR[rt] & 0xFFFFFFF8ul;
+    fprintf(stderr,
+        "S64_CXD4_RDP_BEFORE start=%08X end=%08X current=%08X status=%08X sp_pc=%08X\\n",
+        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),
+        GET_RCP_REG(DPC_CURRENT_REG), GET_RCP_REG(DPC_STATUS_REG),
+        GET_RCP_REG(SP_PC_REG));
+    fflush(stderr);
+    GBI_phase();
+    fprintf(stderr,
+        "S64_CXD4_RDP_AFTER start=%08X end=%08X current=%08X status=%08X sp_pc=%08X\\n",
+        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),
+        GET_RCP_REG(DPC_CURRENT_REG), GET_RCP_REG(DPC_STATUS_REG),
+        GET_RCP_REG(SP_PC_REG));
+    fflush(stderr);
+    return;
+}
+"""
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, new, 1))
+          PY
+          git -C mupen64plus-rsp-cxd4 diff -- su.c | tee "$GITHUB_WORKSPACE/captures/cxd4-rdp-call-trace.patch"
+
           export PATH="$root/mupen64plus-core/.github/workflows/scripts:$PATH"
 
           cd "$root/mupen64plus-core"
@@ -183,7 +224,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-angrylion.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-angrylion-rdp-call-trace.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -208,6 +249,7 @@ jobs:
           expect "(dbg) "
           send "bp add $env(CAPTURE_READY_ADDR) 1 8\r"
           expect "(dbg) "
+          set timeout 60
           send "run\r"
           expect "PC at 0x$env(CAPTURE_READY_HEX)."
           expect "(dbg) "
@@ -227,7 +269,7 @@ jobs:
           export M64P_ROM="$GITHUB_WORKSPACE/wrap/out/e1c.z64"
           (
             cd captures
-            timeout 330 xvfb-run -a expect "$RUNNER_TEMP/mupen-hcomp.expect"
+            timeout 150 xvfb-run -a expect "$RUNNER_TEMP/mupen-hcomp.expect"
           )
 
       - name: Classify Mupen Angrylion crosscheck
@@ -240,7 +282,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-angrylion-evidence
+          name: gate-c-h-comp-e4b-mupen-angrylion-rdp-call-trace
           retention-days: 30
           if-no-files-found: ignore
           path: |

@@ -544,8 +544,26 @@ next_layer:
     jal rdp_send
     li a1, RDP_FRAME + 8
 
-    // E2f proof: the second/main screen target needs its own backdrop baseline.
-    // Replay the already-prepared current-band backdrop before traversing TM.
+    // E2g-A ownership proof: TM gets an independent compact Z strip.
+    // k0 is the current 8-line band start inside the controlled 0..16 section.
+    beqz k0, e2g_main_z_band1
+    nop
+    li t0, 0x000BEB80 // main strip 0xC2000 - global y=24 * 560
+    b e2g_main_z_ready
+    nop
+e2g_main_z_band1:
+    li t0, 0x000BFD00 // main strip 0xC2000 - global y=16 * 560
+e2g_main_z_ready:
+    sw t0, RDP_TILE7 + 4
+    li a0, RDP_TILE7
+    jal rdp_send
+    li a1, RDP_TILE7 + 8
+
+    // E2f backdrop replay now owns TM metadata too. Reset primitive depth to
+    // the already-validated backdrop identity before filling the main target.
+    li a2, 0x0800
+    jal e1_set_prim_depth
+    nop
     li a0, RDP_FILL
     jal rdp_send
     li a1, RDP_WINDOW

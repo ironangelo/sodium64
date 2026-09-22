@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2d 16-line bounded compact-band reuse proof."""
+"""Capture/classify Gate-C E2e real-traversal compact-Z band alignment proof."""
 
 from __future__ import annotations
 
@@ -288,13 +288,16 @@ def classify_e2d_carrier_sections(
     }
 
 
-def classify_e2d_band_reuse(
+def classify_e2e_z_band_alignment(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
     color_prefix_guard: bytes,
     color_suffix_guard: bytes,
     framebuffer: bytes,
+    z_final: bytes,
+    z_prefix_guard: bytes,
+    z_suffix_guard: bytes,
 ) -> dict[str, object]:
     carrier = classify_e2d_carrier_sections(queue1, queue2)
 
@@ -362,17 +365,60 @@ def classify_e2d_band_reuse(
         and main_hist[E2B_MAIN_RED_RGBA5551] == expected_main_active
         and main_hist[BG2_GREEN_RGBA5551] == 0
     )
+    z_words = words(z_final)
+    z_wrong: list[dict[str, int]] = []
+    for index, actual in enumerate(z_words):
+        y, x = divmod(index, FB_WIDTH)
+        active = E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1
+        expected = BG1_TAG_WORD if active else SENTINEL_WORD
+        if actual != expected and len(z_wrong) < 64:
+            z_wrong.append({
+                "x": x,
+                "y": y,
+                "actual": actual,
+                "expected": expected,
+            })
+    z_hist = collections.Counter(z_words)
+    z_prefix_ok = z_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+    z_suffix_ok = z_suffix_guard == (
+        SENTINEL_WORD.to_bytes(2, "big") * (E1C_GUARD_SIZE // 2)
+    )
+    z_passed = (
+        len(z_words) == FB_WIDTH * E1C_ROWS
+        and not z_wrong
+        and z_hist[BG1_TAG_WORD] == expected_compact_active
+        and z_hist[SENTINEL_WORD] == expected_border
+        and z_prefix_ok
+        and z_suffix_ok
+    )
+
     pixels_passed = compact_passed and main_passed
-    passed = bool(carrier["passed"] and pixels_passed)
+    passed = bool(carrier["passed"] and pixels_passed and z_passed)
 
     return {
         "classification": (
-            "E2D_BAND_REUSE_VALIDATED"
+            "E2E_REAL_Z_BAND_ALIGNMENT_VALIDATED"
             if passed
-            else "E2D_BAND_REUSE_FAILED"
+            else "E2E_REAL_Z_BAND_ALIGNMENT_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
+        "z_contract": {
+            "passed": z_passed,
+            "active_bg1_tag_words": z_hist[BG1_TAG_WORD],
+            "sentinel_border_words": z_hist[SENTINEL_WORD],
+            "prefix_guard_ok": z_prefix_ok,
+            "suffix_guard_ok": z_suffix_ok,
+            "mismatches": z_wrong,
+            "constants": {
+                "scratch_address": hex(E1C_Z_SCRATCH_ADDR),
+                "scratch_size": E1C_Z_SCRATCH_SIZE,
+                "active_tag": hex(BG1_TAG_WORD),
+                "sentinel_word": hex(SENTINEL_WORD),
+                "expected_active_words": expected_compact_active,
+                "expected_border_words": expected_border,
+            },
+        },
         "pixel_contract": {
             "passed": pixels_passed,
             "constants": {
@@ -760,16 +806,18 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2d repair keeps the 16-line carrier frozen while the proof-local
-        # RSP subdivides the loaded section into two 8-line bands that reuse
-        # the same compact target. Both compact guards must now remain intact.
-        result = classify_e2d_band_reuse(
+        # E2e keeps the validated E2d color-band reuse contract frozen and
+        # adds only real-traversal compact-Z geometry/guard authority.
+        result = classify_e2e_z_band_alignment(
             section_queue1,
             section_queue2,
             color_final_b,
             color_prefix_guard,
             color_suffix_guard,
             framebuffer,
+            final_b,
+            prefix_guard,
+            suffix_guard,
         )
         result["capture_state"] = {
             **state,
@@ -783,7 +831,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2d band-reuse classifier failed; see result.json")
+            raise RuntimeError("E2e real Z-band alignment classifier failed; see result.json")
 
         try:
             client.request("D")

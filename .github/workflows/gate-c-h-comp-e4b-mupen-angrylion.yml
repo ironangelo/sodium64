@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Angrylion RDP Call Trace
+name: Gate C H-COMP E4b Mupen cxd4 RSP Control Trace
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-angrylion-rdp-call-trace
+      - phase4/gate-c-h-comp-e4b-mupen-cxd4-rsp-control-trace
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-angrylion-rdp-trace-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-cxd4-rsp-control-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -123,33 +123,109 @@ jobs:
           git clone https://github.com/mupen64plus/mupen64plus-rsp-cxd4.git
           git -C mupen64plus-rsp-cxd4 checkout 00906a92641c540a64e4e7505012157315314810
 
-          # Host-lab trace only: preserve cxd4 semantics and bracket the exact
-          # synchronous callback that hands DPC_END work to the gfx RDP plugin.
+          # Host-lab trace only: preserve cxd4 emulation semantics while
+          # localizing whether Sodium64 reaches its end-of-frame RSP halt.
           python3 - <<'PY'
           from pathlib import Path
           p = Path("mupen64plus-rsp-cxd4/su.c")
           s = p.read_text()
+
+          # Track cxd4's current interpreted RSP PC in host memory only.
+          needle = "static int temp_PC;\n"
+          repl = "static int temp_PC;\nstatic u32 s64_trace_pc;\n"
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          # Keep the proven RDP call-boundary trace, now with real newlines and
+          # the interpreted RSP PC rather than Mupen's externally stored SP_PC.
           needle = "    GBI_phase();\n"
           before = (
               "    fprintf(stderr,\n"
-              "        \"S64_CXD4_RDP_BEFORE start=%08X end=%08X current=%08X status=%08X sp_pc=%08X\\\\n\",\n"
+              "        \"S64_CXD4_RDP_BEFORE start=%08X end=%08X current=%08X status=%08X rsp_pc=%08X\\n\",\n"
               "        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),\n"
               "        GET_RCP_REG(DPC_CURRENT_REG), GET_RCP_REG(DPC_STATUS_REG),\n"
-              "        GET_RCP_REG(SP_PC_REG));\n"
+              "        s64_trace_pc);\n"
               "    fflush(stderr);\n"
           )
           after = (
               "    fprintf(stderr,\n"
-              "        \"S64_CXD4_RDP_AFTER start=%08X end=%08X current=%08X status=%08X sp_pc=%08X\\\\n\",\n"
+              "        \"S64_CXD4_RDP_AFTER start=%08X end=%08X current=%08X status=%08X rsp_pc=%08X\\n\",\n"
               "        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),\n"
               "        GET_RCP_REG(DPC_CURRENT_REG), GET_RCP_REG(DPC_STATUS_REG),\n"
-              "        GET_RCP_REG(SP_PC_REG));\n"
+              "        s64_trace_pc);\n"
               "    fflush(stderr);\n"
           )
           assert s.count(needle) == 1
-          p.write_text(s.replace(needle, before + needle + after, 1))
+          s = s.replace(needle, before + needle + after, 1)
+
+          # Log the exact SP_STATUS command. Sodium64 ends a rendered frame with
+          # value 0x2 (set HALT); this separates "never reached halt" from
+          # "halt reached but not observed by the R4300/debugger".
+          needle = "static void MT_SP_STATUS(unsigned int rt)\n{\n    pu32 MI_INTR_REG;\n    pu32 SP_STATUS_REG;\n"
+          repl = needle + (
+              "    fprintf(stderr, \"S64_CXD4_SP_STATUS_BEFORE value=%08X rsp_pc=%08X status=%08X\\n\",\n"
+              "        SR[rt], s64_trace_pc, GET_RCP_REG(SP_STATUS_REG));\n"
+              "    fflush(stderr);\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = "    *SP_STATUS_REG |=   (SR[rt] & 0x00000010) >> 4; /* int set halt */\n    return;\n}\n"
+          repl = (
+              "    *SP_STATUS_REG |=   (SR[rt] & 0x00000010) >> 4; /* int set halt */\n"
+              "    fprintf(stderr, \"S64_CXD4_SP_STATUS_AFTER value=%08X rsp_pc=%08X status=%08X\\n\",\n"
+              "        SR[rt], s64_trace_pc, *SP_STATUS_REG);\n"
+              "    fflush(stderr);\n"
+              "    return;\n}\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          # Entry/exit plus sparse heartbeats make a non-returning RSP loop
+          # localizable without changing guest state or Sodium64 bytes.
+          needle = "NOINLINE void run_task(void)\n{\n    register u32 PC;\n\n    PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));\n"
+          repl = (
+              "NOINLINE void run_task(void)\n"
+              "{\n"
+              "    register u32 PC;\n"
+              "    unsigned long s64_steps = 0;\n\n"
+              "    PC = FIT_IMEM(GET_RCP_REG(SP_PC_REG));\n"
+              "    s64_trace_pc = PC;\n"
+              "    fprintf(stderr, \"S64_CXD4_RSP_ENTER pc=%08X status=%08X dpc=%08X\\n\",\n"
+              "        PC, GET_RCP_REG(SP_STATUS_REG), GET_RCP_REG(DPC_STATUS_REG));\n"
+              "    fflush(stderr);\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = "    for (;;) {\n        inst_word = *(pi32)(IMEM + FIT_IMEM(PC));\n"
+          repl = (
+              "    for (;;) {\n"
+              "        s64_trace_pc = PC;\n"
+              "        if ((++s64_steps & 0x000FFFFFul) == 0) {\n"
+              "            fprintf(stderr, \"S64_CXD4_RSP_HEARTBEAT pc=%08X status=%08X dpc=%08X steps=%lu\\n\",\n"
+              "                PC, GET_RCP_REG(SP_STATUS_REG), GET_RCP_REG(DPC_STATUS_REG), s64_steps);\n"
+              "            fflush(stderr);\n"
+              "        }\n"
+              "        inst_word = *(pi32)(IMEM + FIT_IMEM(PC));\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = "RSP_halted_CPU_exit_point:\n    GET_RCP_REG(SP_PC_REG) = 0x04001000 | FIT_IMEM(PC);\n"
+          repl = (
+              "RSP_halted_CPU_exit_point:\n"
+              "    fprintf(stderr, \"S64_CXD4_RSP_EXIT pc=%08X status=%08X dpc=%08X steps=%lu\\n\",\n"
+              "        PC, GET_RCP_REG(SP_STATUS_REG), GET_RCP_REG(DPC_STATUS_REG), s64_steps);\n"
+              "    fflush(stderr);\n"
+              "    GET_RCP_REG(SP_PC_REG) = 0x04001000 | FIT_IMEM(PC);\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          p.write_text(s)
           PY
-          git -C mupen64plus-rsp-cxd4 diff -- su.c | tee "$GITHUB_WORKSPACE/captures/cxd4-rdp-call-trace.patch"
+          git -C mupen64plus-rsp-cxd4 diff -- su.c | tee "$GITHUB_WORKSPACE/captures/cxd4-rsp-control-trace.patch"
 
           export PATH="$root/mupen64plus-core/.github/workflows/scripts:$PATH"
 
@@ -211,7 +287,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-angrylion-rdp-call-trace.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-cxd4-rsp-control-trace.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -269,7 +345,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-angrylion-rdp-call-trace
+          name: gate-c-h-comp-e4b-mupen-cxd4-rsp-control-trace
           retention-days: 30
           if-no-files-found: ignore
           path: |

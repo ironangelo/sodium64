@@ -610,27 +610,9 @@ e4b_vis_dp_wait:
     bnez t0, e4b_vis_dp_wait
     nop
 
-    // Always sample physical Main rows0..7,x12..19. First band archives
-    // immediately after its fence; second band samples the exact same bytes
-    // after one more band has been rendered and fenced.
-    li a0, SCRN_DATA
-    lw a1, FRAMEBUFFER(sp)
-    addi a1, a1, 0x18
-    li a2, 0x2200700F
-    jal dma_read
-    nop
-
-    li a0, SCRN_DATA
-    beqz k0, e4b_vis_archive_first
-    li a2, 0x7F
-    li a1, 0xA00EA000
-    b e4b_vis_archive_store
-    nop
-e4b_vis_archive_first:
-    li a1, 0xA00E8000
-e4b_vis_archive_store:
-    jal dma_write
-    nop
+    // Fence-only discriminator: deliberately no SP DMA and no framebuffer
+    // writeback here. Final framebuffer bytes isolate the effect of the new
+    // per-band SyncFull boundary itself.
 
 e4b_band_comp_done:
     // Only the controlled first 0..16 section is subdivided. If its true end

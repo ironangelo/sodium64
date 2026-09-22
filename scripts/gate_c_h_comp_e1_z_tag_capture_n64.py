@@ -366,19 +366,19 @@ def classify_e2f_carrier_sections(
     }
 
 
-def classify_e2g_shared_z_baseline(
+def classify_e2g_a_z_ownership(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
     color_prefix_guard: bytes,
     color_suffix_guard: bytes,
     framebuffer: bytes,
-    shared_z: bytes,
-    shared_z_prefix: bytes,
-    shared_z_suffix: bytes,
-    second_z: bytes,
-    second_z_prefix: bytes,
-    second_z_suffix: bytes,
+    sub_z: bytes,
+    sub_z_prefix: bytes,
+    sub_z_suffix: bytes,
+    main_z: bytes,
+    main_z_prefix: bytes,
+    main_z_suffix: bytes,
 ) -> dict[str, object]:
     carrier = classify_e2f_carrier_sections(queue1, queue2)
 
@@ -388,56 +388,63 @@ def classify_e2g_shared_z_baseline(
             for i in range(0, len(data), 2)
         ]
 
-    state_counts = collections.Counter()
-    compact_wrong: list[dict[str, int]] = []
-    main_wrong: list[dict[str, int]] = []
-    shared_z_wrong: list[dict[str, int]] = []
-
     compact_words = words(color_final)
     framebuffer_words = words(framebuffer)
-    shared_z_words = words(shared_z)
-
-    # Final compact band is 8 rows; main color spans the same pattern over 16 rows.
-    for y in range(E1C_ROWS):
-        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
-            tile_state = ((x - E1C_ACTIVE_X0) // 8) & 3
-            expected_sub = (
-                BG2_GREEN_RGBA5551 if tile_state in (2, 3)
-                else E2F_BACKDROP_BLUE_RGBA5551
-            )
-            actual_sub = compact_words[y * FB_WIDTH + x]
-            if actual_sub != expected_sub and len(compact_wrong) < 64:
-                compact_wrong.append({
-                    "x": x, "y": y, "state": tile_state,
-                    "actual": actual_sub, "expected": expected_sub,
-                })
-
-            expected_shared_z = (
-                BG1_TAG_WORD if tile_state in (1, 3) else BG2_TAG_WORD
-            )
-            actual_z = shared_z_words[y * FB_WIDTH + x]
-            if actual_z != expected_shared_z and len(shared_z_wrong) < 64:
-                shared_z_wrong.append({
-                    "x": x, "y": y, "state": tile_state,
-                    "actual": actual_z, "expected": expected_shared_z,
-                })
-            state_counts[tile_state] += 1
-
-    for y in range(E2B_MAIN_ROW0, E2D_MAIN_ROW1):
-        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
-            tile_state = ((x - E1C_ACTIVE_X0) // 8) & 3
-            expected_main = (
-                E2B_MAIN_RED_RGBA5551 if tile_state in (1, 3)
-                else E2F_BACKDROP_BLUE_RGBA5551
-            )
-            actual_main = framebuffer_words[y * FB_WIDTH + x]
-            if actual_main != expected_main and len(main_wrong) < 64:
-                main_wrong.append({
-                    "x": x, "y": y, "state": tile_state,
-                    "actual": actual_main, "expected": expected_main,
-                })
+    sub_z_words = words(sub_z)
+    main_z_words = words(main_z)
 
     expected_state = (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) * E1C_ROWS // 4
+    compact_wrong: list[dict[str, int]] = []
+    main_wrong: list[dict[str, int]] = []
+    sub_z_wrong: list[dict[str, int]] = []
+    main_z_wrong: list[dict[str, int]] = []
+    pair_counts = collections.Counter()
+    state_counts = collections.Counter()
+
+    for y in range(E1C_ROWS):
+        main_y = E2B_MAIN_ROW1 + y
+        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
+            state = ((x - E1C_ACTIVE_X0) // 8) & 3
+            expected_sub_color = (
+                BG2_GREEN_RGBA5551 if state in (2, 3)
+                else E2F_BACKDROP_BLUE_RGBA5551
+            )
+            expected_main_color = (
+                E2B_MAIN_RED_RGBA5551 if state in (1, 3)
+                else E2F_BACKDROP_BLUE_RGBA5551
+            )
+            expected_sub_tag = BG2_TAG_WORD if state in (2, 3) else BACKDROP_TAG_WORD
+            expected_main_tag = BG1_TAG_WORD if state in (1, 3) else BACKDROP_TAG_WORD
+
+            actual_sub_color = compact_words[y * FB_WIDTH + x]
+            actual_main_color = framebuffer_words[main_y * FB_WIDTH + x]
+            actual_sub_tag = sub_z_words[y * FB_WIDTH + x]
+            actual_main_tag = main_z_words[y * FB_WIDTH + x]
+
+            if actual_sub_color != expected_sub_color and len(compact_wrong) < 64:
+                compact_wrong.append({
+                    "x": x, "y": y, "state": state,
+                    "actual": actual_sub_color, "expected": expected_sub_color,
+                })
+            if actual_main_color != expected_main_color and len(main_wrong) < 64:
+                main_wrong.append({
+                    "x": x, "y": main_y, "state": state,
+                    "actual": actual_main_color, "expected": expected_main_color,
+                })
+            if actual_sub_tag != expected_sub_tag and len(sub_z_wrong) < 64:
+                sub_z_wrong.append({
+                    "x": x, "y": y, "state": state,
+                    "actual": actual_sub_tag, "expected": expected_sub_tag,
+                })
+            if actual_main_tag != expected_main_tag and len(main_z_wrong) < 64:
+                main_z_wrong.append({
+                    "x": x, "y": y, "state": state,
+                    "actual": actual_main_tag, "expected": expected_main_tag,
+                })
+
+            state_counts[state] += 1
+            pair_counts[(actual_main_tag, actual_sub_tag)] += 1
+
     compact_hist = collections.Counter(
         compact_words[y * FB_WIDTH + x]
         for y in range(E1C_ROWS)
@@ -448,20 +455,30 @@ def classify_e2g_shared_z_baseline(
         for y in range(E2B_MAIN_ROW0, E2D_MAIN_ROW1)
         for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1)
     )
-    shared_hist = collections.Counter(
-        shared_z_words[y * FB_WIDTH + x]
+    sub_hist = collections.Counter(
+        sub_z_words[y * FB_WIDTH + x]
         for y in range(E1C_ROWS)
         for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1)
     )
-
+    main_z_hist = collections.Counter(
+        main_z_words[y * FB_WIDTH + x]
+        for y in range(E1C_ROWS)
+        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1)
+    )
     compact_border = collections.Counter(
         compact_words[y * FB_WIDTH + x]
         for y in range(E1C_ROWS)
         for x in range(FB_WIDTH)
         if not (E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1)
     )
-    shared_border = collections.Counter(
-        shared_z_words[y * FB_WIDTH + x]
+    sub_border = collections.Counter(
+        sub_z_words[y * FB_WIDTH + x]
+        for y in range(E1C_ROWS)
+        for x in range(FB_WIDTH)
+        if not (E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1)
+    )
+    main_z_border = collections.Counter(
+        main_z_words[y * FB_WIDTH + x]
         for y in range(E1C_ROWS)
         for x in range(FB_WIDTH)
         if not (E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1)
@@ -471,15 +488,13 @@ def classify_e2g_shared_z_baseline(
         color_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
         and color_suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
     )
-    shared_guards_ok = (
-        shared_z_prefix == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
-        and shared_z_suffix == SENTINEL_WORD.to_bytes(2, "big") * (E1C_GUARD_SIZE // 2)
+    sub_guards_ok = (
+        sub_z_prefix == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+        and sub_z_suffix == SENTINEL_WORD.to_bytes(2, "big") * (E1C_GUARD_SIZE // 2)
     )
-    second_words = words(second_z)
-    second_untouched = (
-        collections.Counter(second_words)[SENTINEL_WORD] == len(second_words)
-        and second_z_prefix == bytes([E2G_SECOND_Z_PREFIX_BYTE]) * E1C_GUARD_SIZE
-        and second_z_suffix == bytes([E2G_SECOND_Z_SUFFIX_BYTE]) * E1C_GUARD_SIZE
+    main_guards_ok = (
+        main_z_prefix == bytes([E2G_SECOND_Z_PREFIX_BYTE]) * E1C_GUARD_SIZE
+        and main_z_suffix == bytes([E2G_SECOND_Z_SUFFIX_BYTE]) * E1C_GUARD_SIZE
     )
 
     colors_passed = (
@@ -492,22 +507,35 @@ def classify_e2g_shared_z_baseline(
         and compact_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
         and color_guards_ok
     )
-    shared_collapse_passed = (
-        not shared_z_wrong
-        and shared_hist[BG1_TAG_WORD] == expected_state * 2
-        and shared_hist[BG2_TAG_WORD] == expected_state * 2
-        and shared_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
-        and shared_guards_ok
-        and state_counts == collections.Counter({0: expected_state, 1: expected_state, 2: expected_state, 3: expected_state})
+    expected_pairs = collections.Counter({
+        (BACKDROP_TAG_WORD, BACKDROP_TAG_WORD): expected_state,
+        (BG1_TAG_WORD, BACKDROP_TAG_WORD): expected_state,
+        (BACKDROP_TAG_WORD, BG2_TAG_WORD): expected_state,
+        (BG1_TAG_WORD, BG2_TAG_WORD): expected_state,
+    })
+    metadata_passed = (
+        not sub_z_wrong
+        and not main_z_wrong
+        and sub_hist[BACKDROP_TAG_WORD] == expected_state * 2
+        and sub_hist[BG2_TAG_WORD] == expected_state * 2
+        and main_z_hist[BACKDROP_TAG_WORD] == expected_state * 2
+        and main_z_hist[BG1_TAG_WORD] == expected_state * 2
+        and sub_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
+        and main_z_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
+        and sub_guards_ok
+        and main_guards_ok
+        and state_counts == collections.Counter({
+            0: expected_state, 1: expected_state,
+            2: expected_state, 3: expected_state,
+        })
+        and pair_counts == expected_pairs
     )
-    passed = bool(
-        carrier["passed"] and colors_passed and shared_collapse_passed and second_untouched
-    )
+    passed = bool(carrier["passed"] and colors_passed and metadata_passed)
 
     return {
         "classification": (
-            "E2G_SHARED_Z_COLLAPSE_BASELINE_VALIDATED"
-            if passed else "E2G_SHARED_Z_COLLAPSE_BASELINE_FAILED"
+            "E2G_A_SCREEN_Z_OWNERSHIP_VALIDATED"
+            if passed else "E2G_A_SCREEN_Z_OWNERSHIP_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
@@ -517,34 +545,37 @@ def classify_e2g_shared_z_baseline(
             "compact_blue": compact_hist[E2F_BACKDROP_BLUE_RGBA5551],
             "main_red": main_hist[E2B_MAIN_RED_RGBA5551],
             "main_blue": main_hist[E2F_BACKDROP_BLUE_RGBA5551],
-            "state_counts_final_band": dict(state_counts),
             "compact_mismatches": compact_wrong,
             "main_mismatches": main_wrong,
         },
-        "shared_z": {
-            "passed": shared_collapse_passed,
-            "bg1_tag_words": shared_hist[BG1_TAG_WORD],
-            "inherited_bg2_tag_words": shared_hist[BG2_TAG_WORD],
-            "mismatches": shared_z_wrong,
-            "guards_ok": shared_guards_ok,
-            "collapsed_states": {
-                "00_and_01_same_tag": hex(BG2_TAG_WORD),
-                "10_and_11_same_tag": hex(BG1_TAG_WORD),
-            },
+        "sub_z": {
+            "backdrop_words": sub_hist[BACKDROP_TAG_WORD],
+            "bg2_words": sub_hist[BG2_TAG_WORD],
+            "border_sentinel_words": sub_border[SENTINEL_WORD],
+            "guards_ok": sub_guards_ok,
+            "mismatches": sub_z_wrong,
         },
-        "second_z_candidate": {
-            "passed": second_untouched,
-            "sentinel_words": collections.Counter(second_words)[SENTINEL_WORD],
-            "total_words": len(second_words),
-            "prefix_guard_ok": second_z_prefix == bytes([E2G_SECOND_Z_PREFIX_BYTE]) * E1C_GUARD_SIZE,
-            "suffix_guard_ok": second_z_suffix == bytes([E2G_SECOND_Z_SUFFIX_BYTE]) * E1C_GUARD_SIZE,
+        "main_z": {
+            "backdrop_words": main_z_hist[BACKDROP_TAG_WORD],
+            "bg1_words": main_z_hist[BG1_TAG_WORD],
+            "border_sentinel_words": main_z_border[SENTINEL_WORD],
+            "guards_ok": main_guards_ok,
+            "mismatches": main_z_wrong,
+        },
+        "pairwise": {
+            "state_counts": dict(state_counts),
+            "pairs": {
+                f"{main:04x}/{sub:04x}": count
+                for (main, sub), count in sorted(pair_counts.items())
+            },
+            "expected_each": expected_state,
         },
         "constants": {
-            "state_words_each_final_band": expected_state,
-            "false_tag": hex(BACKDROP_TAG_WORD),
+            "backdrop_tag": hex(BACKDROP_TAG_WORD),
             "bg1_tag": hex(BG1_TAG_WORD),
             "bg2_tag": hex(BG2_TAG_WORD),
-            "second_z_address": hex(E2G_SECOND_Z_ADDR),
+            "sub_z_address": hex(E1C_Z_SCRATCH_ADDR),
+            "main_z_address": hex(E2G_SECOND_Z_ADDR),
         },
     }
 
@@ -1075,10 +1106,9 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2g baseline keeps the validated E2f runtime frozen and proves the
-        # current single Z target collapses independent main/sub state while the
-        # reserved second screen-specific Z candidate remains untouched.
-        result = classify_e2g_shared_z_baseline(
+        # E2g-A authority keeps the four-state guest and color path frozen while
+        # requiring independent identity metadata in the TS/sub and TM/main Z strips.
+        result = classify_e2g_a_z_ownership(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -1104,7 +1134,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2g shared-Z baseline classifier failed; see result.json")
+            raise RuntimeError("E2g-A screen-Z ownership classifier failed; see result.json")
 
         try:
             client.request("D")

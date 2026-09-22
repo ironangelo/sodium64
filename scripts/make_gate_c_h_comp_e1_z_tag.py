@@ -22,9 +22,12 @@ NMI_OFFSET = NMI_ADDRESS - LOAD_ADDRESS
 BG1_TILEMAP_ADDRESS = 0x9000
 BG2_TILEMAP_ADDRESS = 0x9800
 BG1_TILE_ADDRESS = 0xA000
-BG2_TILE_ADDRESS = 0xA020
+BG2_TILE_ADDRESS = 0xA400
 HDMA_WINDOW_TABLE_ADDRESS = 0xB000
 TILEMAP_SIZE = 0x800
+TILE_COUNT = 32
+TILE_BYTES = 16
+TILE_SET_SIZE = TILE_COUNT * TILE_BYTES
 VISIBLE_LINES = 224
 FRAME_COUNTER = 0x7E0000
 
@@ -123,8 +126,8 @@ def build_program() -> bytes:
 
     dma_to_vram(a, source=BG1_TILEMAP_ADDRESS, vram_word=0x0000, length=TILEMAP_SIZE)
     dma_to_vram(a, source=BG2_TILEMAP_ADDRESS, vram_word=0x0800, length=TILEMAP_SIZE)
-    dma_to_vram(a, source=BG1_TILE_ADDRESS, vram_word=0x1000, length=32)
-    dma_to_vram(a, source=BG2_TILE_ADDRESS, vram_word=0x2000, length=32)
+    dma_to_vram(a, source=BG1_TILE_ADDRESS, vram_word=0x1000, length=TILE_SET_SIZE)
+    dma_to_vram(a, source=BG2_TILE_ADDRESS, vram_word=0x2000, length=TILE_SET_SIZE)
 
     # CGRAM 0: full blue backdrop. CGRAM 1: full red for opaque BG1.
     # CGRAM 2: full green for opaque BG2.
@@ -179,10 +182,11 @@ def build_program() -> bytes:
 
 
 def build_tilemap() -> bytes:
-    # Alternate character IDs 0/1. A 32-tile row has even width, so every row
-    # starts at tile 0 and no horizontally adjacent entries are identical.
+    # Use unique character IDs 0..31 across every row. Even IDs are opaque and
+    # odd IDs transparent, preserving an exact 50/50 pattern while avoiding
+    # the renderer's known repeated-tile skip-upload proof artifact.
     return b"".join(
-        (index & 1).to_bytes(2, "little")
+        (index % TILE_COUNT).to_bytes(2, "little")
         for index in range(TILEMAP_SIZE // 2)
     )
 
@@ -204,9 +208,17 @@ def write_vector(rom: bytearray, offset: int, address: int) -> None:
 def build_rom() -> bytes:
     program = build_program()
     tilemap = build_tilemap()
-    transparent_tile = bytes(16)
-    bg1_tiles = build_bg1_tile() + transparent_tile
-    bg2_tiles = build_bg2_tile() + transparent_tile
+    transparent_tile = bytes(TILE_BYTES)
+    bg1_opaque = build_bg1_tile()
+    bg2_opaque = build_bg2_tile()
+    bg1_tiles = b"".join(
+        bg1_opaque if (index & 1) == 0 else transparent_tile
+        for index in range(TILE_COUNT)
+    )
+    bg2_tiles = b"".join(
+        bg2_opaque if (index & 1) == 0 else transparent_tile
+        for index in range(TILE_COUNT)
+    )
     hdma_table = build_hdma_window_table()
     bg1_map_offset = BG1_TILEMAP_ADDRESS - LOAD_ADDRESS
     bg2_map_offset = BG2_TILEMAP_ADDRESS - LOAD_ADDRESS

@@ -543,6 +543,12 @@ next_layer:
     li a0, RDP_FRAME
     jal rdp_send
     li a1, RDP_FRAME + 8
+
+    // E2f proof: the second/main screen target needs its own backdrop baseline.
+    // Replay the already-prepared current-band backdrop before traversing TM.
+    li a0, RDP_FILL
+    jal rdp_send
+    li a1, RDP_WINDOW
     b next_layer
     nop
 

@@ -199,7 +199,7 @@ jobs:
           set seed [string map {"\n" "\r"} $seed]
           set send_slow {4096 0.005}
           send -s -- $seed
-          expect "0000000000000000"
+          expect "PC: $env(CAPTURE_READY_HEX)"
           expect "(dbg) "
 
           send "bp rm $env(CAPTURE_READY_ADDR)\r"
@@ -217,7 +217,7 @@ jobs:
           close $postf
           set post [string map {"\n" "\r"} $post]
           send -s -- $post
-          expect "e1f00d01"
+          expect "PC: $env(CAPTURE_READY_HEX)"
           expect "(dbg) "
           send "quit\r"
           expect eof

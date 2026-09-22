@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4a DMA2D Gather Scatter Proof
+name: Gate C H-COMP E4b Guest Baseline
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4a-dma2d-band-stream
+      - phase4/gate-c-h-comp-e4b-same-band-ownership
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4a-dma2d-band-stream-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-guest-baseline-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
-      - name: Validate deterministic E3b brightness-order guest
+      - name: Validate deterministic E4b same-band guest
         shell: bash
         run: |
           set -euo pipefail
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build E4a DMA2D runtime with frozen E3b semantics
+      - name: Build frozen E4a runtime with E4b guest
         shell: bash
         run: |
           set -euo pipefail
@@ -54,7 +54,7 @@ jobs:
           sha256sum sodium64.z64 build/sodium64.elf | tee build-sha256.txt
           grep -E '(^|[[:space:]])(text|\.text)' build/rsp_main.map || true
 
-      - name: Wrap exact E3b brightness-order guest
+      - name: Wrap exact E4b same-band guest
         shell: bash
         run: |
           set -euo pipefail
@@ -71,7 +71,7 @@ jobs:
           sha256sum workload/e1c.smc wrap/out/e1c.z64 | tee workload/hashes.sha256
           rm workload/embedded.smc
 
-      - name: Locate E4a runtime state
+      - name: Locate frozen E4a runtime state
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run fenced E4a DMA2D gather/scatter proof
+      - name: Run stale E4a authority on E4b guest baseline
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E4a DMA2D gather/scatter evidence
+      - name: Upload E4b guest-baseline evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4a-dma2d-gather-scatter-evidence
+          name: gate-c-h-comp-e4b-guest-baseline-evidence
           retention-days: 30
           path: |
             captures/

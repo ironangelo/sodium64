@@ -1,9 +1,9 @@
-name: Gate C H-COMP E4b Main Visibility Archive
+name: Gate C H-COMP E4b Fence Only
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-main-visibility-archive
+      - phase4/gate-c-h-comp-e4b-fence-only
   workflow_dispatch:
 
 permissions:
@@ -171,7 +171,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-main-visibility-evidence
+          name: gate-c-h-comp-e4b-fence-only-evidence
           retention-days: 30
           path: |
             captures/

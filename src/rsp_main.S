@@ -256,6 +256,14 @@ next_section:
     nop
     li k1, 8
 
+    // E2e proof: align compact winner-metadata with compact color band 1.
+    // Global RDP y=16 maps to physical Z scratch row 0.
+    li t0, 0x000BDD00 // 0xC0000 - 16*560
+    sw t0, RDP_TILE7 + 4
+    li a0, RDP_TILE7
+    jal rdp_send
+    li a1, RDP_TILE7 + 8
+
 e2d_band_bounds_ready:
     // Check if this section has an OAM update
     lbu t0, STAT_FLAGS
@@ -546,16 +554,35 @@ e2d_band_done:
     lw t0, MODE7_BOUNDS + 4
     bnez t0, next_section
     lw t1, MODE7_BOUNDS + 0
-    bge k1, t1, next_section
+    bge k1, t1, e2e_restore_z
     nop
     move k0, k1
     move k1, t1
+
+    // E2e proof: rebase compact winner-metadata with compact color band 2.
+    // Global RDP y=24 maps back to physical Z scratch row 0.
+    li t0, 0x000BCB80 // 0xC0000 - 24*560
+    sw t0, RDP_TILE7 + 4
+    li a0, RDP_TILE7
+    jal rdp_send
+    li a1, RDP_TILE7 + 8
+
     li t0, 0x000E0B80 // 0xE4000 - 24*560
     sw t0, RDP_FRAME + 4
     li a0, RDP_FRAME
     jal rdp_send
     li a1, RDP_FRAME + 8
     b oam_skip
+    nop
+
+e2e_restore_z:
+    // Return later sections to the inherited full-surface-safe proof target.
+    li t0, 0x000BEE80
+    sw t0, RDP_TILE7 + 4
+    li a0, RDP_TILE7
+    jal rdp_send
+    li a1, RDP_TILE7 + 8
+    b next_section
     nop
 
 

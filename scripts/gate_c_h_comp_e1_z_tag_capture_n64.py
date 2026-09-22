@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2c shared-layer membership repair proof."""
+"""Capture/classify Gate-C E2d 16-line compact-band overrun baseline proof."""
 
 from __future__ import annotations
 
@@ -57,6 +57,8 @@ BG2_GREEN_RGBA5551 = 0x07C1
 E2B_MAIN_RED_RGBA5551 = 0xF801
 E2B_MAIN_ROW0 = 8
 E2B_MAIN_ROW1 = 16
+E2D_MAIN_ROW1 = 24
+E2D_SUFFIX_INTACT_BYTES = 24
 
 E1C_Z_SCRATCH_ADDR = 0xA00C0000
 E1C_Z_SCRATCH_SIZE = 0x1180
@@ -232,7 +234,7 @@ def decode_section_queue(data: bytes) -> list[dict[str, int]]:
     return records
 
 
-def classify_e2c_carrier_sections(
+def classify_e2d_carrier_sections(
     queue1: bytes,
     queue2: bytes,
 ) -> dict[str, object]:
@@ -242,7 +244,7 @@ def classify_e2c_carrier_sections(
     }
 
     expected = [
-        {"index": 0, "wh0": 0x00, "ts": 0x01, "tm": 0x01, "split_line": 8},
+        {"index": 0, "wh0": 0x00, "ts": 0x01, "tm": 0x01, "split_line": 16},
         {"index": 1, "wh0": 0x01, "ts": 0x01, "tm": 0x01, "split_line": 224},
     ]
 
@@ -275,9 +277,9 @@ def classify_e2c_carrier_sections(
     passed = bool(matches)
     return {
         "classification": (
-            "E2C_SHARED_CARRIER_VALIDATED"
+            "E2D_BAND_CARRIER_VALIDATED"
             if passed
-            else "E2C_SHARED_CARRIER_FAILED"
+            else "E2D_BAND_CARRIER_FAILED"
         ),
         "passed": passed,
         "matching_queues": matches,
@@ -286,7 +288,7 @@ def classify_e2c_carrier_sections(
     }
 
 
-def classify_e2c_shared_repair(
+def classify_e2d_band_overrun_baseline(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -294,7 +296,7 @@ def classify_e2c_shared_repair(
     color_suffix_guard: bytes,
     framebuffer: bytes,
 ) -> dict[str, object]:
-    carrier = classify_e2c_carrier_sections(queue1, queue2)
+    carrier = classify_e2d_carrier_sections(queue1, queue2)
 
     def words(data: bytes) -> list[int]:
         return [
@@ -316,18 +318,28 @@ def classify_e2c_shared_repair(
                 "expected": expected,
             })
 
-    expected_active = (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) * E1C_ROWS
+    expected_compact_active = (
+        E1C_ACTIVE_X1 - E1C_ACTIVE_X0
+    ) * E1C_ROWS
     expected_border = (
         FB_WIDTH - (E1C_ACTIVE_X1 - E1C_ACTIVE_X0)
     ) * E1C_ROWS
+    expected_main_active = (
+        E1C_ACTIVE_X1 - E1C_ACTIVE_X0
+    ) * (E2D_MAIN_ROW1 - E2B_MAIN_ROW0)
     compact_hist = collections.Counter(compact_words)
     prefix_ok = color_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
-    suffix_ok = color_suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
+    suffix_expected = (
+        bytes([SUFFIX_BYTE]) * E2D_SUFFIX_INTACT_BYTES
+        + E2B_MAIN_RED_RGBA5551.to_bytes(2, "big")
+        * ((E1C_GUARD_SIZE - E2D_SUFFIX_INTACT_BYTES) // 2)
+    )
+    suffix_overrun_signature_ok = color_suffix_guard == suffix_expected
 
     framebuffer_words = words(framebuffer)
     main_wrong: list[dict[str, int]] = []
     main_active_words: list[int] = []
-    for y in range(E2B_MAIN_ROW0, E2B_MAIN_ROW1):
+    for y in range(E2B_MAIN_ROW0, E2D_MAIN_ROW1):
         row = framebuffer_words[y * FB_WIDTH:(y + 1) * FB_WIDTH]
         for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
             actual = row[x]
@@ -344,15 +356,15 @@ def classify_e2c_shared_repair(
     compact_passed = (
         len(compact_words) == FB_WIDTH * E1C_ROWS
         and not compact_wrong
-        and compact_hist[E2B_MAIN_RED_RGBA5551] == expected_active
+        and compact_hist[E2B_MAIN_RED_RGBA5551] == expected_compact_active
         and compact_hist[SENTINEL_WORD] == expected_border
         and prefix_ok
-        and suffix_ok
+        and suffix_overrun_signature_ok
     )
     main_passed = (
-        len(main_active_words) == expected_active
+        len(main_active_words) == expected_main_active
         and not main_wrong
-        and main_hist[E2B_MAIN_RED_RGBA5551] == expected_active
+        and main_hist[E2B_MAIN_RED_RGBA5551] == expected_main_active
         and main_hist[BG2_GREEN_RGBA5551] == 0
     )
     pixels_passed = compact_passed and main_passed
@@ -360,9 +372,9 @@ def classify_e2c_shared_repair(
 
     return {
         "classification": (
-            "E2C_SHARED_MEMBERSHIP_VALIDATED"
+            "E2D_BAND_OVERRUN_BASELINE_VALIDATED"
             if passed
-            else "E2C_SHARED_MEMBERSHIP_FAILED"
+            else "E2D_BAND_OVERRUN_BASELINE_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
@@ -378,9 +390,10 @@ def classify_e2c_shared_repair(
                 "compact_color": hex(E2B_MAIN_RED_RGBA5551),
                 "compact_border": hex(SENTINEL_WORD),
                 "main_row0": E2B_MAIN_ROW0,
-                "main_row1_exclusive": E2B_MAIN_ROW1,
+                "main_row1_exclusive": E2D_MAIN_ROW1,
                 "main_color": hex(E2B_MAIN_RED_RGBA5551),
-                "expected_active_words": expected_active,
+                "expected_compact_active_words": expected_compact_active,
+                "expected_main_active_words": expected_main_active,
                 "expected_border_words": expected_border,
             },
             "compact": {
@@ -388,7 +401,9 @@ def classify_e2c_shared_repair(
                 "active_red_words": compact_hist[E2B_MAIN_RED_RGBA5551],
                 "sentinel_border_words": compact_hist[SENTINEL_WORD],
                 "prefix_guard_ok": prefix_ok,
-                "suffix_guard_ok": suffix_ok,
+                "suffix_overrun_signature_ok": suffix_overrun_signature_ok,
+                "suffix_intact_prefix_bytes": E2D_SUFFIX_INTACT_BYTES,
+                "suffix_overwritten_red_pixels": (E1C_GUARD_SIZE - E2D_SUFFIX_INTACT_BYTES) // 2,
                 "mismatches": compact_wrong,
             },
             "main": {
@@ -752,10 +767,11 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2c repair authority keeps the guest and E2b target-switch machinery
-        # frozen while asserting the one-instruction shared-membership change:
-        # BG1 shared on TM+TS must now contribute red to both compact and main.
-        result = classify_e2c_shared_repair(
+        # E2d baseline keeps the validated E2c RSP runtime frozen and extends
+        # only the real carrier section from 8 to 16 lines. The first compact
+        # 8 rows remain valid; row 8 must begin overwriting the 64-byte suffix
+        # guard with the precommitted 24-byte-sentinel + 20-red-pixel signature.
+        result = classify_e2d_band_overrun_baseline(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -775,7 +791,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2c shared membership classifier failed; see result.json")
+            raise RuntimeError("E2d band-overrun baseline classifier failed; see result.json")
 
         try:
             client.request("D")

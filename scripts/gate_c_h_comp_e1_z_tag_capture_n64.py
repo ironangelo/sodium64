@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2d 16-line compact-band overrun baseline proof."""
+"""Capture/classify Gate-C E2d 16-line bounded compact-band reuse proof."""
 
 from __future__ import annotations
 
@@ -288,7 +288,7 @@ def classify_e2d_carrier_sections(
     }
 
 
-def classify_e2d_band_overrun_baseline(
+def classify_e2d_band_reuse(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -329,12 +329,7 @@ def classify_e2d_band_overrun_baseline(
     ) * (E2D_MAIN_ROW1 - E2B_MAIN_ROW0)
     compact_hist = collections.Counter(compact_words)
     prefix_ok = color_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
-    suffix_expected = (
-        bytes([SUFFIX_BYTE]) * E2D_SUFFIX_INTACT_BYTES
-        + E2B_MAIN_RED_RGBA5551.to_bytes(2, "big")
-        * ((E1C_GUARD_SIZE - E2D_SUFFIX_INTACT_BYTES) // 2)
-    )
-    suffix_overrun_signature_ok = color_suffix_guard == suffix_expected
+    suffix_ok = color_suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
 
     framebuffer_words = words(framebuffer)
     main_wrong: list[dict[str, int]] = []
@@ -359,7 +354,7 @@ def classify_e2d_band_overrun_baseline(
         and compact_hist[E2B_MAIN_RED_RGBA5551] == expected_compact_active
         and compact_hist[SENTINEL_WORD] == expected_border
         and prefix_ok
-        and suffix_overrun_signature_ok
+        and suffix_ok
     )
     main_passed = (
         len(main_active_words) == expected_main_active
@@ -372,9 +367,9 @@ def classify_e2d_band_overrun_baseline(
 
     return {
         "classification": (
-            "E2D_BAND_OVERRUN_BASELINE_VALIDATED"
+            "E2D_BAND_REUSE_VALIDATED"
             if passed
-            else "E2D_BAND_OVERRUN_BASELINE_FAILED"
+            else "E2D_BAND_REUSE_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
@@ -401,9 +396,7 @@ def classify_e2d_band_overrun_baseline(
                 "active_red_words": compact_hist[E2B_MAIN_RED_RGBA5551],
                 "sentinel_border_words": compact_hist[SENTINEL_WORD],
                 "prefix_guard_ok": prefix_ok,
-                "suffix_overrun_signature_ok": suffix_overrun_signature_ok,
-                "suffix_intact_prefix_bytes": E2D_SUFFIX_INTACT_BYTES,
-                "suffix_overwritten_red_pixels": (E1C_GUARD_SIZE - E2D_SUFFIX_INTACT_BYTES) // 2,
+                "suffix_guard_ok": suffix_ok,
                 "mismatches": compact_wrong,
             },
             "main": {
@@ -767,11 +760,10 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2d baseline keeps the validated E2c RSP runtime frozen and extends
-        # only the real carrier section from 8 to 16 lines. The first compact
-        # 8 rows remain valid; row 8 must begin overwriting the 64-byte suffix
-        # guard with the precommitted 24-byte-sentinel + 20-red-pixel signature.
-        result = classify_e2d_band_overrun_baseline(
+        # E2d repair keeps the 16-line carrier frozen while the proof-local
+        # RSP subdivides the loaded section into two 8-line bands that reuse
+        # the same compact target. Both compact guards must now remain intact.
+        result = classify_e2d_band_reuse(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -791,7 +783,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2d band-overrun baseline classifier failed; see result.json")
+            raise RuntimeError("E2d band-reuse classifier failed; see result.json")
 
         try:
             client.request("D")

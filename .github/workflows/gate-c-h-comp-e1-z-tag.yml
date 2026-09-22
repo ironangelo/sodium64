@@ -1,4 +1,4 @@
-name: Gate C H-COMP E2d Band Overrun Baseline
+name: Gate C H-COMP E2d Band Reuse Proof
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e2d-band-overrun-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e2d-band-reuse-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build exact E2d band-overrun runtime
+      - name: Build exact E2d band-reuse runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run fenced E2d band-overrun baseline
+      - name: Run fenced E2d band-reuse proof
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E2d band-overrun evidence
+      - name: Upload E2d band-reuse evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e2d-band-overrun-evidence
+          name: gate-c-h-comp-e2d-band-reuse-evidence
           retention-days: 30
           path: |
             captures/

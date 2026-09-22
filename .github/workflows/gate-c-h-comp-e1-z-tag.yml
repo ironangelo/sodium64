@@ -1,16 +1,16 @@
-name: Gate C H-COMP E2g-B Screen Boolean Proof
+name: Gate C H-COMP E3a Guest Baseline
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e2g-bg-metadata
+      - phase4/gate-c-h-comp-e3a-add-compositor
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e2g-b-screen-boolean-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e3a-guest-baseline-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build exact E2g-B screen-boolean runtime
+      - name: Build E3a guest baseline with frozen E2g-B runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run fenced E2g-B screen-boolean proof
+      - name: Run frozen E2g-B oracle on E3a guest baseline
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E2g-B screen-boolean evidence
+      - name: Upload E3a guest-baseline evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e2g-b-screen-boolean-evidence
+          name: gate-c-h-comp-e3a-guest-baseline-evidence
           retention-days: 30
           path: |
             captures/

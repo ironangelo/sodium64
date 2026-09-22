@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Generate the deterministic original SNES guest for Gate-C E2b target switching.
+"""Generate the deterministic SNES guest for Gate-C E2f screen-backdrop proof.
 
-The 32 KiB LoROM renders a controlled Mode-0 shared-layer baseline: BG1 is
-fully opaque red and enabled on both main and sub screens. BG2 remains loaded
-but disabled from both screen masks. A harmless direct-HDMA WH0 stream changes
-only after the first
-16 visible lines; windows are disabled, so the write exists solely to force the
-already-validated urgent section boundary used by the E2b carrier.
+The 32 KiB LoROM renders separate Mode-0 screens with explicit transparent
+holes: BG1 red is main-only, BG2 green is sub-only, and CGRAM[0] is full blue.
+The existing alternating tilemap selects opaque tile 0 and transparent tile 1,
+so each active 256-pixel row is exactly half layer and half backdrop. A harmless
+direct-HDMA WH0 stream keeps the validated 16-line carrier geometry.
 """
 
 from __future__ import annotations
@@ -127,18 +126,18 @@ def build_program() -> bytes:
     dma_to_vram(a, source=BG1_TILE_ADDRESS, vram_word=0x1000, length=32)
     dma_to_vram(a, source=BG2_TILE_ADDRESS, vram_word=0x2000, length=32)
 
-    # CGRAM 0: black backdrop. CGRAM 1: full red for opaque BG1.
+    # CGRAM 0: full blue backdrop. CGRAM 1: full red for opaque BG1.
     # CGRAM 2: full green for opaque BG2.
     lda_sta_abs(a, 0x00, 0x2121)
-    lda_sta_abs(a, 0x00, 0x2122)    # color 0 low: black
-    lda_sta_abs(a, 0x00, 0x2122)    # color 0 high
+    lda_sta_abs(a, 0x00, 0x2122)    # color 0 low: blue BGR555 0x7C00
+    lda_sta_abs(a, 0x7C, 0x2122)    # color 0 high
     lda_sta_abs(a, 0x1F, 0x2122)    # color 1 low: red BGR555 0x001F
     lda_sta_abs(a, 0x00, 0x2122)    # color 1 high
     lda_sta_abs(a, 0xE0, 0x2122)    # color 2 low: green BGR555 0x03E0
     lda_sta_abs(a, 0x03, 0x2122)    # color 2 high
 
-    lda_sta_abs(a, 0x01, 0x212C)    # TM: BG1 shared
-    lda_sta_abs(a, 0x01, 0x212D)    # TS: BG1 shared
+    lda_sta_abs(a, 0x01, 0x212C)    # TM: BG1 main-only
+    lda_sta_abs(a, 0x02, 0x212D)    # TS: BG2 sub-only
     lda_sta_abs(a, 0x00, 0x212E)    # TMW disabled
     lda_sta_abs(a, 0x00, 0x212F)    # TSW disabled
     lda_sta_abs(a, 0x00, 0x2130)    # CGWSEL
@@ -205,8 +204,9 @@ def write_vector(rom: bytearray, offset: int, address: int) -> None:
 def build_rom() -> bytes:
     program = build_program()
     tilemap = build_tilemap()
-    bg1_tiles = build_bg1_tile() * 2
-    bg2_tiles = build_bg2_tile() * 2
+    transparent_tile = bytes(16)
+    bg1_tiles = build_bg1_tile() + transparent_tile
+    bg2_tiles = build_bg2_tile() + transparent_tile
     hdma_table = build_hdma_window_table()
     bg1_map_offset = BG1_TILEMAP_ADDRESS - LOAD_ADDRESS
     bg2_map_offset = BG2_TILEMAP_ADDRESS - LOAD_ADDRESS
@@ -235,7 +235,7 @@ def build_rom() -> bytes:
     rom[bg2_tile_offset:bg2_tile_offset + len(bg2_tiles)] = bg2_tiles
     rom[hdma_table_offset:hdma_table_offset + len(hdma_table)] = hdma_table
 
-    rom[HEADER:HEADER + 21] = b"S64 E2D BAND16".ljust(21, b" ")
+    rom[HEADER:HEADER + 21] = b"S64 E2F BACKDROP".ljust(21, b" ")
     rom[0x7FD5] = 0x20               # LoROM
     rom[0x7FD6] = 0x00
     rom[0x7FD7] = 0x05

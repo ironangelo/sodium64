@@ -158,9 +158,9 @@ def build_seed_commands(guest_counter: int) -> list[str]:
     for index, fb in enumerate(FRAMEBUFFER_ADDRS, 1):
         emit_dump(lines, fb, ROWS_0_23_BYTES, f"pre-fb{index}.raw")
 
-    # Unique terminal read used by expect to prove the whole seed stream was
-    # consumed while the emulator remained paused.
-    lines.append(f"mem /1d 0x{STATUS_ADDR:08X}")
+    # Unique terminal debugger command used by expect to prove the whole seed
+    # stream was consumed while the emulator remained paused at capture-ready.
+    lines.append("pc")
     return lines
 
 
@@ -183,7 +183,7 @@ def build_post_commands(guest_counter: int) -> list[str]:
     emit_dump(lines, E2A_MAIN_AFTER_ADDR, COMPACT_SIZE, "post-main-after.raw")
     for index, fb in enumerate(FRAMEBUFFER_ADDRS, 1):
         emit_dump(lines, fb, ROWS_0_23_BYTES, f"post-fb{index}.raw")
-    lines.append(f"mem /1d 0x{STATUS_ADDR:08X}")
+    lines.append("pc")
     return lines
 
 

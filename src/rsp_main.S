@@ -1234,6 +1234,98 @@ e2b_dp_wait:
     bnez t0, e2b_dp_wait
     nop
 
+    // E3a proof: after the established final RDP fence, compose only the
+    // first active row of the final reused band. This is deliberately a
+    // narrow full-ADD/subscreen discriminator, not the production loop.
+    lbu t0, CGWSEL
+    andi t0, t0, 0x02
+    beqz t0, e3a_comp_done
+    lbu t0, CGADSUB
+    andi t0, t0, 0xC0
+    bnez t0, e3a_comp_done
+    nop
+
+    lw s0, FRAMEBUFFER(sp)
+    addi s0, s0, 0x2318 // Main physical row 16, x=12
+    li s1, 0xA00E4018  // Compact sub row 0, x=12
+    li s2, 0xA00C2018  // Main boolean-Z row 0, x=12
+    li s3, 0xA00C0018  // Sub boolean-Z row 0, x=12
+    li s4, 32          // 32 chunks * 8 pixels = 256 active pixels
+    li v0, 0x0C00      // E2g-B boolean true
+
+e3a_comp_chunk:
+    li a0, TEXTURE
+    move a1, s0
+    jal dma_read
+    li a2, 0x0F
+    li a0, TEXTURE + 0x10
+    move a1, s1
+    jal dma_read
+    li a2, 0x0F
+    li a0, TEXTURE + 0x20
+    move a1, s2
+    jal dma_read
+    li a2, 0x0F
+    li a0, TEXTURE + 0x30
+    move a1, s3
+    jal dma_read
+    li a2, 0x0F
+
+    li t0, TEXTURE
+    li t1, TEXTURE + 0x10
+    li t2, TEXTURE + 0x20
+    li t3, TEXTURE + 0x30
+    li t4, 8
+
+e3a_comp_pixel:
+    lhu t5, 0(t2)
+    bne t5, v0, e3a_comp_next
+    lhu t6, 0(t3)
+    bne t6, v0, e3a_comp_next
+    nop
+
+    // Full saturating ADD on the three contiguous RGB5 fields obtained by
+    // removing RGBA5551 alpha. The packed identity is pinned to ares.
+    lhu t5, 0(t0)
+    lhu t6, 0(t1)
+    srl t5, t5, 1
+    srl t6, t6, 1
+    xor t7, t5, t6
+    andi t7, t7, 0x0421
+    add t8, t5, t6
+    sub t9, t8, t7
+    andi t9, t9, 0x8420
+    sub t8, t8, t9
+    srl t7, t9, 5
+    sub t9, t9, t7
+    or t8, t8, t9
+    sll t8, t8, 1
+    ori t8, t8, 1
+    sh t8, 0(t0)
+
+e3a_comp_next:
+    addi t0, t0, 2
+    addi t1, t1, 2
+    addi t2, t2, 2
+    addi t3, t3, 2
+    addi t4, t4, -1
+    bnez t4, e3a_comp_pixel
+    nop
+
+    li a0, TEXTURE
+    move a1, s0
+    jal dma_write
+    li a2, 0x0F
+
+    addi s0, s0, 0x10
+    addi s1, s1, 0x10
+    addi s2, s2, 0x10
+    addi s3, s3, 0x10
+    addi s4, s4, -1
+    bnez s4, e3a_comp_chunk
+    nop
+
+e3a_comp_done:
     li t0, 0xE1F00D01
     sw t0, TEXTURE
     lw t1, FRAMEBUFFER(sp)

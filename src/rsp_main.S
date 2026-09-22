@@ -581,6 +581,141 @@ e2g_main_z_ready:
     nop
 
 e2d_band_done:
+    // E4b proof: compose one 8x8 tile while Main/Sub/metadata for the current
+    // band still belong to the same SNES scanlines. This proof fences the RDP
+    // per band for coherence; that synchronization is not a throughput claim.
+    lw t0, MODE7_BOUNDS + 4
+    bnez t0, e4b_band_comp_done
+    nop
+    lbu t0, CGWSEL
+    andi t0, t0, 0x02
+    beqz t0, e4b_band_comp_done
+    lbu t0, CGADSUB
+    andi t0, t0, 0xC0
+    bnez t0, e4b_band_comp_done
+    nop
+    lbu t0, STAT_FLAGS
+    andi t0, t0, 0x1F
+    li t1, 8
+    bne t0, t1, e4b_band_comp_done
+    nop
+
+    li a0, RDP_TILE7 + 16
+    jal rdp_send
+    li a1, RDP_TILE7 + 24
+e4b_dp_wait:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x70
+    bnez t0, e4b_dp_wait
+    nop
+
+    // Main physical row tracks k0 directly in normal 224-line mode.
+    lw s0, FRAMEBUFFER(sp)
+    beqz k0, e4b_main_addr_ready
+    nop
+    addi s0, s0, 0x1180 // 8 * 560
+e4b_main_addr_ready:
+    addi s0, s0, 0x18   // x=12
+    li s1, 0xA00E4018   // compact Sub color row0, x=12
+    li s2, 0xA00C2018   // compact Main boolean-Z row0, x=12
+    li s3, 0xA00C0018   // compact Sub boolean-Z row0, x=12
+    li s4, 0x2200700F   // 16 B * 8 rows, skip 544
+    li v0, 0x0C00       // boolean true
+
+    // Gather both metadata planes and reduce them to a 64-byte 2-bit mask.
+    li a0, SCRN_DATA
+    move a1, s2
+    move a2, s4
+    jal dma_read
+    nop
+    li a0, CHAR_DATA
+    move a1, s3
+    move a2, s4
+    jal dma_read
+    nop
+
+    li t0, SCRN_DATA
+    li t1, CHAR_DATA
+    li t2, TEXTURE
+    li t4, 64
+e4b_mask_loop:
+    li t7, 0
+    lhu t5, 0(t0)
+    bne t5, v0, e4b_mask_no_main
+    nop
+    ori t7, t7, 1
+e4b_mask_no_main:
+    lhu t6, 0(t1)
+    bne t6, v0, e4b_mask_no_sub
+    nop
+    ori t7, t7, 2
+e4b_mask_no_sub:
+    sb t7, 0(t2)
+    addi t0, t0, 2
+    addi t1, t1, 2
+    addi t2, t2, 1
+    addi t4, t4, -1
+    bnez t4, e4b_mask_loop
+    nop
+
+    // Reuse the two 128-byte buffers for raw Main/Sub color.
+    li a0, SCRN_DATA
+    move a1, s0
+    move a2, s4
+    jal dma_read
+    nop
+    li a0, CHAR_DATA
+    move a1, s1
+    move a2, s4
+    jal dma_read
+    nop
+
+    li t0, SCRN_DATA
+    li t1, CHAR_DATA
+    li t2, TEXTURE
+    li t4, 64
+    li v1, 3
+e4b_color_loop:
+    lhu t8, 0(t0)
+    srl t8, t8, 1
+    lbu t7, 0(t2)
+    bne t7, v1, e4b_apply_brightness
+    nop
+
+    // Full saturating ADD on raw RGB555 when main-eligible + sub-present.
+    lhu t5, 0(t1)
+    srl t5, t5, 1
+    xor t7, t8, t5
+    andi t7, t7, 0x0421
+    add t6, t8, t5
+    sub t9, t6, t7
+    andi t9, t9, 0x8420
+    sub t6, t6, t9
+    srl t7, t9, 5
+    sub t9, t9, t7
+    or t8, t6, t9
+
+e4b_apply_brightness:
+    andi t8, t8, 0x7BDE
+    srl t8, t8, 1
+    sll t8, t8, 1
+    ori t8, t8, 1
+    sh t8, 0(t0)
+
+    addi t0, t0, 2
+    addi t1, t1, 2
+    addi t2, t2, 1
+    addi t4, t4, -1
+    bnez t4, e4b_color_loop
+    nop
+
+    li a0, SCRN_DATA
+    move a1, s0
+    move a2, s4
+    jal dma_write
+    nop
+
+e4b_band_comp_done:
     // Only the controlled first 0..16 section is subdivided. If its true end
     // is still ahead, advance 0..8 -> 8..16 without reloading section/OAM,
     // rebase the compact target so global y=24 maps back to scratch row 0,
@@ -1232,131 +1367,6 @@ e2b_dp_wait:
     mfc0 t0, COP0_DP_STATUS
     andi t0, t0, 0x70
     bnez t0, e2b_dp_wait
-    nop
-
-    // E3a proof: after the established final RDP fence, compose only the
-    // first active row of the final reused band. This is deliberately a
-    // narrow full-ADD/subscreen discriminator, not the production loop.
-    lbu t0, CGWSEL
-    andi t0, t0, 0x02
-    beqz t0, e3a_comp_done
-    lbu t0, CGADSUB
-    andi t0, t0, 0xC0
-    bnez t0, e3a_comp_done
-    nop
-    lbu s5, STAT_FLAGS
-    andi s5, s5, 0x1F
-    li t0, 8
-    bne s5, t0, e3a_comp_done
-    nop
-
-    lw s0, FRAMEBUFFER(sp)
-    addi s0, s0, 0x2318 // Main physical row 16, x=12
-    li s1, 0xA00E4018  // Compact sub row 0, x=12
-    li s2, 0xA00C2018  // Main boolean-Z row 0, x=12
-    li s3, 0xA00C0018  // Sub boolean-Z row 0, x=12
-    li s4, 32          // 32 chunks * 8 pixels = 256 active pixels
-    li v0, 0x0C00      // E2g-B boolean true
-
-e3a_comp_chunk:
-    li a0, TEXTURE
-    move a1, s0
-    jal dma_read
-    li a2, 0x0F
-    li a0, TEXTURE + 0x10
-    move a1, s1
-    jal dma_read
-    li a2, 0x0F
-    li a0, TEXTURE + 0x20
-    move a1, s2
-    jal dma_read
-    li a2, 0x0F
-    li a0, TEXTURE + 0x30
-    move a1, s3
-    jal dma_read
-    li a2, 0x0F
-
-    li t0, TEXTURE
-    li t1, TEXTURE + 0x10
-    li t2, TEXTURE + 0x20
-    li t3, TEXTURE + 0x30
-    li t4, 8
-
-e3a_comp_pixel:
-    // Start from raw Main for every pixel. Only true/true performs color math.
-    lhu t8, 0(t0)
-    srl t8, t8, 1
-    lhu t5, 0(t2)
-    bne t5, v0, e3b_apply_brightness
-    lhu t6, 0(t3)
-    bne t6, v0, e3b_apply_brightness
-    nop
-
-    // Full saturating ADD on raw RGB555, before master brightness.
-    lhu t5, 0(t1)
-    srl t5, t5, 1
-    xor t7, t8, t5
-    andi t7, t7, 0x0421
-    add t6, t8, t5
-    sub t9, t6, t7
-    andi t9, t9, 0x8420
-    sub t6, t6, t9
-    srl t7, t9, 5
-    sub t9, t9, t7
-    or t8, t6, t9
-
-e3b_apply_brightness:
-    // E3b discriminator: coefficient 8 is exactly one-half after color math.
-    andi t8, t8, 0x7BDE
-    srl t8, t8, 1
-    sll t8, t8, 1
-    ori t8, t8, 1
-    sh t8, 0(t0)
-
-e3a_comp_next:
-    addi t0, t0, 2
-    addi t1, t1, 2
-    addi t2, t2, 2
-    addi t3, t3, 2
-    addi t4, t4, -1
-    bnez t4, e3a_comp_pixel
-    nop
-
-    li a0, TEXTURE
-    move a1, s0
-    jal dma_write
-    li a2, 0x0F
-
-    addi s0, s0, 0x10
-    addi s1, s1, 0x10
-    addi s2, s2, 0x10
-    addi s3, s3, 0x10
-    addi s4, s4, -1
-    bnez s4, e3a_comp_chunk
-    nop
-
-e3a_comp_done:
-    // E4a proof: validate SP 2D DMA gather/scatter semantics using the
-    // already-rendered Main rows 16..23. LEN=0x2200700F means 16 bytes,
-    // eight rows total, and 544 bytes of DRAM skip between rows.
-    li a0, SCRN_DATA
-    lw a1, FRAMEBUFFER(sp)
-    addi a1, a1, 0x2318 // Main y=16, x=12
-    li a2, 0x2200700F
-    jal dma_read
-    nop
-
-    // Archive the gathered 8x8 block contiguously for host authority.
-    li a0, SCRN_DATA
-    li a1, 0xA00E8000
-    jal dma_write
-    li a2, 0x7F
-
-    // Scatter the same rows into the existing captured after-buffer at x=12.
-    li a0, SCRN_DATA
-    li a1, 0xA00EA018
-    li a2, 0x2200700F
-    jal dma_write
     nop
 
     li t0, 0xE1F00D01

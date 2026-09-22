@@ -631,6 +631,20 @@ e4b_z_archive_store:
     jal dma_write
     nop
 
+    // Band0 color-landing discriminator: before compact reuse by band1,
+    // freeze the compact color x12..19 rows0..7 into the existing E2a archive.
+    bnez k0, e4b_band_comp_done
+    nop
+    li a0, SCRN_DATA
+    li a1, 0xA00E4018
+    li a2, 0x2200700F
+    jal dma_read
+    nop
+    li a0, SCRN_DATA
+    li a1, 0xA00E6000
+    jal dma_write
+    li a2, 0x7F
+
 e4b_band_comp_done:
     // Only the controlled first 0..16 section is subdivided. If its true end
     // is still ahead, advance 0..8 -> 8..16 without reloading section/OAM,

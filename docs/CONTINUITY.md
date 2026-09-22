@@ -4,7 +4,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 > **Continuity compaction / recovery (2026-09-21):** the live file crossed the GitHub contents-size boundary and a later checkpoint accidentally replaced it with an empty file. The last complete pre-overflow operational log is permanently preserved in Git at continuity commit **`686f5a1da210f8fcd1b9cd6e74d5663f4d359c30`** (and earlier history). This live document is intentionally compacted to current state + durable decisions so future checkpoints remain well below the API limit. Historical detail not repeated here is **archived, not discarded**.
 
-## RESUME HERE — current audited state (2026-09-21 UTC)
+## RESUME HERE — current audited state (2026-09-22 UTC)
 
 ### Phase / gate
 - **M3 / Gate C — base-system fidelity and compatibility.**
@@ -22,7 +22,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Pinned SNES reference semantics establish per-channel RGB5 arithmetic with clipping. Brightness is conceptually later than the main/sub arithmetic.
 - A production design must still solve operand preservation, selection/gating, half rules, windows, throughput, and integration. The scalar proof kernels below are semantic discriminators, **not production compositor architecture**.
 
-### ACTIVE / RESUME HERE — E2g-B runtime candidate generic-green; stale semantic artifact pending
+### ACTIVE / RESUME HERE — E2g-B final authority generic-green; semantic ares build in progress
 - **E2g-A SCREEN-SPECIFIC Z OWNERSHIP CLOSED / VALIDATED** on exact head **`7b59c4657527f8853e507150ac184ac6b02cdf93`**. Exact-head Build and Validate **`35691679728 SUCCESS`** and semantic **`35691679773 SUCCESS`**; final artifact **`10679286993`**, digest **`sha256:fe9467905e77ad2b126a72a4765f129b90281c8b06a9ed5786aadf7e657dbecd`**. `result.json` reports **`E2G_A_SCREEN_Z_OWNERSHIP_VALIDATED / passed=true`**.
 - Final authority reproduces the frozen four-state oracle: sub Z = 1,024 backdrop `0x0400` + 1,024 BG2 `0x1400`; main Z = 1,024 backdrop `0x0400` + 1,024 BG1 `0x0C00`; each strip has 192 sentinel border words and intact guards. Pairwise positional states are exactly **512 each**: `0400/0400`, `0C00/0400`, `0400/1400`, `0C00/1400`. Colors remain compact 1,024 green + 1,024 blue and main 2,048 red + 2,048 blue; carrier remains 16/224. Capture is fresh/quiescent: baseline 7 -> guest 8, `SP_STATUS=1`, `DP_STATUS=129`.
 - **Meaning:** two independently addressed compact Z targets are sufficient to preserve screen-specific winner state for the controlled BG/backdrop path. This is proof-vehicle ownership, not yet the production metadata format.
@@ -656,10 +656,10 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## Current exact repo state
 - `master@5b7134930a0ca859f6aa24e54102de116948e3ed` — integrated truth.
-- Active proof branch: `phase4/gate-c-h-comp-e2g-bg-metadata@78e6a2cb126d436e9ea54e9276da76f0c06feeb4` — **E2g-B CANDIDATE / runtime-only boolean reduction**, not integrated. Frozen parent `7b59c465...` remains **E2g-A CLOSED / VALIDATED**.
+- Active proof branch: `phase4/gate-c-h-comp-e2g-bg-metadata@d184bcde9c52b29b5a58d7a9106e195317611b34` — **E2g-B CANDIDATE / final host-authority head**, not integrated. Runtime bytes are bit-identical to runtime-only parent `78e6a2cb...`; frozen parent `7b59c465...` remains **E2g-A CLOSED / VALIDATED**.
 - E2f prerequisite is **CLOSED / VALIDATED** at `efc79acef0fa5d78234ebeb91a2f62213cfc783a`; per-screen CGRAM0 backdrop ownership is established for the controlled normal-width BG path.
 - PR #13 `phase4/gate-c-rsp-overlay-clean@84ecafad7cc3505d82f134b2672d9ed1146fedc0` — **OPEN / CANDIDATE**, mergeable, not integrated; real N64 remains authority for overlay DMA/bus/cadence.
-- **Experiment in progress:** E2g-B runtime candidate `78e6a2cb126d436e9ea54e9276da76f0c06feeb4`; generic run `35723128496 SUCCESS` is closed green and stale-oracle semantic `35723128457` remains active building pinned ares. Immediate next action is exact artifact-first interpretation when that run finishes; no host-oracle change until the frozen boolean signature is directly observed.
+- **Experiment in progress:** E2g-B final-authority head `d184bcde9c52b29b5a58d7a9106e195317611b34`; exact-head generic run `35725163196` is fully green (build/profile/Mupen-LLE smoke). Final semantic `35725163080` is building pinned ares after passing guest/build/wrap/state/dependency setup. The deliberately stale run `35723128457` is already closed as **MEASURED BOOLEAN PASS / STALE-ORACLE FAILURE** with artifact `10691909601`. Immediate action: when `35725163080` finishes, inspect its exact artifact and require `E2G_B_SCREEN_BOOLEAN_METADATA_VALIDATED / passed=true` plus the frozen 512×4 pair signature before closing E2g-B.
 
 ## Operating protocol
 Authority: **current Iron instruction > repo/artifact evidence > canonical docs > continuity > chats/memory/inference**. `master` is integrated truth; phase branches are candidates/proofs only.

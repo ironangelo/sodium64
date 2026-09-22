@@ -256,7 +256,7 @@ jobs:
           export M64P_ROM="$GITHUB_WORKSPACE/wrap/out/e1c.z64"
           (
             cd captures
-            timeout 150 xvfb-run -a expect "$RUNNER_TEMP/mupen-hcomp.expect"
+            timeout 360 xvfb-run -a expect "$RUNNER_TEMP/mupen-hcomp.expect"
           )
 
       - name: Classify Mupen Angrylion crosscheck

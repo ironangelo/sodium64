@@ -1,9 +1,9 @@
-name: Gate C H-COMP E4b Guest Baseline
+name: Gate C H-COMP E4b Software-RDP Crosscheck
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-same-band-ownership
+      - phase4/gate-c-h-comp-e4b-software-rdp-crosscheck
   workflow_dispatch:
 
 permissions:
@@ -114,9 +114,13 @@ jobs:
           from pathlib import Path
           p = Path('ares/n64/system/system.cpp')
           s = p.read_text()
-          old = 'rsp.recompiler.enabled = value.boolean();'
-          assert s.count(old) == 1
-          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          old_rsp = 'rsp.recompiler.enabled = value.boolean();'
+          old_gpu = 'if(name == "Enable GPU acceleration") vulkan.enable = value.boolean();'
+          assert s.count(old_rsp) == 1
+          assert s.count(old_gpu) == 1
+          s = s.replace(old_rsp, 'rsp.recompiler.enabled = false;', 1)
+          s = s.replace(old_gpu, 'if(name == "Enable GPU acceleration") vulkan.enable = false;', 1)
+          p.write_text(s)
           PY
           .github/scripts/build_sdl.sh
           cmake --preset ubuntu-ci -DARES_CORES=n64

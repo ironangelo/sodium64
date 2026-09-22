@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E3b pre-brightness ADD defect baseline."""
+"""Capture/classify Gate-C E3b raw-before-brightness repair proof."""
 
 from __future__ import annotations
 
@@ -372,7 +372,7 @@ def classify_e2f_carrier_sections(
     }
 
 
-def classify_e3b_prebright_add_defect(
+def classify_e3b_raw_before_brightness(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -387,6 +387,20 @@ def classify_e3b_prebright_add_defect(
     main_z_suffix: bytes,
 ) -> dict[str, object]:
     carrier = classify_e2f_carrier_sections(queue1, queue2)
+    decoded_carriers = {
+        "queue1": decode_section_queue(queue1),
+        "queue2": decode_section_queue(queue2),
+    }
+    brightness_queues: list[str] = []
+    for name in carrier["matching_queues"]:
+        records = decoded_carriers[name][:2]
+        if (
+            len(records) == 2
+            and records[0]["stat_flags"] == 0x48
+            and records[1]["stat_flags"] == 0x08
+        ):
+            brightness_queues.append(name)
+    brightness_passed = bool(brightness_queues)
 
     def words(data: bytes) -> list[int]:
         return [
@@ -413,15 +427,18 @@ def classify_e3b_prebright_add_defect(
         for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
             state = ((x - E1C_ACTIVE_X0) // 8) & 3
             expected_sub_color = (
-                E3B_DIM_RED_RGBA5551 if state in (2, 3)
-                else E3B_DIM_BLUE_RGBA5551
+                E2B_MAIN_RED_RGBA5551 if state in (2, 3)
+                else E2F_BACKDROP_BLUE_RGBA5551
             )
-            if main_y == E2B_MAIN_ROW1 and state == 3:
-                expected_main_color = E3B_PREBRIGHT_RED_RGBA5551
-            else:
+            if main_y == E2B_MAIN_ROW1:
                 expected_main_color = (
                     E3B_DIM_RED_RGBA5551 if state in (1, 3)
                     else E3B_DIM_BLUE_RGBA5551
+                )
+            else:
+                expected_main_color = (
+                    E2B_MAIN_RED_RGBA5551 if state in (1, 3)
+                    else E2F_BACKDROP_BLUE_RGBA5551
                 )
             expected_sub_tag = BOOL_TRUE_TAG_WORD if state in (2, 3) else BOOL_FALSE_TAG_WORD
             expected_main_tag = BOOL_TRUE_TAG_WORD if state in (1, 3) else BOOL_FALSE_TAG_WORD
@@ -455,13 +472,13 @@ def classify_e3b_prebright_add_defect(
             state_counts[state] += 1
             pair_counts[(actual_main_tag, actual_sub_tag)] += 1
 
-    # Rows 8..15 are an unchanged Main control; the compositor owns row 16 only.
+    # Rows 8..15 are raw Main controls; the compositor owns row 16 only.
     for main_y in range(E2B_MAIN_ROW0, E2B_MAIN_ROW1):
         for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
             state = ((x - E1C_ACTIVE_X0) // 8) & 3
             expected_main_color = (
-                E3B_DIM_RED_RGBA5551 if state in (1, 3)
-                else E3B_DIM_BLUE_RGBA5551
+                E2B_MAIN_RED_RGBA5551 if state in (1, 3)
+                else E2F_BACKDROP_BLUE_RGBA5551
             )
             actual_main_color = framebuffer_words[main_y * FB_WIDTH + x]
             if actual_main_color != expected_main_color and len(main_wrong) < 64:
@@ -525,11 +542,13 @@ def classify_e3b_prebright_add_defect(
     colors_passed = (
         not compact_wrong
         and not main_wrong
-        and compact_hist[E3B_DIM_RED_RGBA5551] == expected_state * 2
-        and compact_hist[E3B_DIM_BLUE_RGBA5551] == expected_state * 2
-        and main_hist[E3B_DIM_RED_RGBA5551] == expected_state * 4 - expected_composed
-        and main_hist[E3B_DIM_BLUE_RGBA5551] == expected_state * 4
-        and main_hist[E3B_PREBRIGHT_RED_RGBA5551] == expected_composed
+        and compact_hist[E2B_MAIN_RED_RGBA5551] == expected_state * 2
+        and compact_hist[E2F_BACKDROP_BLUE_RGBA5551] == expected_state * 2
+        and main_hist[E2B_MAIN_RED_RGBA5551] == expected_state * 4 - expected_composed * 2
+        and main_hist[E2F_BACKDROP_BLUE_RGBA5551] == expected_state * 4 - expected_composed * 2
+        and main_hist[E3B_DIM_RED_RGBA5551] == expected_composed * 2
+        and main_hist[E3B_DIM_BLUE_RGBA5551] == expected_composed * 2
+        and main_hist[E3B_PREBRIGHT_RED_RGBA5551] == 0
         and compact_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
         and color_guards_ok
     )
@@ -556,21 +575,33 @@ def classify_e3b_prebright_add_defect(
         })
         and pair_counts == expected_pairs
     )
-    passed = bool(carrier["passed"] and colors_passed and metadata_passed)
+    passed = bool(
+        carrier["passed"]
+        and brightness_passed
+        and colors_passed
+        and metadata_passed
+    )
 
     return {
         "classification": (
-            "E3B_PREBRIGHT_ADD_DEFECT_BASELINE_VALIDATED"
-            if passed else "E3B_PREBRIGHT_ADD_DEFECT_BASELINE_FAILED"
+            "E3B_RAW_BEFORE_BRIGHTNESS_VALIDATED"
+            if passed else "E3B_RAW_BEFORE_BRIGHTNESS_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
+        "brightness": {
+            "passed": brightness_passed,
+            "matching_queues": brightness_queues,
+            "expected_stat_flags": ["0x48", "0x08"],
+        },
         "colors": {
             "passed": colors_passed,
-            "compact_red15": compact_hist[E3B_DIM_RED_RGBA5551],
-            "compact_blue15": compact_hist[E3B_DIM_BLUE_RGBA5551],
-            "main_red15": main_hist[E3B_DIM_RED_RGBA5551],
-            "main_blue15": main_hist[E3B_DIM_BLUE_RGBA5551],
+            "compact_full_red": compact_hist[E2B_MAIN_RED_RGBA5551],
+            "compact_full_blue": compact_hist[E2F_BACKDROP_BLUE_RGBA5551],
+            "main_full_red": main_hist[E2B_MAIN_RED_RGBA5551],
+            "main_full_blue": main_hist[E2F_BACKDROP_BLUE_RGBA5551],
+            "main_dim_red": main_hist[E3B_DIM_RED_RGBA5551],
+            "main_dim_blue": main_hist[E3B_DIM_BLUE_RGBA5551],
             "main_prebright_red30": main_hist[E3B_PREBRIGHT_RED_RGBA5551],
             "compact_mismatches": compact_wrong,
             "main_mismatches": main_wrong,
@@ -600,6 +631,8 @@ def classify_e3b_prebright_add_defect(
         "constants": {
             "boolean_false_tag": hex(BOOL_FALSE_TAG_WORD),
             "boolean_true_tag": hex(BOOL_TRUE_TAG_WORD),
+            "full_blue_rgba5551": hex(E2F_BACKDROP_BLUE_RGBA5551),
+            "full_red_rgba5551": hex(E2B_MAIN_RED_RGBA5551),
             "dim_blue_rgba5551": hex(E3B_DIM_BLUE_RGBA5551),
             "dim_red_rgba5551": hex(E3B_DIM_RED_RGBA5551),
             "prebright_red30_rgba5551": hex(E3B_PREBRIGHT_RED_RGBA5551),
@@ -1135,9 +1168,9 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E3b defect authority freezes the E3a runtime and requires the exact
-        # brightness-before-ADD failure signature measured with the child guest.
-        result = classify_e3b_prebright_add_defect(
+        # E3b repair authority freezes the measured runtime+guest and requires
+        # raw operands, post-ADD brightness, and section coefficient8 transport.
+        result = classify_e3b_raw_before_brightness(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -1163,7 +1196,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E3b pre-brightness ADD defect baseline classifier failed; see result.json")
+            raise RuntimeError("E3b raw-before-brightness classifier failed; see result.json")
 
         try:
             client.request("D")

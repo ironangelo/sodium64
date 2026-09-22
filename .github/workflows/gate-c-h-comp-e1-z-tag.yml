@@ -1,4 +1,4 @@
-name: Gate C H-COMP E3b Brightness Order Defect Baseline
+name: Gate C H-COMP E3b Raw Before Brightness Proof
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e3b-brightness-order-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e3b-raw-before-brightness-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build frozen E3a runtime with E3b guest
+      - name: Build exact E3b raw-before-brightness runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -71,7 +71,7 @@ jobs:
           sha256sum workload/e1c.smc wrap/out/e1c.z64 | tee workload/hashes.sha256
           rm workload/embedded.smc
 
-      - name: Locate frozen E3a runtime state
+      - name: Locate E3b repair runtime state
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run fenced E3b brightness-order defect baseline
+      - name: Run fenced E3b raw-before-brightness proof
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E3b brightness-order defect evidence
+      - name: Upload E3b raw-before-brightness evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e3b-brightness-order-defect-evidence
+          name: gate-c-h-comp-e3b-raw-before-brightness-evidence
           retention-days: 30
           path: |
             captures/

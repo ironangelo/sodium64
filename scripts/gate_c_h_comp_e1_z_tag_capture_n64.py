@@ -104,6 +104,18 @@ E2A_MAIN_BEFORE_INIT = 0xA6
 E2A_MAIN_AFTER_INIT = 0x5B
 E2A_ARCHIVE_INIT = 0xCC
 
+# E4b band0 isolated Color Image target. Physical rows0..7 live at ALT_ADDR;
+# the RDP command uses ALT_ADDR - 16*560 because the controlled band scissor
+# remains at global y=16..23.
+E4B_ALT_COLOR_ADDR = 0xA00EC000
+E4B_ALT_COLOR_SIZE = 0x1180
+E4B_ALT_COLOR_PREFIX_ADDR = 0xA00EBFC0
+E4B_ALT_COLOR_SUFFIX_ADDR = 0xA00ED180
+E4B_ALT_COLOR_GUARD_SIZE = 64
+E4B_ALT_COLOR_SENTINEL_WORD = 0x6B5B
+E4B_ALT_COLOR_PREFIX_BYTE = 0x97
+E4B_ALT_COLOR_SUFFIX_BYTE = 0x79
+
 
 def parse_int(text: str) -> int:
     return int(text, 0)
@@ -160,6 +172,25 @@ def initialize_proof_memory(client: RSPClient) -> None:
     assert client.read_memory(E2A_COLOR_ARCHIVE_A_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == color_archive
     assert client.read_memory(E2A_MAIN_BEFORE_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == main_before
     assert client.read_memory(E2A_MAIN_AFTER_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == main_after
+
+    alt_prefix = bytes([E4B_ALT_COLOR_PREFIX_BYTE]) * E4B_ALT_COLOR_GUARD_SIZE
+    alt_color = (
+        E4B_ALT_COLOR_SENTINEL_WORD.to_bytes(2, "big")
+        * (E4B_ALT_COLOR_SIZE // 2)
+    )
+    alt_suffix = bytes([E4B_ALT_COLOR_SUFFIX_BYTE]) * E4B_ALT_COLOR_GUARD_SIZE
+    write_pattern(client, E4B_ALT_COLOR_PREFIX_ADDR, alt_prefix)
+    write_pattern(client, E4B_ALT_COLOR_ADDR, alt_color)
+    write_pattern(client, E4B_ALT_COLOR_SUFFIX_ADDR, alt_suffix)
+    assert client.read_memory(
+        E4B_ALT_COLOR_PREFIX_ADDR, E4B_ALT_COLOR_GUARD_SIZE, 0x100
+    ) == alt_prefix
+    assert client.read_memory(
+        E4B_ALT_COLOR_ADDR, E4B_ALT_COLOR_SIZE, 0x400
+    ) == alt_color
+    assert client.read_memory(
+        E4B_ALT_COLOR_SUFFIX_ADDR, E4B_ALT_COLOR_GUARD_SIZE, 0x100
+    ) == alt_suffix
 
     # E2f: make absence of a second-screen backdrop deterministic. Seed only
     # the first-section physical rows in every framebuffer between quiescent
@@ -1275,6 +1306,17 @@ def main() -> int:
         main_after = client.read_memory(
             E2A_MAIN_AFTER_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400
         )
+        alt_color = client.read_memory(
+            E4B_ALT_COLOR_ADDR, E4B_ALT_COLOR_SIZE, 0x400
+        )
+        alt_color_prefix = client.read_memory(
+            E4B_ALT_COLOR_PREFIX_ADDR, E4B_ALT_COLOR_GUARD_SIZE,
+            E4B_ALT_COLOR_GUARD_SIZE,
+        )
+        alt_color_suffix = client.read_memory(
+            E4B_ALT_COLOR_SUFFIX_ADDR, E4B_ALT_COLOR_GUARD_SIZE,
+            E4B_ALT_COLOR_GUARD_SIZE,
+        )
         section_queue1 = client.read_memory(
             SECTION_QUEUE1_ADDR, SECTION_CAPTURE_SIZE, 0x400
         )
@@ -1295,6 +1337,9 @@ def main() -> int:
         (out / "color_suffix_guard.bin").write_bytes(color_suffix_guard)
         (out / "main_before.bin").write_bytes(main_before)
         (out / "main_after.bin").write_bytes(main_after)
+        (out / "e4b_alt_color.bin").write_bytes(alt_color)
+        (out / "e4b_alt_color_prefix_guard.bin").write_bytes(alt_color_prefix)
+        (out / "e4b_alt_color_suffix_guard.bin").write_bytes(alt_color_suffix)
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
@@ -1316,6 +1361,30 @@ def main() -> int:
             main_before,
             main_after,
         )
+        alt_words = [
+            int.from_bytes(alt_color[i:i + 2], "big")
+            for i in range(0, len(alt_color), 2)
+        ]
+        alt_hist = collections.Counter(alt_words)
+        result["e4b_alt_color_target"] = {
+            "address": hex(E4B_ALT_COLOR_ADDR),
+            "size": E4B_ALT_COLOR_SIZE,
+            "sentinel_word": hex(E4B_ALT_COLOR_SENTINEL_WORD),
+            "red_words": alt_hist[E2B_MAIN_RED_RGBA5551],
+            "sentinel_words": alt_hist[E4B_ALT_COLOR_SENTINEL_WORD],
+            "prefix_guard_ok": (
+                alt_color_prefix
+                == bytes([E4B_ALT_COLOR_PREFIX_BYTE]) * E4B_ALT_COLOR_GUARD_SIZE
+            ),
+            "suffix_guard_ok": (
+                alt_color_suffix
+                == bytes([E4B_ALT_COLOR_SUFFIX_BYTE]) * E4B_ALT_COLOR_GUARD_SIZE
+            ),
+            "histogram_top": [
+                {"word": hex(word), "count": count}
+                for word, count in alt_hist.most_common(8)
+            ],
+        }
         result["capture_state"] = {
             **state,
             "framebuffer_pointer": hex(fb_pointer),

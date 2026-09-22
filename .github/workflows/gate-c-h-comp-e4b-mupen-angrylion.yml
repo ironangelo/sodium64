@@ -129,38 +129,25 @@ jobs:
           from pathlib import Path
           p = Path("mupen64plus-rsp-cxd4/su.c")
           s = p.read_text()
-          old = """static void MT_CMD_END(unsigned int rt)
-{
-    if (GET_RCP_REG(DPC_BUFBUSY_REG))
-        message("MTC0\\nCMD_END"); /* This is just CA-related. */
-    GET_RCP_REG(DPC_END_REG) = SR[rt] & 0xFFFFFFF8ul;
-    GBI_phase();
-    return;
-}
-"""
-          new = """static void MT_CMD_END(unsigned int rt)
-{
-    if (GET_RCP_REG(DPC_BUFBUSY_REG))
-        message("MTC0\\nCMD_END"); /* This is just CA-related. */
-    GET_RCP_REG(DPC_END_REG) = SR[rt] & 0xFFFFFFF8ul;
-    fprintf(stderr,
-        "S64_CXD4_RDP_BEFORE start=%08X end=%08X current=%08X status=%08X sp_pc=%08X\\n",
-        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),
-        GET_RCP_REG(DPC_CURRENT_REG), GET_RCP_REG(DPC_STATUS_REG),
-        GET_RCP_REG(SP_PC_REG));
-    fflush(stderr);
-    GBI_phase();
-    fprintf(stderr,
-        "S64_CXD4_RDP_AFTER start=%08X end=%08X current=%08X status=%08X sp_pc=%08X\\n",
-        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),
-        GET_RCP_REG(DPC_CURRENT_REG), GET_RCP_REG(DPC_STATUS_REG),
-        GET_RCP_REG(SP_PC_REG));
-    fflush(stderr);
-    return;
-}
-"""
-          assert s.count(old) == 1
-          p.write_text(s.replace(old, new, 1))
+          needle = "    GBI_phase();\n"
+          before = (
+              "    fprintf(stderr,\n"
+              "        \"S64_CXD4_RDP_BEFORE start=%08X end=%08X current=%08X status=%08X sp_pc=%08X\\\\n\",\n"
+              "        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),\n"
+              "        GET_RCP_REG(DPC_CURRENT_REG), GET_RCP_REG(DPC_STATUS_REG),\n"
+              "        GET_RCP_REG(SP_PC_REG));\n"
+              "    fflush(stderr);\n"
+          )
+          after = (
+              "    fprintf(stderr,\n"
+              "        \"S64_CXD4_RDP_AFTER start=%08X end=%08X current=%08X status=%08X sp_pc=%08X\\\\n\",\n"
+              "        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),\n"
+              "        GET_RCP_REG(DPC_CURRENT_REG), GET_RCP_REG(DPC_STATUS_REG),\n"
+              "        GET_RCP_REG(SP_PC_REG));\n"
+              "    fflush(stderr);\n"
+          )
+          assert s.count(needle) == 1
+          p.write_text(s.replace(needle, before + needle + after, 1))
           PY
           git -C mupen64plus-rsp-cxd4 diff -- su.c | tee "$GITHUB_WORKSPACE/captures/cxd4-rdp-call-trace.patch"
 

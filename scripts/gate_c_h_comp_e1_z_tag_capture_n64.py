@@ -70,6 +70,7 @@ E2F_MAIN_SENTINEL_WORD = 0x294B
 E2F_FRAMEBUFFER_ADDRS = (0xA00F2300, 0xA0113000, 0xA0133D00)
 E2F_MAIN_BAND_OFFSET = E2B_MAIN_ROW0 * FB_WIDTH * 2
 E2F_MAIN_BAND_BYTES = (E2D_MAIN_ROW1 - E2B_MAIN_ROW0) * FB_WIDTH * 2
+E4B_MAIN_PREFIX_BYTES = E2B_MAIN_ROW0 * FB_WIDTH * 2
 
 E1C_Z_SCRATCH_ADDR = 0xA00C0000
 E1C_Z_SCRATCH_SIZE = 0x1180
@@ -160,7 +161,15 @@ def initialize_proof_memory(client: RSPClient) -> None:
     # the first-section physical rows in every framebuffer between quiescent
     # frames; the one captured RSP frame must overwrite only what it renders.
     main_seed = E2F_MAIN_SENTINEL_WORD.to_bytes(2, "big") * (E2F_MAIN_BAND_BYTES // 2)
+    prefix_seed = E2F_MAIN_SENTINEL_WORD.to_bytes(2, "big") * (E4B_MAIN_PREFIX_BYTES // 2)
     for framebuffer_addr in E2F_FRAMEBUFFER_ADDRS:
+        # E4b clean epoch: the same-band compositor now touches physical rows
+        # 0..7 during warmup, so reset them too before the one captured frame.
+        write_pattern(client, framebuffer_addr, prefix_seed)
+        assert client.read_memory(
+            framebuffer_addr, E4B_MAIN_PREFIX_BYTES, 0x400
+        ) == prefix_seed
+
         band_addr = framebuffer_addr + E2F_MAIN_BAND_OFFSET
         write_pattern(client, band_addr, main_seed)
         assert client.read_memory(band_addr, E2F_MAIN_BAND_BYTES, 0x400) == main_seed

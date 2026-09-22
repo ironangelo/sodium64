@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2e real-traversal compact-Z band alignment proof."""
+"""Capture/classify Gate-C E2f per-screen backdrop baseline proof."""
 
 from __future__ import annotations
 
@@ -59,6 +59,11 @@ E2B_MAIN_ROW0 = 8
 E2B_MAIN_ROW1 = 16
 E2D_MAIN_ROW1 = 24
 E2D_SUFFIX_INTACT_BYTES = 24
+E2F_BACKDROP_BLUE_RGBA5551 = 0x003F
+E2F_MAIN_SENTINEL_WORD = 0x294B
+E2F_FRAMEBUFFER_ADDRS = (0xA00F2300, 0xA0113000, 0xA0133D00)
+E2F_MAIN_BAND_OFFSET = E2B_MAIN_ROW0 * FB_WIDTH * 2
+E2F_MAIN_BAND_BYTES = (E2D_MAIN_ROW1 - E2B_MAIN_ROW0) * FB_WIDTH * 2
 
 E1C_Z_SCRATCH_ADDR = 0xA00C0000
 E1C_Z_SCRATCH_SIZE = 0x1180
@@ -127,6 +132,15 @@ def initialize_proof_memory(client: RSPClient) -> None:
     assert client.read_memory(E2A_COLOR_ARCHIVE_A_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == color_archive
     assert client.read_memory(E2A_MAIN_BEFORE_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == main_before
     assert client.read_memory(E2A_MAIN_AFTER_ADDR, E2A_COLOR_SCRATCH_SIZE, 0x400) == main_after
+
+    # E2f: make absence of a second-screen backdrop deterministic. Seed only
+    # the first-section physical rows in every framebuffer between quiescent
+    # frames; the one captured RSP frame must overwrite only what it renders.
+    main_seed = E2F_MAIN_SENTINEL_WORD.to_bytes(2, "big") * (E2F_MAIN_BAND_BYTES // 2)
+    for framebuffer_addr in E2F_FRAMEBUFFER_ADDRS:
+        band_addr = framebuffer_addr + E2F_MAIN_BAND_OFFSET
+        write_pattern(client, band_addr, main_seed)
+        assert client.read_memory(band_addr, E2F_MAIN_BAND_BYTES, 0x400) == main_seed
 
 
 def wait_for_proof(
@@ -285,6 +299,185 @@ def classify_e2d_carrier_sections(
         "matching_queues": matches,
         "expected_records": expected,
         "queues": observations,
+    }
+
+
+def classify_e2f_carrier_sections(
+    queue1: bytes,
+    queue2: bytes,
+) -> dict[str, object]:
+    decoded = {
+        "queue1": decode_section_queue(queue1),
+        "queue2": decode_section_queue(queue2),
+    }
+    expected = [
+        {"index": 0, "wh0": 0x00, "ts": 0x02, "tm": 0x01, "split_line": 16},
+        {"index": 1, "wh0": 0x01, "ts": 0x02, "tm": 0x01, "split_line": 224},
+    ]
+    matches: list[str] = []
+    observations: dict[str, object] = {}
+    for name, records in decoded.items():
+        checks: list[dict[str, object]] = []
+        ok = True
+        for exp, actual in zip(expected, records[:2]):
+            fields = {key: actual[key] == value for key, value in exp.items()}
+            checks.append({
+                "expected": exp,
+                "actual": actual,
+                "field_matches": fields,
+                "passed": all(fields.values()),
+            })
+            ok = ok and all(fields.values())
+        observations[name] = {
+            "passed": ok,
+            "checks": checks,
+            "first_four_records": records[:4],
+        }
+        if ok:
+            matches.append(name)
+    passed = bool(matches)
+    return {
+        "classification": (
+            "E2F_BACKDROP_CARRIER_VALIDATED"
+            if passed
+            else "E2F_BACKDROP_CARRIER_FAILED"
+        ),
+        "passed": passed,
+        "matching_queues": matches,
+        "expected_records": expected,
+        "queues": observations,
+    }
+
+
+def classify_e2f_backdrop_baseline(
+    queue1: bytes,
+    queue2: bytes,
+    color_final: bytes,
+    color_prefix_guard: bytes,
+    color_suffix_guard: bytes,
+    framebuffer: bytes,
+    z_prefix_guard: bytes,
+    z_suffix_guard: bytes,
+) -> dict[str, object]:
+    carrier = classify_e2f_carrier_sections(queue1, queue2)
+
+    def words(data: bytes) -> list[int]:
+        return [
+            int.from_bytes(data[i:i + 2], "big")
+            for i in range(0, len(data), 2)
+        ]
+
+    expected_compact_half = (
+        (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) * E1C_ROWS // 2
+    )
+    expected_main_half = (
+        (E1C_ACTIVE_X1 - E1C_ACTIVE_X0)
+        * (E2D_MAIN_ROW1 - E2B_MAIN_ROW0)
+        // 2
+    )
+    expected_border = (
+        FB_WIDTH - (E1C_ACTIVE_X1 - E1C_ACTIVE_X0)
+    ) * E1C_ROWS
+
+    compact_words = words(color_final)
+    compact_active: list[int] = []
+    compact_wrong: list[dict[str, int]] = []
+    for index, actual in enumerate(compact_words):
+        y, x = divmod(index, FB_WIDTH)
+        active = E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1
+        if active:
+            compact_active.append(actual)
+            valid = actual in (
+                BG2_GREEN_RGBA5551,
+                E2F_BACKDROP_BLUE_RGBA5551,
+            )
+        else:
+            valid = actual == SENTINEL_WORD
+        if not valid and len(compact_wrong) < 64:
+            compact_wrong.append({"x": x, "y": y, "actual": actual})
+    compact_hist = collections.Counter(compact_active)
+    compact_all_hist = collections.Counter(compact_words)
+    color_prefix_ok = color_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+    color_suffix_ok = color_suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
+    compact_passed = (
+        len(compact_active) == expected_compact_half * 2
+        and not compact_wrong
+        and compact_hist[BG2_GREEN_RGBA5551] == expected_compact_half
+        and compact_hist[E2F_BACKDROP_BLUE_RGBA5551] == expected_compact_half
+        and compact_all_hist[SENTINEL_WORD] == expected_border
+        and color_prefix_ok
+        and color_suffix_ok
+    )
+
+    framebuffer_words = words(framebuffer)
+    main_active: list[int] = []
+    main_wrong: list[dict[str, int]] = []
+    for y in range(E2B_MAIN_ROW0, E2D_MAIN_ROW1):
+        row = framebuffer_words[y * FB_WIDTH:(y + 1) * FB_WIDTH]
+        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
+            actual = row[x]
+            main_active.append(actual)
+            if actual not in (E2B_MAIN_RED_RGBA5551, E2F_MAIN_SENTINEL_WORD):
+                if len(main_wrong) < 64:
+                    main_wrong.append({"x": x, "y": y, "actual": actual})
+    main_hist = collections.Counter(main_active)
+    main_passed = (
+        len(main_active) == expected_main_half * 2
+        and not main_wrong
+        and main_hist[E2B_MAIN_RED_RGBA5551] == expected_main_half
+        and main_hist[E2F_MAIN_SENTINEL_WORD] == expected_main_half
+        and main_hist[E2F_BACKDROP_BLUE_RGBA5551] == 0
+        and main_hist[BG2_GREEN_RGBA5551] == 0
+    )
+
+    z_prefix_ok = z_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+    z_suffix_ok = z_suffix_guard == (
+        SENTINEL_WORD.to_bytes(2, "big") * (E1C_GUARD_SIZE // 2)
+    )
+    guards_passed = z_prefix_ok and z_suffix_ok
+
+    passed = bool(
+        carrier["passed"] and compact_passed and main_passed and guards_passed
+    )
+    return {
+        "classification": (
+            "E2F_SCREEN_BACKDROP_BASELINE_VALIDATED"
+            if passed
+            else "E2F_SCREEN_BACKDROP_BASELINE_FAILED"
+        ),
+        "passed": passed,
+        "carrier": carrier,
+        "compact": {
+            "passed": compact_passed,
+            "green_words": compact_hist[BG2_GREEN_RGBA5551],
+            "blue_backdrop_words": compact_hist[E2F_BACKDROP_BLUE_RGBA5551],
+            "sentinel_border_words": compact_all_hist[SENTINEL_WORD],
+            "prefix_guard_ok": color_prefix_ok,
+            "suffix_guard_ok": color_suffix_ok,
+            "mismatches": compact_wrong,
+        },
+        "main": {
+            "passed": main_passed,
+            "red_words": main_hist[E2B_MAIN_RED_RGBA5551],
+            "seed_sentinel_words": main_hist[E2F_MAIN_SENTINEL_WORD],
+            "blue_backdrop_words": main_hist[E2F_BACKDROP_BLUE_RGBA5551],
+            "green_words": main_hist[BG2_GREEN_RGBA5551],
+            "mismatches": main_wrong,
+        },
+        "z_guard_safety": {
+            "passed": guards_passed,
+            "prefix_guard_ok": z_prefix_ok,
+            "suffix_guard_ok": z_suffix_ok,
+        },
+        "constants": {
+            "blue_backdrop": hex(E2F_BACKDROP_BLUE_RGBA5551),
+            "main_seed_sentinel": hex(E2F_MAIN_SENTINEL_WORD),
+            "expected_compact_green": expected_compact_half,
+            "expected_compact_blue": expected_compact_half,
+            "expected_main_red": expected_main_half,
+            "expected_main_seed_sentinel": expected_main_half,
+            "expected_main_blue": 0,
+        },
     }
 
 
@@ -806,16 +999,16 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2e keeps the validated E2d color-band reuse contract frozen and
-        # adds only real-traversal compact-Z geometry/guard authority.
-        result = classify_e2e_z_band_alignment(
+        # E2f baseline measures the historical one-fill behavior before any
+        # runtime repair: TS holes must reveal blue CGRAM0, while TM holes keep
+        # the clean-epoch framebuffer sentinel because main was never filled.
+        result = classify_e2f_backdrop_baseline(
             section_queue1,
             section_queue2,
             color_final_b,
             color_prefix_guard,
             color_suffix_guard,
             framebuffer,
-            final_b,
             prefix_guard,
             suffix_guard,
         )
@@ -831,7 +1024,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2e real Z-band alignment classifier failed; see result.json")
+            raise RuntimeError("E2f screen-backdrop baseline classifier failed; see result.json")
 
         try:
             client.request("D")

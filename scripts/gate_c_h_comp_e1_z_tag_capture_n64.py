@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E3a rendered subscreen ADD proof."""
+"""Capture/classify Gate-C E3b pre-brightness ADD defect baseline."""
 
 from __future__ import annotations
 
@@ -63,6 +63,9 @@ E2D_MAIN_ROW1 = 24
 E2D_SUFFIX_INTACT_BYTES = 24
 E2F_BACKDROP_BLUE_RGBA5551 = 0x003F
 E3A_ADD_YELLOW_RGBA5551 = 0xFFC1
+E3B_DIM_BLUE_RGBA5551 = 0x001F
+E3B_DIM_RED_RGBA5551 = 0x7801
+E3B_PREBRIGHT_RED_RGBA5551 = 0xF001
 E2F_MAIN_SENTINEL_WORD = 0x294B
 E2F_FRAMEBUFFER_ADDRS = (0xA00F2300, 0xA0113000, 0xA0133D00)
 E2F_MAIN_BAND_OFFSET = E2B_MAIN_ROW0 * FB_WIDTH * 2
@@ -369,7 +372,7 @@ def classify_e2f_carrier_sections(
     }
 
 
-def classify_e3a_rendered_subscreen_add(
+def classify_e3b_prebright_add_defect(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -410,15 +413,15 @@ def classify_e3a_rendered_subscreen_add(
         for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
             state = ((x - E1C_ACTIVE_X0) // 8) & 3
             expected_sub_color = (
-                BG2_GREEN_RGBA5551 if state in (2, 3)
-                else E2F_BACKDROP_BLUE_RGBA5551
+                E3B_DIM_RED_RGBA5551 if state in (2, 3)
+                else E3B_DIM_BLUE_RGBA5551
             )
             if main_y == E2B_MAIN_ROW1 and state == 3:
-                expected_main_color = E3A_ADD_YELLOW_RGBA5551
+                expected_main_color = E3B_PREBRIGHT_RED_RGBA5551
             else:
                 expected_main_color = (
-                    E2B_MAIN_RED_RGBA5551 if state in (1, 3)
-                    else E2F_BACKDROP_BLUE_RGBA5551
+                    E3B_DIM_RED_RGBA5551 if state in (1, 3)
+                    else E3B_DIM_BLUE_RGBA5551
                 )
             expected_sub_tag = BOOL_TRUE_TAG_WORD if state in (2, 3) else BOOL_FALSE_TAG_WORD
             expected_main_tag = BOOL_TRUE_TAG_WORD if state in (1, 3) else BOOL_FALSE_TAG_WORD
@@ -457,8 +460,8 @@ def classify_e3a_rendered_subscreen_add(
         for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
             state = ((x - E1C_ACTIVE_X0) // 8) & 3
             expected_main_color = (
-                E2B_MAIN_RED_RGBA5551 if state in (1, 3)
-                else E2F_BACKDROP_BLUE_RGBA5551
+                E3B_DIM_RED_RGBA5551 if state in (1, 3)
+                else E3B_DIM_BLUE_RGBA5551
             )
             actual_main_color = framebuffer_words[main_y * FB_WIDTH + x]
             if actual_main_color != expected_main_color and len(main_wrong) < 64:
@@ -522,11 +525,11 @@ def classify_e3a_rendered_subscreen_add(
     colors_passed = (
         not compact_wrong
         and not main_wrong
-        and compact_hist[BG2_GREEN_RGBA5551] == expected_state * 2
-        and compact_hist[E2F_BACKDROP_BLUE_RGBA5551] == expected_state * 2
-        and main_hist[E2B_MAIN_RED_RGBA5551] == expected_state * 4 - expected_composed
-        and main_hist[E2F_BACKDROP_BLUE_RGBA5551] == expected_state * 4
-        and main_hist[E3A_ADD_YELLOW_RGBA5551] == expected_composed
+        and compact_hist[E3B_DIM_RED_RGBA5551] == expected_state * 2
+        and compact_hist[E3B_DIM_BLUE_RGBA5551] == expected_state * 2
+        and main_hist[E3B_DIM_RED_RGBA5551] == expected_state * 4 - expected_composed
+        and main_hist[E3B_DIM_BLUE_RGBA5551] == expected_state * 4
+        and main_hist[E3B_PREBRIGHT_RED_RGBA5551] == expected_composed
         and compact_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
         and color_guards_ok
     )
@@ -557,18 +560,18 @@ def classify_e3a_rendered_subscreen_add(
 
     return {
         "classification": (
-            "E3A_RENDERED_SUBSCREEN_ADD_VALIDATED"
-            if passed else "E3A_RENDERED_SUBSCREEN_ADD_FAILED"
+            "E3B_PREBRIGHT_ADD_DEFECT_BASELINE_VALIDATED"
+            if passed else "E3B_PREBRIGHT_ADD_DEFECT_BASELINE_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
         "colors": {
             "passed": colors_passed,
-            "compact_green": compact_hist[BG2_GREEN_RGBA5551],
-            "compact_blue": compact_hist[E2F_BACKDROP_BLUE_RGBA5551],
-            "main_red": main_hist[E2B_MAIN_RED_RGBA5551],
-            "main_blue": main_hist[E2F_BACKDROP_BLUE_RGBA5551],
-            "main_yellow": main_hist[E3A_ADD_YELLOW_RGBA5551],
+            "compact_red15": compact_hist[E3B_DIM_RED_RGBA5551],
+            "compact_blue15": compact_hist[E3B_DIM_BLUE_RGBA5551],
+            "main_red15": main_hist[E3B_DIM_RED_RGBA5551],
+            "main_blue15": main_hist[E3B_DIM_BLUE_RGBA5551],
+            "main_prebright_red30": main_hist[E3B_PREBRIGHT_RED_RGBA5551],
             "compact_mismatches": compact_wrong,
             "main_mismatches": main_wrong,
         },
@@ -597,7 +600,9 @@ def classify_e3a_rendered_subscreen_add(
         "constants": {
             "boolean_false_tag": hex(BOOL_FALSE_TAG_WORD),
             "boolean_true_tag": hex(BOOL_TRUE_TAG_WORD),
-            "add_yellow_rgba5551": hex(E3A_ADD_YELLOW_RGBA5551),
+            "dim_blue_rgba5551": hex(E3B_DIM_BLUE_RGBA5551),
+            "dim_red_rgba5551": hex(E3B_DIM_RED_RGBA5551),
+            "prebright_red30_rgba5551": hex(E3B_PREBRIGHT_RED_RGBA5551),
             "sub_z_address": hex(E1C_Z_SCRATCH_ADDR),
             "main_z_address": hex(E2G_SECOND_Z_ADDR),
         },
@@ -1130,9 +1135,9 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E3a authority keeps the validated guest/runtime frozen and requires
-        # exactly one rendered Main row to consume Sub + both E2g-B booleans.
-        result = classify_e3a_rendered_subscreen_add(
+        # E3b defect authority freezes the E3a runtime and requires the exact
+        # brightness-before-ADD failure signature measured with the child guest.
+        result = classify_e3b_prebright_add_defect(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -1158,7 +1163,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E3a rendered subscreen ADD classifier failed; see result.json")
+            raise RuntimeError("E3b pre-brightness ADD defect baseline classifier failed; see result.json")
 
         try:
             client.request("D")

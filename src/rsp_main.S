@@ -603,18 +603,10 @@ e2d_band_done:
     li a0, RDP_TILE7 + 16
     jal rdp_send
     li a1, RDP_TILE7 + 24
-// E4b discriminator: rdp_send returns immediately after publishing DP_END.
-// Observe this newly-published command actually entering the command unit before
-// accepting an idle status, otherwise a 0->busy scheduling window can look done.
-e4b_dp_wait_start:
-    mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x40
-    beqz t0, e4b_dp_wait_start
-    nop
-e4b_dp_wait_done:
+e4b_dp_wait:
     mfc0 t0, COP0_DP_STATUS
     andi t0, t0, 0x70
-    bnez t0, e4b_dp_wait_done
+    bnez t0, e4b_dp_wait
     nop
 
     // Main physical row tracks k0 directly in normal 224-line mode.

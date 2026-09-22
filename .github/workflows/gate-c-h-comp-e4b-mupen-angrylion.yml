@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen cxd4 RSP Control Trace
+name: Gate C H-COMP E4b Mupen Preserve LLE Halt
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-cxd4-rsp-control-trace
+      - phase4/gate-c-h-comp-e4b-mupen-preserve-lle-halt
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-cxd4-rsp-control-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-preserve-lle-halt-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -118,6 +118,29 @@ jobs:
 
           git clone https://github.com/mupen64plus/mupen64plus-core.git
           git -C mupen64plus-core checkout b20b27ebf9e5b099a978e86dba609111dc98c837
+
+          # Host-lab compatibility shim only. cxd4 LLE correctly returns with
+          # SP_STATUS.HALT set by Sodium64's resident microcode. Pinned Mupen's
+          # do_SP_Task() clears HALT unconditionally after plugin return, so the
+          # R4300 can never observe the synchronization bit Sodium64 polls.
+          # Preserve HALT while retaining the core's TASKDONE/BROKE cleanup.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("mupen64plus-core/src/device/rcp/rsp/rsp_core.c")
+          s = p.read_text()
+          needle = (
+              "    sp->regs[SP_STATUS_REG] &=\n"
+              "        ~(SP_STATUS_TASKDONE | SP_STATUS_BROKE | SP_STATUS_HALT);\n"
+          )
+          repl = (
+              "    sp->regs[SP_STATUS_REG] &=\n"
+              "        ~(SP_STATUS_TASKDONE | SP_STATUS_BROKE);\n"
+          )
+          assert s.count(needle) == 1
+          p.write_text(s.replace(needle, repl, 1))
+          PY
+          git -C mupen64plus-core diff -- src/device/rcp/rsp/rsp_core.c | tee "$GITHUB_WORKSPACE/captures/mupen-preserve-lle-halt.patch"
+
           git clone https://github.com/mupen64plus/mupen64plus-ui-console.git
           git -C mupen64plus-ui-console checkout c8ac4862a019d7885b24927d9b4db5dd3e42a528
           git clone https://github.com/mupen64plus/mupen64plus-rsp-cxd4.git
@@ -287,7 +310,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-cxd4-rsp-control-trace.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-preserve-lle-halt.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -345,7 +368,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-cxd4-rsp-control-trace
+          name: gate-c-h-comp-e4b-mupen-preserve-lle-halt
           retention-days: 30
           if-no-files-found: ignore
           path: |

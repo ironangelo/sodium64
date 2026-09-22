@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2c shared-layer suppression baseline proof."""
+"""Capture/classify Gate-C E2c shared-layer membership repair proof."""
 
 from __future__ import annotations
 
@@ -286,7 +286,7 @@ def classify_e2c_carrier_sections(
     }
 
 
-def classify_e2c_shared_baseline(
+def classify_e2c_shared_repair(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -307,7 +307,7 @@ def classify_e2c_shared_baseline(
     for index, actual in enumerate(compact_words):
         y, x = divmod(index, FB_WIDTH)
         active = E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1
-        expected = BG1_BLACK_RGBA5551 if active else SENTINEL_WORD
+        expected = E2B_MAIN_RED_RGBA5551 if active else SENTINEL_WORD
         if actual != expected and len(compact_wrong) < 64:
             compact_wrong.append({
                 "x": x,
@@ -344,7 +344,7 @@ def classify_e2c_shared_baseline(
     compact_passed = (
         len(compact_words) == FB_WIDTH * E1C_ROWS
         and not compact_wrong
-        and compact_hist[BG1_BLACK_RGBA5551] == expected_active
+        and compact_hist[E2B_MAIN_RED_RGBA5551] == expected_active
         and compact_hist[SENTINEL_WORD] == expected_border
         and prefix_ok
         and suffix_ok
@@ -360,9 +360,9 @@ def classify_e2c_shared_baseline(
 
     return {
         "classification": (
-            "E2C_SHARED_BASELINE_VALIDATED"
+            "E2C_SHARED_MEMBERSHIP_VALIDATED"
             if passed
-            else "E2C_SHARED_BASELINE_FAILED"
+            else "E2C_SHARED_MEMBERSHIP_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
@@ -375,7 +375,7 @@ def classify_e2c_shared_baseline(
                 "compact_size": E2A_COLOR_SCRATCH_SIZE,
                 "compact_active_x0": E1C_ACTIVE_X0,
                 "compact_active_x1_exclusive": E1C_ACTIVE_X1,
-                "compact_color": hex(BG1_BLACK_RGBA5551),
+                "compact_color": hex(E2B_MAIN_RED_RGBA5551),
                 "compact_border": hex(SENTINEL_WORD),
                 "main_row0": E2B_MAIN_ROW0,
                 "main_row1_exclusive": E2B_MAIN_ROW1,
@@ -385,7 +385,7 @@ def classify_e2c_shared_baseline(
             },
             "compact": {
                 "passed": compact_passed,
-                "active_black_words": compact_hist[BG1_BLACK_RGBA5551],
+                "active_red_words": compact_hist[E2B_MAIN_RED_RGBA5551],
                 "sentinel_border_words": compact_hist[SENTINEL_WORD],
                 "prefix_guard_ok": prefix_ok,
                 "suffix_guard_ok": suffix_ok,
@@ -752,11 +752,10 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2c baseline authority keeps the E2b target-switch runtime frozen and
-        # measures the historical shared-layer suppression before any RSP fix.
-        # With BG1 shared on TM+TS, the first compact pass must contain only the
-        # black backdrop while the second/main pass contains opaque red BG1.
-        result = classify_e2c_shared_baseline(
+        # E2c repair authority keeps the guest and E2b target-switch machinery
+        # frozen while asserting the one-instruction shared-membership change:
+        # BG1 shared on TM+TS must now contribute red to both compact and main.
+        result = classify_e2c_shared_repair(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -776,7 +775,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2c shared baseline classifier failed; see result.json")
+            raise RuntimeError("E2c shared membership classifier failed; see result.json")
 
         try:
             client.request("D")

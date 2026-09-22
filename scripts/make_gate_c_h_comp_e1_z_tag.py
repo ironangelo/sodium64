@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Generate the deterministic SNES guest for Gate-C E3b brightness-order proof.
+"""Generate the deterministic SNES guest for Gate-C E4b same-band ownership proof.
 
 The 32 KiB LoROM renders four Mode-0 winner combinations per 4 unique IDs:
 0=neither, 1=main BG1 only, 2=sub BG2 only, 3=both. CGRAM[0] remains full
 blue and CGADSUB enables BG1 math only, so the four pixels encode all
 (main_math_eligible, sub_present) states 00/10/01/11 without repeated tile IDs.
 CGWSEL selects the subscreen operand and fixed color is explicitly black.
-Both opaque BGs are red and display brightness is 7 to discriminate raw-add-then-brightness from brightness-first ADD.
+BG1 is red, BG2 is green, and display brightness is 7. Tilemap rows 0 and 1 use different state permutations so same-band ownership cannot hide behind vertical repetition.
 A harmless direct-HDMA WH0 stream keeps the validated 16-line carrier geometry.
 """
 
@@ -132,14 +132,14 @@ def build_program() -> bytes:
     dma_to_vram(a, source=BG2_TILE_ADDRESS, vram_word=0x2000, length=TILE_SET_SIZE)
 
     # CGRAM 0: full blue backdrop. CGRAM 1: full red for opaque BG1.
-    # CGRAM 2: full red for opaque BG2 (same-channel saturation discriminator).
+    # CGRAM 2: full green for opaque BG2 (same-band subscreen discriminator).
     lda_sta_abs(a, 0x00, 0x2121)
     lda_sta_abs(a, 0x00, 0x2122)    # color 0 low: blue BGR555 0x7C00
     lda_sta_abs(a, 0x7C, 0x2122)    # color 0 high
     lda_sta_abs(a, 0x1F, 0x2122)    # color 1 low: red BGR555 0x001F
     lda_sta_abs(a, 0x00, 0x2122)    # color 1 high
-    lda_sta_abs(a, 0x1F, 0x2122)    # color 2 low: red BGR555 0x001F
-    lda_sta_abs(a, 0x00, 0x2122)    # color 2 high
+    lda_sta_abs(a, 0xE0, 0x2122)    # color 2 low: green BGR555 0x03E0
+    lda_sta_abs(a, 0x03, 0x2122)    # color 2 high
 
     lda_sta_abs(a, 0x01, 0x212C)    # TM: BG1 main-only
     lda_sta_abs(a, 0x02, 0x212D)    # TS: BG2 sub-only
@@ -185,13 +185,20 @@ def build_program() -> bytes:
 
 
 def build_tilemap() -> bytes:
-    # Use unique character IDs 0..31 across every row. Even IDs are opaque and
-    # odd IDs transparent, preserving an exact 50/50 pattern while avoiding
-    # the renderer's known repeated-tile skip-upload proof artifact.
-    return b"".join(
-        (index % TILE_COUNT).to_bytes(2, "little")
-        for index in range(TILEMAP_SIZE // 2)
-    )
+    # Keep every tilemap row a unique 0..31 permutation while deliberately
+    # breaking vertical state symmetry for the first two 8-line bands.
+    # Low two tile-ID bits define the four BG1/BG2 winner states.
+    entries = bytearray()
+    for index in range(TILEMAP_SIZE // 2):
+        row, x = divmod(index, 32)
+        if row == 0:
+            tile_id = x ^ 0x03  # column0 => state3 (both)
+        elif row == 1:
+            tile_id = x ^ 0x01  # column0 => state1 (main-only)
+        else:
+            tile_id = x
+        entries.extend(tile_id.to_bytes(2, "little"))
+    return bytes(entries)
 
 
 def build_bg1_tile() -> bytes:
@@ -250,7 +257,7 @@ def build_rom() -> bytes:
     rom[bg2_tile_offset:bg2_tile_offset + len(bg2_tiles)] = bg2_tiles
     rom[hdma_table_offset:hdma_table_offset + len(hdma_table)] = hdma_table
 
-    rom[HEADER:HEADER + 21] = b"S64 E2G META4".ljust(21, b" ")
+    rom[HEADER:HEADER + 21] = b"S64 E4B SAMEBAND".ljust(21, b" ")
     rom[0x7FD5] = 0x20               # LoROM
     rom[0x7FD6] = 0x00
     rom[0x7FD7] = 0x05

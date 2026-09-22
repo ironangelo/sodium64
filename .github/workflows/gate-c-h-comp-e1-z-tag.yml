@@ -1,9 +1,9 @@
-name: Gate C H-COMP E4b Main Z Visibility
+name: Gate C H-COMP E4b Band0 Color Landing
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-main-z-visibility
+      - phase4/gate-c-h-comp-e4b-band0-color-landing
   workflow_dispatch:
 
 permissions:
@@ -171,7 +171,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-main-z-visibility-evidence
+          name: gate-c-h-comp-e4b-band0-color-landing-evidence
           retention-days: 30
           path: |
             captures/

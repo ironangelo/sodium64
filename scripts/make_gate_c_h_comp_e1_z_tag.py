@@ -5,7 +5,7 @@ The 32 KiB LoROM renders a controlled Mode-0 shared-layer baseline: BG1 is
 fully opaque red and enabled on both main and sub screens. BG2 remains loaded
 but disabled from both screen masks. A harmless direct-HDMA WH0 stream changes
 only after the first
-8 visible lines; windows are disabled, so the write exists solely to force the
+16 visible lines; windows are disabled, so the write exists solely to force the
 already-validated urgent section boundary used by the E2b carrier.
 """
 
@@ -97,7 +97,7 @@ def dma_to_vram(a: Assembler, *, source: int, vram_word: int, length: int) -> No
 def build_hdma_window_table() -> bytes:
     # Reuse the proven direct-HDMA form from H-SAMPLE: bit 7 set means one
     # source byte is transferred on every line in the block.
-    values = bytes([0x00] * 8 + [0x01] * (VISIBLE_LINES - 8))
+    values = bytes([0x00] * 16 + [0x01] * (VISIBLE_LINES - 16))
     table = bytearray()
     offset = 0
     while offset < len(values):
@@ -146,7 +146,7 @@ def build_program() -> bytes:
     lda_sta_abs(a, 0x00, 0x2133)    # 224-line mode / centered 8px border
 
     # Harmless WH0 HDMA creates one urgent section boundary after the first
-    # 8 visible lines. Window enables remain zero, so WH0 cannot mask pixels.
+    # 16 visible lines. Window enables remain zero, so WH0 cannot mask pixels.
     lda_sta_abs(a, 0x00, 0x2126)
     lda_sta_abs(a, 0x00, 0x4300)    # direct HDMA, mode 0
     lda_sta_abs(a, 0x26, 0x4301)    # WH0
@@ -235,7 +235,7 @@ def build_rom() -> bytes:
     rom[bg2_tile_offset:bg2_tile_offset + len(bg2_tiles)] = bg2_tiles
     rom[hdma_table_offset:hdma_table_offset + len(hdma_table)] = hdma_table
 
-    rom[HEADER:HEADER + 21] = b"S64 E2C SHARED".ljust(21, b" ")
+    rom[HEADER:HEADER + 21] = b"S64 E2D BAND16".ljust(21, b" ")
     rom[0x7FD5] = 0x20               # LoROM
     rom[0x7FD6] = 0x00
     rom[0x7FD7] = 0x05

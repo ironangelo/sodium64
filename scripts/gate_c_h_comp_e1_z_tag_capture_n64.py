@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E3b raw-before-brightness repair proof."""
+"""Capture/classify Gate-C E4a 2D DMA gather/scatter proof."""
 
 from __future__ import annotations
 
@@ -642,6 +642,102 @@ def classify_e3b_raw_before_brightness(
     }
 
 
+def classify_e4a_dma2d_band_stream(
+    queue1: bytes,
+    queue2: bytes,
+    color_final: bytes,
+    color_prefix_guard: bytes,
+    color_suffix_guard: bytes,
+    framebuffer: bytes,
+    sub_z: bytes,
+    sub_z_prefix: bytes,
+    sub_z_suffix: bytes,
+    main_z: bytes,
+    main_z_prefix: bytes,
+    main_z_suffix: bytes,
+    main_before: bytes,
+    main_after: bytes,
+) -> dict[str, object]:
+    base = classify_e3b_raw_before_brightness(
+        queue1,
+        queue2,
+        color_final,
+        color_prefix_guard,
+        color_suffix_guard,
+        framebuffer,
+        sub_z,
+        sub_z_prefix,
+        sub_z_suffix,
+        main_z,
+        main_z_prefix,
+        main_z_suffix,
+    )
+
+    dim_row = E3B_DIM_BLUE_RGBA5551.to_bytes(2, "big") * 8
+    full_row = E2F_BACKDROP_BLUE_RGBA5551.to_bytes(2, "big") * 8
+    expected_gather = dim_row + full_row * 7
+    expected_before = (
+        expected_gather
+        + bytes([E2A_MAIN_BEFORE_INIT]) * (len(main_before) - len(expected_gather))
+    )
+    expected_after = bytearray([E2A_MAIN_AFTER_INIT]) * len(main_after)
+    expected_segments: list[dict[str, int]] = []
+    for row in range(8):
+        start = row * FB_WIDTH * 2 + E1C_ACTIVE_X0 * 2
+        end = start + 16
+        expected_after[start:end] = expected_gather[row * 16:(row + 1) * 16]
+        expected_segments.append({
+            "row": row,
+            "start": start,
+            "end_exclusive": end,
+        })
+
+    before_passed = main_before == expected_before
+    after_passed = main_after == bytes(expected_after)
+    before_changed = sum(
+        actual != E2A_MAIN_BEFORE_INIT for actual in main_before
+    )
+    after_changed = sum(
+        actual != E2A_MAIN_AFTER_INIT for actual in main_after
+    )
+    dma2d_passed = bool(
+        before_passed
+        and after_passed
+        and before_changed == 128
+        and after_changed == 128
+    )
+    passed = bool(base["passed"] and dma2d_passed)
+
+    base["classification"] = (
+        "E4A_DMA2D_GATHER_SCATTER_VALIDATED"
+        if passed else "E4A_DMA2D_GATHER_SCATTER_FAILED"
+    )
+    base["passed"] = passed
+    base["dma2d"] = {
+        "passed": dma2d_passed,
+        "len_register": hex(0x2200700F),
+        "gather": {
+            "passed": before_passed,
+            "changed_bytes": before_changed,
+            "expected_changed_bytes": 128,
+            "expected_words": {
+                "dim_blue": 8,
+                "full_blue": 56,
+            },
+            "tail_init_byte": hex(E2A_MAIN_BEFORE_INIT),
+        },
+        "scatter": {
+            "passed": after_passed,
+            "changed_bytes": after_changed,
+            "expected_changed_bytes": 128,
+            "segments": expected_segments,
+            "init_byte": hex(E2A_MAIN_AFTER_INIT),
+            "stride_bytes": FB_WIDTH * 2,
+        },
+    }
+    return base
+
+
 def classify_e2e_z_band_alignment(
     queue1: bytes,
     queue2: bytes,
@@ -1168,9 +1264,9 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E3b repair authority freezes the measured runtime+guest and requires
-        # raw operands, post-ADD brightness, and section coefficient8 transport.
-        result = classify_e3b_raw_before_brightness(
+        # E4a authority keeps the full validated E3b contract and additionally
+        # requires exact 2D DMA gather/scatter bytes in the captured buffers.
+        result = classify_e4a_dma2d_band_stream(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -1183,6 +1279,8 @@ def main() -> int:
             second_z,
             second_z_prefix,
             second_z_suffix,
+            main_before,
+            main_after,
         )
         result["capture_state"] = {
             **state,
@@ -1196,7 +1294,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E3b raw-before-brightness classifier failed; see result.json")
+            raise RuntimeError("E4a DMA2D gather/scatter classifier failed; see result.json")
 
         try:
             client.request("D")

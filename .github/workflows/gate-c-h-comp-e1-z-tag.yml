@@ -1,4 +1,4 @@
-name: Gate C H-COMP E4a DMA2D Band Stream Probe
+name: Gate C H-COMP E4a DMA2D Gather Scatter Proof
 
 on:
   push:
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run frozen E3b authority plus E4a DMA2D capture
+      - name: Run fenced E4a DMA2D gather/scatter proof
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E4a DMA2D band-stream evidence
+      - name: Upload E4a DMA2D gather/scatter evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4a-dma2d-band-stream-evidence
+          name: gate-c-h-comp-e4a-dma2d-gather-scatter-evidence
           retention-days: 30
           path: |
             captures/

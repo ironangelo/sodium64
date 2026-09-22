@@ -237,10 +237,26 @@ next_section:
     addi a1, a1, SECTION_SIZE
     sw a1, SECTION_PTR(sp)
 
-    // Set the section bounds
+    // Set the section bounds.
+    // E2d proof: preserve the loaded section's true bounds in unused Mode-7
+    // scratch. For the controlled first 0..16 section only, render 0..8 first;
+    // the second 8-line band reuses the same loaded section state below.
     move k0, k1
     lbu k1, SPLIT_LINE
+    sw k0, MODE7_BOUNDS + 4
+    sw k1, MODE7_BOUNDS + 0
+    bnez k0, e2d_band_bounds_ready
+    nop
+    li t0, 16
+    bne k1, t0, e2d_band_bounds_ready
+    nop
+    lbu t0, STAT_FLAGS
+    andi t0, t0, 0x80
+    bnez t0, e2d_band_bounds_ready
+    nop
+    li k1, 8
 
+e2d_band_bounds_ready:
     // Check if this section has an OAM update
     lbu t0, STAT_FLAGS
     andi t0, t0, 0x40
@@ -504,14 +520,14 @@ next_layer:
     bnez t0, draw_bg
     andi t3, t0, 0x3 // Index
 
-    // Move to the next screen's layers until the section is finished.
-    // E2b: default layer_set traverses TS first and TM second. For the first
-    // real 8-line section only, switch Color Image from compact sub scratch
-    // back to the normal main framebuffer before the second traversal.
+    // Move to the next screen's layers until the current band is finished.
+    // E2d keeps the original section start separately, so both 8-line bands
+    // of the controlled 0..16 section switch compact TS -> normal main TM.
     srl s7, s7, 8
-    beqz s7, next_section
+    beqz s7, e2d_band_done
     andi s3, s3, 0xF0
-    bnez k0, next_layer
+    lw t0, MODE7_BOUNDS + 4
+    bnez t0, next_layer
     nop
     lw t0, FRAMEBUFFER(sp)
     addi t0, t0, 280 * -16
@@ -520,6 +536,26 @@ next_layer:
     jal rdp_send
     li a1, RDP_FRAME + 8
     b next_layer
+    nop
+
+e2d_band_done:
+    // Only the controlled first 0..16 section is subdivided. If its true end
+    // is still ahead, advance 0..8 -> 8..16 without reloading section/OAM,
+    // rebase the compact target so global y=24 maps back to scratch row 0,
+    // and rerun the per-band scissor/backdrop/layer path.
+    lw t0, MODE7_BOUNDS + 4
+    bnez t0, next_section
+    lw t1, MODE7_BOUNDS + 0
+    bge k1, t1, next_section
+    nop
+    move k0, k1
+    move k1, t1
+    li t0, 0x000E0B80 // 0xE4000 - 24*560
+    sw t0, RDP_FRAME + 4
+    li a0, RDP_FRAME
+    jal rdp_send
+    li a1, RDP_FRAME + 8
+    b oam_skip
     nop
 
 

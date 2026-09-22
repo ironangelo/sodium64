@@ -1,16 +1,16 @@
-name: Gate C H-COMP E3b Raw Before Brightness Proof
+name: Gate C H-COMP E4a DMA2D Band Stream Probe
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e3b-brightness-order
+      - phase4/gate-c-h-comp-e4a-dma2d-band-stream
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e3b-raw-before-brightness-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4a-dma2d-band-stream-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build exact E3b raw-before-brightness runtime
+      - name: Build E4a DMA2D runtime with frozen E3b semantics
         shell: bash
         run: |
           set -euo pipefail
@@ -71,7 +71,7 @@ jobs:
           sha256sum workload/e1c.smc wrap/out/e1c.z64 | tee workload/hashes.sha256
           rm workload/embedded.smc
 
-      - name: Locate E3b repair runtime state
+      - name: Locate E4a runtime state
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run fenced E3b raw-before-brightness proof
+      - name: Run frozen E3b authority plus E4a DMA2D capture
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E3b raw-before-brightness evidence
+      - name: Upload E4a DMA2D band-stream evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e3b-raw-before-brightness-evidence
+          name: gate-c-h-comp-e4a-dma2d-band-stream-evidence
           retention-days: 30
           path: |
             captures/

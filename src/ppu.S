@@ -892,6 +892,7 @@ set_bright:
     // STAT_FLAGS[4:0] while preserving OAM-dirty/force-blank bits.
     lbu t2, brightness
     beq t2, t0, bright_store_flags
+    nop
     sb t0, brightness
     li t2, 0x1
     sb t2, sect_status

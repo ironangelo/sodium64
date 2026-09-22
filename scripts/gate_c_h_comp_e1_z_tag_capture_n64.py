@@ -30,6 +30,10 @@ STATUS_ADDR = 0xA00E1000
 STATUS_MARKER = 0xE1F00D01
 STATUS_SIZE = 8
 SP_STATUS_ADDR = 0xA4040010
+SP_PC_ADDR = 0xA4080000
+DP_START_ADDR = 0xA4100000
+DP_END_ADDR = 0xA4100004
+DP_CURRENT_ADDR = 0xA4100008
 DP_STATUS_ADDR = 0xA410000C
 
 SECTION_QUEUE1_ADDR = 0xA016C600
@@ -208,6 +212,27 @@ def wait_for_proof(
                 "status": marker,
                 "counter_delta": 0 if delta is None else delta,
             }
+    # Timeout diagnostics are host-only evidence. They intentionally do not
+    # alter runtime state; capture the RSP PC and DPC ownership registers so a
+    # hang can be localized instead of inferred from guest progress alone.
+    try:
+        timeout_state = {
+            "sp_pc": read_u(client, SP_PC_ADDR, 4),
+            "sp_status": read_u(client, SP_STATUS_ADDR, 4),
+            "dp_start": read_u(client, DP_START_ADDR, 4),
+            "dp_end": read_u(client, DP_END_ADDR, 4),
+            "dp_current": read_u(client, DP_CURRENT_ADDR, 4),
+            "dp_status": read_u(client, DP_STATUS_ADDR, 4),
+        }
+        print(
+            "timeout_diagnostic: "
+            + json.dumps(
+                {key: f"0x{value:08X}" for key, value in timeout_state.items()},
+                sort_keys=True,
+            )
+        )
+    except Exception as exc:
+        print(f"timeout_diagnostic_failed: {exc!r}")
     raise RuntimeError("E1c proof marker/fresh guest frame was not observed")
 
 

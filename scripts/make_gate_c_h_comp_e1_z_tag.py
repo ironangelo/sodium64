@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Generate the deterministic SNES guest for Gate-C E3a ADD-compositor proof.
+"""Generate the deterministic SNES guest for Gate-C E3b brightness-order proof.
 
 The 32 KiB LoROM renders four Mode-0 winner combinations per 4 unique IDs:
 0=neither, 1=main BG1 only, 2=sub BG2 only, 3=both. CGRAM[0] remains full
 blue and CGADSUB enables BG1 math only, so the four pixels encode all
 (main_math_eligible, sub_present) states 00/10/01/11 without repeated tile IDs.
 CGWSEL selects the subscreen operand and fixed color is explicitly black.
+Both opaque BGs are red and display brightness is 7 to discriminate raw-add-then-brightness from brightness-first ADD.
 A harmless direct-HDMA WH0 stream keeps the validated 16-line carrier geometry.
 """
 
@@ -131,14 +132,14 @@ def build_program() -> bytes:
     dma_to_vram(a, source=BG2_TILE_ADDRESS, vram_word=0x2000, length=TILE_SET_SIZE)
 
     # CGRAM 0: full blue backdrop. CGRAM 1: full red for opaque BG1.
-    # CGRAM 2: full green for opaque BG2.
+    # CGRAM 2: full red for opaque BG2 (same-channel saturation discriminator).
     lda_sta_abs(a, 0x00, 0x2121)
     lda_sta_abs(a, 0x00, 0x2122)    # color 0 low: blue BGR555 0x7C00
     lda_sta_abs(a, 0x7C, 0x2122)    # color 0 high
     lda_sta_abs(a, 0x1F, 0x2122)    # color 1 low: red BGR555 0x001F
     lda_sta_abs(a, 0x00, 0x2122)    # color 1 high
-    lda_sta_abs(a, 0xE0, 0x2122)    # color 2 low: green BGR555 0x03E0
-    lda_sta_abs(a, 0x03, 0x2122)    # color 2 high
+    lda_sta_abs(a, 0x1F, 0x2122)    # color 2 low: red BGR555 0x001F
+    lda_sta_abs(a, 0x00, 0x2122)    # color 2 high
 
     lda_sta_abs(a, 0x01, 0x212C)    # TM: BG1 main-only
     lda_sta_abs(a, 0x02, 0x212D)    # TS: BG2 sub-only
@@ -160,7 +161,7 @@ def build_program() -> bytes:
     lda_sta_abs(a, 0x01, 0x420C)    # enable HDMA channel 0
 
     lda_sta_long(a, 0x00, FRAME_COUNTER)
-    lda_sta_abs(a, 0x0F, 0x2100)    # full brightness, display on
+    lda_sta_abs(a, 0x07, 0x2100)    # brightness 7, display on
     lda_sta_abs(a, 0x80, 0x4200)    # NMI enable
 
     a.label("main_loop")

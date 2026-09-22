@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E2g-B four-state screen-boolean proof."""
+"""Capture/classify Gate-C E3a rendered subscreen ADD proof."""
 
 from __future__ import annotations
 
@@ -62,6 +62,7 @@ E2B_MAIN_ROW1 = 16
 E2D_MAIN_ROW1 = 24
 E2D_SUFFIX_INTACT_BYTES = 24
 E2F_BACKDROP_BLUE_RGBA5551 = 0x003F
+E3A_ADD_YELLOW_RGBA5551 = 0xFFC1
 E2F_MAIN_SENTINEL_WORD = 0x294B
 E2F_FRAMEBUFFER_ADDRS = (0xA00F2300, 0xA0113000, 0xA0133D00)
 E2F_MAIN_BAND_OFFSET = E2B_MAIN_ROW0 * FB_WIDTH * 2
@@ -368,7 +369,7 @@ def classify_e2f_carrier_sections(
     }
 
 
-def classify_e2g_b_screen_booleans(
+def classify_e3a_rendered_subscreen_add(
     queue1: bytes,
     queue2: bytes,
     color_final: bytes,
@@ -396,6 +397,7 @@ def classify_e2g_b_screen_booleans(
     main_z_words = words(main_z)
 
     expected_state = (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) * E1C_ROWS // 4
+    expected_composed = (E1C_ACTIVE_X1 - E1C_ACTIVE_X0) // 4
     compact_wrong: list[dict[str, int]] = []
     main_wrong: list[dict[str, int]] = []
     sub_z_wrong: list[dict[str, int]] = []
@@ -411,10 +413,13 @@ def classify_e2g_b_screen_booleans(
                 BG2_GREEN_RGBA5551 if state in (2, 3)
                 else E2F_BACKDROP_BLUE_RGBA5551
             )
-            expected_main_color = (
-                E2B_MAIN_RED_RGBA5551 if state in (1, 3)
-                else E2F_BACKDROP_BLUE_RGBA5551
-            )
+            if main_y == E2B_MAIN_ROW1 and state == 3:
+                expected_main_color = E3A_ADD_YELLOW_RGBA5551
+            else:
+                expected_main_color = (
+                    E2B_MAIN_RED_RGBA5551 if state in (1, 3)
+                    else E2F_BACKDROP_BLUE_RGBA5551
+                )
             expected_sub_tag = BOOL_TRUE_TAG_WORD if state in (2, 3) else BOOL_FALSE_TAG_WORD
             expected_main_tag = BOOL_TRUE_TAG_WORD if state in (1, 3) else BOOL_FALSE_TAG_WORD
 
@@ -446,6 +451,21 @@ def classify_e2g_b_screen_booleans(
 
             state_counts[state] += 1
             pair_counts[(actual_main_tag, actual_sub_tag)] += 1
+
+    # Rows 8..15 are an unchanged Main control; the compositor owns row 16 only.
+    for main_y in range(E2B_MAIN_ROW0, E2B_MAIN_ROW1):
+        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
+            state = ((x - E1C_ACTIVE_X0) // 8) & 3
+            expected_main_color = (
+                E2B_MAIN_RED_RGBA5551 if state in (1, 3)
+                else E2F_BACKDROP_BLUE_RGBA5551
+            )
+            actual_main_color = framebuffer_words[main_y * FB_WIDTH + x]
+            if actual_main_color != expected_main_color and len(main_wrong) < 64:
+                main_wrong.append({
+                    "x": x, "y": main_y, "state": state,
+                    "actual": actual_main_color, "expected": expected_main_color,
+                })
 
     compact_hist = collections.Counter(
         compact_words[y * FB_WIDTH + x]
@@ -504,8 +524,9 @@ def classify_e2g_b_screen_booleans(
         and not main_wrong
         and compact_hist[BG2_GREEN_RGBA5551] == expected_state * 2
         and compact_hist[E2F_BACKDROP_BLUE_RGBA5551] == expected_state * 2
-        and main_hist[E2B_MAIN_RED_RGBA5551] == expected_state * 4
+        and main_hist[E2B_MAIN_RED_RGBA5551] == expected_state * 4 - expected_composed
         and main_hist[E2F_BACKDROP_BLUE_RGBA5551] == expected_state * 4
+        and main_hist[E3A_ADD_YELLOW_RGBA5551] == expected_composed
         and compact_border[SENTINEL_WORD] == (FB_WIDTH - 256) * E1C_ROWS
         and color_guards_ok
     )
@@ -536,8 +557,8 @@ def classify_e2g_b_screen_booleans(
 
     return {
         "classification": (
-            "E2G_B_SCREEN_BOOLEAN_METADATA_VALIDATED"
-            if passed else "E2G_B_SCREEN_BOOLEAN_METADATA_FAILED"
+            "E3A_RENDERED_SUBSCREEN_ADD_VALIDATED"
+            if passed else "E3A_RENDERED_SUBSCREEN_ADD_FAILED"
         ),
         "passed": passed,
         "carrier": carrier,
@@ -547,6 +568,7 @@ def classify_e2g_b_screen_booleans(
             "compact_blue": compact_hist[E2F_BACKDROP_BLUE_RGBA5551],
             "main_red": main_hist[E2B_MAIN_RED_RGBA5551],
             "main_blue": main_hist[E2F_BACKDROP_BLUE_RGBA5551],
+            "main_yellow": main_hist[E3A_ADD_YELLOW_RGBA5551],
             "compact_mismatches": compact_wrong,
             "main_mismatches": main_wrong,
         },
@@ -575,6 +597,7 @@ def classify_e2g_b_screen_booleans(
         "constants": {
             "boolean_false_tag": hex(BOOL_FALSE_TAG_WORD),
             "boolean_true_tag": hex(BOOL_TRUE_TAG_WORD),
+            "add_yellow_rgba5551": hex(E3A_ADD_YELLOW_RGBA5551),
             "sub_z_address": hex(E1C_Z_SCRATCH_ADDR),
             "main_z_address": hex(E2G_SECOND_Z_ADDR),
         },
@@ -1107,9 +1130,9 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E2g-B authority keeps the four-state guest and color path frozen while
-        # requiring independent boolean metadata in the TS/sub and TM/main Z strips.
-        result = classify_e2g_b_screen_booleans(
+        # E3a authority keeps the validated guest/runtime frozen and requires
+        # exactly one rendered Main row to consume Sub + both E2g-B booleans.
+        result = classify_e3a_rendered_subscreen_add(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -1135,7 +1158,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E2g-B screen-boolean classifier failed; see result.json")
+            raise RuntimeError("E3a rendered subscreen ADD classifier failed; see result.json")
 
         try:
             client.request("D")

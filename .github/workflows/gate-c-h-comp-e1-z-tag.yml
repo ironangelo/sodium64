@@ -1,4 +1,4 @@
-name: Gate C H-COMP E3a Guest Baseline
+name: Gate C H-COMP E3a Rendered Subscreen ADD Proof
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e3a-guest-baseline-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e3a-rendered-add-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
-      - name: Validate deterministic E2g four-state guest
+      - name: Validate deterministic E3a four-state guest
         shell: bash
         run: |
           set -euo pipefail
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build E3a guest baseline with frozen E2g-B runtime
+      - name: Build exact E3a rendered-ADD runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -54,7 +54,7 @@ jobs:
           sha256sum sodium64.z64 build/sodium64.elf | tee build-sha256.txt
           grep -E '(^|[[:space:]])(text|\.text)' build/rsp_main.map || true
 
-      - name: Wrap exact E2g four-state guest
+      - name: Wrap exact E3a four-state guest
         shell: bash
         run: |
           set -euo pipefail
@@ -71,7 +71,7 @@ jobs:
           sha256sum workload/e1c.smc wrap/out/e1c.z64 | tee workload/hashes.sha256
           rm workload/embedded.smc
 
-      - name: Locate E2g runtime state
+      - name: Locate E3a runtime state
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run frozen E2g-B oracle on E3a guest baseline
+      - name: Run fenced E3a rendered subscreen ADD proof
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E3a guest-baseline evidence
+      - name: Upload E3a rendered-ADD evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e3a-guest-baseline-evidence
+          name: gate-c-h-comp-e3a-rendered-add-evidence
           retention-days: 30
           path: |
             captures/

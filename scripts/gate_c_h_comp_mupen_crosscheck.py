@@ -145,9 +145,15 @@ def build_commands(capture_ready: int, guest_counter: int) -> list[str]:
 
     # Pre-run dumps prove the debugger writes established the requested epoch.
     emit_dump(lines, STATUS_ADDR, STATUS_SIZE, "pre-status.raw")
+    emit_dump(lines, Z_COMMAND_ADDR, Z_PREFIX_SIZE, "pre-z-prefix.raw")
     emit_dump(lines, Z_BASE, Z_SIZE, "pre-z.raw")
+    emit_dump(lines, Z_BASE + Z_SIZE, Z_SUFFIX_SIZE, "pre-z-suffix.raw")
+    emit_dump(lines, E2G_SECOND_Z_PREFIX_ADDR, GUARD_SIZE, "pre-main-z-prefix.raw")
     emit_dump(lines, E2G_SECOND_Z_ADDR, COMPACT_SIZE, "pre-main-z.raw")
+    emit_dump(lines, E2G_SECOND_Z_SUFFIX_ADDR, GUARD_SIZE, "pre-main-z-suffix.raw")
+    emit_dump(lines, E2A_COLOR_PREFIX_GUARD_ADDR, GUARD_SIZE, "pre-color-prefix.raw")
     emit_dump(lines, E2A_COLOR_SCRATCH_ADDR, COMPACT_SIZE, "pre-compact.raw")
+    emit_dump(lines, E2A_COLOR_SUFFIX_GUARD_ADDR, GUARD_SIZE, "pre-color-suffix.raw")
     emit_dump(lines, E2A_COLOR_ARCHIVE_A_ADDR, COMPACT_SIZE, "pre-archive.raw")
     emit_dump(lines, E2A_MAIN_BEFORE_ADDR, COMPACT_SIZE, "pre-main-before.raw")
     emit_dump(lines, E2A_MAIN_AFTER_ADDR, COMPACT_SIZE, "pre-main-after.raw")
@@ -164,9 +170,15 @@ def build_commands(capture_ready: int, guest_counter: int) -> list[str]:
     # Second capture-ready hit: exactly one renderer frame later.
     emit_dump(lines, counter_base, 4, "post-counter.raw")
     emit_dump(lines, STATUS_ADDR, STATUS_SIZE, "post-status.raw")
+    emit_dump(lines, Z_COMMAND_ADDR, Z_PREFIX_SIZE, "post-z-prefix.raw")
     emit_dump(lines, Z_BASE, Z_SIZE, "post-z.raw")
+    emit_dump(lines, Z_BASE + Z_SIZE, Z_SUFFIX_SIZE, "post-z-suffix.raw")
+    emit_dump(lines, E2G_SECOND_Z_PREFIX_ADDR, GUARD_SIZE, "post-main-z-prefix.raw")
     emit_dump(lines, E2G_SECOND_Z_ADDR, COMPACT_SIZE, "post-main-z.raw")
+    emit_dump(lines, E2G_SECOND_Z_SUFFIX_ADDR, GUARD_SIZE, "post-main-z-suffix.raw")
+    emit_dump(lines, E2A_COLOR_PREFIX_GUARD_ADDR, GUARD_SIZE, "post-color-prefix.raw")
     emit_dump(lines, E2A_COLOR_SCRATCH_ADDR, COMPACT_SIZE, "post-compact.raw")
+    emit_dump(lines, E2A_COLOR_SUFFIX_GUARD_ADDR, GUARD_SIZE, "post-color-suffix.raw")
     emit_dump(lines, E2A_COLOR_ARCHIVE_A_ADDR, COMPACT_SIZE, "post-archive.raw")
     emit_dump(lines, E2A_MAIN_BEFORE_ADDR, COMPACT_SIZE, "post-main-before.raw")
     emit_dump(lines, E2A_MAIN_AFTER_ADDR, COMPACT_SIZE, "post-main-after.raw")
@@ -255,14 +267,30 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
 
     pre_checks = {
         "status_zero": read("pre-status.raw") == bytes(STATUS_SIZE),
+        "z_prefix": read("pre-z-prefix.raw") == bytes([PREFIX_BYTE]) * Z_PREFIX_SIZE,
         "z_sentinel": all_pattern(
             read("pre-z.raw"), SENTINEL_WORD.to_bytes(2, "big")
+        ),
+        "z_suffix": read("pre-z-suffix.raw") == bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE,
+        "main_z_prefix": (
+            read("pre-main-z-prefix.raw")
+            == bytes([E2G_SECOND_Z_PREFIX_BYTE]) * GUARD_SIZE
         ),
         "main_z_sentinel": all_pattern(
             read("pre-main-z.raw"), SENTINEL_WORD.to_bytes(2, "big")
         ),
+        "main_z_suffix": (
+            read("pre-main-z-suffix.raw")
+            == bytes([E2G_SECOND_Z_SUFFIX_BYTE]) * GUARD_SIZE
+        ),
+        "color_prefix": (
+            read("pre-color-prefix.raw") == bytes([PREFIX_BYTE]) * GUARD_SIZE
+        ),
         "compact_sentinel": all_pattern(
             read("pre-compact.raw"), SENTINEL_WORD.to_bytes(2, "big")
+        ),
+        "color_suffix": (
+            read("pre-color-suffix.raw") == bytes([SUFFIX_BYTE]) * GUARD_SIZE
         ),
         "archive_init": read("pre-archive.raw") == bytes([E2A_ARCHIVE_INIT]) * COMPACT_SIZE,
         "main_before_init": read("pre-main-before.raw") == bytes([E2A_MAIN_BEFORE_INIT]) * COMPACT_SIZE,
@@ -298,6 +326,16 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
     archive = read("post-archive.raw")
     compact_written = compact != SENTINEL_WORD.to_bytes(2, "big") * (COMPACT_SIZE // 2)
     archive_written = archive != bytes([E2A_ARCHIVE_INIT]) * COMPACT_SIZE
+    post_guards_ok = bool(
+        read("post-z-prefix.raw") == bytes([PREFIX_BYTE]) * Z_PREFIX_SIZE
+        and read("post-z-suffix.raw") == bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE
+        and read("post-main-z-prefix.raw")
+            == bytes([E2G_SECOND_Z_PREFIX_BYTE]) * GUARD_SIZE
+        and read("post-main-z-suffix.raw")
+            == bytes([E2G_SECOND_Z_SUFFIX_BYTE]) * GUARD_SIZE
+        and read("post-color-prefix.raw") == bytes([PREFIX_BYTE]) * GUARD_SIZE
+        and read("post-color-suffix.raw") == bytes([SUFFIX_BYTE]) * GUARD_SIZE
+    )
 
     if selected_fb is None:
         band0 = None
@@ -334,6 +372,7 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
         and main_z_written
         and compact_written
         and archive_written
+        and post_guards_ok
     )
 
     if controls_ok and band0_healthy:
@@ -369,6 +408,7 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
             "main_z_written": main_z_written,
             "compact_written": compact_written,
             "archive_written": archive_written,
+            "post_guards_ok": post_guards_ok,
             "main_z_counts": {
                 "false_0x0400": main_z_hist[BOOL_FALSE],
                 "true_0x0c00": main_z_hist[BOOL_TRUE],

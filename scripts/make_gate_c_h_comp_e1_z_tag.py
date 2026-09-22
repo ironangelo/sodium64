@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Generate the deterministic SNES guest for Gate-C E2f screen-backdrop proof.
+"""Generate the deterministic SNES guest for Gate-C E2g BG metadata proof.
 
-The 32 KiB LoROM renders separate Mode-0 screens with explicit transparent
-holes: BG1 red is main-only, BG2 green is sub-only, and CGRAM[0] is full blue.
-The existing alternating tilemap selects opaque tile 0 and transparent tile 1,
-so each active 256-pixel row is exactly half layer and half backdrop. A harmless
-direct-HDMA WH0 stream keeps the validated 16-line carrier geometry.
+The 32 KiB LoROM renders complementary Mode-0 winner masks: BG1 red is
+main-only with even unique IDs opaque, while BG2 green is sub-only with odd
+unique IDs opaque; CGRAM[0] remains full blue. CGADSUB enables BG1 math only,
+creating independent main-eligibility vs sub-presence metadata discriminators.
+A harmless direct-HDMA WH0 stream keeps the validated 16-line carrier geometry.
 """
 
 from __future__ import annotations
@@ -144,7 +144,7 @@ def build_program() -> bytes:
     lda_sta_abs(a, 0x00, 0x212E)    # TMW disabled
     lda_sta_abs(a, 0x00, 0x212F)    # TSW disabled
     lda_sta_abs(a, 0x00, 0x2130)    # CGWSEL
-    lda_sta_abs(a, 0x00, 0x2131)    # CGADSUB
+    lda_sta_abs(a, 0x01, 0x2131)    # CGADSUB: BG1 math eligible only
     lda_sta_abs(a, 0x00, 0x2133)    # 224-line mode / centered 8px border
 
     # Harmless WH0 HDMA creates one urgent section boundary after the first
@@ -216,7 +216,7 @@ def build_rom() -> bytes:
         for index in range(TILE_COUNT)
     )
     bg2_tiles = b"".join(
-        bg2_opaque if (index & 1) == 0 else transparent_tile
+        transparent_tile if (index & 1) == 0 else bg2_opaque
         for index in range(TILE_COUNT)
     )
     hdma_table = build_hdma_window_table()
@@ -247,7 +247,7 @@ def build_rom() -> bytes:
     rom[bg2_tile_offset:bg2_tile_offset + len(bg2_tiles)] = bg2_tiles
     rom[hdma_table_offset:hdma_table_offset + len(hdma_table)] = hdma_table
 
-    rom[HEADER:HEADER + 21] = b"S64 E2F BACKDROP".ljust(21, b" ")
+    rom[HEADER:HEADER + 21] = b"S64 E2G BGMETA".ljust(21, b" ")
     rom[0x7FD5] = 0x20               # LoROM
     rom[0x7FD6] = 0x00
     rom[0x7FD7] = 0x05

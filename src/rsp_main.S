@@ -547,8 +547,18 @@ next_layer:
     lw t0, MODE7_BOUNDS + 4
     bnez t0, next_layer
     nop
+    // E4b band0 target-ownership discriminator: only the first 8-line
+    // TM pass is redirected to an isolated guarded color surface. Band1 keeps
+    // the normal Main framebuffer target unchanged.
+    beqz k0, e4b_band0_alt_color_target
+    nop
     lw t0, FRAMEBUFFER(sp)
     addi t0, t0, 280 * -16
+    b e4b_main_color_target_ready
+    nop
+e4b_band0_alt_color_target:
+    li t0, 0x000E9D00 // 0xEC000 - global y=16 * 560
+e4b_main_color_target_ready:
     sw t0, RDP_FRAME + 4
     li a0, RDP_FRAME
     jal rdp_send

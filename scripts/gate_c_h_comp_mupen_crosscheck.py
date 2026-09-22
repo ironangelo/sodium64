@@ -98,10 +98,8 @@ def emit_dump(lines: list[str], address: int, size: int, name: str) -> None:
     lines.append(f"dumpmem 0x{address:08X} 0x{size:X} {name}")
 
 
-def build_commands(capture_ready: int, guest_counter: int) -> list[str]:
+def build_seed_commands(guest_counter: int) -> list[str]:
     lines: list[str] = []
-    lines.append(f"bp add 0x{capture_ready:08X} 1 8")
-    lines.append("run")
 
     # First capture-ready hit: stop before update_menu/menu_return, record the
     # guest counter, then establish the same clean epoch used by the ares lab.
@@ -160,14 +158,15 @@ def build_commands(capture_ready: int, guest_counter: int) -> list[str]:
     for index, fb in enumerate(FRAMEBUFFER_ADDRS, 1):
         emit_dump(lines, fb, ROWS_0_23_BYTES, f"pre-fb{index}.raw")
 
-    # Leave the current capture-ready instruction before re-arming the same
-    # breakpoint. This prevents an immediate self-hit on resume.
-    lines.append(f"bp rm 0x{capture_ready:08X}")
-    lines.append("step")
-    lines.append(f"bp add 0x{capture_ready:08X} 1 8")
-    lines.append("run")
+    # Unique terminal read used by expect to prove the whole seed stream was
+    # consumed while the emulator remained paused.
+    lines.append(f"mem /1d 0x{STATUS_ADDR:08X}")
+    return lines
 
-    # Second capture-ready hit: exactly one renderer frame later.
+
+def build_post_commands(guest_counter: int) -> list[str]:
+    lines: list[str] = []
+    counter_base = guest_counter & ~3
     emit_dump(lines, counter_base, 4, "post-counter.raw")
     emit_dump(lines, STATUS_ADDR, STATUS_SIZE, "post-status.raw")
     emit_dump(lines, Z_COMMAND_ADDR, Z_PREFIX_SIZE, "post-z-prefix.raw")
@@ -184,7 +183,7 @@ def build_commands(capture_ready: int, guest_counter: int) -> list[str]:
     emit_dump(lines, E2A_MAIN_AFTER_ADDR, COMPACT_SIZE, "post-main-after.raw")
     for index, fb in enumerate(FRAMEBUFFER_ADDRS, 1):
         emit_dump(lines, fb, ROWS_0_23_BYTES, f"post-fb{index}.raw")
-    lines.append("quit")
+    lines.append(f"mem /1d 0x{STATUS_ADDR:08X}")
     return lines
 
 
@@ -425,9 +424,9 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     gen = sub.add_parser("commands")
-    gen.add_argument("--capture-ready-address", required=True, type=parse_int)
     gen.add_argument("--guest-counter-address", required=True, type=parse_int)
-    gen.add_argument("--output", required=True, type=Path)
+    gen.add_argument("--seed-output", required=True, type=Path)
+    gen.add_argument("--post-output", required=True, type=Path)
 
     cls = sub.add_parser("classify")
     cls.add_argument("--guest-counter-address", required=True, type=parse_int)
@@ -437,15 +436,19 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.command == "commands":
-        lines = build_commands(args.capture_ready_address, args.guest_counter_address)
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        seed_lines = build_seed_commands(args.guest_counter_address)
+        post_lines = build_post_commands(args.guest_counter_address)
+        args.seed_output.parent.mkdir(parents=True, exist_ok=True)
+        args.post_output.parent.mkdir(parents=True, exist_ok=True)
+        args.seed_output.write_text("\n".join(seed_lines) + "\n", encoding="utf-8")
+        args.post_output.write_text("\n".join(post_lines) + "\n", encoding="utf-8")
         print(
             json.dumps(
                 {
-                    "commands": len(lines),
-                    "bytes": args.output.stat().st_size,
-                    "capture_ready_address": hex(args.capture_ready_address),
+                    "seed_commands": len(seed_lines),
+                    "seed_bytes": args.seed_output.stat().st_size,
+                    "post_commands": len(post_lines),
+                    "post_bytes": args.post_output.stat().st_size,
                     "guest_counter_address": hex(args.guest_counter_address),
                 },
                 indent=2,

@@ -1342,8 +1342,9 @@ e3a_comp_done:
     li a0, SCRN_DATA
     lw a1, FRAMEBUFFER(sp)
     addi a1, a1, 0x2318 // Main y=16, x=12
-    jal dma_read
     li a2, 0x2200700F
+    jal dma_read
+    nop
 
     // Archive the gathered 8x8 block contiguously for host authority.
     li a0, SCRN_DATA
@@ -1354,8 +1355,9 @@ e3a_comp_done:
     // Scatter the same rows into the existing captured after-buffer at x=12.
     li a0, SCRN_DATA
     li a1, 0xA00EA018
-    jal dma_write
     li a2, 0x2200700F
+    jal dma_write
+    nop
 
     li t0, 0xE1F00D01
     sw t0, TEXTURE

@@ -157,6 +157,16 @@ pi_wait1:
     la a1, rsp_main_data_start
     jal rsp_upload
     li a0, 0x0000 // DMEM address
+
+    // Publish the fixed renderer-slot sources for demand-driven RSP overlays.
+    // Referencing both embedded blobs also keeps them resident in the final ROM.
+    la t0, rsp_main_text_start
+    addi t0, t0, 0x3A8
+    sw t0, DMEM(OVERLAY_MAIN_SRC)
+    la t0, rsp_mode7_text_start
+    addi t0, t0, 0x3A8
+    sw t0, DMEM(OVERLAY_MODE7_SRC)
+
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_PROFILE

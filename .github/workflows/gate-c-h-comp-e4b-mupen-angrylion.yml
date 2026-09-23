@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Retarget Control Trace
+name: Gate C H-COMP E4b Mupen S7 Transition Trace
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-retarget-control-trace
+      - phase4/gate-c-h-comp-e4b-mupen-s7-transition-trace
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-retarget-control-trace-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-s7-transition-trace-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -202,6 +202,46 @@ jobs:
           # Track cxd4's current interpreted RSP PC in host memory only.
           needle = "static int temp_PC;\n"
           repl = "static int temp_PC;\nstatic u32 s64_trace_pc;\n"
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          # Observe the exact two-screen mask transition. s7 is GPR 23.
+          # This distinguishes bad/missing TM state from scalar/control-flow
+          # divergence without changing guest or RSP memory.
+          needle = (
+              "    case 002: /* SRL */\n"
+              "        SR[rd] = (u32)(SR[rt]) >> MASK_SA(inst >> 6);\n"
+              "        SR[zero] = 0x00000000;\n"
+          )
+          repl = (
+              "    case 002: /* SRL */\n"
+              "        if (rd == 23u && rt == 23u && MASK_SA(inst >> 6) == 8u) {\n"
+              "            fprintf(stderr, \"S64_CXD4_S7_SRL8_BEFORE pc=%08X value=%08X\\n\", PC, SR[23]);\n"
+              "            fflush(stderr);\n"
+              "        }\n"
+              "        SR[rd] = (u32)(SR[rt]) >> MASK_SA(inst >> 6);\n"
+              "        if (rd == 23u && rt == 23u && MASK_SA(inst >> 6) == 8u) {\n"
+              "            fprintf(stderr, \"S64_CXD4_S7_SRL8_AFTER pc=%08X value=%08X\\n\", PC, SR[23]);\n"
+              "            fflush(stderr);\n"
+              "        }\n"
+              "        SR[zero] = 0x00000000;\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = (
+              "PROFILE_MODE int BEQ(u32 inst, u32 PC)\n"
+              "{\n"
+              "    const unsigned int rs = (inst >> 21) % (1 << 5);\n"
+              "    const unsigned int rt = (inst >> 16) % (1 << 5);\n\n"
+          )
+          repl = needle + (
+              "    if (rs == 23u && rt == 0u) {\n"
+              "        fprintf(stderr, \"S64_CXD4_BEQZ_S7 pc=%08X value=%08X taken=%u\\n\",\n"
+              "            PC, SR[23], SR[23] == 0u);\n"
+              "        fflush(stderr);\n"
+              "    }\n"
+          )
           assert s.count(needle) == 1
           s = s.replace(needle, repl, 1)
 
@@ -443,7 +483,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-retarget-control-trace.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-s7-transition-trace.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -501,7 +541,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-retarget-control-trace
+          name: gate-c-h-comp-e4b-mupen-s7-transition-trace
           retention-days: 30
           if-no-files-found: ignore
           path: |

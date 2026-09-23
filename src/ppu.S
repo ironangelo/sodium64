@@ -569,6 +569,31 @@ rsp_wait:
     beqz t0, rsp_wait
     xori t6, t5, 0x4
 
+#ifdef SODIUM64_E4D_HW_VERIFY
+    // Real-N64 E4d correctness milestone: inspect the just-completed framebuffer
+    // while SP is halted and before software UI writes can touch it. Preserve the
+    // handwritten rsp_frame state across the diagnostic-only call.
+    addiu sp, sp, -32
+    sw ra, 0(sp)
+    sw t4, 4(sp)
+    sw t5, 8(sp)
+    sw t6, 12(sp)
+    sw t7, 16(sp)
+    sw t8, 20(sp)
+    sw t9, 24(sp)
+    lw a0, DMEM(FRAMEBUFFER)(t6)
+    jal e4d_hw_verify_hook
+    nop
+    lw ra, 0(sp)
+    lw t4, 4(sp)
+    lw t5, 8(sp)
+    lw t6, 12(sp)
+    lw t7, 16(sp)
+    lw t8, 20(sp)
+    lw t9, 24(sp)
+    addiu sp, sp, 32
+#endif
+
     // Update the software-rendered UI
     lw a0, DMEM(FRAMEBUFFER)(t6)
     j update_menu

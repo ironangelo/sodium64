@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Core SP Read Trace
+name: Gate C H-COMP E4b Mupen Preserve cxd4 Halt
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-core-sp-read-trace
+      - phase4/gate-c-h-comp-e4b-mupen-preserve-cxd4-halt
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-core-sp-read-trace-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-preserve-cxd4-halt-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -296,6 +296,24 @@ jobs:
           PY
           git -C mupen64plus-rsp-cxd4 diff -- su.c | tee "$GITHUB_WORKSPACE/captures/cxd4-rsp-control-trace.patch"
 
+          # Host-lab compatibility shim only: Sodium64's resident custom
+          # microcode intentionally sets SP_STATUS.HALT to signal frame
+          # completion to the R4300. cxd4's wrapper clears that HALT after
+          # run_task() returns, before Mupen core can expose it to the CPU.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("mupen64plus-rsp-cxd4/module.c")
+          s = p.read_text()
+          needle = '    *CR[0x4] &= ~SP_STATUS_HALT; /* CPU restarts with the correct SIGs. */\n'
+          repl = (
+              '    fprintf(stderr, "S64_CXD4_PRESERVE_HALT status=%08X\\n", *CR[0x4]);\n'
+              '    fflush(stderr);\n'
+          )
+          assert s.count(needle) == 1
+          p.write_text(s.replace(needle, repl, 1))
+          PY
+          git -C mupen64plus-rsp-cxd4 diff -- module.c | tee "$GITHUB_WORKSPACE/captures/cxd4-preserve-halt.patch"
+
           export PATH="$root/mupen64plus-core/.github/workflows/scripts:$PATH"
 
           cd "$root/mupen64plus-core"
@@ -356,7 +374,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-core-sp-read-trace.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-preserve-cxd4-halt.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -414,7 +432,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-core-sp-read-trace
+          name: gate-c-h-comp-e4b-mupen-preserve-cxd4-halt
           retention-days: 30
           if-no-files-found: ignore
           path: |

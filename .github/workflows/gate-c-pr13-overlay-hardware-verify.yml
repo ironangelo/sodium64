@@ -1,0 +1,160 @@
+name: Gate C PR13 Real-N64 Overlay Verify
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-rsp-overlay-hardware-verify
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-overlay-hw-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate deterministic guest and decoder
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile             scripts/make_gate_c_obj_window.py             scripts/make_gate_c_mode7_switch.py             scripts/make_gate_c_mode7_midframe.py             scripts/overlay_hw_verify_report.py
+          python3 scripts/test_gate_c_mode7_switch.py -v
+          python3 scripts/test_gate_c_mode7_midframe.py -v
+
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_mode7_midframe.py diagnostic/overlay-a.smc
+          python3 scripts/make_gate_c_mode7_midframe.py diagnostic/overlay-b.smc
+          cmp diagnostic/overlay-a.smc diagnostic/overlay-b.smc
+          test "$(stat -c %s diagnostic/overlay-a.smc)" -eq 32768
+          sha256sum diagnostic/overlay-a.smc | tee diagnostic/guest.sha256
+
+          python3 - <<'PY'
+          import struct
+          from pathlib import Path
+
+          words = [0] * 32
+          words[0] = 0x5336344F
+          words[1] = 1
+          words[2] = 0x4F564D31
+          words[3] = 1
+          words[4] = 0x1FF
+          words[5] = 30
+          words[6] = 0x33
+          words[7] = 2
+          words[8] = 1
+          words[9] = 1
+          words[10] = 30
+          words[11] = 30
+          words[12] = 1
+          words[13] = 31
+          words[14] = 1
+          words[15] = 0
+          words[16] = 0
+          words[17] = 0x900
+          words[18] = 0x91670E64
+          words[19] = 1
+          words[20] = 1
+          words[21] = 0xA0113000
+          words[22] = 0x81
+          words[23] = 0x91670E64
+          words[25] = 0x80
+          words[26] = 0x454E4421
+          checksum = 0
+          for index, word in enumerate(words):
+              if index != 24:
+                  checksum ^= word
+          words[24] = checksum
+          Path("diagnostic/synthetic-pass.sav").write_bytes(
+              struct.pack(">32I", *words) + bytes(0x8000 - 0x80)
+          )
+          PY
+          python3 scripts/overlay_hw_verify_report.py diagnostic/synthetic-pass.sav             | tee diagnostic/decoder-selftest.txt
+
+      - name: Build exact overlay hardware verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make OVERLAY_HW_VERIFY=1 -j"$(nproc)" 2>&1             | tee overlay-hardware-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+          nm -n build/sodium64.elf | grep -E ' overlay_hw_verify_hook$'
+          grep -F 'overlay_hw_mode7_done' build/rsp_main.map
+          grep -F 'overlay_hw_main_done' build/rsp_main.map
+
+          python3 scripts/build_metrics.py             --rom sodium64.z64             --elf build/sodium64.elf             --build-dir build             --output overlay-hardware-build-metrics.txt
+          sha256sum sodium64.z64 build/sodium64.elf             | tee overlay-hardware-build.sha256
+
+      - name: Wrap exact same-frame overlay guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wrap package
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp diagnostic/overlay-a.smc wrap/pr13-overlay-sameframe.smc
+          (
+            cd wrap
+            python3 rom-converter.py </dev/null
+          )
+          test -s wrap/out/pr13-overlay-sameframe.z64
+
+          dd if=wrap/out/pr13-overlay-sameframe.z64             of=package/embedded.smc bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          cmp diagnostic/overlay-a.smc package/embedded.smc
+          rm package/embedded.smc
+
+          cp wrap/out/pr13-overlay-sameframe.z64 package/pr13-overlay-sameframe-correctness.z64
+          cp build/sodium64.elf package/sodium64-pr13-overlay-verify.elf
+          cp build/sodium64.map package/sodium64-pr13-overlay-verify.map
+          cp build/rsp_main.map package/rsp_main.map
+          cp build/rsp_mode7.map package/rsp_mode7.map
+          cp scripts/overlay_hw_verify_report.py package/overlay_hw_verify_report.py
+          cp diagnostic/guest.sha256 package/guest.sha256
+          cp overlay-hardware-build.log package/overlay-hardware-build.log
+          cp overlay-hardware-build-metrics.txt package/overlay-hardware-build-metrics.txt
+          cp overlay-hardware-build.sha256 package/overlay-hardware-build.sha256
+
+          sha256sum             package/pr13-overlay-sameframe-correctness.z64             package/sodium64-pr13-overlay-verify.elf             package/rsp_main.map             package/rsp_mode7.map             package/overlay_hw_verify_report.py             | tee package/package.sha256
+
+          cat > package/README.txt <<'EOF'
+          Sodium64 PR#13 real-N64 fixed-slot overlay correctness/stability test
+
+          Run:
+              pr13-overlay-sameframe-correctness.z64
+
+          The guest holds Mode1, then in one visible frame switches:
+              Mode1 -> Mode7 at line 80 -> Mode1 at line 160.
+
+          Wait for a solid GREEN or RED freeze. Then extract the SRAM save.
+          GREEN means the structured OVM1 hardware contract passed; RED means
+          a coherent failure was captured. In either case return the save.
+
+          Decode with:
+              python3 overlay_hw_verify_report.py <save-file>
+
+          This build is instrumented. Do NOT use its runtime for performance
+          or cadence conclusions.
+          EOF
+
+      - name: Upload real-N64 overlay correctness package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-pr13-overlay-real-n64-correctness
+          retention-days: 30
+          path: package/

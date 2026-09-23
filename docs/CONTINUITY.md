@@ -950,3 +950,9 @@ Validation authority:
 Do not build a second emulator around Sodium64. Do not let proof tooling become the project. Ask: **does this move a Road-to-1.0 gate?**
 
 Historical full continuity before compaction: **`continuity@686f5a1da210f8fcd1b9cd6e74d5663f4d359c30:docs/CONTINUITY.md`**.
+
+- **E4d RAW-MAIN ORACLE MATERIALIZED:** the frozen 32-tile ×128-byte raw Main-Z expectation is exactly 4096 bytes with local checksum `sha256:eaf15f1c85a5b0a92076031d88d0dfcfd40f8351e3d8f91cc8a2a7f4d909ea0e`. Tile-major rule remains: rows0..6 use Main bit `((j^1)&1)`, row7 uses `(j&1)`, mapping false=`0x0400`, true=`0x0C00` for all eight pixels.
+
+- **PINNED ARES SYNC CONTEXT (SOURCE-SUPPORTED):** at `ares@17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`, Vulkan RDP handling of `SyncFull` explicitly calls `wait_for_timeline(signal_timeline())` before `rdp.syncFull()`. Therefore if the raw Main-Z archive still shows a two-pixel lag, the interpretation cannot stop at “RDP commands were simply still executing”; investigate RDRAM visibility/coherency or Main-pass-specific state and seek independent-lab/hardware discrimination before changing production semantics.
+
+- **STOP CHECKPOINT / RESUME:** exact-head generic `35879415530 SUCCESS`; semantic `35879415786` on `phase4/gate-c-h-comp-e4d-main-raw-archive@40884f64979b200244ea9b056eef66e5647e531d` remains **IN PROGRESS**, job `107243694407`, currently `Build pinned N64-only ares in established valid lab mode`. Do not push the active branch. On resume, inspect this run first; if artifact exists, decode `main_after.bin[0:4096]` as 32 tile-major blocks of128 bytes and compare to the frozen oracle. Raw mismatch at the same first two Main=false pixels => pre-vector path; raw exact => vector reduction/packing.

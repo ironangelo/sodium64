@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Postdump Timeout
+name: Gate C H-COMP E4b Mupen Color Command Trace
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-postdump-timeout
+      - phase4/gate-c-h-comp-e4b-mupen-color-command-trace
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-postdump-timeout-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-color-command-trace-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -207,8 +207,34 @@ jobs:
 
           # Keep the proven RDP call-boundary trace, now with real newlines and
           # the interpreted RSP PC rather than Mupen's externally stored SP_PC.
+          # Also decode live DMEM SET_COLOR_IMAGE commands before Angrylion
+          # consumes them. This is observational only and uses cxd4's BES()
+          # accessor so bytes are reconstructed in guest order.
           needle = "    GBI_phase();\n"
           before = (
+              "    {\n"
+              "        u32 s64_cmd_start = GET_RCP_REG(DPC_CURRENT_REG) & 0x00000FFFu;\n"
+              "        u32 s64_cmd_end = GET_RCP_REG(DPC_END_REG) & 0x00000FFFu;\n"
+              "        u32 s64_off;\n"
+              "        if (GET_RCP_REG(DPC_STATUS_REG) & 0x00000001u) {\n"
+              "            for (s64_off = s64_cmd_start; s64_off + 7u < s64_cmd_end; s64_off += 8u) {\n"
+              "                u32 s64_w0 = ((u32)DMEM[BES((s64_off + 0u) & 0xFFFu)] << 24) |\n"
+              "                    ((u32)DMEM[BES((s64_off + 1u) & 0xFFFu)] << 16) |\n"
+              "                    ((u32)DMEM[BES((s64_off + 2u) & 0xFFFu)] << 8) |\n"
+              "                    ((u32)DMEM[BES((s64_off + 3u) & 0xFFFu)]);\n"
+              "                if ((s64_w0 >> 24) == 0x3Fu) {\n"
+              "                    u32 s64_w1 = ((u32)DMEM[BES((s64_off + 4u) & 0xFFFu)] << 24) |\n"
+              "                        ((u32)DMEM[BES((s64_off + 5u) & 0xFFFu)] << 16) |\n"
+              "                        ((u32)DMEM[BES((s64_off + 6u) & 0xFFFu)] << 8) |\n"
+              "                        ((u32)DMEM[BES((s64_off + 7u) & 0xFFFu)]);\n"
+              "                    fprintf(stderr,\n"
+              "                        \"S64_CXD4_SET_COLOR_IMAGE off=%03X w0=%08X w1=%08X target=%08X rsp_pc=%08X\\n\",\n"
+              "                        s64_off, s64_w0, s64_w1, s64_w1 & 0x03FFFFFFu, s64_trace_pc);\n"
+              "                    fflush(stderr);\n"
+              "                }\n"
+              "            }\n"
+              "        }\n"
+              "    }\n"
               "    fprintf(stderr,\n"
               "        \"S64_CXD4_RDP_BEFORE start=%08X end=%08X current=%08X status=%08X rsp_pc=%08X\\n\",\n"
               "        GET_RCP_REG(DPC_START_REG), GET_RCP_REG(DPC_END_REG),\n"
@@ -374,7 +400,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-preserve-cxd4-halt.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-color-command-trace.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -432,7 +458,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-postdump-timeout
+          name: gate-c-h-comp-e4b-mupen-color-command-trace
           retention-days: 30
           if-no-files-found: ignore
           path: |

@@ -6,6 +6,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-22 UTC)
 
+- **Independent E4d mask audit in progress (2026-09-23):** exact-opcode source analysis finds no inherited-ACC dependency in VXOR/VMUDL/VOR/VMUDN; interpreter can still use host SIMD. Main-reduction run35884417209 completed with artifact10762652566; stale-classifier failure does not establish lane result. See checkpoint 1 below.
+
 ### Phase / gate
 - **M3 / Gate C — base-system fidelity and compatibility.**
 - Road destination unchanged: real N64, correct native cadence, frameskip 0, full-rate APU/audio, broad fidelity/compatibility, no per-game modes; SuperFX/SuperFX2 and SA-1 remain required later.
@@ -974,3 +976,20 @@ Historical full continuity before compaction: **`continuity@686f5a1da210f8fcd1b9
 - **E4d MAIN-REDUCTION ARCHIVE IMPLEMENTED / IN FLIGHT:** branch `phase4/gate-c-h-comp-e4d-main-reduction-archive` forks measured vector-lane head `0d4201fe...`. Runtime commit `6c854dd26aec53bd1ec6633ebdaf83de0c8737f2` moves the diagnostic `SQV` to immediately after Main `VMUDL`, storing v00's 0/1 lanes into the consumed current `SCRN_DATA` row; the existing archive DMA now preserves SCRN_DATA as128 bytes/tile. Workflow-only final head `e08ed5835ab19410bcb7533eba46dbadd8578833` retargets labels/trigger/artifact. Compare `0d4201fe... -> e08ed583...` is exactly **2 commits / 2 files**: `src/rsp_main.S +6/-6`, workflow +9/-9; guest/capture inputs unchanged. Exact-head semantic `35884417209 QUEUED`, Build and Validate `35884417084 PENDING` at checkpoint; intermediate runtime-only generic cancelled by expected concurrency. **Do not push active branch.**
 
 - **STOP CHECKPOINT / RESUME (2026-09-23):** active branch `phase4/gate-c-h-comp-e4d-main-reduction-archive@e08ed5835ab19410bcb7533eba46dbadd8578833`. Exact-head Build and Validate `35884417084 IN PROGRESS`: build job `107260869668` compiling, profile-build `107260870232` compiling. Exact-head semantic `35884417209 IN PROGRESS`, job `107260791485`, currently `Build E4d main-reduction archive runtime with frozen guest`. Do not push active branch. **Resume first:** inspect these exact runs; if semantic artifact exists, compare `main_after.bin[0:4096]` against the frozen Main-reduction oracle (32 tiles ×8 rows ×8 lanes ×2 bytes, words 0x0000/0x0001 only). Leading false-row words already 0x0001 => Main VXOR/VMUDL path; exact archive => VOR/VMUDN combine path.
+
+
+## Independent E4d two-lane mask audit — 2026-09-23 / checkpoint 1
+
+Scope: read-only source/lab audit; Iron's direct request authorizes only this continuity update. No runtime, workflow, technical branch or PR changes. Baseline master remains `5b713493...`; inspected exact full-width `67b2cd92`, vector archive `0d4201fe`, and Main-reduction `e08ed583` sources plus pinned ares `17813a3c`.
+
+**FINDING — SUPPORTED INTERPRETATION:** with full aligned loads and the stated constants, the quoted arithmetic is correct and does not consume previous accumulator values. Pinned ares `ares/n64/rsp/interpreter-vpu.cpp:1102–1118` implements VMUDL as unsigned high-half product, replacing ACCL and clearing ACCM/ACCH. VMUDN at 1146–1166 replaces the accumulator with unsigned VS × signed VT and returns the low half. VXOR/VOR overwrite ACCL and the destination; their residual upper accumulator slices are not inputs to these VMUD operations. Using VD=VS is safe in the inspected SISD and SIMD implementations: source values are consumed before VD is assigned. Numeric e=0 is lane-wise identity, not a broadcast of lane0.
+
+**WHAT IT PROVES:** `0x0800*0x0020 >>16 =1`; `0x0800*0x0040 >>16 =2`; `state*0x0100` produces 0/0x100/0x200/0x300. A true zero Main input after VXOR cannot become one merely because the multiplier or old accumulator contains a stale value. Main input/constant/register-load provenance therefore deserves priority over an accumulator-reset workaround.
+
+**WHAT IT DOES NOT PROVE:** actual executed input registers/instruction words equal source intent; the pinned interpreter is hardware-perfect; the first Main reduction result is known.
+
+**PLAUSIBLE CAUSE / REJECTED CAUSE:** stale ACC/VCO/VCC as an intrinsic dependency of the quoted reduction is unsupported and inconsistent with these opcodes. The workflow disables the RSP recompiler, but interpreter vector math may still use host SIMD: `accuracy.hpp` selects SIMD independently of the interpreter/JIT choice. Do not conflate “RSP interpreter” with SISD C++ execution.
+
+**Live experiment status correction:** semantic run `35884417209` at exact `e08ed5835ab19410bcb7533eba46dbadd8578833` has finished. Build/ares setup and upload succeeded; the stale E4b color classifier failed. Evidence artifact `10762652566`, ZIP digest `4f94c6d6879399b468751645c0e016276f1acb1f8b341f68dfa3f091284b9dd7`. This checkpoint has NOT decoded its Main lanes; red CI alone does not select either branch of the precommitted discriminator.
+
+**MINIMAL NEXT TEST:** first inspect the already-produced archive. In parallel source reasoning only, verify actual load addresses/alignment and live vector constants; do not insert NOPs or clear ACC speculatively. Audit continues.

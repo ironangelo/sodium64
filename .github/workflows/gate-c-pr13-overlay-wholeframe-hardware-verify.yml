@@ -69,8 +69,8 @@ jobs:
           test -s sodium64.z64
           test -s build/sodium64.elf
           nm -n build/sodium64.elf | grep -E ' overlay_wholeframe_verify_hook$'
-          test "$(grep -E '^\.text[[:space:]]+0x0+[[:space:]]+0xd00' build/rsp_main.map | wc -l)" -ge 1
-          test "$(grep -E '^\.text[[:space:]]+0x0+[[:space:]]+0xd00' build/rsp_mode7.map | wc -l)" -ge 1
+          grep -Eq '^[[:space:]]*\.text[[:space:]]+0x0+[[:space:]]+0xd00([[:space:]]|$)' build/rsp_main.map
+          grep -Eq '^[[:space:]]*\.text[[:space:]]+0x0+[[:space:]]+0xd00([[:space:]]|$)' build/rsp_mode7.map
           python3 scripts/build_metrics.py             --rom sodium64.z64 --elf build/sodium64.elf --build-dir build             --output wholeframe-hardware-build-metrics.txt
           sha256sum sodium64.z64 build/sodium64.elf | tee wholeframe-hardware-build.sha256
 

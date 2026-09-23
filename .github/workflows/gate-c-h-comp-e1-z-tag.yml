@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4d Mask Archive
+name: Gate C H-COMP E4d Main Raw Archive
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4d-mask-archive
+      - phase4/gate-c-h-comp-e4d-main-raw-archive
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4d-mask-archive-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4d-main-raw-archive-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
-      - name: Validate deterministic E4d mask-archive guest
+      - name: Validate deterministic E4d main-raw archive guest
         shell: bash
         run: |
           set -euo pipefail
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build E4d mask-archive runtime with frozen guest
+      - name: Build E4d main-raw archive runtime with frozen guest
         shell: bash
         run: |
           set -euo pipefail
@@ -54,7 +54,7 @@ jobs:
           sha256sum sodium64.z64 build/sodium64.elf | tee build-sha256.txt
           grep -E '(^|[[:space:]])(text|\.text)' build/rsp_main.map || true
 
-      - name: Wrap exact E4d mask-archive guest
+      - name: Wrap exact E4d main-raw archive guest
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run stale E4b oracle and capture E4d tile-mask archive
+      - name: Run stale E4b oracle and capture E4d raw Main-Z archive
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E4d mask-archive evidence
+      - name: Upload E4d main-raw archive evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4d-mask-archive-evidence
+          name: gate-c-h-comp-e4d-main-raw-archive-evidence
           retention-days: 30
           path: |
             captures/

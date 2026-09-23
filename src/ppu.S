@@ -573,25 +573,28 @@ rsp_wait:
     // Real-N64 E4d correctness milestone: inspect the just-completed framebuffer
     // while SP is halted and before software UI writes can touch it. Preserve the
     // handwritten rsp_frame state across the diagnostic-only call.
-    addiu sp, sp, -32
-    sw ra, 0(sp)
-    sw t4, 4(sp)
-    sw t5, 8(sp)
-    sw t6, 12(sp)
-    sw t7, 16(sp)
-    sw t8, 20(sp)
-    sw t9, 24(sp)
+    // Sodium64 intentionally has no ABI stack contract here and existing
+    // runtime code repurposes register29/sp. Preserve the live rsp_frame state
+    // in verifier-owned static words instead of touching sp/SP memory.
+    la t0, e4d_hw_call_spill
+    sw ra, 0(t0)
+    sw t4, 4(t0)
+    sw t5, 8(t0)
+    sw t6, 12(t0)
+    sw t7, 16(t0)
+    sw t8, 20(t0)
+    sw t9, 24(t0)
     lw a0, DMEM(FRAMEBUFFER)(t6)
     jal e4d_hw_verify_hook
     nop
-    lw ra, 0(sp)
-    lw t4, 4(sp)
-    lw t5, 8(sp)
-    lw t6, 12(sp)
-    lw t7, 16(sp)
-    lw t8, 20(sp)
-    lw t9, 24(sp)
-    addiu sp, sp, 32
+    la t0, e4d_hw_call_spill
+    lw ra, 0(t0)
+    lw t4, 4(t0)
+    lw t5, 8(t0)
+    lw t6, 12(t0)
+    lw t7, 16(t0)
+    lw t8, 20(t0)
+    lw t9, 24(t0)
 #endif
 
     // Update the software-rendered UI

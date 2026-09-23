@@ -135,7 +135,14 @@ mode7_mask: .word 0x0003FFFF
 .byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
 overlay_main_src: .word 0
 overlay_mode7_src: .word 0
+#ifdef SODIUM64_OVERLAY_HW_VERIFY
+// Hardware-only evidence: incremented only after each renderer-slot DMA returns.
+overlay_hw_mode7_done: .word 0
+overlay_hw_main_done: .word 0
+.byte 0:(VEC_DATA - (OVERLAY_HW_MAIN_DONE + 4))
+#else
 .byte 0:(VEC_DATA - (OVERLAY_MODE7_SRC + 4))
+#endif
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -1401,6 +1408,11 @@ overlay_load_mode7:
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
+#ifdef SODIUM64_OVERLAY_HW_VERIFY
+    lw t0, OVERLAY_HW_MODE7_DONE
+    addiu t0, t0, 1
+    sw t0, OVERLAY_HW_MODE7_DONE
+#endif
     b draw_mode7_entry
     nop
 
@@ -1409,5 +1421,10 @@ overlay_load_main:
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
+#ifdef SODIUM64_OVERLAY_HW_VERIFY
+    lw t0, OVERLAY_HW_MAIN_DONE
+    addiu t0, t0, 1
+    sw t0, OVERLAY_HW_MAIN_DONE
+#endif
     b draw_bg
     move t0, v0

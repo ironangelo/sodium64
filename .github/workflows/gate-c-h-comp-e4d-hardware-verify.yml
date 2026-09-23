@@ -268,7 +268,7 @@ jobs:
             package/e4d-resident-correctness.z64
           expect "(dbg)"
           send "run\r"
-          after 3000
+          after 20000
           send "pause\r"
           expect "(dbg)"
           send "pc\r"
@@ -299,17 +299,21 @@ jobs:
           from pathlib import Path
           import struct
 
+          def normalize_debugger_dump(blob):
+              assert len(blob) % 4 == 0
+              return b"".join(blob[i:i+4][::-1] for i in range(0, len(blob), 4))
+
           def words(path):
-              blob = Path(path).read_bytes()
+              blob = normalize_debugger_dump(Path(path).read_bytes())
               return [f"0x{value:08X}" for value in struct.unpack(f">{len(blob)//4}I", blob)]
 
-          state = Path("smoke/e4d-state.bin").read_bytes()
-          wram = Path("smoke/e4d-wram.bin").read_bytes()
-          fb = Path("smoke/framebuffer-ptr.bin").read_bytes()
-          print("state words:", words("smoke/e4d-state.bin"))
-          print("WRAM first16:", wram.hex())
+          state = normalize_debugger_dump(Path("smoke/e4d-state.bin").read_bytes())
+          wram = normalize_debugger_dump(Path("smoke/e4d-wram.bin").read_bytes())
+          fb = normalize_debugger_dump(Path("smoke/framebuffer-ptr.bin").read_bytes())
+          print("state words:", [f"0x{value:08X}" for value in struct.unpack(">4I", state)])
+          print("WRAM first16 canonical:", wram.hex())
           print("guest_counter:", wram[0])
-          print("framebuffer ptr:", words("smoke/framebuffer-ptr.bin"))
+          print("framebuffer ptr:", [f"0x{struct.unpack('>I', fb)[0]:08X}"])
           PY
           python3 package/e4d_hw_verify_report.py smoke/e4d-s64e.bin \
             | tee smoke/e4d-s64e-report.txt

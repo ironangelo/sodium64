@@ -72,6 +72,14 @@ BOOL_TRUE = 0x0C00
 ACTIVE_X0 = 12
 ACTIVE_X1 = 268
 
+# 224-line SNES mode is centered in the 240-line N64 framebuffer.
+# FB_OFFSET=16 plus the production 8-row Color Image underflow maps
+# SNES line 0 to physical Main row 8.
+MAIN_TOP_BORDER_ROW0 = 0
+MAIN_BAND0_ROW0 = 8
+MAIN_BAND1_ROW0 = 16
+MAIN_BAND_END = 24
+
 
 def parse_int(text: str) -> int:
     return int(text, 0)
@@ -264,12 +272,25 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
     def read(name: str) -> bytes:
         return transform(load_raw(root, name))
 
+    # The large Z seed intentionally overlaps the separately guarded Main-Z
+    # proof region. Validate the actual composite seed rather than demanding
+    # that the whole range remain the base 0x55AA pattern.
+    expected_pre_z = bytearray(
+        SENTINEL_WORD.to_bytes(2, "big") * (Z_SIZE // 2)
+    )
+    main_z_prefix_off = E2G_SECOND_Z_PREFIX_ADDR - Z_BASE
+    main_z_suffix_off = E2G_SECOND_Z_SUFFIX_ADDR - Z_BASE
+    expected_pre_z[
+        main_z_prefix_off:main_z_prefix_off + GUARD_SIZE
+    ] = bytes([E2G_SECOND_Z_PREFIX_BYTE]) * GUARD_SIZE
+    expected_pre_z[
+        main_z_suffix_off:main_z_suffix_off + GUARD_SIZE
+    ] = bytes([E2G_SECOND_Z_SUFFIX_BYTE]) * GUARD_SIZE
+
     pre_checks = {
         "status_zero": read("pre-status.raw") == bytes(STATUS_SIZE),
         "z_prefix": read("pre-z-prefix.raw") == bytes([PREFIX_BYTE]) * Z_PREFIX_SIZE,
-        "z_sentinel": all_pattern(
-            read("pre-z.raw"), SENTINEL_WORD.to_bytes(2, "big")
-        ),
+        "z_composite_seed": read("pre-z.raw") == bytes(expected_pre_z),
         "z_suffix": read("pre-z-suffix.raw") == bytes([SUFFIX_BYTE]) * Z_SUFFIX_SIZE,
         "main_z_prefix": (
             read("pre-main-z-prefix.raw")
@@ -337,14 +358,23 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
     )
 
     if selected_fb is None:
+        top_border = None
         band0 = None
         band1 = None
+        top_border_healthy = False
         band0_healthy = False
         band0_missing = False
         band1_healthy = False
     else:
-        band0 = band_stats(selected_fb, 0, 8)
-        band1 = band_stats(selected_fb, 8, 16)
+        top_border = band_stats(
+            selected_fb, MAIN_TOP_BORDER_ROW0, MAIN_BAND0_ROW0
+        )
+        band0 = band_stats(selected_fb, MAIN_BAND0_ROW0, MAIN_BAND1_ROW0)
+        band1 = band_stats(selected_fb, MAIN_BAND1_ROW0, MAIN_BAND_END)
+        top_border_healthy = (
+            top_border["active_main_sentinel"] == 2048
+            and top_border["border_main_sentinel"] == 192
+        )
         band0_healthy = (
             band0["active_red"] == 1024
             and band0["active_blue"] == 1024
@@ -367,6 +397,7 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
         and marker == STATUS_MARKER
         and framebuffer_pointer in FRAMEBUFFER_ADDRS
         and counter_delta == 1
+        and top_border_healthy
         and band1_healthy
         and main_z_written
         and compact_written
@@ -403,7 +434,13 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
         },
         "controls": {
             "passed": controls_ok,
+            "top_border_healthy": top_border_healthy,
             "band1_healthy": band1_healthy,
+            "main_row_contract": {
+                "top_border": [MAIN_TOP_BORDER_ROW0, MAIN_BAND0_ROW0],
+                "band0": [MAIN_BAND0_ROW0, MAIN_BAND1_ROW0],
+                "band1": [MAIN_BAND1_ROW0, MAIN_BAND_END],
+            },
             "main_z_written": main_z_written,
             "compact_written": compact_written,
             "archive_written": archive_written,
@@ -414,6 +451,7 @@ def classify(root: Path, guest_counter: int) -> dict[str, object]:
                 "sentinel_0x55aa": main_z_hist[SENTINEL_WORD],
             },
         },
+        "top_border": top_border,
         "band0": band0,
         "band1": band1,
     }

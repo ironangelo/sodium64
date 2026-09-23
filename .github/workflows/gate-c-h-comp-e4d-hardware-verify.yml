@@ -1,0 +1,150 @@
+name: Gate C E4d Real-N64 Hardware Package
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-h-comp-e4d-hardware-verify
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-e4d-hardware-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate deterministic guest and decoder
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile             scripts/make_gate_c_h_comp_e1_z_tag.py             scripts/e4d_hw_verify_report.py
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_h_comp_e1_z_tag.py diagnostic/e4d-a.smc
+          python3 scripts/make_gate_c_h_comp_e1_z_tag.py diagnostic/e4d-b.smc
+          cmp diagnostic/e4d-a.smc diagnostic/e4d-b.smc
+          test "$(stat -c %s diagnostic/e4d-a.smc)" -eq 32768
+          sha256sum diagnostic/e4d-a.smc | tee diagnostic/guest.sha256
+
+          python3 - <<'PY'
+          import struct
+          from pathlib import Path
+
+          words = [0] * 32
+          words[0] = 0x53363445
+          words[1] = 1
+          words[2] = 0x45344431
+          words[3] = 1
+          words[4] = 0x1F
+          words[5] = 7
+          words[6] = 8
+          words[7] = 1
+          words[8] = 1
+          words[9] = 0x81
+          words[10] = 0xA00F2300
+          words[11] = 0
+          words[12] = 0
+          words[13] = 2048
+          words[14] = 1024
+          words[15] = 1024
+          words[16] = 0
+          words[17] = 0xFFFFFFFF
+          words[19] = 0xFFFFFFFF
+          words[21] = 1
+          words[22] = 0x81
+          words[23] = 7
+          words[24] = 4096
+          words[25] = 2624
+          words[26] = 1
+          words[29] = 0x80
+          words[30] = 0x294B
+          words[31] = 0x454E4421
+          checksum = 0
+          for i, word in enumerate(words):
+              if i != 28:
+                  checksum ^= word
+          words[28] = checksum
+          blob = struct.pack(">32I", *words) + bytes(0x8000 - 0x80)
+          Path("diagnostic/synthetic-pass.sav").write_bytes(blob)
+          PY
+          python3 scripts/e4d_hw_verify_report.py diagnostic/synthetic-pass.sav             | tee diagnostic/decoder-selftest.txt
+
+      - name: Build exact hardware verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make E4D_HW_VERIFY=1 -j"$(nproc)" 2>&1 | tee hardware-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+          nm -n build/sodium64.elf | grep -E ' e4d_hw_verify_hook$'
+          nm -n build/sodium64.elf | grep -E ' wram$'
+          python3 scripts/build_metrics.py             --rom sodium64.z64             --elf build/sodium64.elf             --build-dir build             --output hardware-build-metrics.txt
+          sha256sum sodium64.z64 build/sodium64.elf             | tee hardware-build.sha256
+          grep -E '(^|[[:space:]])(text|\.text)' build/rsp_main.map || true
+
+      - name: Wrap exact E4d synthetic guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wrap package
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp diagnostic/e4d-a.smc wrap/e4d-resident-correctness.smc
+          (
+            cd wrap
+            python3 rom-converter.py </dev/null
+          )
+          test -s wrap/out/e4d-resident-correctness.z64
+
+          dd if=wrap/out/e4d-resident-correctness.z64             of=package/embedded.smc bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          cmp diagnostic/e4d-a.smc package/embedded.smc
+          rm package/embedded.smc
+
+          cp wrap/out/e4d-resident-correctness.z64 package/e4d-resident-correctness.z64
+          cp build/sodium64.elf package/sodium64-e4d-hardware.elf
+          cp build/sodium64.map package/sodium64-e4d-hardware.map
+          cp build/rsp_main.map package/rsp_main.map
+          cp scripts/e4d_hw_verify_report.py package/e4d_hw_verify_report.py
+          cp diagnostic/guest.sha256 package/guest.sha256
+          cp hardware-build.log package/hardware-build.log
+          cp hardware-build-metrics.txt package/hardware-build-metrics.txt
+          cp hardware-build.sha256 package/hardware-build.sha256
+          sha256sum package/e4d-resident-correctness.z64             package/sodium64-e4d-hardware.elf             package/rsp_main.map             package/e4d_hw_verify_report.py             | tee package/package.sha256
+
+          cat > package/README.txt <<'EOF'
+          Sodium64 E4d real-N64 correctness milestone
+
+          Run e4d-resident-correctness.z64 on real N64 and wait until the screen
+          freezes solid GREEN (PASS) or RED (FAIL). Only then leave the ROM/reset
+          as required by the flashcart and extract its SRAM save.
+
+          The SRAM record at offset 0 is S64E version 1, test E4D1.
+          Decode with:
+              python3 e4d_hw_verify_report.py <save-file>
+
+          This build measures correctness only. Do not use its runtime duration
+          as compositor performance/cadence evidence.
+          EOF
+
+      - name: Upload real-N64 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-e4d-real-n64-correctness
+          retention-days: 30
+          path: package/

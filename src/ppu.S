@@ -561,6 +561,30 @@ rsp_wait:
     beqz t0, rsp_wait
     xori t6, t5, 0x4
 
+#ifdef SODIUM64_OVERLAY_HW_VERIFY
+    // Hardware-only PR#13 milestone. Preserve live rsp_frame state without
+    // using register29/sp: Sodium64 does not maintain an ABI stack here.
+    la t0, overlay_hw_call_spill
+    sw ra, 0(t0)
+    sw t4, 4(t0)
+    sw t5, 8(t0)
+    sw t6, 12(t0)
+    sw t7, 16(t0)
+    sw t8, 20(t0)
+    sw t9, 24(t0)
+    lw a0, DMEM(FRAMEBUFFER)(t6)
+    jal overlay_hw_verify_hook
+    nop
+    la t0, overlay_hw_call_spill
+    lw ra, 0(t0)
+    lw t4, 4(t0)
+    lw t5, 8(t0)
+    lw t6, 12(t0)
+    lw t7, 16(t0)
+    lw t8, 20(t0)
+    lw t9, 24(t0)
+#endif
+
     // Update the software-rendered UI
     lw a0, DMEM(FRAMEBUFFER)(t6)
     j update_menu

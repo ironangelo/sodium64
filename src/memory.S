@@ -21,6 +21,9 @@
 
 .globl sram
 .globl sram_dirty
+#ifdef SODIUM64_E4D_HW_VERIFY
+.globl wram
+#endif
 .globl io_disable
 .globl read_iomap
 .globl write_iomap

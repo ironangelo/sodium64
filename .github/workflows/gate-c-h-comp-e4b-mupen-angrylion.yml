@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Bandstart Trace
+name: Gate C H-COMP E4b Mupen Warm Epoch Crosscheck
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-bandstart-trace
+      - phase4/gate-c-h-comp-e4b-mupen-warm-epoch-crosscheck
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-bandstart-trace-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-warm-epoch-crosscheck-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -530,7 +530,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-bandstart-trace.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-warm-epoch-crosscheck.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -539,6 +539,22 @@ jobs:
           send "run\r"
           expect "PC at 0x$env(CAPTURE_READY_HEX)."
           expect "(dbg) "
+
+          # Match the established ares clean-epoch contract: startup ownership
+          # is not authoritative. Advance five additional complete rendered
+          # frames before seeding proof memory, so guest_counter is expected
+          # to be >=5 at the seed boundary.
+          for {set warm 0} {$warm < 5} {incr warm} {
+            send "bp rm $env(CAPTURE_READY_ADDR)\r"
+            expect "(dbg) "
+            send "step\r"
+            expect "(dbg) "
+            send "bp add $env(CAPTURE_READY_ADDR) 1 8\r"
+            expect "(dbg) "
+            send "run\r"
+            expect "PC at 0x$env(CAPTURE_READY_HEX)."
+            expect "(dbg) "
+          }
 
           set seedf [open "$env(GITHUB_WORKSPACE)/captures/seed.commands" r]
           set seed [read $seedf]
@@ -588,7 +604,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-bandstart-trace
+          name: gate-c-h-comp-e4b-mupen-warm-epoch-crosscheck
           retention-days: 30
           if-no-files-found: ignore
           path: |

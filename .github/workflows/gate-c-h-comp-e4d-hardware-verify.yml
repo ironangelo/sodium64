@@ -226,20 +226,29 @@ jobs:
             echo "M64P_LIBDIR=$(dirname "$core_lib")"
           } >> "$GITHUB_ENV"
 
-      - name: Locate exact local SRAM record
+      - name: Locate exact verifier state
         shell: bash
         run: |
           set -euo pipefail
           elf=package/sodium64-e4d-hardware.elf
           sram=$(nm -n "$elf" | awk '$3 == "sram" { print $1; exit }')
           hook=$(nm -n "$elf" | awk '$3 == "e4d_hw_verify_hook" { print $1; exit }')
+          state=$(nm -n "$elf" | awk '$3 == "e4d_hw_state" { print $1; exit }')
+          wram=$(nm -n "$elf" | awk '$3 == "wram" { print $1; exit }')
+          framebuffer=$(nm -n "$elf" | awk '$3 == "framebuffer" { print $1; exit }')
           test -n "$sram"
           test -n "$hook"
+          test -n "$state"
+          test -n "$wram"
+          test -n "$framebuffer"
           {
             echo "SRAM_ADDR=$sram"
             echo "VERIFY_HOOK=$hook"
+            echo "E4D_STATE_ADDR=$state"
+            echo "WRAM_ADDR=$wram"
+            echo "FRAMEBUFFER_PTR_ADDR=$framebuffer"
           } >> "$GITHUB_ENV"
-          echo "local SRAM=0x$sram verifier=0x$hook"
+          echo "SRAM=0x$sram verifier=0x$hook state=0x$state WRAM=0x$wram framebuffer_ptr=0x$framebuffer"
 
       - name: Run exact hardware ROM and dump S64E
         shell: bash
@@ -266,17 +275,42 @@ jobs:
           expect "(dbg)"
           send "dumpmem $env(SRAM_ADDR) 128 $env(S64E_DUMP)\r"
           expect "(dbg)"
+          send "dumpmem $env(E4D_STATE_ADDR) 16 $env(GITHUB_WORKSPACE)/smoke/e4d-state.bin\r"
+          expect "(dbg)"
+          send "dumpmem $env(WRAM_ADDR) 16 $env(GITHUB_WORKSPACE)/smoke/e4d-wram.bin\r"
+          expect "(dbg)"
+          send "dumpmem $env(FRAMEBUFFER_PTR_ADDR) 4 $env(GITHUB_WORKSPACE)/smoke/framebuffer-ptr.bin\r"
+          expect "(dbg)"
           send "quit\r"
           expect eof
           EOF
           expect "$RUNNER_TEMP/e4d.expect"
           test -s smoke/e4d-s64e.bin
           test "$(stat -c %s smoke/e4d-s64e.bin)" -eq 128
+          test "$(stat -c %s smoke/e4d-state.bin)" -eq 16
+          test "$(stat -c %s smoke/e4d-wram.bin)" -eq 16
+          test "$(stat -c %s smoke/framebuffer-ptr.bin)" -eq 4
 
       - name: Decode verifier record
         shell: bash
         run: |
           set -euo pipefail
+          python3 - <<'PY' | tee smoke/e4d-state-report.txt
+          from pathlib import Path
+          import struct
+
+          def words(path):
+              blob = Path(path).read_bytes()
+              return [f"0x{value:08X}" for value in struct.unpack(f">{len(blob)//4}I", blob)]
+
+          state = Path("smoke/e4d-state.bin").read_bytes()
+          wram = Path("smoke/e4d-wram.bin").read_bytes()
+          fb = Path("smoke/framebuffer-ptr.bin").read_bytes()
+          print("state words:", words("smoke/e4d-state.bin"))
+          print("WRAM first16:", wram.hex())
+          print("guest_counter:", wram[0])
+          print("framebuffer ptr:", words("smoke/framebuffer-ptr.bin"))
+          PY
           python3 package/e4d_hw_verify_report.py smoke/e4d-s64e.bin \
             | tee smoke/e4d-s64e-report.txt
           grep -F "result:            PASS" smoke/e4d-s64e-report.txt

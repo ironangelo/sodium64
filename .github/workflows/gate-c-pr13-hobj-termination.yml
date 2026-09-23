@@ -1,0 +1,152 @@
+name: Gate C PR13 H-OBJ Termination Proof
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-pr13-hobj-termination-fixed-validation
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: latest}
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+      - name: Build exact candidate and diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee build.log
+          mkdir -p work wrap captures
+          python3 scripts/make_gate_c_obj_window_termination.py work/proof.smc | tee work/generator.log
+          sha256sum work/proof.smc | tee work/guest.sha256
+          cp sodium64.z64 wrap/
+          cp rom-converter.py wrap/
+          cp work/proof.smc wrap/proof.smc
+          (cd wrap && python3 rom-converter.py </dev/null)
+          test -s wrap/out/proof.z64
+      - name: Locate runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol(){ nm -n "$elf" | awk -v name="$1" '$3==name {print $1; exit}'; }
+          wram=$(symbol wram); framebuffer=$(symbol framebuffer); tmw=$(symbol tmw)
+          wobjsel=$(symbol wobjsel); whx=$(symbol whx); tm=$(symbol tm); ts=$(symbol ts)
+          phase=$(printf '%08x' "$((0x$wram + 1))")
+          {
+            echo "PHASE_ADDR=0x$phase"
+            echo "FRAMEBUFFER_ADDR=0x$framebuffer"
+            echo "TMW_ADDR=0x$tmw"
+            echo "WOBJSEL_ADDR=0x$wobjsel"
+            echo "WHX_ADDR=0x$whx"
+            echo "TM_ADDR=0x$tm"
+            echo "TS_ADDR=0x$ts"
+          } >> "$GITHUB_ENV"
+      - name: Install/build pinned ares N64 lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb >/dev/null
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ares/n64/system/system.cpp'); s=p.read_text()
+          old='rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old)==1
+          p.write_text(s.replace(old,'rsp.recompiler.enabled = false;',1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64 >/dev/null
+          cmake --build build --parallel "$(nproc)" >/dev/null
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+      - name: Capture candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          home="$RUNNER_TEMP/ares-home"; settings="$RUNNER_TEMP/ares-settings.bml"; mkdir -p "$home"
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a stdbuf -oL -eL "$ARES_BIN"             --no-file-prompt --system "Nintendo 64" --settings-file "$settings"             --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true"             --setting "Developer/DebugServerPort=9140" --setting "Developer/HomebrewMode=true"             --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false"             --setting "Boot/AwaitGDBClient=true" wrap/out/proof.z64 > captures/ares.log 2>&1 &
+          pid=$!; trap 'kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true' EXIT
+          set +e
+          python3 scripts/gate_c_obj_window_termination_capture_n64.py             --port 9140 --phase-address "$PHASE_ADDR" --framebuffer-address "$FRAMEBUFFER_ADDR"             --observe "tmw:$TMW_ADDR:1" --observe "wobjsel:$WOBJSEL_ADDR:1"             --observe "whx:$WHX_ADDR:4" --observe "tm:$TM_ADDR:1" --observe "ts:$TS_ADDR:1"             --attempts 35 --output-dir captures > captures/capture.txt 2>&1
+          rc=$?
+          set -e
+          echo "$rc" > captures/capture.rc
+          if [ "$rc" -eq 0 ]; then
+            python3 scripts/gate_c_obj_window_termination_analyze.py               captures/control.rgba5551 captures/treatment.rgba5551               --output captures/analysis.json | tee captures/analysis.txt
+          else
+            echo "candidate capture failed/progress timed out; retain as dynamic evidence to inspect"
+            cat captures/capture.txt
+          fi
+      - name: Upload candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-pr13-hobj-termination-candidate
+          retention-days: 30
+          path: |
+            captures/
+            work/
+            build.log
+
+  reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate diagnostic
+        run: |
+          mkdir -p reference/frames
+          python3 scripts/make_gate_c_obj_window_termination.py reference/proof.smc | tee reference/generator.log
+          sha256sum reference/proof.smc | tee reference/guest.sha256
+      - name: Install/build pinned ares SFC reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y ccache cmake git imagemagick libgtk-3-dev libgl1-mesa-dri libsdl2-dev libvulkan1 mesa-vulkan-drivers ninja-build python3-pil qt6-base-dev unzip xauth xvfb >/dev/null
+          root="$RUNNER_TEMP/ares-sfc"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=sfc >/dev/null
+          cmake --build build --parallel "$(nproc)" >/dev/null
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          echo "ARES_SFC_BIN=$ares_bin" >> "$GITHUB_ENV"
+      - name: Capture direct SNES phases
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ROM="$GITHUB_WORKSPACE/reference/proof.smc"
+          export FRAME_DIR="$GITHUB_WORKSPACE/reference/frames"
+          export HOME_DIR="$RUNNER_TEMP/ares-sfc-home"
+          mkdir -p "$HOME_DIR"
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            HOME="$HOME_DIR" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 "$ARES_SFC_BIN"               --no-file-prompt --system "Super Famicom"               --setting "Developer/DeterministicEntropy=true" "$ROM" > "$GITHUB_WORKSPACE/reference/ares.log" 2>&1 &
+            pid=$!; trap "kill $pid 2>/dev/null || true; wait $pid 2>/dev/null || true" EXIT
+            sleep 1
+            for i in $(seq -w 0 23); do import -window root "$FRAME_DIR/frame-$i.png"; sleep 0.25; done
+          '
+          python3 scripts/gate_c_obj_window_termination_reference.py reference/frames/frame-*.png             --output reference/analysis.json | tee reference/analysis.txt
+          grep -q 'REFERENCE_NORMAL_W1_CONFIRMED' reference/analysis.txt
+      - name: Upload reference evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-pr13-hobj-termination-reference
+          retention-days: 30
+          path: reference/

@@ -164,9 +164,6 @@ overlay_hw_clear:
     move t8, zero
 
     li t9, 0x33
-    bne t2, t2, overlay_hw_guest_done_check // deterministic no-op branch target setup
-    nop
-overlay_hw_guest_done_check:
     lw t1, OR_PHASE(s0)
     bne t1, t9, overlay_hw_guest_bad
     nop

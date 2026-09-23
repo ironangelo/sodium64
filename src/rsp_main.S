@@ -609,11 +609,15 @@ e4b_dp_wait:
     bnez t0, e4b_dp_wait
     nop
 
-    // Main physical row tracks k0 directly in normal 224-line mode.
+    // Main is a 240-line surface. In normal 224-line SNES mode,
+    // FB_OFFSET=16 and the renderer's Color Image underflow place SNES
+    // line 0 at physical Main row 8. Track the current 8-line band from
+    // that centered origin, not from physical row 0.
     lw s0, FRAMEBUFFER(sp)
+    addi s0, s0, 0x1180 // centered top border: 8 * 560
     beqz k0, e4b_main_addr_ready
     nop
-    addi s0, s0, 0x1180 // 8 * 560
+    addi s0, s0, 0x1180 // second controlled band: +8 * 560
 e4b_main_addr_ready:
     addi s0, s0, 0x18   // x=12
     li s1, 0xA00E4018   // compact Sub color row0, x=12

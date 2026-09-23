@@ -6,6 +6,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-22 UTC)
 
+- **Independent E4d audit checkpoint3 — compiled DMEM collision VERIFIED:** artifact10761862049 has false constants at0xE80 and executed priority-clear instruction0xAC000E80 atIMEM0x13B4; WIN_BOUNDS also overlaps the table. This predicts exact Main reduction but Sub1/3 contamination in lanes0/1. Recommended single-variable test: source v16 from resident0x0400 broadcast without changing instruction count; no patch applied.
+
 - **Independent E4d audit checkpoint2 — immediate direction update:** Main-reduction artifact10762652566 is independently decoded: **2048/2048 lanes exact**. Strong candidate: false-tag constant at0xE80 overlaps PRIO_CHECKS+4; two zeroed baseline lanes leave Main reduction correct but make Sub emit1/3 instead of0/2, contaminating Main bit through VOR. Verify compiled overlap; no runtime change made.
 
 - **Independent E4d mask audit in progress (2026-09-23):** exact-opcode source analysis finds no inherited-ACC dependency in VXOR/VMUDL/VOR/VMUDN; interpreter can still use host SIMD. Main-reduction run35884417209 completed with artifact10762652566; stale-classifier failure does not establish lane result. See checkpoint 1 below.
@@ -1015,3 +1017,23 @@ Sub's bit1 remains correct, but its bit0 is spuriously set. VOR therefore makes 
 **WHAT IT DOES NOT PROVE:** v16's live values have been captured directly; a controlled non-overlapping-constant repair passes; real hardware has executed this proof. Preserve these distinctions.
 
 **PLAUSIBLE CAUSE / SUPERSEDED interpretation:** “Main true→false lag” is a correct description of final mask comparisons but is not proof of temporal carryover. The concrete alternative is a permanently forced low bit from Sub in lanes0/1. **MINIMAL NEXT TEST:** verify compiled symbol0xE80 and priority stores, then change only false-baseline sourcing (or archive live v16/Sub post-VMUDL) while keeping inputs/oracle/math fixed. Do not reset ACC or add NOPs.
+
+
+## Independent E4d two-lane mask audit — 2026-09-23 / checkpoint 3: compiled overlap VERIFIED
+
+**FINDING / EVIDENCE — MEASURED compiled bytes:** independently read exact-head normal-build artifact **10761862049** from run35884417084. ZIP SHA256=`c12f37e560ebc08a1cd2e7402d9a9702462dc8ad53581b7f3953be0ae9c8d833`; ELF SHA256=`60c806e22b38d003a8d1d4c25362590e83f4d378ecdd004446ab7f5bba605dc9`. ELF embeds `rsp_main_text_start=0x800B76D8`, text size0x1000; `rsp_main_data_start=0x800B86D8`, data size0x1000. At DMEM offset **0xE80**, the compiled data is exactly `04000400040004000400040004000400` (eight false-tag constants). The compiled text contains:
+- IMEM0x13B0: word **0xAC000E7C**, `sw zero,0xE7C(zero)`;
+- IMEM0x13B4: word **0xAC000E80**, `sw zero,0xE80(zero)`;
+- IMEM0x1510: word **0x24190E80**, `addiu t9,zero,0xE80`, the constant-table base.
+
+**WHAT IT PROVES:** the supposed unused gap really overlaps the live priority-clear word in the executable, not just comments or a guessed linker location. Clearing PRIO_CHECKS+4 overwrites exactly the first two halfwords of the constant later loaded into v16. This is a concrete Sodium64 experimental DMEM allocation defect; no ares misimplementation is required.
+
+**Additional ownership risk:** WIN_BOUNDS starts0xE84 and is used through+4, so bytes0xE84..0xE88 also overlap this first constant vector. The current no-window fixture need not expose every harmful value there. Do not repair only the first two words while keeping this allocation classified “free.” The first aligned location after the known live range is0xE90; any relocation must keep the whole table disjoint and preserve VEC_DATA=0xF70.
+
+**PLAUSIBLE CAUSE:** this verified collision is the leading explanation of the complete observed signature. Main's >>11 ignores bit10 and remains correct; Sub's >>10 exposes that bit as spurious low-bit1. Main mask comparison therefore reports errors even though Main reduction is exact. The hypothesis has a precise dynamic prediction: v16 lanes0/1 are0; Sub post-VMUDL lanes0/1 are1/3, not0/2.
+
+**WHAT IT DOES NOT PROVE:** a controlled candidate has passed or a live v16/Sub register capture has been taken. Those are the remaining causal validation steps, not reasons to continue broad opcode speculation.
+
+**MINIMAL NEXT TEST — one instruction, same IMEM size (proposal only):** in the authoritative mask-archive diagnostic, replace only the false-baseline load with `vor $v16,$v31,$v24,13`, which broadcasts resident v24 lane5=0x0400 using numeric e=13 and resident v31=zero. Leave all other arithmetic, guest, masks, targets and oracle unchanged. This tests **baseline source only**, avoids the corrupted DMEM table and adds no instruction at the current4096-byte ceiling. Predicted: all2048 mask bytes exact, all4096 controlled output pixels exact. If masks still fail identically with verified uniform v16, this collision is insufficient to explain the defect. This is a diagnostic alternative, **not an implemented or prescribed final repair**. A production-quality local fix would remove the entire constant-table/live-state overlap and preserve ABI endpoints, then revalidate.
+
+Checkpoint preserved before finishing opcode/hazard documentation review; no runtime change.

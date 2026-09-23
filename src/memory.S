@@ -34,6 +34,9 @@
 
 .align 12 // TLB alignment
 sram: .byte 0:0x8000
+#ifdef SODIUM64_OVERLAY_HW_VERIFY
+.globl wram
+#endif
 wram: .byte 0:0x20000
 empty: .byte 0:0x2000
 

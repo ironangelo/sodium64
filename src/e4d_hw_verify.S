@@ -61,6 +61,7 @@
 #define REC_END               0x7C
 
 .globl e4d_hw_verify_hook
+.globl e4d_hw_call_spill
 
 .data
 .align 4
@@ -68,6 +69,7 @@ e4d_hw_state:       .word 0
 e4d_hw_baseline:    .word 0
 e4d_hw_seed_sp:     .word 0
 e4d_hw_seed_dp:     .word 0
+e4d_hw_call_spill:  .word 0:7 // ra,t4,t5,t6,t7,t8,t9; no ABI stack exists here
 
 .text
 .set noreorder

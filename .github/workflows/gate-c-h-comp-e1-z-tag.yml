@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Guest Baseline
+name: Gate C H-COMP E4b Same-Band Row Correct
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-same-band-ownership
+      - phase4/gate-c-h-comp-e4b-same-band-row-correct
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-guest-baseline-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-row-correct-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -167,7 +167,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-guest-baseline-evidence
+          name: gate-c-h-comp-e4b-row-correct-evidence
           retention-days: 30
           path: |
             captures/

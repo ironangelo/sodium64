@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4d Vector Full Width
+name: Gate C H-COMP E4d Mask Archive
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4d-vector-full-width
+      - phase4/gate-c-h-comp-e4d-mask-archive
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4d-vector-full-width-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4d-mask-archive-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
-      - name: Validate deterministic E4d full-width guest
+      - name: Validate deterministic E4d mask-archive guest
         shell: bash
         run: |
           set -euo pipefail
@@ -43,7 +43,7 @@ jobs:
           test "$(stat -c %s diagnostic/e1c-a.smc)" -eq 32768
           sha256sum diagnostic/e1c-a.smc | tee diagnostic/guest.sha256
 
-      - name: Build E4d full-width runtime with frozen guest
+      - name: Build E4d mask-archive runtime with frozen guest
         shell: bash
         run: |
           set -euo pipefail
@@ -54,7 +54,7 @@ jobs:
           sha256sum sodium64.z64 build/sodium64.elf | tee build-sha256.txt
           grep -E '(^|[[:space:]])(text|\.text)' build/rsp_main.map || true
 
-      - name: Wrap exact E4d full-width guest
+      - name: Wrap exact E4d mask-archive guest
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +126,7 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Run stale narrow E4b oracle on E4d full width
+      - name: Run stale E4b oracle and capture E4d tile-mask archive
         shell: bash
         run: |
           set -euo pipefail
@@ -163,11 +163,11 @@ jobs:
             --capture-ready-address "$CAPTURE_READY_ADDR" \
             --output-dir captures | tee captures/capture.log
 
-      - name: Upload E4d guest-baseline evidence
+      - name: Upload E4d mask-archive evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4d-full-width-evidence
+          name: gate-c-h-comp-e4d-mask-archive-evidence
           retention-days: 30
           path: |
             captures/

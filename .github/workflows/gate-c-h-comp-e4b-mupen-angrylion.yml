@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Preserve cxd4 Halt
+name: Gate C H-COMP E4b Mupen Postdump Timeout
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-preserve-cxd4-halt
+      - phase4/gate-c-h-comp-e4b-mupen-postdump-timeout
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-preserve-cxd4-halt-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-postdump-timeout-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -419,7 +419,7 @@ jobs:
           export M64P_ROM="$GITHUB_WORKSPACE/wrap/out/e1c.z64"
           (
             cd captures
-            timeout 360 xvfb-run -a expect "$RUNNER_TEMP/mupen-hcomp.expect"
+            timeout 720 xvfb-run -a expect "$RUNNER_TEMP/mupen-hcomp.expect"
           )
 
       - name: Classify Mupen Angrylion crosscheck
@@ -432,7 +432,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-preserve-cxd4-halt
+          name: gate-c-h-comp-e4b-mupen-postdump-timeout
           retention-days: 30
           if-no-files-found: ignore
           path: |

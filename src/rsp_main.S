@@ -684,7 +684,9 @@ e4c_mask_row:
     vmudl $v01, $v01, $v22, 0 // sub  0x0800 -> bit1 (>>10)
     vor $v00, $v00, $v01, 0
     vmudn $v00, $v00, $v25, 0 // move 0..3 to upper byte for SPV
-    spv $v00, 0, 0, t2
+    // Diagnostic child: preserve the eight 16-bit post-reduction lanes in the
+    // already-consumed Sub metadata row instead of packing them to TEXTURE.
+    sqv $v00, 0, 0, t1
     addi t0, t0, 16
     addi t1, t1, 16
     addi t2, t2, 8
@@ -692,14 +694,14 @@ e4c_mask_row:
     bnez t4, e4c_mask_row
     nop
 
-    // Diagnostic-only archive: one dense 64-byte block per tile, tile-major.
-    // a2=63 encodes a single 64-byte RSP DMA transfer.
-    li a0, TEXTURE
+    // Diagnostic-only archive: CHAR_DATA now holds eight rows of post-VMUDN
+    // 16-bit lanes. Preserve all 128 bytes per tile before color DMA overwrites it.
+    li a0, CHAR_DATA
     move a1, s6
-    li a2, 63
+    li a2, 127
     jal dma_write
     nop
-    addi s6, s6, 64
+    addi s6, s6, 128
 
     // Reuse the two 128-byte buffers for raw Main/Sub color.
     li a0, SCRN_DATA

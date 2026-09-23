@@ -15,6 +15,10 @@ TEST_ID = 0x45344431  # E4D1
 RECORD_SIZE = 0x80
 END_MARKER = 0x454E4421  # END!
 
+ROW_MAGIC = 0x53363452  # S64R
+ROW_VERSION = 1
+ROW_END = 0x524F5721  # ROW!
+
 FLAG_PASS = 0x01
 FLAG_FRESH = 0x02
 FLAG_SP_HALT = 0x04
@@ -185,7 +189,37 @@ def parse_capture(blob: bytes) -> E4dCapture:
     return capture
 
 
-def render_text(c: E4dCapture) -> str:
+def parse_row_extension(blob: bytes) -> list[tuple[int, int]] | None:
+    blob, _ = normalize_save(blob)
+    if len(blob) < 0xD0:
+        return None
+    if struct.unpack_from(">I", blob, 0x80)[0] != ROW_MAGIC:
+        return None
+    version = struct.unpack_from(">I", blob, 0x84)[0]
+    if version != ROW_VERSION:
+        raise ValueError(f"unsupported S64R version {version}")
+    end_marker = struct.unpack_from(">I", blob, 0xCC)[0]
+    if end_marker != ROW_END:
+        raise ValueError(f"bad S64R end marker 0x{end_marker:08X}")
+
+    words = list(struct.unpack_from(">20I", blob, 0x80))
+    stored = words[18]
+    checksum = 0
+    for index, word in enumerate(words):
+        if index != 18:
+            checksum ^= word
+    if checksum != stored:
+        raise ValueError(
+            f"S64R checksum mismatch: stored=0x{stored:08X} computed=0x{checksum:08X}"
+        )
+
+    rows = []
+    for word in words[2:18]:
+        rows.append(((word >> 16) & 0xFFFF, word & 0xFFFF))
+    return rows
+
+
+def render_text(c: E4dCapture, rows: list[tuple[int, int]] | None = None) -> str:
     lines = [
         "Sodium64 real-N64 E4d resident color-math capture",
         f"  save format:       {c.capture_format}",
@@ -216,6 +250,14 @@ def render_text(c: E4dCapture) -> str:
             f"actual=0x{actual:04X} expected=0x{expected:04X}"
         )
 
+    if rows is not None:
+        lines.append("  row diagnostics:")
+        for index, (mismatches, first_pixel) in enumerate(rows):
+            lines.append(
+                f"    y={index + 8:02d}: mismatches={mismatches:3d} "
+                f"x12_actual=0x{first_pixel:04X}"
+            )
+
     return "\n".join(lines) + "\n"
 
 
@@ -225,11 +267,23 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
     args = parser.parse_args()
 
-    capture = parse_capture(args.save.read_bytes())
+    blob = args.save.read_bytes()
+    capture = parse_capture(blob)
+    rows = parse_row_extension(blob)
     if args.json:
-        print(json.dumps(asdict(capture) | {"passed": capture.passed}, indent=2))
+        payload = asdict(capture) | {"passed": capture.passed}
+        if rows is not None:
+            payload["row_diagnostics"] = [
+                {
+                    "y": index + 8,
+                    "mismatches": mismatches,
+                    "x12_actual": first_pixel,
+                }
+                for index, (mismatches, first_pixel) in enumerate(rows)
+            ]
+        print(json.dumps(payload, indent=2))
     else:
-        print(render_text(capture), end="")
+        print(render_text(capture, rows), end="")
     return 0 if capture.passed else 2
 
 

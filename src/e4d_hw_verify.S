@@ -15,6 +15,13 @@
 #define E4D_HW_VERSION        1
 #define E4D_HW_TEST_ID        0x45344431 /* "E4D1" */
 #define E4D_HW_RECORD_SIZE    0x80
+#define E4D_HW_CAPTURE_SIZE   0x100
+
+#define ROW_MAGIC             0x80
+#define ROW_VERSION           0x84
+#define ROW_DATA              0x88
+#define ROW_CHECKSUM          0xC8
+#define ROW_END               0xCC
 
 #define E4D_FLAG_PASS         0x00000001
 #define E4D_FLAG_FRESH        0x00000002
@@ -147,10 +154,10 @@ e4d_hw_verify_frame:
     // From here the milestone intentionally never returns.
     move s1, a0
 
-    // Clear the local SRAM record before populating it.
+    // Clear core S64E plus the A3 row-diagnostic extension.
     la s0, sram
     move t0, s0
-    li t1, E4D_HW_RECORD_SIZE / 4
+    li t1, E4D_HW_CAPTURE_SIZE / 4
 e4d_hw_clear_record:
     sw zero, (t0)
     addiu t0, t0, 4
@@ -164,6 +171,12 @@ e4d_hw_clear_record:
     sw t0, REC_VERSION(s0)
     li t0, E4D_HW_TEST_ID
     sw t0, REC_TEST_ID(s0)
+    li t0, 0x53363452 // "S64R"
+    sw t0, ROW_MAGIC(s0)
+    li t0, 1
+    sw t0, ROW_VERSION(s0)
+    li t0, 0x524F5721 // "ROW!"
+    sw t0, ROW_END(s0)
 
     // Capture provenance before any verifier-side waiting or framebuffer writes.
     lw t0, 0xA4040010
@@ -315,8 +328,15 @@ e4d_hw_left_ok:
     // rows16..23: (tile ^ 1) & 3
     li t2, 256
     li t3, 12 // x
+    move v0, zero // per-row mismatch count
+    move v1, zero // actual pixel at x=12
 e4d_hw_active:
     lhu t4, (t0)
+    li t8, 12
+    bne t3, t8, e4d_hw_row_first_done
+    nop
+    move v1, t4
+e4d_hw_row_first_done:
     addiu t6, t3, -12
     srl t6, t6, 3 // tile 0..31
     sltiu t7, t1, 16
@@ -374,6 +394,7 @@ e4d_hw_hist_done:
     beq t4, t7, e4d_hw_active_ok
     nop
     addiu s2, s2, 1
+    addiu v0, v0, 1
     lw t8, REC_FIRST_ACTIVE_XY(s0)
     li t9, -1
     bne t8, t9, e4d_hw_active_ok
@@ -390,6 +411,15 @@ e4d_hw_active_ok:
     addiu t2, t2, -1
     bnez t2, e4d_hw_active
     nop
+
+    // A3 diagnostic extension: one word per physical row8..23.
+    // high16 = mismatch count (0..256), low16 = actual pixel at x=12.
+    addiu t6, t1, -8
+    sll t6, t6, 2
+    addu t6, s0, t6
+    sll t7, v0, 16
+    or t7, t7, v1
+    sw t7, ROW_DATA(t6)
 
     // Right border.
     li t2, 12
@@ -477,9 +507,27 @@ e4d_hw_checksum_skip:
     nop
     sw t1, REC_CHECKSUM(s0)
 
-    // PI reads RDRAM, so write back the exact 128-byte record first.
+    // A3 row-extension checksum: XOR 0x80..0xCC except ROW_CHECKSUM.
+    move t1, zero
+    addiu t2, s0, ROW_MAGIC
+    li t3, 20
+    li t4, ROW_MAGIC
+e4d_hw_row_checksum:
+    beq t4, ROW_CHECKSUM, e4d_hw_row_checksum_skip
+    nop
+    lw t5, (t2)
+    xor t1, t1, t5
+e4d_hw_row_checksum_skip:
+    addiu t2, t2, 4
+    addiu t4, t4, 4
+    addiu t3, t3, -1
+    bnez t3, e4d_hw_row_checksum
+    nop
+    sw t1, ROW_CHECKSUM(s0)
+
+    // PI reads RDRAM, so write back the full core+diagnostic capture first.
     move t1, s0
-    addiu t2, s0, E4D_HW_RECORD_SIZE
+    addiu t2, s0, E4D_HW_CAPTURE_SIZE
 e4d_hw_flush_record:
     cache 0x19, 0(t1)
     addiu t1, t1, 0x10
@@ -495,7 +543,7 @@ e4d_hw_pi_idle:
     sw s0, 0x0000(t1) // PI_DRAM_ADDR
     li t2, 0x08000000
     sw t2, 0x0004(t1) // PI_CART_ADDR
-    li t2, E4D_HW_RECORD_SIZE - 1
+    li t2, E4D_HW_CAPTURE_SIZE - 1
     sw t2, 0x0008(t1) // PI_RD_LEN: RDRAM -> cart
 e4d_hw_pi_wait:
     lw t2, 0x0010(t1)

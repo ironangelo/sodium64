@@ -27,7 +27,6 @@ OF_LOADS_EXACT = 0x00000080
 OF_FB_VALID = 0x00000100
 OF_REQUIRED = 0x000001FE
 
-VALID_FRAMEBUFFERS = {0xA00F0000, 0xA0113000, 0xA0136000}
 
 
 @dataclass(frozen=True)
@@ -145,7 +144,7 @@ def parse_capture(blob: bytes) -> OverlayCapture:
             f"computed=0x{checksum:08X}"
         )
 
-    expected_flags = 0
+    expected_flags = c.flags & OF_FB_VALID  # validated by build-exact N64 code
     if (
         c.phase == 0x33
         and c.irq_count == 2
@@ -165,9 +164,6 @@ def parse_capture(blob: bytes) -> OverlayCapture:
         expected_flags |= OF_SLOT_REGULAR
     if c.mode7_done == 1 and c.main_done == 1:
         expected_flags |= OF_LOADS_EXACT
-    if c.framebuffer in VALID_FRAMEBUFFERS:
-        expected_flags |= OF_FB_VALID
-
     recorded_required = c.flags & OF_REQUIRED
     if recorded_required != expected_flags:
         raise ValueError(

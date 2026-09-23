@@ -20,6 +20,9 @@
 #include "defines.h"
 
 .globl sram
+#ifdef SODIUM64_OVERLAY_WHOLEFRAME_HW_VERIFY
+.globl wram
+#endif
 .globl sram_dirty
 .globl io_disable
 .globl read_iomap

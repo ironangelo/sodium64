@@ -88,6 +88,9 @@
 .globl write_nmitimen
 .globl write_vtimel
 .globl write_vtimeh
+#ifdef SODIUM64_OVERLAY_WHOLEFRAME_HW_VERIFY
+.globl bg_mode
+#endif
 
 .data
 
@@ -560,6 +563,31 @@ rsp_wait:
     andi t0, t0, 0x1 // Halt
     beqz t0, rsp_wait
     xori t6, t5, 0x4
+
+#ifdef SODIUM64_OVERLAY_WHOLEFRAME_HW_VERIFY
+    // C2 real-N64 whole-frame overlay proof. Sodium64 has no ABI stack
+    // contract here, so preserve the live rsp_frame state in verifier-owned
+    // static words rather than touching register29/sp.
+    la t0, overlay_wholeframe_call_spill
+    sw ra, 0(t0)
+    sw t4, 4(t0)
+    sw t5, 8(t0)
+    sw t6, 12(t0)
+    sw t7, 16(t0)
+    sw t8, 20(t0)
+    sw t9, 24(t0)
+    lw a0, DMEM(FRAMEBUFFER)(t6)
+    jal overlay_wholeframe_verify_hook
+    nop
+    la t0, overlay_wholeframe_call_spill
+    lw ra, 0(t0)
+    lw t4, 4(t0)
+    lw t5, 8(t0)
+    lw t6, 12(t0)
+    lw t7, 16(t0)
+    lw t8, 20(t0)
+    lw t9, 24(t0)
+#endif
 
     // Update the software-rendered UI
     lw a0, DMEM(FRAMEBUFFER)(t6)

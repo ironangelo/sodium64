@@ -134,9 +134,10 @@ fillrec_mask: .word 0xFF000FFF
 ldblk_bits: .word 0x01000200
 mode7_mask: .word 0x0003FFFF
 
-// E4c proof-local uniform vector constants. They live in the previously unused
-// alignment gap and do not move the fixed VEC_DATA ABI at 0xF70.
+// E4c proof-local uniform vector constants. Keep them after the live
+// PRIO_CHECKS/WIN_BOUNDS range while preserving the fixed VEC_DATA ABI at 0xF70.
 .align 4
+.byte 0:0x10
 e4c_vec_false:   .hword 0x0400, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400
 e4c_vec_carrylo: .hword 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421
 e4c_vec_carryhi: .hword 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420
@@ -146,8 +147,8 @@ e4c_vec_three:   .hword 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 
 e4c_vec_shr10:   .hword 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040
 e4c_vec_shr11:   .hword 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020
 
-// Audited fixed gap: constants occupy 0xE80..0xEFF; VEC_DATA stays at 0xF70.
-.byte 0:0x70
+// Audited fixed gap: constants occupy 0xE90..0xF0F; VEC_DATA stays at 0xF70.
+.byte 0:0x60
 
 vec_data:
     // Constants that are always kept in vector registers

@@ -1105,8 +1105,16 @@ next_object:
     bltz t8, obj_finish_objects
     nop
 
+    // A completed visible span ending at the right edge is terminal. Check
+    // this before reading the next interval so normal W1 [..,255] cannot walk
+    // beyond the finite WIN_BOUNDS list into unrelated DMEM.
+    lbu t2, WIN_BOUNDS + 1(t8)
+    beq t2, 255, obj_windows_done
+    nop
+
 obj_advance_segment:
-    // Move to the next visible W1 span. A value of 255 terminates the span list.
+    // Skip an empty leading span or move to the next visible W1 span. A
+    // next-lower value of 255 means there is no following visible interval.
     lbu t2, WIN_BOUNDS + 2(t8)
     beq t2, 255, obj_windows_done
     addi t8, t8, 2

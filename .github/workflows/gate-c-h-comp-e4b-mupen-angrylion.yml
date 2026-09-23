@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Preserve cxd4 Self Halt
+name: Gate C H-COMP E4b Mupen Postdump No Prompt
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-preserve-cxd4-self-halt
+      - phase4/gate-c-h-comp-e4b-mupen-postdump-no-prompt
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-preserve-cxd4-self-halt-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-postdump-no-prompt-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -381,7 +381,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-preserve-cxd4-self-halt.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-postdump-no-prompt.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -409,16 +409,18 @@ jobs:
           set timeout 60
           send "run\r"
           expect "PC at 0x$env(CAPTURE_READY_HEX)."
-          expect "(dbg) "
 
+          # The second breakpoint is semantically valid but this pinned
+          # UI-console does not emit a fresh "(dbg)" prompt afterward.
+          # Queue the bounded post-capture commands immediately; they are
+          # read-only dumpmem operations plus a final 'pc'.
           set postf [open "$env(GITHUB_WORKSPACE)/captures/post.commands" r]
           set post [read $postf]
           close $postf
           set post [string map {"\n" "\r"} $post]
           send -s -- $post
-          expect "PC: $env(CAPTURE_READY_HEX)"
-          expect "(dbg) "
           send "quit\r"
+          expect "PC: $env(CAPTURE_READY_HEX)"
           expect eof
           EOF
 
@@ -426,7 +428,7 @@ jobs:
           export M64P_ROM="$GITHUB_WORKSPACE/wrap/out/e1c.z64"
           (
             cd captures
-            timeout 360 xvfb-run -a expect "$RUNNER_TEMP/mupen-hcomp.expect"
+            timeout 420 xvfb-run -a expect "$RUNNER_TEMP/mupen-hcomp.expect"
           )
 
       - name: Classify Mupen Angrylion crosscheck
@@ -439,7 +441,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-preserve-cxd4-self-halt
+          name: gate-c-h-comp-e4b-mupen-postdump-no-prompt
           retention-days: 30
           if-no-files-found: ignore
           path: |

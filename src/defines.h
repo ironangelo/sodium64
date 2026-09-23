@@ -209,6 +209,10 @@
 // Renderer overlay source pointers live in the audited scratch gap.
 #define OVERLAY_MAIN_SRC 0xE90
 #define OVERLAY_MODE7_SRC 0xE94
+#ifdef SODIUM64_OVERLAY_HW_VERIFY
+#define OVERLAY_HW_MODE7_DONE 0xE98
+#define OVERLAY_HW_MAIN_DONE 0xE9C
+#endif
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached

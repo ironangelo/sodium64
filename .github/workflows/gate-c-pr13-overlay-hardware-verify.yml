@@ -84,6 +84,7 @@ jobs:
               struct.pack(">32I", *words) + bytes(0x8000 - 0x80)
           )
           PY
+
           python3 scripts/overlay_hw_verify_report.py diagnostic/synthetic-pass.sav             | tee diagnostic/decoder-selftest.txt
 
       - name: Build exact overlay hardware verifier
@@ -94,131 +95,10 @@ jobs:
           libdragon make OVERLAY_HW_VERIFY=1 -j"$(nproc)" 2>&1             | tee overlay-hardware-build.log
           test -s sodium64.z64
           test -s build/sodium64.elf
+          test -s build/src/rsp_main.elf
           nm -n build/sodium64.elf | grep -E ' overlay_hw_verify_hook$'
-          nm -n build/src/rsp_main.elf | grep -E ' overlay_hw_mode7_done
-          python3 scripts/build_metrics.py             --rom sodium64.z64             --elf build/sodium64.elf             --build-dir build             --output overlay-hardware-build-metrics.txt
-          sha256sum sodium64.z64 build/sodium64.elf             | tee overlay-hardware-build.sha256
-
-      - name: Wrap exact same-frame overlay guest
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p wrap package
-          cp sodium64.z64 wrap/sodium64.z64
-          cp rom-converter.py wrap/rom-converter.py
-          cp diagnostic/overlay-a.smc wrap/pr13-overlay-sameframe.smc
-          (
-            cd wrap
-            python3 rom-converter.py </dev/null
-          )
-          test -s wrap/out/pr13-overlay-sameframe.z64
-
-          dd if=wrap/out/pr13-overlay-sameframe.z64             of=package/embedded.smc bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
-          cmp diagnostic/overlay-a.smc package/embedded.smc
-          rm package/embedded.smc
-
-          cp wrap/out/pr13-overlay-sameframe.z64 package/pr13-overlay-sameframe-correctness.z64
-          cp build/sodium64.elf package/sodium64-pr13-overlay-verify.elf
-          cp build/sodium64.map package/sodium64-pr13-overlay-verify.map
-          cp build/rsp_main.map package/rsp_main.map
-          cp build/rsp_mode7.map package/rsp_mode7.map
-          cp scripts/overlay_hw_verify_report.py package/overlay_hw_verify_report.py
-          cp diagnostic/guest.sha256 package/guest.sha256
-          cp overlay-hardware-build.log package/overlay-hardware-build.log
-          cp overlay-hardware-build-metrics.txt package/overlay-hardware-build-metrics.txt
-          cp overlay-hardware-build.sha256 package/overlay-hardware-build.sha256
-
-          sha256sum             package/pr13-overlay-sameframe-correctness.z64             package/sodium64-pr13-overlay-verify.elf             package/rsp_main.map             package/rsp_mode7.map             package/overlay_hw_verify_report.py             | tee package/package.sha256
-
-          cat > package/README.txt <<'EOF'
-          Sodium64 PR#13 real-N64 fixed-slot overlay correctness/stability test
-
-          Run:
-              pr13-overlay-sameframe-correctness.z64
-
-          The guest holds Mode1, then in one visible frame switches:
-              Mode1 -> Mode7 at line 80 -> Mode1 at line 160.
-
-          Wait for a solid GREEN or RED freeze. Then extract the SRAM save.
-          GREEN means the structured OVM1 hardware contract passed; RED means
-          a coherent failure was captured. In either case return the save.
-
-          Decode with:
-              python3 overlay_hw_verify_report.py <save-file>
-
-          This build is instrumented. Do NOT use its runtime for performance
-          or cadence conclusions.
-          EOF
-
-      - name: Upload real-N64 overlay correctness package
-        uses: actions/upload-artifact@v4
-        with:
-          name: sodium64-pr13-overlay-real-n64-correctness
-          retention-days: 30
-          path: package/
-
-          nm -n build/src/rsp_main.elf | grep -E ' overlay_hw_main_done
-          python3 scripts/build_metrics.py             --rom sodium64.z64             --elf build/sodium64.elf             --build-dir build             --output overlay-hardware-build-metrics.txt
-          sha256sum sodium64.z64 build/sodium64.elf             | tee overlay-hardware-build.sha256
-
-      - name: Wrap exact same-frame overlay guest
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p wrap package
-          cp sodium64.z64 wrap/sodium64.z64
-          cp rom-converter.py wrap/rom-converter.py
-          cp diagnostic/overlay-a.smc wrap/pr13-overlay-sameframe.smc
-          (
-            cd wrap
-            python3 rom-converter.py </dev/null
-          )
-          test -s wrap/out/pr13-overlay-sameframe.z64
-
-          dd if=wrap/out/pr13-overlay-sameframe.z64             of=package/embedded.smc bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
-          cmp diagnostic/overlay-a.smc package/embedded.smc
-          rm package/embedded.smc
-
-          cp wrap/out/pr13-overlay-sameframe.z64 package/pr13-overlay-sameframe-correctness.z64
-          cp build/sodium64.elf package/sodium64-pr13-overlay-verify.elf
-          cp build/sodium64.map package/sodium64-pr13-overlay-verify.map
-          cp build/rsp_main.map package/rsp_main.map
-          cp build/rsp_mode7.map package/rsp_mode7.map
-          cp scripts/overlay_hw_verify_report.py package/overlay_hw_verify_report.py
-          cp diagnostic/guest.sha256 package/guest.sha256
-          cp overlay-hardware-build.log package/overlay-hardware-build.log
-          cp overlay-hardware-build-metrics.txt package/overlay-hardware-build-metrics.txt
-          cp overlay-hardware-build.sha256 package/overlay-hardware-build.sha256
-
-          sha256sum             package/pr13-overlay-sameframe-correctness.z64             package/sodium64-pr13-overlay-verify.elf             package/rsp_main.map             package/rsp_mode7.map             package/overlay_hw_verify_report.py             | tee package/package.sha256
-
-          cat > package/README.txt <<'EOF'
-          Sodium64 PR#13 real-N64 fixed-slot overlay correctness/stability test
-
-          Run:
-              pr13-overlay-sameframe-correctness.z64
-
-          The guest holds Mode1, then in one visible frame switches:
-              Mode1 -> Mode7 at line 80 -> Mode1 at line 160.
-
-          Wait for a solid GREEN or RED freeze. Then extract the SRAM save.
-          GREEN means the structured OVM1 hardware contract passed; RED means
-          a coherent failure was captured. In either case return the save.
-
-          Decode with:
-              python3 overlay_hw_verify_report.py <save-file>
-
-          This build is instrumented. Do NOT use its runtime for performance
-          or cadence conclusions.
-          EOF
-
-      - name: Upload real-N64 overlay correctness package
-        uses: actions/upload-artifact@v4
-        with:
-          name: sodium64-pr13-overlay-real-n64-correctness
-          retention-days: 30
-          path: package/
-
+          nm -n build/src/rsp_main.elf | grep -E ' overlay_hw_mode7_done$'
+          nm -n build/src/rsp_main.elf | grep -E ' overlay_hw_main_done$'
 
           python3 scripts/build_metrics.py             --rom sodium64.z64             --elf build/sodium64.elf             --build-dir build             --output overlay-hardware-build-metrics.txt
           sha256sum sodium64.z64 build/sodium64.elf             | tee overlay-hardware-build.sha256

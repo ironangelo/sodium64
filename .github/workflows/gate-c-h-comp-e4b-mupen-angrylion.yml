@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Preserve LLE Halt
+name: Gate C H-COMP E4b Mupen Core SP Read Trace
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-preserve-lle-halt
+      - phase4/gate-c-h-comp-e4b-mupen-core-sp-read-trace
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-preserve-lle-halt-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-core-sp-read-trace-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -119,15 +119,54 @@ jobs:
           git clone https://github.com/mupen64plus/mupen64plus-core.git
           git -C mupen64plus-core checkout b20b27ebf9e5b099a978e86dba609111dc98c837
 
-          # Host-lab compatibility shim only. cxd4 LLE correctly returns with
-          # SP_STATUS.HALT set by Sodium64's resident microcode. Pinned Mupen's
-          # do_SP_Task() clears HALT unconditionally after plugin return, so the
-          # R4300 can never observe the synchronization bit Sodium64 polls.
-          # Preserve HALT while retaining the core's TASKDONE/BROKE cleanup.
+          # Host-lab compatibility shim + observational trace only.
+          # Preserve cxd4's returned HALT and trace what Mupen core exposes to
+          # the R4300 immediately after the completed custom LLE task.
           python3 - <<'PY'
           from pathlib import Path
           p = Path("mupen64plus-core/src/device/rcp/rsp/rsp_core.c")
           s = p.read_text()
+
+          needle = "#include <string.h>\n"
+          repl = "#include <string.h>\n#include <stdio.h>\n"
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = '#include "api/callbacks.h"\n'
+          repl = needle + "\nstatic int s64_sp_reads_remaining;\n"
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = "    *value = sp->regs[reg];\n\n"
+          repl = (
+              "    *value = sp->regs[reg];\n\n"
+              "    if (reg == SP_STATUS_REG && s64_sp_reads_remaining > 0)\n"
+              "    {\n"
+              "        fprintf(stderr, \"S64_M64P_SP_READ value=%08X rsp_pc=%08X locked=%d unsafe=%08X mi=%08X remaining=%d\\n\",\n"
+              "            *value, sp->regs2[SP_PC_REG], sp->rsp_task_locked,\n"
+              "            sp->mi->r4300->cp0.interrupt_unsafe_state, sp->mi->regs[MI_INTR_REG],\n"
+              "            s64_sp_reads_remaining);\n"
+              "        fflush(stderr);\n"
+              "        --s64_sp_reads_remaining;\n"
+              "    }\n\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = "    uint32_t reg = rsp_reg(address);\n\n    switch(reg)\n"
+          repl = (
+              "    uint32_t reg = rsp_reg(address);\n\n"
+              "    if (reg == SP_STATUS_REG && s64_sp_reads_remaining > 0)\n"
+              "    {\n"
+              "        fprintf(stderr, \"S64_M64P_SP_WRITE value=%08X mask=%08X before=%08X locked=%d remaining=%d\\n\",\n"
+              "            value, mask, sp->regs[SP_STATUS_REG], sp->rsp_task_locked, s64_sp_reads_remaining);\n"
+              "        fflush(stderr);\n"
+              "    }\n\n"
+              "    switch(reg)\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
           needle = (
               "    sp->regs[SP_STATUS_REG] &=\n"
               "        ~(SP_STATUS_TASKDONE | SP_STATUS_BROKE | SP_STATUS_HALT);\n"
@@ -135,11 +174,18 @@ jobs:
           repl = (
               "    sp->regs[SP_STATUS_REG] &=\n"
               "        ~(SP_STATUS_TASKDONE | SP_STATUS_BROKE);\n"
+              "    fprintf(stderr, \"S64_M64P_TASK_EXIT status=%08X rsp_pc=%08X locked=%d unsafe=%08X mi=%08X\\n\",\n"
+              "        sp->regs[SP_STATUS_REG], sp->regs2[SP_PC_REG], sp->rsp_task_locked,\n"
+              "        sp->mi->r4300->cp0.interrupt_unsafe_state, sp->mi->regs[MI_INTR_REG]);\n"
+              "    fflush(stderr);\n"
+              "    s64_sp_reads_remaining = 64;\n"
           )
           assert s.count(needle) == 1
-          p.write_text(s.replace(needle, repl, 1))
+          s = s.replace(needle, repl, 1)
+
+          p.write_text(s)
           PY
-          git -C mupen64plus-core diff -- src/device/rcp/rsp/rsp_core.c | tee "$GITHUB_WORKSPACE/captures/mupen-preserve-lle-halt.patch"
+          git -C mupen64plus-core diff -- src/device/rcp/rsp/rsp_core.c | tee "$GITHUB_WORKSPACE/captures/mupen-core-sp-read-trace.patch"
 
           git clone https://github.com/mupen64plus/mupen64plus-ui-console.git
           git -C mupen64plus-ui-console checkout c8ac4862a019d7885b24927d9b4db5dd3e42a528
@@ -310,7 +356,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-preserve-lle-halt.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-core-sp-read-trace.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -368,7 +414,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-preserve-lle-halt
+          name: gate-c-h-comp-e4b-mupen-core-sp-read-trace
           retention-days: 30
           if-no-files-found: ignore
           path: |

@@ -48,7 +48,7 @@ jobs:
           words = [0] * 32
           words[0] = 0x53363445
           words[1] = 1
-          words[2] = 0x45344431
+          words[2] = 0x45344432
           words[3] = 1
           words[4] = 0x1F
           words[5] = 7
@@ -134,7 +134,7 @@ jobs:
           freezes solid GREEN (PASS) or RED (FAIL). Only then leave the ROM/reset
           as required by the flashcart and extract its SRAM save.
 
-          The SRAM record at offset 0 is S64E version 1, test E4D1.
+          The SRAM record at offset 0 is S64E version 1, test E4D2.
           Decode with:
               python3 e4d_hw_verify_report.py <save-file>
 

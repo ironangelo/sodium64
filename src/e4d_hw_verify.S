@@ -13,7 +13,7 @@
 
 #define E4D_HW_MAGIC          0x53363445 /* "S64E" */
 #define E4D_HW_VERSION        1
-#define E4D_HW_TEST_ID        0x45344431 /* "E4D1" */
+#define E4D_HW_TEST_ID        0x45344432 /* "E4D2": SNES-visible vertical phase oracle */
 #define E4D_HW_RECORD_SIZE    0x80
 #define E4D_HW_CAPTURE_SIZE   0x100
 
@@ -323,9 +323,9 @@ e4d_hw_left_ok:
     bnez t2, e4d_hw_left_border
     nop
 
-    // Active 256 pixels. Tile state comes from the frozen synthetic guest:
-    // rows 8..15: (tile ^ 3) & 3
-    // rows16..23: (tile ^ 1) & 3
+    // Active 256 pixels. SNES BG scanline 0 is hidden; with BGVOFS=0
+    // the first visible line samples vertical offset 1. Therefore physical
+    // rows 8..14 use tilemap row0, 15..22 row1, and 23 starts row2.
     li t2, 256
     li t3, 12 // x
     move v0, zero // per-row mismatch count
@@ -339,12 +339,17 @@ e4d_hw_active:
 e4d_hw_row_first_done:
     addiu t6, t3, -12
     srl t6, t6, 3 // tile 0..31
-    sltiu t7, t1, 16
-    beqz t7, e4d_hw_row_xor1
+    sltiu t7, t1, 15
+    beqz t7, e4d_hw_row_check1
+    nop
     li t7, 3
-    b e4d_hw_state_ready
     xor t6, t6, t7
-e4d_hw_row_xor1:
+    b e4d_hw_state_ready
+    nop
+e4d_hw_row_check1:
+    sltiu t7, t1, 23
+    beqz t7, e4d_hw_state_ready // row23 uses default tile_id=x
+    nop
     li t7, 1
     xor t6, t6, t7
 e4d_hw_state_ready:

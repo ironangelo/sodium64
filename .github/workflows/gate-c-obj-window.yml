@@ -1,0 +1,414 @@
+name: Gate C OBJ Window Diagnostic
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-rsp-overlay-clean-validation-rebase
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-obj-window-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diagnostic-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate diagnostic generator
+        run: python3 scripts/test_gate_c_obj_window.py -v
+
+      - name: Generate deterministic original SNES diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_obj_window.py diagnostic/gate-c-obj-window.smc \
+            | tee diagnostic/generator.log
+          echo "b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77  diagnostic/gate-c-obj-window.smc" \
+            | sha256sum --check
+
+          cat > diagnostic/MANIFEST.txt <<EOF
+          purpose=Gate C H-OBJ discriminator
+          sodium64_core=c2fb4483b92d3d6034ad8c0391e4ba839398917a
+          diagnostic_source_sha=$GITHUB_SHA
+          guest_rom_sha256=b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77
+          mode=SNES Mode1
+          tm=0x11
+          ts=0x00
+          w12sel=0x03
+          wobjsel=0x03
+          wh0=64
+          wh1=191
+          control_tmw=0x01
+          treatment_tmw=0x11
+          hdma=disabled
+          color_math=disabled
+          probe_x=16,96,224
+          probe_y=96
+          phase_frames=120
+          EOF
+
+      - name: Upload original diagnostic artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-obj-window-diagnostic
+          retention-days: 30
+          path: |
+            diagnostic/gate-c-obj-window.smc
+            diagnostic/MANIFEST.txt
+            diagnostic/generator.log
+
+
+  sodium64-n64-semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    needs:
+      - diagnostic-build
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Run Gate-C host tests
+        run: |
+          python3 scripts/test_gate_c_obj_window.py -v
+          python3 scripts/test_gate_c_obj_window_analyze_fb.py -v
+
+      - name: Build exact Sodium64 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+
+      - name: Generate and wrap exact original diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workload
+          python3 scripts/make_gate_c_obj_window.py workload/gate-c-obj-window.smc
+          echo "b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77  workload/gate-c-obj-window.smc" \
+            | sha256sum --check
+
+          mkdir -p wrap
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp workload/gate-c-obj-window.smc wrap/gate-c-obj-window.smc
+          (
+            cd wrap
+            python3 rom-converter.py </dev/null
+          )
+          test -s wrap/out/gate-c-obj-window.z64
+
+          dd if=wrap/out/gate-c-obj-window.z64 of=workload/embedded.smc \
+            bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          echo "b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77  workload/embedded.smc" \
+            | sha256sum --check
+          rm workload/embedded.smc
+
+      - name: Locate Sodium64 diagnostic state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() {
+            nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'
+          }
+
+          wram=$(symbol wram)
+          framebuffer=$(symbol framebuffer)
+          tmw=$(symbol tmw)
+          wobjsel=$(symbol wobjsel)
+          whx=$(symbol whx)
+          tm=$(symbol tm)
+          ts=$(symbol ts)
+
+          for value in "$wram" "$framebuffer" "$tmw" "$wobjsel" "$whx" "$tm" "$ts"; do
+            test -n "$value"
+          done
+
+          phase=$(printf '%08x' "$((0x$wram + 1))")
+          {
+            echo "PHASE_ADDR=0x$phase"
+            echo "FRAMEBUFFER_ADDR=0x$framebuffer"
+            echo "TMW_ADDR=0x$tmw"
+            echo "WOBJSEL_ADDR=0x$wobjsel"
+            echo "WHX_ADDR=0x$whx"
+            echo "TM_ADDR=0x$tm"
+            echo "TS_ADDR=0x$ts"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            git \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Build pinned N64-only ares in valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+
+          # Existing LAB LIMITATION: this pinned ares RSP recompiler is invalid
+          # for Sodium64 custom RSP ucode. Preserve R4300 JIT and force RSP interp.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Capture synchronized Sodium64 control and treatment framebuffers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          home="$RUNNER_TEMP/ares-home-gate-c-obj"
+          settings="$RUNNER_TEMP/ares-gate-c-obj-settings.bml"
+          mkdir -p "$home"
+
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt \
+              --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9140" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              wrap/out/gate-c-obj-window.z64 \
+              > captures/ares-n64.log 2>&1 &
+          ares_pid=$!
+
+          cleanup() {
+            kill "$ares_pid" 2>/dev/null || true
+            wait "$ares_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          python3 scripts/gate_c_obj_window_capture_n64.py \
+            --port 9140 \
+            --phase-address "$PHASE_ADDR" \
+            --framebuffer-address "$FRAMEBUFFER_ADDR" \
+            --observe "tmw:$TMW_ADDR:1" \
+            --observe "wobjsel:$WOBJSEL_ADDR:1" \
+            --observe "whx:$WHX_ADDR:4" \
+            --observe "tm:$TM_ADDR:1" \
+            --observe "ts:$TS_ADDR:1" \
+            --output-dir captures
+
+          python3 scripts/gate_c_obj_window_analyze_fb.py \
+            captures/control.rgba5551 \
+            captures/treatment.rgba5551 \
+            --output captures/analysis.json \
+            | tee captures/analysis.txt
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          state = json.loads(Path('captures/state.json').read_text())
+          analysis = json.loads(Path('captures/analysis.json').read_text())
+
+          expected_common = {
+              'wobjsel': 0x03,
+              'whx': 0x000040BF,
+              'tm': 0x11,
+              'ts': 0x00,
+          }
+          assert state['control']['phase'] == 0x01, state
+          assert state['treatment']['phase'] == 0x11, state
+          assert state['control']['tmw'] == 0x01, state
+          assert state['treatment']['tmw'] == 0x11, state
+          for phase in ('control', 'treatment'):
+              for key, expected in expected_common.items():
+                  assert state[phase][key] == expected, (phase, key, state)
+
+          classification = analysis['classification']
+          expected = 'H_OBJ_FALSIFIED_SODIUM64_MASKS_OUTER_OBJ'
+          if classification != expected:
+              raise SystemExit(
+                  f'clean H-OBJ regression failed: expected {expected}, got {classification}'
+              )
+          print(f'Gate-C clean H-OBJ PASS: {classification}')
+          PY
+
+      - name: Upload Gate-C Sodium64 semantic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-obj-window-sodium64-evidence
+          retention-days: 30
+          path: |
+            captures/
+            ares-version.txt
+            sodium64-build.log
+
+
+  snes-reference-semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs:
+      - diagnostic-build
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Install pinned ares reference dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            cmake \
+            git \
+            imagemagick \
+            libgtk-3-dev \
+            libgl1-mesa-dri \
+            libsdl2-dev \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            ninja-build \
+            python3-pil \
+            qt6-base-dev \
+            unzip \
+            xauth \
+            xvfb
+
+      - name: Generate exact original diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reference
+          python3 scripts/make_gate_c_obj_window.py reference/gate-c-obj-window.smc
+          echo "b91fdcd4a4ec7c4dce3b49946e054e4847f86bad03f8da56083c6757b13f6f77  reference/gate-c-obj-window.smc" \
+            | sha256sum --check
+
+      - name: Build pinned ares Super Famicom reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-sfc-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=sfc
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -n "$ares_bin"
+          test -x "$ares_bin"
+          echo "ARES_SFC_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/reference/ares-version.txt"
+
+      - name: Capture direct-SNES control and treatment sequence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reference/frames
+          export ROM="$GITHUB_WORKSPACE/reference/gate-c-obj-window.smc"
+          export FRAME_DIR="$GITHUB_WORKSPACE/reference/frames"
+          export ARES_LOG="$GITHUB_WORKSPACE/reference/ares-sfc.log"
+          export ARES_SETTINGS="$RUNNER_TEMP/ares-sfc-settings.bml"
+          export ARES_HOME="$RUNNER_TEMP/ares-sfc-home"
+          mkdir -p "$ARES_HOME"
+
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            HOME="$ARES_HOME" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              "$ARES_SFC_BIN" \
+                --no-file-prompt \
+                --system "Super Famicom" \
+                --settings-file "$ARES_SETTINGS" \
+                --setting "Developer/DeterministicEntropy=true" \
+                "$ROM" > "$ARES_LOG" 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true; wait $pid 2>/dev/null || true" EXIT
+
+            # Allow the window and first rendered frames to appear, then sample
+            # across >2 full 120-frame control/treatment cycles. Analysis finds
+            # the two stable outer-OBJ states (2->0); no wall-clock
+            # sample is itself treated as authoritative.
+            sleep 1
+            for i in $(seq -w 0 23); do
+              import -window root "$FRAME_DIR/frame-$i.png"
+              sleep 0.25
+            done
+          '
+
+          test "$(find reference/frames -name 'frame-*.png' | wc -l)" -eq 24
+
+      - name: Analyze pinned SNES reference semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/gate_c_obj_window_analyze_reference.py \
+            reference/frames/frame-*.png \
+            --output reference/analysis.json \
+            | tee reference/analysis.txt
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('reference/analysis.json').read_text())
+          classification = result['classification']
+          print(f'Gate-C OBJ-window direct SNES reference: {classification}')
+          if classification != 'REFERENCE_CONFIRMS_OUTER_OBJ_MASK_2_TO_0':
+              raise SystemExit('direct SNES reference capture did not establish outer-OBJ 2->0 semantics')
+          PY
+
+      - name: Upload direct-SNES reference evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-obj-window-snes-reference
+          retention-days: 30
+          path: |
+            reference/

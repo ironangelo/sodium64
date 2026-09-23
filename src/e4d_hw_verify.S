@@ -517,6 +517,7 @@ e4d_hw_indicator_dp_wait:
     lw t1, REC_FLAGS(s0)
     andi t1, t1, E4D_FLAG_PASS
     beqz t1, e4d_hw_indicator_red
+    nop
     li t2, 0x07C107C1
     b e4d_hw_indicator_fill
     nop

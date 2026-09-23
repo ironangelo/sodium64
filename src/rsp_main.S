@@ -681,12 +681,12 @@ e4c_mask_row:
     vxor $v00, $v00, $v16, 0 // 0x0400/0x0C00 -> 0/0x0800
     vxor $v01, $v01, $v16, 0
     vmudl $v00, $v00, $v15, 0 // main 0x0800 -> bit0 (>>11)
+    // Diagnostic child: preserve Main's eight reduced 0/1 lanes before Sub
+    // reduction/VOR can affect v00. The current Main DMEM row is already consumed.
+    sqv $v00, 0, 0, t0
     vmudl $v01, $v01, $v22, 0 // sub  0x0800 -> bit1 (>>10)
     vor $v00, $v00, $v01, 0
     vmudn $v00, $v00, $v25, 0 // move 0..3 to upper byte for SPV
-    // Diagnostic child: preserve the eight 16-bit post-reduction lanes in the
-    // already-consumed Sub metadata row instead of packing them to TEXTURE.
-    sqv $v00, 0, 0, t1
     addi t0, t0, 16
     addi t1, t1, 16
     addi t2, t2, 8
@@ -694,9 +694,9 @@ e4c_mask_row:
     bnez t4, e4c_mask_row
     nop
 
-    // Diagnostic-only archive: CHAR_DATA now holds eight rows of post-VMUDN
-    // 16-bit lanes. Preserve all 128 bytes per tile before color DMA overwrites it.
-    li a0, CHAR_DATA
+    // Diagnostic-only archive: SCRN_DATA now holds eight rows of Main's post-VMUDL
+    // 0/1 lanes. Preserve all 128 bytes per tile before color DMA overwrites it.
+    li a0, SCRN_DATA
     move a1, s6
     li a2, 127
     jal dma_write

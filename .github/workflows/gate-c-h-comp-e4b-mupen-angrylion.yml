@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Core SP Read Trace
+name: Gate C H-COMP E4b Mupen Preserve cxd4 Self Halt
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-core-sp-read-trace
+      - phase4/gate-c-h-comp-e4b-mupen-preserve-cxd4-self-halt
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-core-sp-read-trace-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-preserve-cxd4-self-halt-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -192,6 +192,31 @@ jobs:
           git clone https://github.com/mupen64plus/mupen64plus-rsp-cxd4.git
           git -C mupen64plus-rsp-cxd4 checkout 00906a92641c540a64e4e7505012157315314810
 
+          # Host-lab compatibility shim only. Sodium64's resident custom LLE
+          # microcode ends a frame by setting HALT without BREAK. cxd4's
+          # plugin-era DoRspCycles epilogue may clear that HALT before returning
+          # to Mupen. Preserve a self-asserted HALT and log the epilogue state.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("mupen64plus-rsp-cxd4/module.c")
+          s = p.read_text()
+          needle = "    run_task();\n\n"
+          repl = (
+              "    run_task();\n"
+              "    fprintf(stderr, \"S64_CXD4_EPILOGUE status=%08X mi=%08X semaphore=%08X\\n\",\n"
+              "        *CR[0x4], GET_RCP_REG(MI_INTR_REG), *CR[0x7]);\n"
+              "    fflush(stderr);\n"
+              "    if (*CR[0x4] & SP_STATUS_HALT) {\n"
+              "        fprintf(stderr, \"S64_CXD4_PRESERVE_SELF_HALT status=%08X\\n\", *CR[0x4]);\n"
+              "        fflush(stderr);\n"
+              "        return (cycles);\n"
+              "    }\n\n"
+          )
+          assert s.count(needle) == 1
+          p.write_text(s.replace(needle, repl, 1))
+          PY
+          git -C mupen64plus-rsp-cxd4 diff -- module.c | tee "$GITHUB_WORKSPACE/captures/cxd4-preserve-self-halt.patch"
+
           # Host-lab trace only: preserve cxd4 emulation semantics while
           # localizing whether Sodium64 reaches its end-of-frame RSP halt.
           python3 - <<'PY'
@@ -356,7 +381,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-core-sp-read-trace.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-preserve-cxd4-self-halt.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -414,7 +439,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-core-sp-read-trace
+          name: gate-c-h-comp-e4b-mupen-preserve-cxd4-self-halt
           retention-days: 30
           if-no-files-found: ignore
           path: |

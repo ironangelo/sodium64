@@ -6,6 +6,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-22 UTC)
 
+- **2026-09-23 independent E4d mask audit COMPLETE — direction correction:** compiled false-tag constants atDMEM0xE80 overlap PRIO_CHECKS+4 and WIN_BOUNDS. Main-reduction artifact10762652566 has2048/2048 exact lanes; the collision model predicts2048/2048 mask bytes and2048/2048 final lanes, including every error. Leading cause: Sub reduces to1/3 in lanes0/1 and pollutes Main bit via correct VOR; this is not proven temporal lag. **Next:** change only v16 baseline sourcing using resident0x0400 broadcast, same instruction count, same mask/pixel oracle; no runtime patch made by auditor. See independent audit FINAL below.
+
 - **Independent E4d audit checkpoint3 — compiled DMEM collision VERIFIED:** artifact10761862049 has false constants at0xE80 and executed priority-clear instruction0xAC000E80 atIMEM0x13B4; WIN_BOUNDS also overlaps the table. This predicts exact Main reduction but Sub1/3 contamination in lanes0/1. Recommended single-variable test: source v16 from resident0x0400 broadcast without changing instruction count; no patch applied.
 
 - **Independent E4d audit checkpoint2 — immediate direction update:** Main-reduction artifact10762652566 is independently decoded: **2048/2048 lanes exact**. Strong candidate: false-tag constant at0xE80 overlaps PRIO_CHECKS+4; two zeroed baseline lanes leave Main reduction correct but make Sub emit1/3 instead of0/2, contaminating Main bit through VOR. Verify compiled overlap; no runtime change made.
@@ -1037,3 +1039,86 @@ Sub's bit1 remains correct, but its bit0 is spuriously set. VOR therefore makes 
 **MINIMAL NEXT TEST — one instruction, same IMEM size (proposal only):** in the authoritative mask-archive diagnostic, replace only the false-baseline load with `vor $v16,$v31,$v24,13`, which broadcasts resident v24 lane5=0x0400 using numeric e=13 and resident v31=zero. Leave all other arithmetic, guest, masks, targets and oracle unchanged. This tests **baseline source only**, avoids the corrupted DMEM table and adds no instruction at the current4096-byte ceiling. Predicted: all2048 mask bytes exact, all4096 controlled output pixels exact. If masks still fail identically with verified uniform v16, this collision is insufficient to explain the defect. This is a diagnostic alternative, **not an implemented or prescribed final repair**. A production-quality local fix would remove the entire constant-table/live-state overlap and preserve ABI endpoints, then revalidate.
 
 Checkpoint preserved before finishing opcode/hazard documentation review; no runtime change.
+
+
+## Independent E4d two-lane mask audit — 2026-09-23 / FINAL
+
+### FINDING 1 — verified allocation defect; exact-fit explanation of observed corruption
+
+**EVIDENCE:** checkpoints2–3 independently decoded the finished Main-reduction run and exact normal ELF. The compiled false-tag table begins atDMEM0xE80, overlapping live PRIO_CHECKS+4. The real `sw zero,0xE80(zero)` clears its first two halfwords before composition loads v16. WIN_BOUNDS0xE84..0xE88 also overlaps that vector. Source references at full-width `67b2cd92151dec4e80784e2fd1b6738ac451474f`: `src/rsp_main.S:137–150` allocation, `520–521` priority clear, `642–650` constant loads, `675–683` mask loop; `src/defines.h:PRIO_CHECKS/WIN_BOUNDS` layout. The same allocations/clears/loads remain in the mask/raw/lane/reduction diagnostics; the archive changes do not remove the collision.
+
+**MEASURED additional artifact analysis:** independently re-read mask archive10756776096 (ZIP digest75de5562…77eb) and final-lane archive10761592420 (digest3d0b87e6…5461b8). Each has256/2048 mismatches against the clean oracle. The specific collision model — `state | 1` for x-offset0/1, unchanged state for offsets2..7, times0x100 for final lanes — matches **2048/2048 mask bytes AND2048/2048 final lanes, zero residual mismatches**. This is analysis of existing captures, not a new runtime experiment.
+
+| Logical state | Main reduction with corrupted baseline | Sub reduction with corrupted baseline | OR result in lanes0/1 | Consequence |
+|---|---:|---:|---:|---|
+| 0: neither | 0 | **1**, should0 | **1** | Wrong Main bit, still no ADD |
+| 1: Main only | 1 | **1**, should0 | 1 | Error hidden by already-true Main |
+| 2: Sub only | 0 | **3**, should2 | **3** | Wrong Main bit enables ADD |
+| 3: both | 1 | **3**, should2 | 3 | Error hidden by already-true Main |
+
+**WHAT IT PROVES:** the executable has a real experimental-runtime DMEM allocation error. Its arithmetic consequence explains the two lanes, Main-bit-only final comparison, zero Sub-bit mismatches, exact Main archive, pre-SPV corruption and state2 blue→blue+green output. The prior state-transition pattern is not evidence that the previous tile survives: the low bit can be forced regardless of history. The original 8×8 success did not exercise every full-width state; a true-Main tile can hide the same defect.
+
+**WHAT IT DOES NOT PROVE:** no live v16/Sub intermediate was captured by this audit, no repair run was performed, and no real N64 result is claimed. Classification: **VERIFIED compiled allocation defect / SUPPORTED INTERPRETATION as proximate cause, awaiting single-variable causal validation**.
+
+**PLAUSIBLE CAUSE:** false-baseline data overwritten by live priority/window state, leading to a Sub contribution with an unintended bit0. The label “Main mask wrong” describes the output bit, not the register that introduced it.
+
+**MINIMAL NEXT TEST:** one instruction substitution in the intact mask-archive authority16cd0d4a, as specified in checkpoint3: load v16's uniform0x0400 from resident v24 lane5 using `vor $v16,$v31,$v24,13` instead of the table LQV. Source v24 has lane5=0x0400 and v31 is the resident zero vector; the composer does not overwrite them. VOR's ACCL side effect is dead before the reduction. This changes only baseline provenance, has the same instruction count, and fits the already-full IMEM. Keep the whole frozen mask/pixel oracle. Predicted pass:2048 exact archived mask bytes and4096 exact controlled pixels. An identical failure with verified uniform v16 falsifies sufficiency of this cause. Do not simultaneously alter selectors, multiplication, DMA, pipeline spacing or ares mode.
+
+If a measurement-only discriminator is preferred, substitute an existing diagnostic archive store to capture Sub immediately after VMUDL; predicted leading lanes1/3 and remaining lanes0/2. It is an alternative, not another mandatory test before the one-variable control.
+
+### FINDING 2 — opcode semantics and source/destination aliasing
+
+**EVIDENCE:** pinned ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`, `ares/n64/rsp/interpreter-vpu.cpp`, `interpreter.cpp`, `rsp.hpp`; hardware-oriented reference tests `lemmy-64/n64-systemtest@196f5421173220eb2f63a7a99c64795dc0ea0698/src/tests/rsp/op_vmudl.rs` and `op_vmudn.rs` explicitly test VD=VS, VD=VT, accumulator replacement and signed/unsigned cases. These tests were inspected, not executed here.
+
+| Opcode / selector | Exact relevant behavior in pinned interpreter | Consequence here |
+|---|---|---|
+| LQV, e=0 | Reads bytes from effective DMEM address through the next16-byte boundary; other vector bytes remain untouched on a partial load. Encoded signed7-bit offset is scaled by16. | SCRN_DATA=0xA60, CHAR_DATA=0xAE0, row increments16: full16-byte loads at each row. Constant base0xE80 is also aligned. The problem is overwritten content, not partial loading. |
+| VXOR / VOR, e=0 | Lane-wise XOR/OR, writes ACCL and VD; upper ACC slices remain, flags are not consumed. | Every lane is replaced. VOR can legitimately import an unexpected bit0 from Sub; it has no notion of “this operand owns only bit1.” |
+| VMUDL | For each lane, unsigned16×unsigned16 high16 bits become ACCL and VD; ACCM/ACCH cleared. No prior ACC or VCO input. | >>11 with0x20 and >>10 with0x40 are correct. They expose different bits of a malformed XOR result. |
+| VMUDN | Unsigned VS×signed VT forms the replacement signed product in ACC; low16 bits go to VD. No multiply-accumulate and no prior ACC input. | With VS0..3 and VT0x100, exact output0/0x100/0x200/0x300. No saturation or overflow boundary in this domain. |
+| SPV, e=0 | Writes the upper byte of each of eight lanes in order; encoded offset scales by8. | Correctly writes0..3 after the shift. Wrong bit is already present before SPV, consistent with existing evidence. |
+| Arithmetic e=0 | Identity selection VT[i] for each VS[i]. | Not lane0 broadcast. Numeric e=8..15 broadcasts VT[e−8]; proposed e=13 selects lane5. Load/store e is a byte-element field, a different context. |
+
+In both ares SISD and SIMD paths, VT selection is materialized before result assignment and VD assignment follows input consumption. VU registers and accumulator slices are separate storage in `rsp.hpp:413–458`. Thus VD=VS in the quoted sequence is supported; no aliasing with ACCL was found. The two vector results do not disappear merely because the next operation replaces ACCL. VMUDL(Main) leaves its result in v00 while VMUDL(Sub) writes v01.
+
+**WHAT IT PROVES:** the arithmetic instructions are suitable for the intended transformations, conditional on their input bits/constants. The expected all-zero Main input cannot turn into1 through old ACC alone.
+
+**WHAT IT DOES NOT PROVE:** every edge case of the RSP ISA or host compiler has been validated on hardware. Old guide pseudocode sometimes uses generic clamp wording; the current domain is tiny and avoids that ambiguity, while the hardware-oriented test source corroborates unsigned VMUDL values above0x7FFF and ordinary low-half VMUDN behavior.
+
+**REJECTED CAUSES for this signature:** stale ACC/flags intrinsic to this opcode chain; e=0 broadcast; ordinary VD=VS aliasing; SPV as the first corruption point. Generic endian reversal or a wrong uniform shift would affect more lanes/states and does not explain the exact captured model.
+
+**MINIMAL NEXT TEST:** the baseline-source control above; no standalone multiply rewrite is justified.
+
+### FINDING 3 — pipeline and ares laboratory boundary
+
+**EVIDENCE:** SGI/Nintendo RSP Programmer's Guide, hardware hazard-locking description pp43–44 and LQV pp189: dependent register reads are stalled until results are available. This covers load→VXOR and subsequent vector-result→multiply/OR/store dependencies. Pinned ares `rsp.cpp:49–83` runs each interpreter operation synchronously (even paired issue invokes them sequentially), with pipeline timing tracked separately; `decoder.cpp` marks vector uses/definitions including LQV and SPV. No delayed partial two-lane result is implemented by the inspected VMUDL/VOR/VMUDN functions.
+
+Workflow `e08ed583:.github/workflows/gate-c-h-comp-e1-z-tag.yml:109–123` checks out the stated ares SHA and patches `rsp.recompiler.enabled=false`. `ares/n64/accuracy.hpp:20–22` independently selects SISD/SIMD from Reference and host SSE4.1 support. Interpreter therefore does not imply absence of host SIMD.
+
+**WHAT IT PROVES:** latency alone is not a reason to insert correctness NOPs in this dependent chain. The hardware interlock covers the named register dependencies; it does not preserve software data that an earlier store intentionally overwrote. Pinned interpreter source and compiled Sodium64 ownership error suffice for the current explanation.
+
+**WHAT IT DOES NOT PROVE:** real hardware timing/cadence, every ares SIMD/compiler detail, or every SP DMA/RDP fence contract. Those remain separate laboratory boundaries. The current failure does not require promoting an ares limitation into the leading diagnosis.
+
+**PLAUSIBLE CAUSE / REJECTED CAUSE:** software DMEM alias strongly supported; unproven “RSP needs NOPs here” rejected as the next action. Ares SIMD bug is a low-priority contingency only if fixed input provenance still fails. There is no justification to rebuild ares in another execution mode before testing the identified collision.
+
+**MINIMAL NEXT TEST:** same frozen diagnostic and same ares mode, change baseline source only. That preserves causal isolation and avoids another lab project.
+
+### Findings that must survive this audit
+
+- **SUPERSEDED interpretation:** “previous tile Main bit persists” → exact final-mask observation is preserved, but the strongest mechanism is Sub low-bit pollution from a shared malformed baseline.
+- **REJECTED inference:** “Sub-bit mismatches=0 means the entire Sub reduction is correct.” The two-bit Sub result can have correct bit1 and an illegal bit0.
+- **REJECTED inference:** “raw DMEM Main and Main reduction exact means the remaining options are broken VOR/VMUDN.” Correct VOR can faithfully combine a malformed Sub value.
+- **VERIFIED allocation lesson:** a table placed in an assembly padding/alignment region is not necessarily outside mutable state declared by address macros. Here the DMEM data symbol end preceded live PRIO_CHECKS/WIN_BOUNDS addresses.
+- **Generic repair direction, not implemented:** remove the whole live-state/constant overlap. In this monolithic layout0xE90 is the first aligned point after WIN_BOUNDS+4; relocating128 bytes there would end at0xF10, leaving0x60 before fixed VEC_DATA0xF70. Preserve all constants and endpoints and check actual binary layout. This is a local layout observation, not permission to reuse0xE90 blindly when later combining a different overlay DMEM ABI.
+- Keep the current4096-byte IMEM bound: a one-for-one baseline-source diagnostic is preferable to inserting new logging/NOP sequences.
+- No need to reopen guest/RDP/stride work for this measured signature; their existing exoneration remains scoped to this fixture.
+
+### Final state / audit completion
+
+All nine requested audit questions addressed; no implementation, build dispatch, workflow edit, technical branch change or PR operation. Existing original-diagnostic artifacts were read in memory, not executed. The only repository change is this continuity file. Master rechecked unchanged at `5b7134930a0ca859f6aa24e54102de116948e3ed`.
+
+Main-reduction authority is no longer “in flight”: run35884417209 finished and its archive is exact. Red status is the deliberately stale color classifier, not an incorrect Main-reduction result. Update working decisions from raw artifact evidence, not CI color.
+
+Sources: [Sodium64 full-width source](https://github.com/ironangelo/sodium64/blob/67b2cd92151dec4e80784e2fd1b6738ac451474f/src/rsp_main.S), [pinned ares VU interpreter](https://github.com/ares-emulator/ares/blob/17813a3ccda21ab9bd45f09bfc2f91196dbf50ff/ares/n64/rsp/interpreter-vpu.cpp), [hardware guide](https://ultra64.ca/files/documentation/silicon-graphics/SGI_Nintendo_64_RSP_Programmers_Guide.pdf), [VMUDL tests](https://github.com/lemmy-64/n64-systemtest/blob/196f5421173220eb2f63a7a99c64795dc0ea0698/src/tests/rsp/op_vmudl.rs), [VMUDN tests](https://github.com/lemmy-64/n64-systemtest/blob/196f5421173220eb2f63a7a99c64795dc0ea0698/src/tests/rsp/op_vmudn.rs).
+
+**Immediate next action:** one-variable false-baseline source control on the intact mask-archive authority, require exact masks and original full-width pixel oracle. If successful, perform a small generic allocation repair in separately authorized technical work; if not, capture live v16 and Sub post-VMUDL before entertaining interpreter/pipeline changes.

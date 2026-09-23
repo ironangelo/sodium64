@@ -692,14 +692,15 @@ e4c_mask_row:
     bnez t4, e4c_mask_row
     nop
 
-    // Diagnostic-only archive: one dense 64-byte block per tile, tile-major.
-    // a2=63 encodes a single 64-byte RSP DMA transfer.
-    li a0, TEXTURE
+    // Diagnostic-only archive: capture the full raw Main-Z DMEM tile before
+    // color gathers. Eight rows * 16 bytes = 128 bytes per tile; 32 tiles use
+    // 4096 bytes of the existing 4480-byte main-after scratch.
+    li a0, SCRN_DATA
     move a1, s6
-    li a2, 63
+    li a2, 127
     jal dma_write
     nop
-    addi s6, s6, 64
+    addi s6, s6, 128
 
     // Reuse the two 128-byte buffers for raw Main/Sub color.
     li a0, SCRN_DATA

@@ -640,7 +640,7 @@ e4b_main_addr_ready:
     // E4c vector semantic twin: load six uniform constants from the proof-local
     // DMEM gap. v16-v21 are scratch here; only v23-v31 are resident constants.
     li t9, e4c_vec_false
-    lqv $v16, 0, 0x00, t9 // 0x0400 false-tag baseline
+    vor $v16, $v31, $v24, 13 // 0x0400 false-tag baseline from resident v24 lane5
     lqv $v17, 0, 0x10, t9 // 0x0421 packed-RGB carry helper
     lqv $v18, 0, 0x20, t9 // 0x8420 packed-RGB saturation mask
     lqv $v19, 0, 0x30, t9 // 0x7BDE half-brightness component mask

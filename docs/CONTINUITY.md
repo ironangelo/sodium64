@@ -6,6 +6,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-22 UTC)
 
+- **Independent E4d audit checkpoint2 — immediate direction update:** Main-reduction artifact10762652566 is independently decoded: **2048/2048 lanes exact**. Strong candidate: false-tag constant at0xE80 overlaps PRIO_CHECKS+4; two zeroed baseline lanes leave Main reduction correct but make Sub emit1/3 instead of0/2, contaminating Main bit through VOR. Verify compiled overlap; no runtime change made.
+
 - **Independent E4d mask audit in progress (2026-09-23):** exact-opcode source analysis finds no inherited-ACC dependency in VXOR/VMUDL/VOR/VMUDN; interpreter can still use host SIMD. Main-reduction run35884417209 completed with artifact10762652566; stale-classifier failure does not establish lane result. See checkpoint 1 below.
 
 ### Phase / gate
@@ -993,3 +995,23 @@ Scope: read-only source/lab audit; Iron's direct request authorizes only this co
 **Live experiment status correction:** semantic run `35884417209` at exact `e08ed5835ab19410bcb7533eba46dbadd8578833` has finished. Build/ares setup and upload succeeded; the stale E4b color classifier failed. Evidence artifact `10762652566`, ZIP digest `4f94c6d6879399b468751645c0e016276f1acb1f8b341f68dfa3f091284b9dd7`. This checkpoint has NOT decoded its Main lanes; red CI alone does not select either branch of the precommitted discriminator.
 
 **MINIMAL NEXT TEST:** first inspect the already-produced archive. In parallel source reasoning only, verify actual load addresses/alignment and live vector constants; do not insert NOPs or clear ACC speculatively. Audit continues.
+
+
+## Independent E4d two-lane mask audit — 2026-09-23 / checkpoint 2: exact-fit cause
+
+**FINDING — MEASURED existing artifact, not a new experiment:** downloaded and independently decoded Main-reduction artifact10762652566 from exact run35884417209/head `e08ed5835ab19410bcb7533eba46dbadd8578833`. ZIP SHA256 matches `4f94c6d6879399b468751645c0e016276f1acb1f8b341f68dfa3f091284b9dd7`. `main_after.bin[0:4096]` SHA256=`de631e507f61c3a2b7f3563a819a4ffccca14046f0f77172666710b8aacfcb3d`. All **2048/2048 Main post-VMUDL lanes are exact**, with 1024 zeros and1024 ones, using the precommitted tile/row oracle. Thus Main's own reduction is not where the wrong bit first appears.
+
+**FINDING — high-specificity SUPPORTED INTERPRETATION:** the “unused” constant placement likely aliases live DMEM state. Source places `e4c_vec_false` at0xE80; `defines.h` places `PRIO_CHECKS=0xE7C` and `PRIO_CHECKS+4=0xE80`. `rsp_main.S:520–521` clears both priority words before layer rendering; this clears the first four bytes / first two lanes of the false-tag constant. `lqv v16` later loads that mutable data at composition entry. Source derivation and compiled map verification are being checked next; no patch applied.
+
+**EVIDENCE — exact arithmetic signature:** if v16 lanes0/1 are0 instead of0x0400:
+- Main false: `0x0400 XOR0 =0x0400`; `0x0400*0x20 >>16=0` (still correct).
+- Main true: `0x0C00*0x20 >>16=1` (still correct).
+- Sub false: `0x0400*0x40 >>16=1` (**expected0**).
+- Sub true: `0x0C00*0x40 >>16=3` (**expected2**).
+Sub's bit1 remains correct, but its bit0 is spuriously set. VOR therefore makes final state0→1 and2→3 in exactly those lanes; states1/3 hide the error. VMUDN then produces the observed0x0100/0x0300. This is **bit contamination from the Sub reduction**, not evidence that the Main reduction retains a prior tile.
+
+**WHAT IT PROVES:** the newly inspected archive chooses the “Main exact” branch of the existing discriminator. A source-level live-state overlap predicts all reported lane/bit/state asymmetries without invoking ares bugs, pipeline hazards or stale accumulators.
+
+**WHAT IT DOES NOT PROVE:** v16's live values have been captured directly; a controlled non-overlapping-constant repair passes; real hardware has executed this proof. Preserve these distinctions.
+
+**PLAUSIBLE CAUSE / SUPERSEDED interpretation:** “Main true→false lag” is a correct description of final mask comparisons but is not proof of temporal carryover. The concrete alternative is a permanently forced low bit from Sub in lanes0/1. **MINIMAL NEXT TEST:** verify compiled symbol0xE80 and priority stores, then change only false-baseline sourcing (or archive live v16/Sub post-VMUDL) while keeping inputs/oracle/math fixed. Do not reset ACC or add NOPs.

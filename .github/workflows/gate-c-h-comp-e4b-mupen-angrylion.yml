@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen S7 Transition Trace
+name: Gate C H-COMP E4b Mupen Bandstart Trace
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-s7-transition-trace
+      - phase4/gate-c-h-comp-e4b-mupen-bandstart-trace
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-s7-transition-trace-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-bandstart-trace-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -202,6 +202,64 @@ jobs:
           # Track cxd4's current interpreted RSP PC in host memory only.
           needle = "static int temp_PC;\n"
           repl = "static int temp_PC;\nstatic u32 s64_trace_pc;\n"
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          # Observe proof-local true-section-start scratch at DMEM 0xB64
+          # (MODE7_BOUNDS+4), plus nearby bnez t0 decisions. This is host-only.
+          needle = (
+              "    addr = SR[base] + offset;\n"
+              "    SR_B(rt, 0) = DMEM[BES(addr + 0) & 0x00000FFFul];\n"
+              "    SR_B(rt, 1) = DMEM[BES(addr + 1) & 0x00000FFFul];\n"
+              "    SR_B(rt, 2) = DMEM[BES(addr + 2) & 0x00000FFFul];\n"
+              "    SR_B(rt, 3) = DMEM[BES(addr + 3) & 0x00000FFFul];\n"
+              "    SR[zero] = 0x00000000;\n"
+          )
+          repl = (
+              "    addr = SR[base] + offset;\n"
+              "    SR_B(rt, 0) = DMEM[BES(addr + 0) & 0x00000FFFul];\n"
+              "    SR_B(rt, 1) = DMEM[BES(addr + 1) & 0x00000FFFul];\n"
+              "    SR_B(rt, 2) = DMEM[BES(addr + 2) & 0x00000FFFul];\n"
+              "    SR_B(rt, 3) = DMEM[BES(addr + 3) & 0x00000FFFul];\n"
+              "    if ((addr & 0x00000FFFu) == 0x00000B64u) {\n"
+              "        fprintf(stderr, \"S64_CXD4_BANDSTART_LW value=%08X rsp_pc=%08X k0=%08X k1=%08X rt=%u\\n\",\n"
+              "            SR[rt], s64_trace_pc, SR[26], SR[27], rt);\n"
+              "        fflush(stderr);\n"
+              "    }\n"
+              "    SR[zero] = 0x00000000;\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = (
+              "    addr = SR[base] + offset;\n"
+              "    DMEM[BES(addr + 0) & 0x00000FFFul] = SR_B(rt, 0);\n"
+          )
+          repl = (
+              "    addr = SR[base] + offset;\n"
+              "    if ((addr & 0x00000FFFu) == 0x00000B64u) {\n"
+              "        fprintf(stderr, \"S64_CXD4_BANDSTART_SW value=%08X rsp_pc=%08X k0=%08X k1=%08X rt=%u\\n\",\n"
+              "            SR[rt], s64_trace_pc, SR[26], SR[27], rt);\n"
+              "        fflush(stderr);\n"
+              "    }\n"
+              "    DMEM[BES(addr + 0) & 0x00000FFFul] = SR_B(rt, 0);\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = (
+              "PROFILE_MODE int BNE(u32 inst, u32 PC)\n"
+              "{\n"
+              "    const unsigned int rs = (inst >> 21) % (1 << 5);\n"
+              "    const unsigned int rt = (inst >> 16) % (1 << 5);\n\n"
+          )
+          repl = needle + (
+              "    if (rs == 8u && rt == 0u) {\n"
+              "        fprintf(stderr, \"S64_CXD4_BNEZ_T0 pc=%08X value=%08X taken=%u k0=%08X k1=%08X\\n\",\n"
+              "            PC, SR[8], SR[8] != 0u, SR[26], SR[27]);\n"
+              "        fflush(stderr);\n"
+              "    }\n"
+          )
           assert s.count(needle) == 1
           s = s.replace(needle, repl, 1)
 
@@ -483,7 +541,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-s7-transition-trace.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-bandstart-trace.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -541,7 +599,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-s7-transition-trace
+          name: gate-c-h-comp-e4b-mupen-bandstart-trace
           retention-days: 30
           if-no-files-found: ignore
           path: |

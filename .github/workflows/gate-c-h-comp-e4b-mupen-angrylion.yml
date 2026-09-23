@@ -1,16 +1,16 @@
-name: Gate C H-COMP E4b Mupen Color Command Trace
+name: Gate C H-COMP E4b Mupen Retarget Control Trace
 
 on:
   push:
     branches:
-      - phase4/gate-c-h-comp-e4b-mupen-color-command-trace
+      - phase4/gate-c-h-comp-e4b-mupen-retarget-control-trace
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sodium64-gate-c-h-comp-e4b-mupen-color-command-trace-${{ github.ref }}
+  group: sodium64-gate-c-h-comp-e4b-mupen-retarget-control-trace-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -202,6 +202,49 @@ jobs:
           # Track cxd4's current interpreted RSP PC in host memory only.
           needle = "static int temp_PC;\n"
           repl = "static int temp_PC;\nstatic u32 s64_trace_pc;\n"
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          # Trace the exact proof-local retarget store and DPC publication.
+          # RDP_FRAME is 0xC48 in this exact runtime, so the target word lives
+          # at DMEM 0xC4C. These logs are observational only.
+          needle = (
+              "    addr = SR[base] + offset;\n"
+              "    DMEM[BES(addr + 0) & 0x00000FFFul] = SR_B(rt, 0);\n"
+          )
+          repl = (
+              "    addr = SR[base] + offset;\n"
+              "    if ((addr & 0x00000FFFu) == 0x00000C4Cu) {\n"
+              "        fprintf(stderr, \"S64_CXD4_RDP_FRAME_TARGET_STORE value=%08X rsp_pc=%08X\\n\", SR[rt], s64_trace_pc);\n"
+              "        fflush(stderr);\n"
+              "    }\n"
+              "    DMEM[BES(addr + 0) & 0x00000FFFul] = SR_B(rt, 0);\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = (
+              "static void MT_CMD_START(unsigned int rt)\n"
+              "{\n"
+              "    const u32 source = SR[rt] & 0xFFFFFFF8ul; /* Funnelcube demo by marshallh */\n"
+          )
+          repl = needle + (
+              "    fprintf(stderr, \"S64_CXD4_DP_START value=%08X rsp_pc=%08X status=%08X\\n\",\n"
+              "        source, s64_trace_pc, GET_RCP_REG(DPC_STATUS_REG));\n"
+              "    fflush(stderr);\n"
+          )
+          assert s.count(needle) == 1
+          s = s.replace(needle, repl, 1)
+
+          needle = (
+              "static void MT_CMD_END(unsigned int rt)\n"
+              "{\n"
+          )
+          repl = needle + (
+              "    fprintf(stderr, \"S64_CXD4_DP_END value=%08X rsp_pc=%08X status=%08X\\n\",\n"
+              "        SR[rt] & 0xFFFFFFF8ul, s64_trace_pc, GET_RCP_REG(DPC_STATUS_REG));\n"
+              "    fflush(stderr);\n"
+          )
           assert s.count(needle) == 1
           s = s.replace(needle, repl, 1)
 
@@ -400,7 +443,7 @@ jobs:
           mkdir -p "$config"
           cat > "$RUNNER_TEMP/mupen-hcomp.expect" <<'EOF'
           set timeout 300
-          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-color-command-trace.log"
+          log_file -noappend "$env(GITHUB_WORKSPACE)/captures/mupen-retarget-control-trace.log"
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) LIBGL_ALWAYS_SOFTWARE=1             $env(M64P_UI)               --corelib $env(M64P_CORE)               --datadir $env(M64P_DATA)               --configdir $env(M64P_CONFIG)               --debug --emumode 0 --nospeedlimit --noosd --windowed               --resolution 320x240               --gfx $env(M64P_GFX)               --audio dummy               --input dummy               --rsp $env(M64P_RSP)               --set {Video-AngrylionPlus[Parallel]=False}               --set {Video-AngrylionPlus[NumWorkers]=1}               --set {Video-AngrylionPlus[BusyLoop]=False}               --set {Video-AngrylionPlus[DpCompat]=2}               --set {Video-AngrylionPlus[ViVsync]=False}               $env(M64P_ROM)
 
           expect "(dbg) "
@@ -458,7 +501,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-h-comp-e4b-mupen-color-command-trace
+          name: gate-c-h-comp-e4b-mupen-retarget-control-trace
           retention-days: 30
           if-no-files-found: ignore
           path: |

@@ -1,0 +1,143 @@
+name: Gate C E4d Real-N64 Cadence Profile
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-h-comp-e4d-hardware-profile
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-e4d-hw-profile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Validate deterministic guest and hardware decoders
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            scripts/make_gate_c_h_comp_e1_z_tag.py \
+            scripts/hw_profile_report.py \
+            scripts/profile_report.py
+          python3 scripts/test_hw_profile_report.py
+          python3 scripts/test_profile_report.py
+
+          mkdir -p diagnostic
+          python3 scripts/make_gate_c_h_comp_e1_z_tag.py diagnostic/e4d-a.smc
+          python3 scripts/make_gate_c_h_comp_e1_z_tag.py diagnostic/e4d-b.smc
+          cmp diagnostic/e4d-a.smc diagnostic/e4d-b.smc
+          test "$(stat -c %s diagnostic/e4d-a.smc)" -eq 32768
+          sha256sum diagnostic/e4d-a.smc | tee diagnostic/guest.sha256
+
+      - name: Build exact Road-valid hardware profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hardware-profile-build.log
+          test -s sodium64.z64
+          test -s build/sodium64.elf
+          nm -n build/sodium64.elf | grep -E ' hw_profile_header$'
+          nm -n build/sodium64.elf | grep -E ' profile_sample_buffer$'
+
+          python3 scripts/build_metrics.py \
+            --rom sodium64.z64 \
+            --elf build/sodium64.elf \
+            --build-dir build \
+            --output hardware-profile-build-metrics.txt
+          sha256sum sodium64.z64 build/sodium64.elf \
+            | tee hardware-profile-build.sha256
+
+      - name: Wrap exact full-frame E4d synthetic guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wrap package
+          cp sodium64.z64 wrap/sodium64.z64
+          cp rom-converter.py wrap/rom-converter.py
+          cp diagnostic/e4d-a.smc wrap/e4d-resident-cadence-profile.smc
+          (
+            cd wrap
+            python3 rom-converter.py </dev/null
+          )
+          test -s wrap/out/e4d-resident-cadence-profile.z64
+
+          dd if=wrap/out/e4d-resident-cadence-profile.z64 \
+            of=package/embedded.smc bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+          cmp diagnostic/e4d-a.smc package/embedded.smc
+          rm package/embedded.smc
+
+          cp wrap/out/e4d-resident-cadence-profile.z64 package/e4d-resident-cadence-profile.z64
+          cp build/sodium64.elf package/sodium64-e4d-hw-profile.elf
+          cp build/sodium64.map package/sodium64-e4d-hw-profile.map
+          cp build/rsp_main.map package/rsp_main.map
+          cp scripts/hw_profile_report.py package/hw_profile_report.py
+          cp scripts/profile_report.py package/profile_report.py
+          cp diagnostic/guest.sha256 package/guest.sha256
+          cp hardware-profile-build.log package/hardware-profile-build.log
+          cp hardware-profile-build-metrics.txt package/hardware-profile-build-metrics.txt
+          cp hardware-profile-build.sha256 package/hardware-profile-build.sha256
+
+          sha256sum \
+            package/e4d-resident-cadence-profile.z64 \
+            package/sodium64-e4d-hw-profile.elf \
+            package/sodium64-e4d-hw-profile.map \
+            package/rsp_main.map \
+            package/hw_profile_report.py \
+            package/profile_report.py \
+            | tee package/package.sha256
+
+          cat > package/README.txt <<'EOF'
+          Sodium64 Gate-C E4d real-N64 cadence/profile milestone
+
+          This ROM is separate from the E4d correctness verifier. It uses the
+          already validated HW_PROFILE path and the same deterministic E4d guest.
+
+          Run:
+              e4d-resident-cadence-profile.z64
+
+          Leave it running until the screen freezes solid RED. RED means the SRAM
+          capture has been committed; it is not a failure indicator in this ROM.
+
+          Then extract the cartridge SRAM save and keep it paired with this exact
+          package. The capture contract is:
+            - 2 complete 60-VI warmup windows
+            - 5 complete 60-VI measured windows
+            - frameskip 0
+            - APU clock 21
+            - audio enabled
+            - precision 8
+            - >=800 statistical R4300 samples required for strict interpretation
+
+          First decode:
+              python3 hw_profile_report.py <save> --snapshot-output profile.bin
+
+          The returned save plus this exact ELF/map is the authority. This test
+          measures full-system throughput/cadence pressure and R4300 sample share;
+          it is not a direct instruction-level RSP cycle counter.
+          EOF
+
+      - name: Upload real-N64 cadence package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-e4d-real-n64-cadence-profile
+          retention-days: 30
+          path: package/

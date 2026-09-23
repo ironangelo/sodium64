@@ -11,7 +11,7 @@ from pathlib import Path
 
 MAGIC = 0x53363445  # S64E
 VERSION = 1
-TEST_ID = 0x45344431  # E4D1
+TEST_IDS = {0x45344431: "E4D1", 0x45344432: "E4D2"}
 RECORD_SIZE = 0x80
 END_MARKER = 0x454E4421  # END!
 
@@ -136,8 +136,11 @@ def parse_capture(blob: bytes) -> E4dCapture:
 
     if capture.version != VERSION:
         raise ValueError(f"unsupported S64E version {capture.version}; expected {VERSION}")
-    if capture.test_id != TEST_ID:
-        raise ValueError(f"wrong S64E test id 0x{capture.test_id:08X}; expected E4D1")
+    if capture.test_id not in TEST_IDS:
+        raise ValueError(
+            f"unsupported S64E test id 0x{capture.test_id:08X}; "
+            f"expected one of {', '.join(TEST_IDS.values())}"
+        )
     if capture.complete != 1:
         raise ValueError("S64E capture is not marked complete; do not interpret a partial save")
     if capture.record_size != RECORD_SIZE:
@@ -223,7 +226,7 @@ def render_text(c: E4dCapture, rows: list[tuple[int, int]] | None = None) -> str
     lines = [
         "Sodium64 real-N64 E4d resident color-math capture",
         f"  save format:       {c.capture_format}",
-        f"  test/version:      E4D1 / {c.version}",
+        f"  test/version:      {TEST_IDS[c.test_id]} / {c.version}",
         f"  result:            {'PASS' if c.passed else 'FAIL'}",
         f"  guest counter:     {c.baseline_counter} -> {c.final_counter} (delta {c.counter_delta})",
         f"  framebuffer:       0x{c.framebuffer:08X}",

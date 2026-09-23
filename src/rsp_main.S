@@ -652,6 +652,10 @@ e4b_main_addr_ready:
     // E4d width proof: stream the validated E4c 8x8 vector kernel across all
     // 32 active tiles. The four RDRAM bases advance together by 16 bytes while
     // the existing 2D DMA keeps the 560-byte row stride / 544-byte skip.
+    // Diagnostic child: archive each tile's 64-byte mask contiguously into the
+    // already-seeded/captured E2A main-after scratch. The second band may
+    // overwrite the first; that is intentional and sufficient for localization.
+    li s6, 0xA00EA000
     li s5, 32
 e4d_tile_loop:
     // Gather both metadata planes. Reduce each 8-pixel row in parallel to the
@@ -687,6 +691,15 @@ e4c_mask_row:
     addi t4, t4, -1
     bnez t4, e4c_mask_row
     nop
+
+    // Diagnostic-only archive: one dense 64-byte block per tile, tile-major.
+    // a2=63 encodes a single 64-byte RSP DMA transfer.
+    li a0, TEXTURE
+    move a1, s6
+    li a2, 63
+    jal dma_write
+    nop
+    addi s6, s6, 64
 
     // Reuse the two 128-byte buffers for raw Main/Sub color.
     li a0, SCRN_DATA

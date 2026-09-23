@@ -232,22 +232,6 @@ jobs:
           s = s.replace(needle, repl, 1)
 
           needle = (
-              "    addr = SR[base] + offset;\n"
-              "    DMEM[BES(addr + 0) & 0x00000FFFul] = SR_B(rt, 0);\n"
-          )
-          repl = (
-              "    addr = SR[base] + offset;\n"
-              "    if ((addr & 0x00000FFFu) == 0x00000B64u) {\n"
-              "        fprintf(stderr, \"S64_CXD4_BANDSTART_SW value=%08X rsp_pc=%08X k0=%08X k1=%08X rt=%u\\n\",\n"
-              "            SR[rt], s64_trace_pc, SR[26], SR[27], rt);\n"
-              "        fflush(stderr);\n"
-              "    }\n"
-              "    DMEM[BES(addr + 0) & 0x00000FFFul] = SR_B(rt, 0);\n"
-          )
-          assert s.count(needle) == 1
-          s = s.replace(needle, repl, 1)
-
-          needle = (
               "PROFILE_MODE int BNE(u32 inst, u32 PC)\n"
               "{\n"
               "    const unsigned int rs = (inst >> 21) % (1 << 5);\n"
@@ -312,6 +296,11 @@ jobs:
           )
           repl = (
               "    addr = SR[base] + offset;\n"
+              "    if ((addr & 0x00000FFFu) == 0x00000B64u) {\n"
+              "        fprintf(stderr, \"S64_CXD4_BANDSTART_SW value=%08X rsp_pc=%08X k0=%08X k1=%08X rt=%u\\n\",\n"
+              "            SR[rt], s64_trace_pc, SR[26], SR[27], rt);\n"
+              "        fflush(stderr);\n"
+              "    }\n"
               "    if ((addr & 0x00000FFFu) == 0x00000C4Cu) {\n"
               "        fprintf(stderr, \"S64_CXD4_RDP_FRAME_TARGET_STORE value=%08X rsp_pc=%08X\\n\", SR[rt], s64_trace_pc);\n"
               "        fflush(stderr);\n"

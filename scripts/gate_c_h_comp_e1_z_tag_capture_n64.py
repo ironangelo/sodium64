@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture/classify Gate-C E4a 2D DMA gather/scatter proof."""
+"""Capture/classify Gate-C E4b corrected same-band ownership proof."""
 
 from __future__ import annotations
 
@@ -65,6 +65,7 @@ E2F_BACKDROP_BLUE_RGBA5551 = 0x003F
 E3A_ADD_YELLOW_RGBA5551 = 0xFFC1
 E3B_DIM_BLUE_RGBA5551 = 0x001F
 E3B_DIM_RED_RGBA5551 = 0x7801
+E4B_DIM_YELLOW_RGBA5551 = 0x7BC1
 E3B_PREBRIGHT_RED_RGBA5551 = 0xF001
 E2F_MAIN_SENTINEL_WORD = 0x294B
 E2F_FRAMEBUFFER_ADDRS = (0xA00F2300, 0xA0113000, 0xA0133D00)
@@ -747,6 +748,253 @@ def classify_e4a_dma2d_band_stream(
     return base
 
 
+def classify_e4b_same_band_row_correct(
+    queue1: bytes,
+    queue2: bytes,
+    color_final: bytes,
+    color_prefix_guard: bytes,
+    color_suffix_guard: bytes,
+    framebuffer: bytes,
+    sub_z: bytes,
+    sub_z_prefix: bytes,
+    sub_z_suffix: bytes,
+    main_z: bytes,
+    main_z_prefix: bytes,
+    main_z_suffix: bytes,
+) -> dict[str, object]:
+    """Executable authority for the precommitted row-correct E4b oracle."""
+    carrier = classify_e2f_carrier_sections(queue1, queue2)
+    decoded = {
+        "queue1": decode_section_queue(queue1),
+        "queue2": decode_section_queue(queue2),
+    }
+    brightness_queues: list[str] = []
+    for name in carrier["matching_queues"]:
+        records = decoded[name][:2]
+        if (
+            len(records) == 2
+            and records[0]["stat_flags"] == 0x48
+            and records[1]["stat_flags"] == 0x08
+        ):
+            brightness_queues.append(name)
+    brightness_passed = bool(brightness_queues)
+
+    def words(data: bytes) -> list[int]:
+        return [
+            int.from_bytes(data[i:i + 2], "big")
+            for i in range(0, len(data), 2)
+        ]
+
+    fb_words = words(framebuffer)
+    compact_words = words(color_final)
+    sub_words = words(sub_z)
+    main_words = words(main_z)
+
+    top_border_wrong: list[dict[str, int]] = []
+    for y in range(0, E2B_MAIN_ROW0):
+        for x in range(FB_WIDTH):
+            actual = fb_words[y * FB_WIDTH + x]
+            if actual != E2F_MAIN_SENTINEL_WORD and len(top_border_wrong) < 64:
+                top_border_wrong.append({
+                    "x": x, "y": y,
+                    "actual": actual, "expected": E2F_MAIN_SENTINEL_WORD,
+                })
+
+    tile_wrong: list[dict[str, int]] = []
+    tile_rows: list[dict[str, object]] = []
+    for y in range(E2B_MAIN_ROW0, E2D_MAIN_ROW1):
+        if y <= 14:
+            expected = E4B_DIM_YELLOW_RGBA5551
+        elif y <= 22:
+            expected = E3B_DIM_RED_RGBA5551
+        else:
+            expected = E3B_DIM_BLUE_RGBA5551
+        row_values = []
+        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X0 + 8):
+            actual = fb_words[y * FB_WIDTH + x]
+            row_values.append(actual)
+            if actual != expected and len(tile_wrong) < 64:
+                tile_wrong.append({
+                    "x": x, "y": y,
+                    "actual": actual, "expected": expected,
+                })
+        tile_rows.append({
+            "row": y,
+            "expected": hex(expected),
+            "matching_words": sum(value == expected for value in row_values),
+            "expected_words": 8,
+        })
+
+    compact_wrong: list[dict[str, int]] = []
+    sub_wrong: list[dict[str, int]] = []
+    pair_counts = collections.Counter()
+    compact_hist = collections.Counter()
+    sub_hist = collections.Counter()
+    main_hist = collections.Counter()
+    for y in range(E1C_ROWS):
+        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X1):
+            state = ((x - E1C_ACTIVE_X0) // 8) & 3
+            expected_compact = (
+                BG2_GREEN_RGBA5551 if state in (2, 3)
+                else E2F_BACKDROP_BLUE_RGBA5551
+            )
+            expected_sub = (
+                BOOL_TRUE_TAG_WORD if state in (2, 3)
+                else BOOL_FALSE_TAG_WORD
+            )
+            actual_compact = compact_words[y * FB_WIDTH + x]
+            actual_sub = sub_words[y * FB_WIDTH + x]
+            actual_main = main_words[y * FB_WIDTH + x]
+            compact_hist[actual_compact] += 1
+            sub_hist[actual_sub] += 1
+            main_hist[actual_main] += 1
+            pair_counts[(actual_main, actual_sub)] += 1
+            if actual_compact != expected_compact and len(compact_wrong) < 64:
+                compact_wrong.append({
+                    "x": x, "y": y, "state": state,
+                    "actual": actual_compact, "expected": expected_compact,
+                })
+            if actual_sub != expected_sub and len(sub_wrong) < 64:
+                sub_wrong.append({
+                    "x": x, "y": y, "state": state,
+                    "actual": actual_sub, "expected": expected_sub,
+                })
+
+    # The vertically asymmetric guest deliberately crosses a tile row on the
+    # eighth scanline.  This 8x8 Main-Z signature was frozen before inspecting
+    # the row-correct semantic artifact.
+    main_tile_wrong: list[dict[str, int]] = []
+    for y in range(E1C_ROWS):
+        expected = BOOL_TRUE_TAG_WORD if y < 7 else BOOL_FALSE_TAG_WORD
+        for x in range(E1C_ACTIVE_X0, E1C_ACTIVE_X0 + 8):
+            actual = main_words[y * FB_WIDTH + x]
+            if actual != expected and len(main_tile_wrong) < 64:
+                main_tile_wrong.append({
+                    "x": x, "y": y,
+                    "actual": actual, "expected": expected,
+                })
+
+    compact_border = collections.Counter(
+        compact_words[y * FB_WIDTH + x]
+        for y in range(E1C_ROWS)
+        for x in range(FB_WIDTH)
+        if not (E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1)
+    )
+    sub_border = collections.Counter(
+        sub_words[y * FB_WIDTH + x]
+        for y in range(E1C_ROWS)
+        for x in range(FB_WIDTH)
+        if not (E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1)
+    )
+    main_border = collections.Counter(
+        main_words[y * FB_WIDTH + x]
+        for y in range(E1C_ROWS)
+        for x in range(FB_WIDTH)
+        if not (E1C_ACTIVE_X0 <= x < E1C_ACTIVE_X1)
+    )
+    color_guards_ok = (
+        color_prefix_guard == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+        and color_suffix_guard == bytes([SUFFIX_BYTE]) * E1C_GUARD_SIZE
+    )
+    sub_guards_ok = (
+        sub_z_prefix == bytes([PREFIX_BYTE]) * E1C_GUARD_SIZE
+        and sub_z_suffix
+        == SENTINEL_WORD.to_bytes(2, "big") * (E1C_GUARD_SIZE // 2)
+    )
+    main_guards_ok = (
+        main_z_prefix == bytes([E2G_SECOND_Z_PREFIX_BYTE]) * E1C_GUARD_SIZE
+        and main_z_suffix == bytes([E2G_SECOND_Z_SUFFIX_BYTE]) * E1C_GUARD_SIZE
+    )
+
+    expected_pairs = collections.Counter({
+        (BOOL_FALSE_TAG_WORD, BOOL_FALSE_TAG_WORD): 512,
+        (BOOL_TRUE_TAG_WORD, BOOL_FALSE_TAG_WORD): 512,
+        (BOOL_FALSE_TAG_WORD, BOOL_TRUE_TAG_WORD): 512,
+        (BOOL_TRUE_TAG_WORD, BOOL_TRUE_TAG_WORD): 512,
+    })
+    controls_passed = bool(
+        not compact_wrong
+        and not sub_wrong
+        and not main_tile_wrong
+        and compact_hist[E2F_BACKDROP_BLUE_RGBA5551] == 1024
+        and compact_hist[BG2_GREEN_RGBA5551] == 1024
+        and sum(compact_hist.values()) == 2048
+        and sub_hist[BOOL_FALSE_TAG_WORD] == 1024
+        and sub_hist[BOOL_TRUE_TAG_WORD] == 1024
+        and sum(sub_hist.values()) == 2048
+        and main_hist[BOOL_FALSE_TAG_WORD] == 1024
+        and main_hist[BOOL_TRUE_TAG_WORD] == 1024
+        and sum(main_hist.values()) == 2048
+        and pair_counts == expected_pairs
+        and compact_border[SENTINEL_WORD] == 192
+        and sub_border[SENTINEL_WORD] == 192
+        and main_border[SENTINEL_WORD] == 192
+        and color_guards_ok
+        and sub_guards_ok
+        and main_guards_ok
+    )
+    same_band_passed = bool(not top_border_wrong and not tile_wrong)
+    passed = bool(
+        carrier["passed"]
+        and brightness_passed
+        and same_band_passed
+        and controls_passed
+    )
+
+    return {
+        "classification": (
+            "E4B_SAME_BAND_ROW_CORRECT_VALIDATED"
+            if passed else "E4B_SAME_BAND_ROW_CORRECT_FAILED"
+        ),
+        "passed": passed,
+        "carrier": carrier,
+        "brightness": {
+            "passed": brightness_passed,
+            "matching_queues": brightness_queues,
+            "expected_stat_flags": ["0x48", "0x08"],
+        },
+        "same_band": {
+            "passed": same_band_passed,
+            "top_border_mismatches": top_border_wrong,
+            "tile_mismatches": tile_wrong,
+            "tile_rows": tile_rows,
+            "top_border_expected_word": hex(E2F_MAIN_SENTINEL_WORD),
+            "tile_x_range": [E1C_ACTIVE_X0, E1C_ACTIVE_X0 + 8],
+        },
+        "controls": {
+            "passed": controls_passed,
+            "compact_blue_words": compact_hist[E2F_BACKDROP_BLUE_RGBA5551],
+            "compact_green_words": compact_hist[BG2_GREEN_RGBA5551],
+            "sub_false_words": sub_hist[BOOL_FALSE_TAG_WORD],
+            "sub_true_words": sub_hist[BOOL_TRUE_TAG_WORD],
+            "main_false_words": main_hist[BOOL_FALSE_TAG_WORD],
+            "main_true_words": main_hist[BOOL_TRUE_TAG_WORD],
+            "pairwise": {
+                f"{main:04x}/{sub:04x}": count
+                for (main, sub), count in sorted(pair_counts.items())
+            },
+            "compact_border_sentinel_words": compact_border[SENTINEL_WORD],
+            "sub_border_sentinel_words": sub_border[SENTINEL_WORD],
+            "main_border_sentinel_words": main_border[SENTINEL_WORD],
+            "color_guards_ok": color_guards_ok,
+            "sub_guards_ok": sub_guards_ok,
+            "main_guards_ok": main_guards_ok,
+            "compact_mismatches": compact_wrong,
+            "sub_mismatches": sub_wrong,
+            "main_tile_mismatches": main_tile_wrong,
+        },
+        "constants": {
+            "dim_yellow_rgba5551": hex(E4B_DIM_YELLOW_RGBA5551),
+            "dim_red_rgba5551": hex(E3B_DIM_RED_RGBA5551),
+            "dim_blue_rgba5551": hex(E3B_DIM_BLUE_RGBA5551),
+            "raw_blue_rgba5551": hex(E2F_BACKDROP_BLUE_RGBA5551),
+            "raw_green_rgba5551": hex(BG2_GREEN_RGBA5551),
+            "false_tag": hex(BOOL_FALSE_TAG_WORD),
+            "true_tag": hex(BOOL_TRUE_TAG_WORD),
+        },
+    }
+
+
 def classify_e2e_z_band_alignment(
     queue1: bytes,
     queue2: bytes,
@@ -1273,9 +1521,9 @@ def main() -> int:
         (out / "section_queue1.bin").write_bytes(section_queue1)
         (out / "section_queue2.bin").write_bytes(section_queue2)
 
-        # E4a authority keeps the full validated E3b contract and additionally
-        # requires exact 2D DMA gather/scatter bytes in the captured buffers.
-        result = classify_e4a_dma2d_band_stream(
+        # E4b authority encodes the already-precommitted corrected-row
+        # same-band oracle. Runtime, guest, targets and capture timing are frozen.
+        result = classify_e4b_same_band_row_correct(
             section_queue1,
             section_queue2,
             color_final_b,
@@ -1288,8 +1536,6 @@ def main() -> int:
             second_z,
             second_z_prefix,
             second_z_suffix,
-            main_before,
-            main_after,
         )
         result["capture_state"] = {
             **state,
@@ -1303,7 +1549,7 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         if not result["passed"]:
-            raise RuntimeError("E4a DMA2D gather/scatter classifier failed; see result.json")
+            raise RuntimeError("E4b row-correct same-band classifier failed; see result.json")
 
         try:
             client.request("D")

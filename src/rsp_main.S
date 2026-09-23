@@ -143,10 +143,11 @@ e4c_vec_carryhi: .hword 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 
 e4c_vec_half:    .hword 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE
 e4c_vec_one:     .hword 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001
 e4c_vec_three:   .hword 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003
-e4c_vec_end:
+e4c_vec_shr10:   .hword 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040
+e4c_vec_shr11:   .hword 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020
 
-// Gap to align vector data to the end of DMEM
-.byte 0:(VEC_DATA - e4c_vec_end)
+// Audited fixed gap: constants occupy 0xE80..0xEFF; VEC_DATA stays at 0xF70.
+.byte 0:0x70
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -161,11 +162,6 @@ vec_data:
     .hword 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 // Zero
 
 .text
-
-// v24 already holds the V_SHIFT8 table loaded by main. Define libdragon's
-// vector shift pseudo-ops against that resident register without emitting a
-// second runtime load.
-setup_vsll8 $v24, 0
 
 main:
     // Load the constants for vector math
@@ -650,6 +646,8 @@ e4b_main_addr_ready:
     lqv $v19, 0, 0x30, t9 // 0x7BDE half-brightness component mask
     lqv $v20, 0, 0x40, t9 // 0x0001 RGBA alpha
     lqv $v21, 0, 0x50, t9 // 0x0003 both metadata booleans true
+    lqv $v22, 0, 0x60, t9 // 0x0040: unsigned >>10 via VMUDL
+    lqv $v15, 0, 0x70, t9 // 0x0020: unsigned >>11 via VMUDL
 
     // Gather both metadata planes. Reduce each 8-pixel row in parallel to the
     // same 64-byte 2-bit mask used by E4b: bit0=main eligible, bit1=sub present.
@@ -673,8 +671,8 @@ e4c_mask_row:
     lqv $v01, 0, 0, t1
     vxor $v00, $v00, $v16, 0 // 0x0400/0x0C00 -> 0/0x0800
     vxor $v01, $v01, $v16, 0
-    vsrl8 $v00, $v00, 11     // main true -> bit0
-    vsrl8 $v01, $v01, 10     // sub true -> bit1
+    vmudl $v00, $v00, $v15, 0 // main 0x0800 -> bit0 (>>11)
+    vmudl $v01, $v01, $v22, 0 // sub  0x0800 -> bit1 (>>10)
     vor $v00, $v00, $v01, 0
     vmudn $v00, $v00, $v25, 0 // move 0..3 to upper byte for SPV
     spv $v00, 0, 0, t2
@@ -707,9 +705,10 @@ e4c_color_row:
     lqv $v00, 0, 0, t0
     lqv $v01, 0, 0, t1
     lpv $v02, 0, 0, t2
-    vsrl $v00, $v00, 1       // RGBA5551 -> raw RGB555
-    vsrl $v01, $v01, 1
-    vsrl $v02, $v02, 8       // byte mask -> 0..3 halfwords
+    // Numeric element 8 broadcasts v24 lane0=0x8000: VMUDL => logical >>1.
+    vmudl $v00, $v00, $v24, 8 // RGBA5551 -> raw RGB555
+    vmudl $v01, $v01, $v24, 8
+    vmudl $v02, $v02, $v25, 0 // uniform 0x0100: byte mask -> 0..3 (>>8)
 
     // Full saturating ADD on all eight raw RGB555 lanes.
     vxor $v03, $v00, $v01, 0
@@ -718,7 +717,8 @@ e4c_color_row:
     vsubc $v05, $v04, $v03, 0
     vand $v05, $v05, $v18, 0
     vsubc $v04, $v04, $v05, 0
-    vsrl $v06, $v05, 5
+    // Numeric element 12 broadcasts v24 lane4=0x0800: VMUDL => logical >>5.
+    vmudl $v06, $v05, $v24, 12
     vsubc $v05, $v05, $v06, 0
     vor $v04, $v04, $v05, 0
 

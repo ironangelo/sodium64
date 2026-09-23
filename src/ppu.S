@@ -416,6 +416,14 @@ update_frame:
     nop
 
 .align 5
+update_window_frame:
+    // Window edges are raster-sensitive: mark dirty and clear the section countdown
+    li t0, 0x100
+    sh t0, sect_status
+    jr ra
+    nop
+
+.align 5
 update_fill:
     // Load the first fill color and both destinations
     lhu t1, coldata
@@ -1462,7 +1470,7 @@ write_wh0: // a1: value
     // Write to the WH0 register and update the frame if changed
     la t1, whx + 0
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1472,7 +1480,7 @@ write_wh1: // a1: value
     // Write to the WH1 register and update the frame if changed
     la t1, whx + 1
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1482,7 +1490,7 @@ write_wh2: // a1: value
     // Write to the WH2 register and update the frame if changed
     la t1, whx + 2
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1492,7 +1500,7 @@ write_wh3: // a1: value
     // Write to the WH3 register and update the frame if changed
     la t1, whx + 3
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop

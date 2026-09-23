@@ -134,8 +134,19 @@ fillrec_mask: .word 0xFF000FFF
 ldblk_bits: .word 0x01000200
 mode7_mask: .word 0x0003FFFF
 
+// E4c proof-local uniform vector constants. They live in the previously unused
+// alignment gap and do not move the fixed VEC_DATA ABI at 0xF70.
+.align 4
+e4c_vec_false:   .hword 0x0400, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400
+e4c_vec_carrylo: .hword 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421
+e4c_vec_carryhi: .hword 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420
+e4c_vec_half:    .hword 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE
+e4c_vec_one:     .hword 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001
+e4c_vec_three:   .hword 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003
+e4c_vec_end:
+
 // Gap to align vector data to the end of DMEM
-.byte 0:(VEC_DATA - PRIO_CHECKS)
+.byte 0:(VEC_DATA - e4c_vec_end)
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -150,6 +161,11 @@ vec_data:
     .hword 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 // Zero
 
 .text
+
+// v24 already holds the V_SHIFT8 table loaded by main. Define libdragon's
+// vector shift pseudo-ops against that resident register without emitting a
+// second runtime load.
+setup_vsll8 $v24, 0
 
 main:
     // Load the constants for vector math
@@ -624,9 +640,19 @@ e4b_main_addr_ready:
     li s2, 0xA00C2018   // compact Main boolean-Z row0, x=12
     li s3, 0xA00C0018   // compact Sub boolean-Z row0, x=12
     li s4, 0x2200700F   // 16 B * 8 rows, skip 544
-    li v0, 0x0C00       // boolean true
 
-    // Gather both metadata planes and reduce them to a 64-byte 2-bit mask.
+    // E4c vector semantic twin: load six uniform constants from the proof-local
+    // DMEM gap. v16-v21 are scratch here; only v23-v31 are resident constants.
+    li t9, e4c_vec_false
+    lqv $v16, 0, 0x00, t9 // 0x0400 false-tag baseline
+    lqv $v17, 0, 0x10, t9 // 0x0421 packed-RGB carry helper
+    lqv $v18, 0, 0x20, t9 // 0x8420 packed-RGB saturation mask
+    lqv $v19, 0, 0x30, t9 // 0x7BDE half-brightness component mask
+    lqv $v20, 0, 0x40, t9 // 0x0001 RGBA alpha
+    lqv $v21, 0, 0x50, t9 // 0x0003 both metadata booleans true
+
+    // Gather both metadata planes. Reduce each 8-pixel row in parallel to the
+    // same 64-byte 2-bit mask used by E4b: bit0=main eligible, bit1=sub present.
     li a0, SCRN_DATA
     move a1, s2
     move a2, s4
@@ -641,25 +667,22 @@ e4b_main_addr_ready:
     li t0, SCRN_DATA
     li t1, CHAR_DATA
     li t2, TEXTURE
-    li t4, 64
-e4b_mask_loop:
-    li t7, 0
-    lhu t5, 0(t0)
-    bne t5, v0, e4b_mask_no_main
-    nop
-    ori t7, t7, 1
-e4b_mask_no_main:
-    lhu t6, 0(t1)
-    bne t6, v0, e4b_mask_no_sub
-    nop
-    ori t7, t7, 2
-e4b_mask_no_sub:
-    sb t7, 0(t2)
-    addi t0, t0, 2
-    addi t1, t1, 2
-    addi t2, t2, 1
+    li t4, 8
+e4c_mask_row:
+    lqv $v00, 0, 0, t0
+    lqv $v01, 0, 0, t1
+    vxor $v00, $v00, $v16, 0 // 0x0400/0x0C00 -> 0/0x0800
+    vxor $v01, $v01, $v16, 0
+    vsrl8 $v00, $v00, 11     // main true -> bit0
+    vsrl8 $v01, $v01, 10     // sub true -> bit1
+    vor $v00, $v00, $v01, 0
+    vmudn $v00, $v00, $v25, 0 // move 0..3 to upper byte for SPV
+    spv $v00, 0, 0, t2
+    addi t0, t0, 16
+    addi t1, t1, 16
+    addi t2, t2, 8
     addi t4, t4, -1
-    bnez t4, e4b_mask_loop
+    bnez t4, e4c_mask_row
     nop
 
     // Reuse the two 128-byte buffers for raw Main/Sub color.
@@ -674,43 +697,48 @@ e4b_mask_no_sub:
     jal dma_read
     nop
 
+    // One vector iteration now owns one complete 8-pixel row. This is an exact
+    // packed-RGB555 twin of the scalar E4b SWAR formula, not a new approximation.
     li t0, SCRN_DATA
     li t1, CHAR_DATA
     li t2, TEXTURE
-    li t4, 64
-    li v1, 3
-e4b_color_loop:
-    lhu t8, 0(t0)
-    srl t8, t8, 1
-    lbu t7, 0(t2)
-    bne t7, v1, e4b_apply_brightness
-    nop
+    li t4, 8
+e4c_color_row:
+    lqv $v00, 0, 0, t0
+    lqv $v01, 0, 0, t1
+    lpv $v02, 0, 0, t2
+    vsrl $v00, $v00, 1       // RGBA5551 -> raw RGB555
+    vsrl $v01, $v01, 1
+    vsrl $v02, $v02, 8       // byte mask -> 0..3 halfwords
 
-    // Full saturating ADD on raw RGB555 when main-eligible + sub-present.
-    lhu t5, 0(t1)
-    srl t5, t5, 1
-    xor t7, t8, t5
-    andi t7, t7, 0x0421
-    add t6, t8, t5
-    sub t9, t6, t7
-    andi t9, t9, 0x8420
-    sub t6, t6, t9
-    srl t7, t9, 5
-    sub t9, t9, t7
-    or t8, t6, t9
+    // Full saturating ADD on all eight raw RGB555 lanes.
+    vxor $v03, $v00, $v01, 0
+    vand $v03, $v03, $v17, 0
+    vaddc $v04, $v00, $v01, 0
+    vsubc $v05, $v04, $v03, 0
+    vand $v05, $v05, $v18, 0
+    vsubc $v04, $v04, $v05, 0
+    vsrl $v06, $v05, 5
+    vsubc $v05, $v05, $v06, 0
+    vor $v04, $v04, $v05, 0
 
-e4b_apply_brightness:
-    andi t8, t8, 0x7BDE
-    srl t8, t8, 1
-    sll t8, t8, 1
-    ori t8, t8, 1
-    sh t8, 0(t0)
+    // Select ADD only where both booleans are true. Clear carry state before
+    // VEQ so the compare cannot inherit VADDC/VSUBC flags from the SWAR path.
+    vadd $v07, $v31, $v31, 0
+    veq $v07, $v02, $v21, 0
+    vmrg $v00, $v04, $v00, 0
 
-    addi t0, t0, 2
-    addi t1, t1, 2
-    addi t2, t2, 1
+    // E4b's scalar half-brightness sequence is numerically equivalent to
+    // (RGB555 & 0x7BDE) | alpha once mapped back to RGBA5551.
+    vand $v00, $v00, $v19, 0
+    vor $v00, $v00, $v20, 0
+    sqv $v00, 0, 0, t0
+
+    addi t0, t0, 16
+    addi t1, t1, 16
+    addi t2, t2, 8
     addi t4, t4, -1
-    bnez t4, e4b_color_loop
+    bnez t4, e4c_color_row
     nop
 
     li a0, SCRN_DATA

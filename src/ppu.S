@@ -167,6 +167,9 @@ ts: .byte 0
 tm: .byte 0
 tsw: .byte 0
 tmw: .byte 0
+#ifdef SODIUM64_OVERLAY_HW_VERIFY
+.globl bg_mode
+#endif
 bg_mode: .byte 0
 stat_flags: .byte 0
 split_line: .byte 0

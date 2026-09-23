@@ -649,6 +649,11 @@ e4b_main_addr_ready:
     lqv $v22, 0, 0x60, t9 // 0x0040: unsigned >>10 via VMUDL
     lqv $v15, 0, 0x70, t9 // 0x0020: unsigned >>11 via VMUDL
 
+    // E4d width proof: stream the validated E4c 8x8 vector kernel across all
+    // 32 active tiles. The four RDRAM bases advance together by 16 bytes while
+    // the existing 2D DMA keeps the 560-byte row stride / 544-byte skip.
+    li s5, 32
+e4d_tile_loop:
     // Gather both metadata planes. Reduce each 8-pixel row in parallel to the
     // same 64-byte 2-bit mask used by E4b: bit0=main eligible, bit1=sub present.
     li a0, SCRN_DATA
@@ -746,6 +751,16 @@ e4c_color_row:
     move a2, s4
     jal dma_write
     nop
+
+    // Advance one 8-pixel RGB16 tile horizontally on Main, compact Sub color,
+    // Main boolean-Z and Sub boolean-Z. s0 advances in the branch delay slot;
+    // its final post-loop value is intentionally dead.
+    addi s1, s1, 16
+    addi s2, s2, 16
+    addi s3, s3, 16
+    addi s5, s5, -1
+    bnez s5, e4d_tile_loop
+    addi s0, s0, 16
 
 e4b_band_comp_done:
     // Only the controlled first 0..16 section is subdivided. If its true end

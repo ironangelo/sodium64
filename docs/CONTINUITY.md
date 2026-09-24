@@ -7,6 +7,10 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-24 UTC)
 
 
+- **CORRECTION — first x255 oracle fix commit was content-no-op:** commit **38ddf21ec33b6ea9810545f0229ba44ce5870177** did not actually change the two edge assertions because the edit searched for literal `\\n` text rather than real line breaks. Trigger head **b0102d79...** therefore reran the unchanged bad assertion and **36066913608 FAILED** with the identical W1 `selected x255` traceback. This second red is the same **REJECTED TOOLING ERROR**, not independent runtime evidence. Exact corrected script head is now **11265e13ef4b16a9a9a3c27ad2ac0c69ef17a982**: both inverted W1/W2 x255 controls now ask for the **visible complement** (`want_selected=False`), matching the already-validated pinned-ares contract. Runtime assembly remains byte-identical to30e327; next authority is the semantic workflow on11265e (or a tooling-only descendant) plus exact generic gate.
+
+
+
 - **WINDOW ORACLE FIRST RUN REJECTED AS TEST-EXPECTATION ERROR / runtime untouched:** dedicated **Gate C Window Layer Runtime 36066599450 FAILED** only after completing the full exhaustive event-scan comparison; traceback is in `prove_full_range_edges()` at the hand-written W1 x255 assertion. The assertion incorrectly asked for the **selected/masked** set of inverted W1 (`want_selected=True`) to equal `[255,255]`; pinned ares semantics make inverted W1 selected outside the interval, while the **layer-visible complement** is the legal `[255,255]` singleton. The same typo exists for W2. This is **REJECTED TOOLING ERROR**, not evidence against `calc_window_spans`; no runtime/source assembly change is authorized from this failure. Fix only those two edge calls from selected→visible (`want_selected=False`) and rerun unchanged exhaustive/source oracle. The preceding 524,288 topology comparisons reached completion without mismatch before the edge assertion fired.
 
 

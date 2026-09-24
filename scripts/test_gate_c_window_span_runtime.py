@@ -132,17 +132,17 @@ def prove_semantics() -> int:
 
 
 def prove_full_range_edges() -> None:
-    # W1 inverted singleton at x=255 => selected interior, visible complement.
+    # W1 inverted singleton at x=255 => selected outside, visible interior.
     cfg = ref.decode_select(0x3, 0)
     bounds = (255, 255, 0, 0)
-    if rsp_style_spans(256, cfg, bounds, True) != ((255, 255),):
-        raise AssertionError("W1 selected x255 singleton lost")
+    if rsp_style_spans(256, cfg, bounds, False) != ((255, 255),):
+        raise AssertionError("W1 visible x255 singleton lost")
 
     # W2 inverted singleton at x=255.
     cfg = ref.decode_select(0xC, 0)
     bounds = (0, 0, 255, 255)
-    if rsp_style_spans(256, cfg, bounds, True) != ((255, 255),):
-        raise AssertionError("W2 selected x255 singleton lost")
+    if rsp_style_spans(256, cfg, bounds, False) != ((255, 255),):
+        raise AssertionError("W2 visible x255 singleton lost")
 
     # Reversed W1 contains nothing, so visible complement is full-screen.
     cfg = ref.decode_select(0x2, 0)

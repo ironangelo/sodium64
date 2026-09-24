@@ -1,0 +1,41 @@
+name: Gate C Audit Cumulative Repair
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-audit-cumulative-repair
+    paths:
+      - src/ppu.S
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - src/defines.h
+      - scripts/test_gate_c_h_comp_window_contract.py
+      - scripts/test_gate_c_window_span_runtime.py
+      - scripts/test_gate_c_color_window_runtime.py
+      - scripts/test_gate_c_raster_section_latency.py
+      - .github/workflows/gate-c-audit-cumulative-repair.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cumulative-audit-repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile host oracles
+        run: |
+          python3 -m py_compile scripts/test_gate_c_h_comp_window_contract.py
+          python3 -m py_compile scripts/test_gate_c_window_span_runtime.py
+          python3 -m py_compile scripts/test_gate_c_color_window_runtime.py
+          python3 -m py_compile scripts/test_gate_c_raster_section_latency.py
+
+      - name: Prove exact color-window runtime
+        run: python3 scripts/test_gate_c_color_window_runtime.py
+
+      - name: Prove raster-sensitive section latency
+        run: python3 scripts/test_gate_c_raster_section_latency.py

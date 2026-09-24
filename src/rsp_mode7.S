@@ -135,12 +135,12 @@ mode7_mask: .word 0x0003FFFF
 .byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
 overlay_main_src: .word 0
 overlay_mode7_src: .word 0
+hcomp_raw_palette_ptrs: .word 0, 0
 
-// Gate-C H-COMP resident-capacity proof. Keep E90/E94 owned by the overlay
-// source pointers, align the remaining vector constants at EA0, and preserve
-// the fixed VEC_DATA ABI at F70. The false-tag baseline itself comes from the
-// already-resident v24 lane5 (0x0400), so it consumes no live DMEM.
-.byte 0:0x8
+// Gate-C H-COMP resident-capacity proof. Keep E90/E94 owned by the overlay,
+// use E98/E9C for the published raw-palette pair, and preserve the fixed
+// vector-constant start at EA0 plus VEC_DATA ABI at F70. The false-tag baseline
+// itself comes from resident v24 lane5 (0x0400).
 hcomp_vec_carrylo: .hword 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421
 hcomp_vec_carryhi: .hword 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420
 hcomp_vec_half:    .hword 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE

@@ -219,6 +219,9 @@
 // Renderer overlay source pointers live in the audited scratch gap.
 #define OVERLAY_MAIN_SRC 0xE90
 #define OVERLAY_MODE7_SRC 0xE94
+// Double-buffered raw-palette queue pointers. Future consumers index this pair
+// with the same 0/4 frame-slot offset used by the visible palette pair.
+#define HCOMP_RAW_PALETTE_PTRS 0xE98
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached

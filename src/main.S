@@ -175,6 +175,19 @@ pi_wait1:
     li t0, HCOMP_RAW_PALETTE_QUEUE2
     sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS + 4)
 
+    // PROOF-ONLY: Mupen's debugger cannot dump SP DMEM. Mirror the four
+    // publication words into the audited RDRAM gap below the current lowest
+    // Color Image so CI can inspect them without changing production state.
+    li t1, 0xA00F0000
+    lw t2, DMEM(OVERLAY_MAIN_SRC)
+    sw t2, 0x00(t1)
+    lw t2, DMEM(OVERLAY_MODE7_SRC)
+    sw t2, 0x04(t1)
+    lw t2, DMEM(HCOMP_RAW_PALETTE_PTRS)
+    sw t2, 0x08(t1)
+    lw t2, DMEM(HCOMP_RAW_PALETTE_PTRS + 4)
+    sw t2, 0x0C(t1)
+
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_PROFILE

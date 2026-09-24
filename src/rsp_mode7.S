@@ -135,7 +135,20 @@ mode7_mask: .word 0x0003FFFF
 .byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
 overlay_main_src: .word 0
 overlay_mode7_src: .word 0
-.byte 0:(VEC_DATA - (OVERLAY_MODE7_SRC + 4))
+
+// Gate-C H-COMP resident-capacity proof. Keep E90/E94 owned by the overlay
+// source pointers, align the remaining vector constants at EA0, and preserve
+// the fixed VEC_DATA ABI at F70. The false-tag baseline itself comes from the
+// already-resident v24 lane5 (0x0400), so it consumes no live DMEM.
+.byte 0:0x8
+hcomp_vec_carrylo: .hword 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421
+hcomp_vec_carryhi: .hword 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420
+hcomp_vec_half:    .hword 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE
+hcomp_vec_one:     .hword 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001
+hcomp_vec_three:   .hword 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003
+hcomp_vec_shr10:   .hword 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040
+hcomp_vec_shr11:   .hword 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020
+.byte 0:0x60
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -1438,3 +1451,121 @@ overlay_load_main:
     li a2, 0x3E7
     b draw_bg
     move t0, v0
+// Gate-C H-COMP resident-capacity proof.
+//
+// This routine is intentionally unreachable in this batch. It is the validated
+// E4d 32-tile vector reduction + ADD/selection/writeback kernel factored behind
+// a future call boundary so we can measure whether it can coexist with the
+// fixed renderer slot. Future caller contract: s0=Main color, s1=Sub color,
+// s2=Main boolean-Z, s3=Sub boolean-Z, s4=2D DMA word. s0-s5/t*/v15-v22 are
+// scratch. Runtime wiring/operand production is deliberately deferred.
+hcomp_vector_band_probe:
+    li t9, hcomp_vec_carrylo
+    vor $v16, $v31, $v24, 13 // 0x0400 false-tag baseline from resident v24 lane5
+    lqv $v17, 0, 0x00, t9 // 0x0421 packed-RGB carry helper
+    lqv $v18, 0, 0x10, t9 // 0x8420 packed-RGB saturation mask
+    lqv $v19, 0, 0x20, t9 // 0x7BDE half-brightness component mask
+    lqv $v20, 0, 0x30, t9 // 0x0001 RGBA alpha
+    lqv $v21, 0, 0x40, t9 // 0x0003 both metadata booleans true
+    lqv $v22, 0, 0x50, t9 // 0x0040: unsigned >>10 via VMUDL
+    lqv $v15, 0, 0x60, t9 // 0x0020: unsigned >>11 via VMUDL
+
+    li s5, 32
+hcomp_probe_tile_loop:
+    // Gather and reduce Main/Sub metadata to the 64-byte 2-bit tile mask.
+    li a0, SCRN_DATA
+    move a1, s2
+    move a2, s4
+    jal dma_read
+    nop
+    li a0, CHAR_DATA
+    move a1, s3
+    move a2, s4
+    jal dma_read
+    nop
+
+    li t0, SCRN_DATA
+    li t1, CHAR_DATA
+    li t2, TEXTURE
+    li t4, 8
+hcomp_probe_mask_row:
+    lqv $v00, 0, 0, t0
+    lqv $v01, 0, 0, t1
+    vxor $v00, $v00, $v16, 0
+    vxor $v01, $v01, $v16, 0
+    vmudl $v00, $v00, $v15, 0
+    vmudl $v01, $v01, $v22, 0
+    vor $v00, $v00, $v01, 0
+    vmudn $v00, $v00, $v25, 0
+    spv $v00, 0, 0, t2
+    addi t0, t0, 16
+    addi t1, t1, 16
+    addi t2, t2, 8
+    addi t4, t4, -1
+    bnez t4, hcomp_probe_mask_row
+    nop
+
+    // Reuse the two 128-byte DMEM buffers for raw Main/Sub color.
+    li a0, SCRN_DATA
+    move a1, s0
+    move a2, s4
+    jal dma_read
+    nop
+    li a0, CHAR_DATA
+    move a1, s1
+    move a2, s4
+    jal dma_read
+    nop
+
+    li t0, SCRN_DATA
+    li t1, CHAR_DATA
+    li t2, TEXTURE
+    li t4, 8
+hcomp_probe_color_row:
+    lqv $v00, 0, 0, t0
+    lqv $v01, 0, 0, t1
+    lpv $v02, 0, 0, t2
+    vmudl $v00, $v00, $v24, 8
+    vmudl $v01, $v01, $v24, 8
+    vmudl $v02, $v02, $v25, 0
+
+    vxor $v03, $v00, $v01, 0
+    vand $v03, $v03, $v17, 0
+    vaddc $v04, $v00, $v01, 0
+    vsubc $v05, $v04, $v03, 0
+    vand $v05, $v05, $v18, 0
+    vsubc $v04, $v04, $v05, 0
+    vmudl $v06, $v05, $v24, 12
+    vsubc $v05, $v05, $v06, 0
+    vor $v04, $v04, $v05, 0
+
+    vadd $v07, $v31, $v31, 0
+    veq $v07, $v02, $v21, 0
+    vmrg $v00, $v04, $v00, 0
+    vand $v00, $v00, $v19, 0
+    vor $v00, $v00, $v20, 0
+    sqv $v00, 0, 0, t0
+
+    addi t0, t0, 16
+    addi t1, t1, 16
+    addi t2, t2, 8
+    addi t4, t4, -1
+    bnez t4, hcomp_probe_color_row
+    nop
+
+    li a0, SCRN_DATA
+    move a1, s0
+    move a2, s4
+    jal dma_write
+    nop
+
+    addi s1, s1, 16
+    addi s2, s2, 16
+    addi s3, s3, 16
+    addi s5, s5, -1
+    bnez s5, hcomp_probe_tile_loop
+    addi s0, s0, 16
+
+    jr ra
+    nop
+

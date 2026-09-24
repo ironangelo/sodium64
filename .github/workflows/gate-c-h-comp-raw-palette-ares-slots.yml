@@ -58,10 +58,7 @@ jobs:
           git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
           git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
           cd "$root"
-          python3 - <<'PY'
-from pathlib import Path
-p=Path('ares/n64/system/system.cpp'); s=p.read_text(); old='rsp.recompiler.enabled = value.boolean();'; assert s.count(old)==1; p.write_text(s.replace(old,'rsp.recompiler.enabled = false;',1))
-PY
+          python3 -c "from pathlib import Path; p=Path('ares/n64/system/system.cpp'); s=p.read_text(); old='rsp.recompiler.enabled = value.boolean();'; assert s.count(old)==1; p.write_text(s.replace(old,'rsp.recompiler.enabled = false;',1))"
           .github/scripts/build_sdl.sh
           cmake --preset ubuntu-ci -DARES_CORES=n64
           cmake --build build --parallel "$(nproc)"

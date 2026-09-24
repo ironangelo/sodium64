@@ -1599,7 +1599,9 @@ hcomp_probe_color_row:
     addi s0, s0, 16
 
     jr ra
-    nop\n\n
+    nop
+
+
 // PROOF-ONLY: validate RSP-side raw-palette queue selection and DMA without
 // changing the fixed renderer slot or invoking the dormant H-COMP kernel.
 // F10..F6F is audited padding below VEC_DATA=F70.

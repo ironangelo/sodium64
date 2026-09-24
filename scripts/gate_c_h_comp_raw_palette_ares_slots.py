@@ -20,12 +20,22 @@ def main()->int:
     out=args.output_dir; out.mkdir(parents=True,exist_ok=True)
     c=connect_with_retry("127.0.0.1",args.port,30.0,30.0)
     try:
+        # AwaitGDBClient resumes ares immediately when the TCP client connects.
+        # Re-establish a real stopped state before seeding proof mailboxes.
+        c.sock.sendall(b"\\x03")
+        validate_stop(c._read_packet(),"Initial seed stop")
         supported=c.request("qSupported:multiprocess+;swbreak+;hwbreak+")
         if b"QPassSignals+" not in supported: raise RuntimeError("QPassSignals unsupported")
         if c.request(f"QPassSignals:{ARES_N64_GUEST_SIGNALS}")!=b"OK": raise RuntimeError("QPassSignals rejected")
         c.write_memory(M0,bytes([0xC3])*48); c.write_memory(M4,bytes([0x3C])*48)
-        assert c.read_memory(M0,48,48)==bytes([0xC3])*48
-        assert c.read_memory(M4,48,48)==bytes([0x3C])*48
+        seed0=c.read_memory(M0,48,48); seed4=c.read_memory(M4,48,48)
+        (out/"seed-slot0.bin").write_bytes(seed0)
+        (out/"seed-slot4.bin").write_bytes(seed4)
+        if seed0!=bytes([0xC3])*48:
+            raise RuntimeError(f"slot0 seed verification failed: {seed0.hex()}")
+        if seed4!=bytes([0x3C])*48:
+            raise RuntimeError(f"slot4 seed verification failed: {seed4.hex()}")
+        print("Seed mailboxes verified while target stopped")
         validate_stop(c.continue_then_interrupt(5.0),"Both-slot proof stop")
         data0=c.read_memory(M0,48,48); data4=c.read_memory(M4,48,48)
         if data0==bytes([0xC3])*48 or data4==bytes([0x3C])*48:

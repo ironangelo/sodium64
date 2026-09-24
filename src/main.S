@@ -167,6 +167,14 @@ pi_wait1:
     addi t0, t0, 0x3A8
     sw t0, DMEM(OVERLAY_MODE7_SRC)
 
+    // Publish raw-palette queue addresses for future H-COMP operand reads.
+    // This stage only publishes ownership metadata; current RSP code does not
+    // consume these words.
+    li t0, HCOMP_RAW_PALETTE_QUEUE1
+    sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS)
+    li t0, HCOMP_RAW_PALETTE_QUEUE2
+    sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS + 4)
+
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_PROFILE

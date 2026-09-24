@@ -91,17 +91,7 @@ jobs:
           python3 scripts/gate_c_h_comp_raw_palette_ares_slots.py --port 9149 --output-dir captures
           python3 scripts/check_gate_c_h_comp_rsp_raw_palette_dma.py captures/rsp-slot0.bin --output captures/result-slot0.json
           python3 scripts/check_gate_c_h_comp_rsp_raw_palette_dma.py captures/rsp-slot4.bin --output captures/result-slot4.json
-          python3 - <<'PY'
-import json
-from pathlib import Path
-a=json.loads(Path('captures/result-slot0.json').read_text())
-b=json.loads(Path('captures/result-slot4.json').read_text())
-assert a['passed'] and a['slot']==0 and a['selected_pointer']=='0xA00EF000'
-assert b['passed'] and b['slot']==4 and b['selected_pointer']=='0xA00EF800'
-assert {a['phase'],b['phase']}=={'red','green'}
-Path('captures/summary.json').write_text(json.dumps({'classification':'ARES_RSP_RAW_BOTH_SLOTS_VALIDATED','passed':True,'slot0_phase':a['phase'],'slot4_phase':b['phase']},indent=2)+'\n')
-print('ARES_RSP_RAW_BOTH_SLOTS_VALIDATED')
-PY
+          python3 -c "import json; from pathlib import Path; a=json.loads(Path('captures/result-slot0.json').read_text()); b=json.loads(Path('captures/result-slot4.json').read_text()); assert a['passed'] and a['slot']==0 and a['selected_pointer']=='0xA00EF000'; assert b['passed'] and b['slot']==4 and b['selected_pointer']=='0xA00EF800'; assert {a['phase'],b['phase']}=={'red','green'}; Path('captures/summary.json').write_text(json.dumps({'classification':'ARES_RSP_RAW_BOTH_SLOTS_VALIDATED','passed':True,'slot0_phase':a['phase'],'slot4_phase':b['phase']},indent=2)+'\\n'); print('ARES_RSP_RAW_BOTH_SLOTS_VALIDATED')"
 
       - name: Upload evidence
         if: always()

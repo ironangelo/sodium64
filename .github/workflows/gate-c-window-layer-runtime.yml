@@ -1,0 +1,33 @@
+name: Gate C Window Layer Runtime
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-window-runtime-repair
+    paths:
+      - src/defines.h
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - scripts/test_gate_c_h_comp_window_contract.py
+      - scripts/test_gate_c_window_span_runtime.py
+      - .github/workflows/gate-c-window-layer-runtime.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  window-layer-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile host oracle
+        run: |
+          python3 -m py_compile scripts/test_gate_c_h_comp_window_contract.py
+          python3 -m py_compile scripts/test_gate_c_window_span_runtime.py
+
+      - name: Prove exact RSP layer-window span algorithm
+        run: python3 scripts/test_gate_c_window_span_runtime.py

@@ -99,6 +99,21 @@ def prove_semantics() -> int:
 def prove_full_range_edges() -> None:
     width = 256
 
+    # A one-pixel enabled segment at x=0 is the discriminator the old fill
+    # loop missed: the following segment must begin at x=1, not x=0 again.
+    cfg = ref.decode_select(0x2, 0)
+    bounds = (0, 0, 0, 0)
+    initial, ends = color_segments(width, cfg, bounds, 1)
+    got = decode_segments(width, initial, ends)
+    expected = ref.ares_color_enabled(
+        width, cfg=cfg, color_mask=1,
+        one_left=0, one_right=0, two_left=0, two_right=0,
+    )
+    if got != expected or not initial or ends[:2] != (0, 255):
+        raise AssertionError(
+            f"x0 singleton transition mismatch: {initial=} {ends=}"
+        )
+
     # Inverted W1 makes the selected region outside the singleton; INSIDE mode
     # therefore enables everything except x255.
     cfg = ref.decode_select(0x3, 0)
@@ -194,9 +209,25 @@ def prove_source_abi() -> None:
         "lbu t0, CGWSEL",
         "lbu t0, WOBJSEL",
         "lbu t0, WOBJLOG",
+        "li a0, WIN_BOUNDS",
+        "lbu t8, WIN_BOUNDS + 0",
+        "li t9, 0",
     ):
         if required not in helper_main:
             raise AssertionError(f"missing color-helper ABI/semantic anchor: {required}")
+
+    # The actual backdrop fill loop must distinguish first-vs-later segments by
+    # ordinal, not by previous coordinate value. Otherwise a boundary at x=0
+    # makes the second segment start at x=0 and overwrite the singleton.
+    fill_loop = extract(main_src, "fill_backdrop:", "// Skip layers for force blank")
+    if "sltu t0, zero, t9" not in fill_loop:
+        raise AssertionError("fill loop does not use segment ordinal for +1")
+    if "sltu t0, zero, t7" in fill_loop:
+        raise AssertionError("legacy coordinate-based x0 overlap rule remains")
+
+    prefix = extract(main_src, "oam_skip:", "not_blank:")
+    if "li t9, 0 // Segment ordinal; zero means first segment" not in prefix:
+        raise AssertionError("backdrop segment ordinal does not initialize at zero")
 
 
 def main() -> int:
@@ -207,7 +238,7 @@ def main() -> int:
     print(f"ares_pin={ref.ARES_PIN}")
     print(f"color_segment_cases={cases}")
     print("max_segment_ends=7")
-    print("x255_edges=preserved")
+    print("x0_x255_edges=preserved")
     print("reversed_bounds=preserved")
     print("common_helpers=source_identical")
     print("protected_register_contract=preserved")

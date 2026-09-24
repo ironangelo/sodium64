@@ -7,6 +7,10 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-24 UTC)
 
 
+- **WINDOW LAYER SEMANTIC ORACLE PASSED / exact generic smoke pending:** exact head **11265e13ef4b16a9a9a3c27ad2ac0c69ef17a982**; dedicated **Gate C Window Layer Runtime 36067046058 SUCCESS**, job107859123867 prints **`WINDOW_LAYER_RUNTIME_MODEL_VALIDATED`**, pinned ares17813a3c, **524,288 event-scan cases**, max_true_spans=3, x255 singleton preserved, reversed bounds preserved, fixed-slot instruction count242, common suffix source-identical, live-register contract preserved. This closes the actual W1/W2 event-scan/span algorithm and its source ABI against the validated L0 window reference. Exact-head **Build and Validate 36067046250** has normal+PROFILE builds SUCCESS and Mupen smoke still running; do not call the runtime repair fully VALIDATED until that final smoke closes. Runtime assembly is unchanged from generic-green30e327; head11265e only adds/fixes host oracle tooling.
+
+
+
 - **CORRECTION — first x255 oracle fix commit was content-no-op:** commit **38ddf21ec33b6ea9810545f0229ba44ce5870177** did not actually change the two edge assertions because the edit searched for literal `\\n` text rather than real line breaks. Trigger head **b0102d79...** therefore reran the unchanged bad assertion and **36066913608 FAILED** with the identical W1 `selected x255` traceback. This second red is the same **REJECTED TOOLING ERROR**, not independent runtime evidence. Exact corrected script head is now **11265e13ef4b16a9a9a3c27ad2ac0c69ef17a982**: both inverted W1/W2 x255 controls now ask for the **visible complement** (`want_selected=False`), matching the already-validated pinned-ares contract. Runtime assembly remains byte-identical to30e327; next authority is the semantic workflow on11265e (or a tooling-only descendant) plus exact generic gate.
 
 

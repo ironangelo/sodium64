@@ -1208,11 +1208,13 @@ skip_objdecode:
 
 
 next_frame:
-    // Halt until the next frame can be drawn
-    li t0, 0x2 // Set halt
-    mtc0 t0, COP0_SP_STATUS
-    b draw_frame
-    xori sp, sp, 4
+    // PROOF-ONLY: CXD4 exits immediately when MTC0 sets HALT and resumes at
+    // that same PC. Run the raw-palette DMA discriminator before HALT while
+    // keeping this four-instruction footprint unchanged.
+    b hcomp_raw_diag_frame
+    nop
+    nop
+    nop
 
 
 clear_cache:
@@ -1569,3 +1571,31 @@ hcomp_probe_color_row:
     jr ra
     nop
 
+
+// PROOF-ONLY: first actually-executed RSP consumer of the published raw
+// palette pair. Run before HALT so pinned CXD4 cannot strand the observation.
+// F10..F3F is audited padding below VEC_DATA=F70.
+hcomp_raw_diag_frame:
+    lw a1, HCOMP_RAW_PALETTE_PTRS(sp)
+    li t0, 0xF10
+    sw a1, 0x00(t0)
+    sw sp, 0x04(t0)
+    li t1, 0x48524157 // "HRAW"
+    sw t1, 0x08(t0)
+    sw zero, 0x0C(t0)
+
+    addi a1, a1, 0x8 // raw CGRAM entry 1
+    li a0, 0xF20
+    jal dma_read
+    li a2, 0x1F // 32 bytes: entries 1..4
+
+    li a0, 0xF10
+    li a1, 0xA00F0040
+    jal dma_write
+    li a2, 0x2F // 48-byte record
+
+    // Preserve the inherited frame-end behavior exactly after observation.
+    li t0, 0x2 // Set halt
+    mtc0 t0, COP0_SP_STATUS
+    b draw_frame
+    xori sp, sp, 4

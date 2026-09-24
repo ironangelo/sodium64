@@ -1,0 +1,29 @@
+name: Gate C Raster Section Latency
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-raster-section-repair
+    paths:
+      - src/ppu.S
+      - src/defines.h
+      - scripts/test_gate_c_raster_section_latency.py
+      - .github/workflows/gate-c-raster-section-latency.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  raster-section-latency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile host oracle
+        run: python3 -m py_compile scripts/test_gate_c_raster_section_latency.py
+
+      - name: Prove raster-sensitive section latency
+        run: python3 scripts/test_gate_c_raster_section_latency.py

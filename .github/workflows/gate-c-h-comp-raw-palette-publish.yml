@@ -1,0 +1,171 @@
+name: Gate C H-COMP Raw Palette Pointer Publication Proof
+
+on:
+  push:
+    branches:
+      - 'phase4/gate-c-h-comp-post-pr15-raw-palette-rsp-publish-proof'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-hcomp-raw-publish-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publication-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-test live-pointer classifier
+        run: python3 scripts/check_gate_c_h_comp_raw_palette_publish.py --self-test
+
+      - name: Build exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j$(nproc) 2>&1 | tee build.log
+          sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
+
+      - name: Generate deterministic alternating guest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/make_gate_c_h_comp_raw_palette_ownership.py guest-a.smc
+          python3 scripts/make_gate_c_h_comp_raw_palette_ownership.py guest-b.smc
+          cmp guest-a.smc guest-b.smc
+          test "$(stat -c %s guest-a.smc)" -eq 32768
+          sha256sum guest-a.smc | tee guest.sha256
+
+      - name: Wrap guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir workload
+          cp sodium64.z64 rom-converter.py guest-a.smc workload/
+          (
+            cd workload
+            python3 rom-converter.py </dev/null
+          )
+          test -f workload/out/guest-a.z64
+          sha256sum workload/out/guest-a.z64 | tee wrapped.sha256
+
+      - name: Install Mupen64Plus build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y             build-essential             expect             git             libfreetype6-dev             libgl1-mesa-dev             libglu1-mesa-dev             libpng-dev             libsdl2-dev             libvulkan-dev             pkg-config             zlib1g-dev
+
+      - name: Build pinned Mupen64Plus debugger and LLE RSP
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/sodium64-mupen"
+          mkdir -p "$root"
+          cd "$root"
+
+          git clone https://github.com/mupen64plus/mupen64plus-core.git
+          git -C mupen64plus-core checkout b20b27ebf9e5b099a978e86dba609111dc98c837
+          git clone https://github.com/mupen64plus/mupen64plus-ui-console.git
+          git -C mupen64plus-ui-console checkout c8ac4862a019d7885b24927d9b4db5dd3e42a528
+          git clone https://github.com/mupen64plus/mupen64plus-rsp-cxd4.git
+          git -C mupen64plus-rsp-cxd4 checkout 00906a92641c540a64e4e7505012157315314810
+
+          export PATH="$root/mupen64plus-core/.github/workflows/scripts:$PATH"
+          cd "$root/mupen64plus-core"
+          export CONFIG_OVERRIDE="DEBUGGER=1 DEBUGGER_NO_DISASM=1 NEW_DYNAREC=0 NO_ASM=1"
+          ci_build.sh x64 gcc
+
+          cd "$root/mupen64plus-ui-console"
+          export CONFIG_OVERRIDE=""
+          ci_build.sh x64 gcc
+
+          cd "$root/mupen64plus-rsp-cxd4"
+          export CONFIG_OVERRIDE='SSE="none"'
+          export OPTFLAGS="-O3"
+          ci_build.sh x64 gcc
+
+          core_lib=$(find "$root/mupen64plus-core/pkg/usr/local/lib" -maxdepth 1 -type f -name 'libmupen64plus.so*' | head -n1)
+          ui_bin="$root/mupen64plus-ui-console/pkg/usr/local/bin/mupen64plus"
+          rsp_lib=$(find "$root/mupen64plus-rsp-cxd4/pkg/usr/local/lib/mupen64plus" -type f -name '*cxd4*.so' | head -n1)
+          data_dir="$root/mupen64plus-core/pkg/usr/local/share/mupen64plus"
+          {
+            echo "M64P_CORE=$core_lib"
+            echo "M64P_UI=$ui_bin"
+            echo "M64P_RSP=$rsp_lib"
+            echo "M64P_DATA=$data_dir"
+            echo "M64P_LIBDIR=$(dirname "$core_lib")"
+          } >> "$GITHUB_ENV"
+
+      - name: Capture two live DMEM pointer snapshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/m64p-config"
+          cat > "$RUNNER_TEMP/rawpublish.expect" <<'EOF'
+          set timeout 70
+          log_file raw-publish-emulator.log
+          spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) $env(M64P_UI)             --corelib $env(M64P_CORE)             --datadir $env(M64P_DATA)             --configdir $env(RUNNER_TEMP)/m64p-config             --debug --emumode 0 --nospeedlimit             --gfx dummy --audio dummy --input dummy --rsp $env(M64P_RSP)             workload/out/guest-a.z64
+          expect "(dbg)"
+          for {set n 1} {$n <= 2} {incr n} {
+            send "run\r"
+            if {$n == 1} {
+              after 4000
+            } else {
+              after 1200
+            }
+            send "pause\r"
+            expect "(dbg)"
+            send "dumpmem 0xA4000E90 16 dmem-ptrs-$n.bin\r"
+            expect "(dbg)"
+          }
+          send "quit\r"
+          expect eof
+          EOF
+          expect "$RUNNER_TEMP/rawpublish.expect"
+          for n in 1 2; do
+            test "$(stat -c %s "dmem-ptrs-$n.bin")" -eq 16
+          done
+
+      - name: Validate live publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          for n in 1 2; do
+            python3 scripts/check_gate_c_h_comp_raw_palette_publish.py               build/sodium64.elf "dmem-ptrs-$n.bin" --output "result-$n.json"
+            grep -q 'RAW_PALETTE_PTRS_LIVE_VALIDATED' "result-$n.json"
+          done
+          cmp dmem-ptrs-1.bin dmem-ptrs-2.bin
+          printf '{"valid_snapshots": 2, "required": 2}\n' | tee summary.json
+
+      - name: Upload publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-h-comp-raw-palette-publish-evidence
+          retention-days: 30
+          path: |
+            dmem-ptrs-*.bin
+            result-*.json
+            summary.json
+            raw-publish-emulator.log
+            guest-a.smc
+            guest.sha256
+            wrapped.sha256
+            runtime.sha256
+            build.log
+            build/rsp_main.map
+            build/rsp_mode7.map

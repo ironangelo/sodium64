@@ -1,5 +1,7 @@
 name: Gate C Window Layer Runtime
 
+# Trigger authority after x255 edge-oracle correction.
+
 on:
   push:
     branches:

@@ -385,7 +385,7 @@ oam_skip:
     and t6, t6, t0
     li t7, 0 // Left bound
     li t8, 255 // Right bound
-    li t9, 1 // Bound index
+    li t9, 0 // Segment ordinal; zero means first segment
 
     // Clear the backdrop if force blank is enabled
     lbu t4, STAT_FLAGS
@@ -429,7 +429,7 @@ use_window:
 
 fill_backdrop:
     // Update the RDP fill bounds for a window segment
-    sltu t0, zero, t7
+    sltu t0, zero, t9
     addi t1, t7, 12
     add t1, t1, t0
     sll t1, t1, 14
@@ -1239,7 +1239,7 @@ shared_decode4:
 
 calc_color_window_segments:
     // Convert exact color-window truth into the legacy backdrop fill loop's
-    // alternating inclusive segment-end list at WIN_BOUNDS+1..+7.
+    // alternating inclusive segment-end list at WIN_BOUNDS+0..+6.
     // Preserve the live RDP fill word in t6 and the nested-call return in t9.
     move a3, t6
     move t9, ra
@@ -1284,7 +1284,7 @@ calc_color_window_segments:
     move s1, a1
 
 color_window_initial_ready:
-    li a0, WIN_BOUNDS + 1
+    li a0, WIN_BOUNDS
 
     // Every true span contributes its upper end; a nonzero lower bound first
     // contributes the preceding false segment end.
@@ -1334,7 +1334,7 @@ color_window_all:
     lhu s0, SUB_COLOR
     lhu s1, MAIN_COLOR
     li t0, 255
-    sb t0, WIN_BOUNDS + 1
+    sb t0, WIN_BOUNDS + 0
     b color_window_finish
     nop
 
@@ -1342,17 +1342,17 @@ color_window_none:
     lhu s0, MAIN_COLOR
     lhu s1, SUB_COLOR
     li t0, 255
-    sb t0, WIN_BOUNDS + 1
+    sb t0, WIN_BOUNDS + 0
 
 color_window_finish:
     // not_blank guarantees t4==0; restore the fill loop's live scalar state.
     move t6, a3
     li t4, 0
     li t7, 0
-    lbu t8, WIN_BOUNDS + 1
+    lbu t8, WIN_BOUNDS + 0
     move ra, t9
     jr ra
-    li t9, 1
+    li t9, 0
 
 
 calc_bg_window_spans:

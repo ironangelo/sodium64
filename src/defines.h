@@ -132,6 +132,11 @@
 #define FRAMEBUFFER2 (FRAMEBUFFER3 - 0x20D00)
 #define FRAMEBUFFER1 (FRAMEBUFFER2 - 0x20D00)
 
+// H-COMP raw palette shadows live immediately below the physical framebuffer
+// base (FRAMEBUFFER1 - 16*560), without changing any existing queue address.
+#define HCOMP_RAW_PALETTE_QUEUE1 (FRAMEBUFFER1 - 0x3300)
+#define HCOMP_RAW_PALETTE_QUEUE2 (HCOMP_RAW_PALETTE_QUEUE1 + 0x800)
+
 // RSP addresses of data in DMEM; used to avoid setting the upper address
 #define TEXTURE 0x000
 #define TILE_TABLE (TEXTURE + 0x40)

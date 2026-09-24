@@ -27,7 +27,11 @@ def main()->int:
         supported=c.request("qSupported:multiprocess+;swbreak+;hwbreak+")
         if b"QPassSignals+" not in supported: raise RuntimeError("QPassSignals unsupported")
         if c.request(f"QPassSignals:{ARES_N64_GUEST_SIGNALS}")!=b"OK": raise RuntimeError("QPassSignals rejected")
-        c.write_memory(M0,bytes([0xC3])*48); c.write_memory(M4,bytes([0x3C])*48)
+        # Pinned ares has a distinct debugger write path for payloads >8 B.
+        # Seed through the proven 4-byte cpu.writeDebug path, then verify all48 B.
+        for off in range(0,48,4):
+            c.write_memory(M0+off,bytes([0xC3])*4)
+            c.write_memory(M4+off,bytes([0x3C])*4)
         seed0=c.read_memory(M0,48,48); seed4=c.read_memory(M4,48,48)
         (out/"seed-slot0.bin").write_bytes(seed0)
         (out/"seed-slot4.bin").write_bytes(seed4)

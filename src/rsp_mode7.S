@@ -896,21 +896,77 @@ start_objects:
     or t0, t0, t1
     andi t0, t0, 0x10
     beqz t0, obj_no_windows
-    li t8, 0 // Window-bound index
-
-    // Calculate the generic OBJ W1 visible spans using the same window helper
-    // already used by BG rendering. W2/combine modes remain explicitly outside
-    // this controlled repair and retain their pre-existing behavior.
-    lbu a0, WOBJSEL
-    jal calc_windows
-    andi a0, a0, 0xF
-
-    // An empty first span is represented by a zero upper bound.
-    lbu t0, WIN_BOUNDS + 1
-    beqz t0, obj_advance_segment
     nop
+
+    // OBJ W1 needs exact inclusive endpoints. The shared BG helper stores
+    // transition bytes and historically overloaded 255 as both a coordinate
+    // and a terminator, which cannot represent the legal [255,255] singleton.
+    // Build up to two explicit visible [lower,upper] pairs instead. W2/combine
+    // remain outside this controlled repair; unsupported combinations retain
+    // the prior unwindowed behavior.
+    lbu t0, WOBJSEL
+    andi t0, t0, 0xF
+    li t1, 2
+    beq t0, t1, obj_w1_normal
+    li t1, 3
+    bne t0, t1, obj_no_windows
+    nop
+
+obj_w1_inverted:
+    // Inverted W1 masks outside [WH0,WH1], so the inclusive interior is the
+    // sole visible span. Reversed bounds contain no visible pixels.
+    lbu t0, WHX + 0
+    lbu t1, WHX + 1
+    bgt t0, t1, obj_no_visible_spans
+    nop
+    sb t0, WIN_BOUNDS + 0
+    sb t1, WIN_BOUNDS + 1
+    b obj_spans_ready
+    li t2, 1
+
+obj_w1_normal:
+    // Normal W1 masks the inclusive [WH0,WH1] interval. Reversed bounds mask
+    // nothing; otherwise the visible exteriors are [0,WH0-1] and
+    // [WH1+1,255], omitting either empty side.
+    lbu t0, WHX + 0
+    lbu t1, WHX + 1
+    bgt t0, t1, obj_no_windows
+    li t2, 0
+
+    beqz t0, obj_normal_right
+    nop
+    addi t3, t0, -1
+    sb zero, WIN_BOUNDS + 0
+    sb t3, WIN_BOUNDS + 1
+    li t2, 1
+
+obj_normal_right:
+    li t3, 255
+    beq t1, t3, obj_spans_ready
+    nop
+    addi t1, t1, 1
+    beqz t2, obj_normal_right_first
+    nop
+    sb t1, WIN_BOUNDS + 2
+    sb t3, WIN_BOUNDS + 3
+    b obj_spans_ready
+    addi t2, t2, 1
+
+obj_normal_right_first:
+    sb t1, WIN_BOUNDS + 0
+    sb t3, WIN_BOUNDS + 1
+    li t2, 1
+
+obj_spans_ready:
+    sb t2, OBJ_WIN_COUNT
+    beqz t2, obj_windows_done
+    li t8, 0
     b obj_window_segment
     nop
+
+obj_no_visible_spans:
+    b obj_windows_done
+    sb zero, OBJ_WIN_COUNT
 
 obj_no_windows:
     // Negative bound index marks the unwindowed fast path at list completion.
@@ -929,9 +985,10 @@ obj_window_segment:
     lbu t2, WIN_BOUNDS + 0(t8)
     lbu t3, WIN_BOUNDS + 1(t8)
 
-    sltu t0, zero, t2
+    // Explicit OBJ spans are already inclusive pixel coordinates. RDP scissor
+    // uses an inclusive upper-left and exclusive lower-right, so only the
+    // fixed framebuffer border offsets are needed here.
     addi t2, t2, 12
-    add t2, t2, t0
     sll t2, t2, 14
     or t0, t6, t2
     sw t0, RDP_WINDOW + 8
@@ -1105,19 +1162,13 @@ next_object:
     bltz t8, obj_finish_objects
     nop
 
-    // A completed visible span ending at the right edge is terminal. Check
-    // this before reading the next interval so normal W1 [..,255] cannot walk
-    // beyond the finite WIN_BOUNDS list into unrelated DMEM.
-    lbu t2, WIN_BOUNDS + 1(t8)
-    beq t2, 255, obj_windows_done
-    nop
-
-obj_advance_segment:
-    // Skip an empty leading span or move to the next visible W1 span. A
-    // next-lower value of 255 means there is no following visible interval.
-    lbu t2, WIN_BOUNDS + 2(t8)
-    beq t2, 255, obj_windows_done
+    // Advance by explicit span count, never by an in-band coordinate sentinel.
+    // This keeps x=255 available as an ordinary legal lower/upper endpoint.
+    lbu t2, OBJ_WIN_COUNT
     addi t8, t8, 2
+    sll t2, t2, 1
+    beq t8, t2, obj_windows_done
+    nop
     b obj_window_segment
     nop
 

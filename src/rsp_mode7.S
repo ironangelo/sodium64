@@ -1241,6 +1241,20 @@ shared_decode4:
     jr t4
 
 
+calc_bg_window_spans:
+    // Regular-BG wrapper kept in both RSP variants so resident suffix layout
+    // remains byte-for-byte symmetric across overlay swaps.
+    lhu t0, WBGSEL
+    sll t1, s2, 1
+    srl t0, t0, t1
+    andi a0, t0, 0xF
+    lbu t0, WBGLOG
+    srl t0, t0, s2
+    andi a1, t0, 0x3
+    b calc_window_spans
+    li a2, 0
+
+
 calc_window_spans: // a0: selector, a1: logic, a2: 0=!selected / 1=selected
     // Emit up to three exact inclusive true spans in WIN_BOUNDS and their
     // out-of-band count in WIN_COUNT. Truth can only change at W1/W2 edges,

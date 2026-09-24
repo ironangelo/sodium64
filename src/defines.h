@@ -132,6 +132,13 @@
 #define FRAMEBUFFER2 (FRAMEBUFFER3 - 0x20D00)
 #define FRAMEBUFFER1 (FRAMEBUFFER2 - 0x20D00)
 
+// Gate-C H-COMP operand preservation: two uncached 0x800-byte shadows for
+// nonzero CGRAM entries. Current layout ends at FRAMEBUFFER1-0x2300, while
+// the lowest standard 280-wide RDP Color Image base is FRAMEBUFFER1-0x1180;
+// re-audit this reservation if framebuffer stride/hires/interlace changes.
+#define HCOMP_RAW_PALETTE_QUEUE1 (FRAMEBUFFER1 - 0x3300)
+#define HCOMP_RAW_PALETTE_QUEUE2 (HCOMP_RAW_PALETTE_QUEUE1 + 0x800)
+
 // RSP addresses of data in DMEM; used to avoid setting the upper address
 #define TEXTURE 0x000
 #define TILE_TABLE (TEXTURE + 0x40)

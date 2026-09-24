@@ -174,6 +174,7 @@ split_line: .byte 0
 .align 4
 // Double-buffered addresses for queued frame data
 pal_queues: .word PALETTE_QUEUE1, PALETTE_QUEUE2
+hcomp_raw_pal_queues: .word HCOMP_RAW_PALETTE_QUEUE1, HCOMP_RAW_PALETTE_QUEUE2
 oam_queues: .word OAM_QUEUE1, OAM_QUEUE2
 dirty_queues: .word DIRTY_QUEUE1, DIRTY_QUEUE2
 sect_queues: .word SECTION_QUEUE1, SECTION_QUEUE2
@@ -500,15 +501,38 @@ skip_reset:
     sw t0, section_ptr
     sw t1, oam_ptr
 
-    // Set initial values for palette conversion
+    // Set initial values for palette conversion. Preserve the existing
+    // brightness-scaled renderer queue and a parallel raw RGBA5551 shadow.
+    // This controlled stage mirrors CGRAM entries 1..255 only; entry 0/backdrop
+    // and mid-frame palette epochs remain explicitly outside its claim.
     lbu t0, brightness
     lw v1, pal_queues(t5)
+    lw a3, hcomp_raw_pal_queues(t5)
     addi v1, v1, 0x7F8
+    addi a3, a3, 0x7F8
     li t6, 0x1FE
 
 update_dpal:
-    // Space out a color's components and multiply with current brightness
     lhu t1, cgram(t6)
+
+    // H-COMP raw operand shadow: SNES RGB555 -> N64 RGBA5551, no brightness.
+    // Duplicate each color to the same 8-byte palette-entry geometry as the
+    // visible queue. The HCOMP_* addresses are KSEG1/uncached.
+    andi t7, t1, 0x1F
+    sll t7, t7, 11
+    andi t8, t1, 0x3E0
+    sll t8, t8, 1
+    or t7, t7, t8
+    andi t8, t1, 0x7C00
+    srl t8, t8, 9
+    or t7, t7, t8
+    ori t7, t7, 0x1
+    sll t8, t7, 16
+    or t7, t7, t8
+    sw t7, 0(a3)
+    sw t7, 4(a3)
+
+    // Existing visible path: space out components and multiply by brightness.
     andi t2, t1, 0x1F // R
     andi t3, t1, 0x3E0 // G
     sll t3, t3, 5
@@ -537,6 +561,7 @@ update_dpal:
     sw t2, 0(v1)
     sw t2, 4(v1)
     addi t6, t6, -2
+    addi a3, a3, -8
     bnez t6, update_dpal
     addi v1, v1, -8
 

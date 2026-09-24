@@ -402,34 +402,30 @@ not_blank:
     andi t0, t0, 0x20 // Backdrop math
     beqz t0, fill_main
 
-    // Fill the backdrop based the math window, so effects like SMW transitions work
-    // TODO: implement color math properly if possible
-    lbu t0, CGWSEL
-    srl t0, t0, 2
-    andi t0, t0, 0xC
-    lw t0, FILL_JUMPS(t0)
-    jr t0
-    lbu a0, WOBJSEL
+    // Apply the existing backdrop approximation on the exact SNES color-window
+    // enable mask. The resident helper sets s0/s1 and alternating segment ends.
+    jal calc_color_window_segments
+    nop
+    b fill_backdrop
+    nop
 
 fill_main:
-    // Use the main color first, without windows
+    // No backdrop math: use Main across the whole section.
     b fill_backdrop
+    lhu s0, MAIN_COLOR
 
 fill_win:
-    // Use the main color first, with windows
-    lhu s0, MAIN_COLOR
-    b use_window
-    lhu s1, SUB_COLOR
-
+    // Kept as padding labels so the pre-overlay prefix retains its exact size.
+    nop
+    nop
 fill_notwin:
-    // Use the sub color first, with windows
-    lhu s1, MAIN_COLOR
-
+    nop
 use_window:
-    // Calculate window bounds and load the first one
-    jal calc_windows
-    srl a0, a0, 4
-    lbu t8, WIN_BOUNDS + 1
+    nop
+    nop
+    nop
+    nop
+    nop
 
 fill_backdrop:
     // Update the RDP fill bounds for a window segment
@@ -1241,6 +1237,124 @@ shared_decode4:
     jr t4
 
 
+calc_color_window_segments:
+    // Convert exact color-window truth into the legacy backdrop fill loop's
+    // alternating inclusive segment-end list at WIN_BOUNDS+1..+7.
+    // Preserve the live RDP fill word in t6 and the nested-call return in t9.
+    move a3, t6
+    move t9, ra
+
+    lbu t0, CGWSEL
+    srl t1, t0, 4
+    andi t1, t1, 0x3
+    beqz t1, color_window_all
+    li t2, 3
+    beq t1, t2, color_window_none
+    nop
+
+    // Modes 1/2 are selected/complement of the OBJ color-window selector.
+    lbu t0, WOBJSEL
+    srl a0, t0, 4
+    lbu t0, WOBJLOG
+    srl t0, t0, 2
+    andi a1, t0, 0x3
+    sltiu a2, t1, 2 // mode1=selected, mode2=complement
+    jal calc_window_spans
+    nop
+
+    lbu t8, WIN_COUNT
+    beqz t8, color_window_none
+    nop
+
+    // Snapshot all possible span endpoints before overwriting E85 onward.
+    lbu t0, WIN_BOUNDS + 0 // L1
+    lbu t1, WIN_BOUNDS + 1 // U1
+    lbu t2, WIN_BOUNDS + 2 // L2
+    lbu t3, WIN_BOUNDS + 3 // U2
+    lbu t4, WIN_BOUNDS + 4 // L3
+    lbu t7, WIN_BOUNDS + 5 // U3
+
+    // The first segment uses Sub where math is enabled, Main otherwise.
+    lhu s0, MAIN_COLOR
+    lhu s1, SUB_COLOR
+    bnez t0, color_window_initial_ready
+    nop
+    move a1, s0
+    move s0, s1
+    move s1, a1
+
+color_window_initial_ready:
+    li a0, WIN_BOUNDS + 1
+
+    // Every true span contributes its upper end; a nonzero lower bound first
+    // contributes the preceding false segment end.
+    beqz t0, color_window_first_upper
+    addi a1, t0, -1
+    sb a1, 0(a0)
+    addi a0, a0, 1
+color_window_first_upper:
+    sb t1, 0(a0)
+    addi a0, a0, 1
+    li a1, 1
+    beq t8, a1, color_window_tail
+    nop
+
+    addi a1, t2, -1
+    sb a1, 0(a0)
+    sb t3, 1(a0)
+    addi a0, a0, 2
+    li a1, 2
+    beq t8, a1, color_window_tail
+    nop
+
+    addi a1, t4, -1
+    sb a1, 0(a0)
+    sb t7, 1(a0)
+    addi a0, a0, 2
+    move t1, t7
+
+color_window_tail:
+    // t1 is the final true upper bound for count1/2; select U2 when needed.
+    li a1, 1
+    beq t8, a1, color_window_tail_ready
+    nop
+    li a1, 2
+    bne t8, a1, color_window_tail_ready
+    nop
+    move t1, t3
+color_window_tail_ready:
+    li a1, 255
+    beq t1, a1, color_window_finish
+    nop
+    sb a1, 0(a0)
+    b color_window_finish
+    nop
+
+color_window_all:
+    lhu s0, SUB_COLOR
+    lhu s1, MAIN_COLOR
+    li t0, 255
+    sb t0, WIN_BOUNDS + 1
+    b color_window_finish
+    nop
+
+color_window_none:
+    lhu s0, MAIN_COLOR
+    lhu s1, SUB_COLOR
+    li t0, 255
+    sb t0, WIN_BOUNDS + 1
+
+color_window_finish:
+    // not_blank guarantees t4==0; restore the fill loop's live scalar state.
+    move t6, a3
+    li t4, 0
+    li t7, 0
+    lbu t8, WIN_BOUNDS + 1
+    move ra, t9
+    jr ra
+    li t9, 1
+
+
 calc_bg_window_spans:
     // Regular-BG wrapper kept in both RSP variants so resident suffix layout
     // remains byte-for-byte symmetric across overlay swaps.
@@ -1393,48 +1507,6 @@ window_advance:
 window_spans_done:
     jr ra
     sb t7, WIN_COUNT
-
-
-calc_windows: // a0: mask settings
-    // Load offsets where the window area changes
-    li t2, 255
-    lbu t1, WHX + 1
-    lbu t0, WHX + 0
-
-    // Determine window areas based on the mask settings
-    // TODO: support window 2 and combine logic
-    li t3, 2
-    beq a0, t3, win_in
-    li t3, 3
-    beq a0, t3, win_out
-    nop
-
-win_none:
-    // Define the entire screen as non-window area
-    jr ra
-    sb t2, WIN_BOUNDS + 1
-
-win_in:
-    // Define the space between bounds as window area
-    bgt t0, t1, win_none
-    sb t0, WIN_BOUNDS + 1
-    sb t1, WIN_BOUNDS + 2
-    jr ra
-    sb t2, WIN_BOUNDS + 3
-
-win_all:
-    // Define the entire screen as window area
-    jr ra
-    sb t2, WIN_BOUNDS + 2
-
-win_out:
-    // Define the space between bounds as non-window area
-    bgt t0, t1, win_all
-    sb zero, WIN_BOUNDS + 1
-    sb t0, WIN_BOUNDS + 2
-    sb t1, WIN_BOUNDS + 3
-    jr ra
-    sb t2, WIN_BOUNDS + 4
 
 
 multiply: // a0: multiplicand, a1: multiplier - v0: product

@@ -1,0 +1,27 @@
+name: Gate C H-COMP Window Contract
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-h-comp-window-contract
+    paths:
+      - scripts/test_gate_c_h_comp_window_contract.py
+      - .github/workflows/gate-c-h-comp-window-contract.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  window-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile host proof
+        run: python3 -m py_compile scripts/test_gate_c_h_comp_window_contract.py
+
+      - name: Prove exact W1 W2 window contract
+        run: python3 scripts/test_gate_c_h_comp_window_contract.py

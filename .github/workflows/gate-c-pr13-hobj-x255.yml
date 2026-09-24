@@ -123,7 +123,8 @@ jobs:
           .github/scripts/build_sdl.sh
           cmake --preset ubuntu-ci -DARES_CORES=sfc >/dev/null
           cmake --build build --parallel "$(nproc)" >/dev/null
-          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          ares_bin="$root/build/rundir/bin/ares"
+          test -x "$ares_bin"
           echo "ARES_SFC_BIN=$ares_bin" >> "$GITHUB_ENV"
       - name: Capture direct SNES phases
         shell: bash

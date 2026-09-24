@@ -900,10 +900,8 @@ start_objects:
     jal dma_read
     li a2, 0x1FF
 
-    // Preserve the existing no-window fast path. Sodium64 currently combines
-    // main/sub window-enable masks for BGs, so OBJ follows the same renderer
-    // contract here; screen-specific TMW/TSW separation remains a later Gate-C
-    // compositor repair rather than a game-specific special case.
+    // Preserve the current combined Main/Sub screen-enable contract, but use
+    // exact W1/W2 selection and OBJ OR/AND/XOR/XNOR logic when enabled.
     lbu t0, TMW
     lbu t1, TSW
     or t0, t0, t1
@@ -911,75 +909,19 @@ start_objects:
     beqz t0, obj_no_windows
     nop
 
-    // OBJ W1 needs exact inclusive endpoints. The shared BG helper stores
-    // transition bytes and historically overloaded 255 as both a coordinate
-    // and a terminator, which cannot represent the legal [255,255] singleton.
-    // Build up to two explicit visible [lower,upper] pairs instead. W2/combine
-    // remain outside this controlled repair; unsupported combinations retain
-    // the prior unwindowed behavior.
-    lbu t0, WOBJSEL
-    andi t0, t0, 0xF
-    li t1, 2
-    beq t0, t1, obj_w1_normal
-    li t1, 3
-    bne t0, t1, obj_no_windows
+    lbu a0, WOBJSEL
+    andi a0, a0, 0xF
+    lbu a1, WOBJLOG
+    andi a1, a1, 0x3
+    li a2, 0 // Return !selected = layer-visible pixels
+    jal calc_window_spans
     nop
 
-obj_w1_inverted:
-    // Inverted W1 masks outside [WH0,WH1], so the inclusive interior is the
-    // sole visible span. Reversed bounds contain no visible pixels.
-    lbu t0, WHX + 0
-    lbu t1, WHX + 1
-    bgt t0, t1, obj_no_visible_spans
-    nop
-    sb t0, WIN_BOUNDS + 0
-    sb t1, WIN_BOUNDS + 1
-    b obj_spans_ready
-    li t2, 1
-
-obj_w1_normal:
-    // Normal W1 masks the inclusive [WH0,WH1] interval. Reversed bounds mask
-    // nothing; otherwise the visible exteriors are [0,WH0-1] and
-    // [WH1+1,255], omitting either empty side.
-    lbu t0, WHX + 0
-    lbu t1, WHX + 1
-    bgt t0, t1, obj_no_windows
-    li t2, 0
-
-    beqz t0, obj_normal_right
-    nop
-    addi t3, t0, -1
-    sb zero, WIN_BOUNDS + 0
-    sb t3, WIN_BOUNDS + 1
-    li t2, 1
-
-obj_normal_right:
-    li t3, 255
-    beq t1, t3, obj_spans_ready
-    nop
-    addi t1, t1, 1
-    beqz t2, obj_normal_right_first
-    nop
-    sb t1, WIN_BOUNDS + 2
-    sb t3, WIN_BOUNDS + 3
-    b obj_spans_ready
-    addi t2, t2, 1
-
-obj_normal_right_first:
-    sb t1, WIN_BOUNDS + 0
-    sb t3, WIN_BOUNDS + 1
-    li t2, 1
-
-obj_spans_ready:
-    sb t2, OBJ_WIN_COUNT
+    lbu t2, WIN_COUNT
     beqz t2, obj_windows_done
     li t8, 0
     b obj_window_segment
     nop
-
-obj_no_visible_spans:
-    b obj_windows_done
-    sb zero, OBJ_WIN_COUNT
 
 obj_no_windows:
     // Negative bound index marks the unwindowed fast path at list completion.
@@ -1177,7 +1119,7 @@ next_object:
 
     // Advance by explicit span count, never by an in-band coordinate sentinel.
     // This keeps x=255 available as an ordinary legal lower/upper endpoint.
-    lbu t2, OBJ_WIN_COUNT
+    lbu t2, WIN_COUNT
     addi t8, t8, 2
     sll t2, t2, 1
     beq t8, t2, obj_windows_done
@@ -1297,6 +1239,146 @@ shared_decode4:
     beqz t7, ret_jump
     spv $v02, 0, 0, t7
     jr t4
+
+
+calc_window_spans: // a0: selector, a1: logic, a2: 0=!selected / 1=selected
+    // Emit up to three exact inclusive true spans in WIN_BOUNDS and their
+    // out-of-band count in WIN_COUNT. Truth can only change at W1/W2 edges,
+    // so scan those at most four transition coordinates rather than pixels.
+    // Preserve s*, v0/v1, a3, t5, t9, gp, k0/k1 and ra for renderer callers.
+    li t0, 0
+    li t6, WIN_BOUNDS
+    li t7, 0
+
+window_span_loop:
+    andi t2, a0, 0x2
+    beqz t2, window_one_done
+    move t2, zero
+    lbu t8, WHX + 0
+    sltu t2, t0, t8
+    lbu t8, WHX + 1
+    sltu t1, t8, t0
+    or t2, t2, t1
+    xori t2, t2, 1
+    andi t1, a0, 0x1
+    xor t2, t2, t1
+window_one_done:
+
+    andi t3, a0, 0x8
+    beqz t3, window_two_done
+    move t3, zero
+    lbu t8, WHX + 2
+    sltu t3, t0, t8
+    lbu t8, WHX + 3
+    sltu t1, t8, t0
+    or t3, t3, t1
+    xori t3, t3, 1
+    srl t1, a0, 2
+    andi t1, t1, 0x1
+    xor t3, t3, t1
+window_two_done:
+
+    andi t1, a0, 0xA
+    beqz t1, window_selected_done
+    move t4, zero
+    li t8, 0x2
+    beq t1, t8, window_selected_one
+    li t8, 0x8
+    beq t1, t8, window_selected_two
+    nop
+
+    beqz a1, window_selected_or
+    li t8, 1
+    beq a1, t8, window_selected_and
+    li t8, 2
+    beq a1, t8, window_selected_xor
+    xor t4, t2, t3
+    xori t4, t4, 1
+    b window_selected_done
+    nop
+
+window_selected_xor:
+    b window_selected_done
+    nop
+window_selected_and:
+    b window_selected_done
+    and t4, t2, t3
+window_selected_or:
+    b window_selected_done
+    or t4, t2, t3
+window_selected_two:
+    b window_selected_done
+    move t4, t3
+window_selected_one:
+    move t4, t2
+
+window_selected_done:
+    xori t8, a2, 1
+    xor t4, t4, t8
+    li t1, 256
+
+    lbu t8, WHX + 0
+    sltu t2, t0, t8
+    beqz t2, window_next_w1r
+    sltu t2, t8, t1
+    beqz t2, window_next_w1r
+    nop
+    move t1, t8
+window_next_w1r:
+    lbu t8, WHX + 1
+    addi t8, t8, 1
+    sltu t2, t0, t8
+    beqz t2, window_next_w2l
+    sltu t2, t8, t1
+    beqz t2, window_next_w2l
+    nop
+    move t1, t8
+window_next_w2l:
+    lbu t8, WHX + 2
+    sltu t2, t0, t8
+    beqz t2, window_next_w2r
+    sltu t2, t8, t1
+    beqz t2, window_next_w2r
+    nop
+    move t1, t8
+window_next_w2r:
+    lbu t8, WHX + 3
+    addi t8, t8, 1
+    sltu t2, t0, t8
+    beqz t2, window_emit
+    sltu t2, t8, t1
+    beqz t2, window_emit
+    nop
+    move t1, t8
+
+window_emit:
+    beqz t4, window_advance
+    addi t8, t1, -1
+    beqz t7, window_new_span
+    nop
+    lbu t2, -1(t6)
+    addi t3, t2, 1
+    bne t3, t0, window_new_span
+    nop
+    b window_advance
+    sb t8, -1(t6)
+
+window_new_span:
+    sb t0, 0(t6)
+    sb t8, 1(t6)
+    addi t6, t6, 2
+    addi t7, t7, 1
+
+window_advance:
+    li t8, 256
+    beq t1, t8, window_spans_done
+    move t0, t1
+    b window_span_loop
+    nop
+
+window_spans_done:
+    jr ra
+    sb t7, WIN_COUNT
 
 
 calc_windows: // a0: mask settings

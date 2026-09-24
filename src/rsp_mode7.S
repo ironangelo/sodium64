@@ -1211,7 +1211,7 @@ next_frame:
     // Halt until the next frame can be drawn
     li t0, 0x2 // Set halt
     mtc0 t0, COP0_SP_STATUS
-    b draw_frame
+    b hcomp_raw_diag_read
     xori sp, sp, 4
 
 
@@ -1569,3 +1569,23 @@ hcomp_probe_color_row:
     jr ra
     nop
 
+
+// PROOF-ONLY: validate frame-slot raw-palette pointer selection and exact
+// 16-byte RSP DMA without calling the dormant H-COMP kernel. At resume, sp has
+// already toggled 0/4, so HCOMP_RAW_PALETTE_PTRS(sp) selects that frame side.
+hcomp_raw_diag_read:
+    li a0, SCRN_DATA
+    lw a1, HCOMP_RAW_PALETTE_PTRS(sp)
+    addi a1, a1, 8
+    jal dma_read
+    li a2, 0x0F
+
+    li a0, SCRN_DATA
+    li a1, 0xA00F0020
+    sll t0, sp, 2
+    add a1, a1, t0
+    jal dma_write
+    li a2, 0x0F
+
+    b draw_frame
+    nop

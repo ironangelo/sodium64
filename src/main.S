@@ -175,6 +175,36 @@ pi_wait1:
     li t0, HCOMP_RAW_PALETTE_QUEUE2
     sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS + 4)
 
+    // PROOF-ONLY: guarded RDRAM mailbox for the RSP raw-palette selection/DMA
+    // discriminator. This lives in the audited gap below the current lowest
+    // Color Image and must never be merged.
+    li t1, 0xA00F0010
+    li t2, 0x11223344
+    sw t2, 0x00(t1)
+    li t2, 0x55667788
+    sw t2, 0x04(t1)
+    li t2, 0x99AABBCC
+    sw t2, 0x08(t1)
+    li t2, 0xDDEEFF00
+    sw t2, 0x0C(t1)
+    li t2, 0xC3C3C3C3
+    sw t2, 0x10(t1)
+    sw t2, 0x14(t1)
+    sw t2, 0x18(t1)
+    sw t2, 0x1C(t1)
+    sw t2, 0x20(t1)
+    sw t2, 0x24(t1)
+    sw t2, 0x28(t1)
+    sw t2, 0x2C(t1)
+    li t2, 0x0FF1CE00
+    sw t2, 0x30(t1)
+    li t2, 0x13579BDF
+    sw t2, 0x34(t1)
+    li t2, 0x2468ACE0
+    sw t2, 0x38(t1)
+    li t2, 0x55AA33CC
+    sw t2, 0x3C(t1)
+
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_PROFILE

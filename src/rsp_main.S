@@ -660,10 +660,9 @@ next_segment:
     lbu t3, WIN_BOUNDS + 1(t8)
 
     // Update the RDP scissor bounds for a window segment
-    // Explicit OBJ spans are already inclusive pixel coordinates. RDP scissor
-    // uses an inclusive upper-left and exclusive lower-right, so only the
-    // fixed framebuffer border offsets are needed here.
+    sltu t0, zero, t2
     addi t2, t2, 12
+    add t2, t2, t0
     sll t2, t2, 14
     or t0, t6, t2
     sw t0, RDP_WINDOW + 8
@@ -1017,9 +1016,10 @@ obj_window_segment:
     lbu t2, WIN_BOUNDS + 0(t8)
     lbu t3, WIN_BOUNDS + 1(t8)
 
-    sltu t0, zero, t2
+    // Explicit OBJ spans are inclusive pixel coordinates. RDP scissor uses an
+    // inclusive upper-left and exclusive lower-right, so only the framebuffer
+    // border offset belongs on the lower endpoint.
     addi t2, t2, 12
-    add t2, t2, t0
     sll t2, t2, 14
     or t0, t6, t2
     sw t0, RDP_WINDOW + 8

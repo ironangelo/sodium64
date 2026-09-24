@@ -148,6 +148,32 @@ def encode_action(
     return Action.PASS_FIXED_HALFABLE
 
 
+def encode_action_from_factors(
+    *,
+    main_math_eligible: bool,
+    sub_present: bool,
+    window_above: bool,
+    window_below: bool,
+    blend_mode: bool,
+) -> Action:
+    """Same compact action using only the two renderer-produced pixel facts."""
+    math_enabled = window_below and main_math_eligible
+
+    if not math_enabled:
+        return Action.PASS_NO_MATH if window_above else Action.CLIP_NO_MATH
+
+    if blend_mode and sub_present:
+        return Action.PASS_SUB_HALFABLE if window_above else Action.CLIP_SUB
+
+    if not window_above:
+        return Action.CLIP_FIXED
+
+    if blend_mode and not sub_present:
+        return Action.PASS_FIXED_NOHALF
+
+    return Action.PASS_FIXED_HALFABLE
+
+
 def decode_action(action: Action, *, halve_requested: bool) -> Decision:
     if action == Action.CLIP_NO_MATH:
         return Decision(False, Operand.NONE, False)
@@ -192,8 +218,26 @@ def prove_exhaustive_equivalence() -> tuple[int, dict[Action, int]]:
                                 blend_mode=blend_mode,
                                 below_is_col=below_is_col,
                             )
+                            factor_action = encode_action_from_factors(
+                                main_math_eligible=ares_color_enabled(source, cgadsub),
+                                sub_present=not below_is_col,
+                                window_above=window_above,
+                                window_below=window_below,
+                                blend_mode=blend_mode,
+                            )
+                            if factor_action != action:
+                                raise AssertionError(
+                                    "factorized producer contract mismatch: "
+                                    f"source={source.name} cgadsub=0x{cgadsub:02X} "
+                                    f"window_above={window_above} "
+                                    f"window_below={window_below} "
+                                    f"blend_mode={blend_mode} "
+                                    f"below_is_col={below_is_col} "
+                                    f"source_action={action.name} "
+                                    f"factor_action={factor_action.name}"
+                                )
                             got = decode_action(
-                                action,
+                                factor_action,
                                 halve_requested=bool(cgadsub & 0x40),
                             )
                             if got != ref:
@@ -297,6 +341,8 @@ def main() -> int:
     print(f"ares_pin={ARES_PIN}")
     print(f"cases={checked}")
     print(f"actions={len(Action)} required_bits=3")
+    print("producer_pixel_facts=main_math_eligible,sub_present")
+    print("section_facts=window_above,window_below,blend_mode,halve_requested")
     for action in Action:
         print(f"{action.value}:{action.name} uses={uses[action]}")
     return 0

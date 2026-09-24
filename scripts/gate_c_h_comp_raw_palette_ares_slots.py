@@ -21,9 +21,9 @@ def main()->int:
     c=connect_with_retry("127.0.0.1",args.port,30.0,30.0)
     try:
         # AwaitGDBClient resumes ares immediately when the TCP client connects.
-        # Re-establish a real stopped state before seeding proof mailboxes.
-        c.sock.sendall(b"\\x03")
-        validate_stop(c._read_packet(),"Initial seed stop")
+        # This pinned ares revision does not handle raw async Ctrl-C, but its
+        # standard '?' packet explicitly halts the program and replies T05.
+        validate_stop(c.request("?"),"Initial seed stop")
         supported=c.request("qSupported:multiprocess+;swbreak+;hwbreak+")
         if b"QPassSignals+" not in supported: raise RuntimeError("QPassSignals unsupported")
         if c.request(f"QPassSignals:{ARES_N64_GUEST_SIGNALS}")!=b"OK": raise RuntimeError("QPassSignals rejected")

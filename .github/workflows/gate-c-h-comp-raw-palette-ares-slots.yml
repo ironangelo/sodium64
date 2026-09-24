@@ -1,0 +1,123 @@
+name: Gate C H-COMP RSP Raw Palette Ares Both-Slots Proof
+
+on:
+  push:
+    branches:
+      - 'phase4/gate-c-h-comp-post-pr15-rsp-raw-palette-ares-both-slots-proof'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-hcomp-raw-ares-slots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semantic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+
+      - name: Self-test classifier and build exact diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/check_gate_c_h_comp_rsp_raw_palette_dma.py --self-test
+          python3 -m py_compile scripts/gate_c_h_comp_raw_palette_ares_slots.py
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
+
+      - name: Generate and wrap alternating guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostic wrap workload
+          python3 scripts/make_gate_c_h_comp_raw_palette_ownership.py diagnostic/guest-a.smc
+          python3 scripts/make_gate_c_h_comp_raw_palette_ownership.py diagnostic/guest-b.smc
+          cmp diagnostic/guest-a.smc diagnostic/guest-b.smc
+          sha256sum diagnostic/guest-a.smc | tee diagnostic/guest.sha256
+          cp sodium64.z64 rom-converter.py diagnostic/guest-a.smc wrap/
+          (cd wrap && python3 rom-converter.py </dev/null)
+          test -s wrap/out/guest-a.z64
+          sha256sum wrap/out/guest-a.z64 | tee wrapped.sha256
+
+      - name: Build pinned N64-only ares
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+from pathlib import Path
+p=Path('ares/n64/system/system.cpp'); s=p.read_text(); old='rsp.recompiler.enabled = value.boolean();'; assert s.count(old)==1; p.write_text(s.replace(old,'rsp.recompiler.enabled = false;',1))
+PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Run both-slot consumption proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          home="$RUNNER_TEMP/ares-home-raw-slots"
+          settings="$RUNNER_TEMP/ares-raw-slots.bml"
+          mkdir -p "$home"
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt --system "Nintendo 64" --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9149" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              wrap/out/guest-a.z64 > captures/ares.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true' EXIT
+          python3 scripts/gate_c_h_comp_raw_palette_ares_slots.py --port 9149 --output-dir captures
+          python3 scripts/check_gate_c_h_comp_rsp_raw_palette_dma.py captures/rsp-slot0.bin --output captures/result-slot0.json
+          python3 scripts/check_gate_c_h_comp_rsp_raw_palette_dma.py captures/rsp-slot4.bin --output captures/result-slot4.json
+          python3 - <<'PY'
+import json
+from pathlib import Path
+a=json.loads(Path('captures/result-slot0.json').read_text())
+b=json.loads(Path('captures/result-slot4.json').read_text())
+assert a['passed'] and a['slot']==0 and a['selected_pointer']=='0xA00EF000'
+assert b['passed'] and b['slot']==4 and b['selected_pointer']=='0xA00EF800'
+assert {a['phase'],b['phase']}=={'red','green'}
+Path('captures/summary.json').write_text(json.dumps({'classification':'ARES_RSP_RAW_BOTH_SLOTS_VALIDATED','passed':True,'slot0_phase':a['phase'],'slot4_phase':b['phase']},indent=2)+'\n')
+print('ARES_RSP_RAW_BOTH_SLOTS_VALIDATED')
+PY
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-h-comp-rsp-raw-palette-ares-both-slots-evidence
+          retention-days: 30
+          path: |
+            captures/
+            diagnostic/guest.sha256
+            wrapped.sha256
+            runtime.sha256
+            sodium64-build.log
+            build/rsp_main.map
+            build/rsp_mode7.map
+            ares-version.txt

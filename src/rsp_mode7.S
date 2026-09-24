@@ -1208,11 +1208,12 @@ skip_objdecode:
 
 
 next_frame:
-    // Halt until the next frame can be drawn
-    li t0, 0x2 // Set halt
-    mtc0 t0, COP0_SP_STATUS
-    b draw_frame
-    xori sp, sp, 4
+    // PROOF-ONLY: archive each frame slot before HALT so ares can validate
+    // both sides of HCOMP_RAW_PALETTE_PTRS across real RSP resumes.
+    b hcomp_raw_diag_frame
+    nop
+    nop
+    nop
 
 
 clear_cache:
@@ -1569,3 +1570,31 @@ hcomp_probe_color_row:
     jr ra
     nop
 
+
+// PROOF-ONLY: write separate persistent records for sp=0 and sp=4.
+// Mailboxes are in the audited RDRAM gap below the lowest Color Image.
+hcomp_raw_diag_frame:
+    lw a1, HCOMP_RAW_PALETTE_PTRS(sp)
+    li t0, 0xF10
+    sw a1, 0x00(t0)
+    sw sp, 0x04(t0)
+    li t1, 0x48524157 // "HRAW"
+    sw t1, 0x08(t0)
+    sw zero, 0x0C(t0)
+
+    addi a1, a1, 0x8
+    li a0, 0xF20
+    jal dma_read
+    li a2, 0x1F
+
+    sll t1, sp, 4 // sp0 -> +0, sp4 -> +0x40
+    li a1, 0xA00F0040
+    add a1, a1, t1
+    li a0, 0xF10
+    jal dma_write
+    li a2, 0x2F
+
+    li t0, 0x2
+    mtc0 t0, COP0_SP_STATUS
+    b draw_frame
+    xori sp, sp, 4

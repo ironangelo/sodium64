@@ -1243,7 +1243,7 @@ next_frame:
     // until a fixed-entry fault stub requests the opposite overlay.
     li t0, 0x2 // Set halt
     mtc0 t0, COP0_SP_STATUS
-    b draw_frame
+    b hcomp_raw_diag_frame
     xori sp, sp, 4
 
 
@@ -1599,5 +1599,28 @@ hcomp_probe_color_row:
     addi s0, s0, 16
 
     jr ra
-    nop
+    nop\n\n
+// PROOF-ONLY: validate RSP-side raw-palette queue selection and DMA without
+// changing the fixed renderer slot or invoking the dormant H-COMP kernel.
+// F10..F6F is audited padding below VEC_DATA=F70.
+hcomp_raw_diag_frame:
+    lw a1, HCOMP_RAW_PALETTE_PTRS(sp)
+    li t0, 0xF10
+    sw a1, 0x00(t0)
+    sw sp, 0x04(t0)
+    li t1, 0x48524157
+    sw t1, 0x08(t0)
+    sw zero, 0x0C(t0)
 
+    addi a1, a1, 0x8
+    li a0, 0xF20
+    jal dma_read
+    li a2, 0x1F
+
+    li a0, 0xF10
+    li a1, 0xA00F0040
+    jal dma_write
+    li a2, 0x2F
+
+    b draw_frame
+    nop

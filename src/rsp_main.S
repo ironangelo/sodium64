@@ -645,32 +645,21 @@ load_screen:
     bnez t0, bg_windows
     li t8, 0 // Span-byte index
 
-    // Preserve the no-window fast path as one explicit full-screen span.
-    sb zero, WIN_BOUNDS + 0
+    // Keep the historical no-window fast path and fixed-slot footprint.
     li t0, 255
-    sb t0, WIN_BOUNDS + 1
-    li t0, 1
-    sb t0, WIN_COUNT
     b next_tile
-    nop
+    sb t0, WIN_BOUNDS + 1
 
 bg_windows:
-    // Build exact visible spans for W1/W2 and the BG's logic operator.
-    lhu t0, WBGSEL
-    sll t1, s2, 1
-    srl t0, t0, t1
-    andi a0, t0, 0xF
-    lbu t0, WBGLOG
-    srl t0, t0, s2
-    andi a1, t0, 0x3
-    li a2, 0 // Return !selected = layer-visible pixels
-    jal calc_window_spans
+    // All selector/logic work lives in resident common code so this fixed-slot
+    // call site keeps the exact instruction footprint of the old W1 helper.
+    jal calc_bg_window_spans
     nop
-
-    // A fully masked layer has no visible span to draw.
     lbu t0, WIN_COUNT
     beqz t0, finish_row
     li t8, 0
+    nop
+    nop
 
 next_segment:
     // Set some values for updating segment bounds
@@ -845,15 +834,16 @@ finish_tile:
     addi t0, t0, -7
     blt s0, t0, next_tile
     addi s0, s0, 8
+    // Upper=255 is necessarily the final explicit span and also preserves the
+    // historical unwindowed fast path without consulting WIN_COUNT.
+    beq t0, 248, finish_row
 
 finish_segment:
-    // Advance by explicit span count; x=255 is never a terminator.
+    // Otherwise advance by explicit span count; x=255 is never a list sentinel.
     addi t8, t8, 2
     lbu t2, WIN_COUNT
-    srl t3, t8, 1
-    blt t3, t2, next_segment
-    nop
-    b finish_row
+    sll t2, t2, 1
+    blt t8, t2, next_segment
     nop
 
 finish_row:
@@ -1282,6 +1272,20 @@ shared_decode4:
     beqz t7, ret_jump
     spv $v02, 0, 0, t7
     jr t4
+
+
+calc_bg_window_spans:
+    // Regular-BG wrapper kept in both RSP variants so resident suffix layout
+    // remains byte-for-byte symmetric across overlay swaps.
+    lhu t0, WBGSEL
+    sll t1, s2, 1
+    srl t0, t0, t1
+    andi a0, t0, 0xF
+    lbu t0, WBGLOG
+    srl t0, t0, s2
+    andi a1, t0, 0x3
+    b calc_window_spans
+    li a2, 0
 
 
 calc_window_spans: // a0: selector, a1: logic, a2: 0=!selected / 1=selected

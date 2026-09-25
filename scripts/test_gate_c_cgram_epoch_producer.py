@@ -116,6 +116,7 @@ def prove_source_contract() -> None:
         "lbu t2, hvbjoy",
         "andi t2, t2, 0x80",
         "bnez t2, cg_epoch_done",
+        "lbu t2, frame_done",
         "lhu t2, hcomp_cgram_event_count",
         "li t3, HCOMP_CGRAM_EVENT_CAPACITY",
         "bge t2, t3, cg_epoch_overflow",
@@ -137,8 +138,12 @@ def prove_source_contract() -> None:
 
     if cg.index("bge t2, t3, cg_epoch_overflow") > cg.index("sw t3, 0(t4)"):
         raise AssertionError("overflow guard occurs after event write")
-    if cg.index("bnez t2, cg_epoch_done") > cg.index("sw t3, 0(t4)"):
+    first_guard = cg.index("bnez t2, cg_epoch_done")
+    frame_done_guard = cg.index("lbu t2, frame_done")
+    if first_guard > cg.index("sw t3, 0(t4)"):
         raise AssertionError("VBlank guard occurs after event write")
+    if frame_done_guard > cg.index("sw t3, 0(t4)"):
+        raise AssertionError("early-frame-close guard occurs after event write")
 
 
 def simulate_frame_slots(skip_pattern: tuple[bool, ...]) -> tuple[int, ...]:
@@ -220,6 +225,7 @@ def main() -> int:
     print("CGRAM_EPOCH_PRODUCER_MODEL_VALIDATED")
     print("queue_ownership=existing_queue_id")
     print("vblank_policy=base_snapshot")
+    print("early_frame_close_policy=fold_into_next_base_snapshot")
     print("active_cgdata=append_event_plus_next_line_section")
     print("section_sideband=event_count_plus_raw_coldata")
     print("overflow_guard=before_store")

@@ -204,6 +204,14 @@ pi_wait1:
     li t1, 0x55667788
     sw t1, 4(t0)
 
+    // Second alternating Mode7 texture destination. Reaching this writer in
+    // the unmodified RSP requires the first tile's rdp_send to have returned.
+    li t0, MODE7_TEXTURE + 0x1000
+    li t1, 0x99AABBCC
+    sw t1, 0(t0)
+    li t1, 0xDDEEFF00
+    sw t1, 4(t0)
+
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_PROFILE

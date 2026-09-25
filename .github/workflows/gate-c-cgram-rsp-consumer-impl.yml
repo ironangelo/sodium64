@@ -8,6 +8,8 @@ on:
       - src/defines.h
       - src/rsp_main.S
       - src/rsp_mode7.S
+      - src/main.S
+      - src/ppu.S
       - scripts/test_gate_c_cgram_epoch_contract.py
       - scripts/test_gate_c_cgram_rsp_consumer_contract.py
       - scripts/test_gate_c_cgram_rsp_consumer_impl.py
@@ -49,7 +51,9 @@ jobs:
 
       - name: Prove binary layout
         run: |
-          python3 scripts/test_gate_c_cgram_rsp_consumer_impl.py             --maps build/rsp_main.map build/rsp_mode7.map             --nms rsp-main.nm rsp-mode7.nm
+          python3 scripts/test_gate_c_cgram_rsp_consumer_impl.py \
+            --maps build/rsp_main.map build/rsp_mode7.map \
+            --symbols rsp-main.sym rsp-mode7.sym
 
       - name: Record hashes
         run: |

@@ -6,6 +6,9 @@ on:
       - phase4/gate-c-hcomp-third-overlay-rdram-proof
     paths:
       - src/rsp_hcomp.S
+      - scripts/test_gate_c_hcomp_third_overlay_exec.py
+      - scripts/test_gate_c_hcomp_third_overlay_boot.py
+      - scripts/make_gate_c_hcomp_third_overlay_boot.py
       - scripts/test_gate_c_hcomp_third_overlay_rdram.py
       - scripts/check_gate_c_hcomp_third_overlay_rdram.py
       - .github/workflows/gate-c-hcomp-third-overlay-rdram.yml

@@ -1,0 +1,72 @@
+name: Gate C CGRAM DMA8 RSP Consumer
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-cgram-epoch-rsp-consumer-dma8
+    paths:
+      - src/defines.h
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - scripts/test_gate_c_cgram_epoch_contract.py
+      - scripts/test_gate_c_cgram_rsp_consumer_contract.py
+      - scripts/test_gate_c_cgram_rsp_consumer_impl.py
+      - .github/workflows/gate-c-cgram-rsp-consumer-impl.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cgram-dma8-rsp-consumer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prove source/model contract
+        run: python3 scripts/test_gate_c_cgram_rsp_consumer_impl.py
+
+      - name: Build exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j$(nproc) 2>&1 | tee consumer-build.log
+          mips64-elf-nm -n build/src/rsp_main.o > rsp-main.nm
+          mips64-elf-nm -n build/src/rsp_mode7.o > rsp-mode7.nm
+
+      - name: Prove binary layout
+        run: |
+          python3 scripts/test_gate_c_cgram_rsp_consumer_impl.py             --maps build/rsp_main.map build/rsp_mode7.map             --nms rsp-main.nm rsp-mode7.nm
+
+      - name: Record hashes
+        run: |
+          sha256sum sodium64.z64 build/sodium64.elf build/src/rsp_main.o build/src/rsp_mode7.o | tee consumer-hashes.txt
+
+      - name: Upload consumer proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-cgram-dma8-rsp-consumer
+          retention-days: 30
+          path: |
+            consumer-build.log
+            consumer-hashes.txt
+            rsp-main.nm
+            rsp-mode7.nm
+            build/rsp_main.map
+            build/rsp_mode7.map
+            build/src/rsp_main.o
+            build/src/rsp_mode7.o
+            build/sodium64.elf
+            sodium64.z64

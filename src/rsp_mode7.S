@@ -245,9 +245,11 @@ next_section:
     addi a1, a1, SECTION_SIZE
     sw a1, SECTION_PTR(sp)
 
-    // Set the section bounds
+    // Set the section bounds, then replay this section's typed CGRAM epoch.
+    // Direct branch keeps the fixed pre-overlay instruction count unchanged.
+    b hcomp_cgram_consume
     move k0, k1
-    lbu k1, SPLIT_LINE
+hcomp_cgram_return:
 
     // Check if this section has an OAM update
     lbu t0, STAT_FLAGS
@@ -414,18 +416,20 @@ fill_main:
     b fill_backdrop
     lhu s0, MAIN_COLOR
 
+hcomp_cgram_consume:
 fill_win:
-    // Kept as padding labels so the pre-overlay prefix retains its exact size.
-    nop
-    nop
+    // Reclaim the legacy 8-instruction padding without moving the fixed
+    // renderer slot. EA0 is the CPU-published logical 4-byte record cursor.
+    lw t6, HCOMP_CGRAM_EVENT_CURSOR
+    andi t7, t6, 0x4
 fill_notwin:
-    nop
+    bnez t7, hcomp_cgram_pair_ready
 use_window:
-    nop
-    nop
-    nop
-    nop
-    nop
+    li a0, HCOMP_CGRAM_PAIR_SCRATCH
+    move a1, t6
+    jal dma_read
+    li a2, 0x7
+    b hcomp_cgram_pair_ready
 
 fill_backdrop:
     // Update the RDP fill bounds for a window segment
@@ -903,8 +907,6 @@ start_objects:
     or t0, t0, t1
     andi t0, t0, 0x10
     beqz t0, obj_no_windows
-    nop
-
     lbu a0, WOBJSEL
     andi a0, a0, 0xF
     lbu a1, WOBJLOG
@@ -1111,11 +1113,10 @@ next_object:
 
     // The unwindowed path is still a single object-list traversal.
     bltz t8, obj_finish_objects
-    nop
+    lbu t2, WIN_COUNT
 
     // Advance by explicit span count, never by an in-band coordinate sentinel.
     // This keeps x=255 available as an ordinary legal lower/upper endpoint.
-    lbu t2, WIN_COUNT
     addi t8, t8, 2
     sll t2, t2, 1
     beq t8, t2, obj_windows_done
@@ -1250,10 +1251,9 @@ calc_color_window_segments:
     beqz t1, color_window_all
     li t2, 3
     beq t1, t2, color_window_none
-    nop
+    lbu t0, WOBJSEL
 
     // Modes 1/2 are selected/complement of the OBJ color-window selector.
-    lbu t0, WOBJSEL
     srl a0, t0, 4
     lbu t0, WOBJLOG
     srl t0, t0, 2
@@ -1264,10 +1264,9 @@ calc_color_window_segments:
 
     lbu t8, WIN_COUNT
     beqz t8, color_window_none
-    nop
+    lbu t0, WIN_BOUNDS + 0 // L1
 
     // Snapshot all possible span endpoints before overwriting E85 onward.
-    lbu t0, WIN_BOUNDS + 0 // L1
     lbu t1, WIN_BOUNDS + 1 // U1
     lbu t2, WIN_BOUNDS + 2 // L2
     lbu t3, WIN_BOUNDS + 3 // U2
@@ -1278,7 +1277,6 @@ calc_color_window_segments:
     lhu s0, MAIN_COLOR
     lhu s1, SUB_COLOR
     bnez t0, color_window_initial_ready
-    nop
     move a1, s0
     move s0, s1
     move s1, a1
@@ -1297,16 +1295,12 @@ color_window_first_upper:
     addi a0, a0, 1
     li a1, 1
     beq t8, a1, color_window_tail
-    nop
-
     addi a1, t2, -1
     sb a1, 0(a0)
     sb t3, 1(a0)
     addi a0, a0, 2
     li a1, 2
     beq t8, a1, color_window_tail
-    nop
-
     addi a1, t4, -1
     sb a1, 0(a0)
     sb t7, 1(a0)
@@ -1619,3 +1613,36 @@ overlay_load_main:
     li a2, 0x3E7
     b draw_bg
     move t0, v0
+
+
+hcomp_cgram_pair_ready:
+    // Select word0/word1 from the cached aligned pair and advance logical cursor.
+    add t0, a0, t7
+    lw t8, 0(t0)
+    addi t6, t6, 4
+    sw t6, HCOMP_CGRAM_EVENT_CURSOR
+
+    // Marker bit15 ends this section. Its raw RGBA5551 payload remains in t7
+    // for the future H-COMP continuation, which is deliberately still frozen.
+    andi t0, t8, 0x8000
+    bnez t0, hcomp_cgram_marker
+    srl t7, t8, 16
+
+    // Color event: duplicate the raw RGBA5551 payload into one aligned 8-byte
+    // palette entry and write it to the handed slot's owned raw shadow.
+    sll t0, t7, 16
+    or t7, t7, t0
+    sw t7, HCOMP_CGRAM_WRITE_SCRATCH
+    sw t7, HCOMP_CGRAM_WRITE_SCRATCH + 4
+    andi t0, t8, 0x7F8
+    lw a1, HCOMP_RAW_PALETTE_PTRS(sp)
+    add a1, a1, t0
+    li a0, HCOMP_CGRAM_WRITE_SCRATCH
+    jal dma_write
+    li a2, 0x7
+    b hcomp_cgram_consume
+    nop
+
+hcomp_cgram_marker:
+    b hcomp_cgram_return
+    lbu k1, SPLIT_LINE

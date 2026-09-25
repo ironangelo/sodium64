@@ -51,6 +51,7 @@ def source_contract()->None:
     defs=(ROOT/"src/defines.h").read_text()
     ppu=(ROOT/"src/ppu.S").read_text()
     rsp=(ROOT/"src/rsp_main.S").read_text()
+    rsp7=(ROOT/"src/rsp_mode7.S").read_text()
 
     anchors_defs=(
       "#define SECTION_SIZE 0x40",
@@ -89,7 +90,7 @@ def source_contract()->None:
         if a not in ppu:
             raise AssertionError(f"CPU section-production anchor drift: {a}")
 
-    # Pin the consumer side only as context: this proof does not claim it ran.
+    # Pin shared consumer dispatch in the regular resident image.
     for a in (
       "next_section:",
       "li a0, BGHOFS",
@@ -98,6 +99,13 @@ def source_contract()->None:
       "lbu s3, BG_MODE",
       "andi s3, s3, 0xF",
       "beq t0, t1, draw_mode7_entry",
+    ):
+        if a not in rsp:
+            raise AssertionError(f"RSP section-consumer anchor drift: {a}")
+
+    # The OOB fast path lives only in the true Mode7 overlay payload.
+    mode7_anchors=(
+      "draw_mode7_impl:",
       "check_wrap:",
       "andi t6, t0, 0xC0",
       "bne t6, t1, set_texels",
@@ -105,9 +113,16 @@ def source_contract()->None:
       "bnez t0, finish_tile7",
       "set_texels:",
       "entry_row:",
+    )
+    for a in mode7_anchors:
+        if a not in rsp7:
+            raise AssertionError(f"Mode7 fast-path anchor drift: {a}")
+    if not (
+        rsp7.index("check_wrap:")
+        < rsp7.index("set_texels:")
+        < rsp7.index("entry_row:")
     ):
-        if a not in rsp:
-            raise AssertionError(f"RSP section-consumer anchor drift: {a}")
+        raise AssertionError("Mode7 OOB early-out ordering drift")
 
 def records(data:bytes,count:int=8)->list[dict]:
     if len(data)<count*SECTION_SIZE:

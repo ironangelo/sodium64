@@ -226,12 +226,37 @@ def prove_source() -> None:
     rf = extract(ppu, "rsp_frame:", "ignore_frame:")
     if "hcomp_raw_pal_queues" in rf:
         raise AssertionError("rsp_frame still overwrites historical raw shadow")
+    # Handoff ownership: t5 is the completed/current producer slot, t6 is the
+    # opposite slot selected for the next CPU frame. The CPU must wait for the
+    # previous RSP frame before publishing t5 to EA0, then unhalt the RSP.
+    handoff_anchors = (
+        "lbu t5, queue_id",
+        "xori t6, t5, 4",
+        "sb t6, queue_id",
+        "rsp_wait:",
+        "lw t0, hcomp_cgram_event_queues(t5)",
+        "sw t0, DMEM(HCOMP_CGRAM_EVENT_CURSOR)",
+        "lw t0, 0xA404001C",
+        "sw t0, 0x0010(t1)",
+    )
+    for anchor in handoff_anchors:
+        if anchor not in rf:
+            raise AssertionError(f"handoff source missing {anchor!r}")
+    save_slot = rf.index("lbu t5, queue_id")
+    switch_next = rf.index("sb t6, queue_id")
+    wait_rsp = rf.index("rsp_wait:")
+    select = rf.index("lw t0, hcomp_cgram_event_queues(t5)")
     handoff = rf.index("sw t0, DMEM(HCOMP_CGRAM_EVENT_CURSOR)")
-    select = rf.rfind("lw t0, hcomp_cgram_event_queues(t5)", 0, handoff)
     semaphore = rf.index("lw t0, 0xA404001C")
     unhalt = rf.index("sw t0, 0x0010(t1)")
-    if select < 0 or not (select < handoff < semaphore < unhalt):
-        raise AssertionError("EA0 publication ordering drift")
+    if not (save_slot < switch_next < wait_rsp < select < handoff < semaphore < unhalt):
+        raise AssertionError("completed-slot/EA0 handoff ordering drift")
+    for slot in (0, 4):
+        completed = slot
+        next_producer = slot ^ 4
+        published = slot
+        if completed == next_producer or published != completed:
+            raise AssertionError("queue parity handoff model drift")
     if ppu.count("DMEM(HCOMP_CGRAM_EVENT_CURSOR)") != 1:
         raise AssertionError("EA0 publication count drift")
 
@@ -254,7 +279,8 @@ def main() -> int:
     print("event_margin=3796")
     print(f"producer_consumer_roundtrip_cases={cases}")
     print("event_cursor_dmem=0xEA0")
-    print("event_cursor_publish=before_rsp_unhalt")
+    print("event_cursor_publish=completed_t5_after_rsp_wait_before_unhalt")
+    print("next_cpu_producer=completed_t5_xor_4")
     print("rsp_consumer=still_frozen")
     print("hcomp_arithmetic=still_frozen")
     return 0

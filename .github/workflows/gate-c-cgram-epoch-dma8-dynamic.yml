@@ -186,7 +186,7 @@ jobs:
           set -euo pipefail
           python3 scripts/check_gate_c_cgram_epoch_dma8_dynamic.py evidence \
             --guest guest-a.smc --output evidence/result.json
-          grep -q 'CGRAM_DMA8_DYNAMIC_PRODUCER_VALIDATED' evidence/result.json
+          grep -q 'CGRAM_DMA8_DYNAMIC_PRODUCER_REPRESENTATION_VALIDATED' evidence/result.json
 
       - name: Upload DMA8 CGRAM evidence
         if: always()

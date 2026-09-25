@@ -85,7 +85,9 @@ def decode_record(rec: bytes) -> tuple[str, int, int]:
     return ("color", meta >> 3, rgb)
 
 
-def parse_handed_stream(data: bytes, phase: str) -> dict[str, object]:
+def parse_producer_stream(data: bytes, phase: str, record_count: int) -> dict[str, object]:
+    if not 1 <= record_count <= MAX_RECORDS:
+        raise ValueError(f"captured producer record count outside 1..{MAX_RECORDS}: {record_count}")
     expected_fixed = int(PHASES[phase]["fixed"])
     color_pos = 0
     first_color_index = None
@@ -94,9 +96,7 @@ def parse_handed_stream(data: bytes, phase: str) -> dict[str, object]:
     markers_before = 0
     interleaved_markers = 0
 
-    # Decode lazily so stale/padding bytes after the terminal active marker are
-    # outside the stream contract and cannot create a false classifier failure.
-    for i in range(MAX_RECORDS):
+    for i in range(record_count):
         kind, index, value = decode_record(data[i * 4:(i + 1) * 4])
         if kind == "marker":
             if color_pos < len(EXPECTED_COLORS):
@@ -146,49 +146,20 @@ def parse_handed_stream(data: bytes, phase: str) -> dict[str, object]:
 
 
 def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
-    # EA0 lives in SP DMEM, which Mupen's dumpmem command refuses because it
-    # is hard-limited to RDRAM. The proof harness reads it through the generic
-    # debugger "mem" command instead. That textual word is already the logical
-    # 32-bit value, so it must NOT receive the RDRAM dump normalization.
+    # EA0 is observed separately from the live producer. In this pinned Mupen
+    # lab the CPU is known (including on the older validated proof) to pause in
+    # rsp_wait before the next completed frame can be published to EA0.
     ea0_text = (root / f"{prefix}-ea0.txt").read_text(encoding="utf-8").strip()
     if not ea0_text:
         raise ValueError("EA0 text read is empty")
     ea0 = int(ea0_text, 16)
-    slot = next((s for s, base in EVENT_BASE.items() if ea0 == base), None)
-    if slot is None:
+    handed_slot = next((s for s, base in EVENT_BASE.items() if ea0 == base), None)
+    if handed_slot is None:
         return {
             "passed": False, "prefix": prefix, "normalization": mode,
-            "reason": "EA0 is not an exact handed event-queue base",
+            "reason": "EA0 is not an exact event-queue base",
             "ea0": f"0x{ea0:08X}",
         }
-
-    base = norm((root / f"{prefix}-{BASE_FILE[slot]}.bin").read_bytes(), mode)
-    raw = norm((root / f"{prefix}-{RAW_FILE[slot]}.bin").read_bytes(), mode)
-    event = norm((root / f"{prefix}-{EVENT_FILE[slot]}.bin").read_bytes(), mode)
-    first3 = words16(base, 3)
-    phase = next((name for name, info in PHASES.items() if first3 == info["base"]), None)
-    if phase is None:
-        return {
-            "passed": False, "prefix": prefix, "normalization": mode, "slot": slot,
-            "reason": "handed base snapshot is not phase A/B",
-            "base_first3": [f"0x{x:04X}" for x in first3],
-        }
-
-    raw3 = raw_entries(raw, 3)
-    if raw3 != first3:
-        return {
-            "passed": False, "prefix": prefix, "normalization": mode, "slot": slot,
-            "phase": phase, "reason": "raw shadow is not historical base",
-            "base_first3": [f"0x{x:04X}" for x in first3],
-            "raw_first3": [f"0x{x:04X}" for x in raw3],
-        }
-    if raw3 == EXPECTED_FINAL:
-        return {
-            "passed": False, "prefix": prefix, "normalization": mode, "slot": slot,
-            "phase": phase, "reason": "raw shadow looks frame-final instead of historical-base",
-        }
-
-    stream = parse_handed_stream(event, phase)
 
     state = norm((root / f"{prefix}-state.bin").read_bytes(), mode)
     if len(state) != 12:
@@ -197,18 +168,14 @@ def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
     producer_count = int.from_bytes(state[8:10], "big")
     producer_overflow = state[10]
     producer_slot = None
-    for s, base_addr in EVENT_BASE.items():
-        if base_addr <= producer_ptr <= base_addr + 0x18000 and (producer_ptr - base_addr) % 4 == 0:
-            producer_slot = s
+    for candidate, base_addr in EVENT_BASE.items():
+        if producer_ptr == base_addr + producer_count * 4:
+            producer_slot = candidate
             break
-
-    # Stable pipeline evidence requires CPU producer ownership to have moved to
-    # the opposite slot while EA0 keeps the handed slot. Pause races are simply
-    # rejected so another snapshot can qualify.
-    if producer_slot is None or producer_slot == slot:
+    if producer_slot is None:
         return {
-            "passed": False, "prefix": prefix, "normalization": mode, "slot": slot,
-            "phase": phase, "reason": "snapshot does not show opposite producer/handed ownership",
+            "passed": False, "prefix": prefix, "normalization": mode,
+            "reason": "event pointer/count is not coherent with Q1/Q2",
             "producer_ptr": f"0x{producer_ptr:08X}",
             "producer_count": producer_count,
         }
@@ -219,20 +186,54 @@ def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
             "producer_overflow": producer_overflow,
         }
 
+    base = norm((root / f"{prefix}-{BASE_FILE[producer_slot]}.bin").read_bytes(), mode)
+    raw = norm((root / f"{prefix}-{RAW_FILE[producer_slot]}.bin").read_bytes(), mode)
+    event = norm((root / f"{prefix}-{EVENT_FILE[producer_slot]}.bin").read_bytes(), mode)
+    first3 = words16(base, 3)
+    phase = next((name for name, info in PHASES.items() if first3 == info["base"]), None)
+    if phase is None:
+        return {
+            "passed": False, "prefix": prefix, "normalization": mode,
+            "producer_slot": producer_slot,
+            "reason": "live producer base snapshot is not phase A/B",
+            "base_first3": [f"0x{x:04X}" for x in first3],
+        }
+
+    raw3 = raw_entries(raw, 3)
+    if raw3 != first3:
+        return {
+            "passed": False, "prefix": prefix, "normalization": mode,
+            "producer_slot": producer_slot, "phase": phase,
+            "reason": "raw shadow is not historical producer base",
+            "base_first3": [f"0x{x:04X}" for x in first3],
+            "raw_first3": [f"0x{x:04X}" for x in raw3],
+        }
+    if raw3 == EXPECTED_FINAL:
+        return {
+            "passed": False, "prefix": prefix, "normalization": mode,
+            "producer_slot": producer_slot, "phase": phase,
+            "reason": "raw shadow looks frame-final instead of historical-base",
+        }
+
+    stream = parse_producer_stream(event, phase, producer_count)
+    relation = "same_slot" if handed_slot == producer_slot else "previous_slot"
+
     return {
-        "classification": "CGRAM_DMA8_DYNAMIC_PRODUCER_VALIDATED",
+        "classification": "CGRAM_DMA8_DYNAMIC_PRODUCER_REPRESENTATION_VALIDATED",
         "passed": True,
         "prefix": prefix,
         "normalization": mode,
-        "handed_slot": slot,
         "producer_slot": producer_slot,
         "phase": phase,
-        "ea0": f"0x{ea0:08X}",
         "producer_ptr": f"0x{producer_ptr:08X}",
         "producer_count": producer_count,
         "producer_overflow": producer_overflow,
         "base_first3": [f"0x{x:04X}" for x in first3],
         "raw_first3": [f"0x{x:04X}" for x in raw3],
+        "ea0": f"0x{ea0:08X}",
+        "ea0_slot_observed": handed_slot,
+        "ea0_relation_to_live_producer": relation,
+        "ea0_next_handoff_dynamic_claim": "not_made_pinned_mupen_rsp_wait_lab_limit",
         **stream,
     }
 
@@ -270,13 +271,16 @@ def encode_record(kind: str, index: int, rgb: int) -> bytes:
 def write_snapshot(root: Path, prefix: str, mode: str, handed: int, phase: str) -> None:
     root.mkdir(parents=True, exist_ok=True)
     producer = handed ^ 4
+    records = [encode_record("marker", -1, int(PHASES[phase]["fixed"]))]
+    records += [encode_record("color", i, v) for i, v in EXPECTED_COLORS]
+    records.append(encode_record("marker", -1, ACTIVE_FIXED))
+    count = len(records)
     state = (
-        (EVENT_BASE[producer] + 12).to_bytes(4, "big")
+        (EVENT_BASE[producer] + count * 4).to_bytes(4, "big")
         + (0).to_bytes(4, "big")
-        + (3).to_bytes(2, "big")
+        + count.to_bytes(2, "big")
         + b"\x00\x00"
     )
-    ea0 = EVENT_BASE[handed].to_bytes(4, "big")
 
     base = bytearray(16)
     for i, value in enumerate(PHASES[phase]["base"]):
@@ -288,9 +292,6 @@ def write_snapshot(root: Path, prefix: str, mode: str, handed: int, phase: str) 
         raw[i * 8:(i + 1) * 8] = rgba * 4
 
     event = bytearray(256)
-    records = [encode_record("marker", -1, int(PHASES[phase]["fixed"]))]
-    records += [encode_record("color", i, v) for i, v in EXPECTED_COLORS]
-    records.append(encode_record("marker", -1, ACTIVE_FIXED))
     for i, rec in enumerate(records):
         event[i * 4:(i + 1) * 4] = rec
 
@@ -300,7 +301,7 @@ def write_snapshot(root: Path, prefix: str, mode: str, handed: int, phase: str) 
     save("state", state)
     (root / f"{prefix}-ea0.txt").write_text(f"{EVENT_BASE[handed]:08x}\n", encoding="utf-8")
     for s in (0, 4):
-        if s == handed:
+        if s == producer:
             save(BASE_FILE[s], bytes(base))
             save(RAW_FILE[s], bytes(raw))
             save(EVENT_FILE[s], bytes(event))
@@ -317,15 +318,16 @@ def self_test() -> None:
             write_snapshot(root, "snap0", mode, handed, phase)
             result = classify(root)
             assert result["passed"], result
-            assert result["handed_slot"] == handed
+            assert result["ea0_slot_observed"] == handed
+            assert result["producer_slot"] == (handed ^ 4)
             assert result["phase"] == phase
 
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         write_snapshot(root, "snap0", "identity", 0, "A")
-        raw = bytearray((root / "snap0-raw-q1.bin").read_bytes())
+        raw = bytearray((root / "snap0-raw-q2.bin").read_bytes())
         raw[0:8] = rgb555_to_rgba5551(0x2AAA).to_bytes(2, "big") * 4
-        (root / "snap0-raw-q1.bin").write_bytes(raw)
+        (root / "snap0-raw-q2.bin").write_bytes(raw)
         assert not classify(root)["passed"]
 
 
@@ -339,7 +341,7 @@ def main() -> int:
 
     if args.self_test:
         self_test()
-        print("CGRAM DMA8 dynamic classifier self-test: PASS")
+        print("CGRAM DMA8 dynamic producer-representation classifier self-test: PASS")
         return 0
     if args.evidence is None:
         ap.error("evidence directory is required unless --self-test is used")

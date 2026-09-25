@@ -1946,3 +1946,9 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - **Interpretation if smoke FAIL:** do not blame CGRAM semantics immediately; inspect exact failing job/log and separate build artifact/harness failure from runtime regression. Candidate remains unaccepted.
 - **L0 authority strengthened:** corrected consumer proof `phase4/gate-c-cgram-epoch-rsp-consumer-contract@3c108b5aa651918cc34477ce1502d67a99009f50` has dedicated run **36091116148 SUCCESS**, including the explicit word0-marker/word1-next-section cached-half discriminator. Producer branch was forked before that host-only correction; production semantics are compatible, but carry the hardened oracle forward before acceptance.
 - **RESUME HERE:** first read run36091025562 completion. If green, absorb/reuse hardened L0 oracle semantics on the producer branch and create a dedicated DMA8 producer oracle before any RSP implementation. Then design a dynamic guest proof that can distinguish base-vs-final raw shadow and inspect typed stream/marker bytes + EA0 handed pointer. Keep H-COMP arithmetic frozen.
+
+
+### 2026-09-25 checkpoint addendum — DMA8 producer generic run GREEN
+
+- **VALIDATED / generic hygiene only:** **Build and Validate 36091025562 SUCCESS** on `phase4/gate-c-cgram-epoch-dma8-producer@683e2c493f679dcde34b1c89d75930a15051b9bc`: normal build, PROFILE build and pinned emulator smoke all completed successfully. This clears the pending generic-smoke question from the STOP checkpoint.
+- **Acceptance boundary unchanged:** green generic CI proves the CPU-side representation candidate still builds/boots under the bounded harness; it does **not** prove typed stream byte semantics, historical-base raw-shadow contents, marker chronology or EA0 handed-slot value. Those remain the immediate dedicated/dynamic proof before any RSP consumer code.

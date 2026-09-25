@@ -34,7 +34,7 @@ hcomp_entry:
 
 // hcomp_entry grows only into pre-existing slot padding; external Mode7 entry
 // remains fixed at 0x1788 and total payload remains 0x790.
-.byte 0:0x3AC
+.byte 0:0x3B0
 
 draw_mode7_entry:
     // Neutral H-COMP-resident fault surface for Mode7 rendering.

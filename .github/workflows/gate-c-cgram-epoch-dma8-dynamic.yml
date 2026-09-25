@@ -1,0 +1,188 @@
+name: Gate C CGRAM DMA8 Dynamic Producer Proof
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-cgram-epoch-dma8-dynamic-proof
+    paths:
+      - scripts/make_gate_c_cgram_epoch_dma8_dynamic.py
+      - scripts/check_gate_c_cgram_epoch_dma8_dynamic.py
+      - .github/workflows/gate-c-cgram-epoch-dma8-dynamic.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-cgram-dma8-dynamic-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cgram-dma8-dynamic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-test generator and classifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/check_gate_c_cgram_epoch_dma8_dynamic.py --self-test
+          python3 scripts/make_gate_c_cgram_epoch_dma8_dynamic.py guest-a.smc
+          python3 scripts/make_gate_c_cgram_epoch_dma8_dynamic.py guest-b.smc
+          cmp guest-a.smc guest-b.smc
+          test "$(stat -c %s guest-a.smc)" -eq 32768
+          sha256sum guest-a.smc | tee guest.sha256
+
+      - name: Build exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j$(nproc) 2>&1 | tee build.log
+          sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
+          state_hex="$(readelf -sW build/sodium64.elf | awk '$8=="hcomp_cgram_event_ptr"{print $2; exit}')"
+          test -n "$state_hex"
+          printf '0x%s\n' "$state_hex" | tee state.addr
+          echo "CGRAM_STATE_ADDR=0x$state_hex" >> "$GITHUB_ENV"
+
+      - name: Wrap deterministic guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir workload
+          cp sodium64.z64 rom-converter.py guest-a.smc workload/
+          (
+            cd workload
+            python3 rom-converter.py </dev/null
+          )
+          test -f workload/out/guest-a.z64
+          sha256sum workload/out/guest-a.z64 | tee wrapped.sha256
+
+      - name: Install Mupen64Plus build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential expect git libfreetype6-dev libgl1-mesa-dev \
+            libglu1-mesa-dev libpng-dev libsdl2-dev libvulkan-dev pkg-config zlib1g-dev
+
+      - name: Build pinned Mupen64Plus debugger and LLE RSP
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/sodium64-mupen"
+          mkdir -p "$root"
+          cd "$root"
+
+          git clone https://github.com/mupen64plus/mupen64plus-core.git
+          git -C mupen64plus-core checkout b20b27ebf9e5b099a978e86dba609111dc98c837
+          git clone https://github.com/mupen64plus/mupen64plus-ui-console.git
+          git -C mupen64plus-ui-console checkout c8ac4862a019d7885b24927d9b4db5dd3e42a528
+          git clone https://github.com/mupen64plus/mupen64plus-rsp-cxd4.git
+          git -C mupen64plus-rsp-cxd4 checkout 00906a92641c540a64e4e7505012157315314810
+
+          export PATH="$root/mupen64plus-core/.github/workflows/scripts:$PATH"
+          cd "$root/mupen64plus-core"
+          export CONFIG_OVERRIDE="DEBUGGER=1 DEBUGGER_NO_DISASM=1 NEW_DYNAREC=0 NO_ASM=1"
+          ci_build.sh x64 gcc
+
+          cd "$root/mupen64plus-ui-console"
+          export CONFIG_OVERRIDE=""
+          ci_build.sh x64 gcc
+
+          cd "$root/mupen64plus-rsp-cxd4"
+          export CONFIG_OVERRIDE='SSE="none"'
+          export OPTFLAGS="-O3"
+          ci_build.sh x64 gcc
+
+          core_lib=$(find "$root/mupen64plus-core/pkg/usr/local/lib" -maxdepth 1 -type f -name 'libmupen64plus.so*' | head -n1)
+          ui_bin="$root/mupen64plus-ui-console/pkg/usr/local/bin/mupen64plus"
+          rsp_lib=$(find "$root/mupen64plus-rsp-cxd4/pkg/usr/local/lib/mupen64plus" -type f -name '*cxd4*.so' | head -n1)
+          data_dir="$root/mupen64plus-core/pkg/usr/local/share/mupen64plus"
+          {
+            echo "M64P_CORE=$core_lib"
+            echo "M64P_UI=$ui_bin"
+            echo "M64P_RSP=$rsp_lib"
+            echo "M64P_DATA=$data_dir"
+            echo "M64P_LIBDIR=$(dirname "$core_lib")"
+          } >> "$GITHUB_ENV"
+
+      - name: Capture read-only DMA8 CGRAM snapshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence "$RUNNER_TEMP/m64p-config"
+          cat > "$RUNNER_TEMP/cgram-dma8.expect" <<'EOF'
+          set timeout 80
+          log_file evidence/mupen.log
+          spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) $env(M64P_UI) \
+            --corelib $env(M64P_CORE) \
+            --datadir $env(M64P_DATA) \
+            --configdir $env(RUNNER_TEMP)/m64p-config \
+            --debug --emumode 0 --nospeedlimit \
+            --gfx dummy --audio dummy --input dummy --rsp $env(M64P_RSP) \
+            workload/out/guest-a.z64
+          expect "(dbg)"
+          for {set n 0} {$n < 8} {incr n} {
+            send "run\r"
+            if {$n == 0} { after 5000 } else { after 700 }
+            send "pause\r"
+            expect "(dbg)"
+            send "dumpmem $env(CGRAM_STATE_ADDR) 12 evidence/snap$n-state.bin\r"
+            expect "(dbg)"
+            send "dumpmem 0xA4000EA0 4 evidence/snap$n-ea0.bin\r"
+            expect "(dbg)"
+            send "dumpmem 0xA00BE200 16 evidence/snap$n-base-q1.bin\r"
+            expect "(dbg)"
+            send "dumpmem 0xA00BE400 16 evidence/snap$n-base-q2.bin\r"
+            expect "(dbg)"
+            send "dumpmem 0xA00EF000 32 evidence/snap$n-raw-q1.bin\r"
+            expect "(dbg)"
+            send "dumpmem 0xA00EF800 32 evidence/snap$n-raw-q2.bin\r"
+            expect "(dbg)"
+            send "dumpmem 0xA00BF000 256 evidence/snap$n-event-q1.bin\r"
+            expect "(dbg)"
+            send "dumpmem 0xA00D7000 256 evidence/snap$n-event-q2.bin\r"
+            expect "(dbg)"
+          }
+          send "quit\r"
+          expect eof
+          EOF
+          expect "$RUNNER_TEMP/cgram-dma8.expect"
+          test "$(find evidence -name 'snap*-state.bin' | wc -l)" -eq 8
+
+      - name: Classify DMA8 producer evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/check_gate_c_cgram_epoch_dma8_dynamic.py evidence \
+            --guest guest-a.smc --output evidence/result.json
+          grep -q 'CGRAM_DMA8_DYNAMIC_PRODUCER_VALIDATED' evidence/result.json
+
+      - name: Upload DMA8 CGRAM evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-cgram-dma8-dynamic-evidence
+          retention-days: 30
+          path: |
+            evidence/
+            guest-a.smc
+            guest.sha256
+            wrapped.sha256
+            runtime.sha256
+            state.addr
+            build.log
+            build/sodium64.map
+            build/rsp_main.map
+            build/rsp_mode7.map

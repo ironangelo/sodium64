@@ -1,0 +1,58 @@
+name: Gate C H-COMP Third Overlay Contract
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-hcomp-third-overlay-contract
+    paths:
+      - scripts/test_gate_c_hcomp_third_overlay_contract.py
+      - .github/workflows/gate-c-hcomp-third-overlay-contract.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-hcomp-third-overlay-contract-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  third-overlay-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prove zero-growth third-overlay contract
+        run: python3 scripts/test_gate_c_hcomp_third_overlay_contract.py
+
+      - name: Prove zero runtime delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee third-overlay-contract-build.log
+          sha256sum sodium64.z64 build/sodium64.elf | tee third-overlay-contract-runtime.sha256
+          grep -q '^2d38cc4b257d2fa59de52ff99afa57403a9afab978d0c1c8528d2106d2537385  sodium64.z64$' third-overlay-contract-runtime.sha256
+          grep -q '^06989e56faaf07916695bb36bf507f64c474bb35e9aef42dc6bc3d26604e2504  build/sodium64.elf$' third-overlay-contract-runtime.sha256
+
+      - name: Upload contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-hcomp-third-overlay-contract
+          retention-days: 30
+          path: |
+            third-overlay-contract-build.log
+            third-overlay-contract-runtime.sha256
+            build/rsp_main.map
+            build/rsp_mode7.map

@@ -45,8 +45,17 @@ def prove_layout_source() -> None:
 
 def prove_source_contract() -> None:
     ppu = (ROOT / "src/ppu.S").read_text()
+    main_src = (ROOT / "src/main.S").read_text()
     main_rsp = (ROOT / "src/rsp_main.S").read_text()
     mode7_rsp = (ROOT / "src/rsp_mode7.S").read_text()
+
+    # The manual epoch arena is below FRAMEBUFFER1, so boot must clear from
+    # its true low-water mark or the first produced Q1 base would be undefined.
+    clear_block = extract(main_src, "// Clear the complete fixed RDRAM arena", "// Initialize the VI")
+    if "li t0, HCOMP_CGRAM_BASE_QUEUE1" not in clear_block:
+        raise AssertionError("startup clear does not initialize CGRAM epoch arena")
+    if "li t1, JIT_BUFFER - 8" not in clear_block:
+        raise AssertionError("startup clear upper bound drift")
 
     # Producer only: RSP consumption remains frozen.
     for src, name in ((main_rsp, "rsp_main"), (mode7_rsp, "rsp_mode7")):

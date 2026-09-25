@@ -140,8 +140,16 @@ jobs:
             expect "(dbg)"
             send "dumpmem $env(CGRAM_STATE_ADDR) 12 evidence/snap$n-state.bin\r"
             expect "(dbg)"
-            send "dumpmem 0xA4000EA0 4 evidence/snap$n-ea0.bin\r"
+
+            # dumpmem is hard-limited to RDRAM in this pinned UI, but the
+            # generic mem command uses DebugMemRead32 and supports RSP DMEM.
+            send "mem /1w A4000EA0\r"
+            expect -re {[\r\n]+([0-9a-fA-F]{8})[ \t]*[\r\n]+}
+            set fd [open "evidence/snap$n-ea0.txt" w]
+            puts $fd $expect_out(1,string)
+            close $fd
             expect "(dbg)"
+
             send "dumpmem 0xA00BE200 16 evidence/snap$n-base-q1.bin\r"
             expect "(dbg)"
             send "dumpmem 0xA00BE400 16 evidence/snap$n-base-q2.bin\r"
@@ -160,6 +168,7 @@ jobs:
           EOF
           expect "$RUNNER_TEMP/cgram-dma8.expect"
           test "$(find evidence -name 'snap*-state.bin' | wc -l)" -eq 8
+          test "$(find evidence -name 'snap*-ea0.txt' | wc -l)" -eq 8
 
       - name: Classify DMA8 producer evidence
         shell: bash

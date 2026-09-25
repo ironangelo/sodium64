@@ -76,18 +76,16 @@ def source_contract()->None:
     if x!=MODE7_TEXTURE_KSEG1 or x-0x20000000!=MODE7_TEXTURE_KSEG0:
         raise AssertionError(f"MODE7_TEXTURE address mismatch: {x:#x}")
 
-    seed=(
-      "li t0, MODE7_TEXTURE",
-      "li t1, 0x11223344",
-      "sw t1, 0(t0)",
-      "li t1, 0x55667788",
-      "sw t1, 4(t0)",
-    )
-    positions=[main.index(a) for a in seed]
-    if positions!=sorted(positions):
-        raise AssertionError("texture sentinel instruction ordering drift")
+    seed_block="""    li t0, MODE7_TEXTURE
+    li t1, 0x11223344
+    sw t1, 0(t0)
+    li t1, 0x55667788
+    sw t1, 4(t0)"""
+    if main.count(seed_block)!=1:
+        raise AssertionError("texture sentinel block missing or duplicated")
+    seed_pos=main.index(seed_block)
     if not (
-        main.index("DMEM(HCOMP_RAW_PALETTE_PTRS + 4)") < positions[0]
+        main.index("DMEM(HCOMP_RAW_PALETTE_PTRS + 4)") < seed_pos
         < main.index("sw zero, 0xA4080000 // SP_PC")
     ):
         raise AssertionError("texture sentinel is not post-init/pre-RSP")

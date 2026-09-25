@@ -195,6 +195,15 @@ pi_wait1:
     li t1, 0xCAFEBABE
     sw t1, 4(t0)
 
+    // Proof-only stage sentinel at the first Mode7 texture-DMA destination.
+    // The renderer itself must overwrite this after char DMA/decode and before
+    // rdp_send; no RSP instrumentation is added for this discriminator.
+    li t0, MODE7_TEXTURE
+    li t1, 0x11223344
+    sw t1, 0(t0)
+    li t1, 0x55667788
+    sw t1, 4(t0)
+
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_PROFILE

@@ -2329,3 +2329,12 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - **Mailbox safety:** raw-Q2 is A00EF800..A00EFFFF; mailbox starts A00F0000 and occupies8 B; validated lowest standard color-image address remains A00F1180.
 - **Harness anti-false-pass:** before `run`, RDRAM mailbox is seeded via debugger writes to `DEADBEEFCAFEBABE`; only a successful RSP publication can replace it. Both mailbox and guest proof are then captured exclusively through RDRAM `dumpmem`, the observation path calibrated green in run36175377678.
 - Dedicated run **36176270007**; generic **36176269817**. Green => first-hand triple-overlay coexistence VALIDATED for this synthetic and next Road-moving batch can place the already validated CGRAM->E4d arithmetic bridge into the real H-COMP overlay. Red => inspect mailbox vs guest separately; do not regress to A400 debugger reads.
+
+### 2026-09-25 checkpoint — first RDRAM-proof red REJECTED as stale padding oracle
+
+- Dedicated **36176270007 FAILURE** stopped in the first source-contract step; build, Mupen and runtime capture were never executed.
+- Exact failure: legacy `test_gate_c_hcomp_third_overlay_exec.py` required source text `.byte 0:0x3C0`. The proof-only DMA8 publication adds 20 assembled bytes inside pre-existing H-COMP slot padding, so the correct padding count becomes `.byte 0:0x3AC` while **hcomp_entry remains13B0, external Mode7 entry remains1788, and total payload remains0x790**.
+- **REJECTED TOOLING/ORACLE:** fixed source padding count is not an architectural invariant. Real invariants are symbol addresses, payload size and fixed-slot boundaries, all separately enforced by binary proof.
+- Checker-only correction `9c513cc611421f46ca12cb328dd091d2b12ed5b4` removes the stale 0x3C0 literal from the generic executable source contract; branch-specific RDRAM contract explicitly requires0x3AC and binary maps still require H-COMP text0x790 + Mode7 entry1788.
+- Workflow dependency paths were also repaired at **`ffa24c65926579cee3fa0bff12cf0b3afa9ef1ee`** so changes to executable/boot oracles redispatch the dedicated proof.
+- Corrected dedicated **36176454931 IN PROGRESS**; generic **36176454971** dispatched. Do not interpret run36176270007 as evidence about overlay execution.

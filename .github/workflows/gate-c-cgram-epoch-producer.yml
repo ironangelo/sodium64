@@ -7,6 +7,7 @@ on:
     paths:
       - src/defines.h
       - src/ppu.S
+      - src/main.S
       - src/rsp_main.S
       - src/rsp_mode7.S
       - scripts/test_gate_c_cgram_epoch_contract.py

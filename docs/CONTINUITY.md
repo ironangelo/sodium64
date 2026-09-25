@@ -2554,3 +2554,13 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - Remaining suspect region is later repeated tile/RDP progression and/or row/layer completion after the second texture DMA. H-COMP/overlay routing remains untouched and should not be changed.
 - Dedicated artifact digest **sha256:0fe966c1832b58cc100debc4ece8aa682477970cbff8c1579821e2b0df848615**; exact guest SMC remains **e58ffbb2c90d65aa3aeb87a672ba396567f4553f578730d9c00cfef45db37ffc**, wrapped guest **417d52fb496a5e4f31236add36a20cfb57d56086916bcde708c815430377a001**.
 - **NEXT controlled batch:** inspect the unmodified Mode7 path immediately after second-tile texture DMA and identify the earliest **existing/natural RDRAM side effect** that proves row completion or layer return. Prefer a guest/proof-only sentinel discriminator; instrument RSP only if no such side effect exists. Keep H-COMP arithmetic frozen.
+
+
+### 2026-09-25 checkpoint — Mode7 SP-state MMIO proof dispatched; trigger wiring repaired
+
+- **PROOF-ONLY branch:** `phase4/gate-c-hcomp-mode7-sp-state-proof@e8ba44cf62c7e0d73198ed07ffd4849b61427659`, forked from validated first-RDP-return proof34b1c397. No `src/` delta; only new host checker/workflow plus trigger wiring.
+- **Question:** at the same stable 5-s observation where slot0+slot1 prove the first `rdp_send` returned but H-COMP mailbox remains sentinel, sample live **SP_PC / SP_STATUS / SP DMA state / DPC START-END-CURRENT-STATUS** through Mupen's debugger `mem` command and map SP_PC against the exact `rsp_mode7.elf` symbols.
+- **Tool authority audited:** pinned Mupen UI `mem` uses `DebugMemRead32(thisAddr)`; pinned core debugger marks `M64P_MEM_RSPREG`, `M64P_MEM_RSP` and `M64P_MEM_DP` readable. Unlike `dumpmem`, this path is not RDRAM-only.
+- **REJECTED TOOLING ERROR:** first proof commit8954b42b did not trigger the dedicated workflow because its inherited `paths:` filter still named only the old RDP-return checker/workflow, and it also omitted the new checker self-test. Runtime evidence was never attempted. Fixed proof-only at **e8ba44cf** by routing both the new checker and its own workflow path and adding self-test execution.
+- **Acceptance:** prerequisite classification must remain `MODE7_FIRST_RDP_SEND_RETURNED_HCOMP_NOT_REACHED`; then the sample reports whether RSP is halted/running, nearest exact IMEM symbol+offset, SP DMA state and DPC busy/current state. This is a **single pinned-Mupen stage sample**, not N64 timing/performance authority.
+- **NEXT:** inspect exact dedicated e8ba44 run. If SP_PC identifies a stable wait/loop, localize there before any RSP instrumentation. If MMIO sampling itself is unstable/invalid, record LAB LIMITATION and use the smallest explicit RSP progress marker instead.

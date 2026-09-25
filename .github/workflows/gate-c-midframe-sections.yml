@@ -1,0 +1,166 @@
+name: Gate C Mid-Frame BGMODE Section Proof
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-hcomp-midframe-section-proof
+    paths:
+      - scripts/check_gate_c_midframe_sections.py
+      - .github/workflows/gate-c-midframe-sections.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-midframe-sections-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  section-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prove zero runtime delta and self-test oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin 67570155473719e7b3e166ba62adbb0286a34a6c
+          git diff --exit-code 67570155473719e7b3e166ba62adbb0286a34a6c HEAD -- src Makefile
+          python3 scripts/check_gate_c_midframe_sections.py --self-test
+          python3 scripts/test_gate_c_hcomp_third_overlay_boot.py
+          python3 scripts/make_gate_c_hcomp_third_overlay_boot.py guest-a.smc
+          python3 scripts/make_gate_c_hcomp_third_overlay_boot.py guest-b.smc
+          cmp guest-a.smc guest-b.smc
+          sha256sum guest-a.smc | tee guest.sha256
+
+      - name: Build exact unchanged candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee build.log
+          wram=$(nm -n build/sodium64.elf | awk '$3 == "wram" { print $1; exit }')
+          test -n "$wram"
+          echo "GUEST_STATE_ADDR=0x$wram" >> "$GITHUB_ENV"
+          sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
+
+      - name: Wrap deterministic short-Mode7 guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir workload
+          cp sodium64.z64 rom-converter.py guest-a.smc workload/
+          (
+            cd workload
+            python3 rom-converter.py </dev/null
+          )
+          test -f workload/out/guest-a.z64
+          sha256sum workload/out/guest-a.z64 | tee wrapped.sha256
+
+      - name: Install Mupen64Plus build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y             build-essential expect git libfreetype6-dev libgl1-mesa-dev             libglu1-mesa-dev libpng-dev libsdl2-dev libvulkan-dev pkg-config zlib1g-dev
+
+      - name: Build pinned Mupen64Plus debugger and LLE RSP
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/sodium64-mupen"
+          mkdir -p "$root"
+          cd "$root"
+          git clone https://github.com/mupen64plus/mupen64plus-core.git
+          git -C mupen64plus-core checkout b20b27ebf9e5b099a978e86dba609111dc98c837
+          git clone https://github.com/mupen64plus/mupen64plus-ui-console.git
+          git -C mupen64plus-ui-console checkout c8ac4862a019d7885b24927d9b4db5dd3e42a528
+          git clone https://github.com/mupen64plus/mupen64plus-rsp-cxd4.git
+          git -C mupen64plus-rsp-cxd4 checkout 00906a92641c540a64e4e7505012157315314810
+
+          export PATH="$root/mupen64plus-core/.github/workflows/scripts:$PATH"
+          cd "$root/mupen64plus-core"
+          export CONFIG_OVERRIDE="DEBUGGER=1 DEBUGGER_NO_DISASM=1 NEW_DYNAREC=0 NO_ASM=1"
+          ci_build.sh x64 gcc
+          cd "$root/mupen64plus-ui-console"
+          export CONFIG_OVERRIDE=""
+          ci_build.sh x64 gcc
+          cd "$root/mupen64plus-rsp-cxd4"
+          export CONFIG_OVERRIDE='SSE="none"'
+          export OPTFLAGS="-O3"
+          ci_build.sh x64 gcc
+
+          core_lib=$(find "$root/mupen64plus-core/pkg/usr/local/lib" -maxdepth 1 -type f -name 'libmupen64plus.so*' | head -n1)
+          ui_bin="$root/mupen64plus-ui-console/pkg/usr/local/bin/mupen64plus"
+          rsp_lib=$(find "$root/mupen64plus-rsp-cxd4/pkg/usr/local/lib/mupen64plus" -type f -name '*cxd4*.so' | head -n1)
+          data_dir="$root/mupen64plus-core/pkg/usr/local/share/mupen64plus"
+          {
+            echo "M64P_CORE=$core_lib"
+            echo "M64P_UI=$ui_bin"
+            echo "M64P_RSP=$rsp_lib"
+            echo "M64P_DATA=$data_dir"
+            echo "M64P_LIBDIR=$(dirname "$core_lib")"
+          } >> "$GITHUB_ENV"
+
+      - name: Capture section queues read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence "$RUNNER_TEMP/m64p-config"
+          cat > "$RUNNER_TEMP/sections.expect" <<'EOF'
+          set timeout 90
+          log_file evidence/mupen.log
+          spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) $env(M64P_UI)             --corelib $env(M64P_CORE)             --datadir $env(M64P_DATA)             --configdir $env(RUNNER_TEMP)/m64p-config             --debug --emumode 0 --nospeedlimit             --gfx dummy --audio dummy --input dummy --rsp $env(M64P_RSP)             workload/out/guest-a.z64
+          expect "(dbg)"
+          send "run\r"
+          after 5000
+          send "pause\r"
+          expect "(dbg)"
+          # SECTION_QUEUE1=A016C600, SECTION_QUEUE2=A0171600.
+          # Use their KSEG0 aliases; ordinary RDRAM dumpmem is calibrated-good.
+          send "dumpmem 0x8016C600 512 evidence/section-q1.bin\r"
+          expect "(dbg)"
+          send "dumpmem 0x80171600 512 evidence/section-q2.bin\r"
+          expect "(dbg)"
+          send "dumpmem $env(GUEST_STATE_ADDR) 8 evidence/guest-state.bin\r"
+          expect "(dbg)"
+          send "pc\r"
+          expect "(dbg)"
+          send "quit\r"
+          expect eof
+          EOF
+          expect "$RUNNER_TEMP/sections.expect"
+          test "$(stat -c %s evidence/section-q1.bin)" -eq 512
+          test "$(stat -c %s evidence/section-q2.bin)" -eq 512
+          test "$(stat -c %s evidence/guest-state.bin)" -eq 8
+
+      - name: Classify CPU section production
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/check_gate_c_midframe_sections.py evidence             --output evidence/result.json
+          grep -q 'MIDFRAME_BGMODE_SECTION_PRODUCTION_VALIDATED' evidence/result.json
+
+      - name: Upload section evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-midframe-section-proof
+          retention-days: 30
+          path: |
+            evidence/
+            guest-a.smc
+            guest.sha256
+            wrapped.sha256
+            runtime.sha256
+            build.log

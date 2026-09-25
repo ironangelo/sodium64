@@ -19,16 +19,22 @@ draw_bg:
     move v0, t0
 
 hcomp_entry:
-    // First-hand execution marker, then preserve the historical HALT contract.
+    // First-hand execution marker. Mode7 has already cleared F10 in its true
+    // entry delay slot; publish F10..F17 to calibrated-good RDRAM before HALT.
     li t0, 0x51
     sb t0, HCOMP_OVERLAY_PROOF_HCOMP
+    li a0, HCOMP_OVERLAY_PROOF_MODE7
+    li a1, 0xA00F0000
+    jal 0xA4001F08 // Common resident dma_write in both renderer payloads.
+    li a2, 0x7
     li t0, 0x2
     mtc0 t0, COP0_SP_STATUS
     j 0xA400103C
     nop
 
-// hcomp_entry ends at 0x13C8; retain the invariant external Mode7 entry.
-.byte 0:0x3C0
+// hcomp_entry grows only into pre-existing slot padding; external Mode7 entry
+// remains fixed at 0x1788 and total payload remains 0x790.
+.byte 0:0x3AC
 
 draw_mode7_entry:
     // Neutral H-COMP-resident fault surface for Mode7 rendering.

@@ -2338,3 +2338,11 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - Checker-only correction `9c513cc611421f46ca12cb328dd091d2b12ed5b4` removes the stale 0x3C0 literal from the generic executable source contract; branch-specific RDRAM contract explicitly requires0x3AC and binary maps still require H-COMP text0x790 + Mode7 entry1788.
 - Workflow dependency paths were also repaired at **`ffa24c65926579cee3fa0bff12cf0b3afa9ef1ee`** so changes to executable/boot oracles redispatch the dedicated proof.
 - Corrected dedicated **36176454931 IN PROGRESS**; generic **36176454971** dispatched. Do not interpret run36176270007 as evidence about overlay execution.
+
+### 2026-09-25 checkpoint — RDRAM proof binary gate caught 4-B padding miscalculation
+
+- Corrected dedicated **36176454931 FAILURE** passed source/model but stopped at binary layout; no Mupen execution occurred.
+- Exact build measured H-COMP text **0x78C**, four bytes short of fixed0x790. Cause: proof design initially reduced padding by20 B assuming `li a1,0xA00F0000` expands to two instructions. Because low16 are zero, GNU as emits a single `lui`; actual new code growth is **16 B**, so padding must shrink from0x3C0 to **0x3B0**, not0x3AC.
+- **SUPPORTED / tooling-layout defect only:** renderer payloads still built 0x1000; no evidence against third-overlay dispatch or RDRAM marker idea. Binary gate behaved correctly by rejecting a payload whose external fixed end would otherwise move four bytes early.
+- Runtime proof correction commit **`580cd0c754ae2697209af32759f344b8f20bf013`** changes only RSP H-COMP padding `3AC->3B0`; oracle commit **`e91efe7c6a93f27770dd4db2d652c4c954a69b61`** pins the corrected value. No semantic instruction changed from the prior RDRAM-marker design.
+- **NEXT:** inspect exact-head rerun and require H-COMP text0x790 + entry13B0 + external Mode7 entry1788 before allowing Mupen capture.

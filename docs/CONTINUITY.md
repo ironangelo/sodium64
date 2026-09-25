@@ -2119,3 +2119,12 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 ### 2026-09-25 addendum — consumer proof head generic gate GREEN
 
 - **VALIDATED / generic hygiene:** exact proof head598d40d40a8ebef4dc473bc115b4f5e49ece8313 has **Build and Validate 36138215620 SUCCESS** across normal build, PROFILE build and pinned-Mupen smoke. Combined with dedicated36138215642 SUCCESS, static/model/binary/generic acceptance for runtime consumer8ac783aa is closed.
+
+### 2026-09-25 checkpoint — DMA8 RSP consumer static/binary + generic acceptance closed
+
+- **VALIDATED / canonical proof head:** `phase4/gate-c-cgram-epoch-rsp-consumer-dma8@598d40d40a8ebef4dc473bc115b4f5e49ece8313`. Dedicated **36138215642 SUCCESS** and same-head **Build and Validate 36138215620 SUCCESS** across normal build, PROFILE build and pinned-Mupen smoke.
+- Runtime authority remains `8ac783aa14b98b9097143432baa4e327cb490113`; `1bc300d3`, `12a8c364` and `598d40d4` are proof/workflow-only hardening with zero `src/` runtime delta.
+- **Linked binary facts:** `rsp_main.elf` sha256 **90a34123e9f29e10be103767095c8641bb49e6e5a1ab381cf23b815beed9c70d**; `rsp_mode7.elf` sha256 **266cff629086aea97005f9718e97691a2abb46619f4d4d3c1bf389c3d5ce28fd**; Sodium64 ROM sha256 **2d38cc4b257d2fa59de52ff99afa57403a9afab978d0c1c8528d2106d2537385**; exact full ELF sha256 **06989e56faaf07916695bb36bf507f64c474bb35e9aef42dc6bc3d26604e2504**.
+- Both RSP maps are `.text A4001000 + 0x1000`; normalized linked symbols are exactly `draw_bg=A40013A8`, `draw_obj=A4001790` for regular and Mode7. Dedicated artifact **10865534542**, digest **sha256:b171334cc53b1933bd73b82c54092905d892eaae2279cf943123e4dbd2c18443**.
+- **Interpretation:** the 29-instruction aligned-pair consumer is now **IMPLEMENTED + source/model VALIDATED + exact-binary-layout VALIDATED + generic-smoke VALIDATED**. This still does not prove that a real RSP execution consumes color records and mutates raw shadow correctly.
+- **NEXT controlled batch:** proof-only child with an original boot-first SNES guest. Seed Q1 before first VBlank with known color sequence `{1:1234,1:4567,0:2AAA,2:7FFF}` followed by fixed color E7; capture first handed Q1 event bytes, raw Q1 and live EA0 after RSP execution. Require stream preservation, exact raw mutations for entries0/1/2, untouched control entry still zero, and EA0 cursor advanced to the byte immediately after the final valid Q1 marker. This intentionally uses first handed Q1 so it does not depend on the pinned-Mupen second-handoff LAB LIMITATION. Keep H-COMP arithmetic frozen.

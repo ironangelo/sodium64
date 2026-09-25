@@ -2544,3 +2544,13 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - **Source-grounded discriminator:** guest generator does not program M7A/M7C and PPU reset state keeps both zero. In current Mode7 code, zero scaling yields `t7=4`; `SHIFT_TABLE[4]=0x10`. Tile0 writes +0, calls `rdp_send`, then `finish_tile7` advances `s0` from0 to16 and branches to tile1, whose existing texture DMA targets +0x1000.
 - This makes second-slot overwrite a first-hand ordinary-RDRAM proof that the **first Mode7 `rdp_send` returned** far enough for tile1 texture DMA, without debugger RSP-space reads or added RSP instrumentation.
 - Runs: dedicated **36192801857**; generic **36192801666**.
+
+
+### 2026-09-25 checkpoint — first Mode7 RDP submission RETURNED; blocker moves later
+
+- **MEASURED / first-hand stage proof:** exact proof-only head `phase4/gate-c-hcomp-mode7-rdp-return-proof@34b1c39742d1d62b29768537fec1fbeb62cbad65`; dedicated **36192801857 SUCCESS**, generic **36192801666 SUCCESS**.
+- Classifier result is exactly **`MODE7_FIRST_RDP_SEND_RETURNED_HCOMP_NOT_REACHED`**. Guest discriminator normalizes by `word_swap32`; mailbox normalizes to unchanged **DEADBEEFCAFEBABE**. Both native alternating Mode7 texture destinations changed: slot0 seed `1122334455667788` -> raw `0000000000000000`; slot1 seed `99AABBCCDDEEFF00` -> raw `0000000000000000`.
+- **SUPPORTED INTERPRETATION:** prior validated source contract pins reset M7A/M7C=0 -> `t7=4`, first tile `s0=0`, then existing order `texture dma_write -> rdp_send -> finish_tile7 -> s0 += 16 -> next_tile7`. Slot1 can only be overwritten by the second tile after the **first rdp_send has returned**. Therefore the first DP wait/submission is **REJECTED as sufficient cause** of the pinned-Mupen H-COMP non-observation.
+- Remaining suspect region is later repeated tile/RDP progression and/or row/layer completion after the second texture DMA. H-COMP/overlay routing remains untouched and should not be changed.
+- Dedicated artifact digest **sha256:0fe966c1832b58cc100debc4ece8aa682477970cbff8c1579821e2b0df848615**; exact guest SMC remains **e58ffbb2c90d65aa3aeb87a672ba396567f4553f578730d9c00cfef45db37ffc**, wrapped guest **417d52fb496a5e4f31236add36a20cfb57d56086916bcde708c815430377a001**.
+- **NEXT controlled batch:** inspect the unmodified Mode7 path immediately after second-tile texture DMA and identify the earliest **existing/natural RDRAM side effect** that proves row completion or layer return. Prefer a guest/proof-only sentinel discriminator; instrument RSP only if no such side effect exists. Keep H-COMP arithmetic frozen.

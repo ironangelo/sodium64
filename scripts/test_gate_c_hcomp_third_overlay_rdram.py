@@ -26,6 +26,25 @@ def source_contract()->None:
     )
     for a in anchors:
         if a not in s: raise AssertionError(f"missing RDRAM proof anchor {a!r}")
+
+    # The sentinel must be seeded by the CPU after the boot arena clear and
+    # after queue publication, but before SP_PC/startup lets the proof execute.
+    main=(ROOT/"src/main.S").read_text()
+    seed=(
+      "li t0, 0xA00F0000",
+      "li t1, 0xDEADBEEF",
+      "sw t1, 0(t0)",
+      "li t1, 0xCAFEBABE",
+      "sw t1, 4(t0)",
+    )
+    pos=[main.index(a) for a in seed]
+    if pos!=sorted(pos):
+        raise AssertionError("CPU mailbox sentinel ordering drift")
+    if not (
+        main.index("DMEM(HCOMP_RAW_PALETTE_PTRS + 4)") < pos[0]
+        < main.index("sw zero, 0xA4080000 // SP_PC")
+    ):
+        raise AssertionError("mailbox sentinel is not post-init/pre-RSP")
     if not (RAW_Q2+RAW_Q_SIZE==MAILBOX):
         raise AssertionError("mailbox no longer begins immediately after raw Q2")
     if MAILBOX+MAILBOX_SIZE>LOWEST_COLOR_IMAGE:

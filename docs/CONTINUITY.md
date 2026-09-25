@@ -2114,3 +2114,8 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - Dedicated artifact **10865534542**, digest **sha256:b171334cc53b1933bd73b82c54092905d892eaae2279cf943123e4dbd2c18443**.
 - **Acceptance boundary:** this closes source/model + exact linked-binary feasibility, not dynamic consumer execution. Runtime8ac already has exact generic **36137268999 SUCCESS**; proof-head generic36138215620 has normal+PROFILE green and emulator-smoke still running at this checkpoint.
 - **NEXT:** once proof-head generic smoke closes, design a diagnostic dynamic consumer proof that actually executes at least one typed color mutation + marker return. Do not depend on the already-documented pinned-Mupen next-handoff limitation for steady-state Q2; either exploit the first handed Q1 bootstrap stream deliberately or use another laboratory that demonstrably progresses the consumer path. Keep H-COMP arithmetic frozen.
+
+
+### 2026-09-25 addendum — consumer proof head generic gate GREEN
+
+- **VALIDATED / generic hygiene:** exact proof head598d40d40a8ebef4dc473bc115b4f5e49ece8313 has **Build and Validate 36138215620 SUCCESS** across normal build, PROFILE build and pinned-Mupen smoke. Combined with dedicated36138215642 SUCCESS, static/model/binary/generic acceptance for runtime consumer8ac783aa is closed.

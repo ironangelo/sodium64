@@ -110,9 +110,9 @@ def build_program()->bytes:
     lda_long(a,0x7E0000)
     sta_long(a,0x7E0005)
     emit_lda_sta_abs(a,TREATMENT_MODE,0x2105)
-    // Keep a real Mode7 section/dispatch request but disable BG rendering in
-    // that same section. RSP next_layer selects draw_mode7_entry before its
-    // enable test; draw_mode7_impl should then exit immediately on t1==0.
+    # Keep a real Mode7 section/dispatch request but disable BG rendering in
+    # that same section. RSP next_layer selects draw_mode7_entry before its
+    # enable test; draw_mode7_impl should then exit immediately on t1==0.
     emit_lda_sta_abs(a,TREATMENT_TM,0x212C)
     lda_sta_long(a,TREATMENT_MODE,0x7E0003)
     emit_lda_sta_abs(a,IRQ2_LINE&0xFF,0x4209)

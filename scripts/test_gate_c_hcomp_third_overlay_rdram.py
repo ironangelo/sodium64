@@ -22,7 +22,7 @@ def source_contract()->None:
       "jal 0xA4001F08",
       "li a2, 0x7",
       "mtc0 t0, COP0_SP_STATUS",
-      ".byte 0:0x3AC",
+      ".byte 0:0x3B0",
     )
     for a in anchors:
         if a not in s: raise AssertionError(f"missing RDRAM proof anchor {a!r}")

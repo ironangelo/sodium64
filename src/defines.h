@@ -227,11 +227,15 @@
 // in E84..E89. Keep the count out of the byte-coordinate domain so x=255
 // remains an ordinary legal endpoint; E8B..E8F stay free before overlay ABI.
 #define WIN_COUNT (WIN_BOUNDS + 0x6)
-// Renderer overlay source pointers live in the audited scratch gap.
+// Three fixed-slot overlay sources. E8C..E8F was the audited free aligned word.
+#define OVERLAY_MODE7_SRC 0xE8C
 #define OVERLAY_MAIN_SRC 0xE90
-#define OVERLAY_MODE7_SRC 0xE94
+#define OVERLAY_HCOMP_SRC 0xE94
 // Per-frame raw palette queue pointers. Indexed by RSP frame slot sp=0/4.
 #define HCOMP_RAW_PALETTE_PTRS 0xE98
+// Proof-only markers in existing F10..F6F padding; no DMEM ABI growth.
+#define HCOMP_OVERLAY_PROOF_MODE7 0xF10
+#define HCOMP_OVERLAY_PROOF_HCOMP 0xF11
 // Handed frame's typed CGRAM event-stream base. EA0 is inside the audited
 // retired H-COMP DMEM interval and remains below the fixed VEC_DATA ABI.
 #define HCOMP_CGRAM_EVENT_CURSOR 0xEA0

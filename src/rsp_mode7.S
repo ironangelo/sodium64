@@ -131,14 +131,15 @@ fillrec_mask: .word 0xFF000FFF
 ldblk_bits: .word 0x01000200
 mode7_mask: .word 0x0003FFFF
 
-// Reserve renderer overlay source pointers without moving vector data.
-.byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
-overlay_main_src: .word 0
+// Reserve three overlay source pointers without moving the raw pair or vectors.
+.byte 0:(OVERLAY_MODE7_SRC - PRIO_CHECKS)
 overlay_mode7_src: .word 0
+overlay_main_src: .word 0
+overlay_hcomp_src: .word 0
 hcomp_raw_palette_ptrs: .word 0, 0
 
-// Gate-C H-COMP resident-capacity proof. Keep E90/E94 owned by the overlay
-// source pointers, use E98/E9C for the published raw palette pair, and preserve
+// Gate-C H-COMP resident-capacity proof. E8C/E90/E94 own Mode7/Main/H-COMP,
+// E98/E9C remain the published raw palette pair, and preserve
 // the fixed vector-constant start at EA0 plus VEC_DATA ABI at F70. The false-tag
 // baseline itself comes from resident v24 lane5 (0x0400).
 hcomp_vec_carrylo: .hword 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421
@@ -860,8 +861,9 @@ finish_tile7:
     // renderer slot; branch back into the variant-local implementation.
     .align 3
 draw_mode7_entry:
+    // Proof-only: zero F10 on actual Mode7 entry with no slot-size growth.
     b draw_mode7_impl
-    nop
+    sb zero, HCOMP_OVERLAY_PROOF_MODE7
 
 
 draw_obj:
@@ -1147,10 +1149,11 @@ skip_objdecode:
 
 
 next_frame:
-    // Halt until the next frame can be drawn
-    li t0, 0x2 // Set halt
-    mtc0 t0, COP0_SP_STATUS
-    b draw_frame
+    // Load the third H-COMP slot at frame end. H-COMP performs HALT and leaves
+    // a neutral two-renderer fault surface resident for the following frame.
+    lw a1, OVERLAY_HCOMP_SRC
+    li t9, 0x13B0
+    b overlay_load_slot
     xori sp, sp, 4
 
 
@@ -1600,10 +1603,11 @@ ret_jump:
 // Demand-load the missing renderer slot from resident suffix code.
 overlay_load_mode7:
     lw a1, OVERLAY_MODE7_SRC
+overlay_load_slot:
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
-    b draw_mode7_entry
+    jr t9
     nop
 
 overlay_load_main:

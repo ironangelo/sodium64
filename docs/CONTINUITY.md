@@ -1979,3 +1979,9 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - **No runtime evidence exists from run36092575174.** It does not falsify producer683e2c4/807ddbf or the dynamic design.
 - Tooling-only head **e002ab04ffbbc459e2c0f543e7f8d1edacc63731** now decodes records lazily and stops at the first qualifying active marker, leaving stale/padding bytes beyond that marker unclassified. Generator/workflow/runtime tree unchanged.
 - **NEXT:** require corrected self-test green, then allow the same workflow to reach real build + pinned-Mupen snapshots. Only post-snapshot semantic failures count against the producer.
+
+
+### 2026-09-25 checkpoint — producer exact-head generic gate closed + ownership premise audited
+
+- **VALIDATED / generic hygiene:** producer-model head `807ddbf30b7559c28ceebbfacc8123f43437caaf` has exact **Build and Validate 36092301082 SUCCESS** across normal build, PROFILE build and pinned emulator smoke. Runtime production source remains the candidate683e2c4;807ddbf adds only proof/workflow changes.
+- **Ownership source audit supporting dynamic classifier:** exact `rsp_frame` captures `t5=queue_id` for the completed/handed frame, computes `t6=t5^4`, stores `queue_id=t6` for the next producer, later publishes `hcomp_cgram_event_queues(t5)` to EA0 while RSP remains halted, then unhalts. `hcomp_cgram_begin_frame` at `vblank_end` reads the updated queue_id and moves `hcomp_cgram_event_ptr` to the opposite slot. Therefore a stable active-frame snapshot should show **EA0 handed slot != live producer pointer slot**. A narrow transition window before the next begin-frame can still show equality; dynamic proof intentionally takes eight snapshots and rejects such races rather than treating them as semantic failure.

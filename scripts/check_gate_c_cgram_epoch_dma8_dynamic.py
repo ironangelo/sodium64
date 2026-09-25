@@ -146,10 +146,14 @@ def parse_handed_stream(data: bytes, phase: str) -> dict[str, object]:
 
 
 def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
-    ea0_bytes = norm((root / f"{prefix}-ea0.bin").read_bytes(), mode)
-    if len(ea0_bytes) != 4:
-        raise ValueError("EA0 dump must be 4 bytes")
-    ea0 = int.from_bytes(ea0_bytes, "big")
+    # EA0 lives in SP DMEM, which Mupen's dumpmem command refuses because it
+    # is hard-limited to RDRAM. The proof harness reads it through the generic
+    # debugger "mem" command instead. That textual word is already the logical
+    # 32-bit value, so it must NOT receive the RDRAM dump normalization.
+    ea0_text = (root / f"{prefix}-ea0.txt").read_text(encoding="utf-8").strip()
+    if not ea0_text:
+        raise ValueError("EA0 text read is empty")
+    ea0 = int(ea0_text, 16)
     slot = next((s for s, base in EVENT_BASE.items() if ea0 == base), None)
     if slot is None:
         return {
@@ -294,7 +298,7 @@ def write_snapshot(root: Path, prefix: str, mode: str, handed: int, phase: str) 
         (root / f"{prefix}-{name}.bin").write_bytes(norm(data, mode))
 
     save("state", state)
-    save("ea0", ea0)
+    (root / f"{prefix}-ea0.txt").write_text(f"{EVENT_BASE[handed]:08x}\n", encoding="utf-8")
     for s in (0, 4):
         if s == handed:
             save(BASE_FILE[s], bytes(base))

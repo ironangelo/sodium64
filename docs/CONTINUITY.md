@@ -2346,3 +2346,10 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - **SUPPORTED / tooling-layout defect only:** renderer payloads still built 0x1000; no evidence against third-overlay dispatch or RDRAM marker idea. Binary gate behaved correctly by rejecting a payload whose external fixed end would otherwise move four bytes early.
 - Runtime proof correction commit **`580cd0c754ae2697209af32759f344b8f20bf013`** changes only RSP H-COMP padding `3AC->3B0`; oracle commit **`e91efe7c6a93f27770dd4db2d652c4c954a69b61`** pins the corrected value. No semantic instruction changed from the prior RDRAM-marker design.
 - **NEXT:** inspect exact-head rerun and require H-COMP text0x790 + entry13B0 + external Mode7 entry1788 before allowing Mupen capture.
+
+### 2026-09-25 checkpoint — corrected RDRAM proof binary/layout gate GREEN
+
+- Exact-head RDRAM proof run **36176745818** on `e91efe7c6a93f27770dd4db2d652c4c954a69b61` has passed source/model, exact build and binary-layout stages before entering Mupen setup.
+- **BINARY VALIDATED for proof instrumentation:** regular RSP text=0x1000; Mode7 RSP text=0x1000; H-COMP payload restored to exactly **0x790**; `hcomp_entry` remains **A40013B0**; external Mode7 entry remains **A4001788**; regular+Mode7 common `dma_write` remains **A4001F08**.
+- This closes the 4-B padding issue. Any later dynamic red on this exact head must be classified from RDRAM mailbox/guest evidence, not from slot-size ambiguity.
+- Long experiment now in pinned-Mupen dependency/LLE setup. If interrupted, resume from run36176745818; do not rebuild a different runtime before reading its artifact.

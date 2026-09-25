@@ -3,7 +3,7 @@ name: Gate C H-COMP Third Overlay RDRAM Proof
 on:
   push:
     branches:
-      - phase4/gate-c-hcomp-third-overlay-short-mode7-proof
+      - phase4/gate-c-hcomp-mode7-empty-oob-proof
     paths:
       - src/rsp_hcomp.S
       - scripts/test_gate_c_hcomp_third_overlay_exec.py

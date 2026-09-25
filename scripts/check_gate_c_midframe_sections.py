@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Classify the CPU-produced mid-frame BGMODE section sequence.
+"""Classify enabled Mode7 empty/out-of-bounds mid-frame section state.
 
 This proof is intentionally read-only with respect to Sodium64 runtime.  It
 examines both fixed section queues after the boot-first 2-line Mode7 guest has
@@ -19,11 +19,19 @@ import argparse, json, tempfile
 from pathlib import Path
 
 SECTION_SIZE=0x40
+M7X_OFFSET=0x20
+M7Y_OFFSET=0x22
+M7SEL_OFFSET=0x33
+TM_OFFSET=0x3A
 BG_MODE_OFFSET=0x3D
 STAT_FLAGS_OFFSET=0x3E
 SPLIT_LINE_OFFSET=0x3F
 QUEUE_CAPTURE_BYTES=0x200
 EXPECTED_MODES=(1,7,1)
+EXPECTED_TM=(1,1,1)
+EXPECTED_M7SEL=0x80
+EXPECTED_M7X=0x0FFF
+EXPECTED_M7Y=0x0FFF
 EXPECTED_SPLITS=(80,82,224)
 EXPECTED_GUEST=bytes((0x00,0x33,0x02,0x01,0x01,0x00,0x00,0x00))
 
@@ -46,6 +54,10 @@ def source_contract()->None:
 
     anchors_defs=(
       "#define SECTION_SIZE 0x40",
+      "#define M7X (M7D + 0x2)",
+      "#define M7Y (M7X + 0x2)",
+      "#define M7SEL (OBSEL + 0x1)",
+      "#define TM (TS + 0x1)",
       "#define BG_MODE (TMW + 0x1)",
       "#define STAT_FLAGS (BG_MODE + 0x1)",
       "#define SPLIT_LINE (STAT_FLAGS + 0x1)",
@@ -60,6 +72,9 @@ def source_contract()->None:
     for a in (
       "write_bgmode:",
       "bne t1, t0, update_window_frame",
+      "write_m7sel:",
+      "write_m7x:",
+      "write_m7y:",
       "update_window_frame:",
       "li t0, 0x100",
       "sh t0, sect_status",
@@ -83,6 +98,13 @@ def source_contract()->None:
       "lbu s3, BG_MODE",
       "andi s3, s3, 0xF",
       "beq t0, t1, draw_mode7_entry",
+      "check_wrap:",
+      "andi t6, t0, 0xC0",
+      "bne t6, t1, set_texels",
+      "lw t1, MODE7_MASK",
+      "bnez t0, finish_tile7",
+      "set_texels:",
+      "entry_row:",
     ):
         if a not in rsp:
             raise AssertionError(f"RSP section-consumer anchor drift: {a}")
@@ -96,6 +118,10 @@ def records(data:bytes,count:int=8)->list[dict]:
         out.append({
           "index":i,
           "mode":r[BG_MODE_OFFSET]&0x0F,
+          "tm":r[TM_OFFSET],
+          "m7sel":r[M7SEL_OFFSET],
+          "m7x":int.from_bytes(r[M7X_OFFSET:M7X_OFFSET+2],"big"),
+          "m7y":int.from_bytes(r[M7Y_OFFSET:M7Y_OFFSET+2],"big"),
           "raw_bg_mode":r[BG_MODE_OFFSET],
           "stat_flags":r[STAT_FLAGS_OFFSET],
           "split":r[SPLIT_LINE_OFFSET],
@@ -106,7 +132,14 @@ def records(data:bytes,count:int=8)->list[dict]:
 def find_signature(rs:list[dict]):
     for i in range(0,len(rs)-2):
         trip=rs[i:i+3]
-        if tuple(r["mode"] for r in trip)==EXPECTED_MODES and tuple(r["split"] for r in trip)==EXPECTED_SPLITS:
+        if (
+            tuple(r["mode"] for r in trip)==EXPECTED_MODES
+            and tuple(r["tm"] for r in trip)==EXPECTED_TM
+            and all(r["m7sel"]==EXPECTED_M7SEL for r in trip)
+            and all(r["m7x"]==EXPECTED_M7X for r in trip)
+            and all(r["m7y"]==EXPECTED_M7Y for r in trip)
+            and tuple(r["split"] for r in trip)==EXPECTED_SPLITS
+        ):
             return i,trip
     return None
 
@@ -163,21 +196,29 @@ def classify(root:Path)->dict:
 
     q=winners[0]
     return {
-      "classification":"MIDFRAME_BGMODE_SECTION_PRODUCTION_VALIDATED",
+      "classification":"MIDFRAME_MODE7_EMPTY_OOB_SECTION_PRODUCTION_VALIDATED",
       "passed":True,
       "guest_normalization":g[0],
       "matching_queue":q,
       "expected_modes":list(EXPECTED_MODES),
+      "expected_tm":list(EXPECTED_TM),
+      "expected_m7sel":EXPECTED_M7SEL,
+      "expected_m7x":EXPECTED_M7X,
+      "expected_m7y":EXPECTED_M7Y,
       "expected_splits":list(EXPECTED_SPLITS),
       "queue":reports[q],
-      "semantic_scope":"CPU queued exact mid-frame BGMODE sections; RSP overlay dispatch remains a separate question",
+      "semantic_scope":"CPU queued exact enabled Mode7 empty/OOB state; RSP heavy-path reachability remains a separate question",
     }
 
 def synthetic_queue()->bytes:
     q=bytearray(QUEUE_CAPTURE_BYTES)
-    for i,(mode,split) in enumerate(zip(EXPECTED_MODES,EXPECTED_SPLITS,strict=True)):
+    for i,(mode,tm,split) in enumerate(zip(EXPECTED_MODES,EXPECTED_TM,EXPECTED_SPLITS,strict=True)):
         off=i*SECTION_SIZE
         q[off+BG_MODE_OFFSET]=mode
+        q[off+TM_OFFSET]=tm
+        q[off+M7SEL_OFFSET]=EXPECTED_M7SEL
+        q[off+M7X_OFFSET:M7X_OFFSET+2]=EXPECTED_M7X.to_bytes(2,"big")
+        q[off+M7Y_OFFSET:M7Y_OFFSET+2]=EXPECTED_M7Y.to_bytes(2,"big")
         q[off+STAT_FLAGS_OFFSET]=0x40 if i==0 else 0
         q[off+SPLIT_LINE_OFFSET]=split
     return bytes(q)

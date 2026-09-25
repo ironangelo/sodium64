@@ -1,11 +1,13 @@
-name: Gate C Mid-Frame BGMODE Section Proof
+name: Gate C Empty-OOB Mode7 Section Proof
 
 on:
   push:
     branches:
-      - phase4/gate-c-hcomp-midframe-section-proof
+      - phase4/gate-c-hcomp-mode7-empty-oob-proof
     paths:
       - scripts/check_gate_c_midframe_sections.py
+      - scripts/make_gate_c_hcomp_third_overlay_boot.py
+      - scripts/test_gate_c_hcomp_third_overlay_boot.py
       - .github/workflows/gate-c-midframe-sections.yml
   workflow_dispatch:
 
@@ -149,13 +151,13 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/check_gate_c_midframe_sections.py evidence             --output evidence/result.json
-          grep -q 'MIDFRAME_BGMODE_SECTION_PRODUCTION_VALIDATED' evidence/result.json
+          grep -q 'MIDFRAME_MODE7_EMPTY_OOB_SECTION_PRODUCTION_VALIDATED' evidence/result.json
 
       - name: Upload section evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-midframe-section-proof
+          name: gate-c-mode7-empty-oob-section-proof
           retention-days: 30
           path: |
             evidence/

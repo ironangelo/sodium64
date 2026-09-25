@@ -18,6 +18,21 @@ class Tests(unittest.TestCase):
         self.assertLess(d.IRQ1_LINE,d.IRQ2_LINE)
         self.assertLess(d.IRQ2_LINE,224)
         self.assertEqual(d.IRQ2_LINE-d.IRQ1_LINE,2)
+    def test_enabled_mode7_uses_empty_oob_discriminator(self):
+        p=d.build_program()
+        self.assertEqual(p.count(bytes((0xA9,0x01,0x8D,0x2C,0x21))),1)
+        self.assertNotIn(bytes((0xA9,0x00,0x8D,0x2C,0x21)),p)
+        self.assertEqual(p.count(bytes((0xA9,d.M7_EMPTY,0x8D,0x1A,0x21))),1)
+        low=d.M7_OOB&0xFF
+        high=(d.M7_OOB>>8)&0x1F
+        xseq=bytes((0xA9,low,0x8D,0x1F,0x21,0xA9,high,0x8D,0x1F,0x21))
+        yseq=bytes((0xA9,low,0x8D,0x20,0x21,0xA9,high,0x8D,0x20,0x21))
+        self.assertEqual(p.count(xseq),1)
+        self.assertEqual(p.count(yseq),1)
+        self.assertEqual(d.M7_EMPTY&0xC0,0x80)
+        self.assertEqual(d.M7_OOB,0x0FFF)
+        self.assertGreater(d.M7_OOB<<8,0x0003FFFF)
+
     def test_irq_is_boot_armed_without_nmi(self):
         p=d.build_program()
         self.assertIn(bytes((0xA9,0x20,0x8D,0x00,0x42)),p)

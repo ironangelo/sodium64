@@ -142,8 +142,7 @@ jobs:
           # correctly erase that value and invalidate the discriminator.
 
           send "run\r"
-          after 5000
-          send "pause\r"
+          # Zero-runtime timing discriminator: allow true Mode7/LLE work to finish.\n          after 30000\n          send "pause\r"
           expect "(dbg)"
           send "dumpmem 0x800F0000 8 evidence/mailbox.bin\r"
           expect "(dbg)"

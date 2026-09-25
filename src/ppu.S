@@ -883,11 +883,26 @@ write_inidisp: // a1: value
     b rsp_frame
 
 set_bright:
-    // Set the master brightness
+    // Set the master brightness coefficient (0 or INIDISP[3:0]+1).
     andi t0, a1, 0xF
     sgtu t1, t0, zero
     add t0, t0, t1
+
+    // Gate-C H-COMP: brightness is raster state. Carry it in the free low
+    // five STAT_FLAGS bits while preserving force-blank/OAM-dirty, and split
+    // the section whenever the coefficient changes.
+    lbu t2, brightness
+    beq t2, t0, bright_store_flags
+    nop
     sb t0, brightness
+    li t2, 0x1
+    sb t2, sect_status
+
+bright_store_flags:
+    lbu t1, stat_flags
+    andi t1, t1, 0xE0
+    or t1, t1, t0
+    sb t1, stat_flags
     j update_fill
     nop
 

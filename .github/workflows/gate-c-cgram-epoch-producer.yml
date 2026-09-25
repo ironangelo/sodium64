@@ -1,0 +1,37 @@
+name: Gate C CGRAM Epoch Producer
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-cgram-epoch-producer
+    paths:
+      - src/defines.h
+      - src/ppu.S
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - scripts/test_gate_c_cgram_epoch_contract.py
+      - scripts/test_gate_c_cgram_epoch_producer.py
+      - .github/workflows/gate-c-cgram-epoch-producer.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cgram-epoch-producer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile host oracles
+        run: |
+          python3 -m py_compile scripts/test_gate_c_cgram_epoch_contract.py
+          python3 -m py_compile scripts/test_gate_c_cgram_epoch_producer.py
+
+      - name: Reprove L0 contract
+        run: python3 scripts/test_gate_c_cgram_epoch_contract.py
+
+      - name: Prove CPU epoch producer contract
+        run: python3 scripts/test_gate_c_cgram_epoch_producer.py

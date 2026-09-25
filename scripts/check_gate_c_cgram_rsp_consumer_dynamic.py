@@ -27,6 +27,57 @@ EXPECTED_RAW = {
 }
 CONTROL_INDEX = 4
 MAX_RECORDS = 64
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def prove_terminal_sentinel_source_contract() -> None:
+    """Prove why the final make_section marker is not part of rendered replay."""
+    ppu = (ROOT / "src/ppu.S").read_text()
+    rsp = (ROOT / "src/rsp_main.S").read_text()
+
+    make = ppu[ppu.index("make_section: // a0: line"):ppu.index(".align 5\nhcomp_cgram_begin_frame:")]
+    if "section_init:" not in make:
+        raise AssertionError("make_section no longer falls through section_init")
+    if "sw t3, 0(t1)" not in make or "hcomp_cgram_event_count" not in make:
+        raise AssertionError("section_init no longer appends the typed section marker")
+
+    frame = ppu[ppu.index("rsp_frame:"):ppu.index("ignore_frame:")]
+    anchors = (
+        "lhu a0, cur_line",
+        "jal make_section",
+        "addi t2, t2, -1",
+        "sw t2, DMEM(FRAME_END)(t5)",
+        "sw t0, DMEM(HCOMP_CGRAM_EVENT_CURSOR)",
+    )
+    for anchor in anchors:
+        if anchor not in frame:
+            raise AssertionError(f"terminal sentinel CPU contract missing {anchor!r}")
+    if not (
+        frame.index("lhu a0, cur_line")
+        < frame.index("jal make_section")
+        < frame.index("addi t2, t2, -1")
+        < frame.index("sw t2, DMEM(FRAME_END)(t5)")
+        < frame.index("sw t0, DMEM(HCOMP_CGRAM_EVENT_CURSOR)")
+    ):
+        raise AssertionError("terminal sentinel CPU ordering drift")
+
+    next_section = rsp[rsp.index("next_section:"):rsp.index("hcomp_cgram_return:")]
+    anchors = (
+        "lw t0, FRAME_END(sp)",
+        "beq k1, t0, next_frame",
+        "lw a1, SECTION_PTR(sp)",
+        "b hcomp_cgram_consume",
+    )
+    for anchor in anchors:
+        if anchor not in next_section:
+            raise AssertionError(f"terminal sentinel RSP contract missing {anchor!r}")
+    if not (
+        next_section.index("lw t0, FRAME_END(sp)")
+        < next_section.index("beq k1, t0, next_frame")
+        < next_section.index("lw a1, SECTION_PTR(sp)")
+        < next_section.index("b hcomp_cgram_consume")
+    ):
+        raise AssertionError("RSP no longer stops before loading trailing section")
 
 
 def swap32(data: bytes) -> bytes:
@@ -74,52 +125,24 @@ def parse_stream(data: bytes) -> tuple[list[tuple[str, int, int]], dict[str, obj
             break
         records.append(decode_record(rec))
 
-    if len(records) < 3:
-        raise ValueError(f"Q1 stream too short: {len(records)}")
-    if records[0] != ("marker", -1, 0x0000):
-        raise ValueError(f"record0 is not startup fixed0 marker: {records[0]}")
-    if records[1] != ("color", 3, 0x1357):
-        raise ValueError(f"record1 is not cached-half discriminator: {records[1]}")
-    if records[-1] != ("marker", -1, ACTIVE_FIXED):
-        raise ValueError(f"last record is not final fixed E7 marker: {records[-1]}")
-
-    color_pos = 0
-    seen_active_fixed = False
-    markers = 0
-    active_markers = 0
-    for i, (kind, index, value) in enumerate(records):
-        if kind == "marker":
-            markers += 1
-            if value == ACTIVE_FIXED:
-                seen_active_fixed = True
-                active_markers += 1
-            elif value == 0:
-                if seen_active_fixed:
-                    raise ValueError("fixed0 marker appears after fixed E7 marker")
-            else:
-                raise ValueError(f"unexpected marker value at {i}: 0x{value:04X}")
-            continue
-
-        if seen_active_fixed:
-            raise ValueError("color appears after fixed E7 marker")
-        if color_pos >= len(EXPECTED_COLORS):
-            raise ValueError(f"unexpected extra color record at {i}: {(index, value)}")
-        if (index, value) != EXPECTED_COLORS[color_pos]:
-            raise ValueError(
-                f"color sequence mismatch at {i}: {(index, hex(value))} != "
-                f"{(EXPECTED_COLORS[color_pos][0], hex(EXPECTED_COLORS[color_pos][1]))}"
-            )
-        color_pos += 1
-
-    if color_pos != len(EXPECTED_COLORS):
-        raise ValueError(f"found {color_pos}/{len(EXPECTED_COLORS)} expected colors")
-    if active_markers < 1:
-        raise ValueError("no fixed E7 marker in Q1 stream")
+    # This deterministic guest closes one rendered section and rsp_frame then
+    # falls through section_init once more, producing one trailing marker for
+    # the next (unrendered) section. The RSP must stop at FRAME_END before it.
+    rendered = [
+        ("marker", -1, 0x0000),
+        *[("color", i, v) for i, v in EXPECTED_COLORS],
+        ("marker", -1, ACTIVE_FIXED),
+    ]
+    expected = rendered + [("marker", -1, ACTIVE_FIXED)]
+    if records != expected:
+        raise ValueError(f"Q1 deterministic stream mismatch: {records} != {expected}")
 
     return records, {
         "record_count": len(records),
-        "marker_count": markers,
-        "active_marker_count": active_markers,
+        "rendered_record_count": len(rendered),
+        "marker_count": 3,
+        "active_marker_count": 2,
+        "terminal_sentinel_count": 1,
         "cached_half_record1": "index3=0x1357",
     }
 
@@ -141,15 +164,21 @@ def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
 
     ea0_text = (root / f"{prefix}-ea0.txt").read_text(encoding="utf-8").strip()
     ea0 = int(ea0_text, 16)
-    expected_ea0 = EVENT_Q1 + len(records) * 4
+    # EA0 is a logical next-record cursor. The final nonzero record is the
+    # source-proven marker for the next unrendered section, so consuming it
+    # would be wrong. Require the cursor immediately after the marker that
+    # terminates the last rendered section and immediately before the sentinel.
+    consumed_count = int(stream_info["rendered_record_count"])
+    expected_ea0 = EVENT_Q1 + consumed_count * 4
     if ea0 != expected_ea0:
         return {
             "passed": False,
             "prefix": prefix,
             "normalization": mode,
-            "reason": "EA0 did not advance through complete first-hand Q1 stream",
+            "reason": "EA0 is not between rendered terminator and terminal sentinel",
             "ea0": f"0x{ea0:08X}",
             "expected_ea0": f"0x{expected_ea0:08X}",
+            "consumed_record_count": consumed_count,
             **stream_info,
         }
 
@@ -190,6 +219,8 @@ def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
         "raw_base": f"0x{RAW_Q1:08X}",
         "ea0": f"0x{ea0:08X}",
         "expected_ea0": f"0x{expected_ea0:08X}",
+        "consumed_record_count": consumed_count,
+        "terminal_sentinel_unconsumed": True,
         "raw_entries": raw_report,
         "untouched_control_index": CONTROL_INDEX,
         "untouched_control_value": "0x0000",
@@ -241,6 +272,7 @@ def write_fixture(root: Path, mode: str) -> None:
     records = [encode_record("marker", -1, 0)]
     records += [encode_record("color", i, v) for i, v in EXPECTED_COLORS]
     records.append(encode_record("marker", -1, ACTIVE_FIXED))
+    records.append(encode_record("marker", -1, ACTIVE_FIXED))  # terminal sentinel
 
     event = bytearray(256)
     for i, rec in enumerate(records):
@@ -258,11 +290,12 @@ def write_fixture(root: Path, mode: str) -> None:
     (root / "snap0-event-q1.bin").write_bytes(event)
     (root / "snap0-raw-q1.bin").write_bytes(raw)
     (root / "snap0-ea0.txt").write_text(
-        f"{EVENT_Q1 + len(records) * 4:08x}\n", encoding="utf-8"
+        f"{EVENT_Q1 + (len(records) - 1) * 4:08x}\n", encoding="utf-8"
     )
 
 
 def self_test() -> None:
+    prove_terminal_sentinel_source_contract()
     for mode in ("identity", "word_swap32"):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -276,6 +309,16 @@ def self_test() -> None:
         raw = bytearray((root / "snap0-raw-q1.bin").read_bytes())
         raw[3 * 8:4 * 8] = b"\x00" * 8
         (root / "snap0-raw-q1.bin").write_bytes(raw)
+        assert not classify(root)["passed"]
+
+    # Consuming the terminal next-section marker must fail too; the proof is
+    # specifically about stopping at FRAME_END with that sentinel untouched.
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        write_fixture(root, "identity")
+        (root / "snap0-ea0.txt").write_text(
+            f"{EVENT_Q1 + (len(EXPECTED_COLORS) + 3) * 4:08x}\n", encoding="utf-8"
+        )
         assert not classify(root)["passed"]
 
 
@@ -294,6 +337,7 @@ def main() -> int:
     if args.evidence is None:
         ap.error("evidence directory required unless --self-test")
 
+    prove_terminal_sentinel_source_contract()
     result = classify(args.evidence)
     if args.guest and args.guest.exists():
         result["guest_sha256"] = hashlib.sha256(args.guest.read_bytes()).hexdigest()

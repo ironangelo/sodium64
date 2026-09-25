@@ -232,8 +232,8 @@ def synthetic_queue()->bytes:
         q[off+BG_MODE_OFFSET]=mode
         q[off+TM_OFFSET]=tm
         q[off+M7SEL_OFFSET]=EXPECTED_M7SEL
-        q[off+M7X_OFFSET:M7X_OFFSET+2]=EXPECTED_M7X.to_bytes(2,"big")
-        q[off+M7Y_OFFSET:M7Y_OFFSET+2]=EXPECTED_M7Y.to_bytes(2,"big")
+        q[off+M7X_OFFSET:off+M7X_OFFSET+2]=EXPECTED_M7X.to_bytes(2,"big")
+        q[off+M7Y_OFFSET:off+M7Y_OFFSET+2]=EXPECTED_M7Y.to_bytes(2,"big")
         q[off+STAT_FLAGS_OFFSET]=0x40 if i==0 else 0
         q[off+SPLIT_LINE_OFFSET]=split
     return bytes(q)

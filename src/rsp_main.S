@@ -148,7 +148,13 @@ hcomp_vec_one:     .hword 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001
 hcomp_vec_three:   .hword 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003
 hcomp_vec_shr10:   .hword 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040
 hcomp_vec_shr11:   .hword 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020
-.byte 0:0x60
+
+// Proof-only CGRAM->H-COMP bridge constants. EA0..EB7 is live consumer
+// scratch, so the validated carry vectors get private copies in unused F10/F20
+// padding without moving the fixed VEC_DATA ABI at F70.
+hcomp_bridge_carrylo: .hword 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421
+hcomp_bridge_carryhi: .hword 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420
+.byte 0:0x40
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -1653,7 +1659,9 @@ overlay_load_main:
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
-    b draw_bg
+    // PROOF-ONLY: bridge overlay returns to section processing after restoring
+    // the regular renderer. This intentionally is not a Mode7-capable runtime.
+    b hcomp_cgram_return
     move t0, v0
 
 
@@ -1686,5 +1694,8 @@ hcomp_cgram_pair_ready:
     nop
 
 hcomp_cgram_marker:
-    b hcomp_cgram_return
+    // PROOF-ONLY: every rendered section marker runs the diagnostic arithmetic
+    // overlay. The deterministic guest is Mode1-only; terminal sentinel is
+    // never consumed. A later active marker overwrites bootstrap probe output.
+    b overlay_load_mode7
     lbu k1, SPLIT_LINE

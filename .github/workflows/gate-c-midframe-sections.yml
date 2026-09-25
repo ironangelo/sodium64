@@ -6,6 +6,8 @@ on:
       - phase4/gate-c-hcomp-mode7-dispatch-bypass-proof
     paths:
       - scripts/check_gate_c_midframe_sections.py
+      - scripts/make_gate_c_hcomp_third_overlay_boot.py
+      - scripts/test_gate_c_hcomp_third_overlay_boot.py
       - .github/workflows/gate-c-midframe-sections.yml
   workflow_dispatch:
 

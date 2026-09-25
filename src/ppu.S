@@ -415,16 +415,39 @@ section_loop:
     addi t1, t1, 8
     sw t1, section_ptr
 
-    // Attach the exact palette epoch and raw fixed color to this section.
-    // Count is cumulative from the frame's base snapshot.
-    lw t1, hcomp_cgram_sideband_ptr
+    // Append one typed section marker after every color event that precedes
+    // this section. High16 carries lossless raw fixed-color RGBA5551 and
+    // metadata bit15 distinguishes the marker from palette byte offsets.
     lhu t0, hcomp_cgram_event_count
+    li t1, HCOMP_CGRAM_EVENT_CAPACITY
+    bge t0, t1, hcomp_cgram_marker_overflow
+    nop
     lhu t2, coldata
-    sh t0, 0(t1)
-    sh t2, 2(t1)
+    andi t3, t2, 0x1F
+    sll t3, t3, 11
+    andi t4, t2, 0x3E0
+    sll t4, t4, 1
+    or t3, t3, t4
+    andi t4, t2, 0x7C00
+    srl t4, t4, 9
+    or t3, t3, t4
+    ori t3, t3, 0x1
+    sll t3, t3, 16
+    ori t3, t3, 0x8000
+    lw t1, hcomp_cgram_event_ptr
+    sw t3, 0(t1)
     addi t1, t1, 4
-    sw t1, hcomp_cgram_sideband_ptr
+    sw t1, hcomp_cgram_event_ptr
+    addi t0, t0, 1
+    sh t0, hcomp_cgram_event_count
+    b hcomp_cgram_marker_done
+    nop
 
+hcomp_cgram_marker_overflow:
+    li t0, 1
+    sb t0, hcomp_cgram_event_overflow
+
+hcomp_cgram_marker_done:
     // Clear the OAM dirty flag for the next section
     la t1, stat_flags
     lbu t0, (t1)
@@ -434,18 +457,22 @@ section_loop:
 
 .align 5
 hcomp_cgram_begin_frame:
-    // Select all producer buffers with the existing section/OAM queue parity.
+    // Select producer buffers with the existing section/OAM queue parity.
+    // The raw shadow is now the handed frame's historical-base workspace,
+    // not a frame-final diagnostic snapshot.
     lbu t0, queue_id
     lw t1, hcomp_cgram_base_queues(t0)
     lw t2, hcomp_cgram_event_queues(t0)
     lw t3, hcomp_cgram_sideband_queues(t0)
+    lw t5, hcomp_raw_pal_queues(t0)
     sw t2, hcomp_cgram_event_ptr
     sw t3, hcomp_cgram_sideband_ptr
     sh zero, hcomp_cgram_event_count
     sb zero, hcomp_cgram_event_overflow
 
-    // Snapshot all 256 live CGRAM words after VBlank writes. Canonicalize to
-    // the SNES-visible 15-bit RGB555 payload; bit15 is not palette state.
+    // Snapshot all 256 live CGRAM words after VBlank writes as canonical
+    // RGB555 and initialize the aligned 8-byte raw RGBA5551 workspace from
+    // exactly the same historical base, including entry0/backdrop.
     la t0, cgram
     li t4, 0x200
 hcomp_cgram_base_loop:
@@ -453,9 +480,26 @@ hcomp_cgram_base_loop:
     lhu t3, 0(t0)
     andi t3, t3, 0x7FFF
     sh t3, 0(t1)
+
+    andi t6, t3, 0x1F
+    sll t6, t6, 11
+    andi t7, t3, 0x3E0
+    sll t7, t7, 1
+    or t6, t6, t7
+    andi t7, t3, 0x7C00
+    srl t7, t7, 9
+    or t6, t6, t7
+    ori t6, t6, 0x1
+    sll t7, t6, 16
+    or t6, t6, t7
+    sw t6, 0(t5)
+    sw t6, 4(t5)
+
     addi t0, t0, 2
-    bnez t4, hcomp_cgram_base_loop
     addi t1, t1, 2
+    addi t5, t5, 8
+    bnez t4, hcomp_cgram_base_loop
+    nop
     jr ra
     nop
 
@@ -552,36 +596,17 @@ skip_reset:
     sw t0, section_ptr
     sw t1, oam_ptr
 
-    // Set initial values for palette conversion. Preserve the existing
-    // brightness-scaled renderer queue and a parallel raw RGBA5551 shadow.
-    // This controlled stage mirrors CGRAM entries 1..255 only; entry 0/backdrop
-    // and mid-frame palette epochs remain explicitly outside its claim.
+    // Set initial values for the existing brightness-scaled renderer queue.
+    // The H-COMP raw shadow is deliberately NOT regenerated here: it was
+    // initialized from the historical frame base at vblank_end and must stay
+    // there until the future RSP consumer replays this frame's typed events.
     lbu t0, brightness
     lw v1, pal_queues(t5)
-    lw a3, hcomp_raw_pal_queues(t5)
     addi v1, v1, 0x7F8
-    addi a3, a3, 0x7F8
     li t6, 0x1FE
 
 update_dpal:
     lhu t1, cgram(t6)
-
-    // H-COMP raw operand shadow: SNES RGB555 -> N64 RGBA5551, no brightness.
-    // Duplicate each color to the same 8-byte palette-entry geometry as the
-    // visible queue. The HCOMP_* addresses are KSEG1/uncached.
-    andi t7, t1, 0x1F
-    sll t7, t7, 11
-    andi t8, t1, 0x3E0
-    sll t8, t8, 1
-    or t7, t7, t8
-    andi t8, t1, 0x7C00
-    srl t8, t8, 9
-    or t7, t7, t8
-    ori t7, t7, 0x1
-    sll t8, t7, 16
-    or t7, t7, t8
-    sw t7, 0(a3)
-    sw t7, 4(a3)
 
     // Existing visible path: space out components and multiply by brightness.
     andi t2, t1, 0x1F // R
@@ -612,7 +637,6 @@ update_dpal:
     sw t2, 0(v1)
     sw t2, 4(v1)
     addi t6, t6, -2
-    addi a3, a3, -8
     bnez t6, update_dpal
     addi v1, v1, -8
 
@@ -691,6 +715,11 @@ menu_return:
     li t0, FRAMEBUFFER1
 set_buffer:
     sw t0, DMEM(FRAMEBUFFER)(t5)
+
+    // Publish the handed frame's typed event-stream base while the RSP is
+    // halted. The future consumer will advance its private EA0 cursor.
+    lw t0, hcomp_cgram_event_queues(t5)
+    sw t0, DMEM(HCOMP_CGRAM_EVENT_CURSOR)
 
     // Provide an address and set the semaphore for copying VRAM
     la t0, UNCACHED(vram)
@@ -1540,10 +1569,19 @@ cg_high:
     bge t2, t3, cg_epoch_overflow
     nop
 
-    // Big-endian 4-byte record: {u8 index, u8 reserved, u16 RGB555}.
-    srl t3, t0, 1
-    sll t3, t3, 24
-    andi t4, t1, 0x7FFF
+    // Typed 4-byte color record: high16 is lossless raw RGBA5551; low16 is
+    // the destination byte offset (CGRAM index * 8) in the raw shadow.
+    andi t3, t1, 0x1F
+    sll t3, t3, 11
+    andi t4, t1, 0x3E0
+    sll t4, t4, 1
+    or t3, t3, t4
+    andi t4, t1, 0x7C00
+    srl t4, t4, 9
+    or t3, t3, t4
+    ori t3, t3, 0x1
+    sll t3, t3, 16
+    sll t4, t0, 2
     or t3, t3, t4
     lw t4, hcomp_cgram_event_ptr
     sw t3, 0(t4)
@@ -1553,7 +1591,7 @@ cg_high:
     sh t2, hcomp_cgram_event_count
 
     // Palette history now exists, so a next-line section can safely refer to
-    // the new cumulative event count instead of coalescing the change later.
+    // the new typed stream state instead of coalescing the change later.
     li t3, 0x100
     sh t3, sect_status
     b cg_epoch_done

@@ -1,0 +1,66 @@
+name: Gate C CGRAM RSP Consumer Implementation
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-cgram-epoch-rsp-consumer
+    paths:
+      - src/defines.h
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - src/ppu.S
+      - scripts/test_gate_c_cgram_epoch_contract.py
+      - scripts/test_gate_c_cgram_rsp_consumer_contract.py
+      - scripts/test_gate_c_cgram_rsp_consumer_impl.py
+      - .github/workflows/gate-c-cgram-rsp-consumer.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cgram-rsp-consumer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile proof scripts
+        run: |
+          python3 -m py_compile scripts/test_gate_c_cgram_epoch_contract.py
+          python3 -m py_compile scripts/test_gate_c_cgram_rsp_consumer_contract.py
+          python3 -m py_compile scripts/test_gate_c_cgram_rsp_consumer_impl.py
+
+      - name: Build exact consumer candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j$(nproc) 2>&1 | tee consumer-build.log
+
+      - name: Validate implemented DMA8 consumer
+        run: python3 scripts/test_gate_c_cgram_rsp_consumer_impl.py
+
+      - name: Preserve consumer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-cgram-rsp-consumer-evidence
+          retention-days: 30
+          path: |
+            consumer-build.log
+            build/rsp_main.map
+            build/rsp_mode7.map
+            build/src/rsp_main.o
+            build/src/rsp_mode7.o
+            build/sodium64.map
+            build/sodium64.elf

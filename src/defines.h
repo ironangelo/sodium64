@@ -235,6 +235,8 @@
 // Handed frame's typed CGRAM event-stream base. EA0 is inside the audited
 // retired H-COMP DMEM interval and remains below the fixed VEC_DATA ABI.
 #define HCOMP_CGRAM_EVENT_CURSOR 0xEA0
+#define HCOMP_CGRAM_PAIR_SCRATCH 0xEA8
+#define HCOMP_CGRAM_WRITE_SCRATCH 0xEB0
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached

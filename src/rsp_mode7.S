@@ -137,10 +137,10 @@ overlay_main_src: .word 0
 overlay_mode7_src: .word 0
 hcomp_raw_palette_ptrs: .word 0, 0
 
-// Gate-C H-COMP resident-capacity proof. Keep E90/E94 owned by the overlay
-// source pointers, use E98/E9C for the published raw palette pair, and preserve
-// the fixed vector-constant start at EA0 plus VEC_DATA ABI at F70. The false-tag
-// baseline itself comes from resident v24 lane5 (0x0400).
+// Gate-C H-COMP resident state. Keep E90/E94 owned by the overlay source
+// pointers and E98/E9C by the published raw palette pair. EA0..EB7 are reclaimed
+// at runtime for the CGRAM DMA8 consumer over definition-only retired constants;
+// preserve the fixed VEC_DATA ABI at F70.
 hcomp_vec_carrylo: .hword 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421, 0x0421
 hcomp_vec_carryhi: .hword 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420, 0x8420
 hcomp_vec_half:    .hword 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE, 0x7BDE
@@ -236,9 +236,15 @@ next_section:
     // Finish the frame after the last section is done
     lw t0, FRAME_END(sp)
     beq k1, t0, next_frame
+    lw a1, HCOMP_CGRAM_EVENT_CURSOR
 
+    // Replay typed CGRAM events for this exact section before loading its
+    // renderer snapshot. The marker returns to hcomp_cgram_section_ready.
+    b hcomp_cgram_consume
+    andi t0, a1, 0x4
+
+hcomp_cgram_section_ready:
     // Load values for the next section
-    li a0, BGHOFS
     lw a1, SECTION_PTR(sp)
     jal dma_read
     li a2, SECTION_SIZE - 1
@@ -415,16 +421,19 @@ fill_main:
     lhu s0, MAIN_COLOR
 
 fill_win:
-    // Kept as padding labels so the pre-overlay prefix retains its exact size.
-    nop
-    nop
+hcomp_cgram_consume:
+    // Cursor bit2 selects the cached logical word inside an aligned 8-byte
+    // event pair. Only first-half records trigger an SP DMA read.
+    bnez t0, hcomp_cgram_pair_ready
+    li a0, HCOMP_CGRAM_PAIR_SCRATCH
+    jal dma_read
+    li a2, 0x7
+hcomp_cgram_pair_ready:
+    andi t0, a1, 0x4
+    b hcomp_cgram_consume_tail
+    lw t2, HCOMP_CGRAM_PAIR_SCRATCH(t0)
 fill_notwin:
-    nop
 use_window:
-    nop
-    nop
-    nop
-    nop
     nop
 
 fill_backdrop:
@@ -903,8 +912,6 @@ start_objects:
     or t0, t0, t1
     andi t0, t0, 0x10
     beqz t0, obj_no_windows
-    nop
-
     lbu a0, WOBJSEL
     andi a0, a0, 0xF
     lbu a1, WOBJLOG
@@ -1111,11 +1118,10 @@ next_object:
 
     // The unwindowed path is still a single object-list traversal.
     bltz t8, obj_finish_objects
-    nop
+    lbu t2, WIN_COUNT
 
     // Advance by explicit span count, never by an in-band coordinate sentinel.
     // This keeps x=255 available as an ordinary legal lower/upper endpoint.
-    lbu t2, WIN_COUNT
     addi t8, t8, 2
     sll t2, t2, 1
     beq t8, t2, obj_windows_done
@@ -1250,10 +1256,9 @@ calc_color_window_segments:
     beqz t1, color_window_all
     li t2, 3
     beq t1, t2, color_window_none
-    nop
+    lbu t0, WOBJSEL
 
     // Modes 1/2 are selected/complement of the OBJ color-window selector.
-    lbu t0, WOBJSEL
     srl a0, t0, 4
     lbu t0, WOBJLOG
     srl t0, t0, 2
@@ -1264,10 +1269,9 @@ calc_color_window_segments:
 
     lbu t8, WIN_COUNT
     beqz t8, color_window_none
-    nop
+    lbu t0, WIN_BOUNDS + 0 // L1
 
     // Snapshot all possible span endpoints before overwriting E85 onward.
-    lbu t0, WIN_BOUNDS + 0 // L1
     lbu t1, WIN_BOUNDS + 1 // U1
     lbu t2, WIN_BOUNDS + 2 // L2
     lbu t3, WIN_BOUNDS + 3 // U2
@@ -1278,7 +1282,6 @@ calc_color_window_segments:
     lhu s0, MAIN_COLOR
     lhu s1, SUB_COLOR
     bnez t0, color_window_initial_ready
-    nop
     move a1, s0
     move s0, s1
     move s1, a1
@@ -1297,16 +1300,12 @@ color_window_first_upper:
     addi a0, a0, 1
     li a1, 1
     beq t8, a1, color_window_tail
-    nop
-
     addi a1, t2, -1
     sb a1, 0(a0)
     sb t3, 1(a0)
     addi a0, a0, 2
     li a1, 2
     beq t8, a1, color_window_tail
-    nop
-
     addi a1, t4, -1
     sb a1, 0(a0)
     sb t7, 1(a0)
@@ -1619,3 +1618,32 @@ overlay_load_main:
     li a2, 0x3E7
     b draw_bg
     move t0, v0
+
+hcomp_cgram_consume_tail:
+    // Advance one logical record before classifying it. Marker metadata bit15
+    // ends this section; its payload remains in t2 for the future H-COMP stage.
+    addi a1, a1, 0x4
+    sw a1, HCOMP_CGRAM_EVENT_CURSOR
+    andi t3, t2, 0x8000
+    bnez t3, hcomp_cgram_section_ready
+    li a0, BGHOFS
+
+    // Color record: duplicate raw RGBA5551 to one aligned 8-byte palette entry
+    // and DMA it into the handed raw-shadow slot selected by the frame index.
+    andi t3, t2, 0x07F8
+    srl t2, t2, 16
+    sll t0, t2, 16
+    or t2, t2, t0
+    sw t2, HCOMP_CGRAM_WRITE_SCRATCH
+    sw t2, HCOMP_CGRAM_WRITE_SCRATCH + 4
+    lw a1, HCOMP_RAW_PALETTE_PTRS(sp)
+    add a1, a1, t3
+    li a0, HCOMP_CGRAM_WRITE_SCRATCH
+    jal dma_write
+    li a2, 0x7
+
+    // Continue from the cursor. If the marker occupied word0, word1 remains
+    // cached in HCOMP_CGRAM_PAIR_SCRATCH and is consumed without another DMA.
+    lw a1, HCOMP_CGRAM_EVENT_CURSOR
+    b hcomp_cgram_consume
+    andi t0, a1, 0x4

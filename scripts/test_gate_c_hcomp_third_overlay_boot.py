@@ -18,6 +18,22 @@ class Tests(unittest.TestCase):
         self.assertLess(d.IRQ1_LINE,d.IRQ2_LINE)
         self.assertLess(d.IRQ2_LINE,224)
         self.assertEqual(d.IRQ2_LINE-d.IRQ1_LINE,2)
+    def test_mode7_dispatch_section_disables_bg_render(self):
+        p=d.build_program()
+        m7=bytes((0xA9,d.TREATMENT_MODE,0x8D,0x05,0x21))
+        tm0=bytes((0xA9,d.TREATMENT_TM,0x8D,0x2C,0x21))
+        m1=bytes((0xA9,d.CONTROL_MODE,0x8D,0x05,0x21))
+        tm1=bytes((0xA9,d.CONTROL_TM,0x8D,0x2C,0x21))
+        m7_pos=p.index(m7)
+        tm0_pos=p.index(tm0,m7_pos+len(m7))
+        m1_pos=p.index(m1,tm0_pos+len(tm0))
+        tm1_pos=p.index(tm1,m1_pos+len(m1))
+        self.assertLess(m7_pos,tm0_pos)
+        self.assertLess(tm0_pos,m1_pos)
+        self.assertLess(m1_pos,tm1_pos)
+        self.assertEqual(p.count(tm0),1)
+        self.assertEqual(p.count(tm1),2)  # initial TM=1 plus IRQ2 restore
+
     def test_irq_is_boot_armed_without_nmi(self):
         p=d.build_program()
         self.assertIn(bytes((0xA9,0x20,0x8D,0x00,0x42)),p)

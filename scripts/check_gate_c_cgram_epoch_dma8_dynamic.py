@@ -86,7 +86,6 @@ def decode_record(rec: bytes) -> tuple[str, int, int]:
 
 
 def parse_handed_stream(data: bytes, phase: str) -> dict[str, object]:
-    records = [decode_record(data[i * 4:(i + 1) * 4]) for i in range(MAX_RECORDS)]
     expected_fixed = int(PHASES[phase]["fixed"])
     color_pos = 0
     first_color_index = None
@@ -95,7 +94,10 @@ def parse_handed_stream(data: bytes, phase: str) -> dict[str, object]:
     markers_before = 0
     interleaved_markers = 0
 
-    for i, (kind, index, value) in enumerate(records):
+    # Decode lazily so stale/padding bytes after the terminal active marker are
+    # outside the stream contract and cannot create a false classifier failure.
+    for i in range(MAX_RECORDS):
+        kind, index, value = decode_record(data[i * 4:(i + 1) * 4])
         if kind == "marker":
             if color_pos < len(EXPECTED_COLORS):
                 if value != expected_fixed:

@@ -425,12 +425,12 @@ section_loop:
     lhu t2, coldata
     andi t3, t2, 0x1F
     sll t3, t3, 11
-    andi t4, t2, 0x3E0
-    sll t4, t4, 1
-    or t3, t3, t4
-    andi t4, t2, 0x7C00
-    srl t4, t4, 9
-    or t3, t3, t4
+    andi t1, t2, 0x3E0
+    sll t1, t1, 1
+    or t3, t3, t1
+    andi t1, t2, 0x7C00
+    srl t1, t1, 9
+    or t3, t3, t1
     ori t3, t3, 0x1
     sll t3, t3, 16
     ori t3, t3, 0x8000

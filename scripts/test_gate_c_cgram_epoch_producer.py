@@ -162,6 +162,11 @@ def prove_source() -> None:
         "li t1, HCOMP_CGRAM_EVENT_CAPACITY",
         "bge t0, t1, hcomp_cgram_marker_overflow",
         "lhu t2, coldata",
+        "andi t1, t2, 0x3E0",
+        "sll t1, t1, 1",
+        "or t3, t3, t1",
+        "andi t1, t2, 0x7C00",
+        "srl t1, t1, 9",
         "ori t3, t3, 0x1",
         "sll t3, t3, 16",
         "ori t3, t3, 0x8000",
@@ -185,6 +190,9 @@ def prove_source() -> None:
         raise AssertionError("marker guard occurs after marker store")
     if "hcomp_cgram_sideband_ptr" in section:
         raise AssertionError("legacy sideband write still active")
+    marker_block = extract(section, "// Append one typed section marker", "hcomp_cgram_marker_overflow:")
+    if "t4" in marker_block:
+        raise AssertionError("section marker clobbers rsp_frame saved return register t4")
 
     cg = extract(ppu, "write_cgdata:", ".align 5\nwrite_w12sel:")
     for anchor in (

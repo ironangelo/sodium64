@@ -5,6 +5,13 @@ on:
     branches:
       - phase4/gate-c-cgram-epoch-dma8-dynamic-proof
     paths:
+      - src/defines.h
+      - src/ppu.S
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - scripts/test_gate_c_cgram_epoch_contract.py
+      - scripts/test_gate_c_cgram_rsp_consumer_contract.py
+      - scripts/test_gate_c_cgram_epoch_producer.py
       - scripts/make_gate_c_cgram_epoch_dma8_dynamic.py
       - scripts/check_gate_c_cgram_epoch_dma8_dynamic.py
       - .github/workflows/gate-c-cgram-epoch-dma8-dynamic.yml
@@ -37,6 +44,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 scripts/test_gate_c_cgram_epoch_contract.py
+          python3 scripts/test_gate_c_cgram_rsp_consumer_contract.py
+          python3 scripts/test_gate_c_cgram_epoch_producer.py
           python3 scripts/check_gate_c_cgram_epoch_dma8_dynamic.py --self-test
           python3 scripts/make_gate_c_cgram_epoch_dma8_dynamic.py guest-a.smc
           python3 scripts/make_gate_c_cgram_epoch_dma8_dynamic.py guest-b.smc

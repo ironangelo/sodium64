@@ -2588,3 +2588,13 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 
 - **SOURCE-GROUNDED CORRECTION before execution proof:** the older all-heavy proof had t7=4, so s0 advanced 0->16 and tile1 naturally targeted `MODE7_TEXTURE+0x1000`. The new bounded workload intentionally has **t7=3**, so `SHIFT_TABLE[3]=8`: tile0 targets +0, tile1 targets **+0x800**, tile2 would target +0x1000 but is the first native fast-out and therefore performs no texture DMA.
 - **Decision:** do **not** reuse the old +0x1000 second-slot sentinel/classifier for the two-heavy run. After CPU section-state acceptance, seed/observe `MODE7_TEXTURE+0x800` for the second heavy tile. Reusing +0x1000 would create a false “second tile not reached” result.
+
+
+### 2026-09-25 checkpoint — exact two-heavy Mode7 CPU section state VALIDATED
+
+- **VALIDATED / exact guest-proof head:** `phase4/gate-c-hcomp-mode7-two-heavy-proof@988c2175baebbc26a4e2179b2d6102ee408f16bf`. Dedicated **Gate C Two-Heavy Mode7 Section Proof 36201505627 SUCCESS** end-to-end; generic **36201505630 SUCCESS** across normal build, PROFILE and pinned-Mupen smoke.
+- **First-hand section queue:** classifier exactly **`MIDFRAME_MODE7_TWO_HEAVY_SECTION_PRODUCTION_VALIDATED`**, unique **Q1 signature_start=4**, guest normalization `word_swap32`. Exact queued state across 1/7/1 sections: `TM=1`, `M7SEL=0x80`, **M7A=0x4000**, B=C=D=0, X=Y=0, splits **80/82/224**.
+- **Source/model bound retained:** t7=3; X bounds [0,0x1C000]; t8 step=0x20000; MODE7_MASK=0x3FFFF; heavy pattern starts exactly tile0=true, tile1=true, tile2=false, tile3=false. From tile2 onward the native empty-OOB branch reaches `finish_tile7` before map/char/decode/texture-DMA/RDP.
+- Guest SMC **sha256:a14cf39db9031056e5757de9942f2cd833a70b001a5f339b76079ef402389656**; wrapped guest **f713a62fa746fe24aae6fa48fe3389dc0ce26e78fd66e6eaae61dc29f581d6f6**. Unchanged diagnostic runtime hashes: ROM **58853a251257bc500081395e00667dc116da1b7b9e57f6f7b4bc19a76b9be399**, ELF **991ce6803e42f82f858d746d71e4299cf1732c094b986bfcd77bfdbdc268d01e**.
+- Dedicated artifact **10892551025**, digest **sha256:d68035b7e32beccdce11cfec91830d185b70387ee13920099438d1ea983bf431**.
+- **NEXT / execution proof:** seed and observe the two actual heavy-tile texture destinations **MODE7_TEXTURE+0** and **MODE7_TEXTURE+0x800** (not the old +0x1000). Require both overwritten. Then inspect H-COMP mailbox: marker => bounded two-heavy renderer returns through row/layer/frame-end; sentinel => immediate post-second-heavy/row-layer progression still blocks and warrants a single size-neutral DMEM row-exit marker.

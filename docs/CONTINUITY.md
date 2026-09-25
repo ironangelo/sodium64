@@ -2598,3 +2598,12 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - Guest SMC **sha256:a14cf39db9031056e5757de9942f2cd833a70b001a5f339b76079ef402389656**; wrapped guest **f713a62fa746fe24aae6fa48fe3389dc0ce26e78fd66e6eaae61dc29f581d6f6**. Unchanged diagnostic runtime hashes: ROM **58853a251257bc500081395e00667dc116da1b7b9e57f6f7b4bc19a76b9be399**, ELF **991ce6803e42f82f858d746d71e4299cf1732c094b986bfcd77bfdbdc268d01e**.
 - Dedicated artifact **10892551025**, digest **sha256:d68035b7e32beccdce11cfec91830d185b70387ee13920099438d1ea983bf431**.
 - **NEXT / execution proof:** seed and observe the two actual heavy-tile texture destinations **MODE7_TEXTURE+0** and **MODE7_TEXTURE+0x800** (not the old +0x1000). Require both overwritten. Then inspect H-COMP mailbox: marker => bounded two-heavy renderer returns through row/layer/frame-end; sentinel => immediate post-second-heavy/row-layer progression still blocks and warrants a single size-neutral DMEM row-exit marker.
+
+
+### 2026-09-25 checkpoint — bounded two-heavy execution proof dispatched
+
+- **CANDIDATE / execution-proof head:** `phase4/gate-c-hcomp-mode7-two-heavy-proof@dbf025ffb783f5502558bf3b00b0a52224f39179`, one controlled commit over CPU-state authority988c2175.
+- **Only runtime delta in this batch:** `src/main.S` proof seed moves the second texture sentinel from stale t7=4 destination `MODE7_TEXTURE+0x1000` to exact t7=3 tile1 destination **`MODE7_TEXTURE+0x800`**. No `rsp_main.S`, `rsp_mode7.S`, `rsp_hcomp.S` or `ppu.S` change; dedicated workflow explicitly diffs those against34b1c397.
+- **Execution oracle:** reuses validated two-heavy section source contract, proves texture-address expression `((s0&0x18)<<8)` maps s0=0/8/16 to +0/+0x800/+0x1000, and treats tile2 +0x1000 as pre-DMA fast-out under the validated bounds. Evidence uses ordinary calibrated RDRAM only: slot0, slot+0x800, H-COMP mailbox and guest state.
+- **Diagnostic outcomes:** both texture sentinels overwritten + mailbox marker => `MODE7_TWO_HEAVY_COMPLETED_HCOMP_REACHED`; both overwritten + mailbox sentinel => `MODE7_TWO_HEAVY_COMPLETED_HCOMP_NOT_REACHED`; only first overwritten => `MODE7_TWO_HEAVY_SECOND_TEXTURE_NOT_OBSERVED`. Contradictory states fail rather than being interpreted.
+- Dedicated **Gate C Mode7 Two-Heavy Execution Proof 36201928053** and generic **36201928044** in flight. H-COMP arithmetic remains frozen.

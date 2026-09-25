@@ -2262,3 +2262,12 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - **Harness simplification / MEASUREMENT DISCIPLINE:** full 1000-B IMEM capture is not required for semantic authority and would increase lab fragility. Static binary proof pins H-COMP bytes/addresses; dynamic F11=51 proves that exact entry executed. Current checker retains only an 8-B H-COMP fault-signature check if convenient plus proof markers and guest state. Avoid invasive mailbox instrumentation unless debugger limitations force it.
 - **CI:** generic Build/Validate **36173791668** on `ca170392...` is IN_PROGRESS. Earlier runs were cancelled only by branch concurrency while commits were being added; they are not semantic failures.
 - **NEXT:** wait for/inspect exact-head build. If binary/layout green, create a dedicated dynamic workflow using pinned Mupen+cxd4, capture F10/F11 with debugger reads and guest WRAM state in RDRAM, classify first-hand coexistence, and checkpoint before any production-routing decision.
+
+
+### 2026-09-25 checkpoint — third-overlay dynamic oracle false-red prevented
+
+- Exact normal artifact **10880268942** from generic run **36173791668** on `ca170392...` was inspected directly before launching the dedicated dynamic proof. Build/PROFILE are green; normal ROM sha256 **a9f1a374f9c197af2924b8074ef0304f362b939a87ac161d9e65d0332fe241c1**.
+- Binary map sizes are exactly as precommitted: regular RSP text **0x1000**, Mode7 RSP text **0x1000**, H-COMP payload text **0x790**.
+- **REJECTED PROOF-ORACLE BUG, not runtime defect:** `check_gate_c_hcomp_third_overlay_dynamic.py@ca170392` pinned the H-COMP slot prefix as `090007E4 / 01001021`, assuming `move v0,t0` encoded as ADDU. Exact linked bytes at `rsp_hcomp_text_start+0x3A8` are **`090007E4 01001025`**; GNU as encoded the pseudo-move as **OR v0,t0,zero**. Without correction the dedicated proof would have produced a false red despite correct runtime bytes.
+- Corrected checker-only head **`e1c924bc0fbe773b63fd3122090c34fe2f005bc0`** now requires **`090007E4/01001025`** and documents the assembler encoding. No runtime source changed in this correction.
+- **NEXT:** run exact-head generic hygiene, then add/execute dedicated pinned-Mupen proof using the corrected signature plus F10/F11 and guest WRAM state. Any future mismatch must be interpreted against exact assembled bytes, not pseudo-instruction assumptions.

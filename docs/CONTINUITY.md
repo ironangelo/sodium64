@@ -2087,3 +2087,10 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - Oracle now source-proves startup order **fixed-arena clear -> startup section_init marker -> RSP upload**, plus Q1/count0/coldata0 defaults and marker-store ordering. Dedicated tooling now uses host `readelf -sW` on the pre-packaging RSP **.elf** files instead of unavailable cross `nm`; it emits minimal symbol dumps and requires `draw_bg=A40013A8`, `draw_obj=A4001790`.
 - First-run artifact maps already independently show both RSP **.text=0x1000**. The uploaded RSP `.o` wrappers retain only exported blob symbols, so they cannot prove internal renderer labels; this is why the corrected job inspects the original RSP ELFs inside the same build step.
 - Fresh exact-head dedicated **36137968294** and generic **36137968357** are in progress. Runtime authority remains8ac783aa;1bc300d3 is proof-only.
+
+
+### 2026-09-25 correction — readelf symbol parser normalized before binary gate
+
+- **REJECTED TOOLING HAZARD caught pre-interpretation:** proof head12a8c wired the binary stage to normalized `readelf | awk` files whose lines are exactly `<hex-value> <symbol>`, but the inherited `parse_symbol` still required at least three fields from the old `nm` format. This would have produced a false “missing symbol” red even with correct linked addresses.
+- **PROOF-ONLY head:** `phase4/gate-c-cgram-epoch-rsp-consumer-dma8@598d40d40a8ebef4dc473bc115b4f5e49ece8313` changes only the implementation oracle parser to accept exactly the two normalized fields. Runtime remains exact consumer8ac783aa; no RSP/CPU source delta and H-COMP arithmetic remains frozen.
+- **NEXT:** use the exact598d40 dedicated run as binary-layout authority; older12a8c CI may be canceled/superseded by concurrency and must not be interpreted.

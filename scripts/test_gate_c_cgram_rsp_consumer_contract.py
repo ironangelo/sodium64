@@ -184,23 +184,22 @@ def prove_stream_semantics() -> int:
                     )
                 cases += 1
 
-    # Explicitly force a section marker into the first half of a DMA pair;
-    # the next section must consume the cached second half without another read.
+    # Explicitly put the first section marker in word0 of an 8-byte pair.
+    # The next section's first color is word1 of that same pair and therefore
+    # must survive the section return in DMEM without another DMA read.
     stream = (
-        color_record(1, 0x1234),
         marker_record(0x001F),
-        color_record(0, 0x2AAA),
-        color_record(2, 0x7FFF),
+        color_record(1, 0x1234),
         marker_record(0x4210),
     )
     got, reads = consume_stream([0, 1, 2], stream)
     if got != [
-        ((0, 0x1234, 2), 0x001F),
-        ((0x2AAA, 0x1234, 0x7FFF), 0x4210),
+        ((0, 1, 2), 0x001F),
+        ((0, 0x1234, 2), 0x4210),
     ]:
-        raise AssertionError("explicit cross-section cached-half replay mismatch")
-    if reads != 3:
-        raise AssertionError("cached-half proof performed redundant DMA")
+        raise AssertionError("explicit first-half-marker cached replay mismatch")
+    if reads != 2:
+        raise AssertionError("cached second half triggered a redundant DMA")
 
     return cases
 

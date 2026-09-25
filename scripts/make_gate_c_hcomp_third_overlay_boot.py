@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Boot-first same-visible-frame Mode1 -> Mode7 -> Mode1 overlay guest.
+"""Boot-first Mode1 -> disabled-BG Mode7 -> Mode1 dispatch discriminator.
 
 Original/homebrew-only. It arms V-IRQ immediately so the first RSP frame,
 rather than a later handoff, exercises both renderer directions before the
@@ -33,6 +33,8 @@ BG_MAP_ADDRESS=0x9040
 PALETTE_ADDRESS=0x9840
 CONTROL_MODE=0x01
 TREATMENT_MODE=0x07
+CONTROL_TM=0x01
+TREATMENT_TM=0x00
 ARMED_PHASE=0x11
 POSTTEST_PHASE=0x33
 IRQ1_LINE=80
@@ -74,7 +76,7 @@ def build_program()->bytes:
     emit_dma_from_rom(a,channel=0,mode=0,bbus=0x22,source=PALETTE_ADDRESS,size=0x200)
 
     for value,address in (
-        (0x01,0x212C),(0x00,0x212D),(0x00,0x212E),
+        (CONTROL_TM,0x212C),(0x00,0x212D),(0x00,0x212E),
         (0x00,0x212F),(0x00,0x2130),(0x00,0x2131),
     ):
         emit_lda_sta_abs(a,value,address)
@@ -108,6 +110,10 @@ def build_program()->bytes:
     lda_long(a,0x7E0000)
     sta_long(a,0x7E0005)
     emit_lda_sta_abs(a,TREATMENT_MODE,0x2105)
+    // Keep a real Mode7 section/dispatch request but disable BG rendering in
+    // that same section. RSP next_layer selects draw_mode7_entry before its
+    // enable test; draw_mode7_impl should then exit immediately on t1==0.
+    emit_lda_sta_abs(a,TREATMENT_TM,0x212C)
     lda_sta_long(a,TREATMENT_MODE,0x7E0003)
     emit_lda_sta_abs(a,IRQ2_LINE&0xFF,0x4209)
     emit_lda_sta_abs(a,(IRQ2_LINE>>8)&1,0x420A)
@@ -119,6 +125,7 @@ def build_program()->bytes:
     lda_long(a,0x7E0000)
     sta_long(a,0x7E0006)
     emit_lda_sta_abs(a,CONTROL_MODE,0x2105)
+    emit_lda_sta_abs(a,CONTROL_TM,0x212C)
     lda_sta_long(a,CONTROL_MODE,0x7E0003)
     emit_lda_sta_abs(a,0x00,0x4200)  # stop V-IRQ
     lda_sta_long(a,POSTTEST_PHASE,0x7E0001)

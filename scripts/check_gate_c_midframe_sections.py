@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Classify the CPU-produced mid-frame BGMODE section sequence.
+"""Classify the CPU-produced Mode1/TM1 -> Mode7/TM0 -> Mode1/TM1 sections.
 
 This proof is intentionally read-only with respect to Sodium64 runtime.  It
 examines both fixed section queues after the boot-first 2-line Mode7 guest has
@@ -8,9 +8,9 @@ completed and asks whether the CPU actually queued Mode1 -> Mode7 -> Mode1.
 For the guest's V-IRQs at lines 80 and 82:
 - BGMODE7 is written during line 80, after that line's section check.
 - line 81 therefore closes the previous Mode1 section at split=80 and snapshots
-  the new Mode7 state.
+  the new Mode7 state with TM=0.
 - BGMODE1 is written during line 82.
-- line 83 closes the Mode7 section at split=82 and snapshots Mode1.
+- line 83 closes the Mode7/TM0 section at split=82 and snapshots Mode1/TM1.
 - vblank begins at line 225, so final make_section closes Mode1 at split=224.
 """
 
@@ -19,11 +19,13 @@ import argparse, json, tempfile
 from pathlib import Path
 
 SECTION_SIZE=0x40
+TM_OFFSET=0x3A
 BG_MODE_OFFSET=0x3D
 STAT_FLAGS_OFFSET=0x3E
 SPLIT_LINE_OFFSET=0x3F
 QUEUE_CAPTURE_BYTES=0x200
 EXPECTED_MODES=(1,7,1)
+EXPECTED_TM=(1,0,1)
 EXPECTED_SPLITS=(80,82,224)
 EXPECTED_GUEST=bytes((0x00,0x33,0x02,0x01,0x01,0x00,0x00,0x00))
 
@@ -96,6 +98,7 @@ def records(data:bytes,count:int=8)->list[dict]:
         out.append({
           "index":i,
           "mode":r[BG_MODE_OFFSET]&0x0F,
+          "tm":r[TM_OFFSET],
           "raw_bg_mode":r[BG_MODE_OFFSET],
           "stat_flags":r[STAT_FLAGS_OFFSET],
           "split":r[SPLIT_LINE_OFFSET],
@@ -106,7 +109,11 @@ def records(data:bytes,count:int=8)->list[dict]:
 def find_signature(rs:list[dict]):
     for i in range(0,len(rs)-2):
         trip=rs[i:i+3]
-        if tuple(r["mode"] for r in trip)==EXPECTED_MODES and tuple(r["split"] for r in trip)==EXPECTED_SPLITS:
+        if (
+            tuple(r["mode"] for r in trip)==EXPECTED_MODES
+            and tuple(r["tm"] for r in trip)==EXPECTED_TM
+            and tuple(r["split"] for r in trip)==EXPECTED_SPLITS
+        ):
             return i,trip
     return None
 
@@ -163,21 +170,23 @@ def classify(root:Path)->dict:
 
     q=winners[0]
     return {
-      "classification":"MIDFRAME_BGMODE_SECTION_PRODUCTION_VALIDATED",
+      "classification":"MIDFRAME_MODE7_TM0_SECTION_PRODUCTION_VALIDATED",
       "passed":True,
       "guest_normalization":g[0],
       "matching_queue":q,
       "expected_modes":list(EXPECTED_MODES),
+      "expected_tm":list(EXPECTED_TM),
       "expected_splits":list(EXPECTED_SPLITS),
       "queue":reports[q],
-      "semantic_scope":"CPU queued exact mid-frame BGMODE sections; RSP overlay dispatch remains a separate question",
+      "semantic_scope":"CPU queued exact Mode1/TM1 -> Mode7/TM0 -> Mode1/TM1 sections; RSP overlay dispatch remains a separate question",
     }
 
 def synthetic_queue()->bytes:
     q=bytearray(QUEUE_CAPTURE_BYTES)
-    for i,(mode,split) in enumerate(zip(EXPECTED_MODES,EXPECTED_SPLITS,strict=True)):
+    for i,(mode,tm,split) in enumerate(zip(EXPECTED_MODES,EXPECTED_TM,EXPECTED_SPLITS,strict=True)):
         off=i*SECTION_SIZE
         q[off+BG_MODE_OFFSET]=mode
+        q[off+TM_OFFSET]=tm
         q[off+STAT_FLAGS_OFFSET]=0x40 if i==0 else 0
         q[off+SPLIT_LINE_OFFSET]=split
     return bytes(q)

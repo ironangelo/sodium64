@@ -198,7 +198,8 @@ def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
 
 
 def prefixes(root: Path) -> list[str]:
-    return sorted(p.name[:-17] for p in root.glob("snap*-event-q1.bin"))
+    suffix = "-event-q1.bin"
+    return sorted(p.name[:-len(suffix)] for p in root.glob(f"snap*{suffix}"))
 
 
 def classify(root: Path) -> dict[str, object]:

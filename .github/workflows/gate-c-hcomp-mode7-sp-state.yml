@@ -14,7 +14,8 @@ on:
       - scripts/test_gate_c_hcomp_third_overlay_exec.py
       - scripts/test_gate_c_hcomp_third_overlay_rdram.py
       - scripts/check_gate_c_hcomp_mode7_rdp_return.py
-      - .github/workflows/gate-c-hcomp-mode7-rdp-return.yml
+      - scripts/check_gate_c_hcomp_mode7_sp_state.py
+      - .github/workflows/gate-c-hcomp-mode7-sp-state.yml
   workflow_dispatch:
 
 permissions:
@@ -48,6 +49,7 @@ jobs:
           python3 scripts/test_gate_c_hcomp_third_overlay_boot.py
           python3 scripts/test_gate_c_hcomp_third_overlay_rdram.py
           python3 scripts/check_gate_c_hcomp_mode7_rdp_return.py --self-test
+          python3 scripts/check_gate_c_hcomp_mode7_sp_state.py --self-test
           python3 scripts/make_gate_c_hcomp_third_overlay_boot.py guest-a.smc
           python3 scripts/make_gate_c_hcomp_third_overlay_boot.py guest-b.smc
           cmp guest-a.smc guest-b.smc

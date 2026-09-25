@@ -119,7 +119,6 @@ def source_contract()->None:
       "sb t0, HCOMP_OVERLAY_PROOF_HCOMP",
       "mtc0 t0, COP0_SP_STATUS",
       "j 0xA400103C",
-      ".byte 0:0x3C0",
       "draw_mode7_entry:",
       "j 0xA4001F78",
       "li t9, 0x1788",

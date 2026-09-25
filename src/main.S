@@ -204,9 +204,10 @@ pi_wait1:
     li t1, 0x55667788
     sw t1, 4(t0)
 
-    // Second alternating Mode7 texture destination. Reaching this writer in
-    // the unmodified RSP requires the first tile's rdp_send to have returned.
-    li t0, MODE7_TEXTURE + 0x1000
+    // Second heavy-tile texture destination for the bounded t7=3 workload.
+    // Tile0 uses +0; after s0 advances by 8, tile1 uses +0x800. Tile2 would
+    // select +0x1000 but takes the native empty-OOB fast-out before texture DMA.
+    li t0, MODE7_TEXTURE + 0x800
     li t1, 0x99AABBCC
     sw t1, 0(t0)
     li t1, 0xDDEEFF00

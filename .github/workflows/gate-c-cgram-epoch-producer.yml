@@ -1,9 +1,9 @@
-name: Gate C CGRAM Epoch Producer
+name: Gate C CGRAM DMA8 Producer
 
 on:
   push:
     branches:
-      - phase4/gate-c-cgram-epoch-producer
+      - phase4/gate-c-cgram-epoch-dma8-producer
     paths:
       - src/defines.h
       - src/ppu.S
@@ -11,6 +11,7 @@ on:
       - src/rsp_main.S
       - src/rsp_mode7.S
       - scripts/test_gate_c_cgram_epoch_contract.py
+      - scripts/test_gate_c_cgram_rsp_consumer_contract.py
       - scripts/test_gate_c_cgram_epoch_producer.py
       - .github/workflows/gate-c-cgram-epoch-producer.yml
   workflow_dispatch:
@@ -20,7 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  cgram-epoch-producer:
+  cgram-dma8-producer:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,10 +30,14 @@ jobs:
       - name: Compile host oracles
         run: |
           python3 -m py_compile scripts/test_gate_c_cgram_epoch_contract.py
+          python3 -m py_compile scripts/test_gate_c_cgram_rsp_consumer_contract.py
           python3 -m py_compile scripts/test_gate_c_cgram_epoch_producer.py
 
-      - name: Reprove L0 contract
+      - name: Reprove epoch layout and timing bound
         run: python3 scripts/test_gate_c_cgram_epoch_contract.py
 
-      - name: Prove CPU epoch producer contract
+      - name: Reprove hardened DMA8 consumer contract
+        run: python3 scripts/test_gate_c_cgram_rsp_consumer_contract.py
+
+      - name: Prove DMA8 CPU producer contract
         run: python3 scripts/test_gate_c_cgram_epoch_producer.py

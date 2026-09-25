@@ -137,12 +137,9 @@ jobs:
           spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) $env(M64P_UI)             --corelib $env(M64P_CORE)             --datadir $env(M64P_DATA)             --configdir $env(RUNNER_TEMP)/m64p-config             --debug --emumode 0 --nospeedlimit             --gfx dummy --audio dummy --input dummy --rsp $env(M64P_RSP)             workload/out/guest-a.z64
           expect "(dbg)"
 
-          # Seed the proof mailbox before Sodium64 runs. It lives outside the
-          # linked image; a valid marker DMA must overwrite this exact sentinel.
-          send "write 0x800F0000 w DEADBEEF\r"
-          expect "(dbg)"
-          send "write 0x800F0004 w CAFEBABE\r"
-          expect "(dbg)"
+          # The proof-only candidate seeds A00F0000 itself after boot clearing.
+          # Do not write the mailbox from the debugger before run: boot would
+          # correctly erase that value and invalidate the discriminator.
 
           send "run\r"
           after 5000

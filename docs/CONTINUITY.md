@@ -2210,3 +2210,10 @@ Actual Color Image bases independently decoded from **IMEM10A4 word2108EE80** (a
 - **Isolation/falsifiers:** regular renderer remains production-shaped; proof-only Mode7 slot performs the bridge. Source/binary checker requires the Mode7 probe at A40013A8, external entry at A4001788, draw_obj A4001790, both texts exactly0x1000, carry vectors F10/F20 and VEC_DATA F70. Runtime classifier requires old consumer evidence unchanged **and** exact outputs4/5 plus zero control6. A green arithmetic output with changed stream/EA0/raw0..3 is rejected.
 - Dedicated **36171107558** builds pinned Mupen debugger + cxd4, captures the same first Q1 handoff and classifies four snapshots. Generic **36171107461** is hygiene. Intermediate runs36170790664/36170950660 and earlier branch-creation runs were cancelled by newer commits, not semantic failures.
 - **Reading:** dynamic green proves an actual RSP execution can bridge consumer-reconstructed historical CGRAM into the hardware-validated E4d arithmetic core under this controlled one-vector diagnostic. It still does not prove production compositor routing, Mode7 coexistence, framebuffer correctness, cadence, SMW or real-N64 behavior. Dynamic red must be classified from exact captured state before changing arithmetic.
+
+
+### 2026-09-25 checkpoint — executable bridge build/layout gate GREEN
+
+- Dedicated dynamic run **36171107558** on exact head `d06ee242...` has passed classifier/guest self-test, exact candidate build, binary map/symbol proof and guest wrapping.
+- **MEASURED binary invariants:** both RSP texts remain exactly0x1000; regular and proof Mode7 fixed slot anchors remain `draw_bg=A40013A8` / `draw_obj=A4001790`; proof external entry is `A4001788`; private bridge carry vectors resolve at DMEM F10/F20; fixed `VEC_DATA=F70`.
+- This closes compile/layout as an explanation for any later semantic red. Run is now building the same pinned Mupen+cxd4 laboratory used by the validated DMA8 consumer, after which it will capture first-hand Q1 stream/raw/EA0. **No semantic bridge claim yet.**

@@ -232,6 +232,9 @@
 #define OVERLAY_MODE7_SRC 0xE94
 // Per-frame raw palette queue pointers. Indexed by RSP frame slot sp=0/4.
 #define HCOMP_RAW_PALETTE_PTRS 0xE98
+// Handed frame's typed CGRAM event-stream base. EA0 is inside the audited
+// retired H-COMP DMEM interval and remains below the fixed VEC_DATA ABI.
+#define HCOMP_CGRAM_EVENT_CURSOR 0xEA0
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached

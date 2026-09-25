@@ -1,10 +1,14 @@
-name: Gate C OOB-Zero-Fill Mode7 Section Proof
+name: Gate C Two-Heavy Mode7 Section Proof
 
 on:
   push:
     branches:
-      - phase4/gate-c-hcomp-mode7-oob-zero-fill-proof
+      - phase4/gate-c-hcomp-mode7-two-heavy-proof
     paths:
+      - src/defines.h
+      - src/ppu.S
+      - src/rsp_main.S
+      - src/rsp_mode7.S
       - scripts/check_gate_c_midframe_sections.py
       - scripts/make_gate_c_hcomp_third_overlay_boot.py
       - scripts/test_gate_c_hcomp_third_overlay_boot.py
@@ -34,12 +38,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prove zero runtime delta and self-test oracle
+      - name: Prove zero RSP/runtime delta and self-test oracle
         shell: bash
         run: |
           set -euo pipefail
-          git fetch --depth=1 origin 67570155473719e7b3e166ba62adbb0286a34a6c
-          git diff --exit-code 67570155473719e7b3e166ba62adbb0286a34a6c HEAD -- src Makefile
+          git fetch --depth=1 origin 34b1c39742d1d62b29768537fec1fbeb62cbad65
+          git diff --exit-code 34b1c39742d1d62b29768537fec1fbeb62cbad65 HEAD -- src Makefile
           python3 scripts/check_gate_c_midframe_sections.py --self-test
           python3 scripts/test_gate_c_hcomp_third_overlay_boot.py
           python3 scripts/make_gate_c_hcomp_third_overlay_boot.py guest-a.smc
@@ -58,7 +62,7 @@ jobs:
           echo "GUEST_STATE_ADDR=0x$wram" >> "$GITHUB_ENV"
           sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
 
-      - name: Wrap deterministic short-Mode7 guest
+      - name: Wrap deterministic two-heavy Mode7 guest
         shell: bash
         run: |
           set -euo pipefail
@@ -151,13 +155,13 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/check_gate_c_midframe_sections.py evidence             --output evidence/result.json
-          grep -q 'MIDFRAME_MODE7_OOB_ZERO_FILL_SECTION_PRODUCTION_VALIDATED' evidence/result.json
+          grep -q 'MIDFRAME_MODE7_TWO_HEAVY_SECTION_PRODUCTION_VALIDATED' evidence/result.json
 
       - name: Upload section evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-mode7-oob-zero-fill-section-proof
+          name: gate-c-mode7-two-heavy-section-proof
           retention-days: 30
           path: |
             evidence/

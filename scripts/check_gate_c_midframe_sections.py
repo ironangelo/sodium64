@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Classify enabled Mode7 OOB zero-fill mid-frame section state.
+"""Classify the exact-two-heavy-tile Mode7 mid-frame section state.
 
 This proof is intentionally read-only with respect to Sodium64 runtime.  It
 examines both fixed section queues after the boot-first 2-line Mode7 guest has
@@ -19,6 +19,10 @@ import argparse, json, tempfile
 from pathlib import Path
 
 SECTION_SIZE=0x40
+M7A_OFFSET=0x18
+M7B_OFFSET=0x1A
+M7C_OFFSET=0x1C
+M7D_OFFSET=0x1E
 M7X_OFFSET=0x20
 M7Y_OFFSET=0x22
 M7SEL_OFFSET=0x33
@@ -29,9 +33,13 @@ SPLIT_LINE_OFFSET=0x3F
 QUEUE_CAPTURE_BYTES=0x200
 EXPECTED_MODES=(1,7,1)
 EXPECTED_TM=(1,1,1)
-EXPECTED_M7SEL=0xC0
-EXPECTED_M7X=0x0FFF
-EXPECTED_M7Y=0x0FFF
+EXPECTED_M7SEL=0x80
+EXPECTED_M7A=0x4000
+EXPECTED_M7B=0
+EXPECTED_M7C=0
+EXPECTED_M7D=0
+EXPECTED_M7X=0
+EXPECTED_M7Y=0
 EXPECTED_SPLITS=(80,82,224)
 EXPECTED_GUEST=bytes((0x00,0x33,0x02,0x01,0x01,0x00,0x00,0x00))
 
@@ -55,6 +63,10 @@ def source_contract()->None:
 
     anchors_defs=(
       "#define SECTION_SIZE 0x40",
+      "#define M7A (M7VOFS + 0x2)",
+      "#define M7B (M7A + 0x2)",
+      "#define M7C (M7B + 0x2)",
+      "#define M7D (M7C + 0x2)",
       "#define M7X (M7D + 0x2)",
       "#define M7Y (M7X + 0x2)",
       "#define M7SEL (OBSEL + 0x1)",
@@ -74,6 +86,10 @@ def source_contract()->None:
       "write_bgmode:",
       "bne t1, t0, update_window_frame",
       "write_m7sel:",
+      "write_m7a:",
+      "write_m7b:",
+      "write_m7c:",
+      "write_m7d:",
       "write_m7x:",
       "write_m7y:",
       "update_window_frame:",
@@ -103,33 +119,57 @@ def source_contract()->None:
         if a not in rsp:
             raise AssertionError(f"RSP section-consumer anchor drift: {a}")
 
-    # The OOB fast path lives only in the true Mode7 overlay payload.
+    # Pin the renderer arithmetic that makes this workload exactly two-heavy.
     mode7_anchors=(
       "draw_mode7_impl:",
+      "lh s2, M7A",
+      "lh s4, M7B",
+      "lh s5, M7C",
+      "lh s6, M7D",
+      "addi t7, t0, 3 // Width shift",
       "check_wrap:",
       "andi t6, t0, 0xC0",
       "bne t6, t1, set_texels",
       "lw t1, MODE7_MASK",
       "bnez t0, finish_tile7",
       "set_texels:",
-      "entry_row:",
-      "mode7_out:",
-      "andi t0, t6, 0x80",
-      "beqz t0, dma_read",
-      "sdv $v31, 0, 0, a0",
-      "mode7_read:",
+      "jal dma_write",
+      "jal rdp_send",
+      "finish_tile7:",
+      "lbu t0, SHIFT_TABLE(t7)",
+      "sll t1, s2, t7",
+      "add s0, s0, t0",
+      "add t8, t8, t1",
+      "blt s0, 256, next_tile7",
     )
     for a in mode7_anchors:
         if a not in rsp7:
-            raise AssertionError(f"Mode7 fast-path anchor drift: {a}")
+            raise AssertionError(f"Mode7 bounded-heavy anchor drift: {a}")
     if not (
         rsp7.index("check_wrap:")
         < rsp7.index("set_texels:")
-        < rsp7.index("entry_row:")
+        < rsp7.index("finish_tile7:")
     ):
-        raise AssertionError("Mode7 heavy-path ordering drift")
-    if (EXPECTED_M7SEL & 0xC0)==0x80 or not (EXPECTED_M7SEL & 0x80):
-        raise AssertionError("OOB zero-fill discriminator no longer enters set_texels/mode7_out")
+        raise AssertionError("Mode7 heavy/fast-out ordering drift")
+    if (EXPECTED_M7SEL & 0xC0) != 0x80:
+        raise AssertionError("empty-OOB discriminator no longer selects fast-out mode")
+
+    # For this 2-line section: s1=k0=80, k1=82 => a3=1. B=0 therefore
+    # X bounds are [0, (A<<3)-A] = [0, 0x1C000]. A=0x4000 makes t7=3
+    # and the per-tile t8 increment A<<3 = 0x20000.
+    mask=0x3FFFF
+    t7=3
+    step=EXPECTED_M7A<<t7
+    xmax=step-EXPECTED_M7A
+    if step != 0x20000 or xmax != 0x1C000:
+        raise AssertionError("two-heavy arithmetic constants drift")
+    def heavy(tile:int)->bool:
+        lower=tile*step
+        upper=lower+xmax
+        return not (lower>mask and upper>mask)
+    pattern=tuple(heavy(i) for i in range(4))
+    if pattern != (True,True,False,False):
+        raise AssertionError(f"expected first two heavy then fast-out, got {pattern}")
 
 def records(data:bytes,count:int=8)->list[dict]:
     if len(data)<count*SECTION_SIZE:
@@ -142,6 +182,10 @@ def records(data:bytes,count:int=8)->list[dict]:
           "mode":r[BG_MODE_OFFSET]&0x0F,
           "tm":r[TM_OFFSET],
           "m7sel":r[M7SEL_OFFSET],
+          "m7a":int.from_bytes(r[M7A_OFFSET:M7A_OFFSET+2],"big"),
+          "m7b":int.from_bytes(r[M7B_OFFSET:M7B_OFFSET+2],"big"),
+          "m7c":int.from_bytes(r[M7C_OFFSET:M7C_OFFSET+2],"big"),
+          "m7d":int.from_bytes(r[M7D_OFFSET:M7D_OFFSET+2],"big"),
           "m7x":int.from_bytes(r[M7X_OFFSET:M7X_OFFSET+2],"big"),
           "m7y":int.from_bytes(r[M7Y_OFFSET:M7Y_OFFSET+2],"big"),
           "raw_bg_mode":r[BG_MODE_OFFSET],
@@ -158,6 +202,10 @@ def find_signature(rs:list[dict]):
             tuple(r["mode"] for r in trip)==EXPECTED_MODES
             and tuple(r["tm"] for r in trip)==EXPECTED_TM
             and all(r["m7sel"]==EXPECTED_M7SEL for r in trip)
+            and all(r["m7a"]==EXPECTED_M7A for r in trip)
+            and all(r["m7b"]==EXPECTED_M7B for r in trip)
+            and all(r["m7c"]==EXPECTED_M7C for r in trip)
+            and all(r["m7d"]==EXPECTED_M7D for r in trip)
             and all(r["m7x"]==EXPECTED_M7X for r in trip)
             and all(r["m7y"]==EXPECTED_M7Y for r in trip)
             and tuple(r["split"] for r in trip)==EXPECTED_SPLITS
@@ -218,18 +266,22 @@ def classify(root:Path)->dict:
 
     q=winners[0]
     return {
-      "classification":"MIDFRAME_MODE7_OOB_ZERO_FILL_SECTION_PRODUCTION_VALIDATED",
+      "classification":"MIDFRAME_MODE7_TWO_HEAVY_SECTION_PRODUCTION_VALIDATED",
       "passed":True,
       "guest_normalization":g[0],
       "matching_queue":q,
       "expected_modes":list(EXPECTED_MODES),
       "expected_tm":list(EXPECTED_TM),
       "expected_m7sel":EXPECTED_M7SEL,
+      "expected_m7a":EXPECTED_M7A,
+      "expected_m7b":EXPECTED_M7B,
+      "expected_m7c":EXPECTED_M7C,
+      "expected_m7d":EXPECTED_M7D,
       "expected_m7x":EXPECTED_M7X,
       "expected_m7y":EXPECTED_M7Y,
       "expected_splits":list(EXPECTED_SPLITS),
       "queue":reports[q],
-      "semantic_scope":"CPU queued exact enabled Mode7 OOB-zero-fill state; RSP post-map heavy-path reachability remains a separate question",
+      "semantic_scope":"CPU queued exact Mode7 state whose current renderer model yields two heavy horizontal tiles then native empty-OOB fast-out; RSP execution remains separate",
     }
 
 def synthetic_queue()->bytes:
@@ -239,6 +291,10 @@ def synthetic_queue()->bytes:
         q[off+BG_MODE_OFFSET]=mode
         q[off+TM_OFFSET]=tm
         q[off+M7SEL_OFFSET]=EXPECTED_M7SEL
+        q[off+M7A_OFFSET:off+M7A_OFFSET+2]=EXPECTED_M7A.to_bytes(2,"big")
+        q[off+M7B_OFFSET:off+M7B_OFFSET+2]=EXPECTED_M7B.to_bytes(2,"big")
+        q[off+M7C_OFFSET:off+M7C_OFFSET+2]=EXPECTED_M7C.to_bytes(2,"big")
+        q[off+M7D_OFFSET:off+M7D_OFFSET+2]=EXPECTED_M7D.to_bytes(2,"big")
         q[off+M7X_OFFSET:off+M7X_OFFSET+2]=EXPECTED_M7X.to_bytes(2,"big")
         q[off+M7Y_OFFSET:off+M7Y_OFFSET+2]=EXPECTED_M7Y.to_bytes(2,"big")
         q[off+STAT_FLAGS_OFFSET]=0x40 if i==0 else 0

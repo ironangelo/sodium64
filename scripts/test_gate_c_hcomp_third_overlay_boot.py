@@ -18,22 +18,24 @@ class Tests(unittest.TestCase):
         self.assertLess(d.IRQ1_LINE,d.IRQ2_LINE)
         self.assertLess(d.IRQ2_LINE,224)
         self.assertEqual(d.IRQ2_LINE-d.IRQ1_LINE,2)
-    def test_enabled_mode7_uses_oob_zero_fill_discriminator(self):
+    def test_enabled_mode7_bounds_heavy_work_to_two_tiles(self):
         p=d.build_program()
         self.assertEqual(p.count(bytes((0xA9,0x01,0x8D,0x2C,0x21))),1)
         self.assertNotIn(bytes((0xA9,0x00,0x8D,0x2C,0x21)),p)
-        self.assertEqual(p.count(bytes((0xA9,d.M7_OOB_ZERO_FILL,0x8D,0x1A,0x21))),1)
-        low=d.M7_OOB&0xFF
-        high=(d.M7_OOB>>8)&0x1F
-        xseq=bytes((0xA9,low,0x8D,0x1F,0x21,0xA9,high,0x8D,0x1F,0x21))
-        yseq=bytes((0xA9,low,0x8D,0x20,0x21,0xA9,high,0x8D,0x20,0x21))
-        self.assertEqual(p.count(xseq),1)
-        self.assertEqual(p.count(yseq),1)
-        self.assertEqual(d.M7_OOB_ZERO_FILL&0xC0,0xC0)
-        self.assertNotEqual(d.M7_OOB_ZERO_FILL&0xC0,0x80)
-        self.assertNotEqual(d.M7_OOB_ZERO_FILL&0x80,0)
-        self.assertEqual(d.M7_OOB,0x0FFF)
-        self.assertGreater(d.M7_OOB<<8,0x0003FFFF)
+        self.assertEqual(p.count(bytes((0xA9,d.M7_EMPTY,0x8D,0x1A,0x21))),1)
+        self.assertEqual(d.M7_EMPTY&0xC0,0x80)
+
+        def word_seq(value,address):
+            return bytes((
+                0xA9,value&0xFF,0x8D,address&0xFF,(address>>8)&0xFF,
+                0xA9,(value>>8)&0xFF,0x8D,address&0xFF,(address>>8)&0xFF,
+            ))
+
+        self.assertEqual(p.count(word_seq(d.M7_A,0x211B)),1)
+        for address in (0x211C,0x211D,0x211E,0x211F,0x2120):
+            self.assertEqual(p.count(word_seq(0,address)),1)
+        self.assertEqual(d.M7_A,0x4000)
+        self.assertEqual(d.M7_CENTER,0)
 
     def test_irq_is_boot_armed_without_nmi(self):
         p=d.build_program()

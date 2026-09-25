@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Boot-first Mode1 -> enabled OOB-zero-fill Mode7 -> Mode1 overlay guest.
+"""Boot-first Mode1 -> exactly-two-heavy-tile Mode7 -> Mode1 overlay guest.
 
 Original/homebrew-only. It arms V-IRQ immediately so the first RSP frame,
 rather than a later handoff, exercises both renderer directions before the
@@ -33,8 +33,9 @@ BG_MAP_ADDRESS=0x9040
 PALETTE_ADDRESS=0x9840
 CONTROL_MODE=0x01
 TREATMENT_MODE=0x07
-M7_OOB_ZERO_FILL=0xC0
-M7_OOB=0x0FFF
+M7_EMPTY=0x80
+M7_A=0x4000
+M7_CENTER=0x0000
 ARMED_PHASE=0x11
 POSTTEST_PHASE=0x33
 IRQ1_LINE=80
@@ -68,13 +69,21 @@ def build_program()->bytes:
     ):
         emit_lda_sta_abs(a,value,address)
 
-    # Keep BG1 enabled and the same out-of-bounds centers, but use 0xC0 so
-    # check_wrap enters set_texels. Later mode7_read still sees bit7 and
-    # zero-fills OOB map rows in DMEM instead of issuing map-entry RDRAM DMA.
-    emit_lda_sta_abs(a,M7_OOB_ZERO_FILL,0x211A)
-    for address in (0x211F,0x2120):
-        emit_lda_sta_abs(a,M7_OOB&0xFF,address)
-        emit_lda_sta_abs(a,(M7_OOB>>8)&0x1F,address)
+    # Bound the heavy Mode7 work using the renderer's native empty-OOB branch.
+    # A=0x4000 with B=C=D=X=Y=0 yields t7=3 and advances t8 by 0x20000
+    # per 8-pixel tile. With MODE7_MASK=0x3FFFF, tile0 and tile1 take the
+    # heavy path, while tile2 onward have both X bounds outside and fast-out.
+    emit_lda_sta_abs(a,M7_EMPTY,0x211A)
+    for value,address in (
+        (M7_A,0x211B), # A
+        (0,0x211C),    # B
+        (0,0x211D),    # C
+        (0,0x211E),    # D
+        (M7_CENTER,0x211F), # X
+        (M7_CENTER,0x2120), # Y
+    ):
+        emit_lda_sta_abs(a,value&0xFF,address)
+        emit_lda_sta_abs(a,(value>>8)&0xFF,address)
 
     emit_vmadd(a,0x1000)
     emit_dma_from_rom(a,channel=0,mode=1,bbus=0x18,source=BG_TILE_ADDRESS,size=0x20)

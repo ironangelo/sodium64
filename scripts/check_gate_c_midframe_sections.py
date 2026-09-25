@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Classify enabled Mode7 empty/out-of-bounds mid-frame section state.
+"""Classify enabled Mode7 OOB zero-fill mid-frame section state.
 
 This proof is intentionally read-only with respect to Sodium64 runtime.  It
 examines both fixed section queues after the boot-first 2-line Mode7 guest has
@@ -29,7 +29,7 @@ SPLIT_LINE_OFFSET=0x3F
 QUEUE_CAPTURE_BYTES=0x200
 EXPECTED_MODES=(1,7,1)
 EXPECTED_TM=(1,1,1)
-EXPECTED_M7SEL=0x80
+EXPECTED_M7SEL=0xC0
 EXPECTED_M7X=0x0FFF
 EXPECTED_M7Y=0x0FFF
 EXPECTED_SPLITS=(80,82,224)
@@ -113,6 +113,11 @@ def source_contract()->None:
       "bnez t0, finish_tile7",
       "set_texels:",
       "entry_row:",
+      "mode7_out:",
+      "andi t0, t6, 0x80",
+      "beqz t0, dma_read",
+      "sdv $v31, 0, 0, a0",
+      "mode7_read:",
     )
     for a in mode7_anchors:
         if a not in rsp7:
@@ -122,7 +127,9 @@ def source_contract()->None:
         < rsp7.index("set_texels:")
         < rsp7.index("entry_row:")
     ):
-        raise AssertionError("Mode7 OOB early-out ordering drift")
+        raise AssertionError("Mode7 heavy-path ordering drift")
+    if (EXPECTED_M7SEL & 0xC0)==0x80 or not (EXPECTED_M7SEL & 0x80):
+        raise AssertionError("OOB zero-fill discriminator no longer enters set_texels/mode7_out")
 
 def records(data:bytes,count:int=8)->list[dict]:
     if len(data)<count*SECTION_SIZE:
@@ -211,7 +218,7 @@ def classify(root:Path)->dict:
 
     q=winners[0]
     return {
-      "classification":"MIDFRAME_MODE7_EMPTY_OOB_SECTION_PRODUCTION_VALIDATED",
+      "classification":"MIDFRAME_MODE7_OOB_ZERO_FILL_SECTION_PRODUCTION_VALIDATED",
       "passed":True,
       "guest_normalization":g[0],
       "matching_queue":q,
@@ -222,7 +229,7 @@ def classify(root:Path)->dict:
       "expected_m7y":EXPECTED_M7Y,
       "expected_splits":list(EXPECTED_SPLITS),
       "queue":reports[q],
-      "semantic_scope":"CPU queued exact enabled Mode7 empty/OOB state; RSP heavy-path reachability remains a separate question",
+      "semantic_scope":"CPU queued exact enabled Mode7 OOB-zero-fill state; RSP post-map heavy-path reachability remains a separate question",
     }
 
 def synthetic_queue()->bytes:

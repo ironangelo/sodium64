@@ -1,9 +1,9 @@
-name: Gate C Empty-OOB Mode7 Section Proof
+name: Gate C OOB-Zero-Fill Mode7 Section Proof
 
 on:
   push:
     branches:
-      - phase4/gate-c-hcomp-mode7-empty-oob-proof
+      - phase4/gate-c-hcomp-mode7-oob-zero-fill-proof
     paths:
       - scripts/check_gate_c_midframe_sections.py
       - scripts/make_gate_c_hcomp_third_overlay_boot.py
@@ -151,13 +151,13 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/check_gate_c_midframe_sections.py evidence             --output evidence/result.json
-          grep -q 'MIDFRAME_MODE7_EMPTY_OOB_SECTION_PRODUCTION_VALIDATED' evidence/result.json
+          grep -q 'MIDFRAME_MODE7_OOB_ZERO_FILL_SECTION_PRODUCTION_VALIDATED' evidence/result.json
 
       - name: Upload section evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-mode7-empty-oob-section-proof
+          name: gate-c-mode7-oob-zero-fill-section-proof
           retention-days: 30
           path: |
             evidence/

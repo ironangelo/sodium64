@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Boot-first Mode1 -> enabled empty-OOB Mode7 -> Mode1 overlay guest.
+"""Boot-first Mode1 -> enabled OOB-zero-fill Mode7 -> Mode1 overlay guest.
 
 Original/homebrew-only. It arms V-IRQ immediately so the first RSP frame,
 rather than a later handoff, exercises both renderer directions before the
@@ -33,7 +33,7 @@ BG_MAP_ADDRESS=0x9040
 PALETTE_ADDRESS=0x9840
 CONTROL_MODE=0x01
 TREATMENT_MODE=0x07
-M7_EMPTY=0x80
+M7_OOB_ZERO_FILL=0xC0
 M7_OOB=0x0FFF
 ARMED_PHASE=0x11
 POSTTEST_PHASE=0x33
@@ -68,11 +68,10 @@ def build_program()->bytes:
     ):
         emit_lda_sta_abs(a,value,address)
 
-    # Keep BG1 enabled, but make the two-line Mode7 section take the renderer's
-    # native empty/out-of-bounds fast path. 0x0FFF is the largest positive
-    # signed 13-bit center; with the default zero matrix the RSP derives
-    # S/T ~= 0x0FFF00, safely beyond MODE7_MASK=0x0003FFFF.
-    emit_lda_sta_abs(a,M7_EMPTY,0x211A)
+    # Keep BG1 enabled and the same out-of-bounds centers, but use 0xC0 so
+    # check_wrap enters set_texels. Later mode7_read still sees bit7 and
+    # zero-fills OOB map rows in DMEM instead of issuing map-entry RDRAM DMA.
+    emit_lda_sta_abs(a,M7_OOB_ZERO_FILL,0x211A)
     for address in (0x211F,0x2120):
         emit_lda_sta_abs(a,M7_OOB&0xFF,address)
         emit_lda_sta_abs(a,(M7_OOB>>8)&0x1F,address)

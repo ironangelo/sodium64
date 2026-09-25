@@ -28,9 +28,9 @@ def classify(root:Path)->dict:
     guest=(root/"guest-state.bin").read_bytes()
     # Linked H-COMP slot begins with:
     #   j 0xA4001F90
-    #   move v0,t0
+    #   move v0,t0  (GNU as encodes this pseudo as OR v0,t0,zero)
     # Source/binary layout proof separately pins that resident helper address.
-    want_prefix=(0x090007E4).to_bytes(4,"big")+(0x01001021).to_bytes(4,"big")
+    want_prefix=(0x090007E4).to_bytes(4,"big")+(0x01001025).to_bytes(4,"big")
 
     proof_pass=None
     for mode,data in normalize_candidates(proof):
@@ -63,7 +63,7 @@ def classify(root:Path)->dict:
       "guest_normalization":guest_pass,
       "mode7_entry_marker":"0x00",
       "hcomp_entry_marker":"0x51",
-      "hcomp_slot_signature":"090007E4/01001021",
+      "hcomp_slot_signature":"090007E4/01001025",
       "guest":guest_report,
     }
 
@@ -71,7 +71,7 @@ def self_test()->None:
     with tempfile.TemporaryDirectory() as td:
       p=Path(td)
       (p/"proof-dmem.bin").write_bytes(bytes([0,0x51])+bytes(14))
-      slot=(0x090007E4).to_bytes(4,"big")+(0x01001021).to_bytes(4,"big")+bytes(8)
+      slot=(0x090007E4).to_bytes(4,"big")+(0x01001025).to_bytes(4,"big")+bytes(8)
       (p/"slot.bin").write_bytes(slot)
       (p/"guest-state.bin").write_bytes(bytes([7,0x33,2,1,1,7,7,0]))
       assert classify(p)["passed"]

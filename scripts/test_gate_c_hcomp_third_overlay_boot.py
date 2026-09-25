@@ -17,6 +17,7 @@ class Tests(unittest.TestCase):
         self.assertGreaterEqual(p.count(m1),2)
         self.assertLess(d.IRQ1_LINE,d.IRQ2_LINE)
         self.assertLess(d.IRQ2_LINE,224)
+        self.assertEqual(d.IRQ2_LINE-d.IRQ1_LINE,2)
     def test_irq_is_boot_armed_without_nmi(self):
         p=d.build_program()
         self.assertIn(bytes((0xA9,0x20,0x8D,0x00,0x42)),p)

@@ -36,7 +36,7 @@ TREATMENT_MODE=0x07
 ARMED_PHASE=0x11
 POSTTEST_PHASE=0x33
 IRQ1_LINE=80
-IRQ2_LINE=160
+IRQ2_LINE=82
 
 def lda_sta_long(asm:Assembler,value:int,address:int)->None:
     asm.emit(0xA9,value,0x8F,address&0xFF,(address>>8)&0xFF,(address>>16)&0xFF)

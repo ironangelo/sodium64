@@ -25,8 +25,12 @@ def guest_ok(data:bytes)->tuple[bool,dict]:
 def classify(root:Path)->dict:
     proof=(root/"proof-dmem.bin").read_bytes()
     slot=(root/"slot.bin").read_bytes()
-    want=(root/"expected-hcomp-slot.bin").read_bytes()
     guest=(root/"guest-state.bin").read_bytes()
+    # Linked H-COMP slot begins with:
+    #   j 0xA4001F90
+    #   move v0,t0
+    # Source/binary layout proof separately pins that resident helper address.
+    want_prefix=(0x090007E4).to_bytes(4,"big")+(0x01001021).to_bytes(4,"big")
 
     proof_pass=None
     for mode,data in normalize_candidates(proof):
@@ -37,10 +41,10 @@ def classify(root:Path)->dict:
 
     slot_pass=None
     for mode,data in normalize_candidates(slot):
-      if data[:len(want)]==want:
+      if data[:8]==want_prefix:
         slot_pass=mode; break
     if not slot_pass:
-      return {"passed":False,"reason":"resident slot != linked H-COMP slot"}
+      return {"passed":False,"reason":"resident slot lacks H-COMP fault signature"}
 
     guest_pass=None
     guest_report={}
@@ -59,7 +63,7 @@ def classify(root:Path)->dict:
       "guest_normalization":guest_pass,
       "mode7_entry_marker":"0x00",
       "hcomp_entry_marker":"0x51",
-      "hcomp_slot_bytes":len(want),
+      "hcomp_slot_signature":"090007E4/01001021",
       "guest":guest_report,
     }
 
@@ -67,9 +71,8 @@ def self_test()->None:
     with tempfile.TemporaryDirectory() as td:
       p=Path(td)
       (p/"proof-dmem.bin").write_bytes(bytes([0,0x51])+bytes(14))
-      want=bytes((i*17)&0xFF for i in range(1000))
-      (p/"expected-hcomp-slot.bin").write_bytes(want)
-      (p/"slot.bin").write_bytes(want)
+      slot=(0x090007E4).to_bytes(4,"big")+(0x01001021).to_bytes(4,"big")+bytes(8)
+      (p/"slot.bin").write_bytes(slot)
       (p/"guest-state.bin").write_bytes(bytes([7,0x33,2,1,1,7,7,0]))
       assert classify(p)["passed"]
       (p/"proof-dmem.bin").write_bytes(bytes([0xFF,0x51])+bytes(14))

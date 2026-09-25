@@ -1528,6 +1528,12 @@ cg_high:
     andi t2, t2, 0x80
     bnez t2, cg_epoch_done
     nop
+    // A late force-blank may have already handed this frame to the RSP before
+    // HVBJOY enters VBlank. Treat that tail exactly like VBlank: its palette
+    // writes belong to the next frame's base snapshot, not the closed slot.
+    lbu t2, frame_done
+    bnez t2, cg_epoch_done
+    nop
 
     lhu t2, hcomp_cgram_event_count
     li t3, HCOMP_CGRAM_EVENT_CAPACITY

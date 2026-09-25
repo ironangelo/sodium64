@@ -42,8 +42,10 @@ jobs:
           set -euo pipefail
           libdragon init
           libdragon make -j$(nproc) 2>&1 | tee consumer-build.log
-          mips64-elf-nm -n build/src/rsp_main.o > rsp-main.nm
-          mips64-elf-nm -n build/src/rsp_mode7.o > rsp-mode7.nm
+          readelf -sW build/src/rsp_main.elf | awk '$8=="draw_bg" || $8=="draw_obj" {print $2, $8}' > rsp-main.sym
+          readelf -sW build/src/rsp_mode7.elf | awk '$8=="draw_bg" || $8=="draw_obj" {print $2, $8}' > rsp-mode7.sym
+          test "$(wc -l < rsp-main.sym)" -eq 2
+          test "$(wc -l < rsp-mode7.sym)" -eq 2
 
       - name: Prove binary layout
         run: |
@@ -51,7 +53,7 @@ jobs:
 
       - name: Record hashes
         run: |
-          sha256sum sodium64.z64 build/sodium64.elf build/src/rsp_main.o build/src/rsp_mode7.o | tee consumer-hashes.txt
+          sha256sum sodium64.z64 build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf | tee consumer-hashes.txt
 
       - name: Upload consumer proof
         if: always()
@@ -62,11 +64,11 @@ jobs:
           path: |
             consumer-build.log
             consumer-hashes.txt
-            rsp-main.nm
-            rsp-mode7.nm
+            rsp-main.sym
+            rsp-mode7.sym
             build/rsp_main.map
             build/rsp_mode7.map
-            build/src/rsp_main.o
-            build/src/rsp_mode7.o
+            build/src/rsp_main.elf
+            build/src/rsp_mode7.elf
             build/sodium64.elf
             sodium64.z64

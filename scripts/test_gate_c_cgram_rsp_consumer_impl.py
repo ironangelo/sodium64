@@ -157,6 +157,35 @@ def prove_rsp_source(path: Path) -> None:
         raise AssertionError(f"{name}: event cursor must have exactly one load and one store")
 
 
+def prove_bootstrap_contract() -> None:
+    main = (ROOT / "src/main.S").read_text()
+    ppu = (ROOT / "src/ppu.S").read_text()
+
+    clear = main.index("li t0, HCOMP_CGRAM_BASE_QUEUE1")
+    startup_section = main.index("jal section_init")
+    rsp_upload = main.index("la a1, rsp_main_text_start")
+    if not (clear < startup_section < rsp_upload):
+        raise AssertionError("boot clear/startup marker/RSP upload ordering drift")
+    if "li t1, JIT_BUFFER - 8" not in main[clear:startup_section]:
+        raise AssertionError("boot fixed-arena clear upper bound drift")
+
+    for anchor in (
+        "queue_id: .byte 0",
+        "coldata: .hword 0",
+        "hcomp_cgram_event_ptr: .word HCOMP_CGRAM_EVENT_QUEUE1",
+        "hcomp_cgram_event_count: .hword 0",
+    ):
+        if anchor not in ppu:
+            raise AssertionError(f"bootstrap producer default drift: {anchor!r}")
+
+    section = extract(ppu, "section_init:", ".align 5\nhcomp_cgram_begin_frame:")
+    marker_store = section.index("sw t3, 0(t1)")
+    marker_meta = section.index("ori t3, t3, 0x8000")
+    marker_count = section.index("sh t0, hcomp_cgram_event_count")
+    if not (marker_meta < marker_store < marker_count):
+        raise AssertionError("startup section marker construction/store drift")
+
+
 def parse_text_size(path: Path) -> int:
     text = path.read_text()
     m = re.search(r"^\.text\s+0xa4001000\s+0x([0-9a-fA-F]+)\b", text, re.M)
@@ -174,37 +203,38 @@ def parse_symbol(path: Path, symbol: str) -> int:
     raise AssertionError(f"{path}: missing symbol {symbol}")
 
 
-def prove_binary(maps: list[Path], nms: list[Path]) -> None:
-    if len(maps) != 2 or len(nms) != 2:
-        raise AssertionError("binary proof needs two maps and two nm dumps")
+def prove_binary(maps: list[Path], symbols: list[Path]) -> None:
+    if len(maps) != 2 or len(symbols) != 2:
+        raise AssertionError("binary proof needs two maps and two symbol dumps")
     for mp in maps:
         size = parse_text_size(mp)
         if size != EXPECTED_TEXT_BYTES:
             raise AssertionError(f"{mp}: RSP text 0x{size:X} != 0x1000")
-    for nm in nms:
-        draw_bg = parse_symbol(nm, "draw_bg")
-        draw_obj = parse_symbol(nm, "draw_obj")
+    for sym in symbols:
+        draw_bg = parse_symbol(sym, "draw_bg")
+        draw_obj = parse_symbol(sym, "draw_obj")
         if draw_bg != FIXED_SLOT_START or draw_obj != FIXED_SLOT_END_NEXT:
             raise AssertionError(
-                f"{nm}: fixed slot moved: draw_bg=0x{draw_bg:X} draw_obj=0x{draw_obj:X}"
+                f"{sym}: fixed slot moved: draw_bg=0x{draw_bg:X} draw_obj=0x{draw_obj:X}"
             )
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--maps", nargs=2, type=Path)
-    ap.add_argument("--nms", nargs=2, type=Path)
+    ap.add_argument("--symbols", nargs=2, type=Path)
     args = ap.parse_args()
 
     prove_model()
     prove_defines()
+    prove_bootstrap_contract()
     for name in ("rsp_main.S", "rsp_mode7.S"):
         prove_rsp_source(ROOT / "src" / name)
 
-    if args.maps or args.nms:
-        if not args.maps or not args.nms:
-            ap.error("--maps and --nms must be provided together")
-        prove_binary(args.maps, args.nms)
+    if args.maps or args.symbols:
+        if not args.maps or not args.symbols:
+            ap.error("--maps and --symbols must be provided together")
+        prove_binary(args.maps, args.symbols)
 
     print("CGRAM_RSP_DMA8_CONSUMER_IMPLEMENTATION_VALIDATED")
     print("consumer_instructions=29")
@@ -216,6 +246,8 @@ def main() -> int:
     print("logical_record=4byte_cached_half")
     print("raw_palette_write=8byte_aligned")
     print("marker_payload=t7_live_on_return")
+    print("bootstrap_q1_terminator=source_order_validated")
+    print("bootstrap_raw_base=zeroed_not_normal_hcomp_base")
     print("hcomp_arithmetic=frozen")
     if args.maps:
         print("rsp_text_bytes=4096")

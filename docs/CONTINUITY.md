@@ -108,10 +108,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ### FINAL PR HEAD IN FLIGHT — tooling-only persistence child published (2026-09-26 UTC)
 
-- PR #17 branch now at **`76f5b8b41b1796453ff684300930880c731318c3`**, a tooling-only child of fully L0-L3-validated runtime head32339fed. Runtime files `src/defines.h`, `src/rsp_main.S`, `src/rsp_mode7.S`, `src/ppu.S` are unchanged from32339fed.
-- Published delta only: dedicated Gate-C regression workflow now triggers on **`master`** as well as its phase branch, and raster capacity oracle requires conservative PAL **315** records while measured capacity remains320.
-- Exact-head runs dispatched automatically: **Gate C Window Color Port 36266801215**, **Build and Validate 36266801351**, **Ares Profile Validation 36266804116**. All are in progress at checkpoint.
-- **Merge condition:** all three must be green on this exact SHA, PR must remain mergeable, and master must still equalad546ab. No additional runtime or tooling edits are planned before merge.
+- PR #17 branch is **`phase4/gate-c-window-color-port@76f5b8b41b1796453ff684300930880c731318c3`**, a tooling-only child of fully L0-L3-validated runtime head32339fed. Runtime files `src/defines.h`, `src/rsp_main.S`, `src/rsp_mode7.S`, `src/ppu.S` are byte-identical to32339fed.
+- Published delta only: dedicated Gate-C regression workflow now triggers on **`master`** as well as its phase branch; raster capacity oracle now requires conservative PAL **315 records** while measured capacity remains320.
+- Exact-head **Gate C Window Color Port 36266801215 SUCCESS**: all prior W1/W2/layer/color-window oracles remain green and raster oracle now reports **section_capacity=320 / conservative_pal_required=315**.
+- Exact-head **Build and Validate 36266801351 IN PROGRESS** at checkpoint: normal build **SUCCESS**, PROFILE build **SUCCESS**, both binary RSP delay-slot checks passed; **emulator-smoke is currently running**. Runtime was not changed from the already-green parent, but exact-head smoke remains required.
+- Exact-head **Ares Profile Validation 36266804116 IN PROGRESS** at checkpoint: `profile-build` **SUCCESS**; `ares-smoke` is currently in dependency/build setup before the workload matrix. The immediately preceding runtime-identical head32339fed had full Ares run36266030441 SUCCESS, but final authority still requires this exact tooling-only SHA to close.
+- **No further head changes planned.** If both remaining jobs close green and master remainsad546ab, re-check PR mergeability, update PR evidence to final SHA, merge PR #17 with expected head76f5b8b, then verify post-merge master and master-triggered Build/Ares/Gate-C semantic workflows. If either turns red, classify tooling/lab/runtime cause before any edit.
+- **Long-run checkpoint:** exact question is only whether the tooling-only persistence/PAL hardening remains regression-free; runtime semantics are unchanged. A red semantic/runtime result would therefore be unexpected and must first be treated as possible harness/environment/concurrency evidence, not automatically as a new Sodium64 regression.
 
 ### PREPARED / NOT PUBLISHED — persistent Gate-C regression trigger hardening (2026-09-26 UTC)
 

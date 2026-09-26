@@ -21,6 +21,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
+### IMPLEMENTED / PRODUCER MODEL VALIDATED — clean CGRAM epoch CPU producer (2026-09-26 UTC)
+
+- Exact current producer head **`phase4/gate-c-cgram-epoch-producer-clean@8dce5f45e6278356172b24576053a66ccf5f6daf`**. Runtime delta from clean L0 parent is limited to `src/defines.h`, `src/main.S`, `src/ppu.S`; tooling adds the producer oracle/workflow plus the state-aware L0 boot-clear check. **RSP source remains untouched.**
+- Dedicated **Gate C CGRAM Epoch Producer Clean 36266516494 SUCCESS**. Same SHA reproves **`CGRAM_EPOCH_CONTRACT_VALIDATED`** with current clean layout and then prints **`CGRAM_EPOCH_PRODUCER_MODEL_VALIDATED`**.
+- Producer model verifies: queue ownership = existing `queue_id`; VBlank policy = 256-word RGB555 base snapshot; active complete CGDATA = append 4-B event + force next-line section; section sideband = cumulative event count + raw COLDATA; overflow guard occurs before store; late force-blank / already-`frame_done` tail folds into next base snapshot; boot clear now correctly begins at **BASE_Q1**.
+- The first producer red **36266443779** remains **REJECTED TOOLING ERROR** only. Tooling-only child made L0 boot-clear validation state-aware; no producer runtime byte changed between `ab1fa8c...` and `8dce5f45...`.
+- **NON-CLAIM:** model/source validation does not prove actual bytes emitted by a running guest. RSP consumption/replay and H-COMP arithmetic remain frozen.
+- Exact-head **Build and Validate 36266516479 QUEUED** at checkpoint. Do not mark the CPU producer fully VALIDATED until normal + PROFILE + delay-slot checks + pinned-Mupen smoke close and linked-map headroom is remeasured.
+
 ### REJECTED TOOLING ERROR — producer first run invalidated by baseline-only boot-clear oracle (2026-09-26 UTC)
 
 - First clean producer head **`phase4/gate-c-cgram-epoch-producer-clean@ab1fa8c151490a0c526950e5890ad681bc398431`** dispatched dedicated **36266443779** plus generic **36266443687**. Dedicated failed **before producer-model execution**, while re-running the L0 contract.

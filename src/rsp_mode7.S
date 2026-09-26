@@ -858,22 +858,24 @@ finish_tile7:
     b next_layer
 
     // Keep the externally visible Mode 7 entry fixed at the far edge of the
-    // renderer slot; branch back into the variant-local implementation.
+    // renderer slot without placing a branch in the row-exit delay slot.
     .align 3
 draw_mode7_entry:
-    // Proof-only: zero F10 on actual Mode7 entry with no slot-size growth.
-    b draw_mode7_impl
+    // Proof-only marker is safe both on entry and as the row-exit delay slot.
     sb zero, HCOMP_OVERLAY_PROOF_MODE7
+    b draw_mode7_impl
 
 
 draw_obj:
-    // Skip the layer if objects are disabled
-    andi t1, s7, 0x10
-    beqz t1, next_layer
+    // Harmless on Mode7 entry: this instruction is the branch delay slot.
     andi a3, t0, 0x3 // Priority
 
+    // Skip the layer if objects are disabled.
+    andi t1, s7, 0x10
+    beqz t1, next_layer
+    lbu t1, OBSEL // Safe/useful delay slot for both OBJ paths
+
     // Check if the object character base or gap changed
-    lbu t1, OBSEL
     lhu t2, CACHE_BASES + 8
     andi t0, t1, 0x3 // Base
     sll t0, t0, 14

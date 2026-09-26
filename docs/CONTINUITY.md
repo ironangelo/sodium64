@@ -106,6 +106,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Sample density was adequate: interpreter-idle643; interpreter-gameplay792; CPU-JIT/RSP-interpreter idle1155, cpu-alu834, wram1381, ppu-registers908, dma-vram1077, gameplay-balanced920 valid samples. No guest-exception/capture failure surfaced.
 - **DECISION:** lower gates L0-L3 are closed for the production runtime at32339fed. It is now authorized to publish the already-prepared tooling-only child `76f5b8b...` that makes the new semantic regression suite persistent on master and hardens PAL capacity. Runtime source must remain byte-identical. Final merge authority will be the rerun gates on that tooling-only exact head.
 
+### FINAL PR HEAD IN FLIGHT — tooling-only persistence child published (2026-09-26 UTC)
+
+- PR #17 branch now at **`76f5b8b41b1796453ff684300930880c731318c3`**, a tooling-only child of fully L0-L3-validated runtime head32339fed. Runtime files `src/defines.h`, `src/rsp_main.S`, `src/rsp_mode7.S`, `src/ppu.S` are unchanged from32339fed.
+- Published delta only: dedicated Gate-C regression workflow now triggers on **`master`** as well as its phase branch, and raster capacity oracle requires conservative PAL **315** records while measured capacity remains320.
+- Exact-head runs dispatched automatically: **Gate C Window Color Port 36266801215**, **Build and Validate 36266801351**, **Ares Profile Validation 36266804116**. All are in progress at checkpoint.
+- **Merge condition:** all three must be green on this exact SHA, PR must remain mergeable, and master must still equalad546ab. No additional runtime or tooling edits are planned before merge.
+
 ### PREPARED / NOT PUBLISHED — persistent Gate-C regression trigger hardening (2026-09-26 UTC)
 
 - Prepared commit object **`76f5b8b41b1796453ff684300930880c731318c3`** with parent PR#17 head `32339fed...`, but **did not move any branch/ref** while Ares run36266030441 is active. This preserves the current PR-specific evidence and avoids concurrency cancellation.

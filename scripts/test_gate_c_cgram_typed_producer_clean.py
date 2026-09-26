@@ -195,6 +195,22 @@ def prove_source() -> None:
         positions.append(section.index(anchor))
     if positions != sorted(positions):
         raise AssertionError("typed marker encode/store order drift")
+    marker_block = extract(
+        section,
+        "// Append one typed section marker",
+        "hcomp_cgram_marker_overflow:",
+    )
+    if "t4" in marker_block:
+        raise AssertionError("typed section marker clobbers rsp_frame saved return t4")
+    for anchor in (
+        "andi t1, t2, 0x3E0",
+        "sll t1, t1, 1",
+        "or t3, t3, t1",
+        "andi t1, t2, 0x7C00",
+        "srl t1, t1, 9",
+    ):
+        if anchor not in marker_block:
+            raise AssertionError(f"t4-safe marker conversion drift: {anchor!r}")
     if "hcomp_cgram_sideband_ptr" in section:
         raise AssertionError("legacy sideband write remains active")
 

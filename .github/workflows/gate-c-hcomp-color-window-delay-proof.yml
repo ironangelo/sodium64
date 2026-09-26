@@ -3,7 +3,7 @@ name: Gate C H-COMP Color Window Delay Proof
 on:
   push:
     branches:
-      - phase4/gate-c-hcomp-color-window-delay-proof
+      - phase4/gate-c-hcomp-stale-s0-framebuffer-proof
     paths:
       - src/rsp_mode7.S
       - src/rsp_main.S
@@ -157,6 +157,10 @@ jobs:
           expect "(dbg)"
           send "dumpmem $env(GUEST_STATE_ADDR) 8 evidence/guest-state.bin\r"
           expect "(dbg)"
+          send "dumpmem 0x800F2300 134400 evidence/framebuffer1.bin\r"
+          expect "(dbg)"
+          send "dumpmem 0x80113000 134400 evidence/framebuffer2.bin\r"
+          expect "(dbg)"
           send "pc\r"
           expect "(dbg)"
           send "quit\r"
@@ -167,6 +171,27 @@ jobs:
           test "$(stat -c %s evidence/mode7-texture-slot1.bin)" -eq 8
           test "$(stat -c %s evidence/mailbox.bin)" -eq 8
           test "$(stat -c %s evidence/guest-state.bin)" -eq 8
+          test "$(stat -c %s evidence/framebuffer1.bin)" -eq 134400
+          test "$(stat -c %s evidence/framebuffer2.bin)" -eq 134400
+          sha256sum evidence/framebuffer1.bin evidence/framebuffer2.bin | tee evidence/framebuffer.sha256
+          python3 - <<'PYFRAME'
+          import hashlib,json
+          from collections import Counter
+          from pathlib import Path
+          out={}
+          for name in ("framebuffer1.bin","framebuffer2.bin"):
+              raw=(Path("evidence")/name).read_bytes()
+              words=[raw[i:i+2].hex() for i in range(0,len(raw),2)]
+              counts=Counter(words)
+              out[name]={
+                  "sha256":hashlib.sha256(raw).hexdigest(),
+                  "bytes":len(raw),
+                  "unique_words":len(counts),
+                  "top_words":counts.most_common(12),
+              }
+          Path("evidence/framebuffer-summary.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,indent=2,sort_keys=True))
+          PYFRAME
 
       - name: Classify single-heavy progression
         shell: bash
@@ -179,7 +204,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-mode7-branch-delay-fix-v2
+          name: gate-c-stale-s0-framebuffer-baseline
           retention-days: 30
           path: |
             evidence/

@@ -52,7 +52,9 @@ def write_pair(asm:Assembler,address:int,value:int)->None:
     emit_lda_sta_abs(asm,(value>>8)&0xFF,address)
 
 def build_assets()->tuple[bytes,bytes,bytes]:
-    tile=bytes([0xFF,0x00]*8+[0x00]*16)
+    # Half-opaque 2bpp rows: left four pixels color 1, right four transparent.
+    # This keeps the Mode7 heavy-tile workload while exposing backdrop pixels.
+    tile=bytes([0xF0,0x00]*8+[0x00]*16)
     bg_map=bytes(0x800)
     palette=bytearray(0x200)
     palette[2:4]=(0x03E0).to_bytes(2,"little")

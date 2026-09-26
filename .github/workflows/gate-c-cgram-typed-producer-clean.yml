@@ -1,0 +1,50 @@
+name: Gate C CGRAM Typed Producer Clean
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-cgram-typed-producer-clean
+    paths:
+      - src/defines.h
+      - src/main.S
+      - src/ppu.S
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - scripts/test_gate_c_cgram_rsp_consumer_clean_contract.py
+      - scripts/test_gate_c_cgram_typed_producer_clean.py
+      - .github/workflows/gate-c-cgram-typed-producer-clean.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typed-producer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current typed producer
+        uses: actions/checkout@v4
+
+      - name: Checkout exact validated raw producer authority
+        uses: actions/checkout@v4
+        with:
+          ref: 8dce5f45e6278356172b24576053a66ccf5f6daf
+          path: producer-reference
+
+      - name: Compile host oracles
+        run: |
+          python3 -m py_compile scripts/test_gate_c_cgram_rsp_consumer_clean_contract.py
+          python3 -m py_compile scripts/test_gate_c_cgram_typed_producer_clean.py
+
+      - name: Reprove raw-producer to DMA8 compatibility
+        run: |
+          python3 scripts/test_gate_c_cgram_rsp_consumer_clean_contract.py \
+            --producer-root producer-reference \
+            --producer-sha 8dce5f45e6278356172b24576053a66ccf5f6daf
+
+      - name: Prove clean typed CPU producer
+        run: python3 scripts/test_gate_c_cgram_typed_producer_clean.py

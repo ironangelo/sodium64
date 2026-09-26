@@ -132,6 +132,19 @@
 #define FRAMEBUFFER2 (FRAMEBUFFER3 - 0x20D00)
 #define FRAMEBUFFER1 (FRAMEBUFFER2 - 0x20D00)
 
+// Gate-C lossless CGRAM epoch stream.  The typed event queues retain the
+// validated clean producer arena; the raw RGBA5551 shadows consume only the
+// audited guard below FRAMEBUFFER1.
+#define HCOMP_RAW_PALETTE_QUEUE1 (FRAMEBUFFER1 - 0x3300)
+#define HCOMP_RAW_PALETTE_QUEUE2 (HCOMP_RAW_PALETTE_QUEUE1 + 0x800)
+#define HCOMP_CGRAM_BASE_QUEUE1 0xA00BE200
+#define HCOMP_CGRAM_BASE_QUEUE2 0xA00BE400
+#define HCOMP_CGRAM_SIDEBAND_QUEUE1 0xA00BE600
+#define HCOMP_CGRAM_SIDEBAND_QUEUE2 0xA00BEB00
+#define HCOMP_CGRAM_EVENT_QUEUE1 0xA00BF000
+#define HCOMP_CGRAM_EVENT_QUEUE2 0xA00D7000
+#define HCOMP_CGRAM_EVENT_CAPACITY 0x6000
+
 // RSP addresses of data in DMEM; used to avoid setting the upper address
 #define TEXTURE 0x000
 #define TILE_TABLE (TEXTURE + 0x40)
@@ -213,6 +226,9 @@
 // Renderer overlay source pointers live in the audited scratch gap.
 #define OVERLAY_MAIN_SRC 0xE90
 #define OVERLAY_MODE7_SRC 0xE94
+// Typed CGRAM event cursor published by the CPU while the RSP is halted.
+// EA0 lies in the audited retired DMEM interval below fixed VEC_DATA.
+#define HCOMP_CGRAM_EVENT_CURSOR 0xEA0
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached

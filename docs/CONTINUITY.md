@@ -6,6 +6,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### IN FLIGHT — stale-s0 helper-observability proof (2026-09-26 UTC)
+
+- Diagnostic branch `phase4/gate-c-hcomp-stale-s0-proof@60357939e069c053ac333641bd12a7ebe91d3988` forks exact guest-enabled parent `571aef3522b05da32637c2dcfa7d07007c249ffd`; `master` is untouched. Commit adds a zero-layout-growth `proof_helper_marker` label in existing RSP DMEM padding and replaces the existing `color_window_all -> color_window_finish` delay-slot NOP with `sb t0,proof_helper_marker`; at that point `t0=0xFF`. Both RSP variants receive the same proof-only delta. CI derives the marker DMEM address from both ELF symbol tables and attempts a one-byte pinned-Mupen debugger dump; classifier records whether 0xFF was observed.
+- Exact-SHA runs dispatched: Build and Validate **36251650009** and dedicated Gate C H-COMP proof **36251650017**. **Question:** with the existing no-OBJ single-heavy guest, CGADSUB bit5 active and CGWSEL=all, does the helper actually execute? **Readings:** marker `00` with otherwise valid progression supports the stale-`s0` bypass hypothesis; marker `FF` falsifies the claim that this guest bypasses the helper; inability to read RSP DMEM is a **LAB LIMITATION**, not runtime evidence. If baseline marker is `00`, next controlled proof should remove/bypass only the stale `beqz s0,fill_main` gate (or otherwise establish semantic nonzero input) while retaining marker/layout guards, and require marker `FF` before considering a production repair.
+
+
 ### H-COMP helper-observability investigation (2026-09-26 UTC)
 
 ### Gate-C backdrop-math stale-register candidate (2026-09-26 UTC)

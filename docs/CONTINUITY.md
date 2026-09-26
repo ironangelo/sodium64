@@ -78,6 +78,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - For the first SMW discriminator, derive/verify the guest SRAM size from the unmodified ROM header/wrapper and reserve only the safe upper tail for a self-describing diagnostic record. The record can set `sram_dirty` and reuse the existing once-per-second PI SRAM flush; no guest ROM patch or game save-point support is required.
 - **OPEN DESIGN DETAIL:** define the smallest question-driven payload and capture trigger only after PR #17 integration. Preserve guest SRAM bytes untouched and include magic/version/runtime SHA + wrapped-ROM hash/identity so returned saves cannot be misattributed.
 
+### PREPARED / NOT PUBLISHED — persistent Gate-C regression trigger hardening (2026-09-26 UTC)
+
+- Prepared commit object **`76f5b8b41b1796453ff684300930880c731318c3`** with parent PR#17 head `32339fed...`, but **did not move any branch/ref** while Ares run36266030441 is active. This preserves the current PR-specific evidence and avoids concurrency cancellation.
+- Tooling-only delta: `.github/workflows/gate-c-window-color-port.yml` will also run on pushes to **`master`**, so the newly added W1/W2/color/raster regression suite does not become dormant after merge; the phase branch trigger remains for candidate iteration.
+- Raster oracle capacity guard is strengthened from NTSC-only262 to the already-audited conservative PAL bound **315 records (313 scanlines + initial/final)**. Existing queue capacity is320, so the acceptance margin is explicit instead of implicit. No runtime source changes.
+- **NEXT:** only if the currently running PR-specific Ares gate on32339fed closes green, fast-forward the branch to76f5b8b, then require the resulting semantic + generic + PR-specific Ares gates again on that final exact head before merge.
+
 ### CANDIDATE / PR #17 OPEN — Ares PR gate pending (2026-09-26 UTC)
 
 - Opened **PR #17**, `Gate C: exact window semantics and raster-sensitive section timing`, head **`32339fed76b8a318dc84938baed2d5c1d305722b`** -> `master@ad546ab825f2a28405650f9bae2713ac261e67f2`. GitHub reports the PR **mergeable=true / rebaseable=true**; no master drift or merge conflict exists.

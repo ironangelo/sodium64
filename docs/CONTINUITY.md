@@ -8,6 +8,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ### H-COMP helper-observability investigation (2026-09-26 UTC)
 
+### Gate-C backdrop-math stale-register candidate (2026-09-26 UTC)
+
+- **HYPOTHESIS / likely fidelity defect:** source trace on both integrated `master` and the isolated H-COMP proof shows `not_blank` executes `beqz s0,fill_main` before testing CGADSUB bit5. Before this point in the frame, the first visible assignment to `s0` is `lbu s0, OBJ_SIZES + 0(v0)` in the OBJ cache path; the backdrop path itself does not establish a semantic color-math predicate in `s0`. Thus backdrop math can depend on stale/object-cache scalar state rather than only PPU color-math state. The current no-OBJ single-heavy guest can therefore bypass the helper even with CGADSUB bit5 set.
+- This explains why the previous bit5 guest could progress without proving helper execution, and it raises a production-fidelity question independent of the conditional-link delay-slot repair. **Not yet promoted to MEASURED defect:** must run a controlled differential that varies only the pre-backdrop `s0` producer (or removes this gate in an isolated proof) while holding PPU color-math registers constant, then observe helper-derived state/output. Do not merge a fix merely from source plausibility.
+
+
 - **HYPOTHESIS / MEASUREMENT PROOF DESIGN:** current proof branch `phase4/gate-c-hcomp-color-window-delay-proof` reaches the H-COMP workload with CGADSUB bit5 set, but that progression result does not establish that `calc_color_window_segments` executed because the preceding `beqz s0,fill_main` can bypass the conditional link. The helper already mutates RSP-visible color-window state, notably `WIN_BOUNDS` plus Main/Sub fill colors. A lower-intrusion next proof may configure a deliberately nontrivial color-window case and capture that DMEM state after execution, rather than add an RDRAM counter or change production control flow.
 - **UNKNOWN / must verify before implementation:** whether the selected helper outputs remain unmodified long enough to capture, whether a safe discriminating initial/final pattern exists, and whether pinned Mupen's debugger can dump the relevant RSP DMEM address reliably. If any of these fail, fall back to a proof-only marker with explicit layout/binary guards. No production or Gate-C claim yet.
 

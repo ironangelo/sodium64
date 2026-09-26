@@ -6,6 +6,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### HYGIENE-BLOCKER — helper marker run1 did not reach runtime (2026-09-26 UTC)
+
+- Diagnostic head `phase4/gate-c-hcomp-stale-s0-proof@60357939e069c053ac333641bd12a7ebe91d3988` dedicated run **36251650017** failed in **Build exact diagnostic candidate**, before any Mupen execution or helper observation. The source oracle, branch-delay checker self-test, classifier self-test and deterministic guest generation all passed; guest SHA-256 remained `8d3352a1da3137a364ef82314e50378b5c2fe832502f985620c1f450ad1d578c`.
+- Both RSP assemblies reject the proof-only delay-slot store `sb t0, proof_helper_marker`: the symbolic absolute form expands into multiple instructions in a branch delay slot, and warnings are errors. Therefore this run is **REJECTED as runtime evidence**; it says nothing about whether `calc_color_window_segments` executes. Partial artifact **10909276293**, digest `sha256:5af8fae348533a5b1a8539658fb3e7e16b08c5ec3154e3cc6ad901f723d1e727`, contains no dynamic proof result.
+- **NEXT:** verify the reserved padding byte's exact RSP DMEM offset against a prior green linked image/map, then use a single real I-type store such as `sb t0,<offset>(zero)` while retaining a symbol/layout oracle. Re-run the same unchanged guest before altering the stale-`s0` gate. A build-red instrumentation mistake must not be confused with a compositor defect.
+
+
 ### IN FLIGHT — stale-s0 helper-observability proof (2026-09-26 UTC)
 
 - Diagnostic branch `phase4/gate-c-hcomp-stale-s0-proof@60357939e069c053ac333641bd12a7ebe91d3988` forks exact guest-enabled parent `571aef3522b05da32637c2dcfa7d07007c249ffd`; `master` is untouched. Commit adds a zero-layout-growth `proof_helper_marker` label in existing RSP DMEM padding and replaces the existing `color_window_all -> color_window_finish` delay-slot NOP with `sb t0,proof_helper_marker`; at that point `t0=0xFF`. Both RSP variants receive the same proof-only delta. CI derives the marker DMEM address from both ELF symbol tables and attempts a one-byte pinned-Mupen debugger dump; classifier records whether 0xFF was observed.

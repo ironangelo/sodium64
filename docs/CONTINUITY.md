@@ -6,6 +6,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### MEASURED / REJECTED — stale-s0 does NOT bypass helper in current bit5 guest (2026-09-26 UTC)
+
+- Recovered the partial artifact from diagnostic run **36251886028** at `phase4/gate-c-hcomp-stale-s0-proof@32cd57acbc0d3ac3df5f4dc194ed08ea80be4f70`: artifact **10908902418**, digest `sha256:cded50547077e8af9a1b0901f8d8c2c7c88756300e3059fba64e5a283ab75df6`. Although the job later failed only because the debugger could not dump SP DMEM, its ordinary RDRAM mailbox capture succeeded.
+- Mailbox raw bytes are `00 00 51 FF 00 00 00 00`; under the checker’s established per-word `word_swap32` normalization this is **`FF 51 00 00 00 00 00 00`**. Existing H-COMP proof code writes `0x51` to DMEM F11 and DMAs F10..F17 to RDRAM `0xA00F0000`; the diagnostic main/Mode7 helper marker writes `0xFF` to F10 only when `calc_color_window_segments` reaches `color_window_all`. Therefore **helper execution is directly MEASURED** for the unchanged CGADSUB-bit5 / CGWSEL=0 single-heavy guest.
+- This **REJECTS the stale-`s0` bypass hypothesis as the explanation for the current guest** and resolves the previous uncertainty “progression does not prove helper execution.” Do **not** remove `beqz s0,fill_main` on the strength of source suspicion alone. Its dependence on unrelated scalar state remains an **OPEN QUESTION / inherited source smell**, but it is not the blocker localized here and should not consume Gate-C work without a workload that actually demonstrates wrong behavior.
+- The failed direct-SP-DMEM read is now unnecessary: the already-existing H-COMP mailbox is a zero-new-DMA transport for F10. **NEXT:** make the proof clean/green by dropping the unsupported SP-DMEM `dumpmem`, teaching the classifier to require normalized mailbox `FF 51 ...`, and adding source/layout guards for the F10/F11 mailbox transport. Then reassess the H-COMP conditional-link candidate from this stronger dynamic evidence.
+
+
 ### LAB LIMITATION — dummy RDP leaves framebuffer RDRAM untouched (2026-09-26 UTC)
 
 - Clean framebuffer baseline `phase4/gate-c-hcomp-stale-s0-framebuffer-proof@a90028fdecbca5cd1155adae96904dc931d2d03d`, dedicated run **36252205709**, is **VALIDATED as a progression baseline**: exact-source/delay-slot/build/capture/classifier all pass, one-heavy model remains `heavy_tiles=[0]`, and H-COMP reaches its mailbox marker. Artifact **10909486676**, digest `sha256:eeae833268f10626ffd3a02fa135ae4c038ca06038a0d4cbe8f5b9e2368243d4`.

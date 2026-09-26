@@ -56,7 +56,7 @@ jobs:
               marker_pad=".byte 0:0x60\n\nvec_data:"
               marker_pad_new="proof_helper_marker:\n.byte 0:0x60\n\nvec_data:"
               marker_old="    li t0, 255\n    sb t0, WIN_BOUNDS + 0\n    b color_window_finish\n    nop"
-              marker_new="    li t0, 255\n    sb t0, WIN_BOUNDS + 0\n    b color_window_finish\n    sb t0, proof_helper_marker // Proof-only marker; no layout growth"
+              marker_new="    li t0, 255\n    sb t0, WIN_BOUNDS + 0\n    b color_window_finish\n    sb t0, 0xF10(zero) // Proof-only DMEM marker; one real delay-slot instruction"
               assert expected.count(marker_pad)==1, path
               assert expected.count(marker_old)==1, path
               expected=expected.replace(marker_pad,marker_pad_new).replace(marker_old,marker_new)
@@ -88,7 +88,8 @@ jobs:
           marker_mode7=$(nm -n build/src/rsp_mode7.elf | awk '$3 == "proof_helper_marker" { print $1; exit }')
           test -n "$marker_main"
           test "$marker_main" = "$marker_mode7"
-          printf -v marker_addr '0x%08X' $((0xA4000000 + 0x$marker_main))
+          test "$(printf '%s' "$marker_main" | tr '[:upper:]' '[:lower:]')" = "a4000f10"
+          marker_addr="0x$marker_main"
           echo "RSP_PROOF_MARKER_ADDR=$marker_addr" >> "$GITHUB_ENV"
           echo "RSP proof marker DMEM address: $marker_addr"
           sha256sum sodium64.z64 build/sodium64.elf             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf             | tee runtime.sha256

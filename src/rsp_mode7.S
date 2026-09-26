@@ -1336,7 +1336,7 @@ color_window_all:
     li t0, 255
     sb t0, WIN_BOUNDS + 0
     b color_window_finish
-    sb t0, proof_helper_marker // Proof-only marker; no layout growth
+    sb t0, 0xF10(zero) // Proof-only DMEM marker; one real delay-slot instruction
 
 color_window_none:
     lhu s0, MAIN_COLOR

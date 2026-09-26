@@ -11,7 +11,7 @@ from pathlib import Path
 
 def read_text(path: Path) -> tuple[int, bytes]:
     data = path.read_bytes()
-    if len(data) < 52 or data[:4] != b"\\x7fELF":
+    if len(data) < 52 or data[:4] != bytes((0x7F,)) + b"ELF":
         raise ValueError(f"{path}: expected ELF")
     elf_class = data[4]
     endian = ">" if data[5] == 2 else "<" if data[5] == 1 else None
@@ -43,7 +43,7 @@ def read_text(path: Path) -> tuple[int, bytes]:
 
     for sec in sections:
         name_off = sec[0]
-        end = names.find(b"\\0", name_off)
+        end = names.find(bytes((0,)), name_off)
         if end < 0:
             continue
         name = names[name_off:end].decode("ascii", errors="replace")

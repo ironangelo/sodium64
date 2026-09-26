@@ -1,0 +1,41 @@
+name: Gate C Window Color Port
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-window-color-port
+    paths:
+      - src/defines.h
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - scripts/test_gate_c_h_comp_window_contract.py
+      - scripts/test_gate_c_window_span_runtime.py
+      - scripts/test_gate_c_color_window_runtime.py
+      - .github/workflows/gate-c-window-color-port.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  window-color:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile host oracles
+        run: |
+          python3 -m py_compile scripts/test_gate_c_h_comp_window_contract.py
+          python3 -m py_compile scripts/test_gate_c_window_span_runtime.py
+          python3 -m py_compile scripts/test_gate_c_color_window_runtime.py
+
+      - name: Prove base W1/W2 contract
+        run: python3 scripts/test_gate_c_h_comp_window_contract.py
+
+      - name: Prove exact layer-window runtime
+        run: python3 scripts/test_gate_c_window_span_runtime.py
+
+      - name: Prove exact color-window runtime and conditional call
+        run: python3 scripts/test_gate_c_color_window_runtime.py

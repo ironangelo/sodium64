@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### SUPPORTED INTERPRETATION — reuse old DMA8 CGRAM consumer as specification, not as branch (2026-09-26 UTC)
+
+- Historical continuity contains a **first-hand validated** DMA8 RSP epoch consumer on the old cumulative lineage: canonical runtime `8ac783aa14b98b9097143432baa4e327cb490113` plus sentinel-aware dynamic proof `0f48cd6d...`. That evidence should not be rediscovered from scratch.
+- **Do not cherry-pick/merge that old branch wholesale.** Its producer ancestry `1621ab9...` and current clean producer `8dce5f45...` diverge from merge-base `8488bbed...` by many unrelated cumulative commits. The old DMA8 path also changes the producer representation from clean sideband `{cumulative count, raw COLDATA}` + RGB555 records to typed records with per-section marker + raw RGBA5551 payload and an aligned 0x800-B raw-palette shadow.
+- The old consumer's **hardware/size invariants remain strong prior evidence**: SP DMA must be 8-byte aligned; events are consumed as cached 8-B pairs; palette writes are aligned 8 B; one terminal section sentinel remains intentionally unconsumed; H-COMP arithmetic stays frozen during replay validation.
+- Current integrated RSP layout is unusually favorable for a clean port: both RSP variants are **4040 B**, leaving exactly **56 B = 14 instructions**; the historical 29-instruction consumer had net +14 instructions after replacing the existing 8-instruction pre-overlay padding and consuming 7 audited delay-slot NOP peepholes. All **8 historical peephole anchors are still present in both current regular and Mode7 sources**, and current DMEM still leaves the retired **E98..F6F** padding before fixed `VEC_DATA=F70`.
+- **Meaning:** layout feasibility is strongly supported, but producer-format compatibility is not yet proven on the clean lineage. The next controlled step should be a **host-only clean-lineage consumer/typed-stream contract** derived from current `master@70d8d8b...` plus the validated clean producer semantics. It must explicitly decide/re-prove whether to transform the producer to the already-proven typed-marker/raw-shadow representation or demonstrate an equally bounded sideband consumer. No RSP runtime change until that L0 contract passes.
+- This supersedes any instruction to “redesign the consumer from zero”; reuse the validated DMA8 invariants and negative lessons, while treating old cumulative code only as reference evidence.
+
+
+
 ### MERGED-CONSUMED / POST-MERGE VALIDATION IN FLIGHT — PR #17 (2026-09-26 UTC)
 
 - **PR #17 merged successfully** with expected head `76f5b8b41b1796453ff684300930880c731318c3`. New integrated truth is **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**.

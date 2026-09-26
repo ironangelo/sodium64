@@ -841,7 +841,7 @@ finish_tile7:
     add s0, s0, t0
     add t8, t8, t1
     sll t0, s5, t7
-    blt s0, 256, next_tile7
+    blt s0, 256, next_layer
     add t9, t9, t0
 
     // Move to the next row, adjusting the VRAM coordinates

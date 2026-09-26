@@ -21,14 +21,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
-### IN FLIGHT — clean-lineage CGRAM epoch L0 reproof (2026-09-26 UTC)
+### VALIDATED — clean-lineage lossless CGRAM epoch L0 contract (2026-09-26 UTC)
 
-- Created **`phase4/gate-c-cgram-epoch-contract-clean@e70f61fad868f476f4ad7bd81a9d714f682efee3`** as a host/workflow-only child of validated clean runtime **`32339fed76b8a318dc84938baed2d5c1d305722b`**. No runtime/source file changed.
-- Reused the previously validated base-snapshot + append-only event-log + per-section fixed-color sideband model, but removed its dependency on experimental `HCOMP_RAW_PALETTE_QUEUE*` macros. Current clean artifact **10910596166** directly measures linked ELF end **`0x800BC140`**.
-- Clean memory re-audit: proposed low-water **A00BE200** leaves **0x20C0 = 8,384 B** above current ELF end; event high-water remains **A00EF000**, leaving **0x3300 = 13,056 B** before current **FRAMEBUFFER1=A00F2300**. The representation retains two 0x200-B base snapshots, two 0x500-B sidebands and two 0x18000-B event queues, with **24,576 4-B events per slot**.
-- Contract keeps the conservative pinned-ares active-display bound **20,460 complete CGDATA commits**, leaving **4,116 event records margin**, and retains exhaustive reduced replay requirements for repeated indices, CGRAM0, RGB555 bit15 canonicalization and COLDATA/fixed-color sideband.
-- New source precondition explicitly records a future producer requirement that old continuity already discovered: current clean boot clear begins at **FRAMEBUFFER1**, so producer integration must lower that clear start to **BASE_Q1/A00BE200** before first-frame state is considered initialized.
-- Exact-head runs dispatched: **Gate C CGRAM Epoch Contract Clean 36266160322 QUEUED** and **Build and Validate 36266160295 PENDING**. **Falsifier:** layout overlap/headroom loss, event-capacity failure, replay mismatch, source-boundary drift or generic regression rejects the contract before any runtime reservation/write path.
+- Host/workflow-only branch **`phase4/gate-c-cgram-epoch-contract-clean@e70f61fad868f476f4ad7bd81a9d714f682efee3`** is a direct child of validated clean runtime **`32339fed76b8a318dc84938baed2d5c1d305722b`**; **zero runtime/source delta**.
+- Dedicated **Gate C CGRAM Epoch Contract Clean 36266160322 SUCCESS** prints **`CGRAM_EPOCH_CONTRACT_VALIDATED`**. Exact-head **Build and Validate 36266160295 SUCCESS** across normal, PROFILE and pinned-Mupen/LLE smoke.
+- Exact clean artifact measurement: linked ELF end **0x800BC140**. Proposed fixed-arena geometry remains base Q1/Q2 **A00BE200/A00BE400**, sideband Q1/Q2 **A00BE600/A00BEB00**, event Q1/Q2 **A00BF000/A00D7000**, high-water **A00EF000**.
+- Measured margins on the clean lineage: **8,384 B** low-water headroom above ELF; **13,056 B** guard from event high-water to current **FRAMEBUFFER1=A00F2300**. Section capacity remains **320**; event capacity **24,576 records/slot**.
+- Conservative pinned-ares active-display bound remains **20,460 complete CGDATA commits**, leaving **4,116 records margin**. Replay oracle exhausts **69,905** reduced streams including repeated indices and CGRAM0; fixed-color sideband covers **32,000** COLDATA cases; RGB555 bit15 canonicalization holds.
+- The clean contract deliberately does **not** depend on old experimental raw-palette queue macros. It independently records that current boot clear still starts at FRAMEBUFFER1, so a runtime producer must lower that start to **BASE_Q1** before first-frame epoch state can be valid.
+- **VALIDATED claim:** base snapshot + append-only 4-B CGRAM events + 4-B/section cumulative-count/raw-COLDATA sideband is a lossless, capacity-safe representation at Sodium64’s current scanline-section granularity on the clean current-master lineage.
+- **NEXT controlled batch:** CPU producer only. Reserve the validated ranges, extend boot clear to BASE_Q1, snapshot live CGRAM at vblank_end using existing queue_id ownership, append complete active-frame CGDATA commits with overflow-before-store and early-frame-close guards, force next-line section visibility, and attach event count + raw COLDATA to each section. RSP consumption/arithmetic remains frozen.
 
 ### VALIDATED — clean current-master Gate-C window/color + raster-latency candidate (2026-09-26 UTC)
 

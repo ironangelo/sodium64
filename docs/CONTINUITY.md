@@ -32,6 +32,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+- Exact accepted live snapshot: classifier passed on first usable attempt after **8 snapshots**, normalization `word_swap32`, phase **B**, active slot **4**, **event_count=4**, **overflow=0**, **section_count=3**, event ptr **A00D7010**, side ptr **A00BEB0C**. Captured base first3 = `{03E0,001F,7FFF}`; events = `(1,1234),(1,4567),(0,2AAA),(2,7FFF)`; replay first3 = `{2AAA,4567,7FFF}`. Deterministic guest SHA-256 **a007b6a698536eb6b2856ff848d53cb0826cdd8a25dafcec1796fc7aaed9ea24**; wrapped SHA-256 **1e061ff2c523ac745bfdb127fc482cca7f178fa683cc0515291e162663e877f1**.
+
 ### DECISION / PROVISIONAL — Gate C representative-game and hardware validation sequence (2026-09-26 UTC)
 
 - **Do not defer SMW/ALttP until Gate C is 100%.** They are representative discriminators used to *reach* Gate-C closure. Approximate percentage estimates discussed in chat are non-canonical shorthand; the canonical trigger is evidence readiness, not a numeric completion percentage.

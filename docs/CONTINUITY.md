@@ -21,6 +21,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
+### IN FLIGHT — read-only dynamic proof of clean CGRAM epoch producer (2026-09-26 UTC)
+
+- Observation-only branch **`phase4/gate-c-cgram-epoch-dynamic-proof-clean@ba61ac3362ca62da95fcba2a269e6000447d8ae4`** is exactly three proof files over validated producer runtime `8dce5f45...`; **zero `src/` delta**.
+- Reuses the previously validated deterministic original 32-KiB LoROM and classifier unchanged. Guest alternates VBlank base phases, then performs active commits **`{1:1234, 1:4567, 0:2AAA, 2:7FFF}`** plus COLDATA E7. Multiple snapshots are read-only; no debugger memory seeding or runtime instrumentation.
+- Classifier derives active Q1/Q2 ownership from live producer pointers/count, accepts only identity or established Mupen word-swap32 normalization, requires event_count=4, overflow=0, valid base phase, exact event records, monotonic sideband with count0/base fixed color and count4/active fixed color, and replay result `{entry0=2AAA, entry1=4567, entry2=7FFF}`.
+- Dedicated **Gate C CGRAM Epoch Dynamic Producer Proof Clean 36266751513 QUEUED**; exact-head **Build and Validate 36266751450 PENDING**.
+- **Possible readings:** PASS validates first-hand emitted producer bytes/ownership/replay on the clean runtime; coherent dumps with semantic mismatch falsify producer behavior; failure before usable dumps/classification is harness/lab evidence and must not be turned into a runtime conclusion.
+- **NEXT if green:** only then design/port the smallest RSP consumer contract. Keep H-COMP arithmetic and framebuffer output frozen until epoch replay itself has a clean-lineage consumer proof.
+
 ### VALIDATED — clean CGRAM epoch CPU producer (2026-09-26 UTC)
 
 - Exact authority `phase4/gate-c-cgram-epoch-producer-clean@8dce5f45e6278356172b24576053a66ccf5f6daf`. Runtime delta from clean L0 parent is limited to `src/defines.h`, `src/main.S`, `src/ppu.S`; RSP source is untouched.

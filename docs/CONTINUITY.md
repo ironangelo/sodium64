@@ -6,6 +6,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### IN FLIGHT — clean mailbox helper proof (2026-09-26 UTC)
+
+- Proof branch head `phase4/gate-c-hcomp-stale-s0-proof@bd2cd5b62118bf8fa948f7de69f6b3785e281f37` turns the recovered run2 observation into a reproducible CI contract. It removes the unsupported direct SP-DMEM debugger dump; keeps the size-neutral F10 helper marker in existing DMEM padding; asserts `HCOMP_OVERLAY_PROOF_MODE7=0xF10`, `HCOMP_OVERLAY_PROOF_HCOMP=0xF11`, the Mode7-entry F10 clear, and H-COMP's existing F10..F17 DMA to RDRAM `0xA00F0000`. The classifier now passes only on normalized mailbox **`FF 51 00 00 00 00 00 00`**, reports `MODE7_SINGLE_HEAVY_HCOMP_HELPER_REACHED`, and rejects both sentinel/no-HCOMP and `00 51...` H-COMP-without-helper cases in self-test.
+- Exact-SHA runs dispatched: dedicated Gate C H-COMP proof **36252589503 IN_PROGRESS** and Build/Validate **36252589534 IN_PROGRESS** at checkpoint. **Expected:** the unchanged guest should reproduce the already-recovered mailbox result and turn the previous partial evidence into a fully green proof. If green, promote helper execution for CGADSUB bit5 / CGWSEL=0 from recovered MEASURED evidence to **VALIDATED dynamic proof**, keep stale-`s0` bypass **REJECTED for this workload**, and reassess the conditional-link candidate itself/next Gate-C compositor uncertainty. If red, classify harness vs runtime before any source change.
+- The framebuffer branch `phase4/gate-c-hcomp-stale-s0-framebuffer-proof@a90028fdecbca5cd1155adae96904dc931d2d03d` is **SUPERSEDED as a color oracle in pinned Mupen** because `--gfx dummy` leaves framebuffer RDRAM zero, though run **36252205709** remains a valid progression baseline and documents that lab limitation.
+
+
 ### MEASURED / REJECTED — stale-s0 does NOT bypass helper in current bit5 guest (2026-09-26 UTC)
 
 - Recovered the partial artifact from diagnostic run **36251886028** at `phase4/gate-c-hcomp-stale-s0-proof@32cd57acbc0d3ac3df5f4dc194ed08ea80be4f70`: artifact **10908902418**, digest `sha256:cded50547077e8af9a1b0901f8d8c2c7c88756300e3059fba64e5a283ab75df6`. Although the job later failed only because the debugger could not dump SP DMEM, its ordinary RDRAM mailbox capture succeeded.

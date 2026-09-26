@@ -6,16 +6,23 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
-### IN FLIGHT — clean typed CGRAM CPU producer (2026-09-26 UTC)
+### IN FLIGHT — observation-only dynamic proof of clean typed CGRAM producer (2026-09-26 UTC)
 
-- New branch `phase4/gate-c-cgram-typed-producer-clean@f0deb5d4aa26f900466b87844737a73ed75b36e6` descends from the validated host-only consumer contract and current integrated master. RSP source is untouched.
-- Runtime port reuses the historically validated DMA8 producer semantics: boot clear extends to BASE_Q1; VBlank snapshots canonical RGB555 base and initializes the handed slot's 0x800-B raw RGBA5551 shadow including entry0; active complete CGDATA writes append typed 4-B color records; every section appends one typed fixed-color marker; frame handoff publishes only the typed event-stream base to **DMEM EA0** while RSP is halted.
-- Existing visible brightness-scaled palette queue remains unchanged. Raw shadow is initialized from historical frame base and is not overwritten by frame-final CGRAM, preserving the state the future RSP consumer must replay.
-- Producer-only safety boundary: no `HCOMP_RAW_PALETTE_PTRS`, no RSP consumer source, no H-COMP arithmetic. Existing base snapshot is retained as independent diagnostic authority.
-- Dedicated **Gate C CGRAM Typed Producer Clean 36279269556 SUCCESS** on exact head; exact-head **Build and Validate 36279269489 IN_PROGRESS** at checkpoint.
-- **Falsifier:** source/model mismatch, stream capacity drift, raw-shadow overlap/alignment failure, build/smoke regression, or any RSP-source delta blocks this port. If generic closes green, next batch is observation-only dynamic capture of real typed producer bytes before implementing the 29-instruction RSP consumer.
+- Next batch is intentionally **zero runtime delta** over validated typed producer `f0deb5d4...`. It will reuse the historical deterministic 32-KiB original LoROM and read-only Mupen debugger capture pattern.
+- Required live evidence: coherent `hcomp_cgram_event_ptr/count/overflow`; EA0 exact event-queue base; live producer slot derived from pointer/count; base first3 matching phase A/B; raw shadow first3 equal to that historical base (and explicitly not frame-final); typed stream containing repeated index1, entry0 and entry2 color records followed by the active fixed-color marker; overflow=0.
+- Pinned-Mupen limitation remains explicit: EA0 may still describe the previously handed slot while CPU producer state is already building the opposite slot because the debugger often pauses in `rsp_wait`. The proof may validate producer representation with this relation but must not claim next-handoff timing from it.
+- **Falsifier:** coherent live bytes that disagree with the expected typed representation reject the producer. Capture/debugger inability is LAB LIMITATION only and must not be converted into runtime evidence.
 
 
+### VALIDATED — clean typed CGRAM CPU producer (2026-09-26 UTC)
+
+- Exact authority `phase4/gate-c-cgram-typed-producer-clean@f0deb5d4aa26f900466b87844737a73ed75b36e6`; RSP source remains byte-identical to integrated master.
+- Dedicated **Gate C CGRAM Typed Producer Clean 36279269556 SUCCESS** reproves the clean DMA8 compatibility contract and validates the direct typed producer source/model. Producer-consumer roundtrip covers **4,624** targeted cases on top of the 42,545-case transform contract.
+- Exact-head **Build and Validate 36279269489 SUCCESS** across normal, PROFILE, binary RSP delay-slot checker and pinned-Mupen/LLE smoke. Both RSP variants remain **0xFC8 = 4040 B / 56 B IMEM free** and `control-in-delay=0`.
+- Artifacts: normal **10917873211** digest `sha256:55cd842c4703ae5c18b20466f7fd3273b1deb41baf6cca6ffb49dae4b688a402`; PROFILE **10918077661** digest `sha256:c531ba3838665868f680a291a18ce5b60ebefd8591efde2f9a70530b1d5ef4ee`; Mupen smoke **10918091731** digest `sha256:efe540c9261fa072ab016c3b89bbf9e470e6be8634ab823b3d8af2bd569e9395`. Normal ROM SHA-256 `d96d880dc31d98cab1a6ca7d72405b71feec587eb91f4b9ca4f42d5796de9bbb`.
+- **VALIDATED implementation claim:** boot clear covers the epoch/raw arena; VBlank snapshots all 256 canonical RGB555 words and initializes the matching double-buffered raw RGBA5551 shadow including entry0; active complete CGDATA commits append typed color records; every section appends a typed fixed-color marker; frame handoff publishes the exact handed event-stream base at DMEM EA0 while RSP is halted.
+- Existing visible brightness-scaled palette generation remains unchanged. Raw historical shadow is not regenerated from frame-final CGRAM. No RSP consumer, no raw-shadow pointer publication to RSP, and no H-COMP arithmetic are active.
+- **NEXT:** observation-only dynamic proof on this exact runtime. Capture producer state, EA0, base snapshot, raw shadow and typed event bytes under the deterministic original LoROM; require coherent queue ownership, historical raw-base equality, exact typed color sequence, fixed-color marker and overflow=0 before any RSP consumer implementation.
 
 ### VALIDATED — clean-lineage CGRAM DMA8 consumer compatibility contract (2026-09-26 UTC)
 

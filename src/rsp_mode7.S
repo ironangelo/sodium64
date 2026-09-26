@@ -853,7 +853,7 @@ finish_tile7:
     sll t0, s4, 3
     add t8, t8, t0
     sll t0, s6, 3
-    blt s1, k1, draw_row7
+    blt s1, k1, next_layer
     add t9, t9, t0
     b next_layer
 

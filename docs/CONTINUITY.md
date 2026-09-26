@@ -6,6 +6,21 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
+
+### DECISION / PROVISIONAL — Gate C representative-game and hardware validation sequence (2026-09-26 UTC)
+
+- **Do not defer SMW/ALttP until Gate C is 100%.** They are representative discriminators used to *reach* Gate-C closure. Approximate percentage estimates discussed in chat are non-canonical shorthand; the canonical trigger is evidence readiness, not a numeric completion percentage.
+- **SMW first serious commercial discriminator:** run once the current H-COMP/color-math work has become a clean production candidate with proof-only instrumentation removed and lower-level semantic/build gates green. The first question is narrow and causal: whether the known SMW iris/window/color-math regression improves/corrects against deterministic/reference evidence. A lack of improvement is evidence that the causal model is incomplete; do not excuse it as “Gate C is not finished yet.”
+- **ALttP next representative discriminator:** follow after the SMW path is sufficiently understood, targeting the known rain/tree/layer-compositor regression. Its purpose is to test whether the compositor repair generalizes beyond the SMW window/color-math family.
+- **Visual observation is supplemental, not the primary verdict.** Iron’s report/video may reveal unmeasured artifacts and should trigger new instrumentation when needed, but “looks right/wrong” alone must not certify or reject Gate C. Prefer deterministic traces, counters, register/state capture, hashes/CRC/ROI evidence and reference comparison.
+- **Commercial ROMs remain unmodified/private.** Do not require uploading commercial ROMs to the repo and do not patch SMW/ALttP merely to add diagnostic save capability. Diagnostic capture should live in Sodium64/N64-side instrumentation around the unmodified guest ROM; preserve exact guest/wrapped-ROM hashes for reproducibility.
+- **SRAM/.sav diagnostic strategy:** milestone/debug builds may write a self-describing Sodium64 diagnostic payload through the existing N64 SRAM path independently of the SNES game’s own save system. Candidate payloads may include frame/VI identity, Road-valid settings, WH0-WH3/window registers, TM/TS/TMW/TSW, CGWSEL/CGADSUB/COLDATA, relevant CGRAM/section/H-COMP markers, overflow/error state, selected framebuffer/ROI signatures and cadence/profile counters. The exact schema should be question-driven and bounded rather than “log everything.”
+- **Capture timing should avoid game-specific production modes.** Acceptable proof-only triggers include a bounded circular capture, detection of a generic PPU/window signature, or an explicit operator capture trigger in a diagnostic build. These are test infrastructure only and must not become per-game execution behavior in release Sodium64.
+- **Separate semantic correctness from cadence authority.** Instrumented/fenced diagnostic builds may establish register/pixel/compositor semantics even if they perturb timing; a clean production build must separately establish cadence/performance. Real N64 remains authority for hardware-specific RSP/RDP/DMA/VI behavior and final cadence.
+- **Next real-N64 session is a milestone checkpoint, not necessarily Gate-C closure.** Request it only after several lower-level repairs are production-clean and the session can answer multiple hardware-authority questions at once. A later final hardware pass is expected near Gate-C closure after representative SMW/ALttP/corpus/regression evidence is strong.
+- **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
+
+
 ### VALIDATED — clean H-COMP helper mailbox proof (2026-09-26 UTC)
 
 - Exact proof head `phase4/gate-c-hcomp-stale-s0-proof@bd2cd5b62118bf8fa948f7de69f6b3785e281f37` is now green. Dedicated Gate C H-COMP proof run **36252589503 SUCCESS** completed exact-source checks, build, binary RSP delay-slot validation, guest wrapping, pinned-Mupen/LLE capture, progression classification and artifact upload. Artifact **10909152433**, digest `sha256:3244105b3cae328e7c415e012379403e294ea856f7482c96f9c56b692995ae6b`.

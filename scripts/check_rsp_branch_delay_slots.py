@@ -11,20 +11,33 @@ from pathlib import Path
 
 def read_text(path: Path) -> tuple[int, bytes]:
     data = path.read_bytes()
-    if len(data) < 52 or data[:4] != b"\\x7fELF" or data[4] != 1:
-        raise ValueError(f"{path}: expected ELF32")
+    if len(data) < 52 or data[:4] != b"\\x7fELF":
+        raise ValueError(f"{path}: expected ELF")
+    elf_class = data[4]
     endian = ">" if data[5] == 2 else "<" if data[5] == 1 else None
     if endian is None:
         raise ValueError(f"{path}: unsupported ELF byte order")
-    hdr = struct.unpack(endian + "16sHHIIIIIHHHHHH", data[:52])
+
+    if elf_class == 1:
+        hfmt, hsize = "16sHHIIIIIHHHHHH", 52
+        sfmt, ssize = "IIIIIIIIII", 40
+    elif elf_class == 2:
+        hfmt, hsize = "16sHHIQQQIHHHHHH", 64
+        sfmt, ssize = "IIQQQQIIQQ", 64
+    else:
+        raise ValueError(f"{path}: unsupported ELF class {elf_class}")
+
+    if len(data) < hsize:
+        raise ValueError(f"{path}: truncated ELF header")
+    hdr = struct.unpack(endian + hfmt, data[:hsize])
     shoff, shentsize, shnum, shstrndx = hdr[6], hdr[11], hdr[12], hdr[13]
-    if shentsize < 40 or shnum == 0 or shstrndx >= shnum:
+    if shentsize < ssize or shnum == 0 or shstrndx >= shnum:
         raise ValueError(f"{path}: invalid section table")
 
     sections = []
     for i in range(shnum):
         off = shoff + i * shentsize
-        sections.append(struct.unpack(endian + "IIIIIIIIII", data[off:off + 40]))
+        sections.append(struct.unpack(endian + sfmt, data[off:off + ssize]))
     shstr = sections[shstrndx]
     names = data[shstr[4]:shstr[4] + shstr[5]]
 

@@ -6,6 +6,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### IN FLIGHT — RDRAM framebuffer stale-s0 baseline (2026-09-26 UTC)
+
+- Clean proof branch `phase4/gate-c-hcomp-stale-s0-framebuffer-proof@a90028fdecbca5cd1155adae96904dc931d2d03d` restarts from exact guest-enabled parent `571aef3522b05da32637c2dcfa7d07007c249ffd`; it carries **no SP-DMEM marker instrumentation**. The guest's single heavy Mode7 tile is changed only from fully opaque color-1 rows to half-opaque/half-transparent rows (`F0/00` 2bpp), preserving the one-heavy-tile model while deliberately exposing backdrop pixels. PPU registers remain `CGWSEL=0`, `CGADSUB=0x20`, `COLDATA=0xFF`.
+- The dedicated workflow now dumps the two allocated visible RDRAM framebuffers at `0x800F2300` and `0x80113000`, 134400 bytes each (280x240x16bpp), after the same deterministic 5-second pinned-Mupen stop; it records SHA-256 plus 16-bit-word histograms. **Baseline question:** with inherited `beqz s0,fill_main` untouched and no OBJ producer, what stable framebuffer output does the backdrop-math guest produce? Exact-SHA dedicated run **36252205709 IN_PROGRESS** and Build/Validate **36252205768 PENDING** at dispatch.
+- **NEXT if baseline is valid:** create one child commit changing only the stale `beqz s0,fill_main` gate to `nop` in both RSP variants (same instruction count/layout, same guest), preserve all existing conditional-link code, rerun the same framebuffer capture, and compare progression + both framebuffer hashes/histograms. A deterministic output change in the reference-supported direction would causally isolate the inherited stale-`s0` predicate; no production merge until that differential is understood.
+
+
 ### LAB LIMITATION — pinned Mupen debugger cannot dump SP DMEM (2026-09-26 UTC)
 
 - Delay-slot-safe helper-marker head `32cd57acbc0d3ac3df5f4dc194ed08ea80be4f70` compiles successfully in normal and PROFILE builds; the exact-source oracle and binary RSP delay-slot checker pass. Dedicated run **36251886028** reaches the pinned-Mupen capture step, and ordinary RDRAM dumps for texture slots, mailbox and guest state succeed. However `dumpmem 0xA4000F10 1 evidence/helper-marker.bin` produces no file, so capture fails only when requesting SP DMEM. This is a **LAB LIMITATION** of the debugger path, not evidence about helper execution.

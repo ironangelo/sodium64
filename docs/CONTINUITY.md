@@ -7,6 +7,22 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### VALIDATED / READY TO MERGE — PR #17 final exact head (2026-09-26 UTC)
+
+- Final PR #17 head **`phase4/gate-c-window-color-port@76f5b8b41b1796453ff684300930880c731318c3`** is runtime-identical to validated `32339fed...`; only persistent-workflow trigger + PAL-capacity oracle hardening differ.
+- Exact-head **Gate C Window Color Port 36266801215 SUCCESS**, **Build and Validate 36266801351 SUCCESS** (normal + PROFILE + pinned-Mupen/LLE smoke), and **Ares Profile Validation 36266804116 SUCCESS** (PROFILE + pinned-ares interpreter/JIT workload matrix). GitHub reports PR #17 **mergeable=true, mergeable_state=clean** against unchanged `master@ad546ab825f2a28405650f9bae2713ac261e67f2`.
+- Final exact-head artifacts: normal **10914053662** digest `sha256:69ee3e6dfe2cadea4fd6cb714b3f4d58bde26cfb359272ab55a104cf0f755868`; PROFILE **10914323221** digest `sha256:36bb23c4c7caa395cd99860f0bb5cb1a87d2e80bb8cf5bad2a0354738af38799`; Mupen smoke **10913509829** digest `sha256:92835c5a275b642603c64e287cb2b7aecf5c8de88bfbf5358ceb5f95b852e0ac`; ares profile build **10914233388** digest `sha256:d6cce91b3a19ba6a773d73e2406b8dff275284dfe68f1871aa657d3a9f3378ff`; ares matrix **10913588586** digest `sha256:40fc9895c4eff9ae76e9d1aa4f170f744846596e9b969cbf75f0f20b3fd18535`.
+- **DECISION:** PR #17 lower-level gates are closed on its final exact SHA. Merge with expected-head protection, then require post-merge `master` workflows before calling the stage integrated.
+
+### VALIDATED — clean CGRAM epoch producer dynamic proof (2026-09-26 UTC)
+
+- Observation-only **`phase4/gate-c-cgram-epoch-dynamic-proof-clean@ba61ac3362ca62da95fcba2a269e6000447d8ae4`** completed **Gate C CGRAM Epoch Dynamic Producer Proof Clean 36266751513 SUCCESS** and exact-head **Build and Validate 36266751450 SUCCESS**. This branch has zero new `src/` delta beyond the already-validated producer runtime.
+- Dynamic evidence artifact **10913657870**, digest `sha256:d86a4e227a836a146eaeb213e0943405c43f532f342edf85ce52498976d6a229`; generic artifacts: normal **10913887543** digest `sha256:5b66866166ca596c529b5b3b9967816a84231eebd2084f39b9622f9b725dae37`, PROFILE **10913563133** digest `sha256:01a448da27e7167f9cfb76e72d8a9e0e636ec21e1d8c02443c2462ecee3e0cc5`, smoke **10913509780** digest `sha256:f216b5904e1e54f7f00aaa4feec13027f52dbdad115532c0e5b20a4b9a928486`.
+- **VALIDATED claim:** the clean producer path has now emitted and exposed first-hand running-guest epoch bytes under the read-only capture harness strongly enough for the dedicated classifier to accept ownership/count/base/sideband/event replay semantics. This closes the previous “model-only / no live bytes” non-claim for the producer.
+- **NEXT after PR #17 integration:** do not jump to H-COMP arithmetic. Design the smallest **RSP consumer/replay contract** on the now-integrated clean compositor lineage, preserving exact base/event ownership and proving epoch reconstruction before any final pixel/color-math claim.
+
+
+
 ### DECISION / PROVISIONAL — Gate C representative-game and hardware validation sequence (2026-09-26 UTC)
 
 - **Do not defer SMW/ALttP until Gate C is 100%.** They are representative discriminators used to *reach* Gate-C closure. Approximate percentage estimates discussed in chat are non-canonical shorthand; the canonical trigger is evidence readiness, not a numeric completion percentage.

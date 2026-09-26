@@ -417,7 +417,7 @@ update_frame:
 
 .align 5
 update_window_frame:
-    // Window edges are raster-sensitive: mark dirty and clear the section countdown
+    // Raster-sensitive state: mark dirty and clear the section countdown
     li t0, 0x100
     sh t0, sect_status
     jr ra
@@ -454,12 +454,12 @@ set_fill:
     srl t3, t3, 9
     or t2, t2, t3
 
-    // Set the fill color and update the frame if changed
+    // Set the fill color and force a next-line section if changed.
     lhu t1, (t4)
     beq t1, t2, next_fill
-    li t1, 0x1
+    li t1, 0x100
     sh t2, (t4)
-    sb t1, sect_status
+    sh t1, sect_status
 
 next_fill:
     // Move to the next color until both are done
@@ -862,8 +862,8 @@ write_inidisp: // a1: value
     beq t2, t0, set_bright
     xori t1, t1, 0x80
     sb t1, stat_flags
-    li t1, 0x1
-    sb t1, sect_status
+    li t1, 0x100
+    sh t1, sect_status
 
     // Some games use mid-frame events to achieve a longer V-blank period
     // If force blank is set after a certain line, handle the frame now
@@ -883,11 +883,21 @@ write_inidisp: // a1: value
     b rsp_frame
 
 set_bright:
-    // Set the master brightness
+    // Set the master brightness coefficient (0 or INIDISP[3:0]+1).
     andi t0, a1, 0xF
     sgtu t1, t0, zero
     add t0, t0, t1
+
+    // Brightness is raster-sensitive. Only a real coefficient change forces
+    // the next-line section boundary; no H-COMP metadata is packed here.
+    lbu t2, brightness
+    beq t2, t0, bright_store_done
+    nop
     sb t0, brightness
+    li t2, 0x100
+    sh t2, sect_status
+
+bright_store_done:
     j update_fill
     nop
 
@@ -993,7 +1003,7 @@ write_bgmode: // a1: value
 set_mode:
     // Update the frame if changed
     sb t0, bg_mode
-    bne t1, t0, update_frame
+    bne t1, t0, update_window_frame
     nop
     jr ra
 
@@ -1440,7 +1450,7 @@ write_w12sel: // a1: value
     // Set the low byte of the combined WBGSEL register and update the frame if changed
     la t1, wbgsel + 1
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1450,7 +1460,7 @@ write_w34sel: // a1: value
     // Set the high byte of the combined WBGSEL register and update the frame if changed
     la t1, wbgsel + 0
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1460,7 +1470,7 @@ write_wobjsel: // a1: value
     // Write to the WOBJSEL register and update the frame if changed
     la t1, wobjsel
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1510,7 +1520,7 @@ write_wbglog: // a1: value
     // Write to the WBGLOG register and update the frame if changed
     la t1, wbglog
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1520,7 +1530,7 @@ write_wobjlog: // a1: value
     // Write to the WOBJLOG register and update the frame if changed
     la t1, wobjlog
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1530,7 +1540,7 @@ write_tm: // a1: value
     // Write to the TM register and update the frame if changed
     la t1, tm
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1540,7 +1550,7 @@ write_ts: // a1: value
     // Write to the TS register and update the frame if changed
     la t1, ts
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1550,7 +1560,7 @@ write_tmw: // a1: value
     // Write to the TMW register and update the frame if changed
     la t1, tmw
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1560,7 +1570,7 @@ write_tsw: // a1: value
     // Write to the TSW register and update the frame if changed
     la t1, tsw
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1570,7 +1580,7 @@ write_cgwsel: // a1: value
     // Write to the CGWSEL register and update the frame if changed
     la t1, cgwsel
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop
@@ -1580,7 +1590,7 @@ write_cgadsub: // a1: value
     // Write to the CGADSUB register and update the frame if changed
     la t1, cgadsub
     lbu t0, (t1)
-    bne t0, a1, update_frame
+    bne t0, a1, update_window_frame
     sb a1, (t1)
     jr ra
     nop

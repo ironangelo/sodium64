@@ -372,7 +372,7 @@ oam_skip:
     and t6, t6, t0
     li t7, 0 // Left bound
     li t8, 255 // Right bound
-    li t9, 1 // Bound index
+    li t9, 0 // Segment ordinal; zero means first segment
 
     // Clear the backdrop if force blank is enabled
     lbu t4, STAT_FLAGS
@@ -387,40 +387,36 @@ not_blank:
     lbu t0, CGADSUB
     beqz s0, fill_main
     andi t0, t0, 0x20 // Backdrop math
-    beqz t0, fill_main
+    sll t0, t0, 26 // Move CGADSUB backdrop bit 5 into the sign bit
 
-    // Fill the backdrop based the math window, so effects like SMW transitions work
-    // TODO: implement color math properly if possible
-    lbu t0, CGWSEL
-    srl t0, t0, 2
-    andi t0, t0, 0xC
-    lw t0, FILL_JUMPS(t0)
-    jr t0
-    lbu a0, WOBJSEL
+    // Call only when backdrop math is enabled; use a non-control delay slot.
+    // The helper sets s0/s1 and alternating segment ends on the taken path.
+    bltzal t0, calc_color_window_segments
+    lhu s0, MAIN_COLOR // Non-taken path uses Main; helper overwrites this
+    b fill_backdrop
+    nop
 
 fill_main:
-    // Use the main color first, without windows
+    // No backdrop math: use Main across the whole section.
     b fill_backdrop
+    lhu s0, MAIN_COLOR
 
 fill_win:
-    // Use the main color first, with windows
-    lhu s0, MAIN_COLOR
-    b use_window
-    lhu s1, SUB_COLOR
-
+    // Kept as padding labels so the pre-overlay prefix retains its exact size.
+    nop
+    nop
 fill_notwin:
-    // Use the sub color first, with windows
-    lhu s1, MAIN_COLOR
-
+    nop
 use_window:
-    // Calculate window bounds and load the first one
-    jal calc_windows
-    srl a0, a0, 4
-    lbu t8, WIN_BOUNDS + 1
+    nop
+    nop
+    nop
+    nop
+    nop
 
 fill_backdrop:
     // Update the RDP fill bounds for a window segment
-    sltu t0, zero, t7
+    sltu t0, zero, t9
     addi t1, t7, 12
     add t1, t1, t0
     sll t1, t1, 14
@@ -621,8 +617,8 @@ load_screen:
     li v0, RDP_TILE + 24
     ldv $v15, 0, 0x00, v0
 
-    // Check if windows are enabled for the layer
-    // TODO: do something better than combining masks?
+    // Check if windows are enabled for the layer. The current renderer still
+    // combines Main/Sub enables; exact screen separation belongs to H-COMP.
     lbu t0, TMW
     lbu t1, TSW
     srl t2, s2, 1
@@ -630,24 +626,23 @@ load_screen:
     or t0, t0, t1
     and t0, t0, t2
     bnez t0, bg_windows
-    li t8, 0 // Bound index
+    li t8, 0 // Span-byte index
 
-    // Draw the entire layer if windows are disabled
+    // Keep the historical no-window fast path and fixed-slot footprint.
     li t0, 255
     b next_tile
     sb t0, WIN_BOUNDS + 1
 
 bg_windows:
-    // Calculate window segments for the layer
-    lhu t0, WBGSEL
-    sll t1, s2, 1
-    srl t0, t0, t1
-    jal calc_windows
-    andi a0, t0, 0xF
-
-    // Skip the first segment if it's empty
-    lbu t0, WIN_BOUNDS + 1
-    beqz t0, finish_segment
+    // All selector/logic work lives in resident common code so this fixed-slot
+    // call site keeps the exact instruction footprint of the old W1 helper.
+    jal calc_bg_window_spans
+    nop
+    lbu t0, WIN_COUNT
+    beqz t0, finish_row
+    li t8, 0
+    nop
+    nop
 
 next_segment:
     // Set some values for updating segment bounds
@@ -817,19 +812,21 @@ draw_tile:
     li a1, RDP_TILE7
 
 finish_tile:
-    // Move to the next tile until the end of the segment
+    // Move to the next tile until the current inclusive span ends.
     lbu t0, WIN_BOUNDS + 1(t8)
     addi t0, t0, -7
     blt s0, t0, next_tile
     addi s0, s0, 8
+    // Upper=255 is necessarily the final explicit span and also preserves the
+    // historical unwindowed fast path without consulting WIN_COUNT.
     beq t0, 248, finish_row
 
 finish_segment:
-    // Move to the next visible segment until finished
-    lbu t2, WIN_BOUNDS + 2(t8)
-    beq t2, 255, finish_row
+    // Otherwise advance by explicit span count; x=255 is never a list sentinel.
     addi t8, t8, 2
-    b next_segment
+    lbu t2, WIN_COUNT
+    sll t2, t2, 1
+    blt t8, t2, next_segment
     nop
 
 finish_row:
@@ -918,10 +915,8 @@ start_objects:
     jal dma_read
     li a2, 0x1FF
 
-    // Preserve the existing no-window fast path. Sodium64 currently combines
-    // main/sub window-enable masks for BGs, so OBJ follows the same renderer
-    // contract here; screen-specific TMW/TSW separation remains a later Gate-C
-    // compositor repair rather than a game-specific special case.
+    // Preserve the current combined Main/Sub screen-enable contract, but use
+    // exact W1/W2 selection and OBJ OR/AND/XOR/XNOR logic when enabled.
     lbu t0, TMW
     lbu t1, TSW
     or t0, t0, t1
@@ -929,75 +924,19 @@ start_objects:
     beqz t0, obj_no_windows
     nop
 
-    // OBJ W1 needs exact inclusive endpoints. The shared BG helper stores
-    // transition bytes and historically overloaded 255 as both a coordinate
-    // and a terminator, which cannot represent the legal [255,255] singleton.
-    // Build up to two explicit visible [lower,upper] pairs instead. W2/combine
-    // remain outside this controlled repair; unsupported combinations retain
-    // the prior unwindowed behavior.
-    lbu t0, WOBJSEL
-    andi t0, t0, 0xF
-    li t1, 2
-    beq t0, t1, obj_w1_normal
-    li t1, 3
-    bne t0, t1, obj_no_windows
+    lbu a0, WOBJSEL
+    andi a0, a0, 0xF
+    lbu a1, WOBJLOG
+    andi a1, a1, 0x3
+    li a2, 0 // Return !selected = layer-visible pixels
+    jal calc_window_spans
     nop
 
-obj_w1_inverted:
-    // Inverted W1 masks outside [WH0,WH1], so the inclusive interior is the
-    // sole visible span. Reversed bounds contain no visible pixels.
-    lbu t0, WHX + 0
-    lbu t1, WHX + 1
-    bgt t0, t1, obj_no_visible_spans
-    nop
-    sb t0, WIN_BOUNDS + 0
-    sb t1, WIN_BOUNDS + 1
-    b obj_spans_ready
-    li t2, 1
-
-obj_w1_normal:
-    // Normal W1 masks the inclusive [WH0,WH1] interval. Reversed bounds mask
-    // nothing; otherwise the visible exteriors are [0,WH0-1] and
-    // [WH1+1,255], omitting either empty side.
-    lbu t0, WHX + 0
-    lbu t1, WHX + 1
-    bgt t0, t1, obj_no_windows
-    li t2, 0
-
-    beqz t0, obj_normal_right
-    nop
-    addi t3, t0, -1
-    sb zero, WIN_BOUNDS + 0
-    sb t3, WIN_BOUNDS + 1
-    li t2, 1
-
-obj_normal_right:
-    li t3, 255
-    beq t1, t3, obj_spans_ready
-    nop
-    addi t1, t1, 1
-    beqz t2, obj_normal_right_first
-    nop
-    sb t1, WIN_BOUNDS + 2
-    sb t3, WIN_BOUNDS + 3
-    b obj_spans_ready
-    addi t2, t2, 1
-
-obj_normal_right_first:
-    sb t1, WIN_BOUNDS + 0
-    sb t3, WIN_BOUNDS + 1
-    li t2, 1
-
-obj_spans_ready:
-    sb t2, OBJ_WIN_COUNT
+    lbu t2, WIN_COUNT
     beqz t2, obj_windows_done
     li t8, 0
     b obj_window_segment
     nop
-
-obj_no_visible_spans:
-    b obj_windows_done
-    sb zero, OBJ_WIN_COUNT
 
 obj_no_windows:
     // Negative bound index marks the unwindowed fast path at list completion.
@@ -1195,7 +1134,7 @@ next_object:
 
     // Advance by explicit span count, never by an in-band coordinate sentinel.
     // This keeps x=255 available as an ordinary legal lower/upper endpoint.
-    lbu t2, OBJ_WIN_COUNT
+    lbu t2, WIN_COUNT
     addi t8, t8, 2
     sll t2, t2, 1
     beq t8, t2, obj_windows_done
@@ -1318,46 +1257,285 @@ shared_decode4:
     jr t4
 
 
-calc_windows: // a0: mask settings
-    // Load offsets where the window area changes
-    li t2, 255
-    lbu t1, WHX + 1
-    lbu t0, WHX + 0
+calc_color_window_segments:
+    // Convert exact color-window truth into the legacy backdrop fill loop's
+    // alternating inclusive segment-end list at WIN_BOUNDS+0..+6.
+    // Preserve the live RDP fill word in t6 and the nested-call return in t9.
+    move a3, t6
+    move t9, ra
 
-    // Determine window areas based on the mask settings
-    // TODO: support window 2 and combine logic
-    li t3, 2
-    beq a0, t3, win_in
-    li t3, 3
-    beq a0, t3, win_out
+    lbu t0, CGWSEL
+    srl t1, t0, 4
+    andi t1, t1, 0x3
+    beqz t1, color_window_all
+    li t2, 3
+    beq t1, t2, color_window_none
     nop
 
-win_none:
-    // Define the entire screen as non-window area
-    jr ra
-    sb t2, WIN_BOUNDS + 1
+    // Modes 1/2 are selected/complement of the OBJ color-window selector.
+    lbu t0, WOBJSEL
+    srl a0, t0, 4
+    lbu t0, WOBJLOG
+    srl t0, t0, 2
+    andi a1, t0, 0x3
+    sltiu a2, t1, 2 // mode1=selected, mode2=complement
+    jal calc_window_spans
+    nop
 
-win_in:
-    // Define the space between bounds as window area
-    bgt t0, t1, win_none
-    sb t0, WIN_BOUNDS + 1
-    sb t1, WIN_BOUNDS + 2
-    jr ra
-    sb t2, WIN_BOUNDS + 3
+    lbu t8, WIN_COUNT
+    beqz t8, color_window_none
+    nop
 
-win_all:
-    // Define the entire screen as window area
-    jr ra
-    sb t2, WIN_BOUNDS + 2
+    // Snapshot all possible span endpoints before overwriting E85 onward.
+    lbu t0, WIN_BOUNDS + 0 // L1
+    lbu t1, WIN_BOUNDS + 1 // U1
+    lbu t2, WIN_BOUNDS + 2 // L2
+    lbu t3, WIN_BOUNDS + 3 // U2
+    lbu t4, WIN_BOUNDS + 4 // L3
+    lbu t7, WIN_BOUNDS + 5 // U3
 
-win_out:
-    // Define the space between bounds as non-window area
-    bgt t0, t1, win_all
-    sb zero, WIN_BOUNDS + 1
-    sb t0, WIN_BOUNDS + 2
-    sb t1, WIN_BOUNDS + 3
+    // The first segment uses Sub where math is enabled, Main otherwise.
+    lhu s0, MAIN_COLOR
+    lhu s1, SUB_COLOR
+    bnez t0, color_window_initial_ready
+    nop
+    move a1, s0
+    move s0, s1
+    move s1, a1
+
+color_window_initial_ready:
+    li a0, WIN_BOUNDS
+
+    // Every true span contributes its upper end; a nonzero lower bound first
+    // contributes the preceding false segment end.
+    beqz t0, color_window_first_upper
+    addi a1, t0, -1
+    sb a1, 0(a0)
+    addi a0, a0, 1
+color_window_first_upper:
+    sb t1, 0(a0)
+    addi a0, a0, 1
+    li a1, 1
+    beq t8, a1, color_window_tail
+    nop
+
+    addi a1, t2, -1
+    sb a1, 0(a0)
+    sb t3, 1(a0)
+    addi a0, a0, 2
+    li a1, 2
+    beq t8, a1, color_window_tail
+    nop
+
+    addi a1, t4, -1
+    sb a1, 0(a0)
+    sb t7, 1(a0)
+    addi a0, a0, 2
+    move t1, t7
+
+color_window_tail:
+    // t1 is the final true upper bound for count1/2; select U2 when needed.
+    li a1, 1
+    beq t8, a1, color_window_tail_ready
+    nop
+    li a1, 2
+    bne t8, a1, color_window_tail_ready
+    nop
+    move t1, t3
+color_window_tail_ready:
+    li a1, 255
+    beq t1, a1, color_window_finish
+    nop
+    sb a1, 0(a0)
+    b color_window_finish
+    nop
+
+color_window_all:
+    lhu s0, SUB_COLOR
+    lhu s1, MAIN_COLOR
+    li t0, 255
+    sb t0, WIN_BOUNDS + 0
+    b color_window_finish
+    nop
+
+color_window_none:
+    lhu s0, MAIN_COLOR
+    lhu s1, SUB_COLOR
+    li t0, 255
+    sb t0, WIN_BOUNDS + 0
+
+color_window_finish:
+    // not_blank guarantees t4==0; restore the fill loop's live scalar state.
+    move t6, a3
+    li t4, 0
+    li t7, 0
+    lbu t8, WIN_BOUNDS + 0
+    move ra, t9
     jr ra
-    sb t2, WIN_BOUNDS + 4
+    li t9, 0
+
+
+calc_bg_window_spans:
+    // Regular-BG wrapper kept in both RSP variants so resident suffix layout
+    // remains byte-for-byte symmetric across overlay swaps.
+    lhu t0, WBGSEL
+    sll t1, s2, 1
+    srl t0, t0, t1
+    andi a0, t0, 0xF
+    lbu t0, WBGLOG
+    srl t0, t0, s2
+    andi a1, t0, 0x3
+    b calc_window_spans
+    li a2, 0
+
+
+calc_window_spans: // a0: selector, a1: logic, a2: 0=!selected / 1=selected
+    // Emit up to three exact inclusive true spans in WIN_BOUNDS and their
+    // out-of-band count in WIN_COUNT. Truth can only change at W1/W2 edges,
+    // so scan those at most four transition coordinates rather than pixels.
+    // Preserve s*, v0/v1, a3, t5, t9, gp, k0/k1 and ra for renderer callers.
+    li t0, 0 // Current segment start
+    li t6, WIN_BOUNDS // Next output byte
+    li t7, 0 // Span count
+
+window_span_loop:
+    // Evaluate W1 at this segment start, including inversion.
+    andi t2, a0, 0x2
+    beqz t2, window_one_done
+    move t2, zero
+    lbu t8, WHX + 0
+    sltu t2, t0, t8 // x < left
+    lbu t8, WHX + 1
+    sltu t1, t8, t0 // right < x
+    or t2, t2, t1
+    xori t2, t2, 1 // inside inclusive interval
+    andi t1, a0, 0x1
+    xor t2, t2, t1
+window_one_done:
+
+    // Evaluate W2 at this segment start, including inversion.
+    andi t3, a0, 0x8
+    beqz t3, window_two_done
+    move t3, zero
+    lbu t8, WHX + 2
+    sltu t3, t0, t8
+    lbu t8, WHX + 3
+    sltu t1, t8, t0
+    or t3, t3, t1
+    xori t3, t3, 1
+    srl t1, a0, 2
+    andi t1, t1, 0x1
+    xor t3, t3, t1
+window_two_done:
+
+    // Match ares single-window semantics; combine only when both are enabled.
+    andi t1, a0, 0xA
+    beqz t1, window_selected_done
+    move t4, zero
+    li t8, 0x2
+    beq t1, t8, window_selected_one
+    li t8, 0x8
+    beq t1, t8, window_selected_two
+    nop
+
+    beqz a1, window_selected_or
+    li t8, 1
+    beq a1, t8, window_selected_and
+    li t8, 2
+    beq a1, t8, window_selected_xor
+    xor t4, t2, t3
+    // XNOR
+    xori t4, t4, 1
+    b window_selected_done
+    nop
+
+window_selected_xor:
+    b window_selected_done
+    nop
+window_selected_and:
+    b window_selected_done
+    and t4, t2, t3
+window_selected_or:
+    b window_selected_done
+    or t4, t2, t3
+window_selected_two:
+    b window_selected_done
+    move t4, t3
+window_selected_one:
+    move t4, t2
+
+window_selected_done:
+    // a2 chooses the selected set (1) or its complement (0).
+    xori t8, a2, 1
+    xor t4, t4, t8
+
+    // Find the next transition coordinate > current start, using 256 as end.
+    li t1, 256
+
+    lbu t8, WHX + 0
+    sltu t2, t0, t8
+    beqz t2, window_next_w1r
+    sltu t2, t8, t1
+    beqz t2, window_next_w1r
+    nop
+    move t1, t8
+window_next_w1r:
+    lbu t8, WHX + 1
+    addi t8, t8, 1
+    sltu t2, t0, t8
+    beqz t2, window_next_w2l
+    sltu t2, t8, t1
+    beqz t2, window_next_w2l
+    nop
+    move t1, t8
+window_next_w2l:
+    lbu t8, WHX + 2
+    sltu t2, t0, t8
+    beqz t2, window_next_w2r
+    sltu t2, t8, t1
+    beqz t2, window_next_w2r
+    nop
+    move t1, t8
+window_next_w2r:
+    lbu t8, WHX + 3
+    addi t8, t8, 1
+    sltu t2, t0, t8
+    beqz t2, window_emit
+    sltu t2, t8, t1
+    beqz t2, window_emit
+    nop
+    move t1, t8
+
+window_emit:
+    beqz t4, window_advance
+    addi t8, t1, -1 // Inclusive upper bound
+
+    // Merge adjacent true segments split by irrelevant/reversed endpoints.
+    beqz t7, window_new_span
+    nop
+    lbu t2, -1(t6)
+    addi t3, t2, 1
+    bne t3, t0, window_new_span
+    nop
+    b window_advance
+    sb t8, -1(t6)
+
+window_new_span:
+    sb t0, 0(t6)
+    sb t8, 1(t6)
+    addi t6, t6, 2
+    addi t7, t7, 1
+
+window_advance:
+    li t8, 256
+    beq t1, t8, window_spans_done
+    move t0, t1
+    b window_span_loop
+    nop
+
+window_spans_done:
+    jr ra
+    sb t7, WIN_COUNT
 
 
 multiply: // a0: multiplicand, a1: multiplier - v0: product

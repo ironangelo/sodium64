@@ -177,6 +177,14 @@ pal_queues: .word PALETTE_QUEUE1, PALETTE_QUEUE2
 oam_queues: .word OAM_QUEUE1, OAM_QUEUE2
 dirty_queues: .word DIRTY_QUEUE1, DIRTY_QUEUE2
 sect_queues: .word SECTION_QUEUE1, SECTION_QUEUE2
+hcomp_cgram_base_queues: .word HCOMP_CGRAM_BASE_QUEUE1, HCOMP_CGRAM_BASE_QUEUE2
+hcomp_cgram_sideband_queues: .word HCOMP_CGRAM_SIDEBAND_QUEUE1, HCOMP_CGRAM_SIDEBAND_QUEUE2
+hcomp_cgram_event_queues: .word HCOMP_CGRAM_EVENT_QUEUE1, HCOMP_CGRAM_EVENT_QUEUE2
+hcomp_cgram_event_ptr: .word HCOMP_CGRAM_EVENT_QUEUE1
+hcomp_cgram_sideband_ptr: .word HCOMP_CGRAM_SIDEBAND_QUEUE1
+hcomp_cgram_event_count: .hword 0
+hcomp_cgram_event_overflow: .byte 0
+.byte 0
 
 .align 4
 // Values that control the cooldown between frame sections (shift, minimum, increment)
@@ -325,6 +333,11 @@ vblank_end:
     ori t1, t1, 0x40 // OAM dirty
     jal reload_hdma
     sb t1, (t0)
+
+    // Start the CGRAM epoch producer for this frame's queue slot.
+    jal hcomp_cgram_begin_frame
+    nop
+
     la ra, vcount_check
     li t0, 16 // Max OAM updates
     sb t0, oam_count
@@ -400,12 +413,47 @@ section_loop:
     addi t1, t1, 8
     sw t1, section_ptr
 
+    // Attach cumulative palette epoch + raw fixed color to this section.
+    lw t1, hcomp_cgram_sideband_ptr
+    lhu t0, hcomp_cgram_event_count
+    lhu t2, coldata
+    sh t0, 0(t1)
+    sh t2, 2(t1)
+    addi t1, t1, 4
+    sw t1, hcomp_cgram_sideband_ptr
+
     // Clear the OAM dirty flag for the next section
     la t1, stat_flags
     lbu t0, (t1)
     andi t0, t0, 0xBF
     jr ra
     sb t0, (t1)
+
+.align 5
+hcomp_cgram_begin_frame:
+    // Select producer buffers with the existing section/OAM queue parity.
+    lbu t0, queue_id
+    lw t1, hcomp_cgram_base_queues(t0)
+    lw t2, hcomp_cgram_event_queues(t0)
+    lw t3, hcomp_cgram_sideband_queues(t0)
+    sw t2, hcomp_cgram_event_ptr
+    sw t3, hcomp_cgram_sideband_ptr
+    sh zero, hcomp_cgram_event_count
+    sb zero, hcomp_cgram_event_overflow
+
+    // Snapshot all 256 live CGRAM words after VBlank writes.
+    la t0, cgram
+    li t4, 0x200
+hcomp_cgram_base_loop:
+    addi t4, t4, -2
+    lhu t3, 0(t0)
+    andi t3, t3, 0x7FFF
+    sh t3, 0(t1)
+    addi t0, t0, 2
+    bnez t4, hcomp_cgram_base_loop
+    addi t1, t1, 2
+    jr ra
+    nop
 
 .align 5
 update_frame:
@@ -1440,6 +1488,48 @@ cg_high:
     sll t2, a1, 8
     or t1, t1, t2
     sh t1, cgram(t0)
+
+    // VBlank and an already-closed early-force-blank tail fold into the next
+    // base snapshot. Active complete CGDATA commits append exact RGB555 events.
+    lbu t2, hvbjoy
+    andi t2, t2, 0x80
+    bnez t2, cg_epoch_done
+    nop
+    lbu t2, frame_done
+    bnez t2, cg_epoch_done
+    nop
+
+    lhu t2, hcomp_cgram_event_count
+    li t3, HCOMP_CGRAM_EVENT_CAPACITY
+    bge t2, t3, cg_epoch_overflow
+    nop
+
+    // Big-endian 4-byte record: {u8 index,u8 reserved,u16 RGB555}.
+    srl t3, t0, 1
+    sll t3, t3, 24
+    andi t4, t1, 0x7FFF
+    or t3, t3, t4
+    lw t4, hcomp_cgram_event_ptr
+    sw t3, 0(t4)
+    addi t4, t4, 4
+    sw t4, hcomp_cgram_event_ptr
+    addi t2, t2, 1
+    sh t2, hcomp_cgram_event_count
+
+    // History exists, so expose this epoch on the next scanline section.
+    li t3, 0x100
+    sh t3, sect_status
+    b cg_epoch_done
+    nop
+
+cg_epoch_overflow:
+    // Proven unreachable by the capacity contract; fail safe before the store.
+    li t2, 1
+    sb t2, hcomp_cgram_event_overflow
+    li t2, 0x100
+    sh t2, sect_status
+
+cg_epoch_done:
     beqz t0, update_fill
     nop
     jr ra

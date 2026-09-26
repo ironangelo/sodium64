@@ -62,8 +62,8 @@ main:
     li t0, 8
     sw t0, 0xBFC007FC
 
-    // Clear framebuffers and other hardcoded data
-    li t0, FRAMEBUFFER1
+    // Clear the complete fixed RDRAM arena, including CGRAM epoch buffers.
+    li t0, HCOMP_CGRAM_BASE_QUEUE1
     li t1, JIT_BUFFER - 8
 clear_vram:
     sd zero, (t0)

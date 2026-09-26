@@ -21,6 +21,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
+### REJECTED TOOLING ERROR — producer first run invalidated by baseline-only boot-clear oracle (2026-09-26 UTC)
+
+- First clean producer head **`phase4/gate-c-cgram-epoch-producer-clean@ab1fa8c151490a0c526950e5890ad681bc398431`** dispatched dedicated **36266443779** plus generic **36266443687**. Dedicated failed **before producer-model execution**, while re-running the L0 contract.
+- Exact traceback is a stale baseline-only source assertion: the clean L0 script searched for **`li t0, FRAMEBUFFER1`** to prove that boot-clear extension was still required. The producer intentionally satisfies that requirement by changing the clear low-water to **`HCOMP_CGRAM_BASE_QUEUE1`**, so the substring no longer exists.
+- **Classification: REJECTED TOOLING ERROR / zero semantic evidence against runtime.** This is the expected state transition from “extension required” to “extension implemented”, not a producer defect.
+- Correct only the contract source oracle so it distinguishes baseline-vs-producer state from the presence of the epoch-layout macros: baseline must clear from FRAMEBUFFER1; reserved producer must clear from HCOMP_CGRAM_BASE_QUEUE1. Keep `src/defines.h`, `src/main.S` and `src/ppu.S` byte-identical, then rerun both producer model and generic gates.
+
 ### VALIDATED — clean-lineage lossless CGRAM epoch L0 contract (2026-09-26 UTC)
 
 - Host/workflow-only branch **`phase4/gate-c-cgram-epoch-contract-clean@e70f61fad868f476f4ad7bd81a9d714f682efee3`** is a direct child of validated clean runtime **`32339fed76b8a318dc84938baed2d5c1d305722b`**; **zero runtime/source delta**.

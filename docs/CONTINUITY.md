@@ -6,20 +6,27 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
+### IN FLIGHT — clean typed CGRAM CPU producer (2026-09-26 UTC)
 
-### IN FLIGHT — clean-lineage CGRAM DMA8 consumer compatibility contract (2026-09-26 UTC)
-
-- New host/workflow-only branch **`phase4/gate-c-cgram-rsp-consumer-contract-clean@37b4fdfe2493c185a4bb31cf61ec96c316727e83`** is a direct child of integrated **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**; zero Sodium64 runtime/source delta.
-- The oracle separately checks out exact dynamically validated producer authority **`8dce5f45e6278356172b24576053a66ccf5f6daf`** and treats its current representation as input specification: 256-word RGB555 base snapshot, append-only 4-B `{index,reserved,RGB555}` events, and per-section cumulative-event-count/raw-COLDATA sideband.
-- **Controlled decision under test:** transform that producer semantics into the historically validated DMA8 consumer format rather than redesigning the RSP consumer: 4-B typed records (raw RGBA5551 payload + 8-B raw-shadow destination offset), a typed fixed-color marker per section, and double-buffered 0x800-B raw RGBA5551 shadows.
-- Current-master feasibility is checked directly: both RSP sources still expose the 8 dead pre-overlay instructions and all 8 historically audited suffix peepholes; validated integrated RSP size is 0xFC8, so 14 tail instructions + 8 dead prefix + 8 safe peepholes = 30 available versus the historical 29-instruction consumer, **1 instruction spare**. Consumer DMA scratch remains modeled at E98/EA0..EB7 below fixed VEC_DATA=F70.
-- Capacity/layout contract: worst conservative active display bound remains **20,460 color records**; at most **320 section markers** makes 20,780 typed 4-B records, below 24,576-record event-slot capacity by **3,796 records / 15,184 B**. Proposed raw shadows occupy **A00EF000..A00F0000**, leaving **0x2300 B** before current FRAMEBUFFER1=A00F2300 and retaining 8-B alignment per palette entry.
-- The oracle exhaustively compares producer prefix replay against typed-stream DMA8 consumption on reduced palettes, includes repeated cumulative section counts and the historical marker-in-word0 / next-color-in-word1 cached-pair hazard, and proves the RGB555<->RGBA5551 mapping over all 32,768 values.
-- **NON-CLAIM:** this does not prove a direct-sideband RSP consumer impossible; it chooses reuse of the already validated DMA8 shape if the semantic/layout contract passes. No producer conversion, RSP consumer, H-COMP arithmetic or framebuffer behavior is implemented yet.
-- Runs at checkpoint: dedicated **36279011981 IN_PROGRESS**, exact-head **Build and Validate 36279011904 PENDING**.
-- **Falsifier / NEXT:** any producer-source drift, transform mismatch, event/raw-shadow overlap, DMA alignment failure, or loss of the 29-instruction current-master budget rejects this reuse path. If green, implement only the clean CPU typed-stream/raw-shadow producer transformation first and dynamically validate its bytes before touching RSP consumption.
+- New branch `phase4/gate-c-cgram-typed-producer-clean@f0deb5d4aa26f900466b87844737a73ed75b36e6` descends from the validated host-only consumer contract and current integrated master. RSP source is untouched.
+- Runtime port reuses the historically validated DMA8 producer semantics: boot clear extends to BASE_Q1; VBlank snapshots canonical RGB555 base and initializes the handed slot's 0x800-B raw RGBA5551 shadow including entry0; active complete CGDATA writes append typed 4-B color records; every section appends one typed fixed-color marker; frame handoff publishes only the typed event-stream base to **DMEM EA0** while RSP is halted.
+- Existing visible brightness-scaled palette queue remains unchanged. Raw shadow is initialized from historical frame base and is not overwritten by frame-final CGRAM, preserving the state the future RSP consumer must replay.
+- Producer-only safety boundary: no `HCOMP_RAW_PALETTE_PTRS`, no RSP consumer source, no H-COMP arithmetic. Existing base snapshot is retained as independent diagnostic authority.
+- Dedicated **Gate C CGRAM Typed Producer Clean 36279269556 SUCCESS** on exact head; exact-head **Build and Validate 36279269489 IN_PROGRESS** at checkpoint.
+- **Falsifier:** source/model mismatch, stream capacity drift, raw-shadow overlap/alignment failure, build/smoke regression, or any RSP-source delta blocks this port. If generic closes green, next batch is observation-only dynamic capture of real typed producer bytes before implementing the 29-instruction RSP consumer.
 
 
+
+### VALIDATED — clean-lineage CGRAM DMA8 consumer compatibility contract (2026-09-26 UTC)
+
+- Host/workflow-only authority `phase4/gate-c-cgram-rsp-consumer-contract-clean@37b4fdfe2493c185a4bb31cf61ec96c316727e83` is a direct child of integrated `master@70d8d8b594c926a7179c43a25c0dfb829745b7cd` with zero Sodium64 runtime delta.
+- Dedicated **Gate C CGRAM RSP Consumer Clean Contract 36279011981 SUCCESS** and exact-head **Build and Validate 36279011904 SUCCESS**. Normal/PROFILE builds, binary RSP delay-slot checks and pinned-Mupen/LLE smoke remain green.
+- The oracle separately checks out exact dynamically validated raw-producer authority `8dce5f45e6278356172b24576053a66ccf5f6daf` and proves a lossless transformation from its RGB555 base + 4-B raw events + cumulative-count/raw-COLDATA section sideband representation to the historical DMA8 consumer format.
+- **Validated representation choice:** 4-B typed stream records plus double-buffered 8-B-per-entry raw RGBA5551 shadow. Reduced-state transform replay passed **42,545 cases**, RGB555/RGBA5551 mapping is bijective over all **32,768** colors, and the marker-word0 / next-color-word1 cached-pair hazard remains correct.
+- Worst conservative stream is **20,460 color records + 320 section markers = 20,780 records**, fitting the 24,576-record slot with **3,796 records / 15,184 B margin**. Raw shadows are **A00EF000/A00EF800**, ending A00F0000 and leaving **0x2300 = 8,960 B** before FRAMEBUFFER1.
+- Current integrated RSP still exposes all 8 historically audited peepholes plus 8 dead pre-overlay instructions and 14 tail instructions at validated 0xFC8 text size: **30 instruction budget vs historical 29-instruction consumer, one instruction spare**.
+- **DECISION:** do not redesign a direct-sideband RSP consumer unless new evidence requires it. Reuse the already validated DMA8 consumer shape. This does not claim the direct-sideband alternative impossible; it is unnecessary extra RSP risk.
+- **NEXT:** transform the clean CPU producer itself to emit typed records + initialize raw shadow and validate its live bytes. RSP consumption and H-COMP arithmetic stay frozen until that producer stage passes.
 
 ### SUPPORTED INTERPRETATION — reuse old DMA8 CGRAM consumer as specification, not as branch (2026-09-26 UTC)
 

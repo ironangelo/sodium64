@@ -21,6 +21,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
+### MEASUREMENT PROOF PASSED — exhaustive semantic oracle on clean window/color port (2026-09-26 UTC)
+
+- Tooling-only child **`phase4/gate-c-window-color-port@7abd196f7503701db1836e69fe52675a22886a36`** leaves runtime source byte-identical to `0fa106589...` and adds a clean-layout version of the established W1/W2 reference contract plus layer/color runtime oracles. Dedicated **Gate C Window Color Port 36254991729 SUCCESS**.
+- Base pinned-ares contract: **524,288 layer topology cases + 1,048,576 color topology cases**, max3 spans, x255 singleton preserved, clean layout `WIN_BOUNDS E84..E89 / WIN_COUNT E8A / OVERLAY_MAIN_SRC E90`.
+- Actual RSP layer runtime oracle: **524,288/524,288 event-scan cases**, max3 spans, x255/reversed bounds preserved, fixed renderer slot **242 instructions**, common suffix source-identical, live-register contract preserved.
+- Actual color-window runtime oracle: **1,048,576/1,048,576 cases**, x0+x255 edges and reversed bounds preserved, common helpers source-identical, protected-register contract preserved. The adapted source oracle additionally requires the current `CGADSUB bit5 -> sign -> bltzal calc_color_window_segments` conditional-link form, while master’s binary checker remains independent authority for control-in-delay hazards.
+- This closes the semantic-port question: the current-master candidate reproduces the previously validated window/color behavior without importing experimental H-COMP scaffolding and while preserving PR #16. **Same-SHA Build and Validate 36254991648 is still running/queued at this checkpoint**; runtime bytes were already generically green at parent `0fa106589...`, but do not promote `7abd196f...` to final candidate authority until its exact-head generic gate closes.
+- **NEXT after exact-head generic green:** add the separately validated raster-sensitive section-latency repair as one controlled `src/ppu.S` batch, adapted to clean master semantics (do not import H-COMP brightness-metadata packing). Re-run the raster latency oracle + window/color oracle + generic gate on the combined exact SHA.
+
 ### IMPLEMENTED / GENERIC VALIDATED — clean master port of window/color semantics (2026-09-26 UTC)
 
 - Clean current-master child **`phase4/gate-c-window-color-port@0fa106589d739f3e53d17485ec3e1a9f089230a0`** is ahead1/behind0 from **`master@ad546ab825f2a28405650f9bae2713ac261e67f2`**. Runtime delta is only `src/defines.h`, `src/rsp_main.S`, `src/rsp_mode7.S`: exact W1/W2 layer spans, exact W1/W2 color-window spatial segmentation, and the validated size-neutral conditional-link rewrite. Raw-CGRAM shadows/pointers, brightness metadata packing, dormant H-COMP kernels and proof markers are absent.

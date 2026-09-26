@@ -6,6 +6,11 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### Follow-up result: backdrop-math guest (2026-09-26 UTC)
+
+- The guest-only commit `571aef3522b05da32637c2dcfa7d07007c249ffd` completed dedicated [run 36249349075](https://github.com/ironangelo/sodium64/actions/runs/36249349075) successfully. Artifact [10907769012](https://github.com/ironangelo/sodium64/actions/runs/36249349075/artifacts/10907769012), digest `sha256:a93402fb5cdffab939fcf7545820d7d91329188c77274dccd8a960d93a5172ca`, confirms the generated guest hash `8d3352a1da3137a364ef82314e50378b5c2fe832502f985620c1f450ad1d578c`, runtime ROM/embedded ELF hashes unchanged from the earlier run, checker PASS on both RSP variants and `MODE7_SINGLE_HEAVY_HCOMP_REACHED` with mailbox `0051000000000000`; slot0 changed, slot1 seeded unchanged. Generic [Build and Validate run 36249349035](https://github.com/ironangelo/sodium64/actions/runs/36249349035) had normal and PROFILE jobs green at last check, emulator-smoke still in progress.
+- This proves no observed progression regression under this pinned-Mupen guest with CGADSUB bit5 set. It **does not** prove the helper was called, because an earlier `beqz s0,fill_main` bypasses the `bltzal`; neither the guest-state capture nor classifier inspects that branch or the resulting color pixels. Required next experiment is explicit helper-path instrumentation/counter or a discriminating framebuffer capture plus comparison to the v2 parent/reference. No Gate C closure or hardware timing conclusion.
+
 ### Follow-up test in flight (2026-09-26 UTC)
 
 - The same isolated proof branch advanced by a single guest-only commit `571aef3522b05da32637c2dcfa7d07007c249ffd` on top of the green code proof `68702a06349739b43efbd540d7b84e5ef114b45a`. It writes `CGADSUB=0x20` ($2131) and bright fixed color `COLDATA=0xFF` ($2132) in the existing one-heavy Mode7 homebrew guest; generated 32 KiB guest SHA-256 is `8d3352a1da3137a364ef82314e50378b5c2fe832502f985620c1f450ad1d578c`. Source/build code is otherwise identical to the green proof. Local generator and classifier self-test pass. The branch's dedicated workflow path filter includes this script.

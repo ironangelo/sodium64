@@ -830,8 +830,11 @@ finish_tile7:
     blt s0, 256, next_tile7
     add t9, t9, t0
 
-    // Move to the next row, adjusting the VRAM coordinates
+    // Move to the next row only when the section still has scanlines.
+    // Check the section bound before mutating dead next-row coordinates so the
+    // exit path never needs a branch immediately before draw_mode7_entry.
     addi s1, s1, 8
+    bge s1, k1, next_layer
     sll t0, s2, 8
     sub t8, t8, t0
     sll t0, s5, 8
@@ -839,9 +842,8 @@ finish_tile7:
     sll t0, s4, 3
     add t8, t8, t0
     sll t0, s6, 3
-    blt s1, k1, draw_row7
+    b draw_row7
     add t9, t9, t0
-    b next_layer
 
     // Keep the externally visible Mode 7 entry fixed at the far edge of the
     // renderer slot; branch back into the variant-local implementation.

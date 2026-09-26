@@ -27,8 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run host profiler decoder tests
-        run: python3 scripts/test_profile_report.py
+      - name: Run host validation tests
+        run: |
+          python3 scripts/test_profile_report.py
+          python3 scripts/check_rsp_branch_delay_slots.py --self-test
 
       - name: Compile
         shell: bash
@@ -36,6 +38,9 @@ jobs:
           set -o pipefail
           libdragon init
           libdragon make -j$(nproc) 2>&1 | tee build.log
+
+      - name: Check RSP branch delay slots
+        run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
 
       - name: Record build metrics
         run: |
@@ -79,6 +84,9 @@ jobs:
           set -o pipefail
           libdragon init
           libdragon make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+
+      - name: Check profiling RSP branch delay slots
+        run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
 
       - name: Record profiling build metrics
         run: |

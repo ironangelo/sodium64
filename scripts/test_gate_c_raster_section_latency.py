@@ -119,8 +119,11 @@ def prove_source_scope() -> None:
     for anchor in ("lbu t2, brightness", "beq t2, t0, bright_store_done", "li t2, 0x100", "sh t2, sect_status"):
         if anchor not in bright:
             raise AssertionError(f"clean brightness raster anchor missing: {anchor}")
-    if "stat_flags" in bright or "H-COMP" in bright:
-        raise AssertionError("brightness repair unexpectedly depends on H-COMP metadata")
+    for forbidden in ("andi t1, t1, 0xE0", "or t1, t1, t0", "sb t1, stat_flags"):
+        if forbidden in bright:
+            raise AssertionError(
+                f"brightness repair unexpectedly packs H-COMP metadata: {forbidden}"
+            )
 
     section_size = re.search(r"#define SECTION_SIZE\s+(0x[0-9A-Fa-f]+|\d+)", defs)
     queue = re.search(r"#define SECTION_QUEUE2 \(OBJECT_CACHE - (0x[0-9A-Fa-f]+|\d+)\)", defs)

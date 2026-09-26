@@ -5,9 +5,10 @@ on:
     branches:
       - phase4/gate-c-hcomp-mode7-branch-delay-fix-proof
     paths:
+      - src/rsp_mode7.S
       - scripts/make_gate_c_hcomp_mode7_single_heavy_boot.py
       - scripts/check_gate_c_hcomp_mode7_single_heavy.py
-      - .github/workflows/gate-c-hcomp-mode7-single-heavy.yml
+      - .github/workflows/gate-c-hcomp-mode7-branch-delay-fix.yml
   workflow_dispatch:
 
 permissions:

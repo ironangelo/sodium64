@@ -35,6 +35,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **NON-CLAIMS / OPEN:** full SNES color arithmetic is still approximate; Main/Sub winner provenance is not yet independently represented; raw fixed-color semantics are incomplete; **CGRAM1..255 mid-frame historical epochs are still lost** because current section payload carries no palette epoch/snapshot. Do not call Gate C closed and do not use this result alone as the SMW representative-game trigger until the next compositor information-loss blocker is addressed or bounded.
 - **NEXT GATE DRIVER:** revisit the already-designed CGRAM epoch contract from the experimental audit lineage, but port/re-prove it against this clean current-master candidate before any runtime allocation/write path. First question is whether the event-log + base-snapshot representation remains lossless, non-overlapping, capacity-safe and compatible with current clean memory layout; only then implement producer state.
 
+### CANDIDATE / PR #17 OPEN — Ares PR gate pending (2026-09-26 UTC)
+
+- Opened **PR #17**, `Gate C: exact window semantics and raster-sensitive section timing`, head **`32339fed76b8a318dc84938baed2d5c1d305722b`** -> `master@ad546ab825f2a28405650f9bae2713ac261e67f2`. GitHub reports the PR **mergeable=true / rebaseable=true**; no master drift or merge conflict exists.
+- PR opening triggered an additional master-targeted **Ares Profile Validation run 36266030441**, which does not run on ordinary phase-branch pushes. At checkpoint its `profile-build` job is in progress; this workflow runs the repository-wide host `test_*.py` suite, builds PROFILE, then boots deterministic workloads under pinned ares with the documented RSP-interpreter lab configuration.
+- **DECISION:** do not merge merely from the already-green branch gates. Hold PR #17 until this PR-specific ares gate closes. Do not touch the head while Ares is running unless an actual defect is found, because workflow concurrency would restart/cancel useful evidence.
+- If Ares is green and master remains unchanged, lower-level evidence is sufficient under `VALIDATION.md` to merge this cleanly reversible Gate-C repair without an immediate real-N64 session. If red, classify workload/harness vs Sodium64 semantics before modifying runtime.
+
 ### VALIDATED — clean current-master Gate-C window/color/raster candidate (2026-09-26 UTC)
 
 - Exact candidate **`phase4/gate-c-window-color-port@32339fed76b8a318dc84938baed2d5c1d305722b`** is a clean four-commit descendant of **`master@ad546ab825f2a28405650f9bae2713ac261e67f2`**, ahead4/behind0. Runtime scope is bounded to `src/defines.h`, `src/rsp_main.S`, `src/rsp_mode7.S`, and `src/ppu.S`; remaining files are targeted executable regression oracles/workflow.

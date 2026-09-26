@@ -18,13 +18,20 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
-### MERGED-CONSUMED / POST-MERGE VALIDATION IN FLIGHT — PR #17 (2026-09-26 UTC)
+### VALIDATED / MERGED-CONSUMED — PR #17 integrated on exact master (2026-09-26 UTC)
 
-- **PR #17 merged successfully** with expected head `76f5b8b41b1796453ff684300930880c731318c3`. New integrated truth is **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**.
-- Merge delta from previous master is exactly the audited nine-file Gate-C window/color/raster set: five regression/workflow files plus `src/defines.h`, `src/ppu.S`, `src/rsp_main.S`, and `src/rsp_mode7.S`.
-- Master push automatically dispatched four exact-merge workflows: **Build and Validate 36277317135**, **Gate C Window Color Port 36277317144**, **Ares Profile Validation 36277317095**, and **APU Cycle And Span Proof 36277317094**.
-- **DECISION:** stage is not yet marked fully integrated until these master-sha workflows close. No new runtime branch should be based on an earlier pre-merge SHA; subsequent Gate-C work must rebase/port from `master@70d8d8b...` after post-merge validation.
-
+- **Integrated truth:** PR #17 merged with expected head `76f5b8b41b1796453ff684300930880c731318c3`; current exact authority is **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**. Merge delta is exactly the audited nine-file Gate-C window/color/raster set.
+- All four post-merge workflows on that exact merge SHA are **SUCCESS**:
+  - **Build and Validate 36277317135** — normal + PROFILE + pinned-Mupen/LLE smoke + release packaging;
+  - **Gate C Window Color Port 36277317144** — exact W1/W2 layer/color-window + raster-latency oracles;
+  - **Ares Profile Validation 36277317095** — pinned-ares interpreter/JIT workload matrix;
+  - **APU Cycle And Span Proof 36277317094** — dynamic SPC700 cycle/span contract, including halted-state ticks and cycle-budget edges.
+- Post-merge artifacts: normal **10917696514**, digest `sha256:7f1af318ae78cbca02116d7fa0de2816c2836ef413ed67afbc2253dbaae07360`; PROFILE **10916789022**, digest `sha256:36197c99569a99d4f7d1a4f48ec8177bcbbf505e267478be5dcb556e1db07147`; Mupen smoke **10916754266**, digest `sha256:fa5bb285e2398da7e634f9a74c7ff1861a1aa92d4b35c53edb9be1419632edd9`; ares profile build **10917588640**, digest `sha256:74db8fae9c7db362ff02004f5a1360552b881a39f9dd84b1a9988907130bf826`; ares matrix **10918030695**, digest `sha256:ac3be72836afe8d46f673fe9751a5cddc223adcd1f02fd9f0b0e21e00fbe7bf5`; APU proof build **10916998861**, digest `sha256:524cbf0473d849dfdfba15eaf82cff6546ba8095ed13994c6c585e01117cee9c`; APU proof **10916544942**, digest `sha256:93ed67087132c964f93210da2762761e592b707bcddb61fa8412b81a69f9c63a`.
+- Mupen smoke yielded **4096 valid samples / 4769 total**. Ares ran with Road-valid diagnostic settings **frameskip=0, APU clock=21, audio=4, precision=8**; complete virtual windows were idle **60/60**, cpu-alu **60/60**, WRAM **60/60**, ppu-registers **61/60**, dma-vram **17/60**, gameplay-balanced **60/60**. The same pre-merge exact candidate reported the same complete-window values, so the merge itself introduced no matrix regression. The synthetic dma-vram result remains diagnostic lab evidence, not a broad software or real-N64 cadence conclusion.
+- APU proof retained its validated invariants after the merge, including `all_cycle_budget_edge_cases_at_or_below_32=true`, `all_halt_scheduler_ticks_match_expected=true`, and cached cycle-budget block reuse without recompilation.
+- **VALIDATED claim:** the clean Gate-C W1/W2 window semantics, color-window segmentation, safe conditional helper call and raster-sensitive next-line sectioning are now production-integrated on `master` without breaking the current build/Mupen/ares/APU lower-level gates.
+- **NON-CLAIMS:** this still does not establish full SNES color arithmetic, independent Main/Sub winner provenance, CGRAM epoch consumption, SMW/ALttP correctness, or a new real-N64 cadence result.
+- **NEXT GATE DRIVER:** start from this integrated `master`, not an old cumulative branch. Reuse the historically validated DMA8 CGRAM consumer invariants as specification, but first build a **clean-lineage host-only consumer/typed-stream contract** against the already dynamically validated clean producer. No H-COMP arithmetic or framebuffer claim until epoch replay is cleanly consumed on the current lineage.
 
 
 ### VALIDATED / READY TO MERGE — PR #17 final exact head (2026-09-26 UTC)
@@ -59,12 +66,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
-### IN FLIGHT — read-only dynamic proof of clean CGRAM epoch producer (2026-09-26 UTC)
+### SUPERSEDED CHECKPOINT — read-only dynamic proof of clean CGRAM epoch producer (2026-09-26 UTC)
 
 - Observation-only branch **`phase4/gate-c-cgram-epoch-dynamic-proof-clean@ba61ac3362ca62da95fcba2a269e6000447d8ae4`** is exactly three proof files over validated producer runtime `8dce5f45...`; **zero `src/` delta**.
 - Reuses the previously validated deterministic original 32-KiB LoROM and classifier unchanged. Guest alternates VBlank base phases, then performs active commits **`{1:1234, 1:4567, 0:2AAA, 2:7FFF}`** plus COLDATA E7. Multiple snapshots are read-only; no debugger memory seeding or runtime instrumentation.
 - Classifier derives active Q1/Q2 ownership from live producer pointers/count, accepts only identity or established Mupen word-swap32 normalization, requires event_count=4, overflow=0, valid base phase, exact event records, monotonic sideband with count0/base fixed color and count4/active fixed color, and replay result `{entry0=2AAA, entry1=4567, entry2=7FFF}`.
-- Dedicated **Gate C CGRAM Epoch Dynamic Producer Proof Clean 36266751513 QUEUED**; exact-head **Build and Validate 36266751450 PENDING**.
+- This checkpoint is superseded by the validated result above: dedicated **36266751513 SUCCESS** and exact-head **Build and Validate 36266751450 SUCCESS**.
 - **Possible readings:** PASS validates first-hand emitted producer bytes/ownership/replay on the clean runtime; coherent dumps with semantic mismatch falsify producer behavior; failure before usable dumps/classification is harness/lab evidence and must not be turned into a runtime conclusion.
 - **NEXT if green:** only then design/port the smallest RSP consumer contract. Keep H-COMP arithmetic and framebuffer output frozen until epoch replay itself has a clean-lineage consumer proof.
 

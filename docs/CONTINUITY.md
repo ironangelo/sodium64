@@ -7,6 +7,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 ### IN FLIGHT — observation-only dynamic proof of clean typed CGRAM producer (2026-09-26 UTC)
+- Exact observation-only head is now **`phase4/gate-c-cgram-typed-producer-dynamic-proof-clean@8d794c9caae13bf34de028b77a192ed808a02ad6`**; it adds only generator/classifier/workflow files over validated runtime `f0deb5d4...`, with zero new `src/` delta.
+- Exact-head runs: dedicated **Gate C CGRAM Typed Producer Dynamic Proof Clean 36279497455 IN_PROGRESS** and **Build and Validate 36279497420 IN_PROGRESS**.
 
 - Next batch is intentionally **zero runtime delta** over validated typed producer `f0deb5d4...`. It will reuse the historical deterministic 32-KiB original LoROM and read-only Mupen debugger capture pattern.
 - Required live evidence: coherent `hcomp_cgram_event_ptr/count/overflow`; EA0 exact event-queue base; live producer slot derived from pointer/count; base first3 matching phase A/B; raw shadow first3 equal to that historical base (and explicitly not frame-final); typed stream containing repeated index1, entry0 and entry2 color records followed by the active fixed-color marker; overflow=0.

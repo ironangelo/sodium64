@@ -6,6 +6,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### IN FLIGHT — delay-slot-safe helper marker run2 (2026-09-26 UTC)
+
+- Prior green artifact **10907769012** from exact guest-enabled parent `571aef3522b05da32637c2dcfa7d07007c249ffd` independently fixes the RSP DMEM layout: `hcomp_vec_shr11=A4000F00`, `vec_data=A4000F70`, therefore the existing 0x60-byte reserved padding begins at **A4000F10**. This also exposed a second pre-runtime harness error in run1: `nm` already reports the absolute RSP address, so adding `0xA4000000` again would have produced a bogus dump address. No dynamic result was affected because run1 stopped at assembly.
+- Tooling-fix head `phase4/gate-c-hcomp-stale-s0-proof@32cd57acbc0d3ac3df5f4dc194ed08ea80be4f70` replaces the symbolic delay-slot store with the single real instruction `sb t0,0xF10(zero)`, keeps the `proof_helper_marker` label at the unchanged padding location, asserts both linked images report symbol **A4000F10**, and dumps that absolute address directly. Runtime/guest logic is otherwise unchanged from run1/parent. Exact-SHA dedicated run **36251886028 IN_PROGRESS**; generic Build and Validate **36251886029 QUEUED** at dispatch.
+- Generic run1 **36251650009** also failed normal and PROFILE compile for the same symbolic-delay-slot instrumentation issue; smoke/release were skipped. It is likewise **REJECTED as runtime evidence**. **NEXT:** require run2 assembly + binary delay checker green, then classify marker byte. `00` with valid progression supports stale-`s0` bypass; `FF` falsifies that bypass reading for this guest. Only after a valid baseline marker result should the `beqz s0,fill_main` gate itself be varied.
+
+
 ### HYGIENE-BLOCKER — helper marker run1 did not reach runtime (2026-09-26 UTC)
 
 - Diagnostic head `phase4/gate-c-hcomp-stale-s0-proof@60357939e069c053ac333641bd12a7ebe91d3988` dedicated run **36251650017** failed in **Build exact diagnostic candidate**, before any Mupen execution or helper observation. The source oracle, branch-delay checker self-test, classifier self-test and deterministic guest generation all passed; guest SHA-256 remained `8d3352a1da3137a364ef82314e50378b5c2fe832502f985620c1f450ad1d578c`.

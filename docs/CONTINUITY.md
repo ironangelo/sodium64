@@ -21,6 +21,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
+### REJECTED TOOLING ERROR — first clean raster oracle false-positive (2026-09-26 UTC)
+
+- Runtime head **`2f401dd68c5171f307715bf9465567c2d11aa347`** kept all three prior semantic gates green in dedicated run **36255183045** (base W1/W2, layer runtime, color-window runtime) and failed only the new raster source oracle.
+- Traceback was purely an oracle-string bug: the checker rejected any literal `"H-COMP"` inside the `set_bright` block, while the clean source comment explicitly says **“no H-COMP metadata is packed here.”** The forbidden packing instructions themselves were absent. Therefore **36255183045 is REJECTED as raster runtime evidence**; it does not falsify the PPU change.
+- Tooling-only child **`32339fed76b8a318dc84938baed2d5c1d305722b`** changes only `scripts/test_gate_c_raster_section_latency.py`: it now rejects the actual experimental packing instruction anchors (`andi ... 0xE0`, `or ...`, `sb ... stat_flags`) instead of a comment substring. `src/ppu.S` is byte-identical to `2f401dd...`.
+- Fresh exact-head runs: **Gate C Window Color Port 36255242304 IN_PROGRESS**, **Build and Validate 36255242310 PENDING**. The older generic **36255183067** is superseded once the exact-head run executes; do not infer semantic status from its eventual outcome.
+
 ### IN FLIGHT — clean raster-sensitive section-latency port (2026-09-26 UTC)
 
 - Branch advanced to **`phase4/gate-c-window-color-port@2f401dd68c5171f307715bf9465567c2d11aa347`** only after exact-head `7abd196f...` closed both dedicated semantic run **36254991729 SUCCESS** and same-SHA **Build and Validate 36254991648 SUCCESS**.

@@ -21,14 +21,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
-### IMPLEMENTED / PRODUCER MODEL VALIDATED — clean CGRAM epoch CPU producer (2026-09-26 UTC)
+### VALIDATED — clean CGRAM epoch CPU producer (2026-09-26 UTC)
 
-- Exact current producer head **`phase4/gate-c-cgram-epoch-producer-clean@8dce5f45e6278356172b24576053a66ccf5f6daf`**. Runtime delta from clean L0 parent is limited to `src/defines.h`, `src/main.S`, `src/ppu.S`; tooling adds the producer oracle/workflow plus the state-aware L0 boot-clear check. **RSP source remains untouched.**
-- Dedicated **Gate C CGRAM Epoch Producer Clean 36266516494 SUCCESS**. Same SHA reproves **`CGRAM_EPOCH_CONTRACT_VALIDATED`** with current clean layout and then prints **`CGRAM_EPOCH_PRODUCER_MODEL_VALIDATED`**.
-- Producer model verifies: queue ownership = existing `queue_id`; VBlank policy = 256-word RGB555 base snapshot; active complete CGDATA = append 4-B event + force next-line section; section sideband = cumulative event count + raw COLDATA; overflow guard occurs before store; late force-blank / already-`frame_done` tail folds into next base snapshot; boot clear now correctly begins at **BASE_Q1**.
-- The first producer red **36266443779** remains **REJECTED TOOLING ERROR** only. Tooling-only child made L0 boot-clear validation state-aware; no producer runtime byte changed between `ab1fa8c...` and `8dce5f45...`.
-- **NON-CLAIM:** model/source validation does not prove actual bytes emitted by a running guest. RSP consumption/replay and H-COMP arithmetic remain frozen.
-- Exact-head **Build and Validate 36266516479 QUEUED** at checkpoint. Do not mark the CPU producer fully VALIDATED until normal + PROFILE + delay-slot checks + pinned-Mupen smoke close and linked-map headroom is remeasured.
+- Exact authority `phase4/gate-c-cgram-epoch-producer-clean@8dce5f45e6278356172b24576053a66ccf5f6daf`. Runtime delta from clean L0 parent is limited to `src/defines.h`, `src/main.S`, `src/ppu.S`; RSP source is untouched.
+- Dedicated **Gate C CGRAM Epoch Producer Clean 36266516494 SUCCESS** reproves the clean L0 contract and prints `CGRAM_EPOCH_PRODUCER_MODEL_VALIDATED`: existing `queue_id` ownership, VBlank base snapshot, active CGDATA append + next-line section, section sideband `{cumulative event count, raw COLDATA}`, overflow-before-store, and late-force-blank/`frame_done` fold-forward all source/model validated.
+- Exact-head **Build and Validate 36266516479 SUCCESS** across normal, PROFILE, binary RSP delay-slot checker and pinned-Mupen/LLE smoke. Both RSP variants remain **0xFC8=4040 B / 56 B free**, confirming producer integration did not alter the RSP compositor.
+- Normal artifact **10914347827**, digest `sha256:133c799e8b013ac702c195366d3469a2bea729011e10983e132d1b706258022a`; PROFILE **10914032104**, digest `sha256:5ab9b77d0578f80258fa464a272955d20d7aad24eff268cbc922e875309a7d2f`; smoke **10913592759**, digest `sha256:59bf75e8f4e96b2c908a68ddbdc6c2d43841c073b41af6f9f34dff73e1d8ab61`.
+- Direct artifact map inspection measures producer linked end **0x800BC170**, leaving **0x2090 = 8,336 B** before **BASE_Q1=0x800BE200**. ROM sha256 **e703477698e73b5e098dc491ab2fe2a8620dcc4fcbed68e876be69b74a8dd85b**; ELF sha256 **1011a832c8b48fd6f8dc6391eb79a4a329d56379005ae22c2cf6ba877a6deead**.
+- First producer run `ab1fa8c...` / dedicated **36266443779** remains **REJECTED TOOLING ERROR** only: baseline-only boot-clear assertion. Tooling-only fix made that check state-aware; runtime is unchanged between the two heads.
+- **VALIDATED claim:** CPU runtime now has a bounded, initialized, double-buffered information-preservation path for mid-frame CGRAM/fixed-color epochs at current section granularity, with generic runtime hygiene green.
+- **NON-CLAIM:** no first-hand running-guest bytes have yet been inspected on this clean lineage; RSP does not consume/replay epoch history and H-COMP arithmetic remains untouched.
+- **NEXT controlled batch:** port the already-proven observation-only dynamic producer harness onto this exact runtime with **zero src delta**. Use the deterministic original guest with repeated index1, CGRAM0, entry2 and COLDATA writes; capture producer state/base/sideband/event queues read-only and require pointer/count ownership + exact replay equivalence before designing any RSP consumer.
 
 ### REJECTED TOOLING ERROR — producer first run invalidated by baseline-only boot-clear oracle (2026-09-26 UTC)
 

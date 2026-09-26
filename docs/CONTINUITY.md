@@ -14,7 +14,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 ### Follow-up test in flight (2026-09-26 UTC)
 
 - The same isolated proof branch advanced by a single guest-only commit `571aef3522b05da32637c2dcfa7d07007c249ffd` on top of the green code proof `68702a06349739b43efbd540d7b84e5ef114b45a`. It writes `CGADSUB=0x20` ($2131) and bright fixed color `COLDATA=0xFF` ($2132) in the existing one-heavy Mode7 homebrew guest; generated 32 KiB guest SHA-256 is `8d3352a1da3137a364ef82314e50378b5c2fe832502f985620c1f450ad1d578c`. Source/build code is otherwise identical to the green proof. Local generator and classifier self-test pass. The branch's dedicated workflow path filter includes this script.
-- **Pending:** no verified CI result or artifact for this second commit yet. Even a green progression classification by itself would not prove `bltzal` was taken because the preexisting `beqz s0,fill_main` can bypass it; the follow-up needs an explicit observation of helper execution and color output (or controlled instrumentation), plus differential reference. Do not merge this experiment on the strength of the earlier zero-CGADSUB run. Earlier green runs/artifacts belong exclusively to commit `68702a0`.
+- **Resolved at the next checkpoint above:** the second commit has a separate successful pinned-Mupen run and artifact. That progression classification cannot prove `bltzal` was taken because the preexisting `beqz s0,fill_main` can bypass it; explicit helper execution and color-output evidence remain outstanding. Earlier zero-CGADSUB artifacts belong exclusively to commit `68702a0`.
 
 ### Gate C — H-COMP color-window delay-slot proof, binary and pinned-Mupen result (2026-09-26 UTC)
 

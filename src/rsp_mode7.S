@@ -403,12 +403,12 @@ not_blank:
     lbu t0, CGADSUB
     beqz s0, fill_main
     andi t0, t0, 0x20 // Backdrop math
-    beqz t0, fill_main
+    sll t0, t0, 26 // Move CGADSUB backdrop bit 5 into the sign bit
 
-    // Apply the existing backdrop approximation on the exact SNES color-window
-    // enable mask. The resident helper sets s0/s1 and alternating segment ends.
-    jal calc_color_window_segments
-    nop
+    // Call only when backdrop math is enabled; use a non-control delay slot.
+    // The helper sets s0/s1 and alternating segment ends on the taken path.
+    bltzal t0, calc_color_window_segments
+    lhu s0, MAIN_COLOR // Non-taken path uses Main; helper overwrites this
     b fill_backdrop
     nop
 

@@ -21,6 +21,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
+### IN FLIGHT — clean master port of validated window/color semantics (2026-09-26 UTC)
+
+- New branch **`phase4/gate-c-window-color-port@0fa106589d739f3e53d17485ec3e1a9f089230a0`** is a clean one-commit child of current **`master@ad546ab825f2a28405650f9bae2713ac261e67f2`** (ahead1/behind0). It ports only the previously validated W1/W2 layer-window + color-window spatial runtime transformations and the size-neutral H-COMP color-window conditional-link repair; it deliberately excludes raw-CGRAM shadow queues, H-COMP palette pointers, brightness metadata packing, dormant kernels, proof markers and cumulative experimental scaffolding.
+- Port construction replayed the exact runtime patches from the old validated lineage onto current master with **exact hunk-context matching only**; any conflict would have aborted rather than fuzzy-applied. Static guards confirm `WIN_COUNT`, general `calc_window_spans`, `calc_color_window_segments`, removal of legacy `calc_windows`, and `bltzal ... calc_color_window_segments` in both RSP variants.
+- **PR #16 is preserved:** the current-master Mode7 row exit remains `bge s1,k1,next_layer` before dead next-row coordinate work and `b draw_row7`; no old branch-in-delay row tail was reintroduced. No proof F10 marker leaked into the production candidate.
+- Exact-head **Build and Validate 36254744300 PENDING** at checkpoint. Current master’s binary control-in-delay checker is part of this gate and should independently reject any hidden RSP delay-slot regression.
+- **Interpretation if green:** this becomes the first clean production-shaped Gate-C candidate for exact layer/color-window spatial semantics on top of PR #16, without claiming full H-COMP arithmetic, Main/Sub provenance, fixed-color correctness or CGRAM epochs. **If red:** classify compile/layout/delay-slot/smoke cause before changing semantics.
+- **NEXT after generic closes:** attach/rebase the already-validated window/color host oracles onto this exact master-based SHA (tooling-only), then add the separately validated raster-sensitive section-latency repair as its own controlled batch rather than importing the cumulative experimental lineage wholesale.
+
 ### AUDITED — helper proof is experimental-lineage evidence, not a merge-ready master delta (2026-09-26 UTC)
 
 - Fresh reconciliation against integrated `master@ad546ab825f2a28405650f9bae2713ac261e67f2` shows proof head `bd2cd5b62118bf8fa948f7de69f6b3785e281f37` is **diverged: 102 commits ahead / 4 behind**, merge-base `8488bbed546b18ff5dbd731beac7bfb94811da76`. The proof inherited the large experimental CGRAM/H-COMP/compositor lineage plus proof infrastructure; it is not a focused production child of current master.

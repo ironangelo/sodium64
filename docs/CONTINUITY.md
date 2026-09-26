@@ -6,6 +6,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### LAB LIMITATION — pinned Mupen debugger cannot dump SP DMEM (2026-09-26 UTC)
+
+- Delay-slot-safe helper-marker head `32cd57acbc0d3ac3df5f4dc194ed08ea80be4f70` compiles successfully in normal and PROFILE builds; the exact-source oracle and binary RSP delay-slot checker pass. Dedicated run **36251886028** reaches the pinned-Mupen capture step, and ordinary RDRAM dumps for texture slots, mailbox and guest state succeed. However `dumpmem 0xA4000F10 1 evidence/helper-marker.bin` produces no file, so capture fails only when requesting SP DMEM. This is a **LAB LIMITATION** of the debugger path, not evidence about helper execution.
+- The attempted DMEM marker method is therefore **SUPERSEDED** for this lab. Do not add an RSP->RDRAM diagnostic DMA merely to rescue it unless no lower-intrusion observable exists. Preferred next proof: use the existing rendered/RDP output as the observable. The diagnostic guest already selects backdrop color math with fixed color; capture both Sodium64 RDRAM framebuffers after the same deterministic stop and compare a backdrop-only region against the bypass/control behavior. This keeps the production RSP path uninstrumented apart from the already-isolated proof branch and tests semantic output rather than an internal marker.
+
+
 ### IN FLIGHT — delay-slot-safe helper marker run2 (2026-09-26 UTC)
 
 - Prior green artifact **10907769012** from exact guest-enabled parent `571aef3522b05da32637c2dcfa7d07007c249ffd` independently fixes the RSP DMEM layout: `hcomp_vec_shr11=A4000F00`, `vec_data=A4000F70`, therefore the existing 0x60-byte reserved padding begins at **A4000F10**. This also exposed a second pre-runtime harness error in run1: `nm` already reports the absolute RSP address, so adding `0xA4000000` again would have produced a bogus dump address. No dynamic result was affected because run1 stopped at assembly.

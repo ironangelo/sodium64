@@ -284,7 +284,7 @@ def prove_fixed_color_sideband() -> int:
     return cases
 
 
-def prove_source_boundary_contract() -> None:
+def prove_source_boundary_contract() -> str:
     ppu = (ROOT / "src/ppu.S").read_text()
 
     # The L0 design deliberately starts from the known current gap: nonzero
@@ -315,13 +315,22 @@ def prove_source_boundary_contract() -> None:
     if "sh t0, coldata" not in col or "j update_fill" not in col:
         raise AssertionError("raw fixed-color source contract drift")
 
-    # Current clean boot clear starts at FRAMEBUFFER1, above the proposed epoch
-    # arena. A future producer MUST extend this low-water mark to BASE_Q1 before
-    # the first snapshot can be considered initialized.
+    # The same L0 proof is reused before and after producer reservation.
+    # Baseline clean runtime must still start at FRAMEBUFFER1; once epoch macros
+    # exist, the producer must have extended the fixed-arena clear to BASE_Q1.
     main = (ROOT / "src/main.S").read_text()
-    clear = main[main.index("li t0, FRAMEBUFFER1"):main.index("clear_vram:") + 64]
-    if "li t0, FRAMEBUFFER1" not in clear or "li t1, JIT_BUFFER - 8" not in clear:
-        raise AssertionError("clean boot-clear baseline drift")
+    defs = (ROOT / "src/defines.h").read_text()
+    producer_reserved = "#define HCOMP_CGRAM_BASE_QUEUE1" in defs
+    clear_start = (
+        "li t0, HCOMP_CGRAM_BASE_QUEUE1"
+        if producer_reserved
+        else "li t0, FRAMEBUFFER1"
+    )
+    start = main.index(clear_start)
+    clear = main[start:main.index("clear_vram:", start) + 64]
+    if clear_start not in clear or "li t1, JIT_BUFFER - 8" not in clear:
+        raise AssertionError(f"boot-clear low-water drift: expected {clear_start}")
+    return "BASE_Q1" if producer_reserved else "FRAMEBUFFER1"
 
 
 def main() -> int:
@@ -329,7 +338,7 @@ def main() -> int:
     max_commits, event_margin = prove_timing_capacity(event_capacity)
     replay_streams = prove_replay_equivalence()
     fixed_cases = prove_fixed_color_sideband()
-    prove_source_boundary_contract()
+    boot_clear_state = prove_source_boundary_contract()
 
     print("CGRAM_EPOCH_CONTRACT_VALIDATED")
     print(f"ares_pin={ARES_PIN}")
@@ -346,7 +355,7 @@ def main() -> int:
     print("repeated_writes=replay_preserved")
     print("rgb555_bit15=canonicalized")
     print("vblank_writes=fold_into_next_base_snapshot")
-    print("boot_clear_extension_required=BASE_Q1")
+    print(f"boot_clear_state={boot_clear_state}")
     return 0
 
 

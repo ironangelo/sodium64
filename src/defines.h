@@ -206,9 +206,10 @@
 #define MODE7_MASK (LDBLK_BITS + 0x4)
 #define PRIO_CHECKS (MODE7_MASK + 0x4)
 #define WIN_BOUNDS (PRIO_CHECKS + 0x8)
-// OBJ W1 uses explicit inclusive [lower,upper] span pairs. Keep the count out
-// of the byte-coordinate domain so x=255 can never alias a list terminator.
-#define OBJ_WIN_COUNT (WIN_BOUNDS + 0x5)
+// Exact W1/W2 window results use up to three inclusive [lower,upper] spans
+// in E84..E89. Keep the count out of the byte-coordinate domain so x=255
+// remains an ordinary legal endpoint; E8B..E8F stay free before overlay ABI.
+#define WIN_COUNT (WIN_BOUNDS + 0x6)
 // Renderer overlay source pointers live in the audited scratch gap.
 #define OVERLAY_MAIN_SRC 0xE90
 #define OVERLAY_MODE7_SRC 0xE94

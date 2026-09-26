@@ -6,6 +6,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
+### SUPERSEDED / BUG FOUND — first clean typed producer clobbered rsp_frame return register (2026-09-26 UTC)
+
+- Fresh historical-lineage audit found that typed producer head `f0deb5d4aa26f900466b87844737a73ed75b36e6` was ported from old reference `807ddbf...`, which predates historical corrective commit **`05a57fd9cf40673343abc9131bb3fbde9579e959`** (`preserve rsp_frame return across CGRAM marker`).
+- Exact source inspection confirms the first clean port's section-marker RGB555->RGBA5551 conversion used **`t4`**. In current `rsp_frame`, `t4` holds the saved return address immediately before `jal make_section`; `section_init` is reached through that final-section path, so the marker conversion can clobber the saved return. Generic build/Mupen smoke and the prior model oracle did not exercise/guard this calling-contract hazard.
+- Therefore previous `f0deb5d4...` **runtime VALIDATED wording is superseded**. Its representation/capacity/layout evidence remains useful, but it is not a valid runtime candidate. Observation-only dynamic branch `8d794c9caae13bf34de028b77a192ed808a02ad6` is likewise **SUPERSEDED as semantic authority before completion** because it inherits the defective runtime; do not interpret its eventual pass/fail as evidence for the corrected producer.
+- Controlled fix on `phase4/gate-c-cgram-typed-producer-clean`: runtime commit **`478753e22dd22beb0b1e02798875a29d58ea9a42`** replaces the marker's `t4` temporaries with `t1`, matching the historically discovered correction. Tooling-only child **`bd375453ed52680462bedd090a65078feff5f880`** adds an explicit oracle that rejects any `t4` occurrence in the marker block and requires the t1-safe conversion anchors.
+- Runtime delta from `f0deb5...` to `478753e...` is only this register-preservation repair; RSP source remains unchanged. Intermediate dedicated run **36279747709 SUCCESS** on the runtime fix. Final exact-head runs at checkpoint: **Gate C CGRAM Typed Producer Clean 36279770371 IN_PROGRESS**, **Build and Validate 36279770382 PENDING**.
+- **Falsifier / NEXT:** require final exact-head source/model + generic gates green, then recreate the observation-only dynamic proof from `bd375453...`. No RSP consumer implementation until corrected producer bytes are dynamically accepted.
+
+
 ### IN FLIGHT — observation-only dynamic proof of clean typed CGRAM producer (2026-09-26 UTC)
 - Exact observation-only head is now **`phase4/gate-c-cgram-typed-producer-dynamic-proof-clean@8d794c9caae13bf34de028b77a192ed808a02ad6`**; it adds only generator/classifier/workflow files over validated runtime `f0deb5d4...`, with zero new `src/` delta.
 - Exact-head runs: dedicated **Gate C CGRAM Typed Producer Dynamic Proof Clean 36279497455 IN_PROGRESS** and **Build and Validate 36279497420 IN_PROGRESS**.

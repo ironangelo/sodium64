@@ -1,0 +1,30 @@
+name: Gate C CGRAM Epoch Contract Clean
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-cgram-epoch-contract-clean
+    paths:
+      - src/defines.h
+      - src/main.S
+      - src/ppu.S
+      - scripts/test_gate_c_cgram_epoch_contract.py
+      - .github/workflows/gate-c-cgram-epoch-contract-clean.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cgram-epoch-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile host oracle
+        run: python3 -m py_compile scripts/test_gate_c_cgram_epoch_contract.py
+
+      - name: Prove lossless CGRAM epoch contract on clean master lineage
+        run: python3 scripts/test_gate_c_cgram_epoch_contract.py

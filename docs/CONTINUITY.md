@@ -6,6 +6,10 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+- **REGRESSION CHECK / production checker discriminates historical master (2026-09-26 UTC):** independently downloaded integrated master normal artifact **10790558302** and candidate normal artifact **10893978748**; each embeds Mode7 RSP `.text` at `800B9470`, length **0xD98**. Applied the exact candidate checker `is_control` to every adjacent machine-word pair in each embedded image: master reports exactly one hazard, **A4001784 `1000FEFB` -> A4001788 `1000FF09`**; candidate reports **zero**. The candidate CI also checked its linked standalone RSP ELFs in normal and PROFILE. This validates that the new guard detects the actual inherited regression, not merely that the candidate passes a vacuous scan. PR #16 Ares run **36211383599 IN_PROGRESS**; profile build green, ares-smoke building. **NEXT:** interpret ares result and exact PR state before merge.
+
+
+
 - **IN FLIGHT — focused production PR #16 opened (2026-09-26 UTC):** https://github.com/ironangelo/sodium64/pull/16 targets `master@8488bbed546b18ff5dbd731beac7bfb94811da76` from clean candidate `phase4/gate-c-mode7-branch-delay-fix@5d89ecfee6a1ddb0e16fab919efdc913171a82cc`. Scope is only the Mode7 row-exit repair plus normal/PROFILE RSP delay-slot checker (three changed files); exact branch Build/Validate **36207880767 SUCCESS** and binary checks are recorded immediately below. PR/Ares pull_request gate is expected to run; no merge until exact-head PR checks, Ares evidence and mergeability are inspected. **NEXT:** read PR run IDs/results and artifacts, resolve any actual blocker without widening runtime scope, then merge only with base/head guard if verified.
 
 

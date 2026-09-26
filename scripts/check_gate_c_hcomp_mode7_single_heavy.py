@@ -113,7 +113,8 @@ def classify(root:Path)->dict:
     s1=(root/"mode7-texture-slot1.bin").read_bytes()
     mb=(root/"mailbox.bin").read_bytes()
     gs=(root/"guest-state.bin").read_bytes()
-    if any(len(x)!=8 for x in (s0,s1,mb,gs)):
+    hm=(root/"helper-marker.bin").read_bytes()
+    if any(len(x)!=8 for x in (s0,s1,mb,gs)) or len(hm)!=1:
         return {"passed":False,"reason":"evidence size mismatch"}
 
     gm=match(gs,EXPECTED_GUEST)
@@ -164,6 +165,8 @@ def classify(root:Path)->dict:
         "mailbox_normalization":mailbox_mode,
         "mailbox_normalized":mailbox_norm,
         "guest_normalization":gm,
+        "helper_marker_raw":hm.hex(),
+        "helper_color_window_all_observed":hm==bytes((0xFF,)),
     }
 
 def self_test()->None:
@@ -174,6 +177,7 @@ def self_test()->None:
         (p/"guest-state.bin").write_bytes(EXPECTED_GUEST)
         (p/"mode7-texture-slot0.bin").write_bytes(bytes(8))
         (p/"mode7-texture-slot1.bin").write_bytes(SLOT1_SENTINEL)
+        (p/"helper-marker.bin").write_bytes(bytes((0,)))
 
         (p/"mailbox.bin").write_bytes(MAILBOX_SENTINEL)
         r=classify(p)
@@ -183,6 +187,10 @@ def self_test()->None:
         (p/"guest-state.bin").write_bytes(swap32(EXPECTED_GUEST))
         r=classify(p)
         assert r["passed"] and r["classification"]=="MODE7_SINGLE_HEAVY_HCOMP_REACHED"
+        assert not r["helper_color_window_all_observed"]
+        (p/"helper-marker.bin").write_bytes(bytes((0xFF,)))
+        r=classify(p)
+        assert r["passed"] and r["helper_color_window_all_observed"]
 
 def main()->int:
     ap=argparse.ArgumentParser(description=__doc__)

@@ -3,7 +3,7 @@ name: Gate C H-COMP Color Window Delay Proof
 on:
   push:
     branches:
-      - phase4/gate-c-hcomp-color-window-delay-proof
+      - phase4/gate-c-hcomp-stale-s0-proof
     paths:
       - src/rsp_mode7.S
       - src/rsp_main.S
@@ -52,7 +52,15 @@ jobs:
           for path in ("src/rsp_main.S", "src/rsp_mode7.S"):
               base=subprocess.check_output(["git","show",f"{parent}:{path}"],text=True)
               assert base.count(old)==1, path
-              assert Path(path).read_text()==base.replace(old,new), path
+              expected=base.replace(old,new)
+              marker_pad=".byte 0:0x60\n\nvec_data:"
+              marker_pad_new="proof_helper_marker:\n.byte 0:0x60\n\nvec_data:"
+              marker_old="    li t0, 255\n    sb t0, WIN_BOUNDS + 0\n    b color_window_finish\n    nop"
+              marker_new="    li t0, 255\n    sb t0, WIN_BOUNDS + 0\n    b color_window_finish\n    sb t0, proof_helper_marker // Proof-only marker; no layout growth"
+              assert expected.count(marker_pad)==1, path
+              assert expected.count(marker_old)==1, path
+              expected=expected.replace(marker_pad,marker_pad_new).replace(marker_old,marker_new)
+              assert Path(path).read_text()==expected, path
           for flag in range(256):
               shifted=((flag & 0x20)<<26) & 0xffffffff
               assert bool(shifted & 0x80000000)==bool(flag & 0x20)
@@ -76,6 +84,13 @@ jobs:
           wram=$(nm -n build/sodium64.elf | awk '$3 == "wram" { print $1; exit }')
           test -n "$wram"
           echo "GUEST_STATE_ADDR=0x$wram" >> "$GITHUB_ENV"
+          marker_main=$(nm -n build/src/rsp_main.elf | awk '$3 == "proof_helper_marker" { print $1; exit }')
+          marker_mode7=$(nm -n build/src/rsp_mode7.elf | awk '$3 == "proof_helper_marker" { print $1; exit }')
+          test -n "$marker_main"
+          test "$marker_main" = "$marker_mode7"
+          printf -v marker_addr '0x%08X' $((0xA4000000 + 0x$marker_main))
+          echo "RSP_PROOF_MARKER_ADDR=$marker_addr" >> "$GITHUB_ENV"
+          echo "RSP proof marker DMEM address: $marker_addr"
           sha256sum sodium64.z64 build/sodium64.elf             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf             | tee runtime.sha256
 
       - name: Reject RSP control in delay slots
@@ -157,6 +172,8 @@ jobs:
           expect "(dbg)"
           send "dumpmem $env(GUEST_STATE_ADDR) 8 evidence/guest-state.bin\r"
           expect "(dbg)"
+          send "dumpmem $env(RSP_PROOF_MARKER_ADDR) 1 evidence/helper-marker.bin\r"
+          expect "(dbg)"
           send "pc\r"
           expect "(dbg)"
           send "quit\r"
@@ -167,6 +184,7 @@ jobs:
           test "$(stat -c %s evidence/mode7-texture-slot1.bin)" -eq 8
           test "$(stat -c %s evidence/mailbox.bin)" -eq 8
           test "$(stat -c %s evidence/guest-state.bin)" -eq 8
+          test "$(stat -c %s evidence/helper-marker.bin)" -eq 1
 
       - name: Classify single-heavy progression
         shell: bash

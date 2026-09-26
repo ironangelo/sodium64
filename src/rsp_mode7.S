@@ -149,6 +149,7 @@ hcomp_vec_one:     .hword 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001
 hcomp_vec_three:   .hword 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003, 0x0003
 hcomp_vec_shr10:   .hword 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040, 0x0040
 hcomp_vec_shr11:   .hword 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020
+proof_helper_marker:
 .byte 0:0x60
 
 vec_data:
@@ -1335,7 +1336,7 @@ color_window_all:
     li t0, 255
     sb t0, WIN_BOUNDS + 0
     b color_window_finish
-    nop
+    sb t0, proof_helper_marker // Proof-only marker; no layout growth
 
 color_window_none:
     lhu s0, MAIN_COLOR

@@ -844,8 +844,9 @@ finish_tile7:
     blt s0, 256, next_tile7
     add t9, t9, t0
 
-    // Move to the next row, adjusting the VRAM coordinates
-    addi s1, s1, 8
+    // Proof-only: neutralize only the row Y increment while preserving all
+    // subsequent row-coordinate arithmetic and the forced next_layer exit.
+    addi s1, s1, 0
     sll t0, s2, 8
     sub t8, t8, t0
     sll t0, s5, 8

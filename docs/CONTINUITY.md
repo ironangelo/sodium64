@@ -21,6 +21,20 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
+### VALIDATED — clean current-master Gate-C window/color + raster-latency candidate (2026-09-26 UTC)
+
+- Exact authority is **`phase4/gate-c-window-color-port@32339fed76b8a318dc84938baed2d5c1d305722b`**, a four-commit child of **`master@ad546ab825f2a28405650f9bae2713ac261e67f2`** with no merge/cherry-pick of the cumulative experimental lineage.
+- Dedicated **Gate C Window Color Port 36255242304 SUCCESS** on this exact SHA:
+  - pinned-ares base contract: **524,288 layer topology + 1,048,576 color topology cases**;
+  - actual layer runtime: **524,288 event-scan cases**, max3 spans, x255 + reversed-bounds preserved, fixed renderer slot **242 instructions**, common suffix identity and live-register contract preserved;
+  - actual color-window runtime: **1,048,576 cases**, max7 alternating segment ends, x0+x255 + reversed bounds preserved, common helpers/protected-register contract preserved;
+  - raster section latency: adaptive example **4 lines** vs targeted raster-sensitive **1 line**, existing queue capacity **320 sections**.
+- Exact-head **Build and Validate 36255242310 SUCCESS**: normal + PROFILE compile, binary control-in-delay checker and pinned-Mupen/LLE smoke all green. Both RSP variants remain **`.text=0xFC8=4040 B` / 56 B IMEM free**, `.data=0x1000`, and **`control-in-delay=0`**. Normal ROM sha256 **631ad37929cd63ac93210a35278aaf0a2a14f110d25189f1467120c2b6ff0434**.
+- Artifacts: normal **10910596166** digest `sha256:2cb6b2dc726722b6d96cb328c3430a33d44c00b5c976094bfa1cf14e21b2dbe7`; PROFILE **10909524784** digest `sha256:7238f014243f0fd6864081718e849a69a36df038fe7d340b61e90d455b0252c7`; emulator smoke **10910167023** digest `sha256:142047ef0a41b310fe9afddfdd8017e287348429af8723337948e2f813315a39`.
+- **VALIDATED scope:** exact W1/W2 inversion/enable + OR/AND/XOR/XNOR spatial masking for regular BG/OBJ; exact color-window spatial segmentation feeding the existing backdrop approximation; delay-slot-safe conditional call; next-line section capture for BGMODE/window/screen/color controls plus force-blank/brightness/fill-color changes; PR #16 Mode7 row-exit repair preserved.
+- **NON-CLAIMS / OPEN:** full SNES color arithmetic is still approximate; Main/Sub winner provenance is not yet independently represented; raw fixed-color semantics are incomplete; **CGRAM1..255 mid-frame historical epochs are still lost** because current section payload carries no palette epoch/snapshot. Do not call Gate C closed and do not use this result alone as the SMW representative-game trigger until the next compositor information-loss blocker is addressed or bounded.
+- **NEXT GATE DRIVER:** revisit the already-designed CGRAM epoch contract from the experimental audit lineage, but port/re-prove it against this clean current-master candidate before any runtime allocation/write path. First question is whether the event-log + base-snapshot representation remains lossless, non-overlapping, capacity-safe and compatible with current clean memory layout; only then implement producer state.
+
 ### REJECTED TOOLING ERROR — first clean raster oracle false-positive (2026-09-26 UTC)
 
 - Runtime head **`2f401dd68c5171f307715bf9465567c2d11aa347`** kept all three prior semantic gates green in dedicated run **36255183045** (base W1/W2, layer runtime, color-window runtime) and failed only the new raster source oracle.

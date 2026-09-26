@@ -61,6 +61,15 @@ jobs:
               assert expected.count(marker_old)==1, path
               expected=expected.replace(marker_pad,marker_pad_new).replace(marker_old,marker_new)
               assert Path(path).read_text()==expected, path
+          defs=Path("src/defines.h").read_text()
+          hcomp=Path("src/rsp_hcomp.S").read_text()
+          mode7=Path("src/rsp_mode7.S").read_text()
+          assert "#define HCOMP_OVERLAY_PROOF_MODE7 0xF10" in defs
+          assert "#define HCOMP_OVERLAY_PROOF_HCOMP 0xF11" in defs
+          assert "sb zero, HCOMP_OVERLAY_PROOF_MODE7" in mode7
+          assert "li a0, HCOMP_OVERLAY_PROOF_MODE7" in hcomp
+          assert "li a1, 0xA00F0000" in hcomp
+          assert "li a2, 0x7" in hcomp
           for flag in range(256):
               shifted=((flag & 0x20)<<26) & 0xffffffff
               assert bool(shifted & 0x80000000)==bool(flag & 0x20)
@@ -89,9 +98,7 @@ jobs:
           test -n "$marker_main"
           test "$marker_main" = "$marker_mode7"
           test "$(printf '%s' "$marker_main" | tr '[:upper:]' '[:lower:]')" = "a4000f10"
-          marker_addr="0x$marker_main"
-          echo "RSP_PROOF_MARKER_ADDR=$marker_addr" >> "$GITHUB_ENV"
-          echo "RSP proof marker DMEM address: $marker_addr"
+          echo "RSP helper marker linked at 0x$marker_main; H-COMP publishes F10..F17 via existing mailbox DMA"
           sha256sum sodium64.z64 build/sodium64.elf             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf             | tee runtime.sha256
 
       - name: Reject RSP control in delay slots
@@ -173,8 +180,6 @@ jobs:
           expect "(dbg)"
           send "dumpmem $env(GUEST_STATE_ADDR) 8 evidence/guest-state.bin\r"
           expect "(dbg)"
-          send "dumpmem $env(RSP_PROOF_MARKER_ADDR) 1 evidence/helper-marker.bin\r"
-          expect "(dbg)"
           send "pc\r"
           expect "(dbg)"
           send "quit\r"
@@ -185,7 +190,6 @@ jobs:
           test "$(stat -c %s evidence/mode7-texture-slot1.bin)" -eq 8
           test "$(stat -c %s evidence/mailbox.bin)" -eq 8
           test "$(stat -c %s evidence/guest-state.bin)" -eq 8
-          test "$(stat -c %s evidence/helper-marker.bin)" -eq 1
 
       - name: Classify single-heavy progression
         shell: bash
@@ -198,7 +202,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gate-c-mode7-branch-delay-fix-v2
+          name: gate-c-hcomp-helper-mailbox-proof
           retention-days: 30
           path: |
             evidence/

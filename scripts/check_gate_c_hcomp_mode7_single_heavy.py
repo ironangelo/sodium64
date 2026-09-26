@@ -25,8 +25,9 @@ def match(raw:bytes,target:bytes):
     return None
 
 def marker(raw:bytes):
+    expected_tail=bytes(6)
     for mode,data in (("identity",raw),("word_swap32",swap32(raw))):
-        if len(data)==8 and data[:2]==bytes((0x00,0x51)) and data!=MAILBOX_SENTINEL:
+        if len(data)==8 and data[1]==0x51 and data[0] in (0x00,0xFF) and data[2:]==expected_tail:
             return mode,data
     return None
 
@@ -113,8 +114,7 @@ def classify(root:Path)->dict:
     s1=(root/"mode7-texture-slot1.bin").read_bytes()
     mb=(root/"mailbox.bin").read_bytes()
     gs=(root/"guest-state.bin").read_bytes()
-    hm=(root/"helper-marker.bin").read_bytes()
-    if any(len(x)!=8 for x in (s0,s1,mb,gs)) or len(hm)!=1:
+    if any(len(x)!=8 for x in (s0,s1,mb,gs)):
         return {"passed":False,"reason":"evidence size mismatch"}
 
     gm=match(gs,EXPECTED_GUEST)
@@ -141,13 +141,26 @@ def classify(root:Path)->dict:
     mm=match(mb,MAILBOX_SENTINEL)
     mk=marker(mb)
     if mk is not None:
-        classification="MODE7_SINGLE_HEAVY_HCOMP_REACHED"
-        meaning="one heavy Mode7 tile completed far enough for frame-end H-COMP to execute; prior non-progression requires accumulated/repeated heavy work under this pinned-Mupen lab"
         mailbox_mode=mk[0]; mailbox_norm=mk[1].hex()
+        helper_observed=mk[1][0]==0xFF
+        if not helper_observed:
+            return {
+                "passed":False,
+                "reason":"H-COMP reached but color-window helper marker absent",
+                "mailbox_normalization":mailbox_mode,
+                "mailbox_normalized":mailbox_norm,
+                "model":model,
+            }
+        classification="MODE7_SINGLE_HEAVY_HCOMP_HELPER_REACHED"
+        meaning="one heavy Mode7 tile reached H-COMP and the existing F10..F17 mailbox transport directly observed color_window_all helper execution"
     elif mm is not None:
-        classification="MODE7_SINGLE_HEAVY_HCOMP_NOT_REACHED"
-        meaning="one heavy tile texture DMA occurred but H-COMP was not observed; repeated heavy submissions alone are not required to reproduce the pinned-Mupen non-progression"
-        mailbox_mode=mm; mailbox_norm=MAILBOX_SENTINEL.hex()
+        return {
+            "passed":False,
+            "reason":"H-COMP/helper not reached",
+            "mailbox_normalization":mm,
+            "mailbox_normalized":MAILBOX_SENTINEL.hex(),
+            "model":model,
+        }
     else:
         return {"passed":False,"reason":"mailbox invalid","mailbox_raw":mb.hex(),"model":model}
 
@@ -165,8 +178,8 @@ def classify(root:Path)->dict:
         "mailbox_normalization":mailbox_mode,
         "mailbox_normalized":mailbox_norm,
         "guest_normalization":gm,
-        "helper_marker_raw":hm.hex(),
-        "helper_color_window_all_observed":hm==bytes((0xFF,)),
+        "helper_color_window_all_observed":True,
+        "helper_marker_transport":"H-COMP existing DMA of DMEM F10..F17 to RDRAM 0xA00F0000",
     }
 
 def self_test()->None:
@@ -177,20 +190,20 @@ def self_test()->None:
         (p/"guest-state.bin").write_bytes(EXPECTED_GUEST)
         (p/"mode7-texture-slot0.bin").write_bytes(bytes(8))
         (p/"mode7-texture-slot1.bin").write_bytes(SLOT1_SENTINEL)
-        (p/"helper-marker.bin").write_bytes(bytes((0,)))
 
         (p/"mailbox.bin").write_bytes(MAILBOX_SENTINEL)
         r=classify(p)
-        assert r["passed"] and r["classification"]=="MODE7_SINGLE_HEAVY_HCOMP_NOT_REACHED"
+        assert not r["passed"] and r["reason"]=="H-COMP/helper not reached"
 
         (p/"mailbox.bin").write_bytes(swap32(bytes((0x00,0x51,0,0,0,0,0,0))))
         (p/"guest-state.bin").write_bytes(swap32(EXPECTED_GUEST))
         r=classify(p)
-        assert r["passed"] and r["classification"]=="MODE7_SINGLE_HEAVY_HCOMP_REACHED"
-        assert not r["helper_color_window_all_observed"]
-        (p/"helper-marker.bin").write_bytes(bytes((0xFF,)))
+        assert not r["passed"] and r["reason"]=="H-COMP reached but color-window helper marker absent"
+
+        (p/"mailbox.bin").write_bytes(swap32(bytes((0xFF,0x51,0,0,0,0,0,0))))
         r=classify(p)
-        assert r["passed"] and r["helper_color_window_all_observed"]
+        assert r["passed"] and r["classification"]=="MODE7_SINGLE_HEAVY_HCOMP_HELPER_REACHED"
+        assert r["helper_color_window_all_observed"]
 
 def main()->int:
     ap=argparse.ArgumentParser(description=__doc__)

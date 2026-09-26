@@ -6,6 +6,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### H-COMP helper-observability investigation (2026-09-26 UTC)
+
+- **HYPOTHESIS / MEASUREMENT PROOF DESIGN:** current proof branch `phase4/gate-c-hcomp-color-window-delay-proof` reaches the H-COMP workload with CGADSUB bit5 set, but that progression result does not establish that `calc_color_window_segments` executed because the preceding `beqz s0,fill_main` can bypass the conditional link. The helper already mutates RSP-visible color-window state, notably `WIN_BOUNDS` plus Main/Sub fill colors. A lower-intrusion next proof may configure a deliberately nontrivial color-window case and capture that DMEM state after execution, rather than add an RDRAM counter or change production control flow.
+- **UNKNOWN / must verify before implementation:** whether the selected helper outputs remain unmodified long enough to capture, whether a safe discriminating initial/final pattern exists, and whether pinned Mupen's debugger can dump the relevant RSP DMEM address reliably. If any of these fail, fall back to a proof-only marker with explicit layout/binary guards. No production or Gate-C claim yet.
+
+
 ### Follow-up result: backdrop-math guest (2026-09-26 UTC)
 
 - The guest-only commit `571aef3522b05da32637c2dcfa7d07007c249ffd` completed dedicated [run 36249349075](https://github.com/ironangelo/sodium64/actions/runs/36249349075) successfully. Artifact [10907769012](https://github.com/ironangelo/sodium64/actions/runs/36249349075/artifacts/10907769012), digest `sha256:a93402fb5cdffab939fcf7545820d7d91329188c77274dccd8a960d93a5172ca`, confirms the generated guest hash `8d3352a1da3137a364ef82314e50378b5c2fe832502f985620c1f450ad1d578c`, runtime ROM/embedded ELF hashes unchanged from the earlier run, checker PASS on both RSP variants and `MODE7_SINGLE_HEAVY_HCOMP_REACHED` with mailbox `0051000000000000`; slot0 changed, slot1 seeded unchanged. Generic [Build and Validate run 36249349035](https://github.com/ironangelo/sodium64/actions/runs/36249349035) completed successfully: normal build, PROFILE build, and emulator smoke all green (release job skipped by design).

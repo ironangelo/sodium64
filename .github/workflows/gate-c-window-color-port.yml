@@ -3,6 +3,7 @@ name: Gate C Window Color Port
 on:
   push:
     branches:
+      - master
       - phase4/gate-c-window-color-port
     paths:
       - src/defines.h

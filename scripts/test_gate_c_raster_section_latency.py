@@ -132,8 +132,13 @@ def prove_source_scope() -> None:
     size = int(section_size.group(1), 0)
     capacity_bytes = int(queue.group(1), 0)
     capacity = capacity_bytes // size
-    if capacity < 262:
-        raise AssertionError(f"section queue cannot hold one boundary per NTSC line: {capacity}")
+    # Conservative PAL bound: 313 scanlines plus initial/final records.
+    # 320 entries therefore still permit one targeted boundary per line.
+    required = 315
+    if capacity < required:
+        raise AssertionError(
+            f"section queue cannot hold conservative PAL per-line boundaries: {capacity} < {required}"
+        )
 
 
 def main() -> int:
@@ -143,6 +148,7 @@ def main() -> int:
     print("adaptive_example_lines=4")
     print("raster_sensitive_lines=1")
     print("section_capacity=320")
+    print("conservative_pal_required=315")
     print("scope=targeted_not_global")
     return 0
 

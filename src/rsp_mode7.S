@@ -844,8 +844,8 @@ finish_tile7:
     blt s0, 256, next_tile7
     add t9, t9, t0
 
-    // Move to the next row, adjusting the VRAM coordinates
-    addi s1, s1, 8
+    // Proof only: all 15 OOB tiles were visited; bypass the row tail.
+    b next_layer
     sll t0, s2, 8
     sub t8, t8, t0
     sll t0, s5, 8

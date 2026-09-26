@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### MERGED-CONSUMED / POST-MERGE VALIDATION IN FLIGHT — PR #17 (2026-09-26 UTC)
+
+- **PR #17 merged successfully** with expected head `76f5b8b41b1796453ff684300930880c731318c3`. New integrated truth is **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**.
+- Merge delta from previous master is exactly the audited nine-file Gate-C window/color/raster set: five regression/workflow files plus `src/defines.h`, `src/ppu.S`, `src/rsp_main.S`, and `src/rsp_mode7.S`.
+- Master push automatically dispatched four exact-merge workflows: **Build and Validate 36277317135**, **Gate C Window Color Port 36277317144**, **Ares Profile Validation 36277317095**, and **APU Cycle And Span Proof 36277317094**.
+- **DECISION:** stage is not yet marked fully integrated until these master-sha workflows close. No new runtime branch should be based on an earlier pre-merge SHA; subsequent Gate-C work must rebase/port from `master@70d8d8b...` after post-merge validation.
+
+
+
 ### VALIDATED / READY TO MERGE — PR #17 final exact head (2026-09-26 UTC)
 
 - Final PR #17 head **`phase4/gate-c-window-color-port@76f5b8b41b1796453ff684300930880c731318c3`** is runtime-identical to validated `32339fed...`; only persistent-workflow trigger + PAL-capacity oracle hardening differ.

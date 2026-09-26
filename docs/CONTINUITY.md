@@ -21,6 +21,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Gate-C closure criterion remains system-level:** representative ordinary SNES software must progress correctly at native cadence with no major visual/audio/gameplay regression and no manual per-game modes; known remaining compromises must be fixed or explicitly characterized with evidence/severity.
 
 
+### IN FLIGHT — clean raster-sensitive section-latency port (2026-09-26 UTC)
+
+- Branch advanced to **`phase4/gate-c-window-color-port@2f401dd68c5171f307715bf9465567c2d11aa347`** only after exact-head `7abd196f...` closed both dedicated semantic run **36254991729 SUCCESS** and same-SHA **Build and Validate 36254991648 SUCCESS**.
+- New runtime variable is only **`src/ppu.S` raster-section latency** plus its host oracle/workflow wiring. Of the historical validated raster repair, **15/16 hunks applied exactly** to the clean current-master source. The one intentionally excluded hunk depended on experimental H-COMP brightness metadata.
+- Clean replacement for that excluded brightness hunk: compare the current master brightness coefficient; only on a real coefficient change store it and write `0x0100` to `sect_status`, forcing next-line section capture. It explicitly does **not** pack brightness into `STAT_FLAGS` or import any H-COMP metadata contract.
+- Preserved validated scope: BGMODE; W12SEL/W34SEL/WOBJSEL; WBGLOG/WOBJLOG; TM/TS/TMW/TSW; CGWSEL/CGADSUB; force-blank/brightness/fill-color changes become next-line raster-sensitive boundaries. General scroll/Mode7 transform state stays on adaptive precision. Nonzero CGRAM1..255 historical epochs remain **OPEN / NON-CLAIM**.
+- Exact-head runs dispatched: combined **Gate C Window Color Port 36255183045 QUEUED** (base W1/W2 + layer + color-window + raster-latency oracles) and **Build and Validate 36255183067 QUEUED**. **Falsifier:** any raster oracle failure, RSP semantic regression, control-in-delay, build/layout drift or smoke failure blocks this port.
+
 ### MEASUREMENT PROOF PASSED — exhaustive semantic oracle on clean window/color port (2026-09-26 UTC)
 
 - Tooling-only child **`phase4/gate-c-window-color-port@7abd196f7503701db1836e69fe52675a22886a36`** leaves runtime source byte-identical to `0fa106589...` and adds a clean-layout version of the established W1/W2 reference contract plus layer/color runtime oracles. Dedicated **Gate C Window Color Port 36254991729 SUCCESS**.

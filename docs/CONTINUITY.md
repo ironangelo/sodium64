@@ -6,6 +6,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+### LAB LIMITATION — dummy RDP leaves framebuffer RDRAM untouched (2026-09-26 UTC)
+
+- Clean framebuffer baseline `phase4/gate-c-hcomp-stale-s0-framebuffer-proof@a90028fdecbca5cd1155adae96904dc931d2d03d`, dedicated run **36252205709**, is **VALIDATED as a progression baseline**: exact-source/delay-slot/build/capture/classifier all pass, one-heavy model remains `heavy_tiles=[0]`, and H-COMP reaches its mailbox marker. Artifact **10909486676**, digest `sha256:eeae833268f10626ffd3a02fa135ae4c038ca06038a0d4cbe8f5b9e2368243d4`.
+- Both captured 280x240x16bpp RDRAM framebuffer allocations are all-zero: each is 134400 bytes, 67200 words of `0000`, SHA-256 `ac8f5613c4b176d380009fa1306c49a027644dba38b9703ed102634c60f8d5ff`. Because this pinned lab runs Mupen with `--gfx dummy`, RDP draw commands are not rasterized into RDRAM. Therefore framebuffer content is **REJECTED as a color-math oracle** here; it does not mean Sodium64 rendered black.
+- **NEXT / lower-intrusion fallback:** reuse the already-existing H-COMP RDRAM mailbox DMA as transport for a helper-observation bit. The main/Mode7 RSP can set one reserved-DMEM byte on helper entry; H-COMP, running later on the same RSP DMEM, can fold that byte into its existing mailbox payload before the already-existing DMA write. This avoids debugger SP-DMEM access and avoids adding a new diagnostic DMA. Audit the mailbox formation/register contract before implementing; keep proof isolated and binary/layout guarded.
+
+
 ### IN FLIGHT — RDRAM framebuffer stale-s0 baseline (2026-09-26 UTC)
 
 - Clean proof branch `phase4/gate-c-hcomp-stale-s0-framebuffer-proof@a90028fdecbca5cd1155adae96904dc931d2d03d` restarts from exact guest-enabled parent `571aef3522b05da32637c2dcfa7d07007c249ffd`; it carries **no SP-DMEM marker instrumentation**. The guest's single heavy Mode7 tile is changed only from fully opaque color-1 rows to half-opaque/half-transparent rows (`F0/00` 2bpp), preserving the one-heavy-tile model while deliberately exposing backdrop pixels. PPU registers remain `CGWSEL=0`, `CGADSUB=0x20`, `COLDATA=0xFF`.

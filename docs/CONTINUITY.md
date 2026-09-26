@@ -6,6 +6,10 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-25 UTC)
 
+- **PR #16 ARES GATE VALIDATED / merge pending (2026-09-26 UTC):** exact PR head `5d89ecfee6a1ddb0e16fab919efdc913171a82cc` against base `8488bbed546b18ff5dbd731beac7bfb94811da76`; `Ares Profile Validation` **36211383599 SUCCESS** with `profile-build` and `ares-smoke` green. Artifacts: profile build **10896171111**, digest **sha256:99b6c8546c200aed97f154a3b8a7212608c082720ef1fc71458c8da52fcf2aff**; matrix **10895973176**, digest **sha256:530475487a17d487c5788f92466c612062dca0f9483cc9410f7977c1ef933559**. Matrix samples >=800 across six recompiler workloads, with `recompiler-gameplay-balanced` at 60/60 in the last complete virtual VI window; DMA-VRAM synthetic remains 17/60, a known diagnostic stress and not a new claim about hardware. This Ares gate is emulation/lab validation, not real-N64 authority or dedicated visual Mode7 output proof. PR state read `mergeable=true`, `mergeable_state=clean`, exact head/base unchanged. Production branch normal+PROFILE RSP guard and first-hand negative-vs-master check are recorded above. **NEXT:** merge PR #16 using expected-head SHA guard, verify master and post-merge CI, then record merged SHA/remaining Gate-C work.
+
+
+
 - **REGRESSION CHECK / production checker discriminates historical master (2026-09-26 UTC):** independently downloaded integrated master normal artifact **10790558302** and candidate normal artifact **10893978748**; each embeds Mode7 RSP `.text` at `800B9470`, length **0xD98**. Applied the exact candidate checker `is_control` to every adjacent machine-word pair in each embedded image: master reports exactly one hazard, **A4001784 `1000FEFB` -> A4001788 `1000FF09`**; candidate reports **zero**. The candidate CI also checked its linked standalone RSP ELFs in normal and PROFILE. This validates that the new guard detects the actual inherited regression, not merely that the candidate passes a vacuous scan. PR #16 Ares run **36211383599 IN_PROGRESS**; profile build green, ares-smoke building. **NEXT:** interpret ares result and exact PR state before merge.
 
 

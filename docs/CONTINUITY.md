@@ -98,6 +98,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - For the first SMW discriminator, derive/verify the guest SRAM size from the unmodified ROM header/wrapper and reserve only the safe upper tail for a self-describing diagnostic record. The record can set `sram_dirty` and reuse the existing once-per-second PI SRAM flush; no guest ROM patch or game save-point support is required.
 - **OPEN DESIGN DETAIL:** define the smallest question-driven payload and capture trigger only after PR #17 integration. Preserve guest SRAM bytes untouched and include magic/version/runtime SHA + wrapped-ROM hash/identity so returned saves cannot be misattributed.
 
+### VALIDATED — PR #17 current-head Ares gate closed (2026-09-26 UTC)
+
+- PR-specific **Ares Profile Validation 36266030441 SUCCESS** on exact runtime head **`32339fed76b8a318dc84938baed2d5c1d305722b`**. Both `profile-build` and `ares-smoke` completed; host tests, PROFILE build, pinned ares, interpreter controls, CPU-JIT+RSP-interpreter workload matrix, frame-budget reports and artifact upload all passed.
+- Artifacts: **sodium64-ares-profile-build 10914276416**, digest `sha256:075674f5dad58d844607833c01125fa8590927c14ad41f20c1e7a80fd5033ef0`; **sodium64-ares-profile-matrix 10913882463**, digest `sha256:81218c06e047ae7143ee1ce906cfc8e7466b97286aa5b5a311925e8bb56a6269`.
+- Road-valid controls observed throughout the matrix: **APU clock 21**, **audio_set 4**, phase branch uses frameskip0/precision8. CPU-JIT + RSP-interpreter virtual frame-budget report: idle60/60; cpu-alu60/60; wram59/60; ppu-registers61/60; dma-vram17/60; gameplay-balanced60/60. Treat these as workload-specific **virtual-N64 lab signals**, not real-N64 FPS; dma-vram remains the expected heavy synthetic stress and does not generalize to commercial software.
+- Sample density was adequate: interpreter-idle643; interpreter-gameplay792; CPU-JIT/RSP-interpreter idle1155, cpu-alu834, wram1381, ppu-registers908, dma-vram1077, gameplay-balanced920 valid samples. No guest-exception/capture failure surfaced.
+- **DECISION:** lower gates L0-L3 are closed for the production runtime at32339fed. It is now authorized to publish the already-prepared tooling-only child `76f5b8b...` that makes the new semantic regression suite persistent on master and hardens PAL capacity. Runtime source must remain byte-identical. Final merge authority will be the rerun gates on that tooling-only exact head.
+
 ### PREPARED / NOT PUBLISHED — persistent Gate-C regression trigger hardening (2026-09-26 UTC)
 
 - Prepared commit object **`76f5b8b41b1796453ff684300930880c731318c3`** with parent PR#17 head `32339fed...`, but **did not move any branch/ref** while Ares run36266030441 is active. This preserves the current PR-specific evidence and avoids concurrency cancellation.

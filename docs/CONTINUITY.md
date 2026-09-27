@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### VALIDATED L0 — clean Main/Sub provenance placement/routing contract CLOSED (2026-09-27 UTC)
+
+- Exact final authority **`phase4/gate-c-hcomp-main-sub-contract-clean@c66ea7a225bb3ede6cc7b995e860176a53a88342`** is host/workflow-only over first-hand validated clean bridge head `5d714c2452091dd0a8ab8613285ba007da36ccc2`; compare is **4 commits / 2 added files / zero runtime-source delta**.
+- Dedicated **`36337358885 SUCCESS`** and exact-head generic **Build and Validate `36337358891 SUCCESS`** are both closed. Generic normal build artifact **`10938171354`** digest `sha256:8b4b39eccf5c73c1b8df38217ea7fac5369a4bb6fe54f641e56860903789d0e6`; PROFILE **`10937926756`** digest `sha256:2d3ff3d11500130eff2e332022f087943e57c4cd5e430281f9fc19a42fedfa67`; emulator smoke **`10937906924`** digest `sha256:883d5361e81565eb5117911d4d39a505f832a106bd13aef5d3d2741678e520e5`.
+- **VALIDATED L0 claim:** on the exact current clean runtime, semantic screen routing can be reintroduced as **TS first / TM second**, independent of manual `MASK_SEL`, while preserving shared layers in both masks and consuming **one fewer resident instruction** than the current workaround. The existing H-COMP fixed slot has measured capacity for a 40-B mid-frame screen-switch helper at **0x1760** without disturbing frame-end E1f or the fixed Mode7 entry.
+- Current PR #18 RDRAM map has a validated non-overlap placement for the controlled 8-line provenance surfaces: Sub metadata `A00DE000`, Main metadata `A00E0000`, Sub color `A00E4000`, each 0x1180 bytes. Old E2g-B Z locations remain explicitly superseded because they collide with Q1.
+- The unchanged runtime remained byte-identical to validated bridge ROM SHA-256 **`71dd6477f50fe6a0ddd55c6508ea62141c15d00147192ef07db37f79ae4cf0e0`**; normal/PROFILE build and pinned Mupen/LLE smoke are all green.
+- The two earlier dedicated failures **`36337123795`** and **`36337215175`** are retained as **HYGIENE-BLOCKER / SUPERSEDED** host-parser failures; neither executed an architecture assertion. The robust-label final oracle supersedes them.
+- **NEXT GATE DRIVER / resume action:** start a fresh executable child from this validated L0 boundary. First prove only a controlled **8-line semantic TS→TM dual-color ownership** path with opaque Sub BG and a real Main BG whose CGADSUB eligibility is exercised disabled vs enabled. Use the H-COMP screen-switch micro-routine so resident IMEM does not grow. Do **not** wire E2g-B metadata, OBJ/backdrop/window/brightness, or expand beyond the bounded band in the same first executable batch. Before implementation, explicitly prove the 8-line lifetime/boundary so the compact Sub target cannot receive later-section writes.
+
+
 ### MEASUREMENT / ARCHITECTURE PROOF PASSED — clean Main/Sub provenance L0 dedicated gate (2026-09-27 UTC)
 
 - Exact host/workflow head **`phase4/gate-c-hcomp-main-sub-contract-clean@c66ea7a225bb3ede6cc7b995e860176a53a88342`** keeps the validated bridge runtime unchanged. Dedicated **Gate C H-COMP Main Sub Contract Clean `36337358885 SUCCESS`**; artifact **`10937985981`**, digest **`sha256:034ab52b9a93a52c92b7f9a2a74080d1dbeaa0f0d8a63732cd2b9c3d9e95a768`**.

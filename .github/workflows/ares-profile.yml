@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - master
+      - phase4/gate-c-cgram-paced-base
+      - phase4/gate-c-cgram-paced-pr18
   workflow_dispatch:
 
 concurrency:
@@ -146,7 +148,7 @@ jobs:
             cd workloads/ares
             python3 rom-converter.py </dev/null
           )
-          for workload in idle cpu-alu wram ppu-registers dma-vram gameplay-balanced; do
+          for workload in idle cpu-alu wram ppu-registers dma-vram gameplay-balanced cgram-paced-4 cgram-paced-32 cgram-paced-128; do
             test -f "workloads/ares/out/profile-$workload.z64"
           done
 
@@ -355,7 +357,7 @@ jobs:
           # R4300-JIT + RSP-interpreter is the validated high-density lab mode.
           # 800 samples spans enough virtual Count time to include >= one 60-VI window.
           port=9130
-          for workload in idle cpu-alu wram ppu-registers dma-vram gameplay-balanced; do
+          for workload in idle cpu-alu wram ppu-registers dma-vram gameplay-balanced cgram-paced-4 cgram-paced-32 cgram-paced-128; do
             run_profile \
               "recompiler-$workload" \
               "workloads/ares/out/profile-$workload.z64" \
@@ -374,6 +376,9 @@ jobs:
             profiles/recompiler-ppu-registers.json \
             profiles/recompiler-dma-vram.json \
             profiles/recompiler-gameplay-balanced.json \
+            profiles/recompiler-cgram-paced-4.json \
+            profiles/recompiler-cgram-paced-32.json \
+            profiles/recompiler-cgram-paced-128.json \
             --output profiles/workload-matrix.md
 
           python3 scripts/frame_budget_report.py \
@@ -383,6 +388,9 @@ jobs:
             profiles/recompiler-ppu-registers-state.json \
             profiles/recompiler-dma-vram-state.json \
             profiles/recompiler-gameplay-balanced-state.json \
+            profiles/recompiler-cgram-paced-4-state.json \
+            profiles/recompiler-cgram-paced-32-state.json \
+            profiles/recompiler-cgram-paced-128-state.json \
             --target-fps 60 \
             --output profiles/frame-budget.md
 

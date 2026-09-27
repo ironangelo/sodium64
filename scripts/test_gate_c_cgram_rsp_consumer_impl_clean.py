@@ -69,6 +69,55 @@ def prove_defines() -> None:
         raise AssertionError("consumer state escapes retired DMEM interval")
 
 
+def prove_inherited_typed_producer() -> None:
+    ppu = (ROOT / "src/ppu.S").read_text()
+
+    begin = extract(ppu, "hcomp_cgram_begin_frame:", ".align 5\nupdate_frame:")
+    for required in (
+        "lw t5, hcomp_raw_pal_queues(t0)",
+        "sh zero, hcomp_cgram_event_count",
+        "sb zero, hcomp_cgram_event_overflow",
+        "sw t6, 0(t5)",
+        "sw t6, 4(t5)",
+    ):
+        if required not in begin:
+            raise AssertionError(f"inherited typed producer base/raw init drift: {required!r}")
+
+    section = extract(ppu, "section_init:", ".align 5\nhcomp_cgram_begin_frame:")
+    marker = extract(section, "// Append one typed section marker", "hcomp_cgram_marker_overflow:")
+    if "t4" in marker:
+        raise AssertionError("inherited typed producer reintroduced rsp_frame t4 clobber")
+    for required in (
+        "andi t1, t2, 0x3E0",
+        "sll t1, t1, 1",
+        "or t3, t3, t1",
+        "andi t1, t2, 0x7C00",
+        "srl t1, t1, 9",
+        "ori t3, t3, 0x8000",
+    ):
+        if required not in marker:
+            raise AssertionError(f"inherited t1-safe marker drift: {required!r}")
+
+    cg = extract(ppu, "write_cgdata:", ".align 5\nwrite_w12sel:")
+    for required in (
+        "li t3, HCOMP_CGRAM_EVENT_CAPACITY",
+        "bge t2, t3, cg_epoch_overflow",
+        "sll t4, t0, 2",
+        "sw t3, 0(t4)",
+        "sh t2, hcomp_cgram_event_count",
+    ):
+        if required not in cg:
+            raise AssertionError(f"inherited typed color-event drift: {required!r}")
+
+    frame = extract(ppu, "rsp_frame:", "ignore_frame:")
+    for required in (
+        "lw t0, hcomp_cgram_event_queues(t5)",
+        "sw t0, DMEM(HCOMP_CGRAM_EVENT_CURSOR)",
+    ):
+        if required not in frame:
+            raise AssertionError(f"inherited EA0 handoff drift: {required!r}")
+
+
 def prove_main_publication() -> None:
     src = (ROOT / "src/main.S").read_text()
     block = extract(
@@ -225,6 +274,7 @@ def main() -> int:
 
     prove_model()
     prove_defines()
+    prove_inherited_typed_producer()
     prove_main_publication()
     for name in ("rsp_main.S", "rsp_mode7.S"):
         prove_rsp_source(ROOT / "src" / name)

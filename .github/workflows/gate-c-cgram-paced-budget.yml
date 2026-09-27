@@ -1,0 +1,261 @@
+name: Gate C CGRAM Paced Budget
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-cgram-paced-base
+      - phase4/gate-c-cgram-paced-pr18
+    paths:
+      - scripts/make_profile_workloads.py
+      - scripts/test_profile_workloads.py
+      - .github/workflows/ares-profile.yml
+      - .github/workflows/gate-c-cgram-paced-budget.yml
+  workflow_dispatch:
+
+concurrency:
+  group: sodium64-cgram-paced-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  profile-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - name: Install libdragon
+        run: npm install -g libdragon
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+      - name: Run host profiling tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+      - name: Compile profiling build
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon init
+          libdragon make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+      - name: Upload profiling artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-cgram-paced-profile-build
+          retention-days: 14
+          path: |
+            sodium64.z64
+            rom-converter.py
+            build/sodium64.elf
+            build/*.map
+            profile-build.log
+
+  paced-budget:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: profile-build
+    strategy:
+      fail-fast: false
+      matrix:
+        workload:
+          - cgram-paced-32
+          - cgram-paced-128
+
+    steps:
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Download profiling build
+        uses: actions/download-artifact@v4
+        with:
+          name: sodium64-cgram-paced-profile-build
+          path: artifacts/profile
+
+      - name: Install ares build and virtual-display dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev xauth xvfb
+
+      - name: Restore ares compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ares-n64-ccache-${{ runner.os }}-${{ runner.arch }}-17813a3ccda21ab9bd45f09bfc2f91196dbf50ff-rsp-interpreter-v1
+
+      - name: Build pinned N64-only ares
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert old in s
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Generate one bounded active-CGRAM workload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workloads/ares
+          cp artifacts/profile/sodium64.z64 workloads/ares/sodium64.z64
+          cp artifacts/profile/rom-converter.py workloads/ares/rom-converter.py
+          python3 scripts/make_profile_workloads.py workloads/ares --only "${{ matrix.workload }}"
+          (
+            cd workloads/ares
+            python3 rom-converter.py </dev/null
+          )
+          test -f "workloads/ares/out/profile-${{ matrix.workload }}.z64"
+
+      - name: Locate profiling and frame-budget runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf="artifacts/profile/build/sodium64.elf"
+          symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
+          magic=$(symbol profile_magic)
+          end=$(symbol profile_sample_buffer_end)
+          buffer=$(symbol profile_sample_buffer)
+          write_ptr=$(symbol profile_write_ptr)
+          sample_count=$(symbol profile_sample_count)
+          last_epc=$(symbol profile_last_epc)
+          apu_clock=$(symbol apu_clock)
+          jit_lookup=$(symbol jit_lookup)
+          jit_pointer=$(symbol jit_pointer)
+          fps_native=$(symbol fps_native)
+          fps_emulate=$(symbol fps_emulate)
+          fps_display=$(symbol fps_display)
+          frame_count=$(symbol frame_count)
+          skipped_set=$(symbol skipped_set)
+          precision_set=$(symbol precision_set)
+          audio_set=$(symbol audio_set)
+          for value in "$magic" "$end" "$buffer" "$write_ptr" "$sample_count" "$last_epc" \
+            "$apu_clock" "$jit_lookup" "$jit_pointer" "$fps_native" "$fps_emulate" \
+            "$fps_display" "$frame_count" "$skipped_set" "$precision_set" "$audio_set"; do
+            test -n "$value"
+          done
+          size=$((0x$end - 0x$magic))
+          jit_lookup_size=$((0x$jit_pointer - 0x$jit_lookup))
+          test "$jit_lookup_size" -eq 262144
+          buffer_hex=$(printf '%08x' "$((0x$buffer))")
+          rom_buffer=$(awk '$1 == "#define" && $2 == "ROM_BUFFER" { print $3; exit }' src/defines.h)
+          jit_buffer=$((rom_buffer - 0x40000))
+          jit_buffer_hex=$(printf '%08x' "$jit_buffer")
+          {
+            echo "ARES_PROFILE_ADDR=$magic"
+            echo "ARES_PROFILE_SIZE=$size"
+            echo "ARES_PROFILE_BUFFER_HEX=$buffer_hex"
+            echo "ARES_PROFILE_WRITE_PTR_ADDR=$write_ptr"
+            echo "ARES_PROFILE_SAMPLE_COUNT_ADDR=$sample_count"
+            echo "ARES_PROFILE_LAST_EPC_ADDR=$last_epc"
+            echo "ARES_APU_CLOCK_ADDR=$apu_clock"
+            echo "ARES_JIT_LOOKUP_ADDR=$jit_lookup"
+            echo "ARES_JIT_LOOKUP_SIZE=$jit_lookup_size"
+            echo "ARES_JIT_POINTER_ADDR=$jit_pointer"
+            echo "ARES_JIT_BUFFER_HEX=$jit_buffer_hex"
+            echo "ARES_FPS_NATIVE_ADDR=$fps_native"
+            echo "ARES_FPS_EMULATE_ADDR=$fps_emulate"
+            echo "ARES_FPS_DISPLAY_ADDR=$fps_display"
+            echo "ARES_FRAME_COUNT_ADDR=$frame_count"
+            echo "ARES_SKIPPED_SET_ADDR=$skipped_set"
+            echo "ARES_PRECISION_SET_ADDR=$precision_set"
+            echo "ARES_AUDIO_SET_ADDR=$audio_set"
+          } >> "$GITHUB_ENV"
+
+      - name: Measure bounded active-CGRAM frame budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p profiles
+          label="recompiler-${{ matrix.workload }}"
+          rom="workloads/ares/out/profile-${{ matrix.workload }}.z64"
+          home="$RUNNER_TEMP/ares-home-$label"
+          settings="$RUNNER_TEMP/ares-settings-$label.bml"
+          mkdir -p "$home"
+          HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+              --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$settings" \
+              --setting "Developer/DebugServerEnabled=true" \
+              --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=9137" \
+              --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" \
+              --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" \
+              "$rom" > "profiles/$label-emulator.log" 2>&1 &
+          ares_pid=$!
+          cleanup() { kill "$ares_pid" 2>/dev/null || true; wait "$ares_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+
+          python3 scripts/gdb_rsp_dump.py \
+            --port 9137 \
+            --connect-timeout 45 \
+            --response-timeout 120 \
+            --warmup-seconds 1 \
+            --zero "0x$ARES_JIT_LOOKUP_ADDR:$ARES_JIT_LOOKUP_SIZE" \
+            --write "0x$ARES_APU_CLOCK_ADDR:15" \
+            --write "0x$ARES_JIT_POINTER_ADDR:$ARES_JIT_BUFFER_HEX" \
+            --write "0x$ARES_SKIPPED_SET_ADDR:00" \
+            --write "0x$ARES_AUDIO_SET_ADDR:04" \
+            --settle-seconds 1 \
+            --after-settle-write "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR:00000000" \
+            --after-settle-write "0x$ARES_PROFILE_WRITE_PTR_ADDR:$ARES_PROFILE_BUFFER_HEX" \
+            --after-settle-write "0x$ARES_PROFILE_LAST_EPC_ADDR:00000000" \
+            --after-settle-write "0x$ARES_FPS_NATIVE_ADDR:00" \
+            --after-settle-write "0x$ARES_FPS_EMULATE_ADDR:00" \
+            --after-settle-write "0x$ARES_FPS_DISPLAY_ADDR:ff" \
+            --run-seconds 3 \
+            --sample-count-address "0x$ARES_PROFILE_SAMPLE_COUNT_ADDR" \
+            --min-samples 800 \
+            --max-run-seconds 60 \
+            --observe "fps_display:0x$ARES_FPS_DISPLAY_ADDR:1" \
+            --observe "fps_native:0x$ARES_FPS_NATIVE_ADDR:1" \
+            --observe "fps_emulate:0x$ARES_FPS_EMULATE_ADDR:1" \
+            --observe "frame_count:0x$ARES_FRAME_COUNT_ADDR:1" \
+            --observe "skipped_set:0x$ARES_SKIPPED_SET_ADDR:1" \
+            --observe "apu_clock:0x$ARES_APU_CLOCK_ADDR:1" \
+            --observe "audio_set:0x$ARES_AUDIO_SET_ADDR:1" \
+            --observe "precision_set:0x$ARES_PRECISION_SET_ADDR:1" \
+            --state-output "profiles/$label-state.json" \
+            --address "0x$ARES_PROFILE_ADDR" \
+            --size "$ARES_PROFILE_SIZE" \
+            --output "profiles/$label.bin" \
+            > "profiles/$label-gdb.log" 2>&1
+
+          cleanup
+          trap - EXIT
+          cat "profiles/$label-gdb.log"
+          python3 scripts/profile_report.py \
+            "profiles/$label.bin" artifacts/profile/build/sodium64.elf \
+            --nm nm --map artifacts/profile/build/sodium64.map \
+            --json-output "profiles/$label.json" | tee "profiles/$label.txt"
+          python3 scripts/frame_budget_report.py \
+            "profiles/$label-state.json" --target-fps 60 \
+            --output "profiles/$label-frame-budget.md"
+          cat "profiles/$label-frame-budget.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload bounded CGRAM diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-${{ matrix.workload }}-budget
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            ares-version.txt
+            profiles/

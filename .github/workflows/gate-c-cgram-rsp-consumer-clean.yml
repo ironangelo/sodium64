@@ -1,0 +1,107 @@
+name: Gate C CGRAM Epoch Replay Regression
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - src/defines.h
+      - src/main.S
+      - src/ppu.S
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - scripts/test_gate_c_cgram_rsp_consumer_clean_contract.py
+      - scripts/test_gate_c_cgram_typed_producer_clean.py
+      - scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
+      - scripts/check_rsp_branch_delay_slots.py
+      - .github/workflows/gate-c-cgram-rsp-consumer-clean.yml
+  pull_request:
+    branches:
+      - master
+    paths:
+      - src/defines.h
+      - src/main.S
+      - src/ppu.S
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - scripts/test_gate_c_cgram_rsp_consumer_clean_contract.py
+      - scripts/test_gate_c_cgram_typed_producer_clean.py
+      - scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
+      - scripts/check_rsp_branch_delay_slots.py
+      - .github/workflows/gate-c-cgram-rsp-consumer-clean.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cgram-epoch-replay:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile host oracles
+        run: |
+          python3 -m py_compile scripts/test_gate_c_cgram_rsp_consumer_clean_contract.py
+          python3 -m py_compile scripts/test_gate_c_cgram_typed_producer_clean.py
+          python3 -m py_compile scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
+
+      - name: Prove typed producer semantics
+        run: python3 scripts/test_gate_c_cgram_typed_producer_clean.py
+
+      - name: Prove DMA8 consumer semantics
+        run: python3 scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
+
+      - name: Build exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j$(nproc) 2>&1 | tee consumer-build.log
+          readelf -sW build/src/rsp_main.elf | awk '$8=="draw_bg" || $8=="draw_obj" {print $2, $8}' > rsp-main.nm
+          readelf -sW build/src/rsp_mode7.elf | awk '$8=="draw_bg" || $8=="draw_obj" {print $2, $8}' > rsp-mode7.nm
+          test "$(wc -l < rsp-main.nm)" -eq 2
+          test "$(wc -l < rsp-mode7.nm)" -eq 2
+
+      - name: Prove binary layout and delay slots
+        run: |
+          python3 scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py \
+            --maps build/rsp_main.map build/rsp_mode7.map \
+            --nms rsp-main.nm rsp-mode7.nm
+          python3 scripts/check_rsp_branch_delay_slots.py \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf
+
+      - name: Record hashes
+        run: |
+          sha256sum sodium64.z64 build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf | tee consumer-hashes.txt
+
+      - name: Upload CGRAM replay regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-cgram-epoch-replay-regression
+          retention-days: 30
+          path: |
+            consumer-build.log
+            consumer-hashes.txt
+            rsp-main.nm
+            rsp-mode7.nm
+            build/rsp_main.map
+            build/rsp_mode7.map
+            build/src/rsp_main.elf
+            build/src/rsp_mode7.elf
+            build/sodium64.elf
+            sodium64.z64

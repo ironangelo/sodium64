@@ -62,8 +62,10 @@ main:
     li t0, 8
     sw t0, 0xBFC007FC
 
-    // Clear framebuffers and other hardcoded data
-    li t0, FRAMEBUFFER1
+    // Clear the complete fixed RDRAM arena, including the CGRAM epoch/base
+    // buffers below FRAMEBUFFER1, raw palette shadows, framebuffers and caches.
+    // This makes the boot frame's Q1 base snapshot match initial zeroed CGRAM.
+    li t0, HCOMP_CGRAM_BASE_QUEUE1
     li t1, JIT_BUFFER - 8
 clear_vram:
     sd zero, (t0)
@@ -166,6 +168,13 @@ pi_wait1:
     la t0, rsp_mode7_text_start
     addi t0, t0, 0x3A8
     sw t0, DMEM(OVERLAY_MODE7_SRC)
+
+    // Publish the raw historical-palette workspaces used by the DMA8 CGRAM
+    // replay consumer. sp remains 0/4, matching queue ownership.
+    li t0, HCOMP_RAW_PALETTE_QUEUE1
+    sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS)
+    li t0, HCOMP_RAW_PALETTE_QUEUE2
+    sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS + 4)
 
     sw zero, 0xA4080000 // SP_PC
 

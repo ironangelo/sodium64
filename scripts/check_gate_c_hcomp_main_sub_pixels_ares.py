@@ -14,12 +14,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_gate_c_hcomp_main_sub_lifetime import classify_queue  # noqa: E402
 
 WIDTH = 280
-ROWS = 8
-STRIP_BYTES = WIDTH * ROWS * 2
+SUB_ROWS = 8
+MAIN_ROWS = 16
+MAIN_ACTIVE_Y0 = 8
+MAIN_ACTIVE_Y1 = 16
 ACTIVE_X0 = 12
 ACTIVE_X1 = 268
-ACTIVE_WORDS = (ACTIVE_X1 - ACTIVE_X0) * ROWS
-BORDER_WORDS = (WIDTH - (ACTIVE_X1 - ACTIVE_X0)) * ROWS
+SUB_ACTIVE_WORDS = (ACTIVE_X1 - ACTIVE_X0) * SUB_ROWS
+SUB_BORDER_WORDS = (WIDTH - (ACTIVE_X1 - ACTIVE_X0)) * SUB_ROWS
+MAIN_ACTIVE_WORDS = (ACTIVE_X1 - ACTIVE_X0) * (MAIN_ACTIVE_Y1 - MAIN_ACTIVE_Y0)
+MAIN_SENTINEL_WORDS = WIDTH * MAIN_ROWS - MAIN_ACTIVE_WORDS
 
 SUB_COLOR_ADDR = 0xA00E4000
 FRAMEBUFFER_ADDRS = (
@@ -37,23 +41,34 @@ SUB_GREEN = 0x07C1
 MAIN_RED = 0xF801
 
 
-def u16_words(data: bytes) -> list[int]:
-    if len(data) != STRIP_BYTES:
-        raise ValueError(f"strip length {len(data)} != {STRIP_BYTES}")
+def u16_words(data: bytes, rows: int) -> list[int]:
+    expected_bytes = WIDTH * rows * 2
+    if len(data) != expected_bytes:
+        raise ValueError(f"surface length {len(data)} != {expected_bytes}")
     return [int.from_bytes(data[i:i + 2], "big") for i in range(0, len(data), 2)]
 
 
-def expected_rendered(active: int) -> list[int]:
+def expected_sub() -> list[int]:
     vals: list[int] = []
-    for _y in range(ROWS):
+    for _y in range(SUB_ROWS):
         for x in range(WIDTH):
-            vals.append(active if ACTIVE_X0 <= x < ACTIVE_X1 else SENTINEL)
+            vals.append(SUB_GREEN if ACTIVE_X0 <= x < ACTIVE_X1 else SENTINEL)
     return vals
 
 
-EXPECTED_SUB = expected_rendered(SUB_GREEN)
-EXPECTED_MAIN = expected_rendered(MAIN_RED)
-EXPECTED_UNTOUCHED = [SENTINEL] * (WIDTH * ROWS)
+def expected_main() -> list[int]:
+    vals: list[int] = []
+    for y in range(MAIN_ROWS):
+        for x in range(WIDTH):
+            active = MAIN_ACTIVE_Y0 <= y < MAIN_ACTIVE_Y1 and ACTIVE_X0 <= x < ACTIVE_X1
+            vals.append(MAIN_RED if active else SENTINEL)
+    return vals
+
+
+EXPECTED_SUB = expected_sub()
+EXPECTED_MAIN = expected_main()
+EXPECTED_SUB_UNTOUCHED = [SENTINEL] * (WIDTH * SUB_ROWS)
+EXPECTED_MAIN_UNTOUCHED = [SENTINEL] * (WIDTH * MAIN_ROWS)
 
 
 def mismatch_sample(got: list[int], want: list[int], limit: int = 24) -> list[dict[str, int]]:
@@ -75,8 +90,8 @@ def histogram(vals: list[int]) -> list[dict[str, object]]:
     ]
 
 
-def classify_surface(data: bytes, want: list[int], label: str) -> dict[str, object]:
-    got = u16_words(data)
+def classify_surface(data: bytes, want: list[int], rows: int, label: str) -> dict[str, object]:
+    got = u16_words(data, rows)
     wrong = mismatch_sample(got, want)
     return {
         "label": label,
@@ -111,13 +126,13 @@ def classify_capture(root: Path) -> dict[str, object]:
     sub = (root / "sub.bin").read_bytes()
     mains = [(root / f"main{i}.bin").read_bytes() for i in range(1, 4)]
 
-    sub_report = classify_surface(sub, EXPECTED_SUB, "compact_sub")
+    sub_report = classify_surface(sub, EXPECTED_SUB, SUB_ROWS, "compact_sub")
     main_rendered_reports = [
-        classify_surface(blob, EXPECTED_MAIN, f"main{i}_rendered")
+        classify_surface(blob, EXPECTED_MAIN, MAIN_ROWS, f"main{i}_rendered")
         for i, blob in enumerate(mains, start=1)
     ]
     main_untouched_reports = [
-        classify_surface(blob, EXPECTED_UNTOUCHED, f"main{i}_untouched")
+        classify_surface(blob, EXPECTED_MAIN_UNTOUCHED, MAIN_ROWS, f"main{i}_untouched")
         for i, blob in enumerate(mains, start=1)
     ]
 
@@ -173,13 +188,16 @@ def classify_capture(root: Path) -> dict[str, object]:
         "sub": {
             "address": f"0x{SUB_COLOR_ADDR:08X}",
             "expected_active": f"0x{SUB_GREEN:04X}",
-            "expected_active_words": ACTIVE_WORDS,
-            "expected_sentinel_border_words": BORDER_WORDS,
+            "expected_active_words": SUB_ACTIVE_WORDS,
+            "expected_sentinel_border_words": SUB_BORDER_WORDS,
             **sub_report,
         },
         "main": {
             "addresses": [f"0x{x:08X}" for x in FRAMEBUFFER_ADDRS],
             "expected_active": f"0x{MAIN_RED:04X}",
+            "expected_active_rows": [MAIN_ACTIVE_Y0, MAIN_ACTIVE_Y1],
+            "expected_active_words": MAIN_ACTIVE_WORDS,
+            "expected_sentinel_words": MAIN_SENTINEL_WORDS,
             "rendered_main_indices": rendered_main_indices,
             "untouched_main_indices": untouched_main_indices,
             "exactly_one_main_rendered": exact_main_ownership,
@@ -188,7 +206,9 @@ def classify_capture(root: Path) -> dict[str, object]:
         },
         "sentinel": f"0x{SENTINEL:04X}",
         "active_x": [ACTIVE_X0, ACTIVE_X1],
-        "rows": [0, ROWS],
+        "sub_rows": [0, SUB_ROWS],
+        "main_capture_rows": [0, MAIN_ROWS],
+        "main_active_rows": [MAIN_ACTIVE_Y0, MAIN_ACTIVE_Y1],
         "same_fresh_frame_dual_target": passed,
         "color_math_gating": "NOT_PROVEN",
         "final_pixel_math": "NOT_PROVEN",
@@ -216,7 +236,7 @@ def write_fixture(root: Path, rendered_main: int = 2) -> None:
 
     (root / "sub.bin").write_bytes(pack(EXPECTED_SUB))
     for i in range(1, 4):
-        vals = EXPECTED_MAIN if i == rendered_main else EXPECTED_UNTOUCHED
+        vals = EXPECTED_MAIN if i == rendered_main else EXPECTED_MAIN_UNTOUCHED
         (root / f"main{i}.bin").write_bytes(pack(vals))
     (root / "capture-state.json").write_text(json.dumps({
         "guest_frame_delta": 1,
@@ -242,7 +262,7 @@ def self_test() -> None:
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         write_fixture(root, 1)
-        (root / "sub.bin").write_bytes(pack(EXPECTED_UNTOUCHED))
+        (root / "sub.bin").write_bytes(pack(EXPECTED_SUB_UNTOUCHED))
         assert not classify_capture(root)["passed"]
 
     # Two Main targets changing in one frame must fail.

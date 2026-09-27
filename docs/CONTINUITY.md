@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### MEASURED ABI SHIFT / RUNTIME CANDIDATE REQUIRES PADDING REPAIR (2026-09-27 UTC)
+
+- Direct inspection of failed-run artifact **`10938737655`** from `f9b018b...` confirms the 0xFF8 shrink was **not safe headroom**: regular and Mode7 fixed/runtime symbols all shifted **-8 B**. Measured examples: `draw_bg=0xA40013A0` (must be 13A8), `draw_mode7_entry=0xA4001780` (must be 1788), `dma_write=0xA4001F00` (must be 1F08), `dma_read=0xA4001F38` (must be 1F40), `rdp_send=0xA4001F54` (must be 1F5C), `overlay_load_slot=0xA4001F74` (must be 1F7C), `overlay_load_main=0xA4001F88` (must be 1F90). `next_layer=0xA4001364`.
+- H-COMP itself remained correctly fixed: `draw_bg=13A8`, frame-end `hcomp_entry=13B0`, pair loop `13D0`, new screen switch `1760`, Mode7 fault `1788`. Therefore the defect is specifically resident regular/Mode7 layout, not H-COMP placement.
+- Root cause is now concrete: semantic routing removes one logic instruction before the fixed slot, and the prior layout also loses a 4-B alignment fill, yielding the measured net **-8 B** shift. **REJECTED:** accept 0xFF8 merely because it is smaller.
+- **Controlled repair:** add an explicit 4-B non-executed pad immediately before the existing `.align 3` fixed-slot boundary in both regular and Mode7 sources. That moves the pre-align cursor from 13A0→13A4, causing `.align 3` to restore the other 4 B and therefore reestablish `draw_bg=13A8` plus the entire historical suffix ABI/text=0x1000. `next_layer` legitimately remains **0x1364** and the H-COMP helper must resume there, not at the earlier predicted 0x1368.
+- This preserves the L0 semantic result (**11 routing logic instructions vs 12 historical**) while consuming the saved byte budget as ABI padding; net resident IMEM growth remains **0**, not -8 B.
+
+
 ### HYGIENE-BLOCKER — 0xFF8 ABI rerun blocked by oracle print serialization (2026-09-27 UTC)
 
 - Dedicated rerun **`36340526815 FAILURE`** on `053e3231...` did **not** reach source assertions or rebuild: Python parsing failed because the host-oracle edit serialized a literal **`\\n`** between two `print()` statements.

@@ -7,7 +7,24 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
-### HYPOTHESIS / QUANTIFIED — typed representation adds hot-path CPU work (2026-09-27 UTC)
+### MEASURED / CAUSE LOCALIZED — CGRAM epoch producer itself causes synthetic ppu-register deficit (2026-09-27 UTC)
+
+- Four-stage identical-harness Ares ladder is now complete:
+  - integrated `master@70d8d8b...`: **ppu-registers 61/60** (three independent PR#17-lineage runs);
+  - **raw RGB555 producer only** draft PR #20 `38dbb2129f53635703631b04aa4dbe2b7ffb6d17`: **57/60**;
+  - **typed RGBA5551 producer only** draft PR #19 `bd375453ed52680462bedd090a65078feff5f880`: **57/60**;
+  - full PR #18 typed producer + DMA8 RSP consumer `5ef80450...`: **57/60**.
+- Raw-producer Ares authority: **36289399981 SUCCESS**, matrix artifact **10921382964**, digest `sha256:4e380353827fb983d502cf9fb83317619f7fe5dcbdc1f68c2410e3e223b8c810`. Exact-head generic **Build and Validate 36289377122 SUCCESS**; normal artifact **10922002239** digest `sha256:9e3b1c7dde79bd523c658aa8fa7133d72c23c18d9207236158cccece00ff00f0`, smoke artifact **10921813207** digest `sha256:e8ddc31ce2e49c215a0458a9802bb3197f6182bbad8865b5317ffc4a4e337510`.
+- **CAUSAL INTERPRETATION:** the 61->57 synthetic movement appears as soon as the first lossless active-frame CGRAM epoch producer is enabled. The later typed conversion/marker representation and DMA8 RSP consumer are **not required** for the deficit and add no further completed-frame loss at this measurement resolution.
+- The prior “typed representation +8/event is the primary cause” hypothesis is therefore **REJECTED**. That instruction delta is real source cost, but raw and typed produce the same 57/60 result. Dominant causal region is the base active-epoch producer path: VBlank/frame-close/capacity checks, per-commit event logging and forcing next-line section visibility (plus fixed per-frame snapshot/section bookkeeping).
+- Raw producer ppu-register profile: **477/1222 = 39.0% PPU/events**; typed producer **432/1105 = 39.1%**; full consumer **373/911 = 40.9%**. Sampling distributions support the same broad localization but are not additive cost measurements.
+- All three producer stages keep **gameplay-balanced 60/60** with substantial VI idle; raw producer has **713/935 = 76.3% frame/VI wait**, typed producer **798/1052 = 75.9%**, full PR #18 **785/1035 = 75.8%**. Therefore this is a demonstrated pathological active-CGRAM stress deficit, **not yet a representative cadence regression**.
+- **MERGE HOLD remains, but its question is now narrower:** before PR #18 integration, bound the producer cost with a deterministic **frame-paced active-CGRAM workload** (finite mid-frame color commits per native frame, e.g. a small/medium/high ladder) under the same Ares harness. Do not optimize or redesign the already-valid replay transport unless that bounded test shows a gate-relevant cadence problem.
+- Draft PR #19 is already closed; draft PR #20 is measurement-only and should now be closed. H-COMP arithmetic/placement remains blocked until this bounded performance question is resolved.
+
+
+
+### MEASURED / REJECTED AS PRIMARY CAUSE — typed representation adds instructions but does not explain 57/60 (2026-09-27 UTC)
 
 - Exact source comparison between validated raw producer `8dce5f45...` and corrected typed producer `bd375453...` gives a concrete execution-cost delta:
   - active complete CGDATA commit block: **30 -> 38 instructions (+8/event)**;

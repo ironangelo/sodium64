@@ -79,6 +79,70 @@ hcomp_pair_loop:
     jal 0xA4001F08
     li a2, 0x7
 
+    // Gate-C clean CGADSUB discriminator. Read one already-rendered active
+    // sample from compact semantic Sub (row0,x12) and the corresponding
+    // current semantic Main sample (published row8,x12) while this handed
+    // queue slot still owns FRAMEBUFFER(sp). This is proof plumbing only:
+    // pinned ares consumes submitted RDP lists synchronously; real-N64-safe
+    // RDP->RSP ownership/fencing remains a separate production requirement.
+    li a0, SCRN_DATA
+    li a1, 0xA00E4018
+    jal 0xA4001F40
+    li a2, 0x7
+
+    li a0, SCRN_DATA + 8
+    lw a1, FRAMEBUFFER(sp)
+    addi a1, a1, 0x1198
+    jal 0xA4001F40
+    li a2, 0x7
+
+    // Canonicalize the rendered Main RGBA5551 sample to SNES RGB555.
+    lhu t0, SCRN_DATA + 8
+    lhu t1, SCRN_DATA
+    srl t2, t0, 11
+    andi t3, t0, 0x07C0
+    srl t3, t3, 1
+    or t2, t2, t3
+    andi t3, t0, 0x003E
+    sll t3, t3, 9
+    or t0, t2, t3
+
+    // Canonicalize the rendered Sub RGBA5551 sample to SNES RGB555.
+    srl t4, t1, 11
+    andi t5, t1, 0x07C0
+    srl t5, t5, 1
+    or t4, t4, t5
+    andi t5, t1, 0x003E
+    sll t5, t5, 9
+    or t1, t4, t5
+
+    // The controlled guest fixes the Main winner to opaque BG1, so bit0 is
+    // the exact eligibility discriminator for this rung. General winner
+    // selection remains deferred until clean per-pixel provenance is wired.
+    lbu t2, CGADSUB
+    andi t2, t2, 0x1
+    move t3, t0
+    beqz t2, hcomp_gate_store
+    nop
+
+    // Reuse the authoritative E1f packed half-add on the live rendered pair.
+    xor t3, t0, t1
+    andi t4, t3, 0x0421
+    add t3, t0, t1
+    sub t3, t3, t4
+    srl t3, t3, 1
+
+hcomp_gate_store:
+    // Self-describing proof record: Main, Sub, selected result, gate bit.
+    sh t0, CHAR_DATA + 8
+    sh t1, CHAR_DATA + 10
+    sh t3, CHAR_DATA + 12
+    sh t2, CHAR_DATA + 14
+    li a0, CHAR_DATA + 8
+    li a1, 0xA00F0008
+    jal 0xA4001F08
+    li a2, 0x7
+
     // Preserve queue ownership through the bridge. Only now select the next
     // slot, then keep the historical halt/resume -> draw_frame contract.
     xori sp, sp, 4
@@ -91,7 +155,7 @@ hcomp_pair_loop:
 // only after semantic TS has completed. Patch Color Image back to the current
 // queue-owned Main framebuffer, publish that one command through resident
 // rdp_send, then reload the regular fixed slot and resume at resident next_layer.
-.byte 0:0x300
+.byte 0:0x24C
 
 hcomp_screen_switch:
     lw t0, FRAMEBUFFER(sp)

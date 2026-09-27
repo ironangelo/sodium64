@@ -20,7 +20,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Raw producer ppu-register profile: **477/1222 = 39.0% PPU/events**; typed producer **432/1105 = 39.1%**; full consumer **373/911 = 40.9%**. Sampling distributions support the same broad localization but are not additive cost measurements.
 - All three producer stages keep **gameplay-balanced 60/60** with substantial VI idle; raw producer has **713/935 = 76.3% frame/VI wait**, typed producer **798/1052 = 75.9%**, full PR #18 **785/1035 = 75.8%**. Therefore this is a demonstrated pathological active-CGRAM stress deficit, **not yet a representative cadence regression**.
 - **MERGE HOLD remains, but its question is now narrower:** before PR #18 integration, bound the producer cost with a deterministic **frame-paced active-CGRAM workload** (finite mid-frame color commits per native frame, e.g. a small/medium/high ladder) under the same Ares harness. Do not optimize or redesign the already-valid replay transport unless that bounded test shows a gate-relevant cadence problem.
-- Draft PR #19 is already closed; draft PR #20 is measurement-only and should now be closed. H-COMP arithmetic/placement remains blocked until this bounded performance question is resolved.
+- Diagnostic draft PRs **#19 and #20 are both CLOSED / UNMERGED** after their artifacts were recorded. Production remains unchanged at `master@70d8d8b...`; PR #18 remains open, mergeable/clean in GitHub, but under the explicit performance **MERGE HOLD** above. H-COMP arithmetic/placement remains blocked until the bounded performance question is resolved.
 
 
 

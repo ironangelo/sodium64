@@ -7,6 +7,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### IN FLIGHT — clean DMA8 CGRAM RSP consumer port (2026-09-27 UTC)
+
+- New clean consumer branch is **`phase4/gate-c-cgram-rsp-consumer-clean@9a860fb7fc8c05b1464d559c0ec9d45b3e72dcb1`**, rooted at corrected typed producer authority `bd375453ed52680462bedd090a65078feff5f880`.
+- Runtime commit **`8acd7789edc4cd667202055b484c0869849848c5`** ports the historically validated **29-instruction DMA8 consumer** from canonical old runtime `8ac783aa14b98b9097143432baa4e327cb490113` using exact-context hunks for both RSP variants, while preserving current PR #16 Mode7 row-exit semantics and keeping H-COMP arithmetic inactive.
+- The clean port also restores one historical dependency that was intentionally absent during producer-only validation: `src/main.S` publishes **HCOMP_RAW_PALETTE_QUEUE1/Q2** to DMEM **E98/E9C** after overlay source publication. This is required because the consumer indexes `HCOMP_RAW_PALETTE_PTRS(sp)` by handed frame slot. Historical dynamic proof did not debugger-seed these pointers; they were real startup state.
+- DMEM consumer state is explicit: `HCOMP_RAW_PALETTE_PTRS=E98`, event cursor `EA0`, aligned pair scratch `EA8`, aligned raw-write scratch `EB0`, all below fixed `VEC_DATA=F70`. CPU typed producer `ppu.S` is unchanged from corrected authority.
+- First dedicated run **36285111975 FAILED before build** for a known tooling reason only: the inherited producer-only oracle intentionally asserts that no RSP consumer exists. Traceback was exactly `rsp_main: RSP consumer activated too early`. **Classification: REJECTED TOOLING ERROR / zero runtime evidence.**
+- Tooling commits `fba5cff1c26599548db087078624c0da0875cf01` + **`9a860fb7fc8c05b1464d559c0ec9d45b3e72dcb1`** make the implementation oracle stage-aware: it now rechecks the corrected producer's t1-safe marker, typed color events, raw-base initialization and EA0 publication while permitting the consumer, and separately checks real E98/E9C publication + the 29-instruction RSP shape.
+- Final exact-head runs at checkpoint: **Gate C CGRAM DMA8 RSP Consumer Clean 36285168350 IN_PROGRESS**, **Build and Validate 36285168352 PENDING**. Older generic runs on intermediate heads are superseded by these exact-SHA gates.
+- **Falsifier:** source/model mismatch, compiled RSP text != 0x1000, fixed renderer slot drift, binary control-in-delay, generic build/smoke failure, or any evidence that the consumer mutates H-COMP arithmetic. If green, next stage is observation-only dynamic consumer replay proof; do not activate color arithmetic yet.
+
+
+
 ### VALIDATED — corrected clean typed CGRAM producer, dynamic live-byte authority (2026-09-26 UTC)
 
 - Corrected producer authority is **`phase4/gate-c-cgram-typed-producer-clean@bd375453ed52680462bedd090a65078feff5f880`**: runtime fix `478753e22dd22beb0b1e02798875a29d58ea9a42` replaces the section-marker conversion's unsafe `t4` temporaries with `t1`, preserving `rsp_frame`'s saved return register; tooling child adds an explicit source guard that rejects `t4` in the marker block.

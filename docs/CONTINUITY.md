@@ -7,6 +7,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### REJECTED TOOLING ERROR — first clean third-overlay L0 build-evidence step (2026-09-27 UTC)
+
+- Host-only branch **`phase4/gate-c-hcomp-third-overlay-contract-clean@9a900aa5976219fc869eb9f8a7cc166ca96bd1ef`** has **zero runtime/source delta** from post-PR18 `master@7cc8fac...`; compare is exactly two added files (one host oracle + one workflow).
+- Dedicated **36321002948** passed the complete clean-lineage L0 semantic/layout contract and printed **`HCOMP_THIRD_OVERLAY_CLEAN_L0_VALIDATED`**: proposed E8C/E90/E94/E98 pointer packing does not overlap PR #18 EA0/EA8/EB0/F70 state; current 4/6/2 resident dispatch footprints are intact; fixed slot remains 1000 B with the historical 400-B fixed / 600-B uncommitted capacity anchor.
+- The same run built the unchanged runtime successfully, measured both RSP variants as **4096 B text / 4096 B data**, and passed binary **control-in-delay=0**. It failed only afterward because the workflow invoked host **`mips64-elf-size`**, which is not exposed outside the libdragon container on this runner. **Classification: REJECTED TOOLING ERROR / zero negative architecture or runtime evidence.**
+- Tooling-only child **`ebf847b970e2f5f3a1ef87a84f394e9f1b4566cf`** replaces unavailable host cross-binutils calls with exact size-line assertions from the already-authoritative libdragon build log; oracle and runtime remain byte-identical. Fresh dedicated/generic runs must close before promoting the clean third-overlay L0 contract.
+
 ### SUPPORTED INTERPRETATION — next H-COMP placement should reprove the historical zero-growth third-overlay contract (2026-09-27 UTC)
 
 - Fresh audit of the current post-PR18 RSP layout confirms both resident variants are expected to remain **0x1000 / 4096 B IMEM** once the DMA8 CGRAM consumer is integrated; ordinary tail growth is unavailable. Current demand-loaded renderer slot remains **A40013A8..A400178F**, with resident loaders for Main/Mode7 and DMEM source pointers at E90/E94 plus raw-palette pointers at E98/E9C.

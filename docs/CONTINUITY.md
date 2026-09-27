@@ -6,6 +6,26 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
+
+### VALIDATED — corrected clean typed CGRAM producer, dynamic live-byte authority (2026-09-26 UTC)
+
+- Corrected producer authority is **`phase4/gate-c-cgram-typed-producer-clean@bd375453ed52680462bedd090a65078feff5f880`**: runtime fix `478753e22dd22beb0b1e02798875a29d58ea9a42` replaces the section-marker conversion's unsafe `t4` temporaries with `t1`, preserving `rsp_frame`'s saved return register; tooling child adds an explicit source guard that rejects `t4` in the marker block.
+- Exact corrected-head gates are green: **Gate C CGRAM Typed Producer Clean 36279770371 SUCCESS** and **Build and Validate 36279770382 SUCCESS**. The earlier `f0deb5d4...` runtime remains **SUPERSEDED** because its generic/model greens did not expose the calling-contract clobber.
+- Observation-only child **`phase4/gate-c-cgram-typed-producer-dynamic-proof-clean-v2@14e65de3c65ddbd6f09c4b106a779eeb5954c3c0`** adds zero runtime `src/` delta over the corrected producer. Dedicated **36279882614 SUCCESS** and exact-head **Build and Validate 36279882609 SUCCESS**.
+- Dynamic evidence artifact **10918192115**, digest `sha256:a755db1c434e70cbce8ebfebc04774add874f70aff119b31009c013faa43e5ce`. Independent artifact inspection of `evidence/result.json`:
+  - classification `CGRAM_TYPED_CLEAN_DYNAMIC_PRODUCER_REPRESENTATION_VALIDATED`;
+  - first usable snapshot `snap0`, normalization `word_swap32`, phase **B**;
+  - live producer slot **4**, count **7**, overflow **0**, producer ptr **A00D701C**;
+  - handed EA0 **A00BF000**, observed previous slot **0**;
+  - base first3 **{03E0,001F,7FFF}** and raw-shadow first3 exactly the same historical base;
+  - replay first3 **{2AAA,4567,7FFF}** after the repeated index1 + entry0 + entry2 typed color sequence;
+  - active fixed-color marker record index **5**, one marker before first color, no interleaved-base markers.
+- Deterministic guest SHA-256 **a007b6a698536eb6b2856ff848d53cb0826cdd8a25dafcec1796fc7aaed9ea24**; wrapped SHA-256 **8f810d6a23b630d9b95f90d7cf144da458f506b252a85abf330df6b3ffd9bd69**; runtime ROM SHA-256 **4e74e28fba074529be75a80d07ada039c9d3f3451c69f33b70399c043606e34f**.
+- **VALIDATED claim:** the corrected clean CPU producer emits the typed/raw-shadow representation required by the already-validated DMA8 consumer contract under a running deterministic guest, while preserving historical palette state rather than regenerating from frame-final CGRAM.
+- **LAB LIMITATION / NON-CLAIM:** pinned Mupen commonly pauses while RSP waits, so EA0 may still describe the previously handed slot while CPU producer state is already building the opposite slot. This result does not claim exact next-handoff timing.
+- **NEXT GATE DRIVER:** implement the smallest clean-lineage RSP DMA8 consumer on top of this corrected producer, preserving the historical 8-byte DMA/cached-half invariants and current PR #16/window-color layout. Keep H-COMP arithmetic frozen until replay consumption itself is dynamically proven.
+
+
 ### SUPERSEDED / BUG FOUND — first clean typed producer clobbered rsp_frame return register (2026-09-26 UTC)
 
 - Fresh historical-lineage audit found that typed producer head `f0deb5d4aa26f900466b87844737a73ed75b36e6` was ported from old reference `807ddbf...`, which predates historical corrective commit **`05a57fd9cf40673343abc9131bb3fbde9579e959`** (`preserve rsp_frame return across CGRAM marker`).

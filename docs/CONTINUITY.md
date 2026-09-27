@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### HYGIENE-BLOCKER / FENCE REFINEMENT — clean runtime reaches CPU capture point before RDP idle (2026-09-27 UTC)
+
+- First pinned-ares seeded run **`36342803845 FAILURE`** on `52a51893...` built the exact runtime, guest and ares laboratory successfully and reached the intended post-`rsp_wait` CPU breakpoint. It failed **before any sentinel seeding or pixel capture** because the boundary had **SP HALT but `DP_STATUS=0x000000A9`**, i.e. RDP `PIPE_BUSY=0x20` still set. Artifact **`10939063126`**, digest **`sha256:b7ff26ade74fb36f3f30dc2a828d12feb7ac54ed88208255c43f48431f219701`**.
+- This is **not renderer evidence**. The current clean runtime does not promise that observing RSP HALT also means the asynchronously running RDP has drained. Historical E2g proofs could require both at the same breakpoint because their diagnostic runtime had additional proof/fence behavior; importing such waits into the clean runtime merely to satisfy the harness would contaminate the experiment.
+- **Correct external fence:** at each `capture_ready` hit, remove the software breakpoint and single-step the R4300 while requiring **SP remains HALT**, polling DP_STATUS until `DP_STATUS & 0x70 == 0`. Only after RDP idle may the harness seed or capture surfaces. If SP leaves HALT before DP drains, the fence is invalid and the run must fail rather than race.
+- The next `capture_ready` breakpoint hit itself is the exact **one-renderer-frame reentry** authority. Guest NMI counter is freshness corroboration and need only advance >=1; requiring counter delta exactly 1 is unnecessarily stronger than the renderer-frame boundary and is therefore replaced by an explicit reentry count.
+- **Classification:** `36342803845` = **HYGIENE-BLOCKER / NO PIXEL VERDICT**. Repair only the external capture fence and seeded oracle state contract; keep Sodium64 runtime, guest, ares pin and RSP-interpreter mode unchanged.
+
+
 ### IMPLEMENTED / CI RUNNING — fenced seeded ares Main/Sub pixel authority (2026-09-27 UTC)
 
 - Pixel-proof branch advanced host/workflow-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@52a51893883ef9293fa7e82003ce8fb0af7e12b8`**. Sodium64 runtime remains exactly the validated executable candidate `3df9f87c...` / ROM SHA-256 `eb216fcc...`.

@@ -17,8 +17,10 @@ from gdb_rsp_dump import (  # noqa: E402
 )
 
 WIDTH = 280
-ROWS = 8
-STRIP_BYTES = WIDTH * ROWS * 2
+SUB_ROWS = 8
+MAIN_ROWS = 16
+SUB_STRIP_BYTES = WIDTH * SUB_ROWS * 2
+MAIN_CAPTURE_BYTES = WIDTH * MAIN_ROWS * 2
 SENTINEL = 0x55AA
 
 SUB_COLOR_ADDR = 0xA00E4000
@@ -166,10 +168,13 @@ def main() -> int:
         validate_stop(client.request("c"), "seed prelaunch")
         seed_state = require_fenced_boundary(client, stage="seed prelaunch")
 
-        sentinel = SENTINEL.to_bytes(2, "big") * (STRIP_BYTES // 2)
-        for address in (SUB_COLOR_ADDR, *FRAMEBUFFER_ADDRS):
-            write_pattern(client, address, sentinel)
-            verify_pattern(client, address, sentinel)
+        sub_sentinel = SENTINEL.to_bytes(2, "big") * (SUB_STRIP_BYTES // 2)
+        main_sentinel = SENTINEL.to_bytes(2, "big") * (MAIN_CAPTURE_BYTES // 2)
+        write_pattern(client, SUB_COLOR_ADDR, sub_sentinel)
+        verify_pattern(client, SUB_COLOR_ADDR, sub_sentinel)
+        for address in FRAMEBUFFER_ADDRS:
+            write_pattern(client, address, main_sentinel)
+            verify_pattern(client, address, main_sentinel)
 
         baseline_counter = read_u(client, args.guest_counter_address, 1)
 
@@ -201,11 +206,11 @@ def main() -> int:
             )
 
         (out / "sub.bin").write_bytes(
-            client.read_memory(SUB_COLOR_ADDR, STRIP_BYTES, 0x400)
+            client.read_memory(SUB_COLOR_ADDR, SUB_STRIP_BYTES, 0x400)
         )
         for i, address in enumerate(FRAMEBUFFER_ADDRS, start=1):
             (out / f"main{i}.bin").write_bytes(
-                client.read_memory(address, STRIP_BYTES, 0x400)
+                client.read_memory(address, MAIN_CAPTURE_BYTES, 0x400)
             )
         for i, address in enumerate(SECTION_QUEUE_ADDRS, start=1):
             (out / f"section-q{i}.bin").write_bytes(

@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / CI RUNNING — pinned-ares DPC command fence replaces impossible PIPE_BUSY-idle requirement (2026-09-27 UTC)
+
+- Pixel proof branch advanced host-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@9b1852221e5ba323daa42ccbfed848cac40efb15`**. Exact compare versus validated executable parent **`3df9f87c...`** remains **0 `src/` runtime files changed**; only the pixel workflow/capture/classifier files differ.
+- Capture now reads **DPC_END `0xA4100004`**, **DPC_CURRENT `0xA4100008`** and DPC_STATUS. At seed, one-instruction step-over and capture reentry it requires **RSP HALT + bufferBusy(bit6/0x40)=0 + (CURRENT & 0xFFFFFF)==(END & 0xFFFFFF)**. PIPE_BUSY(bit5/0x20) and TMEM_BUSY are recorded diagnostically, not used as false completion gates.
+- Strict pixel oracle now requires the same command-complete facts and contains negative self-tests for bufferBusy and CURRENT!=END, plus a positive self-test that deliberately keeps **PIPE_BUSY=true**. Pixel/lifetime expectations themselves are unchanged.
+- Exact +0x14 ELF geometry remains frozen in the workflow before ares build. The branch is now **16 commits ahead / 0 behind** its validated runtime parent with only four host-side added files, so this repair cannot explain a pixel result by a guest/runtime mutation.
+- Fresh exact-head runs: **Build and Validate `36355259721`** and dedicated **Gate C H-COMP Main Sub Pixels Clean `36355259717`**. Prior run `36354896463` is superseded because it still required sticky PIPE_BUSY to clear.
+- **Expected discriminator:** if pinned ares reports submitted-list completion at the unique prelaunch boundary, sentinels can finally adjudicate whether the compact Sub surface receives green and exactly one current Main framebuffer receives red in the same renderer frame. A pixel mismatch after this fence is evidence about ownership/rendering; a command-fence failure remains laboratory/harness evidence, not a reason to alter runtime blindly.
+- **STATUS: IMPLEMENTED / CI RUNNING.**
+
+
 ### CORRECTION / LAB LIMITATION — pinned ares PIPE_BUSY is sticky without Sync Full; old DP-idle fence is invalid (2026-09-27 UTC)
 
 - Exact source inspection of pinned **ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`** changes the interpretation of the earlier `DP_STATUS=0xA9` result. In `ares/n64/rdp/io.cpp:flushCommands()`, submitting DP_END sets **`bufferBusy=1`, `pipeBusy=1`**, then calls `render()` synchronously and clears **bufferBusy** when that submitted command list returns. In `render.cpp`, **only RDP Sync Full opcode 0x29 clears `pipeBusy`** through `syncFull()`.

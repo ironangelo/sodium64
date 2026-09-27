@@ -28,15 +28,30 @@ Canonical live handoff for `ironangelo/sodium64`.
 - These old branches are **reference specifications, not merge candidates**. Current master now contains PR #16 + PR #17 + PR #18 semantics and a full resident IMEM, so every source/layout/lifetime assumption must be re-derived on the exact current lineage.
 - **NEXT AFTER post-merge PR #18 gates:** create a **host-only, zero-runtime-delta current-master triple-overlay placement contract** first. It should re-prove pointer ABI, fixed renderer slot, H-COMP payload budget, frame-end call phase, Main/Mode7 loader lifetime, DMEM scratch non-overlap with EA0/EA8/EB0/F70, and no resident growth. Only a green clean-lineage contract authorizes an executable overlay proof; do not import cumulative H-COMP runtime wholesale and do not shave arbitrary resident instructions.
 
-### MERGED / POST-MERGE VALIDATION PENDING — PR #18 CGRAM epoch replay (2026-09-27 UTC)
+### VALIDATED / MERGED-CONSUMED — PR #18 CGRAM epoch replay integrated (2026-09-27 UTC)
 
-- Performance hold was released by the completed bounded paced A/B: both integrated-master baseline and PR #18 candidate sustain **32 and 128 active-display CGRAM commits per native frame at 60/60**, with ~70% virtual frame/VI idle remaining. The unlimited `ppu-registers` 57/60 candidate result remains a pathological free-running stress ceiling, not a representative cadence regression.
-- PR **#18 `Gate C: preserve CGRAM epochs through RSP replay`** merged with expected head **`5ef80450dec16c031e76d18bcaddb2da72a5b2a8`**. GitHub created merge commit **`7cc8facfe8643fb85888f301f79995575830521d`**.
-- Pre-merge exact-head gates were already green: **Build and Validate 36286513229**, **Gate C CGRAM Epoch Replay Regression 36286515413**, **Ares Profile Validation 36286515410**, plus the separate bounded performance falsifier.
-- **STATUS:** do not yet mark MERGED-CONSUMED. Require post-merge workflows on exact `master@7cc8fac...` before treating the epoch producer + DMA8 replay as integrated truth.
-- **NEXT:** inspect post-merge Build/Validate, persistent CGRAM replay regression, Ares profile validation and any relevant master-only gates. If all green, promote to VALIDATED / MERGED-CONSUMED and move the Gate-C frontier to H-COMP use of the now-correct historical palette/fixed-color state under the full-IMEM constraint.
-
-
+- **Integrated truth:** PR #18 merged with expected head `5ef80450dec16c031e76d18bcaddb2da72a5b2a8`; exact current authority is **`master@7cc8facfe8643fb85888f301f79995575830521d`**.
+- Post-merge exact-SHA gates all closed **SUCCESS**:
+  - **Build and Validate 36320544210** — normal + PROFILE, binary RSP delay-slot checker, pinned-Mupen/LLE smoke and release packaging;
+  - **Gate C Window Color Port 36320544179** — existing W1/W2 + color-window + raster-latency regression;
+  - **Gate C CGRAM Epoch Replay Regression 36320544200** — typed producer + DMA8 consumer semantics and exact binary layout;
+  - **Ares Profile Validation 36320544188** — pinned-ares interpreter/JIT workload matrix;
+  - **APU Cycle And Span Proof 36320544187** — SPC700 cycle/span/halt/cycle-budget regression.
+- Post-merge artifacts:
+  - normal build **10932072283**, digest `sha256:1dc6828788946d537b156aa00b565aa68e04e16d16c2aefe15016a0de6d0c342`;
+  - PROFILE build **10931917551**, digest `sha256:4ba74250388f116b4eb5f9b262cc820de2d86cba32f5b478924424150b380af2`;
+  - Mupen smoke **10932561718**, digest `sha256:c2c14c71eef43efde8a6b3fcf9a87d69631398142673256b117bd98de3be2e12`;
+  - CGRAM replay regression **10931822602**, digest `sha256:d00dc05407b31ae1617c3c771dcaca6b214e8b7f8a3390374d4f33be94aba28c`;
+  - ares profile build **10932211899**, digest `sha256:2e7bc14680aeed44c1463126370ee06e2b6c83f3c9b72ee158f74a52794b36a3`;
+  - ares matrix **10932417994**, digest `sha256:a04f8bb637fadcba9c9c365ef47db292efa9ef9113f5976e9a1bb3c7ddcd334c`;
+  - APU proof build **10932367385**, digest `sha256:7dca36ffcc19b6f7eda9de44c3474518e08dd5b15d7cc0d809f5c5efa7bcd87d`;
+  - APU proof **10931959414**, digest `sha256:a87bad6f326f6def3e0558816b521416038b8421593ccdd9155e010e6409bf0c`.
+- Both normal and PROFILE RSP variants are exactly **4096 B text / 4096 B data**, with binary **`control-in-delay=0`**. Normal ROM SHA-256 **`f67033c44581679cacaf4d49c3ce9b4f7db9358ee1f7e4844bc1ec98d12fb393`**.
+- Post-merge ares matrix remains consistent with the pre-merge candidate: idle/cpu-alu/wram/gameplay-balanced **60/60**, pathological free-running `ppu-registers` **57/60**, synthetic `dma-vram` **17/60**. The separately controlled bounded A/B remains the performance interpretation authority for PR #18: **4/32/128 active CGRAM commits per native frame all sustain 60/60 with large idle headroom**. Do not reinterpret the two synthetic stress ceilings as broad N64 cadence claims.
+- APU proof also stays green on the integrated master, preserving the validated 32-SPC-cycle budget edge, halted-state scheduler behavior, semantic/span checks, cached reuse and mutation-triggered recompilation.
+- **VALIDATED claim:** lossless mid-frame CGRAM/fixed-color history is now produced, handed off and replayed into the owned raw RGBA shadow on the production master, with bounded performance evidence and no regression in the current lower-level Gate-B/Gate-C controls.
+- **NON-CLAIM:** H-COMP arithmetic still does not consume that historical state to produce full SNES color math; Main/Sub winner provenance/full compositor output and SMW/ALttP correctness remain open.
+- **NEXT GATE DRIVER:** reprove the historically validated zero-resident-growth third H-COMP overlay placement on this exact full-IMEM master, then use an executable proof to connect the now-integrated historical palette state into H-COMP arithmetic/output without importing cumulative experimental branches.
 
 ### MEASURED / MERGE HOLD RELEASED — bounded CGRAM producer cost clears 32/128 A/B (2026-09-27 UTC)
 

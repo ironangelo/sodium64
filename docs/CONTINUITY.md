@@ -7,6 +7,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### VALIDATED — exact-head generic gates close clean CGRAM→H-COMP L0 (2026-09-27 UTC)
+
+- Same-head **Build and Validate `36334787357 SUCCESS`** on `2e6efdb289a7c7d4c0796ba1d9566d2b1a2c1b63`: host validation, normal build, PROFILE build, binary RSP branch-delay checks, release path and pinned-Mupen/LLE emulator smoke all completed green.
+- This removes the temporary promotion hold recorded in the prior checkpoint. The clean L0 contract is now **VALIDATED** rather than merely dedicated-workflow green.
+- **NEXT:** executable proof-only H-COMP third overlay on a fresh branch derived from integrated master, implementing exactly the validated current-slot RGBA5551→RGB555→E1f bridge and moving the `sp` toggle into H-COMP immediately before HALT. First close source/binary/build evidence; only then add a deterministic active-CGRAM first-hand run.
+
+
 ### MEASUREMENT / ARCHITECTURE PROOF PASSED — clean CGRAM→H-COMP arithmetic L0 (2026-09-27 UTC)
 
 - Exact host/workflow head **`phase4/gate-c-hcomp-cgram-arith-contract-clean@2e6efdb289a7c7d4c0796ba1d9566d2b1a2c1b63`** is **3 commits ahead / 0 behind** integrated `master@7cc8fac...` and changes only the L0 oracle + dedicated workflow; compare confirms **zero runtime-source delta**.

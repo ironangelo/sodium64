@@ -7,6 +7,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / CI RUNNING — clean Main/Sub provenance L0 contract (2026-09-27 UTC)
+
+- Fresh host/workflow-only branch **`phase4/gate-c-hcomp-main-sub-contract-clean@e7df846fc3b1cb2b8c6024d02460c24897ff4910`** derives from first-hand validated bridge authority **`5d714c2452091dd0a8ab8613285ba007da36ccc2`**. No `src/` runtime bytes are changed by this L0 branch.
+- New contract **`scripts/test_gate_c_hcomp_main_sub_contract_clean.py`** reconciles clean PR #18 + third-overlay/H-COMP runtime with the durable E2g-B provenance result without importing the cumulative E2/E3/E4 source branch.
+- **Resident-routing hypothesis:** replace the historical 8-instruction `MASK_SEL`/shared-suppression pack with semantic **TS low byte / TM high byte** in 4 instructions, preserving shared layers in both screens. Replace the 4-instruction first→second transition with a 7-instruction dispatch into the already-published H-COMP overlay. Combined resident footprint is **12 -> 11 instructions**, so semantic screen routing can be introduced with **no resident-IMEM growth**.
+- **Overlay reuse hypothesis:** reserve fixed **H-COMP screen-switch entry `0x1760`**. A 10-instruction / **40 B** H-COMP helper can retarget Color Image to `FRAMEBUFFER(sp)`, send the command via resident `rdp_send`, then reload the regular renderer through existing `overlay_load_slot` and continue at resident `next_layer`. Current H-COMP active fixed-slot code is 192 B; adding this helper projects **232/1000 B**, leaving 768 B. No fourth overlay pointer/loader is required.
+- **Clean RDRAM proposal after rejecting old E2g-B addresses:** one 280x8 RGB16/Z16 strip = **0x1180 B**. Proposed non-overlapping ranges inside the current Q2→raw-shadow gap are **Sub metadata `0xA00DE000..0xA00DF17F`**, **Main metadata `0xA00E0000..0xA00E117F`**, and **Sub color `0xA00E4000..0xA00E517F`**. The latter keeps the historically validated compact-color neighborhood but all ranges are re-proved against current PR #18 ownership.
+- **Late-DMEM capacity:** reserve only **F10** for a compact first-screen RDP target word in the first rung; current audited **F10..F6F = 0x60 B** padding remains after PR #18 live scratch and before fixed `VEC_DATA=F70`.
+- **First executable successor is intentionally narrower than full E2g-B wiring:** use one opaque real Main BG + one opaque real Sub BG so `sub_present=true` is controlled, and exercise the Main BG's **CGADSUB bit disabled vs enabled** across deterministic states. This proves semantic dual-color ownership + real Main gating before adding per-pixel metadata wiring. The reserved E2g-B metadata surfaces are capacity/layout evidence only at this rung.
+- **Explicit non-claims:** OBJ palette-group exception, backdrop-math enable, color windows, brightness/raw ordering, metadata runtime wiring, full-band/full-frame throughput, cadence and real-N64 result remain open.
+- Dedicated workflow **Gate C H-COMP Main Sub Contract Clean** has been dispatched on exact head `e7df846f...`; require `HCOMP_MAIN_SUB_CLEAN_L0_VALIDATED`, unchanged bridge-runtime ROM hash `71dd6477...`, RSP 0x1000/0x1000/H-COMP 0x790 and zero control-in-delay hazards before promoting this architecture.
+
+
 ### SUPPORTED SOURCE FINDING — E2g-B semantics survive, old metadata addresses do not (2026-09-27 UTC)
 
 - Fresh reconciliation of validated E2g-B with integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`** found a concrete clean-lineage collision: historical E2g-B used compact Z16 metadata surfaces at **`0xA00C0000`** (Sub `sub_present`) and **`0xA00C2000`** (Main `main_math_eligible`).

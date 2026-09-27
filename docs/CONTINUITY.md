@@ -7,6 +7,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### MEASURED / LAB LIMITATION — first paced A/B gives 4/32 greens but high-rung harness timeouts (2026-09-27 UTC)
+
+- First bounded Ares pass produced real frame-budget evidence before its harness failures:
+  - integrated-master baseline `f2b6880d...`: **cgram-paced-4 = 60/60**, 943 valid samples, **72.64% frame/VI wait**;
+  - PR#18 candidate `d91cde6f...`: **cgram-paced-4 = 60/60**, 948 valid samples;
+  - PR#18 candidate: **cgram-paced-32 = 60/60**, 861 valid samples, **71.89% frame/VI wait**, PPU/events **31/861 = 3.60%**.
+- The same runs reconfirm the old controls: baseline free-running `ppu-registers=61/60`; PR#18 free-running `ppu-registers=57/60`; both `gameplay-balanced=60/60`. Therefore the bounded result is not caused by losing the previously observed stress difference.
+- Baseline **cgram-paced-32** and candidate **cgram-paced-128** did **not** produce a frame-budget observation. Each failed during GDB preparation/settle at `continue_then_interrupt` with **`TimeoutError` before measurement reset** after the ROM had loaded and GDB connected. Baseline artifact **10923063360**, digest `sha256:63e35cd3fc07c013fc564bfb16e98f3aeea164ed71d97b2d62b4f653d3d04a80`; candidate artifact **10923895928**, digest `sha256:9f160a2d56a35a14004e9d08525e91d68042b27eb0b3ce5f2f2d4be2e772a790`.
+- **Classification: LAB LIMITATION / REJECTED AS BUDGET EVIDENCE for the timed-out rungs.** ares/paraLLEl logs show one-time compute/shader compilation stalls around these launches. Because no `fps_display` measurement reset/observation occurred, these timeouts cannot be called 32/128 performance failures.
+- **Supported interpretation so far:** PR #18 demonstrably sustains **32 finite active-display CGRAM commits per native frame at 60/60 with large virtual idle headroom**, while its unlimited tight-loop stress remains 57/60. This materially weakens the merge-blocker concern, but the A/B is not complete because master lacks a valid 32 result and 128 lacks comparable evidence.
+- **NEXT:** rerun only 32/128 as isolated Ares jobs (fresh process/job per rung, no long preceding matrix), with a boundedly larger GDB response timeout to tolerate startup shader compilation. Keep runtime bytes unchanged and preserve identical tooling between base/candidate. One rung must not prevent collection of the other.
+
 ### GENERIC VALIDATED — both paced A/B branches build and smoke cleanly (2026-09-27 UTC)
 
 - Baseline measurement head `f2b6880d4727a2438bf77c99a7685f515b3c9f53`: **Build and Validate 36293986492 SUCCESS**, including host tests, normal + PROFILE compile, independent RSP branch-delay checks and pinned-Mupen/LLE smoke.

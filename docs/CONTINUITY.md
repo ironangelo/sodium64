@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### CORRECTION / LAB LIMITATION — pinned ares PIPE_BUSY is sticky without Sync Full; old DP-idle fence is invalid (2026-09-27 UTC)
+
+- Exact source inspection of pinned **ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`** changes the interpretation of the earlier `DP_STATUS=0xA9` result. In `ares/n64/rdp/io.cpp:flushCommands()`, submitting DP_END sets **`bufferBusy=1`, `pipeBusy=1`**, then calls `render()` synchronously and clears **bufferBusy** when that submitted command list returns. In `render.cpp`, **only RDP Sync Full opcode 0x29 clears `pipeBusy`** through `syncFull()`.
+- Current exact Sodium64 proof runtime contains **no Sync Full (0x29)** in `rsp_main.S`, `rsp_mode7.S` or `rsp_hcomp.S`. Therefore ares **PIPE_BUSY bit 0x20 may remain asserted indefinitely after perfectly completed command-list execution**. The old host predicate `DP_STATUS & 0x70 == 0` is invalid for this Sodium64/a​res laboratory and can be unreachable by construction.
+- Search of the pinned RDP source finds no normal `tmemBusy` producer beyond status/reset/serialization bookkeeping in this implementation; it is not the observed blocker. **bufferBusy bit 0x40** is the meaningful submission-in-progress flag in this ares path.
+- **SUPERSEDED interpretation:** the earlier 4096 R4300 single-step failure does not primarily demonstrate that GDB single-step starves asynchronous RDP scheduling. Pinned ares renders the submitted DP list synchronously from `flushCommands()`; the persistent 0x20 is a model/status semantic, not evidence that those pixels are still pending.
+- **REJECTED:** require PIPE_BUSY=0, wait for it with CPU stepping, or add a proof-only Sync Full to Sodium64 just to satisfy the host harness.
+- **Correct pinned-ares completion authority:** at the exact pre-RSP-launch frame boundary require **SP HALT**, **DPC bufferBusy clear**, and **DPC_CURRENT == DPC_END**. Record PIPE_BUSY diagnostically but do not gate on it. This is explicitly **LAB-SPECIFIC** evidence that ares has consumed the submitted RDP command list; it is not a claim about real-N64 DPC timing or hardware idle semantics.
+- In-flight dedicated run **`36354896463`** still carries the invalid all-busy-bits-clear predicate and is therefore **SUPERSEDED regardless of terminal result**. Repair only capture/oracle host semantics; runtime, guest, exact +0x14 ELF boundary, ares pin and strict seeded pixel expectations remain unchanged.
+
+
 ### IMPLEMENTED / CI RUNNING — exact-ELF prelaunch fence corrected to frame_wait+0x14 (2026-09-27 UTC)
 
 - Pixel branch advanced host/workflow-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@fc56fe8680dbecaed0941d5c4d6c2248f87c142a`**. Runtime/guest/oracle semantics remain unchanged.

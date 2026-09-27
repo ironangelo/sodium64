@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### VALIDATED DEDICATED GEOMETRY — clean executable Main/Sub ownership ABI restored (2026-09-27 UTC)
+
+- Exact repaired executable head **`phase4/gate-c-hcomp-main-sub-exec-clean@3df9f87cfaa238b890d48a00c145ecee6d9b376a`** passes dedicated **Gate C H-COMP Main Sub Exec Clean `36340856658 SUCCESS`**. Artifact **`10938568755`**, digest **`sha256:fbb9a227124b86fb8ecb45f293bcad9b475311adefc828c018b0adb7611dc6a3`**.
+- Source + binary oracle reports **`HCOMP_MAIN_SUB_EXEC_CLEAN_CONTRACT_VALIDATED`**. Regular and Mode7 RSP are restored to **0x1000 text**, H-COMP remains **0x790**, and all three binary delay-slot checks report **`control-in-delay=0`**.
+- The explicit 4-B pre-slot pad repaired the measured -8 B ABI shift exactly. Frozen resident addresses are restored: `draw_bg=0xA40013A8`, Mode7 entry `0xA4001788`, `draw_obj=0xA4001790`, `dma_write=0xA4001F08`, `dma_read=0xA4001F40`, `rdp_send=0xA4001F5C`, `overlay_load_mode7=0xA4001F78`, `overlay_load_slot=0xA4001F7C`, `overlay_load_main=0xA4001F90`.
+- New semantic routing's resident **`next_layer=0xA4001364`** is now measured and pinned; H-COMP screen switch is **`0xA4001760`** and resumes at that measured address. Frame-end H-COMP remains `13B0`; Mode7 fault remains `1788`.
+- Candidate runtime ROM SHA-256 is **`eb216fcc259dd174d9ae3fb7b1908aaed775753a5b2c43689c9ead238670cff9`**. H-COMP active fixed-slot footprint remains **232/1000 B**; resident IMEM growth vs validated bridge is **0**.
+- **VALIDATED dedicated claim:** the bounded TS→TM dual-color runtime now compiles with exact fixed-slot/suffix ABI and preserves the frame-end E1f bridge. No pixel result yet.
+- Exact-head generic **Build and Validate `36340856637`** is still pending at this checkpoint. Do **not** dispatch semantic pixel authority until it closes green.
+
+
 ### MEASURED ABI SHIFT / RUNTIME CANDIDATE REQUIRES PADDING REPAIR (2026-09-27 UTC)
 
 - Direct inspection of failed-run artifact **`10938737655`** from `f9b018b...` confirms the 0xFF8 shrink was **not safe headroom**: regular and Mode7 fixed/runtime symbols all shifted **-8 B**. Measured examples: `draw_bg=0xA40013A0` (must be 13A8), `draw_mode7_entry=0xA4001780` (must be 1788), `dma_write=0xA4001F00` (must be 1F08), `dma_read=0xA4001F38` (must be 1F40), `rdp_send=0xA4001F54` (must be 1F5C), `overlay_load_slot=0xA4001F74` (must be 1F7C), `overlay_load_main=0xA4001F88` (must be 1F90). `next_layer=0xA4001364`.

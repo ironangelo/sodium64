@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / CI RUNNING — clean first-hand Main/Sub pixel ownership proof (2026-09-27 UTC)
+
+- Fresh host/workflow-only child **`phase4/gate-c-hcomp-main-sub-pixels-clean@9e5221c9806d3db1be9c607b2748c2bff4b56693`** derives from fully green executable authority `3df9f87c...`. Sodium64 runtime source is intentionally unchanged in this batch.
+- The proof reuses the **already-validated lifetime guest** unchanged (guest SHA-256 pinned to `bfbbf280a830cf8659c9b670fa753af94e36a1ddd00f1aada162fb85438d0b05`): opaque BG2 green on semantic Sub for [0,8), opaque BG1 red on Main, exact section split 8/224.
+- New classifier **`scripts/check_gate_c_hcomp_main_sub_pixels.py`** requires one same-snapshot/proven-normalization section-queue authority plus exact pixel ownership in physical rows 0..7 / active x=12..267: compact Sub `A00E4000` must contain **RGBA5551 0x07C1 green** across all 2048 active words, while all three warmed Main framebuffers `A00F2300/A0113000/A0133D00` must contain **RGBA5551 0xF801 red** across the same active band. The 192 border words are required to remain cleared in this deterministic control.
+- Exact-pattern classification also rejects red contamination in Sub and green contamination in Main. Self-tests cover both debugger byte normalizations, swapped Sub/Main colors, and corruption of one Main framebuffer.
+- Dedicated workflow rebuilds and revalidates the exact executable geometry/ROM hash **`eb216fcc...`**, captures six pinned-Mupen/CXD4 LLE snapshots of both section queues + fixed Sub strip + all three Main strips, and accepts only first-hand **`HCOMP_MAIN_SUB_PIXELS_DYNAMIC_VALIDATED`** evidence.
+- **STATUS: IMPLEMENTED / CI RUNNING.** If green, claim only **two independently rendered color operands exist on the clean runtime**. CGADSUB arithmetic selection/gating, final color math, metadata, OBJ/backdrop/windows/brightness, cadence and hardware remain non-claims.
+
+
 ### VALIDATED EXECUTABLE GEOMETRY — Main/Sub runtime candidate fully green (2026-09-27 UTC)
 
 - Exact executable authority **`phase4/gate-c-hcomp-main-sub-exec-clean@3df9f87cfaa238b890d48a00c145ecee6d9b376a`** now has both required gates closed: dedicated **`36340856658 SUCCESS`** and exact-head generic **Build and Validate `36340856637 SUCCESS`**, including normal build, PROFILE build and pinned Mupen/CXD4 LLE smoke.

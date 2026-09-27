@@ -152,8 +152,10 @@ def main() -> int:
 
         baseline_counter = read_u(client, args.guest_counter_address, 1)
 
-        # Step exactly one inert li-t0-1 instruction only to move the CPU PC
-        # past the software breakpoint. We do not use single-step as a timing or
+        # Step exactly one inert lui-t1-A404 instruction only to move the CPU PC
+        # past the software breakpoint. The preceding li-t0-1 is the frame_wait
+        # branch delay slot, so the breakpoint deliberately sits at +0x0C.
+        # We do not use single-step as a timing or
         # RDP-drain mechanism. Reinstall behind the PC and then run normally
         # until the next prelaunch reentry, which identifies one renderer frame.
         set_breakpoint(client, args.prelaunch_address, False)

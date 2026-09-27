@@ -7,6 +7,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### OPEN ARCHITECTURE CONSTRAINT — post-consumer RSP IMEM is full (2026-09-27 UTC)
+
+- PR #18's validated consumer makes both resident RSP variants exactly **0x1000 / 4096 B of IMEM**. There is **zero ordinary tail headroom** after the 29-instruction DMA8 replay consumer.
+- Current code already has demand-loaded regular/Mode7 renderer payloads in the fixed slot **A40013A8..A400178F**, with source pointers E90/E94 and resident suffix loaders. This proves that controlled IMEM replacement is an available mechanism, but it does **not** by itself prove that future H-COMP arithmetic can safely reuse that slot at the required phase.
+- Historical H-COMP experimentation should be treated as reference evidence only; a fresh search did not establish a merge-ready third H-COMP overlay on the clean lineage. **Do not respond to the full-IMEM state by shaving arbitrary instructions or importing cumulative H-COMP branches wholesale.**
+- **NEXT after PR #18 integration:** architecture-proof the smallest place for final H-COMP palette/fixed-color arithmetic under the full-IMEM constraint. Candidate directions must explicitly prove lifetime/call-phase compatibility with the existing renderer overlay, or justify another execution location with semantic/performance evidence. The now-correct CGRAM replay transport is an input to that decision, not permission to assume a placement.
+
 ### VALIDATED — persistent CGRAM epoch replay regression on PR #18 final head (2026-09-27 UTC)
 
 - Corrected PR #18 head **`5ef80450dec16c031e76d18bcaddb2da72a5b2a8`** completed **Gate C CGRAM Epoch Replay Regression 36286515413 SUCCESS**.

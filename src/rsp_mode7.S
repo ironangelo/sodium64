@@ -507,6 +507,11 @@ next_layer:
     b overlay_load_slot
     nop
 
+    // Preserve the historical fixed-slot/suffix ABI after the semantic
+    // routing logic shrank by one instruction. This 4-B pad plus the existing
+    // 64-bit alignment restores draw_bg to 0x13A8 without executing extra work.
+    .byte 0:4
+
     // Fixed renderer overlay begins on a 64-bit DMA boundary.
     .align 3
 draw_bg:

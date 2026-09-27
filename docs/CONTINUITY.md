@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / CI RUNNING — exact 8-line Main/Sub lifetime discriminator (2026-09-27 UTC)
+
+- Fresh child **`phase4/gate-c-hcomp-main-sub-lifetime-clean@1a2c5be6ef9cb03e7aa4a4ed72c072347595f69f`** derives from validated Main/Sub L0 authority `c66ea7a...` and still makes **zero Sodium64 runtime-source changes**. New files are deterministic guest, first-hand section-queue classifier and dedicated workflow only.
+- The guest uses the future proof's real screen shape already: opaque **BG1 on Main (TM=1)** and opaque **BG2 on Sub (TS=2)**. Direct HDMA targets **TS itself ($212D)** with values **2 for exactly 8 visible lines, then 0 through line224**. NMI restores TS=2 before the next frame.
+- This discriminator exploits integrated PR #17 semantics rather than inventing a proof-only section marker: `write_ts` calls raster-sensitive `update_window_frame`, so the handed section queue must encode **section0 [0,8): TS=2/TM=1** and **section1 [8,224): TS=0/TM=1** if the compact-Sub lifetime assumption is valid.
+- Classifier dumps **both ping-pong section queues** (`A016C600`, `A0171600`) and requires both to carry the exact two-record state under an already-proven debugger normalization. It additionally requires frame-start OAM-dirty on record0 and its removal on record1; off-by-one split=9 and post-split TS re-enable are explicit negative self-tests.
+- **Why this closes the future write-bound:** the planned executable can set the compact Sub color target once at frame start, render semantic TS for the first section, switch to Main at the TS→TM transition, and never restore the compact target. Because later delivered sections have TS=0, no later Sub-layer traversal can write the compact surface. This is stronger than gating on an inferred section number.
+- Dedicated **Gate C H-COMP Main Sub Lifetime Clean** has been dispatched on exact head `1a2c5be6...`. Require first-hand classification **`HCOMP_MAIN_SUB_LIFETIME_DYNAMIC_VALIDATED`**, exact split **8/224** in both queues and unchanged bridge ROM hash `71dd6477...` before any runtime implementation.
+
+
 ### VALIDATED L0 — clean Main/Sub provenance placement/routing contract CLOSED (2026-09-27 UTC)
 
 - Exact final authority **`phase4/gate-c-hcomp-main-sub-contract-clean@c66ea7a225bb3ede6cc7b995e860176a53a88342`** is host/workflow-only over first-hand validated clean bridge head `5d714c2452091dd0a8ab8613285ba007da36ccc2`; compare is **4 commits / 2 added files / zero runtime-source delta**.

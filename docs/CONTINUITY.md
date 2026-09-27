@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / CI RUNNING — natural pre-RSP-launch quiescent pixel fence (2026-09-27 UTC)
+
+- Host/workflow-only pixel branch advanced to **`phase4/gate-c-hcomp-main-sub-pixels-clean@0f8683b10beb53afeae7457c0ea35011f8075659`**. Sodium64 runtime source, deterministic lifetime guest, pinned ares revision and strict pixel oracle are unchanged.
+- The failed repeated-single-step DP drain has been removed. Capture now breaks at the existing **`frame_wait + 0x0C`** CPU instruction: `frame_wait+0x08` is the branch delay-slot `li t0,1` and executes on every wait-loop iteration, while **+0x0C is the following `lui t1,0xA404` reached only after the wait branch falls through and before the `jr` delay-slot store clears SP HALT**.
+- At both seed and capture reentry the harness now requires **SP HALT + RDP idle immediately**. It will not step/poll to manufacture quiescence. Sentinels are seeded only after that natural state is observed.
+- The harness removes the breakpoint, single-steps exactly the inert +0x0C `lui` only to move PC past the software breakpoint, reinstalls it behind the PC, and then runs normally until exactly one same-boundary reentry. Single-step is no longer used as a timing/RDP-progress mechanism.
+- **Expected discriminator:** if the prelaunch boundary is naturally quiescent, the existing strict Sub-green / exactly-one-Main-red sentinel oracle can finally adjudicate real RDP ownership on the byte-identical clean runtime. If DP is still busy there, classify the fence as invalid rather than editing runtime or weakening the oracle.
+- **STATUS: IMPLEMENTED / CI RUNNING.** This is a laboratory synchronization repair only; no renderer correctness claim yet.
+
+
 ### LAB LIMITATION / NO PIXEL VERDICT — R4300 single-step is not an RDP-drain fence in pinned ares (2026-09-27 UTC)
 
 - Exact pixel-proof head **`phase4/gate-c-hcomp-main-sub-pixels-clean@defc9ed6939239ddcc048431dab71b0e98f7d9ed`** has generic **Build and Validate `36343423368 SUCCESS`**, so the clean runtime/source-binary contract remains intact.

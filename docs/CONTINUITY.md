@@ -13,6 +13,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Workflow now freezes the exact assembled CPU geometry before entering the expensive ares lab: **`frame_wait=0x8000AE1C`**, expected .text words at **0x8000AE20/0x8000AE30**, and **`PRELAUNCH_ADDR=0x8000AE30 = frame_wait+0x14`**. Any source/assembler/layout drift fails this assertion rather than silently changing the boundary.
 - Capture single-steps only the inert **`lui t1,0xA404` at +0x14** to move PC past the software breakpoint; the RSP clear-HALT store remains later at the `jr` delay slot **+0x1C**. Thus the seed is written while RSP is still HALT, and normal execution—not debugger stepping—performs the renderer frame.
 - Prior +0x0C dedicated run **`36354515925`** remains **SUPERSEDED** by exact machine-code evidence even if GitHub reports a terminal status.
+- Fresh source audit also explains the original post-`rsp_wait` PIPE_BUSY observation without invoking a deadlock: resident `rdp_send` waits only **DP command-busy bit 0x40** before publishing DP_START/DP_END, while frame-end H-COMP toggles ownership and HALTs the RSP without a final RDP pipe-drain/full-sync wait. Therefore **RSP HALT may legitimately precede RDP PIPE_BUSY clearing**. This supports moving the observation later in normal CPU execution; it does not pre-judge whether +0x14 will already be idle.
 - **STATUS: IMPLEMENTED / CI RUNNING.** Require same-head generic green plus dedicated immediate SP-HALT/RDP-idle at seed and reentry, then the unchanged strict sentinel pixel oracle.
 
 

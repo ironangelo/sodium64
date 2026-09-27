@@ -7,6 +7,25 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### IN FLIGHT — executable clean-lineage third-overlay coexistence proof (2026-09-27 UTC)
+
+- New proof-only branch **`phase4/gate-c-hcomp-third-overlay-exec-clean@462a4ea8b816e4edf2d4d344f91501f9706011a4`** is exactly **1 commit ahead / 0 behind** integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`**. No cumulative H-COMP branch was merged/cherry-picked.
+- Runtime delta is deliberately narrow: `src/defines.h`, `src/main.S`, `src/rsp_main.S`, `src/rsp_mode7.S`, plus new proof-only `src/rsp_hcomp.S`. Tooling is one source/binary contract + one dedicated workflow.
+- The zero-growth L0 design is now executable:
+  - Mode7 source moves into audited free DMEM word **E8C**, Main stays **E90**, proof H-COMP owns **E94**, raw palette pointers remain **E98/E9C**;
+  - F10/F11 in existing reserved DMEM padding are proof markers only;
+  - regular/Mode7 `next_frame` replaces the existing 4-instruction HALT tail with a 4-instruction H-COMP slot load;
+  - the existing 6-instruction Mode7 loader is factored into the same-size indirect `overlay_load_slot`; the regular Mode7 fault remains 2 instructions and supplies target `0x1788`;
+  - true Mode7 entry clears F10 in its existing delay slot;
+  - proof H-COMP slot at **A40013A8** has neutral Main/Mode7 fault surfaces, writes **0x51** to F11 at **A40013B0**, HALTs, and resumes at the current resident `draw_frame`.
+- Absolute proof jumps were **not copied blindly from the old lineage**. Current integrated build artifact `10932072283` was inspected directly: resident loader machine code is still **A4001F78 Mode7 / A4001F90 Main**, DMA read remains **A4001F40**, and the fixed renderer slot remains **13A8..178F**. The proof contract independently rechecks those addresses from the newly linked ELFs.
+- Source contract explicitly requires PR #18 replay anchors (`hcomp_cgram_pair_ready`, EA0 cursor, EB0 scratch, raw-palette pointer selection) to remain present. Binary contract requires regular + Mode7 resident text **0x1000**, H-COMP proof payload **0x790**, fixed entries **13A8 / 13B0 / 1788 / 1790**, equal renderer `next_frame` placement, and independent binary `control-in-delay=0` on all three RSP ELFs.
+- Exact-head runs dispatched: **Gate C H-COMP Third Overlay Exec Clean 36325338090 QUEUED** and generic **Build and Validate 36325338072 PENDING**.
+- **Falsifiers:** any resident IMEM growth beyond 0x1000, moved fixed entry/loader ABI, control-in-delay regression, loss of PR #18 replay anchors, H-COMP payload layout mismatch, compile/smoke failure. A green build/layout result proves only executable placement; first-hand Main↔Mode7↔H-COMP lifetime still requires a separate dynamic guest/capture batch.
+- **NEXT if green:** add the historical boot-first Mode1→Mode7→Mode1 homebrew discriminator and first-hand marker/slot classifier on this exact clean runtime. Keep compositor arithmetic disabled. Do not request hardware yet.
+
+
+
 ### MEASUREMENT PROOF PASSED — clean-lineage third-overlay L0 contract (2026-09-27 UTC)
 
 - Host/workflow-only branch **`phase4/gate-c-hcomp-third-overlay-contract-clean@3629f099bec628b70382544918a01e2e23422fda`** remains **zero runtime/source delta** from exact integrated `master@7cc8facfe8643fb85888f301f79995575830521d`.

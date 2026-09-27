@@ -19,16 +19,21 @@ draw_bg:
     move v0, t0
 
 hcomp_entry:
-    // First-hand execution marker, then preserve the historical HALT contract.
+    // Mode7 clears F10 on true entry. Publish F10..F17 to a calibrated RDRAM
+    // mailbox before HALT so no unreliable direct SP-DMEM debugger read is used.
     li t0, 0x51
     sb t0, HCOMP_OVERLAY_PROOF_HCOMP
+    li a0, HCOMP_OVERLAY_PROOF_MODE7
+    li a1, 0xA00F0000
+    jal 0xA4001F08 // Exact-current resident dma_write, rechecked by binary oracle.
+    li a2, 0x7
     li t0, 0x2
     mtc0 t0, COP0_SP_STATUS
     j 0xA400103C
     nop
 
-// Keep the externally visible Mode7 entry at 0x1788.
-.byte 0:0x3C0
+// DMA marker code consumes only existing slot padding; Mode7 stays at 0x1788.
+.byte 0:0x3B0
 
 draw_mode7_entry:
     // Neutral H-COMP-resident fault surface for Mode7 rendering.

@@ -185,6 +185,14 @@ pi_wait1:
     li t0, HCOMP_RAW_PALETTE_QUEUE2
     sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS + 4)
 
+    // Proof-only mailbox sentinel, seeded after arena/init clear and before RSP
+    // execution. H-COMP must replace it with F10..F17 through resident DMA.
+    li t0, 0xA00F0000
+    li t1, 0xDEADBEEF
+    sw t1, 0(t0)
+    li t1, 0xCAFEBABE
+    sw t1, 4(t0)
+
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_PROFILE

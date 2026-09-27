@@ -82,7 +82,9 @@ def source_contract():
     h=(ROOT/"src/rsp_hcomp.S").read_text()
     for a in (".byte 0:0x3A8","draw_bg:","j 0xA4001F90","hcomp_entry:",
               "sb t0, HCOMP_OVERLAY_PROOF_HCOMP","mtc0 t0, COP0_SP_STATUS",
-              "j 0xA400103C",".byte 0:0x3C0","draw_mode7_entry:",
+              "li a0, HCOMP_OVERLAY_PROOF_MODE7","li a1, 0xA00F0000",
+              "jal 0xA4001F08","li a2, 0x7",
+              "j 0xA400103C",".byte 0:0x3B0","draw_mode7_entry:",
               "j 0xA4001F78","li t9, 0x1788"):
         if a not in h: raise AssertionError(f"HCOMP payload missing {a}")
 
@@ -94,7 +96,7 @@ def binary_contract(maps,symbols):
         raise AssertionError("resident renderer IMEM grew")
     if text_size(hm)!=0x790:
         raise AssertionError(f"HCOMP proof payload size {text_size(hm):#x} != 0x790")
-    fixed={"draw_frame":0xA400103C,"dma_read":0xA4001F40,
+    fixed={"draw_frame":0xA400103C,"dma_write":0xA4001F08,"dma_read":0xA4001F40,
            "overlay_load_mode7":0xA4001F78,"overlay_load_slot":0xA4001F7C,
            "overlay_load_main":0xA4001F90,"draw_bg":0xA40013A8,
            "draw_mode7_entry":0xA4001788,"draw_obj":0xA4001790}

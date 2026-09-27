@@ -7,6 +7,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### AUDITED — frame-paced V-IRQ workload exercises one bounded active event burst per frame (2026-09-27 UTC)
+
+- Source audit of integrated `src/ppu.S` confirms the diagnostic ROM's pacing contract matches Sodium64's actual interrupt model: `cur_line == vtime` enters `vcount_irq`; `NMITIMEN & 0x30` gates the IRQ; an enabled IRQ clears the WAI/halted bit, dispatches the interrupt, then sets `TIMEUP=0x80`. `read_timeup` returns and clears that flag.
+- `write_vtimel`/ `write_vtimeh` construct the 9-bit V timer exactly as used by the workload. Line **96** is in active display under the current 240-line default VBlank boundary, so the CGRAM commits are not accidentally VBlank-only traffic.
+- The diagnostic's `CLI -> WAI` loop therefore yields one bounded IRQ burst per frame, and its handler's `LDA $4211` explicitly acknowledges the interrupt before emitting the exact 4/32/128 complete CGDATA pairs. This validates the intended workload shape independently of whether Ares later reports sufficient frame budget.
+- Host profiling tests have already passed on both measurement branches. Any later runtime failure must be classified separately as guest execution/harness or actual budget evidence rather than a generator/vector construction error.
+
 ### IN FLIGHT — bounded frame-paced active-CGRAM A/B for PR #18 merge hold (2026-09-27 UTC)
 
 - Current integrated truth remains **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**; PR #18 remains open at runtime head **`5ef80450dec16c031e76d18bcaddb2da72a5b2a8`** under the existing producer-cost MERGE HOLD.

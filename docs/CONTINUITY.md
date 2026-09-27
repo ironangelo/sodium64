@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### IN FLIGHT — controlled Ares producer-only A/B for PR #18 merge hold (2026-09-27 UTC)
+
+- Merge hold discriminator is now exact and requires **no runtime reconstruction**: corrected typed-producer-only authority `phase4/gate-c-cgram-typed-producer-clean@bd375453ed52680462bedd090a65078feff5f880` is directly **4 commits ahead / 0 behind** current integrated `master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`.
+- Its runtime delta is only the corrected typed CGRAM CPU producer (`src/defines.h`, `src/main.S`, `src/ppu.S`) plus producer/contract host tooling; it has **no RSP consumer changes**. Existing exact-head producer semantic + Build/Validate gates remain green.
+- This is the controlled A/B requested by the PR #18 merge hold. Trigger the normal PR-specific **Ares Profile Validation** on this exact head and compare the identical synthetic `ppu-registers` workload against integrated master (**61/60** across three independent PR#17-lineage runs) and PR #18 full producer+consumer (**57/60**).
+- **Decision rule:** producer-only ~57/60 localizes the stress regression primarily to CPU epoch bookkeeping/typed production; producer-only ~61/60 localizes it to the RSP DMA8 replay/consumer; an intermediate reproducible value implies split cost and requires a second controlled discriminator before merge. Preserve identical Road-valid settings and workload artifact semantics; do not use host wall time.
+- PR #18 remains **MERGE HOLD** during this A/B. H-COMP placement/arithmetic work remains blocked until the cost source is understood; semantic replay evidence remains valid independently of the performance result.
+
+
+
 ### OPEN ARCHITECTURE CONSTRAINT — post-consumer RSP IMEM is full (2026-09-27 UTC)
 
 - PR #18's validated consumer makes both resident RSP variants exactly **0x1000 / 4096 B of IMEM**. There is **zero ordinary tail headroom** after the 29-instruction DMA8 replay consumer.

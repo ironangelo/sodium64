@@ -16,7 +16,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Expected discriminator:** if the prelaunch boundary is naturally quiescent, the existing strict Sub-green / exactly-one-Main-red sentinel oracle can finally adjudicate real RDP ownership on the byte-identical clean runtime. If DP is still busy there, classify the fence as invalid rather than editing runtime or weakening the oracle.
 - Exact compare against validated executable parent **`3df9f87c...`** is **12 commits ahead / 0 behind** and changes only four host-side files: the pixel workflow plus three capture/classifier scripts; **no `src/` runtime file differs**.
 - Moving capture later than `rsp_wait` does not silently introduce normal UI writes for this deterministic guest: `update_menu` returns directly when Start is not pressed and default `counter_set=0`; its optional FPS/menu drawing paths are inactive. This removes a plausible contamination mechanism for the seeded top-band pixels without claiming that arbitrary interactive runs share the same property.
-- **STATUS: IMPLEMENTED / CI RUNNING.** This is a laboratory synchronization repair only; no renderer correctness claim yet.
+- Same-head generic **Build and Validate `36354515841 SUCCESS`** is now closed green, including normal build, PROFILE build and emulator smoke. The only remaining authority for this batch is the dedicated pinned-ares pixel run.
+- **STATUS: IMPLEMENTED / DEDICATED CI RUNNING.** This is a laboratory synchronization repair only; no renderer correctness claim yet.
 
 
 ### LAB LIMITATION / NO PIXEL VERDICT — R4300 single-step is not an RDP-drain fence in pinned ares (2026-09-27 UTC)

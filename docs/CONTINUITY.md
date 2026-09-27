@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### SUPPORTED SOURCE FINDING — clean CGRAM→H-COMP bridge must cross an explicit color representation boundary (2026-09-27 UTC)
+
+- Fresh audit of integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`** confirms PR #18 preserves two deliberately different forms of historical palette state: frame-start **canonical SNES RGB555** in `HCOMP_CGRAM_BASE_QUEUE*`, and an aligned **N64 RGBA5551** shadow in `HCOMP_RAW_PALETTE_QUEUE*` consumed by the current DMA8 replay path.
+- Active-display `CGDATA` records do **not** currently retain a second RGB555 sideband value: their typed 4-byte record stores high16 as lossless RGBA5551 and low16 as the raw-shadow byte offset. The allocated `hcomp_cgram_sideband_ptr` is initialized but has no active writer/consumer on current master.
+- This means the next H-COMP arithmetic bridge must **not** silently feed the RGBA5551 shadow into the E1d/E1e/E1f/E1g RGB555 kernels. The boundary must either decode RGBA5551 back to canonical RGB555 inside the proof overlay, or deliberately extend transport; the smaller controlled discriminator is an explicit lossless decode in the proof overlay first.
+- The old `phase4/gate-c-cgram-hcomp-bridge-*` experiment remains useful only as transport/execution evidence. Its host `half_add_rgb555()` model saturates before halving and is **SUPERSEDED** by the later pinned-reference E1f identity `(x + y - ((x ^ y) & 0x0421)) >> 1`. Do not copy that old arithmetic oracle into the clean lineage.
+- **NEXT controlled batch:** create a fresh **zero-runtime-delta L0 contract from current master** for the smallest clean bridge: validated third-overlay packing + lossless RGBA5551→RGB555 adapter + authoritative E1f half-add discriminator. It must fit inside the 1000-byte fixed H-COMP slot with zero resident-IMEM growth and explicitly keep Main/Sub provenance, gating, final pixels and production completeness as non-claims.
+
+
 ### VALIDATED FIRST-HAND — clean Main→Mode7→Main→H-COMP coexistence (2026-09-27 UTC)
 
 - Exact dynamic authority **`phase4/gate-c-hcomp-third-overlay-dynamic-clean@595a9afbda92d1a16b4cb333b45d8a83912d7712`**, one controlled proof commit over validated executable-layout parent `462a4ea8...`; integrated `master` remains untouched at **`7cc8facfe8643fb85888f301f79995575830521d`**.

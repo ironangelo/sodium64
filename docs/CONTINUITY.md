@@ -7,6 +7,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### HYGIENE-BLOCKER — 0xFF8 ABI rerun blocked by oracle print serialization (2026-09-27 UTC)
+
+- Dedicated rerun **`36340526815 FAILURE`** on `053e3231...` did **not** reach source assertions or rebuild: Python parsing failed because the host-oracle edit serialized a literal **`\\n`** between two `print()` statements.
+- This failure says nothing about the 0xFF8 runtime geometry or fixed ABI. The runtime source is byte-identical to the prior assembled candidate `8d52ea4e...`; only the oracle file changed.
+- Classification: **HYGIENE-BLOCKER / HYPOTHESIS NOT TESTED**. Repair only the malformed print line and rerun the exact 0xFF8 + fixed-symbol discriminator.
+
+
 ### BINARY CHECKPOINT — first Main/Sub exec build shrank resident text; oracle wording was wrong (2026-09-27 UTC)
 
 - Dedicated executable run **`36340347581 FAILURE`** on `8d52ea4e...` passed the complete **source contract** and assembled/linked all runtime objects successfully. Failure occurred only in the new binary oracle before delay-slot/hash steps.

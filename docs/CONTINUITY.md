@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### REJECTED TOOLING ERROR — first persistent replay workflow had one stale producer-only guard (2026-09-27 UTC)
+
+- PR #18 first persistent regression run **36286454287 FAILED before consumer/build** in `test_gate_c_cgram_typed_producer_clean.py`. Exact traceback: `AssertionError: consumer/H-COMP arithmetic leaked into producer-only stage`.
+- Source inspection found a second stale stage-only assertion at the end of the producer oracle: it rejected the now-legitimate `HCOMP_RAW_PALETTE_PTRS` definition even though the integrated consumer is supposed to publish that pointer. This is **REJECTED TOOLING ERROR / zero negative runtime evidence**; dynamically validated runtime and prior exact-head Build/Validate are unchanged.
+- Tooling-only fix **`5ef80450dec16c031e76d18bcaddb2da72a5b2a8`** removes only that obsolete pointer prohibition, retains the prohibition on actual H-COMP arithmetic activation, and relabels the oracle output as producer invariants with consumer allowed. No `src/` file changed.
+- Fresh final-head gates dispatched: **Build and Validate 36286513229 IN_PROGRESS**, **Gate C CGRAM Epoch Replay Regression 36286515413 QUEUED**, **Ares Profile Validation 36286515410 PENDING**. PR #18 remains open; old Ares/replay runs on `b75e7c61...` are superseded by these exact-head gates.
+- **NEXT:** require all three fresh exact-head gates green before merge. If replay now fails after entering consumer/build steps, treat the new failure independently rather than assuming tooling.
+
 ### CANDIDATE / PR #18 OPEN — CGRAM replay + Ares gates pending (2026-09-27 UTC)
 
 - Opened **PR #18**, `Gate C: preserve CGRAM epochs through RSP replay`, final head **`b75e7c61cf8298700f2b7ed938612790f123dae7`** -> unchanged **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**. GitHub reports **mergeable=true / rebaseable=true**; current `mergeable_state=unstable` reflects pending checks, not a conflict.

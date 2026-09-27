@@ -170,12 +170,16 @@ def classify(disabled: Path, enabled: Path) -> dict[str, object]:
     off = classify_state(disabled, 0)
     on = classify_state(enabled, 1)
 
-    for name in ("sub.bin", "main1.bin", "main2.bin", "main3.bin"):
-        if (disabled / name).read_bytes() != (enabled / name).read_bytes():
-            raise ValueError(f"rendered operand changed across gating states: {name}")
+    if (disabled / "sub.bin").read_bytes() != (enabled / "sub.bin").read_bytes():
+        raise ValueError("rendered Sub operand changed across gating states")
 
-    if off["main_rendered_index"] != on["main_rendered_index"]:
-        raise ValueError("Main ownership rotated across gating states")
+    # Each capture is a separate ares process, so triple-buffer phase is not a
+    # cross-process semantic identity. Compare the uniquely rendered Main
+    # surface selected inside each capture, not the same physical slot number.
+    off_main = disabled / f"main{off['main_rendered_index']}.bin"
+    on_main = enabled / f"main{on['main_rendered_index']}.bin"
+    if off_main.read_bytes() != on_main.read_bytes():
+        raise ValueError("canonical rendered Main operand changed across gating states")
 
     return {
         "classification": "HCOMP_CGADSUB_BG1_LIVE_GATING_VALIDATED",
@@ -183,6 +187,7 @@ def classify(disabled: Path, enabled: Path) -> dict[str, object]:
         "disabled": off,
         "enabled": on,
         "rendered_operands_identical_across_gate_states": True,
+        "physical_main_slot_may_rotate_across_processes": True,
         "controlled_main_winner": "BG1",
         "general_winner_metadata": "NOT_PROVEN",
         "add_sub_half_modes": "NOT_PROVEN",
@@ -199,8 +204,8 @@ def patch_fixture_cgadsub(root: Path, value: int) -> None:
         path.write_bytes(data)
 
 
-def write_fixture(root: Path, value: int) -> None:
-    write_pixel_fixture(root, rendered_main=1)
+def write_fixture(root: Path, value: int, rendered_main: int = 1) -> None:
+    write_pixel_fixture(root, rendered_main=rendered_main)
     patch_fixture_cgadsub(root, value)
     result = EXPECTED_ENABLED_RESULT if value else EXPECTED_DISABLED_RESULT
     words = (EXPECTED_MAIN_RGB555, EXPECTED_SUB_RGB555, result, value)
@@ -216,8 +221,8 @@ def self_test() -> None:
         on = base / "on"
         off.mkdir()
         on.mkdir()
-        write_fixture(off, 0)
-        write_fixture(on, 1)
+        write_fixture(off, 0, rendered_main=1)
+        write_fixture(on, 1, rendered_main=3)
         result = classify(off, on)
         assert result["passed"], result
 

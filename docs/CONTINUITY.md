@@ -4,27 +4,23 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 > **Continuity compaction / recovery (2026-09-21):** the live file crossed the GitHub contents-size boundary and a later checkpoint accidentally replaced it with an empty file. The last complete pre-overflow operational log is permanently preserved in Git at continuity commit **`686f5a1da210f8fcd1b9cd6e74d5663f4d359c30`** (and earlier history). This live document is intentionally compacted to current state + durable decisions so future checkpoints remain well below the API limit. Historical detail not repeated here is **archived, not discarded**.
 
-## RESUME HERE — current audited state (2026-09-26 UTC)
+## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
-### IN FLIGHT — executable clean-lineage third-overlay coexistence proof (2026-09-27 UTC)
+### VALIDATED L1/L2 — executable clean-lineage third-overlay layout (2026-09-27 UTC)
 
-- New proof-only branch **`phase4/gate-c-hcomp-third-overlay-exec-clean@462a4ea8b816e4edf2d4d344f91501f9706011a4`** is exactly **1 commit ahead / 0 behind** integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`**. No cumulative H-COMP branch was merged/cherry-picked.
-- Runtime delta is deliberately narrow: `src/defines.h`, `src/main.S`, `src/rsp_main.S`, `src/rsp_mode7.S`, plus new proof-only `src/rsp_hcomp.S`. Tooling is one source/binary contract + one dedicated workflow.
-- The zero-growth L0 design is now executable:
-  - Mode7 source moves into audited free DMEM word **E8C**, Main stays **E90**, proof H-COMP owns **E94**, raw palette pointers remain **E98/E9C**;
-  - F10/F11 in existing reserved DMEM padding are proof markers only;
-  - regular/Mode7 `next_frame` replaces the existing 4-instruction HALT tail with a 4-instruction H-COMP slot load;
-  - the existing 6-instruction Mode7 loader is factored into the same-size indirect `overlay_load_slot`; the regular Mode7 fault remains 2 instructions and supplies target `0x1788`;
-  - true Mode7 entry clears F10 in its existing delay slot;
-  - proof H-COMP slot at **A40013A8** has neutral Main/Mode7 fault surfaces, writes **0x51** to F11 at **A40013B0**, HALTs, and resumes at the current resident `draw_frame`.
-- Absolute proof jumps were **not copied blindly from the old lineage**. Current integrated build artifact `10932072283` was inspected directly: resident loader machine code is still **A4001F78 Mode7 / A4001F90 Main**, DMA read remains **A4001F40**, and the fixed renderer slot remains **13A8..178F**. The proof contract independently rechecks those addresses from the newly linked ELFs.
-- Source contract explicitly requires PR #18 replay anchors (`hcomp_cgram_pair_ready`, EA0 cursor, EB0 scratch, raw-palette pointer selection) to remain present. Binary contract requires regular + Mode7 resident text **0x1000**, H-COMP proof payload **0x790**, fixed entries **13A8 / 13B0 / 1788 / 1790**, equal renderer `next_frame` placement, and independent binary `control-in-delay=0` on all three RSP ELFs.
-- Exact-head runs dispatched: **Gate C H-COMP Third Overlay Exec Clean 36325338090 QUEUED** and generic **Build and Validate 36325338072 PENDING**.
-- **Falsifiers:** any resident IMEM growth beyond 0x1000, moved fixed entry/loader ABI, control-in-delay regression, loss of PR #18 replay anchors, H-COMP payload layout mismatch, compile/smoke failure. A green build/layout result proves only executable placement; first-hand Main↔Mode7↔H-COMP lifetime still requires a separate dynamic guest/capture batch.
-- **NEXT if green:** add the historical boot-first Mode1→Mode7→Mode1 homebrew discriminator and first-hand marker/slot classifier on this exact clean runtime. Keep compositor arithmetic disabled. Do not request hardware yet.
-
-
+- Proof-only branch **`phase4/gate-c-hcomp-third-overlay-exec-clean@462a4ea8b816e4edf2d4d344f91501f9706011a4`** remains exactly **1 commit ahead / 0 behind** integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`**. No cumulative H-COMP branch was imported.
+- Dedicated **Gate C H-COMP Third Overlay Exec Clean 36325338090 SUCCESS**. Artifact **10933069890**, digest `sha256:1961f8257cd5481770f8e7e76a8dfc2a5191c136429c88d9e0a415fad567b4b1`.
+- Exact binary proof:
+  - regular RSP **4096 B text / 4096 B data**, `control-in-delay=0`;
+  - Mode7 RSP **4096 B text / 4096 B data**, `control-in-delay=0`;
+  - proof H-COMP RSP **1936 B = 0x790 text**, `control-in-delay=0`;
+  - fixed slot/entry/loader ABI revalidated from linked symbols at **13A8 / 13B0 / 1788 / 1790** and resident **dma_read 1F40 / Mode7 loader 1F78 / generic slot 1F7C / Main loader 1F90**.
+- Exact ELF SHA-256: regular **91e1b0be...75b4**, Mode7 **451a2ae7...c2e5**, H-COMP **6c332708...33df** (full values are in the artifact). Source contract also requires the integrated PR #18 replay anchors to remain resident.
+- Same-head generic **Build and Validate 36325338072 SUCCESS**, including host tests, normal + PROFILE builds, independent branch-delay checking and pinned-Mupen/LLE smoke. Artifacts: normal **10934070955** digest `sha256:4143959e4e9545b6d189e97a09a5f187765e32cf0131bfbaf5db6e007f35fc05`; PROFILE **10933908249** digest `sha256:f7e88e48bf1cf16d76c934630082117f269b391ad933851fbf40d4d129aae0e4`; smoke **10933378061** digest `sha256:eb2af3f6ac8deecfbbdb849887d454a2eab0621a622aff66935879baffc64b8d`.
+- **VALIDATED claim:** on the exact post-PR18 lineage, a third fixed-slot H-COMP payload is executable/buildable with **zero resident IMEM growth**, fixed Main/Mode7 entry ABI intact and PR #18 replay resident. This closes placement/layout/build uncertainty.
+- **NON-CLAIM:** no first-hand run yet proves regular↔Mode7↔H-COMP lifetime on this clean branch. No compositor arithmetic, pixel-output or cadence claim follows.
+- **NEXT controlled batch:** dynamic first-hand proof using the historical boot-first Mode1→Mode7→Mode1 guest with a deliberately short true-Mode7 interval, and a **post-clear CPU-seeded RDRAM mailbox** overwritten only by the H-COMP F10/F11 marker DMA. Do not use direct RSP debugger-memory reads as authority; prior calibration established that path as unreliable in pinned Mupen.
 
 ### MEASUREMENT PROOF PASSED — clean-lineage third-overlay L0 contract (2026-09-27 UTC)
 

@@ -173,17 +173,21 @@ def main() -> int:
 
         baseline_counter = read_u(client, args.guest_counter_address, 1)
 
-        # Step exactly one inert lui-t1-A404 instruction only to move the CPU PC
-        # past the software breakpoint. Exact-ELF validation proves that
-        # frame_wait's source pseudo-ops expand through +0x10, so the unique
-        # post-loop, pre-unhalt boundary deliberately sits at +0x14.
-        # We do not use single-step as a timing or
-        # RDP-drain mechanism. Reinstall behind the PC and then run normally
-        # until the next prelaunch reentry, which identifies one renderer frame.
+        # Advance exactly across the inert +0x14 lui without GDB single-step.
+        # Pinned ares can let an R4300 single-step cross the following jr delay
+        # slot, whose +0x1C store clears SP HALT. Instead, arm a temporary
+        # software breakpoint at +0x18 (the jr itself), remove +0x14, and
+        # continue normally. Stopping before the jr guarantees the unhalt store
+        # has not executed; then re-arm +0x14 behind the PC before releasing
+        # the renderer for one complete frame.
+        stepover_address = args.prelaunch_address + 4
+        set_breakpoint(client, stepover_address, True)
         set_breakpoint(client, args.prelaunch_address, False)
-        validate_stop(client.request("s"), "prelaunch breakpoint step-over")
-        step_state = require_fenced_boundary(client, stage="post-step prelaunch")
+        validate_stop(client.request("c"), "prelaunch one-instruction continue")
+        step_state = require_fenced_boundary(client, stage="pre-jr prelaunch")
         set_breakpoint(client, args.prelaunch_address, True)
+        set_breakpoint(client, stepover_address, False)
+
         validate_stop(client.request("c"), "fresh-frame prelaunch")
         final_state = require_fenced_boundary(client, stage="capture prelaunch")
         set_breakpoint(client, args.prelaunch_address, False)
@@ -215,6 +219,7 @@ def main() -> int:
             "guest_frame_delta": delta,
             "renderer_frame_reentries": 1,
             "prelaunch_address": f"0x{args.prelaunch_address:08X}",
+            "stepover_address": f"0x{stepover_address:08X}",
             "step_over_boundary": step_state,
             "sentinel": f"0x{SENTINEL:04X}",
             "seed_boundary": seed_state,

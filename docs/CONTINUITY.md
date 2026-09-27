@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### MEASURED PIXEL FAILURE — compact Sub target remained zero in first dynamic ownership run (2026-09-27 UTC)
+
+- Dedicated **Gate C H-COMP Main Sub Pixels Clean `36342015453 FAILURE`** on exact host/workflow head `9e5221c9806d3db1be9c607b2748c2bff4b56693` reached full runtime build, wrap, pinned Mupen/CXD4 LLE execution and six complete pixel/section captures. Artifact **`10938674982`**, digest **`sha256:59493945bfe10f2932e9e0d82e2b45ed9f23724ccca2e275319d16c5646a6a1d`**.
+- Runtime source is unchanged from validated executable authority `3df9f87c...`; its source/binary contract and ROM hash gate passed before capture. Therefore this failure is a **semantic runtime result**, not a build/ABI regression.
+- Under established **`word_swap32`** normalization the lifetime queue advances far enough to reach pixel classification, but every snapshot reports the first active compact-Sub pixels at x=12.. as **`0x0000`**, expected green RGBA5551 **`0x07C1`**. Identity normalization still sees stale/non-authoritative queue state, as expected from prior ping-pong evidence.
+- **Do not weaken the oracle.** At this checkpoint the evidence only proves that the intended compact Sub surface is not receiving the expected rendered BG2 color. It does **not yet distinguish** (a) Color Image target/underflow not active, (b) semantic TS traversal not reaching BG2 draw, (c) RDP command ordering/state issue, or (d) address/row mapping still wrong.
+- **NEXT controlled diagnostic:** keep runtime unchanged and expand capture/classification to report full Sub/Main histograms plus the live RSP `RDP_FRAME+4` Color Image word / relevant DMEM routing state in the same snapshots. Determine whether Main receives red and whether the target command ever contains `0x000E1D00` before changing runtime.
+
+
 ### IMPLEMENTED / CI RUNNING — clean first-hand Main/Sub pixel ownership proof (2026-09-27 UTC)
 
 - Fresh host/workflow-only child **`phase4/gate-c-hcomp-main-sub-pixels-clean@9e5221c9806d3db1be9c607b2748c2bff4b56693`** derives from fully green executable authority `3df9f87c...`. Sodium64 runtime source is intentionally unchanged in this batch.

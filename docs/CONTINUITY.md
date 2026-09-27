@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### MEASUREMENT / ARCHITECTURE PROOF PASSED — clean CGRAM→H-COMP arithmetic L0 (2026-09-27 UTC)
+
+- Exact host/workflow head **`phase4/gate-c-hcomp-cgram-arith-contract-clean@2e6efdb289a7c7d4c0796ba1d9566d2b1a2c1b63`** is **3 commits ahead / 0 behind** integrated `master@7cc8fac...` and changes only the L0 oracle + dedicated workflow; compare confirms **zero runtime-source delta**.
+- Dedicated **Gate C H-COMP CGRAM Arithmetic Contract Clean run `36334787435 SUCCESS`**. Artifact **`10937240278`**, digest **`sha256:41ff9c666029578a64598ae843e78c23b5892c1e20bbbec78899a1fe6b358989`**.
+- Oracle step passed **`HCOMP_CGRAM_ARITH_CLEAN_L0_VALIDATED`**: exhaustive 32,768-value RGBA5551→RGB555 round-trip, authoritative E1f half-add discriminator, current PR #18 replay/source anchors, clean E8C/E90/E94/E98 overlay packing, and current-slot-before-toggle ownership contract.
+- The unchanged runtime rebuilt to the exact integrated ROM hash **`f67033c44581679cacaf4d49c3ce9b4f7db9358ee1f7e4844bc1ec98d12fb393`**; regular + Mode7 RSP remain **4096 B text / 4096 B data** with binary **`control-in-delay=0`**.
+- Planned proof active code occupies only **192/1000 B** of the fixed slot (44 arithmetic/bridge instructions + two 2-instruction fault surfaces), leaving large routing headroom without resident IMEM growth.
+- **VALIDATED L0 claim:** the exact current lineage has a source/representation/ownership/capacity path for the smallest PR18-replay→E1f arithmetic bridge. **NON-CLAIMS:** no executable bridge yet; no Main/Sub provenance, CGADSUB/CGWSEL gating, final-pixel correctness, cadence or hardware result.
+- Generic Build and Validate for the same head was still running at this checkpoint; its host tests had already passed and normal/PROFILE compilation was active. Do not promote to executable proof until that exact-head generic run closes green.
+
+
 ### IMPLEMENTED / NOT YET VALIDATED — clean CGRAM→H-COMP arithmetic L0 contract (2026-09-27 UTC)
 
 - Fresh branch **`phase4/gate-c-hcomp-cgram-arith-contract-clean@3da623133fe96651e3762e4f931e8708909ddf0d`** was created directly from integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`**. Runtime source is intentionally unchanged; current delta is host contract only.

@@ -223,10 +223,14 @@
 // in E84..E89. Keep the count out of the byte-coordinate domain so x=255
 // remains an ordinary legal endpoint; E8B..E8F stay free before overlay ABI.
 #define WIN_COUNT (WIN_BOUNDS + 0x6)
-// Renderer overlay source pointers live in the audited scratch gap.
+// Proof-only three-overlay source pointers. E8C..E8F is the audited free word.
+#define OVERLAY_MODE7_SRC 0xE8C
 #define OVERLAY_MAIN_SRC 0xE90
-#define OVERLAY_MODE7_SRC 0xE94
+#define OVERLAY_HCOMP_SRC 0xE94
 #define HCOMP_RAW_PALETTE_PTRS 0xE98
+// Proof-only coexistence markers in existing F10..F6F padding.
+#define HCOMP_OVERLAY_PROOF_MODE7 0xF10
+#define HCOMP_OVERLAY_PROOF_HCOMP 0xF11
 // Typed CGRAM event cursor published by the CPU while the RSP is halted.
 // EA0 lies in the audited retired DMEM interval below fixed VEC_DATA.
 #define HCOMP_CGRAM_EVENT_CURSOR 0xEA0

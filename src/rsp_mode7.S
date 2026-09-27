@@ -131,11 +131,14 @@ fillrec_mask: .word 0xFF000FFF
 ldblk_bits: .word 0x01000200
 mode7_mask: .word 0x0003FFFF
 
-// Reserve renderer overlay source pointers without moving vector data.
-.byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
-overlay_main_src: .word 0
+// Reserve three proof-overlay source pointers without moving PR #18 scratch
+// or the fixed vector ABI.
+.byte 0:(OVERLAY_MODE7_SRC - PRIO_CHECKS)
 overlay_mode7_src: .word 0
-.byte 0:(VEC_DATA - (OVERLAY_MODE7_SRC + 4))
+overlay_main_src: .word 0
+overlay_hcomp_src: .word 0
+hcomp_raw_palette_ptrs: .word 0, 0
+.byte 0:(VEC_DATA - (HCOMP_RAW_PALETTE_PTRS + 8))
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -849,8 +852,9 @@ finish_tile7:
     // renderer slot; branch back into the variant-local implementation.
     .align 3
 draw_mode7_entry:
+    // Proof-only marker: reaching true Mode7 clears F10 without slot growth.
     b draw_mode7_impl
-    nop
+    sb zero, HCOMP_OVERLAY_PROOF_MODE7
 
 
 draw_obj:
@@ -1136,10 +1140,11 @@ skip_objdecode:
 
 
 next_frame:
-    // Halt until the next frame can be drawn
-    li t0, 0x2 // Set halt
-    mtc0 t0, COP0_SP_STATUS
-    b draw_frame
+    // Proof-only: load the third H-COMP slot at frame end. H-COMP marks entry,
+    // performs HALT, and leaves neutral Main/Mode7 fault surfaces resident.
+    lw a1, OVERLAY_HCOMP_SRC
+    li t9, 0x13B0
+    b overlay_load_slot
     xori sp, sp, 4
 
 
@@ -1589,10 +1594,11 @@ ret_jump:
 // Demand-load the missing renderer slot from resident suffix code.
 overlay_load_mode7:
     lw a1, OVERLAY_MODE7_SRC
+overlay_load_slot:
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
-    b draw_mode7_entry
+    jr t9
     nop
 
 overlay_load_main:

@@ -127,45 +127,67 @@ def classify(root: Path) -> dict[str, object]:
         p.name[:-len("-q1.bin")]
         for p in root.glob("snap*-q1.bin")
     )
+    queue_addrs = {"q1": SECTION_QUEUE1, "q2": SECTION_QUEUE2}
+
     for prefix in snapshots:
         for mode in ("identity", "word_swap32"):
-            try:
-                q1 = classify_queue((root / f"{prefix}-q1.bin").read_bytes(), mode)
-                q2 = classify_queue((root / f"{prefix}-q2.bin").read_bytes(), mode)
-            except (OSError, ValueError) as exc:
-                diagnostic: dict[str, object] = {
+            decoded: dict[str, list[dict[str, int]]] = {}
+            for queue in ("q1", "q2"):
+                path = root / f"{prefix}-{queue}.bin"
+                try:
+                    decoded[queue] = peek_queue(path.read_bytes(), mode)
+                except (OSError, ValueError) as exc:
+                    attempts.append(
+                        {
+                            "prefix": prefix,
+                            "normalization": mode,
+                            "queue": queue,
+                            "passed": False,
+                            "reason": f"decode failed: {exc}",
+                        }
+                    )
+                    continue
+
+                try:
+                    authority = classify_queue(path.read_bytes(), mode)
+                except (OSError, ValueError) as exc:
+                    attempts.append(
+                        {
+                            "prefix": prefix,
+                            "normalization": mode,
+                            "queue": queue,
+                            "passed": False,
+                            "reason": str(exc),
+                            "sections": decoded[queue],
+                        }
+                    )
+                    continue
+
+                other = "q2" if queue == "q1" else "q1"
+                if other not in decoded:
+                    try:
+                        decoded[other] = peek_queue(
+                            (root / f"{prefix}-{other}.bin").read_bytes(), mode
+                        )
+                    except (OSError, ValueError):
+                        pass
+
+                return {
+                    "classification": "HCOMP_MAIN_SUB_LIFETIME_DYNAMIC_VALIDATED",
+                    "passed": True,
                     "prefix": prefix,
                     "normalization": mode,
-                    "passed": False,
-                    "reason": str(exc),
+                    "authoritative_queue": queue,
+                    "authoritative_queue_address": f"0x{queue_addrs[queue]:08X}",
+                    "authoritative": authority,
+                    "opposite_queue": other,
+                    "opposite_queue_sections_diagnostic": decoded.get(other),
+                    "ping_pong_queues_need_not_match_simultaneously": True,
+                    "sub_target_safe_after_first_split": True,
+                    "runtime_source_delta": 0,
+                    "snapshots_seen": len(snapshots),
+                    "attempts_before_pass": len(attempts),
                 }
-                try:
-                    diagnostic["q1_sections"] = peek_queue(
-                        (root / f"{prefix}-q1.bin").read_bytes(), mode
-                    )
-                    diagnostic["q2_sections"] = peek_queue(
-                        (root / f"{prefix}-q2.bin").read_bytes(), mode
-                    )
-                except (OSError, ValueError) as peek_exc:
-                    diagnostic["peek_error"] = str(peek_exc)
-                attempts.append(diagnostic)
-                continue
-
-            return {
-                "classification": "HCOMP_MAIN_SUB_LIFETIME_DYNAMIC_VALIDATED",
-                "passed": True,
-                "prefix": prefix,
-                "normalization": mode,
-                "section_queue1": f"0x{SECTION_QUEUE1:08X}",
-                "section_queue2": f"0x{SECTION_QUEUE2:08X}",
-                "queue1": q1,
-                "queue2": q2,
-                "both_ping_pong_queues_match": True,
-                "sub_target_safe_after_first_split": True,
-                "runtime_source_delta": 0,
-                "snapshots_seen": len(snapshots),
-                "attempts_before_pass": len(attempts),
-            }
 
     return {
         "classification": "HCOMP_MAIN_SUB_LIFETIME_DYNAMIC_FAILED",
@@ -207,22 +229,35 @@ def self_test() -> None:
             result = classify(root)
             assert result["passed"], result
 
-    # Off-by-one lifetime must fail.
+    # One stale ping-pong queue must not reject a coherent handed frame in the
+    # opposite queue. This is the ownership shape measured in Mupen.
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         write_fixture(root, "identity")
-        bad = bytearray((root / "snap0-q1.bin").read_bytes())
-        bad[SPLIT_LINE] = 9
-        (root / "snap0-q1.bin").write_bytes(bad)
+        stale = bytearray(SECTION_SIZE * 4)
+        (root / "snap0-q1.bin").write_bytes(stale)
+        result = classify(root)
+        assert result["passed"], result
+        assert result["authoritative_queue"] == "q2", result
+
+    # Off-by-one lifetime must fail when neither handed queue has a valid frame.
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        write_fixture(root, "identity")
+        for queue in ("q1", "q2"):
+            bad = bytearray((root / f"snap0-{queue}.bin").read_bytes())
+            bad[SPLIT_LINE] = 9
+            (root / f"snap0-{queue}.bin").write_bytes(bad)
         assert not classify(root)["passed"]
 
-    # A later section that re-enables Sub must fail.
+    # A later section that re-enables Sub must fail in both candidate queues.
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         write_fixture(root, "identity")
-        bad = bytearray((root / "snap0-q2.bin").read_bytes())
-        bad[SECTION_SIZE + TS] = 0x02
-        (root / "snap0-q2.bin").write_bytes(bad)
+        for queue in ("q1", "q2"):
+            bad = bytearray((root / f"snap0-{queue}.bin").read_bytes())
+            bad[SECTION_SIZE + TS] = 0x02
+            (root / f"snap0-{queue}.bin").write_bytes(bad)
         assert not classify(root)["passed"]
 
 

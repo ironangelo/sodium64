@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### SUPPORTED SOURCE FINDING — E2g-B semantics survive, old metadata addresses do not (2026-09-27 UTC)
+
+- Fresh reconciliation of validated E2g-B with integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`** found a concrete clean-lineage collision: historical E2g-B used compact Z16 metadata surfaces at **`0xA00C0000`** (Sub `sub_present`) and **`0xA00C2000`** (Main `main_math_eligible`).
+- PR #18 now owns **`HCOMP_CGRAM_EVENT_QUEUE1 = 0xA00BF000`** with **`0x6000` bytes** capacity, i.e. **`0xA00BF000..0xA00C4FFF`**. Both old E2g-B metadata surfaces land inside that authoritative event arena. Therefore those historical addresses are **SUPERSEDED / NOT PORTABLE** even though the E2g-B boolean semantics remain validated.
+- Current lower-RDRAM map still has a large unallocated interval after Q2 event storage: Q2 is **`0xA00D7000..0xA00DCFFF`**; current raw-palette Q1 begins at **`0xA00EF000`**. Historical compact Sub color at **`0xA00E4000`** is not defined/owned by current master and lies inside that gap, but any clean contract must prove the complete chosen target ranges/guards rather than inherit old addresses by convention.
+- **Interpretation:** reuse **E2g-B's proven provenance model**, not its diagnostic memory layout. The next L0 contract must allocate non-overlapping clean-lineage compact color/metadata targets in the current PR #18 arena map and prove their capacity before any runtime port.
+- **NEXT controlled batch:** host-only L0/source-capacity contract from current master. It must prove (1) semantic TS then TM traversal independent of manual `MASK_SEL`, preserving shared layers in both screens; (2) room for one 280x8 compact Sub RGB16 strip plus independent Sub/Main boolean metadata for the controlled discriminator without colliding with PR #18/framebuffers/raw shadows; (3) compatibility with the validated third H-COMP fixed-slot dispatch and current-slot lifetime; and (4) explicit non-claims for OBJ/backdrop/windows/brightness/general throughput.
+
+
 ### VALIDATED FIRST-HAND — active-display CGRAM replay reaches clean H-COMP E1f arithmetic (2026-09-27 UTC)
 
 - Exact dynamic authority **`phase4/gate-c-hcomp-cgram-arith-dynamic-clean@5d714c2452091dd0a8ab8613285ba007da36ccc2`**, a host/workflow-only 3-commit child of validated executable head `1ebc5d1...`. Exact compare changes only the deterministic guest, classifier and dedicated workflow; **zero runtime-source bytes changed**.

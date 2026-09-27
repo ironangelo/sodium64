@@ -209,10 +209,13 @@ table_loop:
     bne t1, t2, table_loop
     addi t1, t1, 16
 
-    // Update the RDP framebuffer and palette addresses
-    lw t0, FRAMEBUFFER(sp)
+    // Gate-C Main/Sub ownership proof: begin the frame on the compact
+    // 280x8 Sub color surface. Global RDP y=16 maps to compact physical row0.
+    // The H-COMP screen-switch helper retargets to the owned Main framebuffer
+    // before semantic TM is rendered.
+    lui t0, 0x000E
+    ori t0, t0, 0x1D00
     lw t1, PALETTE_PTR(sp)
-    addi t0, t0, 280 * -16 // Underflow offset
     sw t0, RDP_FRAME + 4
     sw t1, RDP_FRAME + 12
 
@@ -472,14 +475,11 @@ fill_backdrop:
     sw zero, PRIO_CHECKS + 0
     sw zero, PRIO_CHECKS + 4
 
-    // Create a layer mask based on main and sub masks, with shared layers on top
-    // As a workaround for lack of blending, the order of the screens can be swapped
-    lw t0, MASK_SEL(sp)
-    lbu s7, TS(t0)
-    xori t0, t0, 0x1
-    lbu t0, TS(t0)
-    and t1, t0, s7 // Shared
-    sub s7, s7, t1
+    // Gate-C Main/Sub ownership proof: screen order is semantic, not a
+    // presentation preference. Low byte always owns TS; high byte always owns TM.
+    // Shared layers deliberately remain present in both traversals.
+    lbu s7, TS
+    lbu t0, TM
     sll t0, t0, 8
     or s7, s7, t0
 
@@ -496,11 +496,16 @@ next_layer:
     bnez t0, draw_bg
     andi t3, t0, 0x3 // Index
 
-    // Move to the next screen's layers until the section is finished
+    // Move from semantic TS to semantic TM. The H-COMP fixed slot
+    // temporarily owns the renderer slot only to retarget Color Image, then reloads
+    // the regular renderer and resumes at resident next_layer.
     srl s7, s7, 8
     beqz s7, next_section
     andi s3, s3, 0xF0
-    b next_layer
+    lw a1, OVERLAY_HCOMP_SRC
+    li t9, 0x1760
+    b overlay_load_slot
+    nop
 
     // Fixed renderer overlay begins on a 64-bit DMA boundary.
     .align 3

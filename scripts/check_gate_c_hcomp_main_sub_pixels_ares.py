@@ -144,8 +144,14 @@ def classify_capture(root: Path) -> dict[str, object]:
         raise ValueError(f"capture lacks fresh guest-time corroboration: {state!r}")
     if not state.get("rsp_halted"):
         raise ValueError(f"capture boundary missing RSP HALT: {state!r}")
-    if not state.get("rdp_idle"):
-        raise ValueError(f"capture boundary has RDP busy: {state!r}")
+    if not state.get("rdp_commands_complete"):
+        raise ValueError(
+            f"capture boundary lacks pinned-ares DP command completion: {state!r}"
+        )
+    if state.get("rdp_buffer_busy"):
+        raise ValueError(f"capture boundary still has DP bufferBusy: {state!r}")
+    if state.get("dp_current") != state.get("dp_end"):
+        raise ValueError(f"capture boundary DPC_CURRENT != DPC_END: {state!r}")
 
     passed = bool(
         sub_report["passed"]
@@ -216,7 +222,11 @@ def write_fixture(root: Path, rendered_main: int = 2) -> None:
         "guest_frame_delta": 1,
         "renderer_frame_reentries": 1,
         "rsp_halted": True,
-        "rdp_idle": True,
+        "rdp_commands_complete": True,
+        "rdp_buffer_busy": False,
+        "rdp_pipe_busy": True,
+        "dp_current": "0x001000",
+        "dp_end": "0x001000",
     }))
 
 
@@ -241,6 +251,46 @@ def self_test() -> None:
         write_fixture(root, 1)
         (root / "main2.bin").write_bytes(pack(EXPECTED_MAIN))
         assert not classify_capture(root)["passed"]
+
+    # Sticky PIPE_BUSY is expected in pinned ares without Sync Full and must
+    # not invalidate an otherwise completed submitted command list.
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        write_fixture(root, 2)
+        state = json.loads((root / "capture-state.json").read_text())
+        state["rdp_pipe_busy"] = True
+        (root / "capture-state.json").write_text(json.dumps(state))
+        assert classify_capture(root)["passed"]
+
+    # DPC buffer completion is mandatory even if the pixels happen to match.
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        write_fixture(root, 2)
+        state = json.loads((root / "capture-state.json").read_text())
+        state["rdp_commands_complete"] = False
+        state["rdp_buffer_busy"] = True
+        (root / "capture-state.json").write_text(json.dumps(state))
+        try:
+            classify_capture(root)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("busy DP buffer fixture unexpectedly accepted")
+
+    # The command cursor must have reached the submitted end address.
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        write_fixture(root, 2)
+        state = json.loads((root / "capture-state.json").read_text())
+        state["rdp_commands_complete"] = False
+        state["dp_current"] = "0x000FF8"
+        (root / "capture-state.json").write_text(json.dumps(state))
+        try:
+            classify_capture(root)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("incomplete DP cursor fixture unexpectedly accepted")
 
     # More than one renderer-frame reentry cannot be promoted even if guest
     # NMI time also advanced.

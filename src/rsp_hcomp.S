@@ -87,9 +87,25 @@ hcomp_pair_loop:
     j 0xA400103C
     nop
 
-// Keep the externally visible Mode7 entry at 0x1788.
-.byte 0:0x328
+// Mid-frame Main/Sub ownership helper. Its fixed entry 0x1760 is loaded
+// only after semantic TS has completed. Patch Color Image back to the current
+// queue-owned Main framebuffer, publish that one command through resident
+// rdp_send, then reload the regular fixed slot and resume at resident next_layer.
+.byte 0:0x300
 
+hcomp_screen_switch:
+    lw t0, FRAMEBUFFER(sp)
+    addi t0, t0, 280 * -16
+    sw t0, RDP_FRAME + 4
+    li a0, RDP_FRAME
+    jal 0xA4001F5C
+    li a1, RDP_FRAME + 8
+    lw a1, OVERLAY_MAIN_SRC
+    li t9, 0x1368
+    j 0xA4001F7C
+    nop
+
+// Keep the externally visible Mode7 entry at 0x1788.
 draw_mode7_entry:
     // H-COMP-resident fault surface for true Mode7 rendering.
     j 0xA4001F78

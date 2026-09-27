@@ -1,0 +1,179 @@
+name: Gate C H-COMP Main Sub Lifetime Clean
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-hcomp-main-sub-lifetime-clean
+    paths:
+      - scripts/make_gate_c_hcomp_main_sub_lifetime.py
+      - scripts/check_gate_c_hcomp_main_sub_lifetime.py
+      - .github/workflows/gate-c-hcomp-main-sub-lifetime-clean.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-hcomp-main-sub-lifetime-clean-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lifetime-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-test lifetime oracle and guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile             scripts/make_gate_c_hcomp_main_sub_lifetime.py             scripts/check_gate_c_hcomp_main_sub_lifetime.py             scripts/test_gate_c_hcomp_main_sub_contract_clean.py             scripts/test_gate_c_hcomp_cgram_arith_exec_clean.py
+          python3 scripts/check_gate_c_hcomp_main_sub_lifetime.py --self-test
+          python3 scripts/test_gate_c_hcomp_main_sub_contract_clean.py | tee main-sub-l0.txt
+          grep -q '^HCOMP_MAIN_SUB_CLEAN_L0_VALIDATED$' main-sub-l0.txt
+          python3 scripts/make_gate_c_hcomp_main_sub_lifetime.py guest-a.smc
+          python3 scripts/make_gate_c_hcomp_main_sub_lifetime.py guest-b.smc
+          cmp guest-a.smc guest-b.smc
+          test "$(stat -c %s guest-a.smc)" -eq 32768
+          sha256sum guest-a.smc | tee guest.sha256
+
+      - name: Build exact unchanged clean bridge runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee build.log
+          readelf -sW build/src/rsp_main.elf > rsp-main.syms
+          readelf -sW build/src/rsp_mode7.elf > rsp-mode7.syms
+          readelf -sW build/src/rsp_hcomp.elf > rsp-hcomp.syms
+          python3 scripts/test_gate_c_hcomp_cgram_arith_exec_clean.py             --maps build/rsp_main.map build/rsp_mode7.map build/rsp_hcomp.map             --symbols rsp-main.syms rsp-mode7.syms rsp-hcomp.syms             | tee executable-contract.txt
+          python3 scripts/check_rsp_branch_delay_slots.py             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf             | tee delay-slots.txt
+          sha256sum sodium64.z64 build/sodium64.elf             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf             | tee runtime.sha256
+          grep -q '^71dd6477f50fe6a0ddd55c6508ea62141c15d00147192ef07db37f79ae4cf0e0  sodium64.z64$' runtime.sha256
+
+      - name: Wrap deterministic guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir workload
+          cp sodium64.z64 rom-converter.py guest-a.smc workload/
+          (
+            cd workload
+            python3 rom-converter.py </dev/null
+          )
+          test -f workload/out/guest-a.z64
+          sha256sum workload/out/guest-a.z64 | tee wrapped.sha256
+
+      - name: Install Mupen64Plus build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y             build-essential expect git libfreetype6-dev libgl1-mesa-dev             libglu1-mesa-dev libpng-dev libsdl2-dev libvulkan-dev pkg-config zlib1g-dev
+
+      - name: Build pinned Mupen64Plus debugger and LLE RSP
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/sodium64-mupen"
+          mkdir -p "$root"
+          cd "$root"
+
+          git clone https://github.com/mupen64plus/mupen64plus-core.git
+          git -C mupen64plus-core checkout b20b27ebf9e5b099a978e86dba609111dc98c837
+          git clone https://github.com/mupen64plus/mupen64plus-ui-console.git
+          git -C mupen64plus-ui-console checkout c8ac4862a019d7885b24927d9b4db5dd3e42a528
+          git clone https://github.com/mupen64plus/mupen64plus-rsp-cxd4.git
+          git -C mupen64plus-rsp-cxd4 checkout 00906a92641c540a64e4e7505012157315314810
+
+          export PATH="$root/mupen64plus-core/.github/workflows/scripts:$PATH"
+          cd "$root/mupen64plus-core"
+          export CONFIG_OVERRIDE="DEBUGGER=1 DEBUGGER_NO_DISASM=1 NEW_DYNAREC=0 NO_ASM=1"
+          ci_build.sh x64 gcc
+
+          cd "$root/mupen64plus-ui-console"
+          export CONFIG_OVERRIDE=""
+          ci_build.sh x64 gcc
+
+          cd "$root/mupen64plus-rsp-cxd4"
+          export CONFIG_OVERRIDE='SSE="none"'
+          export OPTFLAGS="-O3"
+          ci_build.sh x64 gcc
+
+          core_lib=$(find "$root/mupen64plus-core/pkg/usr/local/lib" -maxdepth 1 -type f -name 'libmupen64plus.so*' | head -n1)
+          ui_bin="$root/mupen64plus-ui-console/pkg/usr/local/bin/mupen64plus"
+          rsp_lib=$(find "$root/mupen64plus-rsp-cxd4/pkg/usr/local/lib/mupen64plus" -type f -name '*cxd4*.so' | head -n1)
+          data_dir="$root/mupen64plus-core/pkg/usr/local/share/mupen64plus"
+          {
+            echo "M64P_CORE=$core_lib"
+            echo "M64P_UI=$ui_bin"
+            echo "M64P_RSP=$rsp_lib"
+            echo "M64P_DATA=$data_dir"
+            echo "M64P_LIBDIR=$(dirname "$core_lib")"
+          } >> "$GITHUB_ENV"
+
+      - name: Capture handed section queues
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence "$RUNNER_TEMP/m64p-config"
+
+          cat > "$RUNNER_TEMP/main-sub-lifetime.expect" <<'EOF'
+          set timeout 90
+          log_file evidence/mupen.log
+          spawn env LD_LIBRARY_PATH=$env(M64P_LIBDIR) $env(M64P_UI)             --corelib $env(M64P_CORE)             --datadir $env(M64P_DATA)             --configdir $env(RUNNER_TEMP)/m64p-config             --debug --emumode 0 --nospeedlimit             --gfx dummy --audio dummy --input dummy --rsp $env(M64P_RSP)             workload/out/guest-a.z64
+          expect "(dbg)"
+
+          for {set n 0} {$n < 6} {incr n} {
+            send "run\r"
+            if {$n == 0} { after 5000 } else { after 700 }
+            send "pause\r"
+            expect "(dbg)"
+
+            send "dumpmem 0xA016C600 256 evidence/snap$n-q1.bin\r"
+            expect "(dbg)"
+            send "dumpmem 0xA0171600 256 evidence/snap$n-q2.bin\r"
+            expect "(dbg)"
+          }
+
+          send "quit\r"
+          expect eof
+          EOF
+
+          expect "$RUNNER_TEMP/main-sub-lifetime.expect"
+          test "$(find evidence -name 'snap*-q1.bin' | wc -l)" -eq 6
+          test "$(find evidence -name 'snap*-q2.bin' | wc -l)" -eq 6
+
+      - name: Classify exact 8-line lifetime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/check_gate_c_hcomp_main_sub_lifetime.py evidence             --guest guest-a.smc             --output evidence/result.json
+          grep -q '"classification": "HCOMP_MAIN_SUB_LIFETIME_DYNAMIC_VALIDATED"' evidence/result.json
+          grep -q '"passed": true' evidence/result.json
+          grep -q '"sub_target_safe_after_first_split": true' evidence/result.json
+
+      - name: Upload lifetime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-hcomp-main-sub-lifetime-clean
+          retention-days: 30
+          path: |
+            evidence/
+            guest-a.smc
+            guest.sha256
+            wrapped.sha256
+            runtime.sha256
+            main-sub-l0.txt
+            executable-contract.txt
+            delay-slots.txt
+            build.log

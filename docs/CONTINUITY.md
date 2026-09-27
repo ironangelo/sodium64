@@ -7,6 +7,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### MEASURED PIXEL RESULT — Sub ownership proven; all seeded Main row-0 bands untouched (2026-09-27 UTC)
+
+- Exact pixel-proof head **`phase4/gate-c-hcomp-main-sub-pixels-clean@be3aa7eebbddc796458b2cab58342fbde46f509e`** has generic **Build and Validate `36355725698 SUCCESS`** and dedicated pinned-ares **Gate C H-COMP Main Sub Pixels Clean `36355725717 FAILURE`**. Evidence artifact **`10943494024`**, digest **`sha256:0e404dd79070cc64b95ce55d3b02b890ca472ead04767832f2144cbf57036391`**.
+- The zero-single-step fence is now **VALIDATED as a laboratory boundary** for this experiment: seed, temporary +0x18 stop and one-frame +0x14 reentry all retained **RSP HALT**, **DPC bufferBusy=false**, **DPC_CURRENT=DPC_END=0x000C70**, with sticky pinned-ares PIPE_BUSY only. Guest counter advanced exactly **7 -> 8**, and `renderer_frame_reentries=1`. The earlier GDB-step hygiene blocker is closed.
+- The section carrier is also exact in **both queues**: record0 `CGADSUB=1, TS=2, TM=1, split=8`; record1 `TS=0, TM=1, split=224`.
+- First-hand compact Sub pixels are **exactly correct**: `0xA00E4000` contains **2,048/2,048 active green `0x07C1` + 192/192 sentinel `0x55AA`**, zero mismatches. This proves the clean runtime's first semantic TS pass really renders into the compact Sub target in pinned ares.
+- All three *currently sampled Main row-0 bands* at `A00F2300/A0113000/A0133D00` remain **2,240/2,240 sentinel `0x55AA`**. Therefore `rendered_main_indices=[]` and the strict dual-target oracle fails. This is now renderer/address evidence, not debugger or dummy-gfx noise.
+- **Do not edit runtime yet.** Historical E2b/E2d evidence used a corrected physical-row mapping for Main, while this fresh clean oracle samples framebuffer rows 0..7. The next controlled diagnostic is a source/binary + historical-evidence audit of the clean screen-switch underflow/Y mapping, followed by a host-only wider Main readback if warranted. If the red pass is simply landing at rows 8..15 (or another deterministically derived band), repair the oracle/capture only; if no derived Main band is written, then investigate the target-switch runtime.
+- **STATUS: MEASURED / SUB VALIDATED / MAIN LOCATION UNRESOLVED.** No CGADSUB gating/compositor work begins until Main ownership is resolved.
+
+
+
 ### IMPLEMENTED / CI RUNNING — zero-single-step two-breakpoint frame fence (2026-09-27 UTC)
 
 - Pixel branch advanced host-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@be3aa7eebbddc796458b2cab58342fbde46f509e`**. Runtime, deterministic guest, strict pixel oracle, pinned ares and exact ELF geometry remain unchanged.

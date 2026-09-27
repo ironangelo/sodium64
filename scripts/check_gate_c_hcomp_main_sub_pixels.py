@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import sys
+import collections
 import tempfile
 from pathlib import Path
 
@@ -54,6 +55,41 @@ ACTIVE_WORDS = (ACTIVE_X1 - ACTIVE_X0) * ROWS
 BORDER_WORDS = (WIDTH - (ACTIVE_X1 - ACTIVE_X0)) * ROWS
 
 
+
+def strip_diag(data: bytes, mode: str) -> dict[str, object]:
+    vals = words(data, mode)
+    hist = collections.Counter(vals)
+    nonzero = [(i, v) for i, v in enumerate(vals) if v]
+    bbox = None
+    if nonzero:
+        xs = [i % WIDTH for i, _ in nonzero]
+        ys = [i // WIDTH for i, _ in nonzero]
+        bbox = [min(xs), min(ys), max(xs), max(ys)]
+    active = [
+        vals[y * WIDTH + x]
+        for y in range(ROWS)
+        for x in range(ACTIVE_X0, ACTIVE_X1)
+    ]
+    ah = collections.Counter(active)
+    return {
+        "top_words": [[f"0x{k:04X}", v] for k, v in hist.most_common(6)],
+        "active_top_words": [[f"0x{k:04X}", v] for k, v in ah.most_common(6)],
+        "nonzero_words": len(nonzero),
+        "nonzero_bbox": bbox,
+    }
+
+
+def rdp_frame_diag(data: bytes, mode: str) -> dict[str, object]:
+    d = norm(data, mode)
+    if len(d) != 24:
+        raise ValueError(f"RDP frame dump length {len(d)} != 24")
+    words32 = [int.from_bytes(d[i:i + 4], "big") for i in range(0, len(d), 4)]
+    return {
+        "words32": [f"0x{x:08X}" for x in words32],
+        "color_image_word": f"0x{words32[1]:08X}",
+    }
+
+
 def check_strip(data: bytes, mode: str, expected: list[int], label: str) -> dict[str, object]:
     got = words(data, mode)
     wrong: list[dict[str, int]] = []
@@ -84,13 +120,28 @@ def check_strip(data: bytes, mode: str, expected: list[int], label: str) -> dict
 
 
 def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
-    # Require the exact lifetime carrier in this same snapshot/normalization.
+    qdata = {
+        q: (root / f"{prefix}-{q}.bin").read_bytes()
+        for q in ("q1", "q2")
+    }
+    sub_data = (root / f"{prefix}-sub.bin").read_bytes()
+    main_data = [
+        (root / f"{prefix}-main{i}.bin").read_bytes()
+        for i in range(1, 4)
+    ]
+    rdp_data = (root / f"{prefix}-rdp-frame.bin").read_bytes()
+
+    diagnostic = {
+        "sub": strip_diag(sub_data, mode),
+        "main": [strip_diag(d, mode) for d in main_data],
+        "rdp_frame": rdp_frame_diag(rdp_data, mode),
+    }
+
     queue_reports: dict[str, object] = {}
     authority: str | None = None
     for q in ("q1", "q2"):
-        data = (root / f"{prefix}-{q}.bin").read_bytes()
         try:
-            report = classify_queue(data, mode)
+            report = classify_queue(qdata[q], mode)
         except ValueError as exc:
             queue_reports[q] = {"passed": False, "reason": str(exc)}
             continue
@@ -98,42 +149,39 @@ def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
         authority = q
         break
     if authority is None:
-        raise ValueError(f"no authoritative lifetime queue: {queue_reports!r}")
-
-    sub = check_strip(
-        (root / f"{prefix}-sub.bin").read_bytes(),
-        mode,
-        EXPECTED_SUB,
-        "compact Sub",
-    )
-
-    main_reports: list[dict[str, object]] = []
-    for i, _addr in enumerate(FRAMEBUFFERS, start=1):
-        rep = check_strip(
-            (root / f"{prefix}-main{i}.bin").read_bytes(),
-            mode,
-            EXPECTED_MAIN,
-            f"Main framebuffer{i}",
+        raise ValueError(
+            "no authoritative lifetime queue; diagnostics="
+            + json.dumps({"queues": queue_reports, **diagnostic}, sort_keys=True)
         )
-        main_reports.append(rep)
 
-    # Exact patterns already reject cross-contamination; state it explicitly.
-    sub_words = words((root / f"{prefix}-sub.bin").read_bytes(), mode)
-    if any(
-        sub_words[y * WIDTH + x] == MAIN_RED
-        for y in range(ROWS)
-        for x in range(ACTIVE_X0, ACTIVE_X1)
-    ):
-        raise ValueError("Main red leaked into compact Sub active band")
+    try:
+        sub = check_strip(sub_data, mode, EXPECTED_SUB, "compact Sub")
+        main_reports = [
+            check_strip(data, mode, EXPECTED_MAIN, f"Main framebuffer{i}")
+            for i, data in enumerate(main_data, start=1)
+        ]
 
-    for i in range(1, 4):
-        main_words = words((root / f"{prefix}-main{i}.bin").read_bytes(), mode)
+        sub_words = words(sub_data, mode)
         if any(
-            main_words[y * WIDTH + x] == SUB_GREEN
+            sub_words[y * WIDTH + x] == MAIN_RED
             for y in range(ROWS)
             for x in range(ACTIVE_X0, ACTIVE_X1)
         ):
-            raise ValueError(f"Sub green leaked into Main framebuffer{i} active band")
+            raise ValueError("Main red leaked into compact Sub active band")
+
+        for i, data in enumerate(main_data, start=1):
+            main_words = words(data, mode)
+            if any(
+                main_words[y * WIDTH + x] == SUB_GREEN
+                for y in range(ROWS)
+                for x in range(ACTIVE_X0, ACTIVE_X1)
+            ):
+                raise ValueError(f"Sub green leaked into Main framebuffer{i} active band")
+    except ValueError as exc:
+        raise ValueError(
+            f"{exc}; diagnostics="
+            + json.dumps({"queues": queue_reports, **diagnostic}, sort_keys=True)
+        ) from exc
 
     return {
         "classification": "HCOMP_MAIN_SUB_PIXELS_DYNAMIC_VALIDATED",
@@ -150,6 +198,7 @@ def classify_snapshot(root: Path, prefix: str, mode: str) -> dict[str, object]:
             {"address": f"0x{addr:08X}", **rep}
             for addr, rep in zip(FRAMEBUFFERS, main_reports)
         ],
+        "rdp_frame": diagnostic["rdp_frame"],
         "active_x": [ACTIVE_X0, ACTIVE_X1],
         "physical_rows": [0, ROWS],
         "sub_expected_rgba5551": f"0x{SUB_GREEN:04X}",
@@ -218,6 +267,11 @@ def write_fixture(root: Path, mode: str) -> None:
         "main1": pack_words(EXPECTED_MAIN),
         "main2": pack_words(EXPECTED_MAIN),
         "main3": pack_words(EXPECTED_MAIN),
+        "rdp-frame": bytes.fromhex(
+            "3F100117000F0000"
+            "3D10000000000000"
+            "3300000000400000"
+        ),
     }
     if mode == "word_swap32":
         blobs = {k: swap32(v) for k, v in blobs.items()}

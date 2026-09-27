@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / RERUNNING — external DP-drain fence for seeded ares pixel proof (2026-09-27 UTC)
+
+- Pixel branch advanced host-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@defc9ed6939239ddcc048431dab71b0e98f7d9ed`**; runtime remains byte-identical to `3df9f87c...`.
+- Capture now treats `capture_ready` as the **renderer-frame identity boundary**, not as an assumption of immediate DP idle. At each hit it removes the breakpoint and single-steps only the R4300 while polling DP_STATUS, requiring **SP.HALT to remain asserted** until `DP_STATUS & 0x70 == 0`. Sentinel seeding/capture occurs only after that external drain fence.
+- The next first breakpoint reentry at `capture_ready` is recorded as exactly **one renderer-frame reentry**. Guest NMI counter remains a freshness corroborator and must advance >=1, but it is no longer incorrectly equated 1:1 with renderer-frame identity.
+- Strict oracle self-tests now reject >1 renderer reentry, still reject no-Sub-write and two-Main-write states, and explicitly accept one renderer reentry even if the guest NMI counter advanced by >1 host-lab tick.
+- **STATUS: IMPLEMENTED / RERUNNING.** Runtime/guest/ares pin are unchanged; only the external fence semantics were repaired.
+
+
 ### HYGIENE-BLOCKER / FENCE REFINEMENT — clean runtime reaches CPU capture point before RDP idle (2026-09-27 UTC)
 
 - First pinned-ares seeded run **`36342803845 FAILURE`** on `52a51893...` built the exact runtime, guest and ares laboratory successfully and reached the intended post-`rsp_wait` CPU breakpoint. It failed **before any sentinel seeding or pixel capture** because the boundary had **SP HALT but `DP_STATUS=0x000000A9`**, i.e. RDP `PIPE_BUSY=0x20` still set. Artifact **`10939063126`**, digest **`sha256:b7ff26ade74fb36f3f30dc2a828d12feb7ac54ed88208255c43f48431f219701`**.

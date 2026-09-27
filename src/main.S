@@ -160,14 +160,17 @@ pi_wait1:
     jal rsp_upload
     li a0, 0x0000 // DMEM address
 
-    // Publish the fixed renderer-slot sources for demand-driven RSP overlays.
-    // Referencing both embedded blobs also keeps them resident in the final ROM.
-    la t0, rsp_main_text_start
-    addi t0, t0, 0x3A8
-    sw t0, DMEM(OVERLAY_MAIN_SRC)
+    // Publish all three fixed-slot sources. Main stays at E90, true Mode7
+    // moves to audited E8C, and the proof-only H-COMP bridge owns E94.
     la t0, rsp_mode7_text_start
     addi t0, t0, 0x3A8
     sw t0, DMEM(OVERLAY_MODE7_SRC)
+    la t0, rsp_main_text_start
+    addi t0, t0, 0x3A8
+    sw t0, DMEM(OVERLAY_MAIN_SRC)
+    la t0, rsp_hcomp_text_start
+    addi t0, t0, 0x3A8
+    sw t0, DMEM(OVERLAY_HCOMP_SRC)
 
     // Publish the raw historical-palette workspaces used by the DMA8 CGRAM
     // replay consumer. sp remains 0/4, matching queue ownership.

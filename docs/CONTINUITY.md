@@ -7,6 +7,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### REJECTED TOOLING ERROR — second clean third-overlay workflow parse failure (2026-09-27 UTC)
+
+- Tooling-only head **`ebf847b970e2f5f3a1ef87a84f394e9f1b4566cf`** produced workflow run **36321141622 FAILURE with zero jobs**. GitHub displayed the workflow path as its name, confirming parse/load failure before execution.
+- Root cause is local workflow-generation tooling: a JavaScript string-replacement step interpreted the `$` characters in grep regexes as replacement tokens and duplicated workflow suffix blocks. This malformed YAML is **not architecture/runtime evidence** and does not alter the already-passing L0 oracle.
+- Clean full-file workflow rewrite **`3629f099bec628b70382544918a01e2e23422fda`** removes the substitution hazard entirely. Runtime source and the L0 oracle are unchanged from `9a900aa...`; only the workflow file changes. Fresh dedicated + generic gates must close before promoting the contract.
+
 ### REJECTED TOOLING ERROR — first clean third-overlay L0 build-evidence step (2026-09-27 UTC)
 
 - Host-only branch **`phase4/gate-c-hcomp-third-overlay-contract-clean@9a900aa5976219fc869eb9f8a7cc166ca96bd1ef`** has **zero runtime/source delta** from post-PR18 `master@7cc8fac...`; compare is exactly two added files (one host oracle + one workflow).

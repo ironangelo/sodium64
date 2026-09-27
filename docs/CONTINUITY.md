@@ -12,9 +12,9 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Pixel branch advanced host-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@be3aa7eebbddc796458b2cab58342fbde46f509e`**. Runtime, deterministic guest, strict pixel oracle, pinned ares and exact ELF geometry remain unchanged.
 - The frame fence now uses **no GDB single-step at all**. At seed it arms temporary breakpoint **`0x8000AE34 = prelaunch+4`** (exact +0x18 `jr t4`), removes +0x14, continues normally across only the inert `lui`, and stops before the `jr`. It then requires RSP HALT + pinned-ares DPC command completion, rearms +0x14 behind PC, removes +0x18, and continues one full renderer frame to the next +0x14 hit.
 - Existing exact-ELF assertions already freeze +0x18 as machine word **`0x01800008`** and +0x1C as **`0xAD280010`**, so the temporary breakpoint is mechanically tied to “before the control transfer / before the SP-unhalt delay-slot store.”
-- Fresh exact-head runs: generic **Build and Validate `36355725698`** and dedicated **Gate C H-COMP Main Sub Pixels Clean `36355725717`**.
+- Fresh exact-head runs: generic **Build and Validate `36355725698 SUCCESS`** and dedicated **Gate C H-COMP Main Sub Pixels Clean `36355725717`**. Generic validation is closed green across normal build, PROFILE build and Mupen emulator smoke; the dedicated pinned-ares pixel job is still the only open authority for this batch.
 - **Expected discriminator:** if +0x18 still reports SP HALT and DPC command-complete, the debugger fence is now closed without stepping ambiguity; the next +0x14 reentry can proceed to first-hand sentinel pixel classification. Any failure after the capture files exist is then evaluated as renderer evidence rather than debugger hygiene.
-- **STATUS: IMPLEMENTED / CI RUNNING.**
+- **STATUS: IMPLEMENTED / GENERIC VALIDATED / DEDICATED CI RUNNING.**
 
 
 ### HYGIENE-BLOCKER — ares GDB single-step crosses RSP-unhalt delay slot; DPC fence itself validated (2026-09-27 UTC)

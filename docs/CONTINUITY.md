@@ -15,6 +15,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Exact +0x14 ELF geometry remains frozen in the workflow before ares build. The branch is now **16 commits ahead / 0 behind** its validated runtime parent with only four host-side added files, so this repair cannot explain a pixel result by a guest/runtime mutation.
 - Fresh exact-head runs: **Build and Validate `36355259721`** and dedicated **Gate C H-COMP Main Sub Pixels Clean `36355259717`**. Prior run `36354896463` is superseded because it still required sticky PIPE_BUSY to clear.
 - **Expected discriminator:** if pinned ares reports submitted-list completion at the unique prelaunch boundary, sentinels can finally adjudicate whether the compact Sub surface receives green and exactly one current Main framebuffer receives red in the same renderer frame. A pixel mismatch after this fence is evidence about ownership/rendering; a command-fence failure remains laboratory/harness evidence, not a reason to alter runtime blindly.
+- Same-head generic **Build and Validate `36355259721 SUCCESS`** is now closed green, including normal build, PROFILE build and emulator smoke. Only the dedicated pinned-ares pixel authority remains open for this batch.
 - **STATUS: IMPLEMENTED / CI RUNNING.**
 
 

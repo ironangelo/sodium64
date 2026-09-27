@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / CI RUNNING — exact-ELF prelaunch fence corrected to frame_wait+0x14 (2026-09-27 UTC)
+
+- Pixel branch advanced host/workflow-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@fc56fe8680dbecaed0941d5c4d6c2248f87c142a`**. Runtime/guest/oracle semantics remain unchanged.
+- Workflow now freezes the exact assembled CPU geometry before entering the expensive ares lab: **`frame_wait=0x8000AE1C`**, expected .text words at **0x8000AE20/0x8000AE30**, and **`PRELAUNCH_ADDR=0x8000AE30 = frame_wait+0x14`**. Any source/assembler/layout drift fails this assertion rather than silently changing the boundary.
+- Capture single-steps only the inert **`lui t1,0xA404` at +0x14** to move PC past the software breakpoint; the RSP clear-HALT store remains later at the `jr` delay slot **+0x1C**. Thus the seed is written while RSP is still HALT, and normal execution—not debugger stepping—performs the renderer frame.
+- Prior +0x0C dedicated run **`36354515925`** remains **SUPERSEDED** by exact machine-code evidence even if GitHub reports a terminal status.
+- **STATUS: IMPLEMENTED / CI RUNNING.** Require same-head generic green plus dedicated immediate SP-HALT/RDP-idle at seed and reentry, then the unchanged strict sentinel pixel oracle.
+
+
 ### CORRECTION / SUPERSEDED — exact ELF moves prelaunch fence from frame_wait+0x0C to +0x14 (2026-09-27 UTC)
 
 - Same-head generic build artifact **`10943263462`** from **Build and Validate `36354515841 SUCCESS`** contains the exact `build/sodium64.elf` for `0f8683b...`. Direct symbol/byte inspection gives **`frame_wait = 0x8000AE1C`**.

@@ -242,10 +242,12 @@ def parse_text_size(path: Path) -> int:
 
 
 def parse_symbol(path: Path, symbol: str) -> int:
+    # Workflow normalizes readelf output to "<hex-value> <symbol>" so the
+    # proof does not depend on a host-installed cross-nm binary.
     text = path.read_text()
     for line in text.splitlines():
         parts = line.split()
-        if len(parts) >= 3 and parts[-1] == symbol:
+        if len(parts) >= 2 and parts[-1] == symbol:
             return int(parts[0], 16)
     raise AssertionError(f"{path}: missing symbol {symbol}")
 

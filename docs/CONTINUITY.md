@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / DIAGNOSTIC RERUN — classify zero-Sub pixel failure before touching runtime (2026-09-27 UTC)
+
+- Pixel branch advanced host/workflow-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@05b67058ca7b881936473b45402c063b68dc359b`**; Sodium64 runtime remains byte-identical to executable authority `3df9f87c...`.
+- Classifier now emits bounded histograms / nonzero bounding boxes for compact Sub and all three Main 8-line strips under each proven debugger normalization instead of hiding later evidence behind the first mismatch.
+- Dedicated capture now also derives the built **`rdp_frame` DMEM symbol from the exact RSP ELF** and dumps its 24-byte command block in every snapshot. This can distinguish a failed TS→TM screen switch (Color Image word still compact) from a successfully switched Main target, without hard-coding a new DMEM address.
+- **Decision rule:** do not edit renderer code from the first zero-Sub observation alone. If Main is correctly red and live `RDP_FRAME+4` resolves to a Main underflow, routing/switch execution worked and the defect is specifically the pre-switch Sub render/target lifetime. If Main is also wrong or the command never reaches Main, investigate routing/target publication first.
+
+
 ### MEASURED PIXEL FAILURE — compact Sub target remained zero in first dynamic ownership run (2026-09-27 UTC)
 
 - Dedicated **Gate C H-COMP Main Sub Pixels Clean `36342015453 FAILURE`** on exact host/workflow head `9e5221c9806d3db1be9c607b2748c2bff4b56693` reached full runtime build, wrap, pinned Mupen/CXD4 LLE execution and six complete pixel/section captures. Artifact **`10938674982`**, digest **`sha256:59493945bfe10f2932e9e0d82e2b45ed9f23724ccca2e275319d16c5646a6a1d`**.

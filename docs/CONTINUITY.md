@@ -7,6 +7,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### HYGIENE-BLOCKER — first clean Main/Sub L0 run did not test the hypothesis (2026-09-27 UTC)
+
+- Dedicated **Gate C H-COMP Main Sub Contract Clean `36337123795 FAILURE`** on `e7df846f...` stopped in Python parsing before any contract assertion or runtime build: **`SyntaxError: unterminated string literal`** at the source-section delimiter.
+- Root cause is tooling serialization in the newly generated host oracle: three intended literal `\\n...` delimiters were written as physical newlines inside quoted Python strings. Runtime source is unchanged and the architecture/memory/capacity hypothesis was **not exercised**.
+- Classification: **HYGIENE-BLOCKER / NO NEGATIVE RUNTIME OR ARCHITECTURE EVIDENCE**. Repair only the three parser delimiters and rerun exact contract; do not change the proposed RDRAM map, screen-routing arithmetic or H-COMP overlay plan in response to this failure.
+
+
 ### IMPLEMENTED / CI RUNNING — clean Main/Sub provenance L0 contract (2026-09-27 UTC)
 
 - Fresh host/workflow-only branch **`phase4/gate-c-hcomp-main-sub-contract-clean@e7df846fc3b1cb2b8c6024d02460c24897ff4910`** derives from first-hand validated bridge authority **`5d714c2452091dd0a8ab8613285ba007da36ccc2`**. No `src/` runtime bytes are changed by this L0 branch.

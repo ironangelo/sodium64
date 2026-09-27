@@ -106,11 +106,22 @@ jobs:
           frame_wait=$(symbol frame_wait)
           test -n "$wram"
           test -n "$frame_wait"
-          # frame_wait+0x08 is the branch delay-slot li t0,1 and executes on
-          # every wait-loop iteration. +0x0C is the following lui t1,A404,
-          # reached only after the branch falls through and before the RSP
-          # unhalt store in the jr delay slot.
-          prelaunch=$(printf '%08x' "$((16#$frame_wait + 0x0C))")
+          test "$frame_wait" = "8000ae1c"
+
+          # Freeze the exact assembled loop geometry rather than reasoning from
+          # pseudo-instruction source width. For the pinned runtime:
+          #   +00/+04 = expanded lbu absolute load
+          #   +08      = li at,2
+          #   +0C      = beq
+          #   +10      = li t0,1 (branch delay slot)
+          #   +14      = lui t1,A404 (unique post-loop, pre-unhalt PC)
+          #   +18/+1C = jr + SP_STATUS clear-halt delay-slot store
+          readelf -x .text "$elf" > cpu-text.hex
+          grep -qi '^  0x8000ae20 910886a9 24010002 1101fffc 24080001' cpu-text.hex
+          grep -qi '^  0x8000ae30 3c09a404 01800008 ad280010 3c08800b' cpu-text.hex
+
+          prelaunch=$(printf '%08x' "$((16#$frame_wait + 0x14))")
+          test "$prelaunch" = "8000ae30"
           {
             echo "GUEST_COUNTER_ADDR=0x$wram"
             echo "PRELAUNCH_ADDR=0x$prelaunch"

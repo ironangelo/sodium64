@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-frame ares capture at the clean pre-RSP-launch quiescent boundary."""
+"""One-frame ares capture at the clean pre-RSP-launch command fence."""
 
 from __future__ import annotations
 
@@ -34,7 +34,10 @@ SECTION_QUEUE_ADDRS = (
 SECTION_CAPTURE_BYTES = 0x100
 
 SP_STATUS_ADDR = 0xA4040010
+DP_END_ADDR = 0xA4100004
+DP_CURRENT_ADDR = 0xA4100008
 DP_STATUS_ADDR = 0xA410000C
+DP_ADDR_MASK = 0x00FFFFFF
 
 
 def read_u(client: RSPClient, address: int, size: int) -> int:
@@ -65,22 +68,39 @@ def set_breakpoint(client: RSPClient, address: int, enabled: bool) -> None:
 
 def read_engine_state(client: RSPClient) -> dict[str, object]:
     sp = read_u(client, SP_STATUS_ADDR, 4)
+    dp_end = read_u(client, DP_END_ADDR, 4) & DP_ADDR_MASK
+    dp_current = read_u(client, DP_CURRENT_ADDR, 4) & DP_ADDR_MASK
     dp = read_u(client, DP_STATUS_ADDR, 4)
+
+    # Pinned ares 17813a3 renders each submitted DP command list synchronously
+    # inside flushCommands(). It clears bufferBusy when render() returns, but
+    # leaves pipeBusy asserted until a Sync Full command. Sodium64 emits no
+    # Sync Full in this proof runtime, so pipeBusy is diagnostic only here.
+    commands_complete = not bool(dp & 0x40) and dp_current == dp_end
+
     return {
         "sp_status": f"0x{sp:08X}",
         "dp_status": f"0x{dp:08X}",
+        "dp_current": f"0x{dp_current:06X}",
+        "dp_end": f"0x{dp_end:06X}",
         "rsp_halted": bool(sp & 1),
-        "rdp_idle": not bool(dp & 0x70),
+        "rdp_tmem_busy": bool(dp & 0x10),
+        "rdp_pipe_busy": bool(dp & 0x20),
+        "rdp_buffer_busy": bool(dp & 0x40),
+        "rdp_ready": bool(dp & 0x80),
+        "rdp_commands_complete": commands_complete,
     }
 
 
-def require_quiescent(client: RSPClient, *, stage: str) -> dict[str, object]:
-    """Require an already-quiescent boundary; never manufacture one by stepping."""
+def require_fenced_boundary(client: RSPClient, *, stage: str) -> dict[str, object]:
+    """Require the pinned-ares command fence without manufacturing progress."""
     state = read_engine_state(client)
     if not state["rsp_halted"]:
         raise RuntimeError(f"{stage}: boundary reached without RSP HALT: {state}")
-    if not state["rdp_idle"]:
-        raise RuntimeError(f"{stage}: boundary reached with RDP busy: {state}")
+    if not state["rdp_commands_complete"]:
+        raise RuntimeError(
+            f"{stage}: submitted RDP command list is not complete in pinned ares: {state}"
+        )
     return state
 
 
@@ -137,13 +157,14 @@ def main() -> int:
         warm_counter = wait_guest_warm(client, args.guest_counter_address)
 
         # Stop immediately before the existing RSP-unhalt sequence after
-        # frame_wait. Unlike the earlier post-rsp_wait point, normal CPU/UI/VI
-        # execution has already given asynchronous RDP work time to drain.
-        # This proof accepts the boundary only if it is naturally quiescent;
-        # the debugger must not manufacture DP idle by repeated CPU stepping.
+        # frame_wait. In pinned ares, DP command-list execution is synchronous
+        # with DP_END publication; PIPE_BUSY itself is sticky until Sync Full.
+        # Accept only a naturally fenced list (bufferBusy clear and
+        # DPC_CURRENT==DPC_END) with the RSP still HALT. Never manufacture
+        # completion by repeated CPU stepping.
         set_breakpoint(client, args.prelaunch_address, True)
         validate_stop(client.request("c"), "seed prelaunch")
-        seed_state = require_quiescent(client, stage="seed prelaunch")
+        seed_state = require_fenced_boundary(client, stage="seed prelaunch")
 
         sentinel = SENTINEL.to_bytes(2, "big") * (STRIP_BYTES // 2)
         for address in (SUB_COLOR_ADDR, *FRAMEBUFFER_ADDRS):
@@ -161,10 +182,10 @@ def main() -> int:
         # until the next prelaunch reentry, which identifies one renderer frame.
         set_breakpoint(client, args.prelaunch_address, False)
         validate_stop(client.request("s"), "prelaunch breakpoint step-over")
-        step_state = require_quiescent(client, stage="post-step prelaunch")
+        step_state = require_fenced_boundary(client, stage="post-step prelaunch")
         set_breakpoint(client, args.prelaunch_address, True)
         validate_stop(client.request("c"), "fresh-frame prelaunch")
-        final_state = require_quiescent(client, stage="capture prelaunch")
+        final_state = require_fenced_boundary(client, stage="capture prelaunch")
         set_breakpoint(client, args.prelaunch_address, False)
 
         current_counter = read_u(client, args.guest_counter_address, 1)

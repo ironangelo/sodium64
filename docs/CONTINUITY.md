@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### IN FLIGHT — isolated 32/128 paced-budget rerun (2026-09-27 UTC)
+
+- Diagnostic branches advanced tooling-only, with runtime parents unchanged:
+  - baseline **`ffdea88dac678c9e0b09c9fbfb55e5266ea9e969`**;
+  - PR#18 candidate **`eb9b61bff30bf71581aa64504491f044ebe7215e`**.
+- New workflow **Gate C CGRAM Paced Budget** runs **cgram-paced-32** and **cgram-paced-128 as independent matrix jobs** (`fail-fast:false`), each with a fresh pinned-Ares process. The generic Ares workflow no longer triggers on these temporary branches, so no unrelated six-workload matrix precedes the target measurement.
+- The GDB response timeout is raised only for this diagnostic from **60 -> 120 s** to tolerate the observed one-time paraLLEl compute/shader compilation stall. Measurement cadence/settings remain unchanged: CPU JIT + RSP interpreter, frameskip0, APU21, audio4, profiler reset, >=800 samples and Sodium64 `fps_display` authority. This is harness robustness, not a relaxed frame-budget criterion.
+- Exact targeted runs: baseline **36295002518 IN_PROGRESS**, candidate **36295009053 IN_PROGRESS**. Same-head generic Build/Validate also dispatched (**36295002498**, **36295009018**) because workflow-only changes should remain mechanically safe.
+- **Falsifier remains candidate-only virtual-budget loss.** A pre-measurement GDB timeout is LAB LIMITATION; a completed `fps_display < 60` on candidate when the identical baseline rung is at/above 60 is merge-blocking evidence.
+
 ### MEASURED / LAB LIMITATION — first paced A/B gives 4/32 greens but high-rung harness timeouts (2026-09-27 UTC)
 
 - First bounded Ares pass produced real frame-budget evidence before its harness failures:

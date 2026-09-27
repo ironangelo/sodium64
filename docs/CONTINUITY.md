@@ -7,6 +7,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### HYGIENE-BLOCKER — second Main/Sub L0 run still did not reach an architecture assertion (2026-09-27 UTC)
+
+- Corrected-head dedicated run **`36337215175 FAILURE`** on **`12de031fa349bf87cb20d559630b748bd31d0f84`** parses successfully but stops at the first source-slice lookup with **`ValueError: substring not found`** before capacity/semantic assertions or runtime build.
+- Exact source inspection confirms the prior mechanical fix over-escaped the three delimiters: the Python file contains **`"\\\\nnext_layer:"`**-style strings, so runtime searches for literal backslash+n rather than a newline. This is the same host-oracle serialization family as the first failure, not a Sodium64 result.
+- Classification remains **HYGIENE-BLOCKER / HYPOTHESIS NOT TESTED**. Repair the source slicer to use unique label/comment tokens with no newline escape dependency; leave architecture constants, RDRAM proposal and runtime untouched.
+
+
 ### HYGIENE-BLOCKER — first clean Main/Sub L0 run did not test the hypothesis (2026-09-27 UTC)
 
 - Dedicated **Gate C H-COMP Main Sub Contract Clean `36337123795 FAILURE`** on `e7df846f...` stopped in Python parsing before any contract assertion or runtime build: **`SyntaxError: unterminated string literal`** at the source-section delimiter.

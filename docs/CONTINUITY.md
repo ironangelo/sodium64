@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### VALIDATED — persistent CGRAM epoch replay regression on PR #18 final head (2026-09-27 UTC)
+
+- Corrected PR #18 head **`5ef80450dec16c031e76d18bcaddb2da72a5b2a8`** completed **Gate C CGRAM Epoch Replay Regression 36286515413 SUCCESS**.
+- The durable stage-aware typed-producer oracle reports **4,624 producer/consumer roundtrip cases**, event capacity **24,576** and margin **3,796**. The DMA8 implementation oracle reports **29 consumer instructions**.
+- Binary proof on the PR merge candidate keeps both RSP variants exactly **`.text=0x1000`**, fixed renderer slot **A40013A8..A400178F**, and independent binary **control-in-delay=0**.
+- Regression artifact **10920860661**, digest `sha256:9a4dcb9de53e92bc46d8c26ba201996bd9d6a964c6130a5357a3755b114a0cfd`.
+- Remaining merge gates on the same exact head: **Build and Validate 36286513229** is in emulator-smoke after normal+PROFILE success; **Ares Profile Validation 36286515410** is in ares-smoke after profile-build success. Do not merge until both close green.
+
 ### REJECTED TOOLING ERROR — first persistent replay workflow had one stale producer-only guard (2026-09-27 UTC)
 
 - PR #18 first persistent regression run **36286454287 FAILED before consumer/build** in `test_gate_c_cgram_typed_producer_clean.py`. Exact traceback: `AssertionError: consumer/H-COMP arithmetic leaked into producer-only stage`.

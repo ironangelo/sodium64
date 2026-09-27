@@ -82,10 +82,13 @@ def require_record(got: dict[str, int], want: dict[str, int], label: str) -> Non
             )
 
 
-def classify_queue(data: bytes, mode: str) -> dict[str, object]:
+def peek_queue(data: bytes, mode: str) -> list[dict[str, int]]:
     data = norm(data, mode)
-    first = decode_record(data, 0)
-    second = decode_record(data, 1)
+    return [decode_record(data, 0), decode_record(data, 1)]
+
+
+def classify_queue(data: bytes, mode: str) -> dict[str, object]:
+    first, second = peek_queue(data, mode)
     require_record(first, EXPECTED_FIRST, "section0")
     require_record(second, EXPECTED_SECOND, "section1")
 
@@ -130,14 +133,22 @@ def classify(root: Path) -> dict[str, object]:
                 q1 = classify_queue((root / f"{prefix}-q1.bin").read_bytes(), mode)
                 q2 = classify_queue((root / f"{prefix}-q2.bin").read_bytes(), mode)
             except (OSError, ValueError) as exc:
-                attempts.append(
-                    {
-                        "prefix": prefix,
-                        "normalization": mode,
-                        "passed": False,
-                        "reason": str(exc),
-                    }
-                )
+                diagnostic: dict[str, object] = {
+                    "prefix": prefix,
+                    "normalization": mode,
+                    "passed": False,
+                    "reason": str(exc),
+                }
+                try:
+                    diagnostic["q1_sections"] = peek_queue(
+                        (root / f"{prefix}-q1.bin").read_bytes(), mode
+                    )
+                    diagnostic["q2_sections"] = peek_queue(
+                        (root / f"{prefix}-q2.bin").read_bytes(), mode
+                    )
+                except (OSError, ValueError) as peek_exc:
+                    diagnostic["peek_error"] = str(peek_exc)
+                attempts.append(diagnostic)
                 continue
 
             return {

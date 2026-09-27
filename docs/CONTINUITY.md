@@ -7,6 +7,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### GENERIC VALIDATED — both paced A/B branches build and smoke cleanly (2026-09-27 UTC)
+
+- Baseline measurement head `f2b6880d4727a2438bf77c99a7685f515b3c9f53`: **Build and Validate 36293986492 SUCCESS**, including host tests, normal + PROFILE compile, independent RSP branch-delay checks and pinned-Mupen/LLE smoke.
+- PR#18 measurement head `d91cde6f154af5b9e22156dabde5d57a2bc012e7`: **Build and Validate 36293991708 SUCCESS** with the same gates.
+- Therefore the new workload/tooling layer is generically valid on both runtime parents. The only unresolved discriminator is the identical pinned-Ares virtual frame-budget result; do not infer performance from build/smoke success.
+
 ### AUDITED — frame-paced V-IRQ workload exercises one bounded active event burst per frame (2026-09-27 UTC)
 
 - Source audit of integrated `src/ppu.S` confirms the diagnostic ROM's pacing contract matches Sodium64's actual interrupt model: `cur_line == vtime` enters `vcount_irq`; `NMITIMEN & 0x30` gates the IRQ; an enabled IRQ clears the WAI/halted bit, dispatches the interrupt, then sets `TIMEUP=0x80`. `read_timeup` returns and clears that flag.

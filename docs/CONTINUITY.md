@@ -7,6 +7,20 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### MEASUREMENT PROOF PASSED — clean-lineage third-overlay L0 contract (2026-09-27 UTC)
+
+- Host/workflow-only branch **`phase4/gate-c-hcomp-third-overlay-contract-clean@3629f099bec628b70382544918a01e2e23422fda`** remains **zero runtime/source delta** from exact integrated `master@7cc8facfe8643fb85888f301f79995575830521d`.
+- Dedicated **Gate C H-COMP Third Overlay Contract Clean 36321189928 SUCCESS**, artifact **10932142671**, digest `sha256:3d9a78f7eeb721169a32b01e90d5fa89b7bbaae765e3c99e16f949e63331223d`.
+- Oracle prints **`HCOMP_THIRD_OVERLAY_CLEAN_L0_VALIDATED`** and re-proves on the post-PR18 lineage:
+  - proposed Mode7/Main/H-COMP/raw pointer packing **E8C / E90 / E94 / E98-E9C**;
+  - PR #18 state remains non-overlapping at **EA0 event cursor / EA8 pair scratch / EB0 write scratch / F70 fixed vector ABI**;
+  - existing resident dispatch footprints remain **next_frame 4 / Mode7 loader 6 / regular Mode7 fault 2 instructions** and have equal-length zero-growth proposed forms;
+  - fixed renderer slot remains **1000 B**; historical H-COMP capacity anchor remains **400 B fixed / 600 B uncommitted routing headroom**;
+  - renderer/H-COMP residency state machine remains well-defined across regular↔Mode7 switches, frame-end H-COMP halt, and next-frame renderer fault/reload.
+- The same dedicated job builds runtime bytes identical to current master: normal ROM SHA-256 **`f67033c44581679cacaf4d49c3ce9b4f7db9358ee1f7e4844bc1ec98d12fb393`**; regular + Mode7 RSP each **4096 B text / 4096 B data**, binary **`control-in-delay=0`**.
+- **Claim boundary:** this validates **placement/capacity/control-flow feasibility only**. It does not prove an executable H-COMP payload on the current lineage, pixel output, cadence, heavy-Mode7 coexistence, or production completeness.
+- Exact-head generic **Build and Validate 36321189946** has normal + PROFILE builds green and is finishing pinned-Mupen/LLE smoke at this checkpoint. Promote the L0 to fully VALIDATED once that unchanged-runtime generic gate closes.
+
 ### REJECTED TOOLING ERROR — second clean third-overlay workflow parse failure (2026-09-27 UTC)
 
 - Tooling-only head **`ebf847b970e2f5f3a1ef87a84f394e9f1b4566cf`** produced workflow run **36321141622 FAILURE with zero jobs**. GitHub displayed the workflow path as its name, confirming parse/load failure before execution.

@@ -1,0 +1,85 @@
+name: Gate C H-COMP CGRAM Arithmetic Exec Clean
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-hcomp-cgram-arith-exec-clean
+    paths:
+      - src/defines.h
+      - src/main.S
+      - src/rsp_main.S
+      - src/rsp_mode7.S
+      - src/rsp_hcomp.S
+      - scripts/test_gate_c_hcomp_cgram_arith_exec_clean.py
+      - .github/workflows/gate-c-hcomp-cgram-arith-exec-clean.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-hcomp-cgram-arith-exec-clean-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  executable-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prove source contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/test_gate_c_hcomp_cgram_arith_exec_clean.py
+          python3 scripts/test_gate_c_hcomp_cgram_arith_exec_clean.py | tee hcomp-cgram-arith-exec-source.txt
+          grep -q '^HCOMP_CGRAM_ARITH_EXEC_CLEAN_CONTRACT_VALIDATED$' hcomp-cgram-arith-exec-source.txt
+
+      - name: Build and prove exact binary layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee hcomp-cgram-arith-exec-build.log
+          readelf -sW build/src/rsp_main.elf > rsp-main.syms
+          readelf -sW build/src/rsp_mode7.elf > rsp-mode7.syms
+          readelf -sW build/src/rsp_hcomp.elf > rsp-hcomp.syms
+          python3 scripts/test_gate_c_hcomp_cgram_arith_exec_clean.py \
+            --maps build/rsp_main.map build/rsp_mode7.map build/rsp_hcomp.map \
+            --symbols rsp-main.syms rsp-mode7.syms rsp-hcomp.syms \
+            | tee hcomp-cgram-arith-exec-binary.txt
+          python3 scripts/check_rsp_branch_delay_slots.py \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf \
+            | tee hcomp-cgram-arith-exec-delay-slots.txt
+          sha256sum sodium64.z64 build/sodium64.elf \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf \
+            | tee hcomp-cgram-arith-exec-runtime.sha256
+
+      - name: Upload executable bridge evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-hcomp-cgram-arith-exec-clean
+          retention-days: 30
+          path: |
+            hcomp-cgram-arith-exec-source.txt
+            hcomp-cgram-arith-exec-build.log
+            hcomp-cgram-arith-exec-binary.txt
+            hcomp-cgram-arith-exec-delay-slots.txt
+            hcomp-cgram-arith-exec-runtime.sha256
+            build/rsp_main.map
+            build/rsp_mode7.map
+            build/rsp_hcomp.map
+            rsp-main.syms
+            rsp-mode7.syms
+            rsp-hcomp.syms

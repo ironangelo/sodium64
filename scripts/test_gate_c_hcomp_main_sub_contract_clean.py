@@ -62,8 +62,9 @@ SUB_META = 0xA00DE000
 MAIN_META = 0xA00E0000
 SUB_COLOR = 0xA00E4000
 
-# Sodium64's normal RGB16 framebuffer underflow maps global y=8 to physical row0.
-ACTIVE_Y0 = 8
+# Current 224-line path: write_setini(0) => fb_border=8, then rsp_frame
+# publishes FB_OFFSET=fb_border+8=16. Therefore global RDP y=16 maps row0.
+ACTIVE_Y0 = 16
 ROW_BYTES = 280 * 2
 SUB_COLOR_RDP_BASE = (SUB_COLOR & 0x00FFFFFF) - ACTIVE_Y0 * ROW_BYTES
 
@@ -286,7 +287,24 @@ def prove_rdram_capacity() -> None:
 
     if STRIP_BYTES != 0x1180:
         raise AssertionError(f"280x8 RGB16/Z16 strip size drift: 0x{STRIP_BYTES:X}")
-    if SUB_COLOR_RDP_BASE != 0x000E2E80:
+
+    # Derive the vertical origin from the exact current CPU/RSP handoff rather
+    # than carrying a historical guess. SETINI=0 gives fb_border=8; rsp_frame
+    # then publishes FB_OFFSET=fb_border+8=16.
+    ppu = (ROOT / "src/ppu.S").read_text()
+    for anchor in (
+        "andi t0, a1, 0x4",
+        "sll t0, t0, 1",
+        "xori t0, t0, 0x8",
+        "sb t0, fb_border",
+        "addi t1, t1, 8",
+        "sw t1, DMEM(FB_OFFSET)(t5)",
+    ):
+        if anchor not in ppu:
+            raise AssertionError(f"FB_OFFSET source anchor drift: {anchor!r}")
+    if ACTIVE_Y0 != 16:
+        raise AssertionError(f"224-line active Y origin drift: {ACTIVE_Y0}")
+    if SUB_COLOR_RDP_BASE != 0x000E1D00:
         raise AssertionError(f"compact Sub underflow drift: 0x{SUB_COLOR_RDP_BASE:X}")
 
 

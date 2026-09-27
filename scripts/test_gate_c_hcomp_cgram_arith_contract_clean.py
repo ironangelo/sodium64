@@ -187,7 +187,7 @@ def prove_e1f_semantics() -> None:
     for a, b, want in (
         *DYNAMIC_PAIRS,
         (0x4210, 0x2108, 0x318C),
-        (0x2AAA, 0x7FFF, 0x52AA),
+        (0x2AAA, 0x7FFF, 0x5354),
     ):
         got = e1f_half_add(a, b)
         ref = channel_reference(a, b)

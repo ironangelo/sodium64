@@ -297,7 +297,7 @@ def prove_semantic_screen_routing() -> None:
         section(
             src,
             "// Create a layer mask based on main and sub masks, with shared layers on top",
-            "\\nnext_layer:",
+            "next_layer:",
         )
     )
     want_mask = [
@@ -317,7 +317,7 @@ def prove_semantic_screen_routing() -> None:
         section(
             src,
             "// Move to the next screen's layers until the section is finished",
-            "\\n    // Fixed renderer overlay begins",
+            "// Fixed renderer overlay begins",
         )
     )
     want_transition = [
@@ -359,7 +359,7 @@ def prove_semantic_screen_routing() -> None:
 def prove_overlay_capacity_and_lifetime() -> None:
     h = (ROOT / "src/rsp_hcomp.S").read_text()
 
-    body = instructions(section(h, "hcomp_entry:", "\\n// Keep the externally visible Mode7 entry"))
+    body = instructions(section(h, "hcomp_entry:", "// Keep the externally visible Mode7 entry"))
     if len(body) != CURRENT_HCOMP_BODY_INSNS:
         raise AssertionError(f"current H-COMP body drift: {len(body)} != {CURRENT_HCOMP_BODY_INSNS}")
 

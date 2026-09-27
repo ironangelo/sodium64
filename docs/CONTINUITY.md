@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### HYGIENE-BLOCKER — ares GDB single-step crosses RSP-unhalt delay slot; DPC fence itself validated (2026-09-27 UTC)
+
+- Exact-head dedicated run **`36355259717 FAILURE`** on **`9b185222...`** reached the corrected **`frame_wait+0x14 = 0x8000AE30`** seed boundary and passed the pinned-ares DPC command fence. After warmup, capture proceeded through sentinel seeding; failure occurred only while stepping over the software breakpoint.
+- At the failing post-step observation: **`DP_STATUS=0x000000A9`**, **`DPC_CURRENT=0x000C70 == DPC_END=0x000C70`**, **`bufferBusy=false`**, **`PIPE_BUSY=true`**, **`rdp_commands_complete=true`**. This directly confirms the corrected ares model: sticky PIPE_BUSY coexists with a fully consumed submitted list.
+- Failure was **`rsp_halted=false`** immediately after GDB `s`. Exact ELF says +0x14 is `lui t1,0xA404`, +0x18 is `jr t4`, and +0x1C is the delay-slot `sw t0,0x10(t1)` that clears SP HALT. Therefore pinned ares R4300 single-step/recompiler behavior cannot be trusted to stop before the branch delay-slot side effect at this location.
+- Artifact **`10944125681`**, digest **`sha256:8a3d462ceebcd3b8d539eeee5c5ac14ece2a1ef09c80c36cd0cbfcde809b33bb`**. No pixel capture/classification ran, so this is **HYGIENE-BLOCKER / NO PIXEL VERDICT**.
+- **REJECTED:** any GDB R4300 single-step in the frame-fence protocol.
+- **NEXT controlled repair:** after seeding at +0x14, install a temporary software breakpoint at **+0x18 (the `jr` itself)**, remove +0x14, continue normally to +0x18, require RSP still HALT + DPC command-complete, reinstall +0x14 behind the PC, remove +0x18, then continue normally. This executes only the inert +0x14 `lui` before stopping and cannot execute the +0x1C unhalt store before the main frame breakpoint is armed.
+
+
 ### IMPLEMENTED / CI RUNNING — pinned-ares DPC command fence replaces impossible PIPE_BUSY-idle requirement (2026-09-27 UTC)
 
 - Pixel proof branch advanced host-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@9b1852221e5ba323daa42ccbfed848cac40efb15`**. Exact compare versus validated executable parent **`3df9f87c...`** remains **0 `src/` runtime files changed**; only the pixel workflow/capture/classifier files differ.

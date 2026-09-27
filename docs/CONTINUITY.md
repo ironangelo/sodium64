@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### BINARY CHECKPOINT — first Main/Sub exec build shrank resident text; oracle wording was wrong (2026-09-27 UTC)
+
+- Dedicated executable run **`36340347581 FAILURE`** on `8d52ea4e...` passed the complete **source contract** and assembled/linked all runtime objects successfully. Failure occurred only in the new binary oracle before delay-slot/hash steps.
+- Built sizes are regular RSP **4088 B / 0xFF8**, Mode7 RSP **4088 B / 0xFF8**, H-COMP **1936 B / 0x790**. The oracle raised `resident renderer IMEM grew` because it required equality to 0x1000; that message is factually wrong: both resident renderers **shrank by 8 B**, not grew.
+- This is not yet automatically accepted. A shrink is harmless only if the fixed renderer/suffix ABI still lands at the frozen addresses. **Next discriminator:** require exact 0xFF8 size and then run all symbol assertions (`draw_bg`, `next_layer`, Mode7 entry, DMA/RDP helpers, overlay loaders). If any fixed symbol moved unexpectedly, reject/repair runtime; if all fixed ABI addresses remain exact, classify the 8-B tail reduction as safe headroom rather than a regression.
+- Run artifact **`10938607581`**, digest **`sha256:bf17613bf2272cfaa86ef46c0a5d740eb1930731d4045453dc2501f8c64cc0e0`**. No pixel/semantic claim follows from this failed geometry run.
+
+
 ### IMPLEMENTED / CI RUNNING — clean executable 8-line Main/Sub ownership rung (2026-09-27 UTC)
 
 - Fresh runtime child **`phase4/gate-c-hcomp-main-sub-exec-clean@8d52ea4e3a38a123f84b9e803b14e94eb77245ac`** derives from validated lifetime authority `91f5c6cb...`. This is the first runtime change after closing the clean PR #18→H-COMP arithmetic bridge and exact compact-Sub lifetime.

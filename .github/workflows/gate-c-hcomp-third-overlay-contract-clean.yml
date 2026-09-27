@@ -1,0 +1,69 @@
+name: Gate C H-COMP Third Overlay Contract Clean
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-hcomp-third-overlay-contract-clean
+    paths:
+      - scripts/test_gate_c_hcomp_third_overlay_contract_clean.py
+      - .github/workflows/gate-c-hcomp-third-overlay-contract-clean.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-hcomp-third-overlay-contract-clean-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  third-overlay-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile and prove clean-lineage L0 contract
+        run: |
+          python3 -m py_compile scripts/test_gate_c_hcomp_third_overlay_contract_clean.py
+          python3 scripts/test_gate_c_hcomp_third_overlay_contract_clean.py
+
+      - name: Build unchanged current-master runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee third-overlay-clean-build.log
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf | tee third-overlay-delay-slots.txt
+          mips64-elf-size build/src/rsp_main.elf build/src/rsp_mode7.elf | tee third-overlay-rsp-size.txt
+          mips64-elf-nm -n build/src/rsp_main.elf | grep -E ' draw_bg$| draw_mode7_entry$| overlay_load_mode7$| overlay_load_main$| hcomp_cgram_consume$' | tee third-overlay-main-symbols.txt
+          mips64-elf-nm -n build/src/rsp_mode7.elf | grep -E ' draw_bg$| draw_mode7_entry$| overlay_load_mode7$| overlay_load_main$| hcomp_cgram_consume$' | tee third-overlay-mode7-symbols.txt
+          sha256sum sodium64.z64 build/sodium64.elf | tee third-overlay-clean-runtime.sha256
+          grep -q '^ *4096 *4096 *0 *8192 .*rsp_main.elf$' third-overlay-rsp-size.txt
+          grep -q '^ *4096 *4096 *0 *8192 .*rsp_mode7.elf$' third-overlay-rsp-size.txt
+          grep -q '^f67033c44581679cacaf4d49c3ce9b4f7db9358ee1f7e4844bc1ec98d12fb393  sodium64.z64$' third-overlay-clean-runtime.sha256
+
+      - name: Upload contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-hcomp-third-overlay-contract-clean
+          retention-days: 30
+          path: |
+            third-overlay-clean-build.log
+            third-overlay-delay-slots.txt
+            third-overlay-rsp-size.txt
+            third-overlay-main-symbols.txt
+            third-overlay-mode7-symbols.txt
+            third-overlay-clean-runtime.sha256
+            build/rsp_main.map
+            build/rsp_mode7.map

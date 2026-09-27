@@ -28,7 +28,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Final host-only candidate **`phase4/gate-c-hcomp-main-sub-pixels-clean@4ec7fe3dbf2c0249221730dae0b2c7b06cf9fabe`** updates the strict oracle. Compare vs `be3aa...` is exactly **2 commits / 2 scripts**: capture **+13/-8**, classifier **+43/-23**; no `src/`, guest or workflow file changed.
 - **Precommitted PASS signature:** compact Sub remains rows0..7 with exactly **2,048 green `0x07C1` + 192 sentinel `0x55AA`**. Exactly one Main framebuffer must have **rows0..7 fully sentinel**, then rows8..15 with **2,048 red `0xF801` active words + 192 sentinel border words**; equivalently the full 16-row capture is 2,048 red + 2,432 sentinel. The other two Main candidates must remain all 4,480 sentinel words. Carrier and zero-step fence requirements are unchanged.
 - **Decision rule:** green closes clean first-hand Main/Sub rendered-color ownership without a runtime repair and classifies `be3aa...` as a host-oracle row-mapping false negative. Red with rows8..15 untouched falsifies that historical-row hypothesis and reopens the H-COMP target-switch path; do not begin CGADSUB gating either way until this result is known.
-- **STATUS: IMPLEMENTED / CI DISPATCHED; exact final-head run IDs/results pending.**
+- Exact-head CI: generic **Build and Validate `36356687530 SUCCESS`** (normal build, PROFILE build and Mupen/LLE smoke all green). Normal ROM remains byte-identical to the clean executable authority: **SHA-256 `eb216fcc259dd174d9ae3fb7b1908aaed775753a5b2c43689c9ead238670cff9`**. Dedicated pinned-ares **`36356687503`** is in progress; its strict oracle/guest self-test, exact executable build, guest wrap and fence-location steps are already green, and it is currently compiling the pinned ares lab before the semantic capture.
+- **STATUS: IMPLEMENTED / GENERIC VALIDATED / DEDICATED CI RUNNING.**
 
 ### IMPLEMENTED / CI RUNNING — zero-single-step two-breakpoint frame fence (2026-09-27 UTC)
 

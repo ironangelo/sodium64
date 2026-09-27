@@ -7,7 +7,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
-### PRECOMMIT — clean CGADSUB BG1 gating on live rendered Main/Sub operands (2026-09-27 UTC)
+### VALIDATED — clean CGADSUB BG1 gating on live rendered Main/Sub operands (2026-09-27 UTC)
 
 - Fresh child **`phase4/gate-c-hcomp-cgadsub-gating-clean`** was created exactly from validated clean pixel authority **`4ec7fe3dbf2c0249221730dae0b2c7b06cf9fabe`**. Parent controls are frozen: semantic TS compact target `0xA00E4000`, dynamic Main target via `FRAMEBUFFER(sp)`, published Main physical rows8..15, TS->TM switch, zero-single-step fence and one-renderer-frame ares oracle.
 - **Question / GATE DRIVER:** can the already-validated E1f half-add path consume an actual rendered Main pixel + actual rendered Sub pixel and obey the **real section CGADSUB BG1 enable bit** for a controlled opaque Main BG1, before general winner metadata is introduced?

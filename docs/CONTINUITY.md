@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### VALIDATED EXECUTABLE GEOMETRY — Main/Sub runtime candidate fully green (2026-09-27 UTC)
+
+- Exact executable authority **`phase4/gate-c-hcomp-main-sub-exec-clean@3df9f87cfaa238b890d48a00c145ecee6d9b376a`** now has both required gates closed: dedicated **`36340856658 SUCCESS`** and exact-head generic **Build and Validate `36340856637 SUCCESS`**, including normal build, PROFILE build and pinned Mupen/CXD4 LLE smoke.
+- Therefore the repaired fixed-slot/suffix geometry is promoted from dedicated-only to **VALIDATED EXECUTABLE GEOMETRY**. Candidate ROM SHA-256 remains **`eb216fcc259dd174d9ae3fb7b1908aaed775753a5b2c43689c9ead238670cff9`**; regular/Mode7 RSP are 0x1000, H-COMP is 0x790, and all binary delay-slot checks are clean.
+- This closes the pre-pixel ABI question. **NEXT controlled discriminator:** first-hand pixel authority only. Use the already-validated lifetime guest (opaque BG2 on semantic Sub for [0,8), opaque BG1 on Main) and dump the fixed compact Sub target plus all candidate Main framebuffers. Require independent expected colors in the same completed frame/capture family before adding CGADSUB arithmetic gating or metadata.
+- **Scope remains bounded:** this next rung proves dual rendered color ownership, not blending/final-pixel correctness, metadata, OBJ/backdrop/windows/brightness, throughput/cadence or hardware behavior.
+
+
 ### VALIDATED DEDICATED GEOMETRY — clean executable Main/Sub ownership ABI restored (2026-09-27 UTC)
 
 - Exact repaired executable head **`phase4/gate-c-hcomp-main-sub-exec-clean@3df9f87cfaa238b890d48a00c145ecee6d9b376a`** passes dedicated **Gate C H-COMP Main Sub Exec Clean `36340856658 SUCCESS`**. Artifact **`10938568755`**, digest **`sha256:fbb9a227124b86fb8ecb45f293bcad9b475311adefc828c018b0adb7611dc6a3`**.

@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### CORRECTION / SUPERSEDED L0 DETAIL — compact Sub RDP underflow must use y=16, not y=8 (2026-09-27 UTC)
+
+- Fresh pre-runtime audit found a real defect in the host-only Main/Sub L0 oracle. Integrated `src/ppu.S:rsp_frame` publishes **`FB_OFFSET = fb_border + 8`**; `write_setini(0)` gives **`fb_border=8`**, therefore ordinary 224-line rendering begins at **RDP y=16**. Current production Main confirms this by programming **`FRAMEBUFFER(sp) - 16*560`**.
+- The closed L0 oracle at `c66ea7a...` had hard-coded **`ACTIVE_Y0=8`** and therefore reported proposed compact-Sub Color Image base **`0x000E2E80`** for `A00E4000`. That base is **WRONG / SUPERSEDED**. Correct underflow is **`0x000E1D00 = 0x000E4000 - 16*560`**, matching the earlier E2g compact-color address evidence.
+- This does **not** invalidate the validated RDRAM non-overlap, TS→TM routing footprint, H-COMP slot capacity or zero-runtime-delta build result. It invalidates only the proposed vertical address mapping inside the L0 host contract, which had never executed that target at runtime.
+- **Action before runtime:** repair the L0 oracle to derive/verify `FB_OFFSET=16` from current source semantics and require `SUB_COLOR_RDP_BASE=0x000E1D00`; rerun dedicated + generic gates. The in-flight lifetime proof is independent semantically, but its branch must inherit the corrected L0 before being accepted so no downstream runtime work can consume the stale base.
+
+
 ### IMPLEMENTED / CI RUNNING — exact 8-line Main/Sub lifetime discriminator (2026-09-27 UTC)
 
 - Fresh child **`phase4/gate-c-hcomp-main-sub-lifetime-clean@1a2c5be6ef9cb03e7aa4a4ed72c072347595f69f`** derives from validated Main/Sub L0 authority `c66ea7a...` and still makes **zero Sodium64 runtime-source changes**. New files are deterministic guest, first-hand section-queue classifier and dedicated workflow only.

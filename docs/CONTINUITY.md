@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### CANDIDATE FINALIZATION — durable CGRAM epoch replay regression (2026-09-27 UTC)
+
+- Production branch advanced tooling-only to **`phase4/gate-c-cgram-rsp-consumer-clean@b75e7c61cf8298700f2b7ed938612790f123dae7`**. Runtime `src/` is byte-identical to dynamically validated consumer authority `5ee3fb847d09fe90771afbede73ef25b8e183113`.
+- Finalization removes the two stage-only branch workflows and converts the consumer workflow into one durable **Gate C CGRAM Epoch Replay Regression** that triggers for relevant PRs into `master`, relevant pushes to `master`, and manual dispatch. It compiles all three host oracles, runs the typed-producer model/source guard plus DMA8 consumer model/source guard, builds the exact candidate, re-proves 0x1000 RSP layout/fixed slot and runs the independent binary delay-slot checker.
+- The typed-producer source oracle is now **stage-aware**: it continues to validate producer semantics after the RSP consumer exists instead of treating any consumer symbol as “activated too early.” Consumer-specific layout/shape remains independently guarded by `test_gate_c_cgram_rsp_consumer_impl_clean.py`.
+- Final delta vs integrated `master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`: **10 commits ahead / 0 behind**, nine files total: `src/defines.h`, `src/main.S`, `src/ppu.S`, both RSP sources, three host oracles, one persistent workflow.
+- Exact-head **Build and Validate 36286295058 IN_PROGRESS**. **NEXT:** require that generic gate green, then open a focused PR against unchanged master. PR creation should trigger the durable CGRAM regression and Ares PR gate; do not merge until both are green on the final exact SHA.
+
 ### VALIDATED — dynamic clean DMA8 CGRAM RSP replay (2026-09-27 UTC)
 
 - Observation-only proof head **`phase4/gate-c-cgram-rsp-consumer-dynamic-proof-clean@d0dd09cfc4314ab5cacac46309420bff0af975a1`** completed **Gate C CGRAM DMA8 RSP Consumer Dynamic Proof Clean 36285530643 SUCCESS** and exact-head **Build and Validate 36285530614 SUCCESS**. The proof adds zero `src/` runtime delta over lower-level validated consumer authority `5ee3fb847d09fe90771afbede73ef25b8e183113`.

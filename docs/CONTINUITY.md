@@ -7,16 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
-### IN FLIGHT — observation-only dynamic proof of clean DMA8 CGRAM RSP replay (2026-09-27 UTC)
+### VALIDATED — dynamic clean DMA8 CGRAM RSP replay (2026-09-27 UTC)
 
-- Observation-only branch **`phase4/gate-c-cgram-rsp-consumer-dynamic-proof-clean@d0dd09cfc4314ab5cacac46309420bff0af975a1`** is a direct child of lower-level validated consumer head `5ee3fb847d09fe90771afbede73ef25b8e183113`; it adds only deterministic guest generator, classifier and workflow. **Zero `src/` runtime delta.**
-- The proof reuses historical validated dynamic-consumer semantics without cumulative runtime ancestry. Debugger interaction is read-only: read EA0 via generic Mupen debugger, dump Q1 typed event bytes at **A00BF000** and Q1 raw shadow at **A00EF000**; no memory seeding/poking.
-- Deterministic first-handoff guest emits the audit-critical sequence: startup marker word0, then color **index3=0x1357** in cached DMA-pair word1, followed by repeated index1 writes 1234->4567, entry0=2AAA, entry2=7FFF, then fixed-color E7. The CPU also creates one final next-section marker that is a terminal sentinel, not part of rendered replay.
-- **Required PASS:** rendered stream = startup marker + five colors + active fixed marker; EA0 must stop immediately before the terminal sentinel; raw historical shadow after replay must decode to **index0=2AAA, index1=4567, index2=7FFF, index3=1357** and untouched control index4=0. This simultaneously proves cached second-half retention across a marker and FRAME_END stop behavior.
-- Exact-head runs dispatched: **Gate C CGRAM DMA8 RSP Consumer Dynamic Proof Clean 36285530643 IN_PROGRESS** and **Build and Validate 36285530614 PENDING**.
-- **Falsifier:** coherent read-only bytes with wrong EA0/raw replay reject the consumer runtime. Capture/debugger failure before coherent classification is LAB LIMITATION only. H-COMP arithmetic remains frozen regardless of outcome.
-
-
+- Observation-only proof head **`phase4/gate-c-cgram-rsp-consumer-dynamic-proof-clean@d0dd09cfc4314ab5cacac46309420bff0af975a1`** completed **Gate C CGRAM DMA8 RSP Consumer Dynamic Proof Clean 36285530643 SUCCESS** and exact-head **Build and Validate 36285530614 SUCCESS**. The proof adds zero `src/` runtime delta over lower-level validated consumer authority `5ee3fb847d09fe90771afbede73ef25b8e183113`.
+- Dynamic evidence artifact **10919974616**, digest `sha256:912d176397ba73737dec57f464e8d5d553757468a93be74223c28eb13a76da95`. Independent artifact inspection of `evidence/result.json` confirms classification **`CGRAM_RSP_DMA8_DYNAMIC_CONSUMER_VALIDATED`**, normalization `word_swap32`, first passing snapshot `snap0`.
+- **EA0 replay boundary is exact:** event base **A00BF000**, observed/expected EA0 **A00BF01C** = 7 consumed 4-byte records. The stream contains 8 total records; **7 are rendered/consumed and the terminal next-section sentinel remains unconsumed** (`terminal_sentinel_unconsumed=true`).
+- The historical DMA-pair cached-word1 hazard is dynamically cleared: record1 carries **index3=0x1357**, is consumed after the preceding marker, and survives into the raw shadow.
+- Raw Q1 historical shadow after replay decodes to **index0=2AAA, index1=4567, index2=7FFF, index3=1357**, while untouched control **index4=0**. Raw bytes independently show the corresponding RGBA5551-expanded repeated 8-byte entries. This proves live palette replay rather than only cursor movement.
+- **VALIDATED claim:** on the clean PR#17 lineage, the typed CPU producer + 29-instruction DMA8 RSP consumer dynamically replays the handed epoch stream, preserves cached second-half data across a marker, writes the correct historical raw palette shadow, and stops at the frame-end sentinel. H-COMP arithmetic remains intentionally frozen.
+- **LAB LIMITATION:** pinned Mupen logs still contain known unrelated SI/PIF/task warnings under the synthetic debugger harness; they did not prevent coherent read-only evidence and are not used as correctness claims.
+- **NEXT GATE DRIVER:** audit the production delta `master -> 5ee3fb8...` for integration. If the delta is bounded to the corrected typed producer + raw-shadow publication + DMA8 consumer + durable regression infrastructure, open a focused PR. Do not include observation-only dynamic proof machinery unless it is intentionally retained as regression infrastructure. After integration, the next compositor question is how to consume the now-correct historical palette/fixed-color state in H-COMP arithmetic; do not jump straight to framebuffer claims.
 
 ### IMPLEMENTED / LOWER-LEVEL VALIDATED — clean DMA8 CGRAM RSP consumer (2026-09-27 UTC)
 

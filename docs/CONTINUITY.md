@@ -7,6 +7,20 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### PRECOMMIT — clean CGADSUB BG1 gating on live rendered Main/Sub operands (2026-09-27 UTC)
+
+- Fresh child **`phase4/gate-c-hcomp-cgadsub-gating-clean`** was created exactly from validated clean pixel authority **`4ec7fe3dbf2c0249221730dae0b2c7b06cf9fabe`**. Parent controls are frozen: semantic TS compact target `0xA00E4000`, dynamic Main target via `FRAMEBUFFER(sp)`, published Main physical rows8..15, TS->TM switch, zero-single-step fence and one-renderer-frame ares oracle.
+- **Question / GATE DRIVER:** can the already-validated E1f half-add path consume an actual rendered Main pixel + actual rendered Sub pixel and obey the **real section CGADSUB BG1 enable bit** for a controlled opaque Main BG1, before general winner metadata is introduced?
+- This rung intentionally follows the earlier clean L0 plan: **do not import E2g/E3/E4 cumulative compositor source and do not hardcode a general winner selector.** The proof guest fixes the Main winner to opaque BG1 by construction, so BG1/CGADSUB bit0 is the only controlled eligibility bit. General per-pixel BG/OBJ/backdrop winner gating still requires metadata and remains a later rung.
+- **Controlled runtime delta:** extend frame-end H-COMP only. Preserve the existing PR#18 raw-shadow->RGB555->E1f mailbox unchanged, then DMA-read one already-rendered active sample from compact Sub **row0,x12 = `0xA00E4018`** and the corresponding current Main **published row8,x12 = `FRAMEBUFFER(sp)+0x1198`** while the handed queue slot is still selected. Convert both RGBA5551 samples losslessly to canonical RGB555 using the already-validated adapter. Read section `CGADSUB`; if bit0 is clear publish raw Main, if bit0 is set publish authoritative E1f half-add(Main,Sub).
+- New proof mailbox **`0xA00F0008..0xA00F000F`** is below FRAMEBUFFER1 and adjacent to the existing validated 8-B arithmetic mailbox. Planned words: **Main RGB555, Sub RGB555, gated result RGB555, gate bit**. For the frozen red Main / green Sub guest: Main=`0x001F`, Sub=`0x03E0`; disabled result=`0x001F`; enabled E1f result=`0x01EF`.
+- **Two-state semantic discriminator:** derive two deterministic guests from the already-validated Main/Sub guest, differing only in `CGADSUB $2131` payload (**0x00 disabled vs 0x01 BG1 enabled**, plus checksum bytes). TM/TS, colors, HDMA split8/224, full brightness and all rendering geometry remain identical. Each state must independently preserve the exact Sub-green/Main-red pixel ownership and fence controls.
+- **Important non-claim / hardware risk:** this first architecture proof runs in the pinned ares laboratory where submitted RDP lists are consumed synchronously. A green result proves the clean **dataflow + CGADSUB gating semantics** in that laboratory; it does **not** yet prove a production-safe real-N64 RDP->RSP framebuffer read fence, full-band throughput, general winner metadata, add/sub/half mode selection, windows, brightness or cadence. Do not silently promote the proof-time framebuffer DMA read into production ownership without a later hardware-safe synchronization design.
+- **Falsifiers:** either live sample is not exact red/green; enabled/disabled runs change rendering controls; CGADSUB carrier does not match 0/1; disabled result is not raw Main; enabled result is not exact E1f; fixed-slot/suffix ABI moves; or generic build/smoke regresses.
+- **STATUS: HYPOTHESIS / PRECOMMITTED; runtime implementation next.**
+
+
+
 ### MEASURED PIXEL RESULT — Sub ownership proven; all seeded Main row-0 bands untouched (2026-09-27 UTC)
 
 - Exact pixel-proof head **`phase4/gate-c-hcomp-main-sub-pixels-clean@be3aa7eebbddc796458b2cab58342fbde46f509e`** has generic **Build and Validate `36355725698 SUCCESS`** and dedicated pinned-ares **Gate C H-COMP Main Sub Pixels Clean `36355725717 FAILURE`**. Evidence artifact **`10943494024`**, digest **`sha256:0e404dd79070cc64b95ce55d3b02b890ca472ead04767832f2144cbf57036391`**.

@@ -35,10 +35,8 @@ jobs:
         run: npm install -g libdragon
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Reprove producer and consumer contracts
-        run: |
-          python3 scripts/test_gate_c_cgram_typed_producer_clean.py
-          python3 scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
+      - name: Prove inherited producer and consumer contracts
+        run: python3 scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
       - name: Build exact candidate
         shell: bash
         run: |

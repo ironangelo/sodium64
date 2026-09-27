@@ -57,6 +57,38 @@ class ProfileWorkloadTests(unittest.TestCase):
         # NMI handler returns with RTI.
         self.assertEqual(program[-1], 0x40)
 
+    def test_cgram_frame_paced_workloads_use_fixed_active_irq(self) -> None:
+        for name, commits in workloads.CGRAM_FRAME_PACED_COMMITS.items():
+            with self.subTest(name=name):
+                rom = workloads.build_rom(name)
+                native_irq = int.from_bytes(rom[0x7FEE:0x7FF0], "little")
+                emulation_irq = int.from_bytes(rom[0x7FFE:0x8000], "little")
+                self.assertEqual(native_irq, workloads.CGRAM_IRQ_ADDRESS)
+                self.assertEqual(emulation_irq, workloads.CGRAM_IRQ_ADDRESS)
+
+                handler = workloads.CGRAM_IRQ_OFFSET
+                # PHA; PHX; LDA $4211 acknowledges one V-IRQ.
+                self.assertEqual(
+                    rom[handler : handler + 5],
+                    bytes([0x48, 0xDA, 0xAD, 0x11, 0x42]),
+                )
+                # The handler reloads the exact bounded commit count every frame.
+                self.assertIn(
+                    bytes([0xA2, commits & 0xFF, (commits >> 8) & 0xFF]),
+                    rom[handler : handler + 64],
+                )
+                self.assertEqual(rom[handler + 5 : handler + 10], bytes([0xA9, 0x00, 0x8D, 0x21, 0x21]))
+
+    def test_cgram_frame_paced_workloads_sleep_between_frames(self) -> None:
+        for name in workloads.CGRAM_FRAME_PACED_COMMITS:
+            with self.subTest(name=name):
+                program = workloads.WORKLOADS[name]()
+                self.assertIn(0xCB, program[: workloads.CGRAM_IRQ_OFFSET])  # WAI
+                # V-IRQ at line 96, not a free-running active-display loop.
+                self.assertIn(bytes([0xA9, 0x60, 0x8D, 0x09, 0x42]), program)
+                self.assertIn(bytes([0xA9, 0x20, 0x8D, 0x00, 0x42]), program)
+                self.assertEqual(program[-1], 0x40)  # RTI
+
     def test_gameplay_balanced_enables_bg1_and_obj(self) -> None:
         program = workloads.workload_gameplay_balanced()
         # LDA #$11; STA $212C (TM): BG1 and OBJ are the only main-screen layers.

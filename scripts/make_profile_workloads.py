@@ -30,6 +30,13 @@ HEADER = 0x7FC0
 LOAD_ADDRESS = 0x8000
 GAMEPLAY_NMI_ADDRESS = 0x8100
 GAMEPLAY_NMI_OFFSET = GAMEPLAY_NMI_ADDRESS - LOAD_ADDRESS
+CGRAM_IRQ_ADDRESS = 0x8200
+CGRAM_IRQ_OFFSET = CGRAM_IRQ_ADDRESS - LOAD_ADDRESS
+CGRAM_FRAME_PACED_COMMITS = {
+    "cgram-paced-4": 4,
+    "cgram-paced-32": 32,
+    "cgram-paced-128": 128,
+}
 
 
 class Assembler:
@@ -322,6 +329,47 @@ def workload_gameplay_balanced() -> bytes:
     return program
 
 
+def workload_cgram_frame_paced(commits: int) -> bytes:
+    """Finite active-display CGRAM commits at one fixed V-IRQ per native frame."""
+    if not 1 <= commits <= 0xFFFF:
+        raise ValueError(f"invalid CGRAM commit count: {commits}")
+
+    asm = Assembler()
+    native_prefix(asm, accumulator_8bit=True)
+
+    # Keep the PPU active, trigger one vertical IRQ in the visible field and
+    # sleep between interrupts. This makes event count per native frame exact.
+    asm.emit(0xA9, 0x0F, 0x8D, 0x00, 0x21)  # INIDISP = brightness 15
+    asm.emit(0xA9, 0x60, 0x8D, 0x09, 0x42)  # VTIMEL = line 96
+    asm.emit(0xA9, 0x00, 0x8D, 0x0A, 0x42)  # VTIMEH = 0
+    asm.emit(0xA9, 0x20, 0x8D, 0x00, 0x42)  # NMITIMEN = V-IRQ only
+    asm.emit(0x58)                          # CLI
+
+    asm.label("frame_wait")
+    asm.emit(0xCB)                          # WAI until the next V-IRQ
+    asm.branch(0x80, "frame_wait")
+
+    asm.pad_to(CGRAM_IRQ_OFFSET)
+    asm.label("irq")
+    asm.emit(0x48, 0xDA)                    # PHA; PHX
+    asm.emit(0xAD, 0x11, 0x42)              # LDA $4211 (TIMEUP / acknowledge IRQ)
+    asm.emit(0xA9, 0x00, 0x8D, 0x21, 0x21)  # CGADD = 0
+    asm.emit(0xA2, commits & 0xFF, (commits >> 8) & 0xFF)  # LDX #commits
+    asm.label("cgram_loop")
+    asm.emit(0x8A)                          # TXA -> low palette byte
+    asm.emit(0x8D, 0x22, 0x21)              # CGDATA low
+    asm.emit(0x49, 0x1F)                    # deterministic high-byte variation
+    asm.emit(0x8D, 0x22, 0x21)              # CGDATA high => one complete commit
+    asm.emit(0xCA)                          # DEX
+    asm.branch(0xD0, "cgram_loop")
+    asm.emit(0xFA, 0x68, 0x40)              # PLX; PLA; RTI
+
+    program = asm.finish()
+    if asm.labels["irq"] != CGRAM_IRQ_OFFSET:
+        raise ValueError("CGRAM paced IRQ handler moved away from its fixed vector")
+    return program
+
+
 WORKLOADS: dict[str, Callable[[], bytes]] = {
     "idle": workload_idle,
     "cpu-alu": workload_cpu_alu,
@@ -329,6 +377,9 @@ WORKLOADS: dict[str, Callable[[], bytes]] = {
     "ppu-registers": workload_ppu_registers,
     "dma-vram": workload_dma_vram,
     "gameplay-balanced": workload_gameplay_balanced,
+    "cgram-paced-4": lambda: workload_cgram_frame_paced(4),
+    "cgram-paced-32": lambda: workload_cgram_frame_paced(32),
+    "cgram-paced-128": lambda: workload_cgram_frame_paced(128),
 }
 
 
@@ -371,6 +422,12 @@ def build_rom(name: str) -> bytes:
         # used during the measured frame loop.
         write_vector(rom, 0x7FEA, GAMEPLAY_NMI_ADDRESS)
         write_vector(rom, 0x7FFA, GAMEPLAY_NMI_ADDRESS)
+
+    if name in CGRAM_FRAME_PACED_COMMITS:
+        # The paced workloads enter native mode before CLI, so native IRQ is the
+        # expected path. Set emulation IRQ defensively without changing reset.
+        write_vector(rom, 0x7FEE, CGRAM_IRQ_ADDRESS)
+        write_vector(rom, 0x7FFE, CGRAM_IRQ_ADDRESS)
 
     # For a checksum/complement pair where the words XOR to $FFFF, the four
     # checksum bytes always contribute $1FE to the byte sum.

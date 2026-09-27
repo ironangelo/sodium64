@@ -7,6 +7,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### VALIDATED — clean executable PR18→E1f H-COMP bridge layout/build (2026-09-27 UTC)
+
+- Exact executable head **`phase4/gate-c-hcomp-cgram-arith-exec-clean@1ebc5d1d63c0c47bc23e78f18ddbb312559192c5`** is now green through both dedicated and generic exact-head validation.
+- Dedicated **Gate C H-COMP CGRAM Arithmetic Exec Clean run `36335179636 SUCCESS`**. Artifact **`10936688057`**, digest **`sha256:c46b59e50665412fd7b8535f07e02435af3a57d2266373270dc77265c5a97c46`**.
+- Source + binary oracle passed **`HCOMP_CGRAM_ARITH_EXEC_CLEAN_CONTRACT_VALIDATED`**. Built geometry is exact: regular RSP **0x1000 text**, Mode7 RSP **0x1000 text**, H-COMP **0x790 text**; all three report **`control-in-delay=0`**. H-COMP fixed entry remains **0xA40013B0** with external Mode7 entry **0xA4001788** and resident suffix ABI intact.
+- Candidate ROM hash for this proof runtime is **`71dd6477f50fe6a0ddd55c6508ea62141c15d00147192ef07db37f79ae4cf0e0`**. The bridge's active fixed-slot code is **192/1000 B** and resident IMEM growth is **0**.
+- Same-head generic **Build and Validate run `36335179637 SUCCESS`** also closed green, including normal/PROFILE build and emulator smoke path.
+- The earlier run **`36335127658 FAILURE`** remains classified as a **HYGIENE-BLOCKER** caused solely by the new oracle's faulty end delimiter; commit `1ebc5d1...` repaired the parser and the exact same runtime architecture then passed source, binary and generic gates. Do not reinterpret the earlier failure as a runtime regression.
+- **VALIDATED claim:** current lineage can execute an H-COMP fixed-slot bridge that reads the just-rendered PR #18 raw palette slot before queue toggle, losslessly adapts RGBA5551→RGB555, applies authoritative E1f half-add, publishes a proof mailbox, then toggles `sp` and HALTs, all without resident IMEM growth.
+- **NON-CLAIMS remain:** this has not yet demonstrated that active-display `CGDATA` events actually flow end-to-end into the H-COMP arithmetic result in first-hand execution; it still proves no Main/Sub provenance, CGWSEL/CGADSUB gating, final-pixel correctness, cadence, software compatibility or N64-hardware result.
+- **NEXT controlled batch:** child branch from this exact validated head, **no runtime changes**, deterministic guest writes four active-display CGRAM operands whose frame base is zero; pinned Mupen/LLE snapshots must jointly prove typed event replay, raw-shadow mutation and H-COMP proof mailbox **`7FFF,000F`**. This is the end-to-end bridge discriminator before tackling Main/Sub provenance.
+
+
 ### HYGIENE-BLOCKER IDENTIFIED — first executable-contract run failed in oracle parsing, not runtime (2026-09-27 UTC)
 
 - Dedicated run **`36335127658 FAILURE`** on `62a271fc...` stopped in the **source-contract step before any build** with `AssertionError: HCOMP Mode7 fault surface drift`.

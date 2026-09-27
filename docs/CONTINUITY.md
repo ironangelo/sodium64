@@ -7,6 +7,22 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### IN FLIGHT — bounded frame-paced active-CGRAM A/B for PR #18 merge hold (2026-09-27 UTC)
+
+- Current integrated truth remains **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**; PR #18 remains open at runtime head **`5ef80450dec16c031e76d18bcaddb2da72a5b2a8`** under the existing producer-cost MERGE HOLD.
+- New measurement-only branches use **identical tooling blobs** and differ only in runtime parent:
+  - baseline **`phase4/gate-c-cgram-paced-base@f2b6880d4727a2438bf77c99a7685f515b3c9f53`** from integrated master;
+  - candidate **`phase4/gate-c-cgram-paced-pr18@d91cde6f154af5b9e22156dabde5d57a2bc012e7`** from PR #18 exact head.
+- The new deterministic workload ladder is deliberately **frame-paced**, not a free-running synthetic loop. It enters native mode, enables one vertical IRQ at visible scanline **96**, sleeps with `WAI` between frames, acknowledges `TIMEUP`, resets CGADD, then emits exactly **4 / 32 / 128 complete CGRAM commits per native frame** before RTI. Native + emulation IRQ vectors are fixed to **0x8200** for the diagnostic ROMs. Host tests assert fixed vectors, V-IRQ setup, bounded per-frame counts and WAI pacing.
+- The ordinary pinned-Ares harness is reused with unchanged Road-valid settings and virtual frame-budget reporting; the three workloads are added to the same CPU-JIT + RSP-interpreter matrix. This avoids host-wall-time interpretation and makes base/candidate comparison causal.
+- Exact runs at checkpoint:
+  - baseline Ares **36293986488 IN_PROGRESS**, Build/Validate **36293986492 PENDING**;
+  - PR#18 candidate Ares **36293991744 QUEUED**, Build/Validate **36293991708 PENDING**.
+- **Decision rule:** if baseline and PR#18 both sustain the native target across 4/32/128 bounded events (or show no meaningful candidate-only degradation), the prior **57/60 free-running ppu-register** result remains a pathological stress ceiling and the performance MERGE HOLD can be released. A reproducible candidate-only deficit at any bounded rung is a real merge blocker and must be localized before integration. Do not optimize producer/consumer code before this result.
+- This measurement branch/tooling is diagnostic only and is not intended to merge into production unchanged unless the workload proves useful as a durable regression control.
+
+
+
 ### MEASURED / CAUSE LOCALIZED — CGRAM epoch producer itself causes synthetic ppu-register deficit (2026-09-27 UTC)
 
 - Four-stage identical-harness Ares ladder is now complete:

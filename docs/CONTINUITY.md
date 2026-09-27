@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / NOT YET VALIDATED — clean executable PR18→E1f H-COMP bridge (2026-09-27 UTC)
+
+- Fresh runtime branch **`phase4/gate-c-hcomp-cgram-arith-exec-clean@62a271fc2df72245dd670f86ace7546bd1b49c50`** derives directly from integrated `master@7cc8fac...` and implements only the validated L0 bridge; it does not import the cumulative E2/E3/E4 compositor branches.
+- Runtime delta: third fixed-slot source pointer at E94 with Mode7 moved to audited E8C; equal-length generic fixed-slot loader; frame-end dispatch to H-COMP while current `sp` is preserved; new `rsp_hcomp.S` reads four PR #18 RGBA5551 shadow entries from **`HCOMP_RAW_PALETTE_PTRS(sp)`**, losslessly decodes two pairs to RGB555, applies exact E1f half-add, and writes two proof-only RGB555 results to **`0xA00F0000`**.
+- Ownership fix is implemented exactly as contracted: resident `next_frame` no longer toggles `sp`; H-COMP executes **`xori sp,sp,4` only after its proof DMA**, immediately before HALT/resume-to-`draw_frame`. Resident frame-end remains four instructions.
+- Fixed-slot active code remains designed at **192/1000 B**. H-COMP retains neutral regular/Mode7 fault surfaces, so the next frame can demand-load Main or true Mode7 normally.
+- New executable source/binary oracle + dedicated workflow were added. **STATUS: IMPLEMENTED / NOT YET VALIDATED** until exact-head build proves resident 4096-B IMEM, fixed entry/suffix addresses, H-COMP 0x790 text geometry and zero control-in-delay hazards.
+- If those checks pass, next child batch is a deterministic active-display CGRAM guest whose shadow is zero at frame base and gains the four discriminator operands only through PR #18 replay; first-hand H-COMP mailbox output must be `7FFF,000F`.
+
+
 ### VALIDATED — exact-head generic gates close clean CGRAM→H-COMP L0 (2026-09-27 UTC)
 
 - Same-head **Build and Validate `36334787357 SUCCESS`** on `2e6efdb289a7c7d4c0796ba1d9566d2b1a2c1b63`: host validation, normal build, PROFILE build, binary RSP branch-delay checks, release path and pinned-Mupen/LLE emulator smoke all completed green.

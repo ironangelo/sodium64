@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### OPEN QUESTION / NO LIFETIME VERDICT — first dynamic run stopped on unrelated CGADSUB assumption (2026-09-27 UTC)
+
+- First dedicated lifetime run **`36339430745 FAILURE`** on pre-underflow-correction head `1a2c5be6...` successfully passed guest/oracle self-test, exact unchanged runtime build/hash, wrapping, pinned Mupen/CXD4 build and all six dual-section-queue captures. Failure occurred only in final classification.
+- Every attempted snapshot/normalization stopped first at **`section0.cgadsub=0x00, expected 0x01`**. Because the classifier checked CGADSUB before TS/TM/split, the artifact as currently summarized provides **no verdict yet** on the actual gate-driving question: whether both queues encode **TS=2/TM=1 split8** followed by **TS=0/TM=1 split224**.
+- CGADSUB is deliberately **not required to prove compact-Sub lifetime**; however, do not simply delete the mismatch. The deterministic guest source still writes `CGADSUB=1`, so first expose the complete decoded section tuples for both queues/snapshots and determine whether this is guest phase, queue interpretation, or another real mismatch.
+- **Harness defect:** the lifetime workflow path filter did not include `scripts/test_gate_c_hcomp_main_sub_contract_clean.py`, so the subsequent y16 L0 correction did not automatically dispatch the dedicated lifetime proof. Add that dependency before the authoritative rerun.
+- Artifact **`10938177952`**, digest **`sha256:e570034a458fecf7ad1c48a48577bdc90e23ff869e0f3880491e1bcb317806e1`**, is retained as diagnostic evidence. Repeated Mupen `Unknown SI DMA PIF address: 000007c0` remains the already-known lab noise, not the classifier failure.
+
+
 ### CORRECTION / SUPERSEDED L0 DETAIL — compact Sub RDP underflow must use y=16, not y=8 (2026-09-27 UTC)
 
 - Fresh pre-runtime audit found a real defect in the host-only Main/Sub L0 oracle. Integrated `src/ppu.S:rsp_frame` publishes **`FB_OFFSET = fb_border + 8`**; `write_setini(0)` gives **`fb_border=8`**, therefore ordinary 224-line rendering begins at **RDP y=16**. Current production Main confirms this by programming **`FRAMEBUFFER(sp) - 16*560`**.

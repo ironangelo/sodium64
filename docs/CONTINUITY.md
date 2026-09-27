@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### MEASUREMENT / ARCHITECTURE PROOF PASSED — clean Main/Sub provenance L0 dedicated gate (2026-09-27 UTC)
+
+- Exact host/workflow head **`phase4/gate-c-hcomp-main-sub-contract-clean@c66ea7a225bb3ede6cc7b995e860176a53a88342`** keeps the validated bridge runtime unchanged. Dedicated **Gate C H-COMP Main Sub Contract Clean `36337358885 SUCCESS`**; artifact **`10937985981`**, digest **`sha256:034ab52b9a93a52c92b7f9a2a74080d1dbeaa0f0d8a63732cd2b9c3d9e95a768`**.
+- Oracle prints **`HCOMP_MAIN_SUB_CLEAN_L0_VALIDATED`** and closes the clean-lineage source/capacity questions: semantic **TS→TM** routing can remove manual `MASK_SEL` dependence while preserving shared membership, with resident routing footprint **12 -> 11 instructions**; H-COMP screen-switch helper fits at **0x1760** using **40 B**, for projected active H-COMP **232/1000 B**.
+- Reallocated clean RDRAM ranges pass non-overlap/guard checks against current PR #18 ownership: Sub metadata **A00DE000 +0x1180**, Main metadata **A00E0000 +0x1180**, Sub color **A00E4000 +0x1180**; historical E2g-B Z addresses inside Q1 remain rejected.
+- Dedicated unchanged-runtime build reproduces exact validated bridge ROM SHA-256 **`71dd6477f50fe6a0ddd55c6508ea62141c15d00147192ef07db37f79ae4cf0e0`**. RSP geometry remains regular **4096/4096**, Mode7 **4096/4096**, H-COMP **1936 B text / 1 B data (0x790 text)**; all three binary checks report **`control-in-delay=0`**.
+- **VALIDATED dedicated claim:** screen provenance has a clean zero-resident-growth placement/routing path compatible with PR #18 + H-COMP. This is still L0 only; no dual-color runtime execution is claimed yet.
+- Exact-head generic **Build and Validate `36337358891`** has normal + PROFILE builds green and is running pinned-Mupen/LLE smoke at checkpoint. Do not promote to executable runtime until this same-head generic gate closes green.
+
+
 ### HYGIENE-BLOCKER — second Main/Sub L0 run still did not reach an architecture assertion (2026-09-27 UTC)
 
 - Corrected-head dedicated run **`36337215175 FAILURE`** on **`12de031fa349bf87cb20d559630b748bd31d0f84`** parses successfully but stops at the first source-slice lookup with **`ValueError: substring not found`** before capacity/semantic assertions or runtime build.

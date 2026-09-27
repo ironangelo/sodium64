@@ -244,8 +244,10 @@ def prove_source() -> None:
     if ppu.count("DMEM(HCOMP_CGRAM_EVENT_CURSOR)") != 1:
         raise AssertionError("typed event cursor publication count drift")
 
-    if "HCOMP_RAW_PALETTE_PTRS" in defs or "hcomp_vector_band_probe" in ppu:
-        raise AssertionError("consumer/H-COMP arithmetic leaked into producer-only stage")
+    # The integrated consumer legitimately publishes HCOMP_RAW_PALETTE_PTRS.
+    # What must remain frozen at this stage is H-COMP arithmetic itself.
+    if "hcomp_vector_band_probe" in ppu:
+        raise AssertionError("H-COMP arithmetic activated during typed-producer stage")
 
 
 def main() -> int:
@@ -256,7 +258,7 @@ def main() -> int:
     prove_source()
 
     print("CGRAM_TYPED_PRODUCER_CLEAN_VALIDATED")
-    print("runtime_scope=cpu_producer_only")
+    print("runtime_scope=typed_producer_invariants_with_consumer_allowed")
     print("raw_shadow_initialization=256_entries_including_entry0")
     print("raw_shadow_geometry=8bytes_per_entry_double_buffered")
     print("typed_color=rgba5551_plus_index_times_8")

@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### SUPPORTED INTERPRETATION — next H-COMP placement should reprove the historical zero-growth third-overlay contract (2026-09-27 UTC)
+
+- Fresh audit of the current post-PR18 RSP layout confirms both resident variants are expected to remain **0x1000 / 4096 B IMEM** once the DMA8 CGRAM consumer is integrated; ordinary tail growth is unavailable. Current demand-loaded renderer slot remains **A40013A8..A400178F**, with resident loaders for Main/Mode7 and DMEM source pointers at E90/E94 plus raw-palette pointers at E98/E9C.
+- Do **not** restart placement design from zero. Historical continuity already contains a validated host-only **zero-resident-growth third H-COMP overlay L0** at `627a9ab12d3f4d2268db7c596934deab2f730e9b`: Mode7 source can move to aligned E8C, Main stays E90, H-COMP uses E94, raw pointers remain E98/E9C; the existing Mode7 loader can become indirect without resident growth, and the third slot had ~400 B fixed / ~600 B routing headroom around the then-measured H-COMP body.
+- Historical first-hand bridge evidence is also already closed: `d06ee2428efc1908c01e14af538e1c562d91aa71` dynamically proved historical-CGRAM replay feeding controlled H-COMP arithmetic, and the old triple-overlay line proved real Mode1→Mode7→Mode1 dispatch plus frame-end H-COMP coexistence under synthetic workloads, subject to documented pinned-Mupen heavy-Mode7 lab limitations.
+- These old branches are **reference specifications, not merge candidates**. Current master now contains PR #16 + PR #17 + PR #18 semantics and a full resident IMEM, so every source/layout/lifetime assumption must be re-derived on the exact current lineage.
+- **NEXT AFTER post-merge PR #18 gates:** create a **host-only, zero-runtime-delta current-master triple-overlay placement contract** first. It should re-prove pointer ABI, fixed renderer slot, H-COMP payload budget, frame-end call phase, Main/Mode7 loader lifetime, DMEM scratch non-overlap with EA0/EA8/EB0/F70, and no resident growth. Only a green clean-lineage contract authorizes an executable overlay proof; do not import cumulative H-COMP runtime wholesale and do not shave arbitrary resident instructions.
+
 ### MERGED / POST-MERGE VALIDATION PENDING — PR #18 CGRAM epoch replay (2026-09-27 UTC)
 
 - Performance hold was released by the completed bounded paced A/B: both integrated-master baseline and PR #18 candidate sustain **32 and 128 active-display CGRAM commits per native frame at 60/60**, with ~70% virtual frame/VI idle remaining. The unlimited `ppu-registers` 57/60 candidate result remains a pathological free-running stress ceiling, not a representative cadence regression.

@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / RUNNING — end-to-end active-CGRAM→H-COMP E1f dynamic discriminator (2026-09-27 UTC)
+
+- Child branch **`phase4/gate-c-hcomp-cgram-arith-dynamic-clean@5d714c2452091dd0a8ab8613285ba007da36ccc2`** derives from validated executable head `1ebc5d1...` and makes **no runtime-source changes**. Only a deterministic SNES guest, first-hand classifier and dedicated workflow were added.
+- Guest writes exactly four non-zero CGRAM operands during the first active frame, after the zero historical base exists: **index0=7FFF, index1=7FFF, index2=001F, index3=0020**. It then spins; no fixed-color write is used.
+- Dynamic pass requires one usable snapshot to jointly satisfy all three layers: (1) Q1 typed stream = bootstrap marker + four color events + section marker + unconsumed terminal marker, with EA0 stopping before the terminal sentinel; (2) PR #18 Q1 raw shadow entries 0..3 equal the corresponding RGBA5551 operands; (3) H-COMP proof mailbox at **`0xA00F0000`** contains RGB555 **`7FFF,000F,0000,0000`**.
+- Classifier accepts only proven debugger byte normalizations (`identity` / `word_swap32`), self-tests both, and contains negative tests for stale arithmetic output and terminal-sentinel over-consumption.
+- Dedicated workflow rebuilds the exact executable candidate, re-runs the executable source/binary contract and delay-slot checks, wraps the deterministic guest, then uses the already-pinned Mupen64Plus debugger + CXD4 LLE RSP laboratory to capture **6 snapshots** of event Q1, raw Q1, EA0 and the H-COMP mailbox.
+- **STATUS: IMPLEMENTED / RUNNING.** This is still an emulator-lab architecture proof; even if green it will not establish hardware cadence, Main/Sub provenance, color-math gating or final pixels.
+
+
 ### VALIDATED — clean executable PR18→E1f H-COMP bridge layout/build (2026-09-27 UTC)
 
 - Exact executable head **`phase4/gate-c-hcomp-cgram-arith-exec-clean@1ebc5d1d63c0c47bc23e78f18ddbb312559192c5`** is now green through both dedicated and generic exact-head validation.

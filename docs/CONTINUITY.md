@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### MEASURED LIFETIME BYTES / CLASSIFIER OWNERSHIP ASSUMPTION REJECTED (2026-09-27 UTC)
+
+- Corrected-lifetime diagnostic run **`36339716889 FAILURE`** on **`phase4/gate-c-hcomp-main-sub-lifetime-clean@2b53241d6baf0787c1e597fe765b552047364451`** reached full first-hand capture; guest/oracle self-tests, unchanged bridge runtime build/hash, wrapping, pinned Mupen/CXD4 build and six section-queue snapshots all completed successfully. Artifact **`10937659018`**, digest **`sha256:cc238fc4c27a50c5610794424b403b0148a8f193b64eeedddaeb1b062a6f8dc9`**.
+- Under the already-established debugger normalization **`word_swap32`**, **Q2 contains the exact precommitted handed-frame tuple** in repeated snapshots: record0 = `CGADSUB=1, TS=2, TM=1, TSW=0, TMW=0, BGMODE=0, STAT_FLAGS=0x40, SPLIT_LINE=8`; record1 = `CGADSUB=1, TS=0, TM=1, TSW=0, TMW=0, BGMODE=0, STAT_FLAGS=0x00, SPLIT_LINE=224`.
+- Q1 at the same arbitrary debugger stop is stale/non-authoritative (zero/old fields); requiring **both ping-pong queues to encode the same completed frame simultaneously is REJECTED**. CPU/RSP queue ownership deliberately alternates, so one queue may contain the currently handed/completed frame while the opposite queue contains older/in-progress state.
+- This also resolves the earlier apparent `CGADSUB=0`: the deterministic guest did write `CGADSUB=1`; the prior classifier simply stopped on stale Q1 before inspecting authoritative Q2. Do not reinterpret that mismatch as a guest or Sodium64 register failure.
+- **SUPPORTED lifetime reading already visible in raw evidence:** the authoritative Q2 frame has Sub BG2 enabled only for **[0,8)** and disabled for **[8,224)** while Main BG1 remains enabled. This is exactly the write-bound required for the compact 8-line Sub target. Formal closure still requires a corrected classifier + exact-head green dedicated/generic run.
+- **Classifier repair:** accept a snapshot when **one handed queue** under a proven byte normalization satisfies the complete strict two-record tuple; report which queue is authoritative and retain the opposite queue only as diagnostic context. Keep split=9 and post-split TS re-enable negative tests. Do not weaken any field of the authoritative tuple.
+- Repeated Mupen `Unknown SI DMA PIF address: 000007c0` remains the previously classified **LAB LIMITATION** and does not explain the queue result.
+
+
 ### VALIDATED CORRECTION — Main/Sub L0 vertical mapping repaired and reclosed (2026-09-27 UTC)
 
 - Canonical corrected L0 head **`phase4/gate-c-hcomp-main-sub-contract-clean@b8cc600952521e02594d6d3017fdda7e86db9374`** changes only the host oracle from prior green `c66ea7a...`; Sodium64 runtime remains unchanged.

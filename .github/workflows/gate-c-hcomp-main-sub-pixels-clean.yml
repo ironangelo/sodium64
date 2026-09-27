@@ -153,6 +153,8 @@ jobs:
             expect "(dbg)"
             send "dumpmem 0xA0133D00 4480 evidence/snap$n-main3.bin\r"
             expect "(dbg)"
+            send "dumpmem $env(RDP_FRAME_ADDR) 24 evidence/snap$n-rdp-frame.bin\r"
+            expect "(dbg)"
           }
 
           send "quit\r"
@@ -160,7 +162,7 @@ jobs:
           EOF
 
           expect "$RUNNER_TEMP/main-sub-pixels.expect"
-          for kind in q1 q2 sub main1 main2 main3; do
+          for kind in q1 q2 sub main1 main2 main3 rdp-frame; do
             test "$(find evidence -name "snap*-$kind.bin" | wc -l)" -eq 6
           done
 
@@ -187,4 +189,5 @@ jobs:
             runtime.sha256
             executable-contract.txt
             delay-slots.txt
+            rdp-frame-address.txt
             build.log

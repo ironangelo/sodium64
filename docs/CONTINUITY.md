@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### LAB LIMITATION / NO PIXEL VERDICT — R4300 single-step is not an RDP-drain fence in pinned ares (2026-09-27 UTC)
+
+- Exact pixel-proof head **`phase4/gate-c-hcomp-main-sub-pixels-clean@defc9ed6939239ddcc048431dab71b0e98f7d9ed`** has generic **Build and Validate `36343423368 SUCCESS`**, so the clean runtime/source-binary contract remains intact.
+- Dedicated pinned-ares run **`36343423388 FAILURE`** reached the intended seed boundary after warmup with the RSP halted, but the RDP never reached `DP_STATUS & 0x70 == 0` across **4096 GDB R4300 single-steps**. Failure occurred before sentinel seeding or any pixel capture. Artifact **`10939049526`**, digest **`sha256:6fdac03ad73961273572297aa9ed480e6c8ee75ad1735dda8e317a5ac4a3a89c`**.
+- Inspection of pinned ares **`17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`** shows GDB `s` sets `singleStepActive`, resumes the emulator, then re-halts on the next reported CPU PC. The experiment therefore does **not** establish that asynchronous RDP work receives normal scheduler progress between those stops. Treat the 4096-step result as a **LAB LIMITATION**, not as evidence of a Sodium64 RDP deadlock.
+- **REJECTED:** use repeated R4300 single-step as the external DP-drain fence, or modify clean Sodium64 runtime merely to satisfy that debugger assumption. The strict pixel oracle remains unchanged.
+- **NEXT controlled discriminator:** move the host-only seed/capture fence to the existing **pre-RSP-launch CPU boundary** immediately after `frame_wait`, where the RSP is still HALT and the prior frame's RDP has received normal execution time while CPU/UI/frame pacing work proceeds. First require SP HALT + immediate RDP idle at that natural boundary; seed there; step only the inert breakpoint instruction to get past it; then run normally to exactly one same-boundary reentry and capture. Runtime, guest and ares pin remain unchanged.
+
+
 ### IMPLEMENTED / RERUNNING — external DP-drain fence for seeded ares pixel proof (2026-09-27 UTC)
 
 - Pixel branch advanced host-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@defc9ed6939239ddcc048431dab71b0e98f7d9ed`**; runtime remains byte-identical to `3df9f87c...`.

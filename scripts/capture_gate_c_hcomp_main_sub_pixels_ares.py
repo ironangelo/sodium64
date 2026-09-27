@@ -24,6 +24,8 @@ MAIN_CAPTURE_BYTES = WIDTH * MAIN_ROWS * 2
 SENTINEL = 0x55AA
 
 SUB_COLOR_ADDR = 0xA00E4000
+GATING_MAILBOX_ADDR = 0xA00F0008
+GATING_MAILBOX_BYTES = 8
 FRAMEBUFFER_ADDRS = (
     0xA00F2300,
     0xA0113000,
@@ -216,6 +218,9 @@ def main() -> int:
             (out / f"section-q{i}.bin").write_bytes(
                 client.read_memory(address, SECTION_CAPTURE_BYTES, 0x100)
             )
+        (out / "gating-mailbox.bin").write_bytes(
+            client.read_memory(GATING_MAILBOX_ADDR, GATING_MAILBOX_BYTES, GATING_MAILBOX_BYTES)
+        )
 
         state = {
             "warm_counter": warm_counter,

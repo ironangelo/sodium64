@@ -7,6 +7,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### MEASURED — typed producer alone reproduces PR #18 ppu-register stress deficit (2026-09-27 UTC)
+
+- Diagnostic draft **PR #19**, exact typed-producer-only head `bd375453ed52680462bedd090a65078feff5f880`, completed **Ares Profile Validation 36288811764 SUCCESS**. Matrix artifact **10921054383**, digest `sha256:b5025a717adde33c03b50990b68080371ecdf670a83b7cb60bb3bfe636ce8d23`.
+- Exact `recompiler-ppu-registers` result is **57/60**, identical to full PR #18 producer+DMA8-consumer **57/60**, versus integrated master / PR#17 lineage **61/60** across three prior independent runs. Therefore the measured synthetic deficit is already present **before the RSP consumer exists**; the DMA8 replay is not required to explain this regression.
+- Producer-only ppu-register profile: **1,105 valid samples**, PPU/events **432/1105 = 39.1%**, with visible new producer symbols including `cg_epoch_done=44`, `hcomp_cgram_marker_done=6`, `section_loop=7`. Full PR #18 had PPU/events **373/911 = 40.9%** and the same 57/60 outcome. This supports CPU producer/bookkeeping as the causal region, without claiming the RSP consumer has zero cost in every workload.
+- Representative control remains healthy: producer-only **gameplay-balanced=60/60** with **798/1052 frame/VI-wait samples (~75.9%)**; full PR #18 also remains 60/60. The current regression is therefore demonstrated on the intentionally pathological active-CGRAM stress, not on the existing frame-paced balanced workload.
+- One unrelated producer-only `cpu-alu` window reported **59/60** while master/PR18 report 60/60; do not attribute that single-window movement to CGRAM semantics without repetition because the workload does not exercise active CGRAM events.
+- **NEXT discriminator already running:** draft PR #20 `phase4/gate-c-cgram-raw-producer-ab@38dbb2129f53635703631b04aa4dbe2b7ffb6d17` is a one-commit/current-master A/B changing only `src/defines.h`, `src/main.S`, `src/ppu.S` to the previously validated raw RGB555 producer representation. Its Ares result separates base epoch bookkeeping from typed RGBA5551/section-marker production cost.
+- PR #18 remains **MERGE HOLD** until the raw-vs-typed result closes. H-COMP work remains blocked. PR #19 is measurement-only and should be closed after this checkpoint.
+
+
+
 ### IN FLIGHT — controlled Ares producer-only A/B for PR #18 merge hold (2026-09-27 UTC)
 
 - Merge hold discriminator is now exact and requires **no runtime reconstruction**: corrected typed-producer-only authority `phase4/gate-c-cgram-typed-producer-clean@bd375453ed52680462bedd090a65078feff5f880` is directly **4 commits ahead / 0 behind** current integrated `master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`.

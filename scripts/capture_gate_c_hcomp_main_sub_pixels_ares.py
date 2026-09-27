@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fenced one-frame ares capture for clean Main/Sub pixel ownership."""
+"""One-frame ares capture at the clean pre-RSP-launch quiescent boundary."""
 
 from __future__ import annotations
 
@@ -74,32 +74,14 @@ def read_engine_state(client: RSPClient) -> dict[str, object]:
     }
 
 
-def settle_rdp_while_rsp_halted(
-    client: RSPClient,
-    *,
-    stage: str,
-    max_steps: int = 4096,
-) -> dict[str, object]:
-    """Advance only the CPU until pending RDP work drains.
-
-    The RSP must remain HALT throughout. If it starts again before the RDP is
-    idle, this is not a between-renderer-frame fence and the proof aborts.
-    """
-    for step in range(max_steps + 1):
-        state = read_engine_state(client)
-        if not state["rsp_halted"]:
-            raise RuntimeError(
-                f"{stage}: RSP left HALT before RDP drained at CPU step {step}: "
-                f"{state}"
-            )
-        if state["rdp_idle"]:
-            return {**state, "cpu_steps_to_rdp_idle": step}
-        if step == max_steps:
-            break
-        reply = client.request("s")
-        if not reply.startswith((b"S", b"T")):
-            raise RuntimeError(f"{stage}: unexpected single-step reply {reply!r}")
-    raise RuntimeError(f"{stage}: RDP did not drain within {max_steps} CPU steps")
+def require_quiescent(client: RSPClient, *, stage: str) -> dict[str, object]:
+    """Require an already-quiescent boundary; never manufacture one by stepping."""
+    state = read_engine_state(client)
+    if not state["rsp_halted"]:
+        raise RuntimeError(f"{stage}: boundary reached without RSP HALT: {state}")
+    if not state["rdp_idle"]:
+        raise RuntimeError(f"{stage}: boundary reached with RDP busy: {state}")
+    return state
 
 
 def wait_guest_warm(
@@ -129,7 +111,7 @@ def main() -> int:
     ap.add_argument("--connect-timeout", type=float, default=30.0)
     ap.add_argument("--response-timeout", type=float, default=30.0)
     ap.add_argument("--guest-counter-address", type=lambda x: int(x, 0), required=True)
-    ap.add_argument("--capture-ready-address", type=lambda x: int(x, 0), required=True)
+    ap.add_argument("--prelaunch-address", type=lambda x: int(x, 0), required=True)
     ap.add_argument("--output-dir", type=Path, required=True)
     args = ap.parse_args()
 
@@ -154,14 +136,14 @@ def main() -> int:
 
         warm_counter = wait_guest_warm(client, args.guest_counter_address)
 
-        # Reach the established post-rsp_wait CPU boundary. The clean runtime
-        # can HALT the RSP before asynchronous RDP work has drained, so do not
-        # seed yet. Remove the breakpoint and single-step only the CPU while
-        # requiring SP.HALT until DP becomes idle.
-        set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "seed capture-ready")
-        set_breakpoint(client, args.capture_ready_address, False)
-        seed_state = settle_rdp_while_rsp_halted(client, stage="seed fence")
+        # Stop immediately before the existing RSP-unhalt sequence after
+        # frame_wait. Unlike the earlier post-rsp_wait point, normal CPU/UI/VI
+        # execution has already given asynchronous RDP work time to drain.
+        # This proof accepts the boundary only if it is naturally quiescent;
+        # the debugger must not manufacture DP idle by repeated CPU stepping.
+        set_breakpoint(client, args.prelaunch_address, True)
+        validate_stop(client.request("c"), "seed prelaunch")
+        seed_state = require_quiescent(client, stage="seed prelaunch")
 
         sentinel = SENTINEL.to_bytes(2, "big") * (STRIP_BYTES // 2)
         for address in (SUB_COLOR_ADDR, *FRAMEBUFFER_ADDRS):
@@ -170,13 +152,17 @@ def main() -> int:
 
         baseline_counter = read_u(client, args.guest_counter_address, 1)
 
-        # The next hit of this once-per-renderer-frame post-rsp_wait PC is the
-        # one-renderer-frame reentry authority. RDP may again still be draining,
-        # so settle it externally before reading pixels.
-        set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "fresh-frame capture-ready")
-        set_breakpoint(client, args.capture_ready_address, False)
-        final_state = settle_rdp_while_rsp_halted(client, stage="capture fence")
+        # Step exactly one inert li-t0-1 instruction only to move the CPU PC
+        # past the software breakpoint. We do not use single-step as a timing or
+        # RDP-drain mechanism. Reinstall behind the PC and then run normally
+        # until the next prelaunch reentry, which identifies one renderer frame.
+        set_breakpoint(client, args.prelaunch_address, False)
+        validate_stop(client.request("s"), "prelaunch breakpoint step-over")
+        step_state = require_quiescent(client, stage="post-step prelaunch")
+        set_breakpoint(client, args.prelaunch_address, True)
+        validate_stop(client.request("c"), "fresh-frame prelaunch")
+        final_state = require_quiescent(client, stage="capture prelaunch")
+        set_breakpoint(client, args.prelaunch_address, False)
 
         current_counter = read_u(client, args.guest_counter_address, 1)
         delta = (current_counter - baseline_counter) & 0xFF
@@ -204,7 +190,8 @@ def main() -> int:
             "current_counter": current_counter,
             "guest_frame_delta": delta,
             "renderer_frame_reentries": 1,
-            "capture_ready_address": f"0x{args.capture_ready_address:08X}",
+            "prelaunch_address": f"0x{args.prelaunch_address:08X}",
+            "step_over_boundary": step_state,
             "sentinel": f"0x{SENTINEL:04X}",
             "seed_boundary": seed_state,
             **final_state,

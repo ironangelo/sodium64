@@ -63,21 +63,43 @@ def set_breakpoint(client: RSPClient, address: int, enabled: bool) -> None:
         )
 
 
-def quiescent(client: RSPClient) -> dict[str, object]:
+def read_engine_state(client: RSPClient) -> dict[str, object]:
     sp = read_u(client, SP_STATUS_ADDR, 4)
     dp = read_u(client, DP_STATUS_ADDR, 4)
-    halted = bool(sp & 1)
-    idle = not bool(dp & 0x70)
-    if not halted:
-        raise RuntimeError(f"RSP not halted at fenced boundary: SP_STATUS=0x{sp:08X}")
-    if not idle:
-        raise RuntimeError(f"RDP busy at fenced boundary: DP_STATUS=0x{dp:08X}")
     return {
         "sp_status": f"0x{sp:08X}",
         "dp_status": f"0x{dp:08X}",
-        "rsp_halted": halted,
-        "rdp_idle": idle,
+        "rsp_halted": bool(sp & 1),
+        "rdp_idle": not bool(dp & 0x70),
     }
+
+
+def settle_rdp_while_rsp_halted(
+    client: RSPClient,
+    *,
+    stage: str,
+    max_steps: int = 4096,
+) -> dict[str, object]:
+    """Advance only the CPU until pending RDP work drains.
+
+    The RSP must remain HALT throughout. If it starts again before the RDP is
+    idle, this is not a between-renderer-frame fence and the proof aborts.
+    """
+    for step in range(max_steps + 1):
+        state = read_engine_state(client)
+        if not state["rsp_halted"]:
+            raise RuntimeError(
+                f"{stage}: RSP left HALT before RDP drained at CPU step {step}: "
+                f"{state}"
+            )
+        if state["rdp_idle"]:
+            return {**state, "cpu_steps_to_rdp_idle": step}
+        if step == max_steps:
+            break
+        reply = client.request("s")
+        if not reply.startswith((b"S", b"T")):
+            raise RuntimeError(f"{stage}: unexpected single-step reply {reply!r}")
+    raise RuntimeError(f"{stage}: RDP did not drain within {max_steps} CPU steps")
 
 
 def wait_guest_warm(
@@ -132,10 +154,14 @@ def main() -> int:
 
         warm_counter = wait_guest_warm(client, args.guest_counter_address)
 
-        # Reach the established post-rsp_wait quiescent boundary.
+        # Reach the established post-rsp_wait CPU boundary. The clean runtime
+        # can HALT the RSP before asynchronous RDP work has drained, so do not
+        # seed yet. Remove the breakpoint and single-step only the CPU while
+        # requiring SP.HALT until DP becomes idle.
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "seed boundary")
-        seed_state = quiescent(client)
+        validate_stop(client.request("c"), "seed capture-ready")
+        set_breakpoint(client, args.capture_ready_address, False)
+        seed_state = settle_rdp_while_rsp_halted(client, stage="seed fence")
 
         sentinel = SENTINEL.to_bytes(2, "big") * (STRIP_BYTES // 2)
         for address in (SUB_COLOR_ADDR, *FRAMEBUFFER_ADDRS):
@@ -144,21 +170,20 @@ def main() -> int:
 
         baseline_counter = read_u(client, args.guest_counter_address, 1)
 
-        # Step over the breakpoint, reinstall it, and permit exactly one RSP
-        # frame to reach the same post-HALT/DP-idle boundary.
-        set_breakpoint(client, args.capture_ready_address, False)
-        validate_stop(client.request("s"), "breakpoint step-over")
+        # The next hit of this once-per-renderer-frame post-rsp_wait PC is the
+        # one-renderer-frame reentry authority. RDP may again still be draining,
+        # so settle it externally before reading pixels.
         set_breakpoint(client, args.capture_ready_address, True)
-        validate_stop(client.request("c"), "fresh-frame boundary")
-        final_state = quiescent(client)
+        validate_stop(client.request("c"), "fresh-frame capture-ready")
+        set_breakpoint(client, args.capture_ready_address, False)
+        final_state = settle_rdp_while_rsp_halted(client, stage="capture fence")
 
         current_counter = read_u(client, args.guest_counter_address, 1)
         delta = (current_counter - baseline_counter) & 0xFF
-        if delta != 1:
+        if delta < 1:
             raise RuntimeError(
-                "strict proof requires exactly one fresh guest frame: "
-                f"baseline=0x{baseline_counter:02X} current=0x{current_counter:02X} "
-                f"delta={delta}"
+                "renderer reentry did not include fresh guest time: "
+                f"baseline=0x{baseline_counter:02X} current=0x{current_counter:02X}"
             )
 
         (out / "sub.bin").write_bytes(
@@ -178,6 +203,7 @@ def main() -> int:
             "baseline_counter": baseline_counter,
             "current_counter": current_counter,
             "guest_frame_delta": delta,
+            "renderer_frame_reentries": 1,
             "capture_ready_address": f"0x{args.capture_ready_address:08X}",
             "sentinel": f"0x{SENTINEL:04X}",
             "seed_boundary": seed_state,

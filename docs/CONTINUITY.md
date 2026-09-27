@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### IMPLEMENTED / DEDICATED VALIDATED — clean DMA8 CGRAM RSP consumer (2026-09-27 UTC)
+
+- Final tooling head **`phase4/gate-c-cgram-rsp-consumer-clean@5ee3fb847d09fe90771afbede73ef25b8e183113`** is runtime-identical to consumer commit **`8acd7789edc4cd667202055b484c0869849848c5`**; subsequent commits only made the stage oracle consumer-aware and replaced unavailable host cross-`nm` with normalized `readelf` symbol extraction.
+- Dedicated **Gate C CGRAM DMA8 RSP Consumer Clean 36285317975 SUCCESS**. Source/model oracle reconfirms corrected typed producer invariants, real E98/E9C raw-shadow pointer publication, 8-byte event-pair DMA/cached-word1 behavior, aligned 8-byte raw writes, terminal marker return semantics and **H-COMP arithmetic frozen**.
+- Both compiled RSP variants are now exactly **`.text=0x1000=4096 B`, `.data=0x1000`**. The historical 29-instruction consumer therefore consumes the full current IMEM budget exactly as designed: 8 reclaimed pre-overlay instructions + 14 former tail-free instructions + 7 audited suffix delay-slot peepholes; the eighth audited peephole remains semantically spare in source but there is **zero tail free space** after link.
+- Dedicated binary proof preserves the fixed renderer overlay slot **A40013A8..A400178F** and current PR #16 Mode7 row-exit form. Artifact **10920506907**, digest `sha256:d8772b2773ed9b2c2f1f292e8750288eeb3163903785c8d240e7ec8203a3736e`.
+- Two earlier red dedicated runs are **REJECTED TOOLING ERRORS** only: `36285111975` invoked a producer-only “no consumer yet” assertion; `36285168350` completed the runtime build at 4096/4096 but host lacked `mips64-elf-nm`. Neither is runtime-negative evidence.
+- Exact-head **Build and Validate 36285318004** has normal + PROFILE compile and independent binary branch-delay checks **SUCCESS**; Mupen/LLE smoke is still running at this checkpoint. Normal artifact **10920228199**, digest `sha256:b8929ade6f8ac55b33cfb7c197740f7be389c809aff06048d8af684e4135590a`; PROFILE artifact **10919993991**, digest `sha256:5f2abc847b1aee7c0ce19b22bfbc4bf9f129a7ac5c82dadbacf2e189fd38a594`.
+- **Status boundary:** implementation/layout/source semantics are validated; do not call runtime replay validated until exact-head Mupen smoke closes and a separate observation-only dynamic consumer proof demonstrates EA0 advancement + raw-shadow replay while leaving the terminal next-section sentinel unconsumed.
+- **NEXT:** after `36285318004` closes green, create a zero-runtime-delta dynamic proof child using the historical sentinel-aware guest/classifier as specification. No H-COMP arithmetic changes before that proof.
+
 ### IN FLIGHT — clean DMA8 CGRAM RSP consumer port (2026-09-27 UTC)
 
 - New clean consumer branch is **`phase4/gate-c-cgram-rsp-consumer-clean@9a860fb7fc8c05b1464d559c0ec9d45b3e72dcb1`**, rooted at corrected typed producer authority `bd375453ed52680462bedd090a65078feff5f880`.

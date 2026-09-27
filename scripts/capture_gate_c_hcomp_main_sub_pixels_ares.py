@@ -153,8 +153,9 @@ def main() -> int:
         baseline_counter = read_u(client, args.guest_counter_address, 1)
 
         # Step exactly one inert lui-t1-A404 instruction only to move the CPU PC
-        # past the software breakpoint. The preceding li-t0-1 is the frame_wait
-        # branch delay slot, so the breakpoint deliberately sits at +0x0C.
+        # past the software breakpoint. Exact-ELF validation proves that
+        # frame_wait's source pseudo-ops expand through +0x10, so the unique
+        # post-loop, pre-unhalt boundary deliberately sits at +0x14.
         # We do not use single-step as a timing or
         # RDP-drain mechanism. Reinstall behind the PC and then run normally
         # until the next prelaunch reentry, which identifies one renderer frame.

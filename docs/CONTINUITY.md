@@ -14,8 +14,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 - The section carrier is also exact in **both queues**: record0 `CGADSUB=1, TS=2, TM=1, split=8`; record1 `TS=0, TM=1, split=224`.
 - First-hand compact Sub pixels are **exactly correct**: `0xA00E4000` contains **2,048/2,048 active green `0x07C1` + 192/192 sentinel `0x55AA`**, zero mismatches. This proves the clean runtime's first semantic TS pass really renders into the compact Sub target in pinned ares.
 - All three *currently sampled Main row-0 bands* at `A00F2300/A0113000/A0133D00` remain **2,240/2,240 sentinel `0x55AA`**. Therefore `rendered_main_indices=[]` and the strict dual-target oracle fails. This is now renderer/address evidence, not debugger or dummy-gfx noise.
-- **Do not edit runtime yet.** Historical E2b/E2d evidence used a corrected physical-row mapping for Main, while this fresh clean oracle samples framebuffer rows 0..7. The next controlled diagnostic is a source/binary + historical-evidence audit of the clean screen-switch underflow/Y mapping, followed by a host-only wider Main readback if warranted. If the red pass is simply landing at rows 8..15 (or another deterministically derived band), repair the oracle/capture only; if no derived Main band is written, then investigate the target-switch runtime.
-- **STATUS: MEASURED / SUB VALIDATED / MAIN LOCATION UNRESOLVED.** No CGADSUB gating/compositor work begins until Main ownership is resolved.
+- **Historical decision at this checkpoint:** do not edit runtime; widen the host-side Main readback using the previously validated E2b/E2d row mapping.
+- **RESOLVED / SUPERSEDED by the host-only discriminator below:** Main is uniquely FRAMEBUFFER1 rows8..15, so this run's row0-only failure is now classified as a host-oracle false negative. No runtime target-switch defect was found.
 
 
 
@@ -42,9 +42,9 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Pixel branch advanced host-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@be3aa7eebbddc796458b2cab58342fbde46f509e`**. Runtime, deterministic guest, strict pixel oracle, pinned ares and exact ELF geometry remain unchanged.
 - The frame fence now uses **no GDB single-step at all**. At seed it arms temporary breakpoint **`0x8000AE34 = prelaunch+4`** (exact +0x18 `jr t4`), removes +0x14, continues normally across only the inert `lui`, and stops before the `jr`. It then requires RSP HALT + pinned-ares DPC command completion, rearms +0x14 behind PC, removes +0x18, and continues one full renderer frame to the next +0x14 hit.
 - Existing exact-ELF assertions already freeze +0x18 as machine word **`0x01800008`** and +0x1C as **`0xAD280010`**, so the temporary breakpoint is mechanically tied to “before the control transfer / before the SP-unhalt delay-slot store.”
-- Fresh exact-head runs: generic **Build and Validate `36355725698 SUCCESS`** and dedicated **Gate C H-COMP Main Sub Pixels Clean `36355725717`**. Generic validation is closed green across normal build, PROFILE build and Mupen emulator smoke; the dedicated pinned-ares pixel job is still the only open authority for this batch.
-- **Expected discriminator:** if +0x18 still reports SP HALT and DPC command-complete, the debugger fence is now closed without stepping ambiguity; the next +0x14 reentry can proceed to first-hand sentinel pixel classification. Any failure after the capture files exist is then evaluated as renderer evidence rather than debugger hygiene.
-- **STATUS: IMPLEMENTED / GENERIC VALIDATED / DEDICATED CI RUNNING.**
+- Exact-head runs: generic **Build and Validate `36355725698 SUCCESS`** and dedicated **Gate C H-COMP Main Sub Pixels Clean `36355725717 FAILURE`**. The dedicated run validated the zero-single-step fence and compact Sub pixels, but its row0-only Main oracle was later proven wrong.
+- **Result:** the debugger fence itself is **VALIDATED**; its pixel failure is **SUPERSEDED** by final host-only row-mapping run `36356687503 SUCCESS`.
+- **STATUS: FENCE VALIDATED / OLD PIXEL ORACLE SUPERSEDED.**
 
 
 ### HYGIENE-BLOCKER — ares GDB single-step crosses RSP-unhalt delay slot; DPC fence itself validated (2026-09-27 UTC)

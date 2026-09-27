@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### HYPOTHESIS / QUANTIFIED — typed representation adds hot-path CPU work (2026-09-27 UTC)
+
+- Exact source comparison between validated raw producer `8dce5f45...` and corrected typed producer `bd375453...` gives a concrete execution-cost delta:
+  - active complete CGDATA commit block: **30 -> 38 instructions (+8/event)**;
+  - per-section producer tail: **21 -> 40 instructions (+19/section)**;
+  - begin-frame palette/base initialization loop body: **19 -> 35 instructions (+16/iteration)**.
+- The pathological `ppu-registers` workload performs one complete CGRAM commit every tight-loop iteration during active display, so the **+8/event typed conversion/packing path is the leading causal hypothesis** for the reproduced 57/60 result. The +19/section and begin-frame costs may contribute but scale with scanlines/frame rather than every guest loop iteration.
+- This is **not yet a causal conclusion**. Draft PR #20 raw-producer-only Ares is the falsifier: if raw returns near master 61/60, typed representation overhead is isolated; if raw is also ~57/60, the base epoch bookkeeping/check/store path is the dominant cost.
+
 ### MEASURED — typed producer alone reproduces PR #18 ppu-register stress deficit (2026-09-27 UTC)
 
 - Diagnostic draft **PR #19**, exact typed-producer-only head `bd375453ed52680462bedd090a65078feff5f880`, completed **Ares Profile Validation 36288811764 SUCCESS**. Matrix artifact **10921054383**, digest `sha256:b5025a717adde33c03b50990b68080371ecdf670a83b7cb60bb3bfe636ce8d23`.

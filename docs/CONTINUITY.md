@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### VALIDATED CORRECTION — Main/Sub L0 vertical mapping repaired and reclosed (2026-09-27 UTC)
+
+- Canonical corrected L0 head **`phase4/gate-c-hcomp-main-sub-contract-clean@b8cc600952521e02594d6d3017fdda7e86db9374`** changes only the host oracle from prior green `c66ea7a...`; Sodium64 runtime remains unchanged.
+- Dedicated **Gate C H-COMP Main Sub Contract Clean `36339567666 SUCCESS`** and same-head generic **Build and Validate `36339567622 SUCCESS`** both closed green after replacing the stale y=8 assumption with source-anchored **`SETINI=0 -> fb_border=8 -> FB_OFFSET=16`**.
+- Correct compact Sub Color Image underflow is now **`0x000E1D00 = 0x000E4000 - 16*560`**. The oracle explicitly checks the integrated `write_setini` and `rsp_frame` source anchors that derive this value, so a future vertical-origin change will invalidate the contract instead of silently preserving a magic constant.
+- All other prior L0 conclusions remain green and unchanged: RDRAM placement/non-overlap, semantic TS→TM packing, resident routing **12 -> 11 instructions**, H-COMP switch helper capacity **40 B**, projected H-COMP active **232/1000 B**, and zero runtime-source delta.
+- **SUPERSEDED:** `c66ea7a...` remains useful for the non-address findings but its `0x000E2E80` Sub underflow claim must never be used. Any executable successor must descend from or reproduce the corrected `b8cc6009...` contract.
+
+
 ### OPEN QUESTION / NO LIFETIME VERDICT — first dynamic run stopped on unrelated CGADSUB assumption (2026-09-27 UTC)
 
 - First dedicated lifetime run **`36339430745 FAILURE`** on pre-underflow-correction head `1a2c5be6...` successfully passed guest/oracle self-test, exact unchanged runtime build/hash, wrapping, pinned Mupen/CXD4 build and all six dual-section-queue captures. Failure occurred only in final classification.

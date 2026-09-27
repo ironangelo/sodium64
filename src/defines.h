@@ -226,9 +226,12 @@
 // Renderer overlay source pointers live in the audited scratch gap.
 #define OVERLAY_MAIN_SRC 0xE90
 #define OVERLAY_MODE7_SRC 0xE94
+#define HCOMP_RAW_PALETTE_PTRS 0xE98
 // Typed CGRAM event cursor published by the CPU while the RSP is halted.
 // EA0 lies in the audited retired DMEM interval below fixed VEC_DATA.
 #define HCOMP_CGRAM_EVENT_CURSOR 0xEA0
+#define HCOMP_CGRAM_PAIR_SCRATCH 0xEA8
+#define HCOMP_CGRAM_WRITE_SCRATCH 0xEB0
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached

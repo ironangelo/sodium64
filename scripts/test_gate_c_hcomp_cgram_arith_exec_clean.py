@@ -159,7 +159,7 @@ def source_contract() -> None:
         "move v0, t0",
     ]:
         raise AssertionError("HCOMP regular fault surface drift")
-    if insns(section(h, "draw_mode7_entry:", "\n"))[:2] != [
+    if insns(h[h.index("draw_mode7_entry:"):])[:2] != [
         "j 0xA4001F78",
         "li t9, 0x1788",
     ]:

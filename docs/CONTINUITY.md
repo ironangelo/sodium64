@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / NOT YET VALIDATED — clean CGRAM→H-COMP arithmetic L0 contract (2026-09-27 UTC)
+
+- Fresh branch **`phase4/gate-c-hcomp-cgram-arith-contract-clean@3da623133fe96651e3762e4f931e8708909ddf0d`** was created directly from integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`**. Runtime source is intentionally unchanged; current delta is host contract only.
+- New host oracle **`scripts/test_gate_c_hcomp_cgram_arith_contract_clean.py`** composes only already-supported pieces: PR #18 historical RGBA5551 replay, the validated clean third-overlay packing, an exhaustive **32,768-value RGBA5551→RGB555 round-trip**, and authoritative E1f half-add semantics.
+- Precommitted dynamic arithmetic discriminators are **`7FFF + 7FFF -> 7FFF`** (rejects the old superseded saturate-then-half model) and **`001F + 0020 -> 000F`** (rejects naïve packed cross-channel carry leakage). The planned bridge body is **44 instructions**; with two 2-instruction fault surfaces the active fixed-slot payload is **192/1000 B**, so no resident-IMEM growth is required.
+- **NEW CONTROL-FLOW CONSTRAINT:** the coexistence-only third-overlay proof toggled `sp` in the resident `next_frame` delay slot because its H-COMP marker did not consume queue-owned state. A real CGRAM bridge must instead enter H-COMP with the just-rendered slot still selected, read `HCOMP_RAW_PALETTE_PTRS(sp)`, publish its proof result, then execute `xori sp,sp,4` immediately before HALT. The proposed resident frame-end footprint remains 4 instructions, so this fixes ownership without growing resident IMEM.
+- **STATUS: IMPLEMENTED / NOT YET VALIDATED.** No runtime claim follows until the dedicated L0 workflow builds unchanged master bytes and the oracle passes. If green, the next batch is an executable proof-only third overlay using this exact slot/representation/arithmetic contract; Main/Sub provenance, color-math gating and final pixels remain explicit non-claims.
+
+
 ### SUPPORTED SOURCE FINDING — clean CGRAM→H-COMP bridge must cross an explicit color representation boundary (2026-09-27 UTC)
 
 - Fresh audit of integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`** confirms PR #18 preserves two deliberately different forms of historical palette state: frame-start **canonical SNES RGB555** in `HCOMP_CGRAM_BASE_QUEUE*`, and an aligned **N64 RGBA5551** shadow in `HCOMP_RAW_PALETTE_QUEUE*` consumed by the current DMA8 replay path.

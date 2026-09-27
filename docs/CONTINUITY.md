@@ -13,6 +13,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Its runtime delta is only the corrected typed CGRAM CPU producer (`src/defines.h`, `src/main.S`, `src/ppu.S`) plus producer/contract host tooling; it has **no RSP consumer changes**. Existing exact-head producer semantic + Build/Validate gates remain green.
 - This is the controlled A/B requested by the PR #18 merge hold. Trigger the normal PR-specific **Ares Profile Validation** on this exact head and compare the identical synthetic `ppu-registers` workload against integrated master (**61/60** across three independent PR#17-lineage runs) and PR #18 full producer+consumer (**57/60**).
 - **Decision rule:** producer-only ~57/60 localizes the stress regression primarily to CPU epoch bookkeeping/typed production; producer-only ~61/60 localizes it to the RSP DMA8 replay/consumer; an intermediate reproducible value implies split cost and requires a second controlled discriminator before merge. Preserve identical Road-valid settings and workload artifact semantics; do not use host wall time.
+- Diagnostic **draft PR #19** (`typed CGRAM producer without RSP consumer`) is open solely to trigger the identical PR-specific ares gate; it is **not intended to merge**. Exact Ares run **36288811764 IN_PROGRESS** on `bd375453...`. Close PR #19 after recording the artifact-backed result.
 - PR #18 remains **MERGE HOLD** during this A/B. H-COMP placement/arithmetic work remains blocked until the cost source is understood; semantic replay evidence remains valid independently of the performance result.
 
 

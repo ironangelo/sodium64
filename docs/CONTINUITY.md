@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### CORRECTION / SUPERSEDED — exact ELF moves prelaunch fence from frame_wait+0x0C to +0x14 (2026-09-27 UTC)
+
+- Same-head generic build artifact **`10943263462`** from **Build and Validate `36354515841 SUCCESS`** contains the exact `build/sodium64.elf` for `0f8683b...`. Direct symbol/byte inspection gives **`frame_wait = 0x8000AE1C`**.
+- The source-level +0x0C calculation was wrong because GNU MIPS expands both pseudo-ops around the loop. Exact instructions from `frame_wait` are: **+0x00 `lui t0,hi(frame_count)`; +0x04 `lbu t0,...`; +0x08 `li at,2`; +0x0C `beq t0,at,frame_wait`; +0x10 `li t0,1` (branch delay slot); +0x14 `lui t1,0xA404`; +0x18 `jr t4`; +0x1C `sw t0,0x10(t1)` (jr delay slot / actual RSP unhalt)**.
+- Therefore **`frame_wait+0x0C` is REJECTED / SUPERSEDED** as a prelaunch boundary because it is reached on every loop iteration. The unique post-wait, pre-unhalt breakpoint is **`frame_wait+0x14 = 0x8000AE30`** on this exact ELF.
+- Dedicated run **`36354515925`** was already in progress using +0x0C when this binary audit landed. Its semantic result is **SUPERSEDED regardless of outcome** and must not be used as pixel authority. Exact-head generic build/smoke success remains valid.
+- **NEXT immediate action:** change only host capture/workflow geometry to +0x14, document that single-step crosses the inert `lui`, and rerun. Add an exact-ELF opcode assertion so future pseudo-op expansion/layout drift fails before the expensive ares stage instead of silently moving the fence.
+
+
 ### IMPLEMENTED / CI RUNNING — natural pre-RSP-launch quiescent pixel fence (2026-09-27 UTC)
 
 - Host/workflow-only pixel branch advanced to **`phase4/gate-c-hcomp-main-sub-pixels-clean@0f8683b10beb53afeae7457c0ea35011f8075659`**. Sodium64 runtime source, deterministic lifetime guest, pinned ares revision and strict pixel oracle are unchanged.

@@ -138,8 +138,10 @@ def classify_capture(root: Path) -> dict[str, object]:
     )
 
     state = json.loads((root / "capture-state.json").read_text())
-    if state.get("guest_frame_delta") != 1:
-        raise ValueError(f"capture is not exactly one fresh guest frame: {state!r}")
+    if state.get("renderer_frame_reentries") != 1:
+        raise ValueError(f"capture is not exactly one renderer-frame reentry: {state!r}")
+    if int(state.get("guest_frame_delta", 0)) < 1:
+        raise ValueError(f"capture lacks fresh guest-time corroboration: {state!r}")
     if not state.get("rsp_halted"):
         raise ValueError(f"capture boundary missing RSP HALT: {state!r}")
     if not state.get("rdp_idle"):
@@ -212,6 +214,7 @@ def write_fixture(root: Path, rendered_main: int = 2) -> None:
         (root / f"main{i}.bin").write_bytes(pack(vals))
     (root / "capture-state.json").write_text(json.dumps({
         "guest_frame_delta": 1,
+        "renderer_frame_reentries": 1,
         "rsp_halted": True,
         "rdp_idle": True,
     }))
@@ -239,11 +242,13 @@ def self_test() -> None:
         (root / "main2.bin").write_bytes(pack(EXPECTED_MAIN))
         assert not classify_capture(root)["passed"]
 
-    # A stale/multi-frame capture cannot be promoted.
+    # More than one renderer-frame reentry cannot be promoted even if guest
+    # NMI time also advanced.
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         write_fixture(root, 1)
         state = json.loads((root / "capture-state.json").read_text())
+        state["renderer_frame_reentries"] = 2
         state["guest_frame_delta"] = 2
         (root / "capture-state.json").write_text(json.dumps(state))
         try:
@@ -251,7 +256,17 @@ def self_test() -> None:
         except ValueError:
             pass
         else:
-            raise AssertionError("multi-frame fixture unexpectedly accepted")
+            raise AssertionError("multi-renderer-frame fixture unexpectedly accepted")
+
+    # One renderer frame may span more than one guest NMI counter tick in a
+    # host laboratory; freshness is corroboration, not the renderer-frame ID.
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        write_fixture(root, 3)
+        state = json.loads((root / "capture-state.json").read_text())
+        state["guest_frame_delta"] = 2
+        (root / "capture-state.json").write_text(json.dumps(state))
+        assert classify_capture(root)["passed"]
 
 
 def main() -> int:

@@ -7,6 +7,7 @@ on:
     paths:
       - scripts/make_gate_c_hcomp_main_sub_lifetime.py
       - scripts/check_gate_c_hcomp_main_sub_lifetime.py
+      - scripts/test_gate_c_hcomp_main_sub_contract_clean.py
       - .github/workflows/gate-c-hcomp-main-sub-lifetime-clean.yml
   workflow_dispatch:
 

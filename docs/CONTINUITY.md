@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### LAB LIMITATION / CORRECTION — Mupen dummy-gfx cannot adjudicate RDP pixel ownership (2026-09-27 UTC)
+
+- Re-audit of the pixel workflow shows both Mupen runs used **`--gfx dummy`**. That laboratory is intentionally established for boot/R4300/RSP/DMA/mailbox smoke, not as an RDP framebuffer oracle. The earlier statement that run `36342015453` was necessarily a **semantic Sodium64 pixel failure** is therefore **SUPERSEDED**.
+- What `36342015453` actually establishes is narrower: under Mupen/CXD4 + dummy gfx, the fixed compact RDRAM range remained zero while the RSP/runtime path itself built and executed. That does **not** prove that real N64 RDP execution, or the project's validated ares RDP laboratory, would leave it zero.
+- Diagnostic rerun **`36342349542 FAILURE`** on `05b67058...` is a **HYGIENE-BLOCKER** only: capture synchronization failed while extending the dummy-gfx workflow with an extra RSP-DMEM dump, before the enhanced classifier ran. Artifact **`10938924493`**, digest **`sha256:3c21675d8a1e56f6e31b48016c0fb1a4cba4fd1e9a3d32c0f988dd44716a34a5`**. No new runtime verdict follows.
+- **REJECTED:** spend more time making dummy-gfx Mupen into a pixel lab. Historical Gate-C color/Z proofs already use pinned **ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`** with R4300 recompiler on and RSP recompiler forced off; PROFILING independently established that RSP-interpreter mode as the valid Sodium64 ares path.
+- **NEXT controlled discriminator:** keep runtime byte-identical to validated executable head `3df9f87c...`, move pixel ownership to pinned ares, fence at the existing post-`rsp_wait` HALT boundary, seed compact Sub + all three Main 8-line bands with sentinels between frames, run exactly one fresh frame, then require **Sub green + exactly one Main red** while untouched Main bands retain sentinels. This provides same-frame RDP write authority rather than a warmed-buffer inference.
+
+
 ### IMPLEMENTED / DIAGNOSTIC RERUN — classify zero-Sub pixel failure before touching runtime (2026-09-27 UTC)
 
 - Pixel branch advanced host/workflow-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@05b67058ca7b881936473b45402c063b68dc359b`**; Sodium64 runtime remains byte-identical to executable authority `3df9f87c...`.

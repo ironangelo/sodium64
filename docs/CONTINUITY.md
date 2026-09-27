@@ -7,6 +7,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### HYGIENE-BLOCKER IDENTIFIED — first executable-contract run failed in oracle parsing, not runtime (2026-09-27 UTC)
+
+- Dedicated run **`36335127658 FAILURE`** on `62a271fc...` stopped in the **source-contract step before any build** with `AssertionError: HCOMP Mode7 fault surface drift`.
+- Root cause is in the new oracle itself: it slices `draw_mode7_entry:` with the first immediate newline as its end delimiter, producing an empty instruction section. This does **not** falsify the H-COMP implementation, slot capacity, ownership contract or binary layout because none of those were compiled/tested in that run.
+- Classification: **HYGIENE-BLOCKER / harness bug**. Repair only the source parser boundary, rerun exact candidate, and preserve the failed run as evidence rather than treating it as a runtime regression.
+
+
 ### IMPLEMENTED / NOT YET VALIDATED — clean executable PR18→E1f H-COMP bridge (2026-09-27 UTC)
 
 - Fresh runtime branch **`phase4/gate-c-hcomp-cgram-arith-exec-clean@62a271fc2df72245dd670f86ace7546bd1b49c50`** derives directly from integrated `master@7cc8fac...` and implements only the validated L0 bridge; it does not import the cumulative E2/E3/E4 compositor branches.

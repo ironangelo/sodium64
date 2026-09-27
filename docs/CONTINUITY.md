@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / CI RUNNING — fenced seeded ares Main/Sub pixel authority (2026-09-27 UTC)
+
+- Pixel-proof branch advanced host/workflow-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@52a51893883ef9293fa7e82003ce8fb0af7e12b8`**. Sodium64 runtime remains exactly the validated executable candidate `3df9f87c...` / ROM SHA-256 `eb216fcc...`.
+- Mupen dummy-gfx has been removed from the pixel authority workflow. The dedicated gate now builds pinned **ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`** in the already-established valid Sodium64 mode: R4300 recompiler enabled, **RSP recompiler forced off / interpreter on**, deterministic entropy and GDB debug server.
+- New fenced capture **`capture_gate_c_hcomp_main_sub_pixels_ares.py`** reaches the existing post-`rsp_wait` boundary where SP HALT is observed and requires RDP idle. Between frames it seeds compact Sub `A00E4000` and all three Main framebuffer 8-line bands with sentinel **`0x55AA`**, verifies the seeds, then steps over the breakpoint and permits exactly **one fresh guest frame** before recapturing at the same HALT/DP-idle boundary.
+- New strict oracle **`check_gate_c_hcomp_main_sub_pixels_ares.py`** accepts only: exact lifetime section authority 8/224; compact Sub active x=12..267 rewritten to **green RGBA5551 0x07C1** with sentinel border intact; **exactly one** of the three Main bands rewritten to **red 0xF801** with sentinel border intact; and the other two Main bands remaining entirely sentinel. A capture with delta != 1 frame is rejected.
+- This design directly answers same-frame target ownership and prevents stale/warmed buffers from masquerading as success. Self-tests cover each possible selected Main framebuffer plus no-Sub-write, two-Main-write and multi-frame negatives.
+- **STATUS: IMPLEMENTED / CI RUNNING.** If green, claim only first-hand independent rendered Main/Sub color operands on the clean runtime. No CGADSUB arithmetic gating, final color math, metadata, OBJ/backdrop/windows/brightness, cadence or hardware claim follows.
+
+
 ### LAB LIMITATION / CORRECTION — Mupen dummy-gfx cannot adjudicate RDP pixel ownership (2026-09-27 UTC)
 
 - Re-audit of the pixel workflow shows both Mupen runs used **`--gfx dummy`**. That laboratory is intentionally established for boot/R4300/RSP/DMA/mailbox smoke, not as an RDP framebuffer oracle. The earlier statement that run `36342015453` was necessarily a **semantic Sodium64 pixel failure** is therefore **SUPERSEDED**.

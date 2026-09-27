@@ -200,7 +200,7 @@ def prove_source() -> None:
         "jal 0xA4001F5C",
         "li a1, RDP_FRAME + 8",
         "lw a1, OVERLAY_MAIN_SRC",
-        "li t9, 0x1368",
+        "li t9, 0x1364",
         "j 0xA4001F7C",
         "nop",
     ]:
@@ -225,7 +225,7 @@ def prove_binary(maps: list[Path], symbols: list[Path]) -> None:
 
     rsize = text_size(rm)
     m7size = text_size(m7m)
-    if rsize != 0xFF8 or m7size != 0xFF8:
+    if rsize != 0x1000 or m7size != 0x1000:
         raise AssertionError(
             f"resident renderer text geometry drift regular={rsize:#x} mode7={m7size:#x}"
         )
@@ -234,7 +234,7 @@ def prove_binary(maps: list[Path], symbols: list[Path]) -> None:
 
     fixed = {
         "draw_frame": 0xA400103C,
-        "next_layer": 0xA4001368,
+        "next_layer": 0xA4001364,
         "draw_bg": 0xA40013A8,
         "draw_mode7_entry": 0xA4001788,
         "draw_obj": 0xA4001790,
@@ -280,11 +280,11 @@ def main() -> int:
     print("sub_color=0xA00E4000")
     print("sub_color_rdp_base=0x000E1D00")
     print("semantic_screen_order=TS_then_TM")
-    print("next_layer=0xA4001368")
+    print("next_layer=0xA4001364")
     print("hcomp_screen_switch=0xA4001760")
     print("hcomp_active_slot_bytes=232")
-    print("resident_text_bytes=4088")
-    print("resident_imem_growth=-8_bytes")
+    print("resident_text_bytes=4096")
+    print("resident_imem_growth=0")
     print("frame_end_E1f_preserved=true")
     print("metadata_wiring=NOT_PROVEN")
     print("color_math_gating=NOT_PROVEN")

@@ -7,6 +7,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### VALIDATED FIRST-HAND — exact 8-line compact-Sub lifetime CLOSED (2026-09-27 UTC)
+
+- Exact final lifetime authority **`phase4/gate-c-hcomp-main-sub-lifetime-clean@91f5c6cb46081b001ab8caf6792bd46e44643884`** is host/guest/workflow-only over the corrected clean bridge/L0 runtime; Sodium64 `src/` remains unchanged.
+- Dedicated **Gate C H-COMP Main Sub Lifetime Clean `36340016618 SUCCESS`**. Artifact **`10938517744`**, digest **`sha256:1ba1eeec0dc609840a096bae3d5b0e962a9d6e80ffe16412c9aebf4871c89fc3`**. Same-head generic **Build and Validate `36340016588 SUCCESS`** also closed green.
+- First-hand classifier reports **`HCOMP_MAIN_SUB_LIFETIME_DYNAMIC_VALIDATED / passed=true`**, normalization **`word_swap32`**, authoritative queue **Q2 @ `0xA0171600`**. Guest SHA-256 **`bfbbf280a830cf8659c9b670fa753af94e36a1ddd00f1aada162fb85438d0b05`**.
+- Authoritative record0 is exactly **`CGADSUB=1, TS=2, TM=1, TSW=0, TMW=0, BGMODE=0, STAT_FLAGS=0x40, SPLIT_LINE=8`**. Record1 is exactly **`CGADSUB=1, TS=0, TM=1, TSW=0, TMW=0, BGMODE=0, STAT_FLAGS=0x00, SPLIT_LINE=224`**.
+- **VALIDATED lifetime claim:** for this deterministic 224-line discriminator, semantic Sub BG2 exists only over **[0,8)** and remains disabled over **[8,224)** while Main BG1 stays enabled. A proof runtime may therefore bind the compact Sub color target at frame start, switch to Main after the first TS traversal, and never restore compact Sub during the remainder of that frame without risking later Sub-layer writes.
+- The final classifier explicitly accepts one coherent handed ping-pong queue as authority and treats the opposite queue as diagnostic stale/in-progress state; its negative tests still reject split=9 and any post-split TS re-enable. **REJECTED:** both ping-pong queues must simultaneously describe the same completed frame.
+- Runtime ROM in the dedicated run remains exact validated bridge SHA-256 **`71dd6477f50fe6a0ddd55c6508ea62141c15d00147192ef07db37f79ae4cf0e0`**; no runtime behavior changed to obtain this result.
+- **NEXT AUTHORIZED BATCH:** implement the bounded executable dual-color ownership path on a fresh child of this exact head, using corrected compact Sub Color Image base **`0x000E1D00`**, semantic TS-low/TM-high routing, and the H-COMP screen-switch helper. First close source/binary/build geometry before any pixel oracle. Scope remains only dual rendered color ownership for the 8-line band; E2g-B metadata, arithmetic gating, OBJ/backdrop/window/brightness and throughput remain deferred.
+
+
 ### MEASURED LIFETIME BYTES / CLASSIFIER OWNERSHIP ASSUMPTION REJECTED (2026-09-27 UTC)
 
 - Corrected-lifetime diagnostic run **`36339716889 FAILURE`** on **`phase4/gate-c-hcomp-main-sub-lifetime-clean@2b53241d6baf0787c1e597fe765b552047364451`** reached full first-hand capture; guest/oracle self-tests, unchanged bridge runtime build/hash, wrapping, pinned Mupen/CXD4 build and six section-queue snapshots all completed successfully. Artifact **`10937659018`**, digest **`sha256:cc238fc4c27a50c5610794424b403b0148a8f193b64eeedddaeb1b062a6f8dc9`**.

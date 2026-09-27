@@ -7,6 +7,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IN FLIGHT — clean first-hand Main→Mode7→Main→H-COMP coexistence proof (2026-09-27 UTC)
+
+- Dynamic child **`phase4/gate-c-hcomp-third-overlay-dynamic-clean@595a9afbda92d1a16b4cb333b45d8a83912d7712`** is exactly one controlled commit over validated executable-layout parent `462a4ea8...`. It does **not** add compositor arithmetic.
+- First-hand transport intentionally avoids the historical pinned-Mupen direct-SP-memory ambiguity. Exact-current artifact symbols from `10933069890` independently confirm resident **`dma_write=A4001F08`** in both regular/Mode7 before the proof uses that absolute call.
+- Proof-only CPU code seeds **A00F0000 = DEADBEEF CAFEBABE** only after raw-palette publication/arena initialization and immediately before `SP_PC` startup. Therefore Sodium64 boot clearing cannot erase the discriminator.
+- Proof H-COMP entry writes **F11=0x51**, while true Mode7 entry alone clears **F10=0**; H-COMP then DMA-writes **F10..F17 (8 B)** to RDRAM mailbox A00F0000 before HALT. Acceptance requires normalized mailbox prefix **00 51** and completed guest state.
+- The deterministic original 32-KiB LoROM guest uses the already-audited boot-first path but shrinks real Mode7 residency to **VIRQ80→VIRQ82 (2 scanlines)**, then returns to Mode1. WRAM acceptance remains phase `33`, IRQ count `2`, final BGMODE mirror `1`, done `1`, and same frame token observed by both IRQs.
+- Classifier accepts only identity or the already-observed per-word `word_swap32` normalization. Unchanged sentinel + completed guest means H-COMP was not observed in the 5-s pinned-Mupen window; it does **not** by itself prove routing wrong. Marker + incomplete guest is also non-accepting.
+- Exact-head runs: **Gate C H-COMP Third Overlay Dynamic Clean 36325776093 IN_PROGRESS** and **Build and Validate 36325775991 PENDING**.
+- **Falsifiers:** source/binary layout drift, `dma_write` mismatch, branch-delay hazard, guest fails to complete 80→82 transition, mailbox has coherent non-sentinel/non-marker bytes, generic smoke regression. If only sentinel survives while guest is complete, classify timing/lab-vs-routing carefully before changing runtime.
+- **NEXT if green:** mark clean triple-overlay lifetime **VALIDATED first-hand** and stop this stage. The following stage may begin the smallest controlled bridge from integrated PR #18 replay state into H-COMP arithmetic, but must not import the cumulative E3/E4 lineage wholesale and still does not require real N64 yet.
+
 ### VALIDATED L1/L2 — executable clean-lineage third-overlay layout (2026-09-27 UTC)
 
 - Proof-only branch **`phase4/gate-c-hcomp-third-overlay-exec-clean@462a4ea8b816e4edf2d4d344f91501f9706011a4`** remains exactly **1 commit ahead / 0 behind** integrated **`master@7cc8facfe8643fb85888f301f79995575830521d`**. No cumulative H-COMP branch was imported.

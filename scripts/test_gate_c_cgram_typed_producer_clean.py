@@ -125,11 +125,8 @@ def prove_source() -> None:
     rsp_main = (ROOT / "src" / "rsp_main.S").read_text()
     rsp_mode7 = (ROOT / "src" / "rsp_mode7.S").read_text()
 
-    for name, src in (("rsp_main", rsp_main), ("rsp_mode7", rsp_mode7)):
-        if "HCOMP_CGRAM_" in src:
-            raise AssertionError(f"{name}: RSP consumer activated too early")
-        if "HCOMP_RAW_PALETTE_PTRS" in src:
-            raise AssertionError(f"{name}: raw-shadow consumer pointer activated too early")
+    # Producer invariants remain authoritative after the RSP consumer is enabled.
+    # Consumer-specific shape/layout is guarded independently by the consumer oracle.
 
     clear = extract(main, "// Clear the complete fixed RDRAM arena", "// Initialize the VI")
     if "li t0, HCOMP_CGRAM_BASE_QUEUE1" not in clear:

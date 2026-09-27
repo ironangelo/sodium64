@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### CANDIDATE / PR #18 OPEN — CGRAM replay + Ares gates pending (2026-09-27 UTC)
+
+- Opened **PR #18**, `Gate C: preserve CGRAM epochs through RSP replay`, final head **`b75e7c61cf8298700f2b7ed938612790f123dae7`** -> unchanged **`master@70d8d8b594c926a7179c43a25c0dfb829745b7cd`**. GitHub reports **mergeable=true / rebaseable=true**; current `mergeable_state=unstable` reflects pending checks, not a conflict.
+- Final exact-head **Build and Validate 36286295058 SUCCESS** before PR creation: normal + PROFILE + binary RSP delay-slot checker + pinned-Mupen/LLE smoke all green. Final normal artifact **10920677681**, digest `sha256:e682586cc3ac5a3e91f4ccdcc8a3627f1d68b7aab6ca8065edabc0e3068fc9ac`; PROFILE artifact **10920028687**, digest `sha256:895aed4c3731d9d28cab52bdbdd28d39551ed3d3c492533ffbffa84d560709b1`.
+- PR-specific gates dispatched on the same head: **Gate C CGRAM Epoch Replay Regression 36286454287 QUEUED** and **Ares Profile Validation 36286454386 QUEUED**.
+- **MERGE RULE:** do not integrate PR #18 until both gates are green and master remains unchanged. The CGRAM regression must re-prove typed producer + DMA8 consumer + exact 0x1000/fixed-slot/delay-slot contracts. Ares is required here because the change materially alters live RSP section execution even though H-COMP arithmetic remains frozen.
+- If both pass, this stage is eligible to merge without a one-off real-N64 session under `VALIDATION.md`: dynamic Mupen replay already proves the exact epoch-consumer semantics, Ares provides independent N64 execution coverage, and real hardware remains reserved for the next milestone bundle rather than every reversible RSP repair.
+
 ### CANDIDATE FINALIZATION — durable CGRAM epoch replay regression (2026-09-27 UTC)
 
 - Production branch advanced tooling-only to **`phase4/gate-c-cgram-rsp-consumer-clean@b75e7c61cf8298700f2b7ed938612790f123dae7`**. Runtime `src/` is byte-identical to dynamically validated consumer authority `5ee3fb847d09fe90771afbede73ef25b8e183113`.

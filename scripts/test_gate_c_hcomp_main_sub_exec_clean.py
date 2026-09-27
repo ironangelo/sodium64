@@ -223,8 +223,12 @@ def prove_binary(maps: list[Path], symbols: list[Path]) -> None:
     rm, m7m, hm = maps
     rs, m7s, hs = [syms(p) for p in symbols]
 
-    if text_size(rm) != 0x1000 or text_size(m7m) != 0x1000:
-        raise AssertionError("resident renderer IMEM grew")
+    rsize = text_size(rm)
+    m7size = text_size(m7m)
+    if rsize != 0xFF8 or m7size != 0xFF8:
+        raise AssertionError(
+            f"resident renderer text geometry drift regular={rsize:#x} mode7={m7size:#x}"
+        )
     if text_size(hm) != 0x790:
         raise AssertionError(f"HCOMP text size {text_size(hm):#x} != 0x790")
 
@@ -279,7 +283,7 @@ def main() -> int:
     print("next_layer=0xA4001368")
     print("hcomp_screen_switch=0xA4001760")
     print("hcomp_active_slot_bytes=232")
-    print("resident_imem_growth=0")
+    print("resident_text_bytes=4088")\n    print("resident_imem_growth=-8_bytes")
     print("frame_end_E1f_preserved=true")
     print("metadata_wiring=NOT_PROVEN")
     print("color_math_gating=NOT_PROVEN")

@@ -7,6 +7,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
+### IMPLEMENTED / CI RUNNING — clean executable 8-line Main/Sub ownership rung (2026-09-27 UTC)
+
+- Fresh runtime child **`phase4/gate-c-hcomp-main-sub-exec-clean@8d52ea4e3a38a123f84b9e803b14e94eb77245ac`** derives from validated lifetime authority `91f5c6cb...`. This is the first runtime change after closing the clean PR #18→H-COMP arithmetic bridge and exact compact-Sub lifetime.
+- Controlled runtime delta touches only **`src/rsp_main.S`**, **`src/rsp_mode7.S`** and **`src/rsp_hcomp.S`**. No E2g/E3/E4 cumulative compositor source was imported.
+- Frame start now binds Color Image to corrected compact Sub base **`0x000E1D00`**, preserving the exact five-instruction pre-frame footprint. Semantic screen pack is now **TS low byte / TM high byte** in four instructions, so shared layers remain present in both traversals and `MASK_SEL` no longer chooses screen ownership in this proof path.
+- TS→TM transition now demand-loads H-COMP at fixed **`0x1760`**. New 10-instruction / 40-B `hcomp_screen_switch` retargets Color Image to **`FRAMEBUFFER(sp)-16*560`**, sends only that RDP command through fixed resident `rdp_send@0xA4001F5C`, reloads regular Main overlay through `overlay_load_slot@0xA4001F7C`, and resumes at predicted resident `next_layer@0xA4001368`.
+- Frame-end H-COMP entry **0x13B0** and its validated PR #18 raw-shadow→RGB555→E1f arithmetic/mailbox/queue-toggle behavior are intentionally untouched. H-COMP Mode7 fault entry remains targeted at **0x1788**.
+- New source/binary oracle **`scripts/test_gate_c_hcomp_main_sub_exec_clean.py`** freezes the corrected y16 mapping, exact TS/TM routing, switch-helper sequence, PR #18 anchors, frame-end E1f anchors and binary ABI. Expected geometry: regular + Mode7 text **0x1000**, H-COMP text **0x790**, `draw_bg=0x13A8`, `next_layer=0x1368`, switch **0x1760**, Mode7 **0x1788**, resident suffix fixed, H-COMP active code **232/1000 B**, zero resident-IMEM growth.
+- Dedicated workflow **Gate C H-COMP Main Sub Exec Clean** is dispatched from exact head `8d52ea4e...`. **STATUS: IMPLEMENTED / NOT YET VALIDATED.** If source/binary or generic build disproves any address/size prediction, stop and repair geometry before any pixel capture.
+- **Scope remains bounded:** this rung proves only actual dual rendered color ownership for the first 8-line band. E2g-B metadata wiring, CGADSUB gating into arithmetic, OBJ/backdrop/windows/brightness, full-frame composition, throughput/cadence and hardware remain non-claims.
+
+
 ### VALIDATED FIRST-HAND — exact 8-line compact-Sub lifetime CLOSED (2026-09-27 UTC)
 
 - Exact final lifetime authority **`phase4/gate-c-hcomp-main-sub-lifetime-clean@91f5c6cb46081b001ab8caf6792bd46e44643884`** is host/guest/workflow-only over the corrected clean bridge/L0 runtime; Sodium64 `src/` remains unchanged.

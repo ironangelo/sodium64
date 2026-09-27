@@ -7,6 +7,23 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### MEASURED / MERGE HOLD RELEASED — bounded CGRAM producer cost clears 32/128 A/B (2026-09-27 UTC)
+
+- Isolated paced-budget reruns completed successfully with fresh pinned-Ares processes for each rung and unchanged runtime parents:
+  - baseline `phase4/gate-c-cgram-paced-base@ffdea88dac678c9e0b09c9fbfb55e5266ea9e969`, run **36295002518 SUCCESS**;
+  - PR #18 runtime candidate `phase4/gate-c-cgram-paced-pr18@eb9b61bff30bf71581aa64504491f044ebe7215e`, run **36295009053 SUCCESS**.
+- **32 active CGRAM commits/native frame:** baseline **60/60**, 2,345 valid samples, **72.20% frame/VI wait**, PPU/events 2.77%; candidate **60/60**, 2,152 valid samples, **71.65% frame/VI wait**, PPU/events 3.39%.
+- **128 active CGRAM commits/native frame:** baseline **60/60**, 2,168 valid samples, **69.83% frame/VI wait**, PPU/events 3.46%; candidate **60/60**, 2,130 valid samples, **69.53% frame/VI wait**, PPU/events 4.32%.
+- Artifacts:
+  - baseline 32 **10923677441**, digest `sha256:ba1d49e9fec99dc65fdcd71a93172c2b4de70ab6608e0a06435edad466712a39`;
+  - baseline 128 **10923846006**, digest `sha256:d1565d7074f5d0cd267fe16ea79a2da44faccb638b2c4bc3cb9f3932625f0c1e`;
+  - candidate 32 **10923282931**, digest `sha256:394df5c656d57baa3d2581851ce8ff1da3458194675ec4a946ac7770c160d231`;
+  - candidate 128 **10922804468**, digest `sha256:6aad9b6aab4e2019aec1dcbe83f21e67d7fabb97a6ab3653b3635cadba4cc481`.
+- Both measurement heads also completed same-head **Build and Validate** successfully (**36295002498** baseline, **36295009018** candidate). The previously timed-out 32/128 observations are superseded as LAB LIMITATION only.
+- Together with the earlier bounded 4-event result, the candidate sustains **4 / 32 / 128 finite active-display CGRAM commits per native frame at 60/60** with substantial virtual idle headroom. The unlimited tight-loop `ppu-registers` result remains **57/60 candidate vs 61/60 master**, but is now classified as a pathological free-running stress ceiling rather than a demonstrated representative cadence regression.
+- **DECISION: PR #18 performance MERGE HOLD is RELEASED.** The bounded causal falsifier did not reproduce candidate-only cadence loss. Do not optimize/redesign the already-valid epoch producer/consumer solely to recover the synthetic unlimited-loop ceiling.
+- PR #18 exact runtime head **`5ef80450dec16c031e76d18bcaddb2da72a5b2a8`** already has **Build and Validate 36286513229 SUCCESS**, **Gate C CGRAM Epoch Replay Regression 36286515413 SUCCESS**, and **Ares Profile Validation 36286515410 SUCCESS**. If master is still `70d8d8b...` and GitHub remains mergeable, the next action is to integrate PR #18 with expected-head protection and require post-merge master gates before calling CGRAM epoch replay integrated.
+
 ### IN FLIGHT — isolated 32/128 paced-budget rerun (2026-09-27 UTC)
 
 - Diagnostic branches advanced tooling-only, with runtime parents unchanged:

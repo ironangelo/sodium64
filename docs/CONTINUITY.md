@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-26 UTC)
 
 
+### MERGED / POST-MERGE VALIDATION PENDING — PR #18 CGRAM epoch replay (2026-09-27 UTC)
+
+- Performance hold was released by the completed bounded paced A/B: both integrated-master baseline and PR #18 candidate sustain **32 and 128 active-display CGRAM commits per native frame at 60/60**, with ~70% virtual frame/VI idle remaining. The unlimited `ppu-registers` 57/60 candidate result remains a pathological free-running stress ceiling, not a representative cadence regression.
+- PR **#18 `Gate C: preserve CGRAM epochs through RSP replay`** merged with expected head **`5ef80450dec16c031e76d18bcaddb2da72a5b2a8`**. GitHub created merge commit **`7cc8facfe8643fb85888f301f79995575830521d`**.
+- Pre-merge exact-head gates were already green: **Build and Validate 36286513229**, **Gate C CGRAM Epoch Replay Regression 36286515413**, **Ares Profile Validation 36286515410**, plus the separate bounded performance falsifier.
+- **STATUS:** do not yet mark MERGED-CONSUMED. Require post-merge workflows on exact `master@7cc8fac...` before treating the epoch producer + DMA8 replay as integrated truth.
+- **NEXT:** inspect post-merge Build/Validate, persistent CGRAM replay regression, Ares profile validation and any relevant master-only gates. If all green, promote to VALIDATED / MERGED-CONSUMED and move the Gate-C frontier to H-COMP use of the now-correct historical palette/fixed-color state under the full-IMEM constraint.
+
+
+
 ### MEASURED / MERGE HOLD RELEASED — bounded CGRAM producer cost clears 32/128 A/B (2026-09-27 UTC)
 
 - Isolated paced-budget reruns completed successfully with fresh pinned-Ares processes for each rung and unchanged runtime parents:

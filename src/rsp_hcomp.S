@@ -101,7 +101,7 @@ hcomp_screen_switch:
     jal 0xA4001F5C
     li a1, RDP_FRAME + 8
     lw a1, OVERLAY_MAIN_SRC
-    li t9, 0x1368
+    li t9, 0x1364
     j 0xA4001F7C
     nop
 

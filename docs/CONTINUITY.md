@@ -19,6 +19,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+
+### HOST-ONLY MAIN ROW-MAPPING DISCRIMINATOR — IMPLEMENTED (2026-09-27 UTC)
+
+- Historical E2b/E2c/E2d authority resolves the most likely explanation for the clean run's untouched Main row0 sample: with `SETINI=0`, `fb_border=8` and handed `FB_OFFSET=16`; validated E2b captured semantic TM in published Main **physical rows 8..15**, while the new clean oracle had sampled only rows 0..7. This old row0 assumption was already marked SUPERSEDED in continuity.
+- Controlled diagnostic keeps **all Sodium64 runtime, guest, section carrier, target-switch code, ares pin and fence byte-identical** to failed pixel head `be3aa7eebbddc796458b2cab58342fbde46f509e`. Only host capture/oracle changed.
+- Intermediate host-only commit **`0d1baa6173622f2cd608e1d27e609936805b01dc`** widens each seeded/captured Main candidate from 8 to 16 physical rows; it is not standalone semantic authority because the old 8-row classifier still existed at that commit and any push-triggered run is superseded.
+- Final host-only candidate **`phase4/gate-c-hcomp-main-sub-pixels-clean@4ec7fe3dbf2c0249221730dae0b2c7b06cf9fabe`** updates the strict oracle. Compare vs `be3aa...` is exactly **2 commits / 2 scripts**: capture **+13/-8**, classifier **+43/-23**; no `src/`, guest or workflow file changed.
+- **Precommitted PASS signature:** compact Sub remains rows0..7 with exactly **2,048 green `0x07C1` + 192 sentinel `0x55AA`**. Exactly one Main framebuffer must have **rows0..7 fully sentinel**, then rows8..15 with **2,048 red `0xF801` active words + 192 sentinel border words**; equivalently the full 16-row capture is 2,048 red + 2,432 sentinel. The other two Main candidates must remain all 4,480 sentinel words. Carrier and zero-step fence requirements are unchanged.
+- **Decision rule:** green closes clean first-hand Main/Sub rendered-color ownership without a runtime repair and classifies `be3aa...` as a host-oracle row-mapping false negative. Red with rows8..15 untouched falsifies that historical-row hypothesis and reopens the H-COMP target-switch path; do not begin CGADSUB gating either way until this result is known.
+- **STATUS: IMPLEMENTED / CI DISPATCHED; exact final-head run IDs/results pending.**
+
 ### IMPLEMENTED / CI RUNNING — zero-single-step two-breakpoint frame fence (2026-09-27 UTC)
 
 - Pixel branch advanced host-only to **`phase4/gate-c-hcomp-main-sub-pixels-clean@be3aa7eebbddc796458b2cab58342fbde46f509e`**. Runtime, deterministic guest, strict pixel oracle, pinned ares and exact ELF geometry remain unchanged.

@@ -119,6 +119,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Same-head generic **Build and Validate `36471912891`** has normal build and PROFILE build green; pinned Mupen/LLE smoke is still running and remains hygiene-only.
 - **Pending authority:** require fixed-direct+HALF, live-Sub+HALF, and Sub-absent fallback captures to agree on raw TS tag, normalized presence, source code, HALF-effective bit, invariant Main/provenance and exact RGB555 result. Do not accept from CI setup/build alone.
 
+### HYGIENE CHECKPOINT — bounded-Z exact-head generic CI green (2026-09-28 UTC)
+
+- Same-head **Build and Validate `36471912891 SUCCESS`** on `5b66d9c40c8c953f8d0d4d0ee8ef95b9604de26a`: normal build, PROFILE build, host validation/branch-delay checks and pinned Mupen/LLE smoke all green.
+- Artifacts: build **`10991592478`** / `sha256:be8a83cdc83d12c5fee63de24b3122f9d09da5f4fa393ed06b196e67f3c3936a`; PROFILE **`10992206487`** / `sha256:0934aaaab012ecf58bb27c92ce5d87ea00352a022638cecdfe6b5d8353b892e9`; smoke **`10992750740`** / `sha256:cbb0562ec8f99df3b53149a2a8d8eb23dab8851b25420e1da672810bce291ccf`.
+- **Meaning:** generic regression/hygiene is excluded for this exact repinned head. Dedicated pinned-ares transparent-Sub semantics remain the authority still in progress; no performance/hardware claim follows from this green run.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

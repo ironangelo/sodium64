@@ -320,9 +320,9 @@ hcomp_sub_presence_saved:
     li a1, RDP_FRAME + 8
 
     // Load regular BG/OBJ rendering back over this slot and resume at the
-    // already-validated resident next_layer address.
+    // paired resident next_layer return for this exact renderer layout.
     lw a1, OVERLAY_MAIN_SRC
-    li t9, 0x1364
+    li t9, 0x1370
     j 0xA4001F7C
     nop
 

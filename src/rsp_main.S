@@ -531,8 +531,9 @@ next_layer:
     li t9, 0x1760
 
     // Filling the safe branch delay slot above plus consuming the former 8 B
-    // inert pad pays exactly for the three-instruction same-frame TS-Z setup,
-    // keeping draw_bg and every fixed overlay/suffix entrypoint byte-identical.
+    // inert pad keeps draw_bg and the public overlay/suffix entries frozen.
+    // The internal next_layer bridge advances by the three current-frame setup
+    // instructions and H-COMP/contracts pair to that exact 0x1370 return.
 
     // Fixed renderer overlay begins on a 64-bit DMA boundary.
     .align 3

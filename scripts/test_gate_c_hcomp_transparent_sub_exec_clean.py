@@ -128,7 +128,7 @@ def prove_source() -> None:
         "sw t0, RDP_FRAME + 4",
         "jal 0xA4001F5C",
         "lw a1, OVERLAY_MAIN_SRC",
-        "li t9, 0x1364",
+        "li t9, 0x1370",
         "j 0xA4001F7C",
     )
     cursor = -1

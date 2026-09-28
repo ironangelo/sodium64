@@ -58,6 +58,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - This run is permanently **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY** because it stopped before wrapping/capturing the three ares states. It does prove the candidate fits the frozen overlay ABI and compiles cleanly.
 - **Immediate action:** update only the workflow ROM pin to `998e2132...`; semantic runtime stays at commit `42613980631a27925bd13b5b078f47a036169458`. Then require same-head generic hygiene plus first-hand pinned-ares captures before accepting the alpha coverage representation.
 
+### HYGIENE CHECKPOINT — exact-head generic CI green (2026-09-28 UTC)
+
+- Same-head **Build and Validate `36450859788 SUCCESS`** on `33a3ec9bf642cf425fe6aa33b0796b54181ad9de`: normal build, PROFILE build, host validation/branch-delay checks and pinned Mupen/LLE smoke all green.
+- Artifacts: build **`10984066380`** / `sha256:6cb81827cbe66cc3ee613ae3544cefa7f26f0c690030eae6dfe25dd86f9f366f`; PROFILE **`10983181976`** / `sha256:216e5c1d0f128037cdf80b917456f15b1ab38de5d5a0cc6e65a7e476aa2edf57`; emulator smoke **`10983676872`** / `sha256:5d752d30cd92262ebe6e9775a83abf74beceb7d794755fb0a59afd8729d88259`.
+- **Meaning:** generic regression/hygiene is excluded for this exact candidate. This still does **not** validate transparent-Sub semantics, real-N64 RDP→RSP ownership, throughput or hardware performance; dedicated pinned-ares evidence remains pending authority.
+
 ### RERUN CHECKPOINT — exact transparent-Sub runtime pinned (2026-09-28 UTC)
 
 - Workflow-only head **`phase4/gate-c-hcomp-transparent-sub-clean@33a3ec9bf642cf425fe6aa33b0796b54181ad9de`** pins the measured ROM hash **`998e2132bff4a65167f3a3c257e48c269715b00be2e74dc43d5e6ddffb26e808`**; semantic runtime remains **`42613980631a27925bd13b5b078f47a036169458`**.

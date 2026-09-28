@@ -136,6 +136,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Historical E1/E2 evidence and the validated Main-provenance parent both point to a narrower next hypothesis: bind/enable the compact Z carrier **just in time in the current frame immediately before TS rendering**, analogous to the already-working TS→TM setup, then preserve the TS sample before TM reuse.
 - **Next controlled experiment:** add only the smallest current-frame TS Z setup that fits the frozen resident ABI; retain the same three guests/oracle and require BG2 to overwrite the runtime-owned absence baseline. If this cannot be done without ownership ambiguity or resident-IMEM growth, record a representation limitation rather than reviving the old cumulative compositor.
 
+### IMPLEMENTED — current-frame TS Z binding candidate (2026-09-28 UTC)
+
+- New semantic candidate **`phase4/gate-c-hcomp-transparent-sub-clean@dae28945adbbd332440a15d0a8be3c7bcefc2b79`** tests the narrow hypothesis from the rejected run: bind/enable the compact Z16 carrier in **the same `draw_frame` immediately before section0 backdrop/TS**, rather than depending on RDP state prepared by the previous completed-frame H-COMP.
+- Runtime change is deliberately bounded: three instructions send the existing immutable `HCOMP_PROOF_RDP_CMDS .. HCOMP_PROOF_BG_DEPTH_CMDS` setup; the resident budget is paid by filling the safe H-COMP overlay branch delay slot and consuming the former 8-byte inert pad before `draw_bg`. No new per-pixel surface or window semantics are introduced.
+- The rejected cross-frame setup call was removed from H-COMP; its fixed external switch address is intended to remain unchanged by increasing internal padding `0x74 -> 0x80`.
+- Executable contract now requires the same-frame TS-Z setup ordering and the compacted safe delay slot. **Expected invariant:** regular/Mode7 text remain 0x1000, H-COMP 0x790, `draw_bg=0x13A8`, `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero.
+- Dedicated run **`36474172645`** and generic **Build and Validate `36474172555`** were triggered. The dedicated workflow intentionally still carries the previous exact ROM pin, so its first acceptable stop is a stale-pin measurement after source/binary/ABI gates; semantic capture is not authoritative until repinned to the newly measured runtime.
+- **Falsifiers:** fixed ABI moves, branch-delay audit rejects the compaction, same-frame setup still leaves TS tag sentinel, BG2/presence differs from expected `0x1400`, absent baseline does not become renderer-owned `0x0400`, Main/provenance drifts, or generic CI regresses.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

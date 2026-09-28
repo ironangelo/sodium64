@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CHECKPOINT — dedicated pin reproducibility confirmed before transparent-Sub captures (2026-09-28 UTC)
+
+- Exact-head dedicated run **`36477073489`** on `phase4/gate-c-hcomp-transparent-sub-clean@7d68c4a2b1e0249fd6fab92cf134c1037c4ef0fd` reproduced the dedicated-authority ROM pin **`188bb47fe379c277dbad084c6e6c6e90015c9e5b80d76ecd8044df02e92473ea`** and passed the deterministic guest/oracle self-test, exact build, executable/ABI contract, RSP branch-delay audit and three guest wrapping steps.
+- **REJECTED hypothesis:** workflow-only commits do not inherently create an unpinnable hash loop in this dedicated path. The prior mismatch came from seeding the semantic workflow with a ROM hash produced by the generic build path.
+- The run is now beyond the pin gate and entering the pinned-ares laboratory. **No semantic result yet**; closure still requires all three first-hand captures and the strict TS-tag/presence/source/HALF/result oracle.
+
+
+
 ### RERUN CHECKPOINT — dedicated same-frame TS-Z runtime repinned from dedicated authority (2026-09-28 UTC)
 
 - Workflow-only head **`phase4/gate-c-hcomp-transparent-sub-clean@7d68c4a2b1e0249fd6fab92cf134c1037c4ef0fd`** changes only the dedicated runtime pin/comment; semantic runtime remains the current-frame TS-Z candidate from `8a487570ce9053d6a49c4b97fdd7c8bfb9248840` plus the host-only regular/Mode7 contract repair `c65aff7911fc19501a4ed30004d769f4806b16ec`.

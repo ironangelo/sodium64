@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### MEASUREMENT CHECKPOINT — Sync Full fence builds with frozen ABI; stale pin only (2026-09-28 UTC)
+
+- Exact semantic candidate **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`**, dedicated **`36483249139 FAILURE`**, artifact **`10998465429`**, digest **`sha256:a926999695311f65d3ab2c18ccbfacff05ba82cf9effcc6ca54e5c8c076a0071`**.
+- Deterministic oracle/guests passed; `HCOMP_TRANSPARENT_SUB_EXEC_CLEAN_CONTRACT_VALIDATED` passed; all RSP branch-delay checks passed. Frozen ABI holds: regular RSP **0x1000**, Mode7 **0x1000**, H-COMP **0x790**, `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero.
+- New dedicated-build authority: ROM **`44e6ce2bf864716d96dfa4fb6c1d15ac59839119ca0c6a0afa36df1bf0575665`**, ELF **`2a3ae06e5ab446c502dfaa987511cbbf06d47d379293d4fcc69e42b0608c45b9`**.
+- Failure is only the deliberately stale previous ROM pin `be9c41a3...`; guest wrapping and ares were skipped.
+- **Classification: REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY.** The Sync Full/PIPE_BUSY hypothesis remains untested at runtime.
+- **Immediate action:** repin only the dedicated workflow to `44e6ce2b...`, preserving semantic runtime/oracle unchanged, then rerun.
+
+
+
 ### HYGIENE FAILURE — first Sync Full candidate rejected by stale source-contract literal (2026-09-28 UTC)
 
 - Exact head **`ec81d68f695b5332576e70a8129fe1cd8ba49354`**, dedicated run **`36482932649 FAILURE`**, artifact **`10998065557`**, digest **`sha256:dcb98d995da09a497281bdae1cc77a13732b206aa7a9b374ed9cff0257afd7bb`**.

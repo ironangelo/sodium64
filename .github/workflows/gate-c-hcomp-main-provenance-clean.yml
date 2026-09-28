@@ -71,7 +71,7 @@ jobs:
           grep -q '^HCOMP_MAIN_PROVENANCE_EXEC_CLEAN_CONTRACT_VALIDATED$' executable-contract.txt
           python3 scripts/check_rsp_branch_delay_slots.py             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf             | tee delay-slots.txt
           sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
-          grep -q '^4fb5abb28f1eaeae13f95e7b2479b5a5851d87cdd7d4b7d6843f4ccf79b34c78  sodium64.z64$' runtime.sha256
+          grep -q '^5cad678264d87f52c402eedb7e1ab8b26af01a979570299dbf947599607dad33  sodium64.z64$' runtime.sha256
 
       - name: Wrap four provenance guests
         shell: bash

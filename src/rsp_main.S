@@ -446,7 +446,11 @@ fill_backdrop:
     andi t1, s0, 0xF800 // R
     sll t1, t1, 16
     or t0, t0, t1
-    ori t0, t0, 0xFF
+    // Clean transparent-Sub proof: this compact offscreen TS target uses
+    // primitive alpha 0 for backdrop/absence. Real palette texels retain the
+    // existing RGBA5551 alpha 1, so bit0 becomes coverage without a new surface.
+    // Keep the instruction slot inert to preserve the fixed renderer ABI.
+    nop
     sw t0, RDP_FILL + 20
 
     // Run the RDP to fill the segment

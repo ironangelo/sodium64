@@ -44,6 +44,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **RECLASSIFIED:** run `36419660606` is **TOOLING/PIN FAILURE ONLY**, not arithmetic evidence. Immediate action is host-only: replace exactly the stale ROM pin with `53df19d9...`; do not change runtime, guests, oracle, capture or ares pin.
 - Host-only exact-pin commit **`73d9d08037151457e53c6150c8ebeeb5a176f4ac`** changes only the workflow ROM SHA to `53df19d9...`; semantic runtime remains `dee7fdb1...`.
 - Exact-head reruns dispatched: dedicated **`36419920887`** and generic **Build and Validate `36419921205`**. **STATUS: ABI VALIDATED / SEMANTIC CI RUNNING.**
+- Same-head generic **Build and Validate `36419921205 SUCCESS`** is now fully green: normal build, PROFILE build, host validation, all RSP branch-delay audits and pinned Mupen/LLE smoke. Artifacts: build `10968648254` (digest `sha256:699561640e1fcce7d50e990a9b15f8172de34c28013f1ae2c0f12dfec722d954`), profile `10969335882` (digest `sha256:8995debb5e293a90422dec6980a760ba76538397f51faacc79b31a581e267fed`), emulator smoke `10968553528` (digest `sha256:5233c148efc5e9537fd18785e7503181eb8fb849b704f93b67c7edd809b02035`).
+- **SUPPORTED INTERPRETATION:** generic regression is now excluded for this exact head; the remaining open question is the dedicated four-mode semantic capture. Dedicated `36419920887` remains in pinned-ares build.
 
 
 ### Phase / authority

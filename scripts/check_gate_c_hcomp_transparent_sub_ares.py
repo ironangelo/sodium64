@@ -254,7 +254,7 @@ def write_fixture(root: Path, mode: str, rendered_main: int) -> None:
     (root / "provenance.bin").write_bytes(pack(expected_provenance(WINNER_TAG)))
     (root / "provenance-suffix.bin").write_bytes(PROVENANCE_SUFFIX)
 
-    sub_rgb = GREEN_RGB555 if present else 0x0000
+    sub_rgb = GREEN_RGB555 if present else BLUE_RGB555
     got = (
         RED_RGB555, sub_rgb, cfg["result"], 1,
         WINNER_TAG, WINNER_MASK, CGADSUB_HALF_BG1, 0,

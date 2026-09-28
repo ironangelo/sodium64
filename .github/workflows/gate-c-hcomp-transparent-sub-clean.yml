@@ -79,9 +79,9 @@ jobs:
             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf \
             | tee delay-slots.txt
           sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
-          # Exact same-frame TS-Z runtime pin measured from the generic green build artifact.
+          # Exact runtime pin measured by this dedicated workflow's own build path.
           # Semantic runtime is unchanged by this workflow-only pin update.
-          grep -q '^9f719b3bc91d836e80ec8242a335eaa8cc979a3cac198a7c47f8075231922e35  sodium64.z64$' runtime.sha256
+          grep -q '^188bb47fe379c277dbad084c6e6c6e90015c9e5b80d76ecd8044df02e92473ea  sodium64.z64$' runtime.sha256
 
       - name: Wrap three discriminator guests
         shell: bash

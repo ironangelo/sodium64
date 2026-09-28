@@ -528,11 +528,21 @@ draw_bg:
     xor t1, t1, gp
     bnez t1, next_layer
 
-    // Set parameters based on the BG type
-    srl t2, t0, 2
-    andi s4, t2, 0x3
-    sll t9, s4, 2 // Jump index
+    // Set parameters based on the BG type. LAYER_CHART already stores the
+    // decoder jump index in bits3-2, so keep that encoded value directly.
+    andi t9, t0, 0xC // Jump index
+    srl s4, t9, 2
     addi s4, s4, 3 // Character shift
+
+    // Clean Main provenance proof: H-COMP prepared two 8-byte Set Primitive
+    // Depth commands at RDP_FRAME+8/+16 before semantic TM. Select the command
+    // from the actual regular-BG index t3; the RDP's Z update tags only texels
+    // that this layer really draws, so later winning layers overwrite earlier
+    // provenance exactly as they overwrite Main color.
+    sll a0, t3, 3
+    addi a0, a0, RDP_FRAME + 8
+    jal rdp_send
+    addi a1, a0, 8
 
     // Check if the BG type or character base changed
     lhu t0, BGNBA
@@ -582,8 +592,8 @@ draw_row:
     andi t0, s6, 0x7
     sub s0, zero, t0
 
-    // Get the base screen address for the BG
-    srl t3, s2, 1
+    // Get the base screen address for the BG. t3 is still the real BG index:
+    // neither the provenance dispatch nor cache-clear/DMA setup clobbers it.
     lbu t2, BGXSC(t3)
     li a0, SCRN_DATA
     lw a1, VRAM_ADDRS
@@ -651,14 +661,14 @@ load_screen:
     sb t0, WIN_BOUNDS + 1
 
 bg_windows:
-    // All selector/logic work lives in resident common code so this fixed-slot
-    // call site keeps the exact instruction footprint of the old W1 helper.
+    // All selector/logic work lives in resident common code. Fold the existing
+    // span-index initialization into the call delay slot and drop obsolete
+    // fixed-slot padding so the four provenance-dispatch instructions above
+    // do not move draw_mode7_entry or any resident suffix ABI.
     jal calc_bg_window_spans
-    nop
+    li t8, 0
     lbu t0, WIN_COUNT
     beqz t0, finish_row
-    li t8, 0
-    nop
     nop
 
 next_segment:

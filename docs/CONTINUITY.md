@@ -112,6 +112,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Classification:** first dedicated run is **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY**, not a bounded-Z failure. Source/oracle/ABI/hygiene gates support repinning this exact runtime.
 - **Immediate action:** change only the dedicated workflow ROM pin to `c073800b...`; leave the semantic runtime untouched, rerun exact-head pinned ares, and require all three precommitted states plus raw TS Z tag/presence/source/HALF/result agreement before closure.
 
+### RERUN CHECKPOINT — bounded-Z transparent-Sub exact runtime pinned (2026-09-28 UTC)
+
+- Workflow-only head **`phase4/gate-c-hcomp-transparent-sub-clean@5b66d9c40c8c953f8d0d4d0ee8ef95b9604de26a`** changes only the dedicated ROM pin from the rejected-alpha hash to exact bounded-Z ROM **`c073800b3adeb19ebaa7b1d295f3fb47470f604d968942dcb89fd670c39bdc5d`**; semantic runtime is unchanged from the measured candidate.
+- Dedicated rerun **`36471912947`** has passed oracle/guest self-test, exact build, executable/ABI/delay-slot gate, wrapping and fence-location gates. It is building the pinned ares laboratory before the three first-hand captures.
+- Same-head generic **Build and Validate `36471912891`** has normal build and PROFILE build green; pinned Mupen/LLE smoke is still running and remains hygiene-only.
+- **Pending authority:** require fixed-direct+HALF, live-Sub+HALF, and Sub-absent fallback captures to agree on raw TS tag, normalized presence, source code, HALF-effective bit, invariant Main/provenance and exact RGB555 result. Do not accept from CI setup/build alone.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

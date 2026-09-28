@@ -25,7 +25,10 @@ SENTINEL = 0x55AA
 
 SUB_COLOR_ADDR = 0xA00E4000
 GATING_MAILBOX_ADDR = 0xA00F0008
-GATING_MAILBOX_BYTES = 8
+GATING_MAILBOX_BYTES = 16
+PROVENANCE_ACTIVE_ADDR = 0xA00F1180
+PROVENANCE_ROWS = 8
+PROVENANCE_CAPTURE_BYTES = WIDTH * PROVENANCE_ROWS * 2
 FRAMEBUFFER_ADDRS = (
     0xA00F2300,
     0xA0113000,
@@ -178,6 +181,15 @@ def main() -> int:
             write_pattern(client, address, main_sentinel)
             verify_pattern(client, address, main_sentinel)
 
+        # Provenance uses the 16-row guard immediately below FRAMEBUFFER1, but
+        # semantic Main occupies only published rows8..15. Seed/capture only
+        # those 8 rows so row0 proof mailboxes remain independently owned.
+        provenance_sentinel = SENTINEL.to_bytes(2, "big") * (
+            PROVENANCE_CAPTURE_BYTES // 2
+        )
+        write_pattern(client, PROVENANCE_ACTIVE_ADDR, provenance_sentinel)
+        verify_pattern(client, PROVENANCE_ACTIVE_ADDR, provenance_sentinel)
+
         baseline_counter = read_u(client, args.guest_counter_address, 1)
 
         # Advance exactly across the inert +0x14 lui without GDB single-step.
@@ -220,6 +232,13 @@ def main() -> int:
             )
         (out / "gating-mailbox.bin").write_bytes(
             client.read_memory(GATING_MAILBOX_ADDR, GATING_MAILBOX_BYTES, GATING_MAILBOX_BYTES)
+        )
+        (out / "provenance.bin").write_bytes(
+            client.read_memory(
+                PROVENANCE_ACTIVE_ADDR,
+                PROVENANCE_CAPTURE_BYTES,
+                0x400,
+            )
         )
 
         state = {

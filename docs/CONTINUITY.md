@@ -161,6 +161,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Dedicated **`36475026226`** and generic **`36475026085`** triggered. Workflow ROM pin remains deliberately stale until this exact candidate passes source/binary/ABI/delay-slot gates and measures its runtime hash.
 - **No semantic claim yet.** If layout/branch-delay gates pass, repin only the exact measured ROM and rerun the same strict three-state ares oracle.
 
+### CONTRACT REPAIR — regular and Mode7 next_layer are intentionally distinct (2026-09-28 UTC)
+
+- Dedicated `36475026226` on `8a487570...` stopped in the executable contract after proving the regular bridge at `0xA4001370`: the shared assertion incorrectly required Mode7 to move too. Actual Mode7 `next_layer` correctly remained **`0xA4001364`** because the same-frame TS-Z setup is regular-renderer-only.
+- This is **REJECTED AS SEMANTIC EVIDENCE / CONTRACT FALSE NEGATIVE**, not a runtime failure. The run never reached ares.
+- Host-only contract repair **`c65aff7911fc19501a4ed30004d769f4806b16ec`** now requires regular `next_layer=0x1370` and Mode7 `next_layer=0x1364` separately while retaining all shared frozen entrypoints and text-size checks.
+- Semantic runtime source is unchanged from `8a487570...`; workflow pin remains stale by design until the corrected contract measures the exact ROM/ELF.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

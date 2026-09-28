@@ -26,9 +26,12 @@ SENTINEL = 0x55AA
 SUB_COLOR_ADDR = 0xA00E4000
 GATING_MAILBOX_ADDR = 0xA00F0008
 GATING_MAILBOX_BYTES = 16
-PROVENANCE_ACTIVE_ADDR = 0xA00F1180
+PROVENANCE_ACTIVE_ADDR = 0xA00E2000
 PROVENANCE_ROWS = 8
 PROVENANCE_CAPTURE_BYTES = WIDTH * PROVENANCE_ROWS * 2
+PROVENANCE_PREFIX_ADDR = PROVENANCE_ACTIVE_ADDR - 0x40
+PROVENANCE_SUFFIX_ADDR = PROVENANCE_ACTIVE_ADDR + PROVENANCE_CAPTURE_BYTES
+PROVENANCE_GUARD_BYTES = 0x40
 FRAMEBUFFER_ADDRS = (
     0xA00F2300,
     0xA0113000,
@@ -181,14 +184,20 @@ def main() -> int:
             write_pattern(client, address, main_sentinel)
             verify_pattern(client, address, main_sentinel)
 
-        # Provenance uses the 16-row guard immediately below FRAMEBUFFER1, but
-        # semantic Main occupies only published rows8..15. Seed/capture only
-        # those 8 rows so row0 proof mailboxes remain independently owned.
+        # Clean provenance reuses the historical E1c compact 280x8 scratch.
+        # Guard both sides so a green result proves section-lifetime bounding,
+        # not merely that the sampled 8 rows happened to contain correct tags.
         provenance_sentinel = SENTINEL.to_bytes(2, "big") * (
             PROVENANCE_CAPTURE_BYTES // 2
         )
+        provenance_prefix = bytes((0xC3,)) * PROVENANCE_GUARD_BYTES
+        provenance_suffix = bytes((0x3C,)) * PROVENANCE_GUARD_BYTES
+        write_pattern(client, PROVENANCE_PREFIX_ADDR, provenance_prefix)
         write_pattern(client, PROVENANCE_ACTIVE_ADDR, provenance_sentinel)
+        write_pattern(client, PROVENANCE_SUFFIX_ADDR, provenance_suffix)
+        verify_pattern(client, PROVENANCE_PREFIX_ADDR, provenance_prefix)
         verify_pattern(client, PROVENANCE_ACTIVE_ADDR, provenance_sentinel)
+        verify_pattern(client, PROVENANCE_SUFFIX_ADDR, provenance_suffix)
 
         baseline_counter = read_u(client, args.guest_counter_address, 1)
 
@@ -233,11 +242,25 @@ def main() -> int:
         (out / "gating-mailbox.bin").write_bytes(
             client.read_memory(GATING_MAILBOX_ADDR, GATING_MAILBOX_BYTES, GATING_MAILBOX_BYTES)
         )
+        (out / "provenance-prefix.bin").write_bytes(
+            client.read_memory(
+                PROVENANCE_PREFIX_ADDR,
+                PROVENANCE_GUARD_BYTES,
+                PROVENANCE_GUARD_BYTES,
+            )
+        )
         (out / "provenance.bin").write_bytes(
             client.read_memory(
                 PROVENANCE_ACTIVE_ADDR,
                 PROVENANCE_CAPTURE_BYTES,
                 0x400,
+            )
+        )
+        (out / "provenance-suffix.bin").write_bytes(
+            client.read_memory(
+                PROVENANCE_SUFFIX_ADDR,
+                PROVENANCE_GUARD_BYTES,
+                PROVENANCE_GUARD_BYTES,
             )
         )
 

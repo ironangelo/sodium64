@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### STATIC FAILURE — first PipeSync candidate did not build; hypothesis not exercised (2026-09-28 UTC)
+
+- Exact commit `9c5666138df3bec65fb55549f2060ce58bc8ef58` triggered dedicated run **`36479011275 FAILURE`** and generic **Build and Validate `36479011370 FAILURE`** before any runtime/pinned-ares execution.
+- Exact assembler cause in both paths: `src/rsp_main.S:158: Warning: unresolvable or nonpositive repeat count; using 1`, promoted to error. The new eight-command proof table exactly fills **F30..F6F**, so the old trailing expression became `.byte 0:(F70-F70)` / zero repeat.
+- **Classification: HYGIENE-BLOCKER / NOT SEMANTIC EVIDENCE.** The PipeSync hypothesis has not been tested and must neither be accepted nor rejected from these runs.
+- **Immediate repair:** remove only the now-zero trailing pad directive. The table already ends exactly at frozen `VEC_DATA=F70`; no byte needs to be emitted. Then rebuild under the unchanged contract/oracle.
+
+
+
 ### CONTROLLED REPAIR CANDIDATE — PipeSync before same-frame proof OtherModes (2026-09-28 UTC)
 
 - Exact branch commit **`phase4/gate-c-hcomp-transparent-sub-clean@9c5666138df3bec65fb55549f2060ce58bc8ef58`** changes only the bounded proof RDP command table/address contract: it prepends **PipeSync `0x2700000000000000`** before the proof-time `Set OtherModes`, shifts `HCOMP_PROOF_BG_DEPTH_CMDS` from `+0x18` to `+0x20`, and updates the source contract accordingly.

@@ -125,6 +125,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Artifacts: build **`10991592478`** / `sha256:be8a83cdc83d12c5fee63de24b3122f9d09da5f4fa393ed06b196e67f3c3936a`; PROFILE **`10992206487`** / `sha256:0934aaaab012ecf58bb27c92ce5d87ea00352a022638cecdfe6b5d8353b892e9`; smoke **`10992750740`** / `sha256:cbb0562ec8f99df3b53149a2a8d8eb23dab8851b25420e1da672810bce291ccf`.
 - **Meaning:** generic regression/hygiene is excluded for this exact repinned head. Dedicated pinned-ares transparent-Sub semantics remain the authority still in progress; no performance/hardware claim follows from this green run.
 
+### REJECTED EXPERIMENT — prior-frame bounded-Z setup does not establish TS presence (2026-09-28 UTC)
+
+- Exact-head dedicated **Gate C H-COMP Transparent Sub Clean `36471912947 FAILURE`** on `5b66d9c40c8c953f8d0d4d0ee8ef95b9604de26a` passed oracle/build/ABI/wrapping/fence/pinned-ares construction, then failed only in the three first-hand semantic captures. Evidence artifact **`10991788461`**, digest **`sha256:3224ec230db7ed795ba8022931a5497fb3717cf2c333901b160a459855927692`**.
+- **Fixed+HALF:** Main/Sub/math remain correct (`001F,03E0 -> 3C0F` with direct fixed blue), Main provenance is exact `0x0C00`, but the saved TS-presence word is untouched sentinel **`0x55AA`**, not expected BG2 tag `0x1400`.
+- **Sub-present+HALF:** live Sub color is correctly green and arithmetic remains `0x01EF`, yet the saved TS Z word is again **`0x55AA`**. This is decisive: a real rendered TS BG2 pixel did **not** acquire the intended compact-Z tag.
+- **Sub-absent:** compact Sub and provenance remain sentinel; current `tag != 0x0400` normalization therefore falsely reports presence from untouched memory. Do not weaken the oracle or treat sentinel inequality as coverage.
+- All captures reached the established fresh-frame fence (one renderer reentry, RSP halted, DPC current=end, bufferBusy=false). Same-head generic **Build and Validate `36471912891 SUCCESS`** is green, so this is a representation/ownership failure rather than a generic build/smoke regression.
+- **REJECTED:** relying on proof-Z state prepared by completed-frame H-COMP and carried across into the next frame's TS traversal. The bounded arena/reuse idea itself is not disproven; the timing/ownership point is.
+- Historical E1/E2 evidence and the validated Main-provenance parent both point to a narrower next hypothesis: bind/enable the compact Z carrier **just in time in the current frame immediately before TS rendering**, analogous to the already-working TS→TM setup, then preserve the TS sample before TM reuse.
+- **Next controlled experiment:** add only the smallest current-frame TS Z setup that fits the frozen resident ABI; retain the same three guests/oracle and require BG2 to overwrite the runtime-owned absence baseline. If this cannot be done without ownership ambiguity or resident-IMEM growth, record a representation limitation rather than reviving the old cumulative compositor.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

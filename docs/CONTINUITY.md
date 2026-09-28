@@ -21,31 +21,38 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Still NOT PROVEN:** add/sub/half mode selection, absent-Sub HALF suppression, mid-frame fixed-color history, brightness ordering below full brightness, color windows/clip/prevent, BG3/BG4/OBJ/backdrop provenance, production-safe real-N64 RDP->RSP fence, throughput and real-N64 cadence/performance.
 - The earlier `36377226182 FAILURE` remains classified **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY**: it stopped at the deliberately stale ROM pin before captures. The corrected exact-head run above is authority.
 
-### ACTIVE — clean CGADSUB add/sub/half mode discriminator (2026-09-28 UTC)
+### CHECKPOINT — clean CGADSUB add/sub/half modes VALIDATED (2026-09-28 UTC)
 
-- **GATE DRIVER:** with Main winner, CGADSUB eligibility, CGWSEL source selection, Main/Sub operands and provenance now fixed, validate the operation bits of real `CGADSUB` independently: add vs subtract and half vs full.
-- Start from exact validated parent **`762250a9...`**. Do not import the old cumulative E2g/E3/E4 compositor as a solution; historical arithmetic proof code may be read only as evidence/reference and individual pieces must re-earn entry.
-- First audit the exact current carrier and canonical SNES `CGADSUB` bit layout from repo evidence/reference. Freeze `CGWSEL=0x02` (live Sub), BG1 winner/eligibility, operand colors, row mapping, provenance, section geometry, ABI and fence.
-- Use the smallest matrix that distinguishes **ADD full / ADD half / SUB full / SUB half** while holding every other semantic variable constant. Precommit exact RGB555 expected results and require queue carrier + selected operand + provenance + result agreement.
-- Explicitly separate normal half behavior from the later special case where HALF is suppressed when the second operand is fixed color / no subscreen contribution; do not combine those questions in the first mode matrix.
-- Falsifiers: requested CGADSUB bits do not survive to the section, Main/Sub/provenance changes between cases, gate changes unexpectedly, any exact arithmetic result mismatches, ABI moves, guards regress, or generic build/smoke regresses.
-- **Immediate action:** audit current `CGADSUB` transport and the existing clean/historical arithmetic helpers, then create the child branch and the smallest controlled four-state mode matrix.
+- **GATE DRIVER / ARCHITECTURE PROOF / VALIDATED / STAGE CLOSED:** `phase4/gate-c-hcomp-cgadsub-modes-clean@73d9d08037151457e53c6150c8ebeeb5a176f4ac`.
+- Semantic runtime commit **`dee7fdb10731cb059a985ea45e8642587c6a8143`** changes only `src/rsp_hcomp.S`; later commits add the deterministic guest/oracle/contract/workflow and the host-only exact ROM pin.
+- Exact runtime hashes: ROM **`53df19d9d0b9f0996d1bb7aca15f744ab28e67525362656ef01f726eaa9e576c`**, ELF **`fa9e863fd4a7927e3591f86ad54154b1e8d156c3f6dc147cbca87bcea6ea8483`**.
+- Dedicated **Gate C H-COMP CGADSUB Modes Clean `36419920887 SUCCESS`**; evidence artifact **`10968609752`**, digest **`sha256:3d11488928a2310e144fb4b2808ea72897eff016c8ff5d19f457a5d667e4108b`**. Classifier: **`HCOMP_CGADSUB_MODES_VALIDATED`**, `passed=true`.
+- Controlled operands were identical in all four states: Main BG1 red RGB555 **`0x001F`**, live Sub BG2 green **`0x03E0`**, `CGWSEL=0x02`, winner tag **`0x0C00 -> mask 0x01`**, compact ownership/provenance and section geometry fixed.
+- First-hand exact arithmetic matrix:
+  - **ADD full:** `CGADSUB=0x01 -> 0x03FF`
+  - **ADD half:** `CGADSUB=0x41 -> 0x01EF`
+  - **SUB full:** `CGADSUB=0x81 -> 0x001F`
+  - **SUB half:** `CGADSUB=0xC1 -> 0x000F`
+- **`main_sub_provenance_identical_across_modes=true`**. Every state has exact Sub active pixels, exact canonical Main ownership, exact BG1 provenance, intact prefix/suffix guards, requested section-carried `CGADSUB`, selected live-Sub operand, and the exact precommitted RGB555 result.
+- The runtime now decodes real `CGADSUB` bit7 (add/subtract) and bit6 (full/half) only after the already-validated winner eligibility gate and CGWSEL source selector. Packed saturating add/sub avoids cross-channel carry/borrow; E1f remains the half-add path.
+- ABI remains frozen: regular/Mode7 RSP text **`0x1000`**, H-COMP **`0x790`**, `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero; all RSP branch-delay audits pass.
+- Same-head generic **Build and Validate `36419921205 SUCCESS`**: normal build, PROFILE build, host validation and pinned Mupen/LLE smoke all green. Artifacts: build `10968648254`, profile `10969335882`, smoke `10968553528`.
+- Earlier run **`36419660606 FAILURE`** is permanently **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY**: source/binary/ABI and delay-slot gates passed, then the deliberately stale parent ROM pin stopped the run before captures. It measured the exact runtime hash used by the successful rerun.
+- Branch audit against parent `762250a9...`: only `src/rsp_hcomp.S` plus the dedicated generator/oracle/contract/workflow differ; no lateral CPU/PPU/renderer changes entered this rung.
+- **Still NOT PROVEN:** transparent/absent Sub fallback to fixed color and its HALF-suppression rule; direct-fixed HALF control outside the prior fixed-source E1f case; mid-frame fixed-color history; brightness ordering below full brightness; clip/prevent/color windows; BG3/BG4/OBJ/backdrop provenance; OBJ palette exception; production-safe real-N64 RDP->RSP fence; throughput and real-N64 cadence/performance.
 
-- **IMPLEMENTED candidate:** fresh child `phase4/gate-c-hcomp-cgadsub-modes-clean` from exact validated parent `762250a95c6d2ef4bda1b2f4d82e255c43889c83`. Runtime commit **`dee7fdb10731cb059a985ea45e8642587c6a8143`** changes only `src/rsp_hcomp.S`; current host/workflow head is **`cd9a32b47dc5bd1541183262d6fd66c18f4d114c`**.
-- Controlled four-state matrix is precommitted with `CGWSEL=0x02`, Main red `0x001F`, live Sub green `0x03E0`, BG1 winner/provenance and eligibility fixed. Raw `CGADSUB` states/results: **ADD full `0x01 -> 0x03FF`**, **ADD half `0x41 -> 0x01EF`**, **SUB full `0x81 -> 0x001F`**, **SUB half `0xC1 -> 0x000F`**.
-- Runtime now decodes bit7 (add/subtract) and bit6 (full/half) only after the already-validated winner gate and CGWSEL source selector. Packed saturating add/sub formulas are per-channel; the previously validated E1f expression remains the half-add path. No CPU/PPU transport, provenance, renderer ownership, source selector or mailbox layout changed.
-- Net H-COMP growth is mechanically absorbed from unused fixed-slot padding: `.byte 0:0xE8 -> 0x5C`; intended public ABI remains `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, H-COMP total `0x790`, resident IMEM growth zero. Build/ELF is authority and has not yet validated this prediction.
-- Deterministic guest generator, strict four-state ares oracle and executable contract are present on the child. Dedicated workflow `Gate C H-COMP CGADSUB Modes Clean` is installed on head `cd9a32b4...`.
-- **Deliberate first-run pin protocol:** the new dedicated workflow intentionally retains the validated parent ROM SHA `f4d3c58e...`. The first build must therefore stop at that stale pin *after* source/binary contract + branch-delay checks if the candidate builds cleanly. That failure is expected tooling/pin evidence only; capture must not run until the exact new ROM hash is measured and the workflow-only pin is replaced.
-- **STATUS: IMPLEMENTED / CI DISPATCHED, semantic result UNKNOWN.** Do not interpret generic build success or the deliberate pin failure as arithmetic correctness. Next action is to inspect the exact-head run, verify ABI/build, pin the measured ROM hash host-only, then require the four first-hand captures to pass.
-- **EXPECTED PIN FAILURE / MEASUREMENT PROOF:** dedicated run **`36419660606 FAILURE`** on head `cd9a32b4...` stopped exactly at the deliberately stale parent ROM SHA after every preceding gate passed. Artifact **`10968607683`**, digest **`sha256:0f46e9c7c612a8c00dab47343d5177aac9c8b5bcbc8b08aa7b87cf26e916f756`**. No semantic captures ran.
-- Exact new candidate hashes measured by that run: ROM **`53df19d9d0b9f0996d1bb7aca15f744ab28e67525362656ef01f726eaa9e576c`**, ELF **`fa9e863fd4a7927e3591f86ad54154b1e8d156c3f6dc147cbca87bcea6ea8483`**.
-- **ABI prediction VALIDATED:** executable contract `HCOMP_CGADSUB_MODES_EXEC_CLEAN_CONTRACT_VALIDATED`; regular/Mode7 RSP text `0x1000`, H-COMP `0x790`; `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero; all three branch-delay audits pass.
-- **RECLASSIFIED:** run `36419660606` is **TOOLING/PIN FAILURE ONLY**, not arithmetic evidence. Immediate action is host-only: replace exactly the stale ROM pin with `53df19d9...`; do not change runtime, guests, oracle, capture or ares pin.
-- Host-only exact-pin commit **`73d9d08037151457e53c6150c8ebeeb5a176f4ac`** changes only the workflow ROM SHA to `53df19d9...`; semantic runtime remains `dee7fdb1...`.
-- Exact-head reruns dispatched: dedicated **`36419920887`** and generic **Build and Validate `36419921205`**. **STATUS: ABI VALIDATED / SEMANTIC CI RUNNING.**
-- Same-head generic **Build and Validate `36419921205 SUCCESS`** is now fully green: normal build, PROFILE build, host validation, all RSP branch-delay audits and pinned Mupen/LLE smoke. Artifacts: build `10968648254` (digest `sha256:699561640e1fcce7d50e990a9b15f8172de34c28013f1ae2c0f12dfec722d954`), profile `10969335882` (digest `sha256:8995debb5e293a90422dec6980a760ba76538397f51faacc79b31a581e267fed`), emulator smoke `10968553528` (digest `sha256:5233c148efc5e9537fd18785e7503181eb8fb849b704f93b67c7edd809b02035`).
-- **SUPPORTED INTERPRETATION:** generic regression is now excluded for this exact head; the remaining open question is the dedicated four-mode semantic capture. Dedicated `36419920887` remains in pinned-ares build.
+### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
+
+- **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.
+- Start from exact validated parent **`73d9d08037151457e53c6150c8ebeeb5a176f4ac`**. Preserve the now-validated add/sub/half arithmetic, BG1 winner/eligibility, operands where applicable, compact provenance, section geometry, ABI and one-frame fence.
+- First audit the current live-Sub representation to determine whether transparency/coverage survives in the RGBA5551 sample or another already-existing carrier. Do **not** invent a new per-pixel surface until evidence shows the current carrier cannot distinguish a real Sub pixel from transparency.
+- Minimal intended discriminator, subject to that carrier audit:
+  1. **Direct fixed + HALF** (`CGWSEL bit1=0`) as control: fixed color selected explicitly and HALF remains active.
+  2. **Live Sub present + HALF** (`CGWSEL bit1=1`) as the already-validated normal-half control.
+  3. **Sub selected but transparent + HALF**: second operand must fall back to fixed color **and HALF must be suppressed** for that pixel.
+- Require the source/fallback decision, half-enable decision, Main winner/provenance, section carriers and exact RGB555 result to agree; keep add/sub operation itself fixed so only transparency/fallback semantics vary.
+- Falsifiers: no trustworthy transparency carrier exists, present/transparent workloads alter Main/provenance unexpectedly, fallback chooses the wrong operand, HALF is not suppressed only in the transparent-Sub case, fixed-direct control is also suppressed, ABI/guards move, or generic build/smoke regresses.
+- **Immediate action:** audit current Sub pixel coverage/transparency evidence and historical clean branches; then design the smallest present-vs-transparent test without importing the old cumulative compositor or beginning window semantics.
 
 
 ### Phase / authority
@@ -53,10 +60,10 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Phase:** M3 / **Gate C — base-system fidelity and compatibility**.
 - **Integrated truth:** `master@7cc8facfe8643fb85888f301f79995575830521d`, merge of PR #18 (“preserve CGRAM epochs through RSP replay”).
 - **Open PRs:** none at this checkpoint.
-- **Current candidate:** `phase4/gate-c-hcomp-cgwsel-source-clean@762250a95c6d2ef4bda1b2f4d82e255c43889c83`.
-- **Semantic runtime commit:** `6786bf55c08d5ec689b234bc2759d4b3f37ba457`; later commits are host/oracle/pin only.
-- **Exact runtime hashes:** ROM `f4d3c58ea6ae05ef89f8b78b66be3b4c1e8b8efdb4bcae52069f58161a49741a`; ELF `cf43093a37a979ee9c01b0a92402b772a82b2ae5fcb544035fe0c9b3c88a08aa`.
-- **Classification:** **ARCHITECTURE PROOF / VALIDATED / STAGE CLOSED** for clean CGWSEL second-operand selection on the live Main/Sub/provenance path.
+- **Current candidate:** `phase4/gate-c-hcomp-cgadsub-modes-clean@73d9d08037151457e53c6150c8ebeeb5a176f4ac`.
+- **Semantic runtime commit:** `dee7fdb10731cb059a985ea45e8642587c6a8143`; later commits are host/oracle/workflow/exact-pin only.
+- **Exact runtime hashes:** ROM `53df19d9d0b9f0996d1bb7aca15f744ab28e67525362656ef01f726eaa9e576c`; ELF `fa9e863fd4a7927e3591f86ad54154b1e8d156c3f6dc147cbca87bcea6ea8483`.
+- **Classification:** **ARCHITECTURE PROOF / VALIDATED / STAGE CLOSED** for clean CGADSUB add/subtract/full/half selection on the validated live Main/Sub/provenance path.
 - This candidate is **not merged** and is not yet production compositor authority.
 
 ### Final clean BG1/BG2 winner-provenance result — VALIDATED
@@ -120,17 +127,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ### RESUME NEXT — GATE DRIVER
 
-**Next controlled rung: real CGADSUB add/sub/half operation selection on the clean live path.**
+**Next controlled rung: transparent-Sub fallback to fixed color and pixel-local HALF suppression.**
 
-1. Start from `phase4/gate-c-hcomp-cgwsel-source-clean@762250a9...`.
-2. Audit exact current CGADSUB transport and canonical bit semantics before editing.
-3. Freeze validated winner provenance, BG1 eligibility, CGWSEL=`0x02` live-Sub source, Main/Sub operands, compact ownership, TM-end Z cut, row mapping, fixed ABI and one-frame fence.
-4. Build a four-state discriminator for ADD full / ADD half / SUB full / SUB half with all other variables constant.
-5. Precommit exact RGB555 results; require carrier + selected operand + provenance + result agreement.
-6. Keep HALF suppression for fixed-color/no-Sub as a separate later discriminator.
-7. Only after the mode matrix is green, proceed to the next missing compositor semantic (likely the HALF special case or remaining provenance/window interaction), chosen from evidence.
+1. Start from `phase4/gate-c-hcomp-cgadsub-modes-clean@73d9d08037151457e53c6150c8ebeeb5a176f4ac`.
+2. Audit whether the current live Sub RGBA5551/sample path already carries a trustworthy present-vs-transparent signal; inspect historical clean evidence before adding state.
+3. Freeze validated BG1 winner/eligibility, CGADSUB operation semantics, compact ownership/provenance, TM-end Z cut, section mapping, ABI and one-frame fence.
+4. Keep the arithmetic operation fixed and distinguish direct-fixed HALF, live-Sub-present HALF, and live-Sub-transparent fallback where fixed color is used but HALF is suppressed.
+5. Precommit exact RGB555 results and require source/fallback + half-enable + provenance + result agreement.
+6. Do not begin clip/prevent/color-window implementation until this source/HALF special case is closed.
+7. If current Sub representation cannot prove transparency, document that limitation and design the smallest carrier needed rather than reviving the old cumulative compositor.
 
-**Immediate action:** inspect current CGADSUB carrier plus clean/historical arithmetic helpers, then create the minimal child experiment without importing old cumulative compositor state.
+**Immediate action:** inspect current Sub alpha/coverage semantics and the old proof history, then build the minimal present-vs-transparent discriminator.
 
 **STATUS: VALIDATED / STAGE CLOSED.**
 
@@ -164,6 +171,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Current stage described above.
 - First semantic attempt proved tags/gates but wrote Z beyond its owned arena.
 - Final TM-end lifetime repair closes those bounds without weakening the oracle.
+
+### 5. Clean CGWSEL second-operand source selection — VALIDATED
+
+- Final head `phase4/gate-c-hcomp-cgwsel-source-clean@762250a95c6d2ef4bda1b2f4d82e255c43889c83`.
+- Dedicated `36377395203 SUCCESS`, artifact `10951817024`.
+- Same live Main/Sub/provenance yields fixed-color result `0x3C0F` at `CGWSEL=0x00` and live-Sub result `0x01EF` at `CGWSEL=0x02`.
+
+### 6. Clean CGADSUB add/sub/full/half operation selection — VALIDATED
+
+- Final host-only head `phase4/gate-c-hcomp-cgadsub-modes-clean@73d9d08037151457e53c6150c8ebeeb5a176f4ac`.
+- Dedicated `36419920887 SUCCESS`, artifact `10968609752`.
+- Exact four-state results: add-full `0x03FF`, add-half `0x01EF`, sub-full `0x001F`, sub-half `0x000F`, with invariant Main/Sub/provenance.
 
 ---
 

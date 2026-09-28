@@ -63,13 +63,13 @@ def prove_source() -> None:
         raise AssertionError(f"size-neutral window scheduling drift: {win}")
 
     h = (ROOT / "src/rsp_hcomp.S").read_text()
-    if ".byte 0:0x158" not in h:
+    if ".byte 0:0x148" not in h:
         raise AssertionError("HCOMP provenance padding drift")
 
     entry = insns(section(h, "hcomp_entry:", "// Mid-frame clean Main provenance helper."))
     for anchor in (
-        "lui a1, 0xA00F",
-        "ori a1, a1, 0x1198",
+        "lui a1, 0xA00E",
+        "ori a1, a1, 0x2018",
         "lhu t6, SCRN_DATA + 16",
         "srl t4, t6, 11",
         "andi t4, t4, 0x3",
@@ -91,9 +91,11 @@ def prove_source() -> None:
     ))
     required = (
         "sw t0, RDP_FRAME + 4",
+        "beqz k0, hcomp_provenance_enable",
+        "ori t0, t0, 0x0001",
         "ori t0, t0, 0x0025",
         "lui t0, 0x3E00",
-        "ori t0, t0, 0xDD00",
+        "ori t0, t0, 0xFD00",
         "lui t0, 0x2E00",
         "lui t1, 0x1800",
         "sw t0, RDP_FRAME + 16",
@@ -135,14 +137,15 @@ def main() -> int:
     print("winner_bg1_stored_z=0x0C00")
     print("winner_bg2_stored_z=0x1400")
     print("winner_mask_rule=stored_z>>11")
-    print("provenance_logical_base=0xA00F0000")
-    print("provenance_sample=0xA00F1198")
-    print("set_z_image_base=0x000EDD00")
+    print("provenance_logical_base=0xA00E2000")
+    print("provenance_sample=0xA00E2018")
+    print("set_z_image_base=0x000DFD00")
+    print("provenance_lifetime=section0_only")
     print("draw_bg=0xA40013A8")
     print("hcomp_screen_switch=0xA4001760")
     print("draw_mode7_entry=0xA4001788")
     print("resident_imem_growth=0")
-    print("semantic_provenance=NOT_YET_PROVEN")
+    print("semantic_provenance=NOT_YET_REVALIDATED_AFTER_BOUNDS_REPAIR")
     return 0
 
 

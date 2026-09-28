@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### STATIC REPAIR — zero-length pad removed, PipeSync experiment preserved (2026-09-28 UTC)
+
+- Follow-up branch head **`phase4/gate-c-hcomp-transparent-sub-clean@5c10b3b4065f8d54170afddc1b4abf586924e2b2`** removes only the invalid zero-repeat `.byte` directive after the eight-command proof table.
+- Intended layout is unchanged: proof table **F30..F6F**, `VEC_DATA=F70`; no semantic command/oracle/H-COMP change from `9c566613...`.
+- This repair exists solely to let the controlled PipeSync hypothesis reach build/runtime. Await exact-head generic + dedicated evidence; expect the dedicated ROM pin to be stale because runtime bytes changed relative to the pre-PipeSync candidate.
+
+
+
 ### STATIC FAILURE — first PipeSync candidate did not build; hypothesis not exercised (2026-09-28 UTC)
 
 - Exact commit `9c5666138df3bec65fb55549f2060ce58bc8ef58` triggered dedicated run **`36479011275 FAILURE`** and generic **Build and Validate `36479011370 FAILURE`** before any runtime/pinned-ares execution.

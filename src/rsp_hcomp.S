@@ -164,19 +164,68 @@ hcomp_source_ready:
     // carry-correction term. This fixes evidence only; gate semantics below
     // still consume the live t4 value directly.
     sh t4, CHAR_DATA + 18
-    lbu t2, CGADSUB
-    and t2, t2, t4
+    lbu t8, CGADSUB
+    and t2, t8, t4
     sltu t2, zero, t2
     move t3, t0
     beqz t2, hcomp_gate_store
     nop
 
-    // Reuse the authoritative E1f packed half-add on the live rendered pair.
+    // Real CGADSUB operation selection on the already-selected live operand.
+    // bit7: 0=add, 1=subtract. bit6: 0=full, 1=half.
+    andi t4, t8, 0x80
+    bnez t4, hcomp_math_sub
+    nop
+    andi t4, t8, 0x40
+    bnez t4, hcomp_math_add_half
+    nop
+
+    // Packed per-channel saturating add, matching the established bsnes
+    // RGB555 expression while avoiding cross-channel carry leakage.
+    add t3, t0, t7
+    xor t4, t0, t7
+    andi t4, t4, 0x0421
+    sub t4, t3, t4
+    andi t4, t4, 0x8420
+    sub t3, t3, t4
+    srl t5, t4, 5
+    sub t4, t4, t5
+    or t3, t3, t4
+    b hcomp_math_done
+    nop
+
+hcomp_math_add_half:
+    // Authoritative E1f packed half-add.
     xor t3, t0, t7
     andi t4, t3, 0x0421
     add t3, t0, t7
     sub t3, t3, t4
     srl t3, t3, 1
+    b hcomp_math_done
+    nop
+
+hcomp_math_sub:
+    // Packed per-channel saturating subtract. If bit6 is also set, halve
+    // the already-clamped difference; transparent-Sub HALF suppression is a
+    // separate later semantic rung and is deliberately not folded in here.
+    sub t3, t0, t7
+    ori t4, zero, 0x8420
+    add t3, t3, t4
+    xor t4, t0, t7
+    andi t4, t4, 0x8420
+    sub t4, t3, t4
+    andi t4, t4, 0x8420
+    sub t3, t3, t4
+    srl t5, t4, 5
+    sub t4, t4, t5
+    and t3, t3, t4
+    andi t5, t8, 0x40
+    beqz t5, hcomp_math_done
+    nop
+    andi t3, t3, 0x7BDE
+    srl t3, t3, 1
+
+hcomp_math_done:
 
 hcomp_gate_store:
     // Self-describing proof record. Keep the validated first 16 B stable
@@ -293,7 +342,7 @@ hcomp_provenance_end:
 
 // Keep the fixed switch address while absorbing the new lifetime cut entirely
 // out of previously unused H-COMP padding.
-.byte 0:0xE8
+.byte 0:0x5C
 
 hcomp_screen_switch:
     beqz s7, hcomp_provenance_end

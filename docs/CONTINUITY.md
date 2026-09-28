@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CONTROLLED REPAIR CANDIDATE — PipeSync before same-frame proof OtherModes (2026-09-28 UTC)
+
+- Exact branch commit **`phase4/gate-c-hcomp-transparent-sub-clean@9c5666138df3bec65fb55549f2060ce58bc8ef58`** changes only the bounded proof RDP command table/address contract: it prepends **PipeSync `0x2700000000000000`** before the proof-time `Set OtherModes`, shifts `HCOMP_PROOF_BG_DEPTH_CMDS` from `+0x18` to `+0x20`, and updates the source contract accordingly.
+- Rationale is architectural, not guesswork: the N64 RDP programming/function reference requires **PipeSync before an RDP attribute/mode change** when prior pipeline work may still be active. The failing same-frame path issued `Set OtherModes` immediately after the frame-start palette/TMEM load and pinned ares then reported an RDP hardware-bug crash; the prior cross-frame carrier used the same Z/depth commands without that crash.
+- The retired DMEM tail already had exactly one 8-byte slot free: the table now occupies **F30..F6F** and `VEC_DATA` remains frozen at **F70**. No new per-pixel surface, no new IMEM footprint, no change to the three-state oracle, no change to H-COMP arithmetic/source semantics, and no public renderer/H-COMP entrypoint is intended to move.
+- **Hypothesis:** missing RDP attribute synchronization, not the bounded Z commands themselves, causes the current-frame crash.
+- **Falsifiers:** exact build/ABI moves; pinned ares still reports the TLUT/RDP crash; guest still cannot reach warmup fence; or semantic captures reach the fence but fail raw TS-tag/source/HALF/result invariants.
+- The existing dedicated workflow still carries the previous exact ROM pin by design. If the runtime hash changes, the first exact run is pin-measurement/tooling evidence only; repin only from that dedicated build and rerun without semantic changes.
+
+
+
 ### CAUSE NARROWED — stalled same-frame candidate crashes pinned-ares RDP before capture (2026-09-28 UTC)
 
 - Inspection of exact artifact `10993629590` found a decisive line near the start of `captures/fixed-half/ares-n64.log`: pinned ares reports **`[RDP] software triggered a hardware bug; RDP crashed and will stop responding. Reason: Attempting to load multiple lines in TLUT.`**

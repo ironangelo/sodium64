@@ -42,6 +42,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Exact new candidate hashes measured by that run: ROM **`53df19d9d0b9f0996d1bb7aca15f744ab28e67525362656ef01f726eaa9e576c`**, ELF **`fa9e863fd4a7927e3591f86ad54154b1e8d156c3f6dc147cbca87bcea6ea8483`**.
 - **ABI prediction VALIDATED:** executable contract `HCOMP_CGADSUB_MODES_EXEC_CLEAN_CONTRACT_VALIDATED`; regular/Mode7 RSP text `0x1000`, H-COMP `0x790`; `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero; all three branch-delay audits pass.
 - **RECLASSIFIED:** run `36419660606` is **TOOLING/PIN FAILURE ONLY**, not arithmetic evidence. Immediate action is host-only: replace exactly the stale ROM pin with `53df19d9...`; do not change runtime, guests, oracle, capture or ares pin.
+- Host-only exact-pin commit **`73d9d08037151457e53c6150c8ebeeb5a176f4ac`** changes only the workflow ROM SHA to `53df19d9...`; semantic runtime remains `dee7fdb1...`.
+- Exact-head reruns dispatched: dedicated **`36419920887`** and generic **Build and Validate `36419921205`**. **STATUS: ABI VALIDATED / SEMANTIC CI RUNNING.**
 
 
 ### Phase / authority

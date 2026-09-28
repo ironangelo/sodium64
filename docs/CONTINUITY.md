@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### RERUN CHECKPOINT — PipeSync runtime repinned without semantic change (2026-09-28 UTC)
+
+- Workflow-only head **`phase4/gate-c-hcomp-transparent-sub-clean@34b581def460036a32b099ec53a89d68f84a98fb`** updates only the dedicated ROM pin from the pre-PipeSync runtime to **`ad96601b62d2104e6428da4c9186849376848595645acf7babb2b25ebbcfd073`**.
+- Semantic/runtime source remains **`5c10b3b4065f8d54170afddc1b4abf586924e2b2`**; three-state guests, strict raw TS-tag/source/HALF/result oracle, current-frame binding, and PipeSync command table are unchanged.
+- **Acceptance:** absence of the prior RDP/TLUT crash is necessary but not sufficient. Stage closure still requires all three first-hand captures with exact `0x0400/0x1400` TS tags, correct source code, HALF-effective decision, invariant Main/provenance/guards, and exact RGB555 result.
+
+
+
 ### MEASUREMENT CHECKPOINT — PipeSync candidate builds with frozen ABI; dedicated stale-pin measured (2026-09-28 UTC)
 
 - Exact semantic head **`phase4/gate-c-hcomp-transparent-sub-clean@5c10b3b4065f8d54170afddc1b4abf586924e2b2`** now builds cleanly after removing only the zero-length pad directive.

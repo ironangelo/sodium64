@@ -6,6 +6,21 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
+
+### ACTIVE — clean CGWSEL second-operand source discriminator (2026-09-28 UTC)
+
+- Fresh child **`phase4/gate-c-hcomp-cgwsel-source-clean`** was created exactly from validated provenance authority **`ef1c37839fad4eca1339c92f4ee92f9a3463f301`**. Frozen controls: BG1 winner provenance `0x0C00 -> mask1`, CGADSUB BG1 eligibility, compact Sub/Main ownership, E1f half-add operation, TM-end Z cut, row mapping, fixed overlay ABI and the one-fresh-frame pinned-ares fence.
+- **GATE DRIVER / question:** with winner, eligibility and arithmetic fixed, does real **CGWSEL bit1** select the H-COMP second operand correctly between semantic Sub and fixed color?
+- **Canonical register audit:** current CPU transports raw `CGWSEL` in every 0x40-B section and `write_cgwsel` is raster-sensitive. SNES CGWSEL bit1 selects color-math second operand: **0=fixed color, 1=subscreen**; window bits remain zero in this rung. Current `COLDATA` is retained losslessly in PR#18 typed section markers, while the legacy section `SUB_COLOR` also carries COLDATA after master-brightness conversion. For this deliberately **full-brightness, constant-COLDATA** discriminator, canonicalizing `SUB_COLOR` back to RGB555 is exact; this avoids mixing a new raw-marker transport change into the source-selection experiment.
+- **Controlled workload:** keep Main winner BG1 opaque red RGB555 **`0x001F`**, live Sub BG2 opaque green **`0x03E0`**, `CGADSUB=0x01` (BG1 math eligible), TMW/TSW=0, full brightness and the existing 8-line Sub lifetime. Set constant fixed color COLDATA to opaque blue RGB555 **`0x7C00`**. Only CGWSEL differs between the two authority guests: `0x00` => fixed; `0x02` => Sub.
+- **Exact E1f results precommitted:** fixed-blue case must select addend `0x7C00` and produce packed half-add **`0x3C0F`**; Sub-green case must select addend `0x03E0` and produce **`0x01EF`**. Both cases must remain gate=1 with identical Main/Sub pixels and provenance.
+- **Runtime hook:** frame-end H-COMP will keep the existing live Sub in its established field, canonicalize this section's `SUB_COLOR` as fixed RGB555, use only `CGWSEL&0x02` to choose the E1f addend, and append fixed/selected/CGWSEL/source evidence after the existing 16-B mailbox so prior provenance fields remain byte-compatible. No renderer ownership, provenance, CGADSUB or arithmetic mode change is allowed.
+- **Guest implementation plan:** preserve startup/NMI addresses and existing rendering/HDMA geometry. Replace only the 5-B initial CGWSEL setup with same-size `JSR $81F0; NOP; NOP`; place an 11-B proof subroutine in already-unused pre-NMI NOP padding at `$81F0` that writes the requested CGWSEL value and COLDATA blue `$9F` to `$2132`, then RTS. The two guests therefore differ semantically only in the CGWSEL immediate (plus checksum); both execute the same nonzero fixed-color write.
+- **Falsifiers:** either queue does not carry requested CGWSEL with stable fixed color; Main/Sub/provenance/guards regress; gate differs from1; fixed case does not select `0x7C00`/result `0x3C0F`; Sub case does not select `0x03E0`/result `0x01EF`; fixed ABI moves; or generic build/smoke regresses.
+- **Non-claims:** this rung does not prove mid-frame changing COLDATA, brightness ordering below full brightness, absent-Sub fallback/HALF suppression, color windows/clip/prevent, add/sub/half mode selection, BG3/BG4/OBJ/backdrop provenance, throughput or real-N64 RDP->RSP fencing.
+- **STATUS: HYPOTHESIS / PRECOMMITTED; implementation next.**
+
+
 ### Phase / authority
 
 - **Phase:** M3 / **Gate C — base-system fidelity and compatibility**.

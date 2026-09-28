@@ -2646,6 +2646,8 @@ The former append-only E4d audit and subsequent 2026-09-23–25 checkpoint block
 - Dedicated **`36372833470 FAILURE` is the expected stale-hash stop only**. Before the pin it reports **`HCOMP_MAIN_PROVENANCE_EXEC_CLEAN_CONTRACT_VALIDATED`**, regular/Mode7/H-COMP text **0x1000 / 0x1000 / 0x790**, fixed `draw_bg=0xA40013A8`, `hcomp_screen_switch=0xA4001760`, `draw_mode7_entry=0xA4001788`, and all branch-delay checks PASS. Artifact **`10949632038`**, digest **`sha256:062bcb892c91f3053c069a053cbb3ab8f8722451e3e51772989802694ac33123`**.
 - Exact repaired runtime hashes measured at that gate: ROM **`5cad678264d87f52c402eedb7e1ab8b26af01a979570299dbf947599607dad33`**, ELF **`092bf2ee7e67d153d260f19eeb99ce2f9f975689fb9b9716ce1742556087f65f`**. No semantic capture ran. **RECLASSIFIED: TOOLING/PIN FAILURE ONLY.**
 - Next controlled action is host-only: replace exactly the old workflow ROM pin `4fb5...` with `5cad...`; preserve runtime, guests, capture, strict four-state oracle and ares pin byte-identical.
+- **IMPLEMENTED host-only pin `ef1c37839fad4eca1339c92f4ee92f9a3463f301`:** compare vs runtime/contract head `7adf58be...` is exactly one workflow line changed (**+1/-1**), pinning ROM `5cad6782...`. No runtime, guest, capture, oracle or contract code changed.
+- Exact-head runs dispatched: dedicated **Gate C H-COMP Main Provenance Clean `36373014424`** and generic **Build and Validate `36373014434`**. **STATUS: ABI VALIDATED / SEMANTIC RERUNNING.**
 
 
 

@@ -302,6 +302,23 @@ hcomp_provenance_switch_helper:
     // not overwrite this evidence after Z updates have been disabled.
     bnez k0, hcomp_sub_presence_saved
     nop
+
+    // The RDP is asynchronous with respect to the RSP. A command-buffer-ready
+    // rdp_send return does not prove prior primitive Z writes reached RDRAM.
+    // Sync Full is the architectural DRAM readback fence; wait for PIPE_BUSY
+    // to clear before DMA-reading the TS winner sample that TM will overwrite.
+    lui t0, 0x2900
+    sw t0, SCRN_DATA
+    sw zero, SCRN_DATA + 4
+    li a0, SCRN_DATA
+    jal 0xA4001F5C
+    li a1, SCRN_DATA + 8
+hcomp_sub_presence_rdp_wait:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x20
+    bnez t0, hcomp_sub_presence_rdp_wait
+    nop
+
     li a0, CHAR_DATA + 32
     lui a1, 0xA00E
     ori a1, a1, 0x2018
@@ -339,7 +356,7 @@ hcomp_provenance_end:
 
 // Keep the fixed switch address while absorbing the new lifetime cut entirely
 // out of previously unused H-COMP padding.
-.byte 0:0x80
+.byte 0:0x4C
 
 hcomp_screen_switch:
     beqz s7, hcomp_provenance_end

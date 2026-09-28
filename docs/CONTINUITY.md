@@ -7,6 +7,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CONTROLLED REPAIR CANDIDATE — architectural Sync Full fence before TS Z readback (2026-09-28 UTC)
+
+- Exact candidate head **`phase4/gate-c-hcomp-transparent-sub-clean@ec81d68f695b5332576e70a8129fe1cd8ba49354`** adds only the missing mid-frame RDP->RSP readback fence before section0 TS Z is DMA-read.
+- In `hcomp_provenance_switch_helper`, section0 now emits a scratch **Sync Full (opcode 0x29)**, then polls **DPC_STATUS PIPE_BUSY (0x20)** clear before the existing unchanged `0xA00E2018` Z sample. Later sections still skip the sample. Main Color Image retarget, TM rendering, final provenance, source logic and oracle are unchanged.
+- The added 10 instructions consume **0x28 bytes** of already-unused H-COMP padding; padding is correspondingly reduced **0x80 -> 0x58**, so public `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788` and H-COMP size are intended to remain frozen.
+- An intermediate local commit briefly used the wrong padding accounting; it was corrected immediately at **`f3266571...`** before this exact-head contract run. The executable host contract at **`ec81d68f...`** now explicitly requires the Sync Full + PIPE_BUSY wait sequence and the corrected padding, preventing accidental ABI drift.
+- **Hypothesis:** the prior all-state `0x55AA` TS tag is an RDP writeback/readback race, not a failure of Z tagging itself.
+- **Expected:** exact raw TS tags become `1400` (fixed), `1400` (Sub present), `0400` (Sub absent); source/HALF evidence remains `0100`, `0101`, `0002`; results remain `3C0F`, `01EF`, `7C1F`; Main/provenance/guards remain invariant; no TLUT crash returns.
+- **Falsifiers:** build/ABI movement, PIPE_BUSY wait deadlock, DP-interrupt side effect, RDP crash recurrence, raw tag still sentinel, or any oracle mismatch.
+- Exact-head runs **`36482932649`** (dedicated) and **`36482932589`** (generic) are queued/pending at this checkpoint. No semantic conclusion yet.
+
+
+
 ### FIRST-HAND ARTIFACT AUDIT — TS carrier is sampled before RDP writeback (2026-09-28 UTC)
 
 - Downloaded and inspected all files from artifact **`10996369911`**. All three ares logs contain **zero** `RDP crashed`, zero multi-line-TLUT crash messages and zero cache-coherency diagnostics.

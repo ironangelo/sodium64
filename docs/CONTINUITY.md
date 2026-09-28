@@ -31,6 +31,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Falsifiers: requested CGADSUB bits do not survive to the section, Main/Sub/provenance changes between cases, gate changes unexpectedly, any exact arithmetic result mismatches, ABI moves, guards regress, or generic build/smoke regresses.
 - **Immediate action:** audit current `CGADSUB` transport and the existing clean/historical arithmetic helpers, then create the child branch and the smallest controlled four-state mode matrix.
 
+- **IMPLEMENTED candidate:** fresh child `phase4/gate-c-hcomp-cgadsub-modes-clean` from exact validated parent `762250a95c6d2ef4bda1b2f4d82e255c43889c83`. Runtime commit **`dee7fdb10731cb059a985ea45e8642587c6a8143`** changes only `src/rsp_hcomp.S`; current host/workflow head is **`cd9a32b47dc5bd1541183262d6fd66c18f4d114c`**.
+- Controlled four-state matrix is precommitted with `CGWSEL=0x02`, Main red `0x001F`, live Sub green `0x03E0`, BG1 winner/provenance and eligibility fixed. Raw `CGADSUB` states/results: **ADD full `0x01 -> 0x03FF`**, **ADD half `0x41 -> 0x01EF`**, **SUB full `0x81 -> 0x001F`**, **SUB half `0xC1 -> 0x000F`**.
+- Runtime now decodes bit7 (add/subtract) and bit6 (full/half) only after the already-validated winner gate and CGWSEL source selector. Packed saturating add/sub formulas are per-channel; the previously validated E1f expression remains the half-add path. No CPU/PPU transport, provenance, renderer ownership, source selector or mailbox layout changed.
+- Net H-COMP growth is mechanically absorbed from unused fixed-slot padding: `.byte 0:0xE8 -> 0x5C`; intended public ABI remains `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, H-COMP total `0x790`, resident IMEM growth zero. Build/ELF is authority and has not yet validated this prediction.
+- Deterministic guest generator, strict four-state ares oracle and executable contract are present on the child. Dedicated workflow `Gate C H-COMP CGADSUB Modes Clean` is installed on head `cd9a32b4...`.
+- **Deliberate first-run pin protocol:** the new dedicated workflow intentionally retains the validated parent ROM SHA `f4d3c58e...`. The first build must therefore stop at that stale pin *after* source/binary contract + branch-delay checks if the candidate builds cleanly. That failure is expected tooling/pin evidence only; capture must not run until the exact new ROM hash is measured and the workflow-only pin is replaced.
+- **STATUS: IMPLEMENTED / CI DISPATCHED, semantic result UNKNOWN.** Do not interpret generic build success or the deliberate pin failure as arithmetic correctness. Next action is to inspect the exact-head run, verify ABI/build, pin the measured ROM hash host-only, then require the four first-hand captures to pass.
+
 
 ### Phase / authority
 

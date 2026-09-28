@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CAUSE NARROWED — stalled same-frame candidate crashes pinned-ares RDP before capture (2026-09-28 UTC)
+
+- Inspection of exact artifact `10993629590` found a decisive line near the start of `captures/fixed-half/ares-n64.log`: pinned ares reports **`[RDP] software triggered a hardware bug; RDP crashed and will stop responding. Reason: Attempting to load multiple lines in TLUT.`**
+- The same log then emits 252 cache-coherency diagnostics while the RSP is observed at PC `0xFAC` (resident `hcomp_cgram_pair_ready` vicinity), consistent with execution continuing around a dead RDP rather than reaching the established renderer-frame fence.
+- Control comparison against the last validated CGADSUB artifact `10968609752` shows **zero** `RDP crashed` messages and **zero** `not cache coherent` diagnostics in all four successful captures. Therefore these messages are **not established baseline noise** for this lab/workload.
+- **Supported interpretation:** the new same-frame proof integration causes/exposes an invalid RDP state before semantic capture. This is stronger than the earlier generic “runtime stall” diagnosis, but it does **not yet identify which proof command/order is causal**.
+- **Next controlled action:** inspect the exact RDP command ordering/state around frame palette/TLUT load and the new same-frame proof list; design a one-variable ordering/state experiment that removes the RDP hardware-bug condition without weakening the transparent-Sub oracle or adding a new surface.
+
+
+
 ### REJECTED EXPERIMENT — same-frame TS-Z binding stalls before semantic capture (2026-09-28 UTC)
 
 - Exact-head dedicated **Gate C H-COMP Transparent Sub Clean `36477073489 FAILURE`** on `phase4/gate-c-hcomp-transparent-sub-clean@7d68c4a2b1e0249fd6fab92cf134c1037c4ef0fd` passed deterministic guest/oracle self-test, the exact dedicated ROM pin `188bb47f...`, executable/ABI contract, RSP branch-delay audit, guest wrapping, fence-location checks, and pinned ares construction.

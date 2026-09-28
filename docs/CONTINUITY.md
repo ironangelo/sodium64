@@ -168,6 +168,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Host-only contract repair **`c65aff7911fc19501a4ed30004d769f4806b16ec`** now requires regular `next_layer=0x1370` and Mode7 `next_layer=0x1364` separately while retaining all shared frozen entrypoints and text-size checks.
 - Semantic runtime source is unchanged from `8a487570...`; workflow pin remains stale by design until the corrected contract measures the exact ROM/ELF.
 
+### MEASURED — exact same-frame TS-Z runtime ready for semantic rerun (2026-09-28 UTC)
+
+- Generic **Build and Validate `36474172555 SUCCESS`** on semantic source `dae28945...` completed normal build, PROFILE build and pinned Mupen/LLE smoke green. Build artifact **`10993415178`**, digest **`sha256:f79f58187699b8bdc93be1fa1b4ef51358fca6fcace86e8d59e2b1693177492f`**.
+- First-hand hashes from that exact build artifact: ROM **`9f719b3bc91d836e80ec8242a335eaa8cc979a3cac198a7c47f8075231922e35`**, ELF **`dec697edfe773009c6d8f074c8590901716babffcd5e2918672afa27fa140646`**.
+- Host-only `c65aff7911fc19501a4ed30004d769f4806b16ec` changes only the regular-vs-Mode7 `next_layer` contract; semantic runtime source is unchanged. Therefore the measured ROM/ELF remain the exact runtime to pin.
+- **Immediate action:** update only the dedicated workflow ROM pin from `c073800b...` to `9f719b3b...`, rerun pinned ares, and accept only if the three states prove renderer-owned `0x0400` absence, `0x1400` BG2 presence, correct source code/HALF-effective bit, invariant Main provenance and exact color result.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

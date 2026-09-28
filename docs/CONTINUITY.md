@@ -7,6 +7,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### HYGIENE CHECKPOINT — same-frame transparent-Sub exact-head generic CI green (2026-09-28 UTC)
+
+- Same-head **Build and Validate `36477073413 SUCCESS`** on `phase4/gate-c-hcomp-transparent-sub-clean@7d68c4a2b1e0249fd6fab92cf134c1037c4ef0fd`: normal build, PROFILE build, host validation/branch-delay checks and pinned Mupen/LLE smoke are green.
+- **Meaning:** generic regression/hygiene is excluded for this exact candidate. This is not semantic transparent-Sub evidence and does not imply real-N64 performance; pinned-ares three-state capture remains the acceptance authority.
+- Dedicated run `36477073489` has already passed the exact dedicated runtime pin and is building the pinned ares N64-only laboratory.
+
+
+
 ### CHECKPOINT — dedicated pin reproducibility confirmed before transparent-Sub captures (2026-09-28 UTC)
 
 - Exact-head dedicated run **`36477073489`** on `phase4/gate-c-hcomp-transparent-sub-clean@7d68c4a2b1e0249fd6fab92cf134c1037c4ef0fd` reproduced the dedicated-authority ROM pin **`188bb47fe379c277dbad084c6e6c6e90015c9e5b80d76ecd8044df02e92473ea`** and passed the deterministic guest/oracle self-test, exact build, executable/ABI contract, RSP branch-delay audit and three guest wrapping steps.

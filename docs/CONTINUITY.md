@@ -153,6 +153,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Audit found the branch candidate uses the literal `0x1364` only in the H-COMP return bridge and executable contracts; ordinary resident branches use the assembler label. Canonical frozen public entrypoints remain `draw_bg=0x13A8`, `hcomp_screen_switch=0x1760`, and `draw_mode7_entry=0x1788`.
 - **Decision:** do not hide this by weakening the contract. Either preserve `next_layer` with a real pre-boundary size recovery, or explicitly move the internal bridge together with all contract/reference users after proving it is not an external ABI. No semantic conclusion is drawn from this run.
 
+### IMPLEMENTED — pair internal next_layer bridge for current-frame TS Z candidate (2026-09-28 UTC)
+
+- Follow-up candidate **`phase4/gate-c-hcomp-transparent-sub-clean@8a487570ce9053d6a49c4b97fdd7c8bfb9248840`** keeps the same-frame TS-Z hypothesis and explicitly pairs the H-COMP return bridge with the resulting resident layout.
+- The added setup advances internal `next_layer` from `0xA4001364` to **`0xA4001370`**. Audit of the candidate found this numeric address is an internal overlay return consumed by H-COMP/contracts; assembler-resolved renderer branches use the label. H-COMP now returns to `0x1370`, and the executable contract still checks the address exactly rather than dropping the invariant.
+- Public/frozen entries remain required unchanged: `draw_bg=0xA40013A8`, `hcomp_screen_switch=0xA4001760`, `draw_mode7_entry=0xA4001788`; regular/Mode7 0x1000, H-COMP 0x790 and zero resident-IMEM growth remain mandatory.
+- Dedicated **`36475026226`** and generic **`36475026085`** triggered. Workflow ROM pin remains deliberately stale until this exact candidate passes source/binary/ABI/delay-slot gates and measures its runtime hash.
+- **No semantic claim yet.** If layout/branch-delay gates pass, repin only the exact measured ROM and rerun the same strict three-state ares oracle.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

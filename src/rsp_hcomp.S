@@ -252,14 +252,27 @@ hcomp_provenance_mode_ready:
     j 0xA4001F7C
     nop
 
-// Keep the fixed switch address while absorbing the new frame-end/provenance
-// machinery entirely out of previously unused H-COMP padding.
-.byte 0:0x148
+// TM has just completed when the resident screen mask shifts to zero.
+// Disable proof-only Z_UPDATE *before* resident next_section can submit its
+// backdrop/fill commands. RDP_INIT[0] is the immutable baseline OtherModes
+// command (0x2F0088FF00040001), so no borrowed RDP_FRAME state is involved.
+hcomp_provenance_end:
+    li a0, RDP_INIT
+    jal 0xA4001F5C
+    li a1, RDP_INIT + 8
+    j 0xA40010C0
+    nop
+
+// Keep the fixed switch address while absorbing the new lifetime cut entirely
+// out of previously unused H-COMP padding.
+.byte 0:0x134
 
 hcomp_screen_switch:
+    beqz s7, hcomp_provenance_end
+    nop
     b hcomp_provenance_switch_helper
     nop
-    .byte 0:0x20
+    .byte 0:0x18
 
 // Keep the externally visible Mode7 entry at 0x1788.
 draw_mode7_entry:

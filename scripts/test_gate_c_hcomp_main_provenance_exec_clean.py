@@ -62,8 +62,25 @@ def prove_source() -> None:
     ]:
         raise AssertionError(f"size-neutral window scheduling drift: {win}")
 
+    transition = insns(section(
+        main,
+        "// End the current semantic screen through H-COMP unconditionally.",
+        "// Removing the direct zero-screen branch saves one resident instruction.",
+    ))
+    if transition != [
+        "srl s7, s7, 8",
+        "andi s3, s3, 0xF0",
+        "lw a1, OVERLAY_HCOMP_SRC",
+        "li t9, 0x1760",
+        "b overlay_load_slot",
+        "nop",
+    ]:
+        raise AssertionError(f"screen-end HCOMP routing drift: {transition}")
+    if ".byte 0:8" not in main:
+        raise AssertionError("resident ABI compensation pad drift")
+
     h = (ROOT / "src/rsp_hcomp.S").read_text()
-    if ".byte 0:0x148" not in h:
+    if ".byte 0:0x134" not in h:
         raise AssertionError("HCOMP provenance padding drift")
 
     entry = insns(section(h, "hcomp_entry:", "// Mid-frame clean Main provenance helper."))
@@ -108,12 +125,28 @@ def prove_source() -> None:
         if anchor not in helper:
             raise AssertionError(f"HCOMP switch-helper anchor lost: {anchor}")
 
+    end_cut = insns(section(
+        h,
+        "hcomp_provenance_end:",
+        "// Keep the fixed switch address",
+    ))
+    if end_cut != [
+        "li a0, RDP_INIT",
+        "jal 0xA4001F5C",
+        "li a1, RDP_INIT + 8",
+        "j 0xA40010C0",
+        "nop",
+    ]:
+        raise AssertionError(f"TM-end provenance lifetime cut drift: {end_cut}")
+
     wrapper = insns(section(
         h,
         "hcomp_screen_switch:",
         "// Keep the externally visible Mode7 entry",
     ))
     if wrapper != [
+        "beqz s7, hcomp_provenance_end",
+        "nop",
         "b hcomp_provenance_switch_helper",
         "nop",
     ]:
@@ -140,7 +173,8 @@ def main() -> int:
     print("provenance_logical_base=0xA00E2000")
     print("provenance_sample=0xA00E2018")
     print("set_z_image_base=0x000DFD00")
-    print("provenance_lifetime=section0_only")
+    print("provenance_lifetime=section0_TM_only")
+    print("provenance_disable_boundary=TM_end_before_next_section")
     print("draw_bg=0xA40013A8")
     print("hcomp_screen_switch=0xA4001760")
     print("draw_mode7_entry=0xA4001788")

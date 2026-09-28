@@ -496,21 +496,21 @@ next_layer:
     bnez t0, draw_bg
     andi t3, t0, 0x3 // Index
 
-    // Move from semantic TS to semantic TM. The H-COMP fixed slot
-    // temporarily owns the renderer slot only to retarget Color Image, then reloads
-    // the regular renderer and resumes at resident next_layer.
+    // End the current semantic screen through H-COMP unconditionally.
+    // After TS, s7 shifts to the pending TM mask and the fixed wrapper performs
+    // the validated Color-Image/provenance switch. After TM, s7 becomes zero;
+    // the same wrapper disables proof Z_UPDATE before any next-section RDP work.
     srl s7, s7, 8
-    beqz s7, next_section
     andi s3, s3, 0xF0
     lw a1, OVERLAY_HCOMP_SRC
     li t9, 0x1760
     b overlay_load_slot
     nop
 
-    // Preserve the historical fixed-slot/suffix ABI after the semantic
-    // routing logic shrank by one instruction. This 4-B pad plus the existing
-    // 64-bit alignment restores draw_bg to 0x13A8 without executing extra work.
-    .byte 0:4
+    // Removing the direct zero-screen branch saves one resident instruction.
+    // Return that exact 4 B as inert padding so draw_bg remains 0x13A8 and all
+    // fixed overlay/suffix entrypoints stay byte-identical.
+    .byte 0:8
 
     // Fixed renderer overlay begins on a 64-bit DMA boundary.
     .align 3

@@ -181,6 +181,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Dedicated **`36475524327`** and generic **Build and Validate `36475524281`** are running. The dedicated result is now allowed to reach first-hand ares semantics; there is no intentional stale-pin stop remaining.
 - **Acceptance remains strict:** fixed-direct+HALF must preserve HALF; live Sub present+HALF must use BG2/live Sub; Sub absent+HALF must show renderer-owned absence tag `0x0400`, fixed fallback source code and pixel-local HALF suppression. Main/provenance/guards/fence/ABI must remain exact.
 
+### PIN CORRECTION — generic artifact hash is not dedicated-build authority (2026-09-28 UTC)
+
+- Exact-head dedicated **`36475524327 FAILURE`** passed the corrected executable contract, all frozen public entries, regular/Mode7 0x1000, H-COMP 0x790 and all branch-delay audits. It then stopped only at the ROM pin **before wrapping/capture**.
+- That dedicated build measured ROM **`188bb47fe379c277dbad084c6e6c6e90015c9e5b80d76ecd8044df02e92473ea`** and ELF **`659214f3c8e01a553262cb43faa1dd19bebbe3324611dfe52f97511acd65e290`**. Evidence artifact **`10994070811`**, digest **`sha256:2e0dc6eb89a1bdbcf796bde824547eb29ef046b92c4ce2b074308a20134f1071`**.
+- **REJECTED AS PIN AUTHORITY:** ROM `9f719b3b...` taken from the generic build artifact. Although useful as hygiene evidence for the same source, it is not byte-identical to the dedicated exact-build path and therefore must not seed this workflow's ROM pin.
+- **Durable rule:** for dedicated semantic workflows, measure the exact runtime in that workflow after its source/binary/ABI gates; do not substitute a generic-build ROM hash even when semantic source is unchanged.
+- **Immediate action:** repin only the dedicated workflow to `188bb47f...`. No semantic/runtime source changes are needed; first-hand ares semantics remain completely untested for this candidate.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

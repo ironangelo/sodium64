@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### HYGIENE CHECKPOINT — bounded transparent-Sub exact-head generic CI green (2026-09-28 UTC)
+
+- Workflow-only repin head **`phase4/gate-c-hcomp-transparent-sub-clean@b440d9f07f664c8e2c6386dfa4246b2e5fc67345`** preserves semantic runtime **`ba6c879a0bca10c2eee298cd49dd46c7b378d173`** and changes only the dedicated ROM hash pin.
+- Exact-head **Build and Validate `36481355316 SUCCESS`**: normal build, PROFILE build, host validation/branch-delay checks and pinned Mupen/LLE smoke are green.
+- **Meaning:** general build/runtime hygiene is not blocking this candidate. This is **not** transparent-Sub semantic evidence and does not validate real-N64 RDP/RSP ownership.
+- Dedicated run **`36481355107`** has already passed the exact runtime pin, deterministic guests, executable contract, ABI/branch-delay checks, guest wrapping and capture-fence discovery; pinned ares is still building at this checkpoint.
+- **Immediate action:** interpret only the dedicated first-hand captures once available. Acceptance remains exact three-state TS tag/source/HALF/result invariants with unchanged Main/provenance/guards.
+
+
+
 ### MEASUREMENT CHECKPOINT — lifetime candidate builds; first dedicated run is stale-pin only (2026-09-28 UTC)
 
 - Exact candidate **`ba6c879a0bca10c2eee298cd49dd46c7b378d173`**, dedicated run **`36481142950 FAILURE`**, artifact **`10996442893`**, digest **`sha256:0d3035dad05be98569ced2bd992449bf2c5e03f4030ef40798822dc5963da8e4`**.

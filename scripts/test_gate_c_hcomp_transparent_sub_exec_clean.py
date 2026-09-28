@@ -94,7 +94,7 @@ def prove_source() -> None:
             raise AssertionError(f"static depth selection drift: {anchor}")
 
     h = (ROOT / "src/rsp_hcomp.S").read_text()
-    if ".byte 0:0x80" not in h:
+    if ".byte 0:0x58" not in h:
         raise AssertionError("transparent-Sub HCOMP padding drift")
     if "0xA00E6000" in h or "0xA00E6000" in main:
         raise AssertionError("unexpected new per-pixel surface introduced")

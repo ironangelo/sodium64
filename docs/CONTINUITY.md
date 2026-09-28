@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### HYGIENE FAILURE — first Sync Full candidate rejected by stale source-contract literal (2026-09-28 UTC)
+
+- Exact head **`ec81d68f695b5332576e70a8129fe1cd8ba49354`**, dedicated run **`36482932649 FAILURE`**, artifact **`10998065557`**, digest **`sha256:dcb98d995da09a497281bdae1cc77a13732b206aa7a9b374ed9cff0257afd7bb`**.
+- Build assembled H-COMP at the expected total size (**0x790**) but `test_gate_c_hcomp_transparent_sub_exec_clean.py` stopped before binary ABI/hash/aress execution because one stale literal still required old padding **`.byte 0:0x80`**. The same test already contained the new Sync Full/PIPE_BUSY sequence checks.
+- **Classification: HYGIENE-BLOCKER / NOT SEMANTIC EVIDENCE.** No pinned-ares execution occurred, so this run neither supports nor rejects the readback-fence hypothesis.
+- Runtime source was not changed in response. Follow-up **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`** changes only the stale contract literal to the correct **0x58**. The 10-instruction fence and its runtime bytes are otherwise unchanged.
+- **Immediate action:** let exact-head generic/dedicated CI measure frozen ABI and new runtime hash; if the dedicated exact ROM pin is stale, record the hash and repin workflow-only before semantic rerun.
+
+
+
 ### CONTROLLED REPAIR CANDIDATE — architectural Sync Full fence before TS Z readback (2026-09-28 UTC)
 
 - Exact candidate head **`phase4/gate-c-hcomp-transparent-sub-clean@ec81d68f695b5332576e70a8129fe1cd8ba49354`** adds only the missing mid-frame RDP->RSP readback fence before section0 TS Z is DMA-read.

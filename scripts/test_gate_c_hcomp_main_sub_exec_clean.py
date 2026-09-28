@@ -234,7 +234,6 @@ def prove_binary(maps: list[Path], symbols: list[Path]) -> None:
 
     fixed = {
         "draw_frame": 0xA400103C,
-        "next_layer": 0xA4001370,
         "draw_bg": 0xA40013A8,
         "draw_mode7_entry": 0xA4001788,
         "draw_obj": 0xA4001790,
@@ -250,6 +249,18 @@ def prove_binary(maps: list[Path], symbols: list[Path]) -> None:
             got = table.get(name)
             if got != want:
                 raise AssertionError(f"{label}: {name}={got} expected {want:#x}")
+
+    # The same-frame TS-Z setup exists only in the regular renderer. Its
+    # internal H-COMP return therefore advances by 12 B while the separate
+    # Mode7 overlay keeps the historical layout.
+    if rs.get("next_layer") != 0xA4001370:
+        raise AssertionError(
+            f"regular: next_layer={rs.get('next_layer')} expected 0xa4001370"
+        )
+    if m7s.get("next_layer") != 0xA4001364:
+        raise AssertionError(
+            f"mode7: next_layer={m7s.get('next_layer')} expected 0xa4001364"
+        )
 
     hfixed = {
         "draw_bg": 0xA40013A8,

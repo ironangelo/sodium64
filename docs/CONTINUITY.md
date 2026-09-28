@@ -145,6 +145,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Dedicated run **`36474172645`** and generic **Build and Validate `36474172555`** were triggered. The dedicated workflow intentionally still carries the previous exact ROM pin, so its first acceptable stop is a stale-pin measurement after source/binary/ABI gates; semantic capture is not authoritative until repinned to the newly measured runtime.
 - **Falsifiers:** fixed ABI moves, branch-delay audit rejects the compaction, same-frame setup still leaves TS tag sentinel, BG2/presence differs from expected `0x1400`, absent baseline does not become renderer-owned `0x0400`, Main/provenance drifts, or generic CI regresses.
 
+### REJECTED LAYOUT ATTEMPT — same-frame setup moved internal overlay return (2026-09-28 UTC)
+
+- Candidate `dae28945adbbd332440a15d0a8be3c7bcefc2b79` did **not** reach ares semantics. Dedicated run **`36474172645 FAILURE`** passed guest/oracle self-test and compiled, then the executable ABI contract stopped it because resident `next_layer` moved **`0xA4001364 -> 0xA4001370`**.
+- Evidence artifact **`10992159547`**, digest **`sha256:6adf99bcdc25bb7bdf32eaa902377376881e8c4d09fbad7f5ebe8af06aa90f10`**. Failure is **LAYOUT/CONTRACT ONLY**; it says nothing yet about whether same-frame TS Z binding fixes the semantic carrier.
+- Cause is understood: the three setup instructions are before `next_layer`; the delay-slot + 8-byte padding compensation occurs after `next_layer`, so it preserves later `draw_bg` placement but cannot preserve that internal H-COMP return address.
+- Audit found the branch candidate uses the literal `0x1364` only in the H-COMP return bridge and executable contracts; ordinary resident branches use the assembler label. Canonical frozen public entrypoints remain `draw_bg=0x13A8`, `hcomp_screen_switch=0x1760`, and `draw_mode7_entry=0x1788`.
+- **Decision:** do not hide this by weakening the contract. Either preserve `next_layer` with a real pre-boundary size recovery, or explicitly move the internal bridge together with all contract/reference users after proving it is not an external ABI. No semantic conclusion is drawn from this run.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

@@ -7,29 +7,29 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
-### ACTIVE — clean CGWSEL second-operand source discriminator (2026-09-28 UTC)
+### CHECKPOINT — clean CGWSEL second-operand source selection VALIDATED (2026-09-28 UTC)
 
-- Fresh child **`phase4/gate-c-hcomp-cgwsel-source-clean`** was created exactly from validated provenance authority **`ef1c37839fad4eca1339c92f4ee92f9a3463f301`**. Frozen controls: BG1 winner provenance `0x0C00 -> mask1`, CGADSUB BG1 eligibility, compact Sub/Main ownership, E1f half-add operation, TM-end Z cut, row mapping, fixed overlay ABI and the one-fresh-frame pinned-ares fence.
-- **GATE DRIVER / question:** with winner, eligibility and arithmetic fixed, does real **CGWSEL bit1** select the H-COMP second operand correctly between semantic Sub and fixed color?
-- **Canonical register audit:** current CPU transports raw `CGWSEL` in every 0x40-B section and `write_cgwsel` is raster-sensitive. SNES CGWSEL bit1 selects color-math second operand: **0=fixed color, 1=subscreen**; window bits remain zero in this rung. Current `COLDATA` is retained losslessly in PR#18 typed section markers, while the legacy section `SUB_COLOR` also carries COLDATA after master-brightness conversion. For this deliberately **full-brightness, constant-COLDATA** discriminator, canonicalizing `SUB_COLOR` back to RGB555 is exact; this avoids mixing a new raw-marker transport change into the source-selection experiment.
-- **Controlled workload:** keep Main winner BG1 opaque red RGB555 **`0x001F`**, live Sub BG2 opaque green **`0x03E0`**, `CGADSUB=0x01` (BG1 math eligible), TMW/TSW=0, full brightness and the existing 8-line Sub lifetime. Set constant fixed color COLDATA to opaque blue RGB555 **`0x7C00`**. Only CGWSEL differs between the two authority guests: `0x00` => fixed; `0x02` => Sub.
-- **Exact E1f results precommitted:** fixed-blue case must select addend `0x7C00` and produce packed half-add **`0x3C0F`**; Sub-green case must select addend `0x03E0` and produce **`0x01EF`**. Both cases must remain gate=1 with identical Main/Sub pixels and provenance.
-- **Runtime hook:** frame-end H-COMP will keep the existing live Sub in its established field, canonicalize this section's `SUB_COLOR` as fixed RGB555, use only `CGWSEL&0x02` to choose the E1f addend, and append fixed/selected/CGWSEL/source evidence after the existing 16-B mailbox so prior provenance fields remain byte-compatible. No renderer ownership, provenance, CGADSUB or arithmetic mode change is allowed.
-- **Guest implementation plan:** preserve startup/NMI addresses and existing rendering/HDMA geometry. Replace only the 5-B initial CGWSEL setup with same-size `JSR $81F0; NOP; NOP`; place an 11-B proof subroutine in already-unused pre-NMI NOP padding at `$81F0` that writes the requested CGWSEL value and COLDATA blue `$9F` to `$2132`, then RTS. The two guests therefore differ semantically only in the CGWSEL immediate (plus checksum); both execute the same nonzero fixed-color write.
-- **Falsifiers:** either queue does not carry requested CGWSEL with stable fixed color; Main/Sub/provenance/guards regress; gate differs from1; fixed case does not select `0x7C00`/result `0x3C0F`; Sub case does not select `0x03E0`/result `0x01EF`; fixed ABI moves; or generic build/smoke regresses.
-- **Non-claims:** this rung does not prove mid-frame changing COLDATA, brightness ordering below full brightness, absent-Sub fallback/HALF suppression, color windows/clip/prevent, add/sub/half mode selection, BG3/BG4/OBJ/backdrop provenance, throughput or real-N64 RDP->RSP fencing.
-- **IMPLEMENTED runtime candidate `6786bf55c08d5ec689b234bc2759d4b3f37ba457`:** only `src/rsp_hcomp.S` changes runtime. It canonicalizes section `SUB_COLOR` to fixed RGB555, chooses `t7 = fixed` for `CGWSEL bit1=0` or `t7 = live Sub` for bit1=1, and feeds the unchanged E1f expression. Existing first 16 B of the provenance mailbox remain structurally identical; appended words publish fixed RGB555, selected addend, raw CGWSEL and normalized source flag. Mailbox DMA expands 16 -> 24 B.
-- The source-selection path adds exactly **19 instructions / 76 B** before the fixed switch region; H-COMP padding is reduced mechanically **`0x134 -> 0xE8`**. Predicted public ABI and total H-COMP size remain unchanged; exact ELF/build is authority.
-- Deterministic guest generator added on host-only head **`d0d0e50a000266d8b59afdb20cb3d88731cc438e`**. It preserves all existing instruction addresses by replacing the original 5-B CGWSEL setup with same-size `JSR $81F0; NOP; NOP`, placing an 11-B subroutine in verified unused NOP padding before frozen NMI `$8200`. Both guests write nonzero fixed blue via `COLDATA=$9F`; only their CGWSEL immediate differs (`0x00` vs `0x02`, plus checksum).
-- Generic **Build and Validate `36376954032`** dispatched on exact host/runtime head `d0d0e50a...`. Dedicated semantic authority is not yet implemented.
-- First dedicated **Gate C H-COMP CGWSEL Source Clean `36377226182 FAILURE`** stopped exactly at the intentionally stale parent-ROM pin, after every earlier gate passed. Artifact **`10951970419`**, digest **`sha256:4a2a79cfecf4f8fd3d0d220994717dad70746ddb9b163e887eabea76b409a1f0`**.
-- **ABI/build evidence is green:** source/binary contract reports `HCOMP_CGWSEL_SOURCE_EXEC_CLEAN_CONTRACT_VALIDATED`; regular+Mode7 RSP text remain **0x1000**, H-COMP remains **0x790**, fixed `hcomp_screen_switch=0x1760` and `draw_mode7_entry=0x1788`, resident IMEM growth zero; branch-delay audit passes all three RSP ELFs.
-- Exact new runtime hashes: ROM **`f4d3c58ea6ae05ef89f8b78b66be3b4c1e8b8efdb4bcae52069f58161a49741a`**, ELF **`cf43093a37a979ee9c01b0a92402b772a82b2ae5fcb544035fe0c9b3c88a08aa`**. Guest hashes are deterministic: fixed **`e99050ab961f9f0aef464ccebf48ee4ccb435f2d587e555a061faae6d40a2c54`**, subscreen **`bfc25c9251f60848c145afb44714bc32a62b1e7d19ec480bf27de8994180dd78`**.
-- **RECLASSIFIED:** run `36377226182` is expected **TOOLING/PIN FAILURE ONLY**, with zero semantic captures. Next controlled action is host-only: replace exactly the stale `5cad...` workflow pin with `f4d3...`; runtime, guests, oracle, capture and ares pin remain byte-identical.
-- Host-only pin commit **`762250a95c6d2ef4bda1b2f4d82e255c43889c83`** changes only the dedicated workflow's expected ROM SHA to exact **`f4d3c58e...`**; runtime, guests, capture, strict oracle and ares pin are unchanged.
-- Exact-head reruns dispatched: dedicated **Gate C H-COMP CGWSEL Source Clean `36377395203`** and generic **Build and Validate `36377395162`**.
-- Same-head generic **Build and Validate `36377395162 SUCCESS`** is fully green across normal build, PROFILE build and pinned Mupen/LLE smoke. Dedicated `36377395203` has also passed deterministic guests, strict oracle self-test, exact runtime/hash, source+binary ABI contract, wrapping and frozen prelaunch geometry; it is now in the pinned-ares build.
-- **STATUS: ABI + GENERIC VALIDATED / SEMANTIC CI RUNNING.** Do not begin mode semantics until this two-state source matrix closes.
+- **ARCHITECTURE PROOF / VALIDATED / STAGE CLOSED:** exact branch head `phase4/gate-c-hcomp-cgwsel-source-clean@762250a95c6d2ef4bda1b2f4d82e255c43889c83`.
+- Semantic runtime change is `6786bf55c08d5ec689b234bc2759d4b3f37ba457`; later commits are host-only guest/oracle/workflow work and the exact ROM-hash pin. Runtime hashes: ROM **`f4d3c58ea6ae05ef89f8b78b66be3b4c1e8b8efdb4bcae52069f58161a49741a`**, ELF **`cf43093a37a979ee9c01b0a92402b772a82b2ae5fcb544035fe0c9b3c88a08aa`**.
+- Dedicated **Gate C H-COMP CGWSEL Source Clean `36377395203 SUCCESS`**; artifact **`10951817024`**, digest **`sha256:483759afdb3fc719807c72c55c62095956dc580b57f6c6ba3b5114862a23c96e`**. Classifier: **`HCOMP_CGWSEL_SOURCE_SELECTION_VALIDATED`**, `passed=true`.
+- Same-head generic **Build and Validate `36377395162 SUCCESS`**: normal build, PROFILE build, branch-delay audit and pinned Mupen/LLE smoke all green.
+- Frozen controls held exactly across both captures: Main BG1 red `0x001F`, live Sub BG2 green `0x03E0`, provenance `0x0C00 -> mask1`, `CGADSUB=0x01`, compact ownership, TM-end Z cut and one-fresh-frame fence. `main_sub_provenance_identical_across_source_states=true`; provenance guards intact.
+- **Fixed case:** `CGWSEL=0x00`, fixed blue `0x7C00`, selected addend `0x7C00`, exact E1f half-add result **`0x3C0F`**.
+- **Subscreen case:** `CGWSEL=0x02`, selected addend live Sub `0x03E0`, exact E1f half-add result **`0x01EF`**.
+- Appended source mailbox is consistent with the intended selector while the original first 16 B remains byte-compatible: fixed/source state `[fixed=7C00, selected=7C00, cgwsel=0000, source=0000]`; Sub state `[fixed=7C00, selected=03E0, cgwsel=0002, source=0001]`.
+- ABI remained frozen: regular/Mode7 RSP text **0x1000**, H-COMP **0x790**, `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero.
+- **Still NOT PROVEN:** add/sub/half mode selection, absent-Sub HALF suppression, mid-frame fixed-color history, brightness ordering below full brightness, color windows/clip/prevent, BG3/BG4/OBJ/backdrop provenance, production-safe real-N64 RDP->RSP fence, throughput and real-N64 cadence/performance.
+- The earlier `36377226182 FAILURE` remains classified **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY**: it stopped at the deliberately stale ROM pin before captures. The corrected exact-head run above is authority.
+
+### ACTIVE — clean CGADSUB add/sub/half mode discriminator (2026-09-28 UTC)
+
+- **GATE DRIVER:** with Main winner, CGADSUB eligibility, CGWSEL source selection, Main/Sub operands and provenance now fixed, validate the operation bits of real `CGADSUB` independently: add vs subtract and half vs full.
+- Start from exact validated parent **`762250a9...`**. Do not import the old cumulative E2g/E3/E4 compositor as a solution; historical arithmetic proof code may be read only as evidence/reference and individual pieces must re-earn entry.
+- First audit the exact current carrier and canonical SNES `CGADSUB` bit layout from repo evidence/reference. Freeze `CGWSEL=0x02` (live Sub), BG1 winner/eligibility, operand colors, row mapping, provenance, section geometry, ABI and fence.
+- Use the smallest matrix that distinguishes **ADD full / ADD half / SUB full / SUB half** while holding every other semantic variable constant. Precommit exact RGB555 expected results and require queue carrier + selected operand + provenance + result agreement.
+- Explicitly separate normal half behavior from the later special case where HALF is suppressed when the second operand is fixed color / no subscreen contribution; do not combine those questions in the first mode matrix.
+- Falsifiers: requested CGADSUB bits do not survive to the section, Main/Sub/provenance changes between cases, gate changes unexpectedly, any exact arithmetic result mismatches, ABI moves, guards regress, or generic build/smoke regresses.
+- **Immediate action:** audit current `CGADSUB` transport and the existing clean/historical arithmetic helpers, then create the child branch and the smallest controlled four-state mode matrix.
 
 
 ### Phase / authority
@@ -37,10 +37,10 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Phase:** M3 / **Gate C — base-system fidelity and compatibility**.
 - **Integrated truth:** `master@7cc8facfe8643fb85888f301f79995575830521d`, merge of PR #18 (“preserve CGRAM epochs through RSP replay”).
 - **Open PRs:** none at this checkpoint.
-- **Current candidate:** `phase4/gate-c-hcomp-main-provenance-clean@ef1c37839fad4eca1339c92f4ee92f9a3463f301`.
-- **Semantic runtime commit:** `7adf58be206709d03733d365602ab558caf072d4`; `ef1c...` is a host/workflow-only ROM-hash pin on top.
-- **Exact runtime hashes:** ROM `5cad678264d87f52c402eedb7e1ab8b26af01a979570299dbf947599607dad33`; ELF `092bf2ee7e67d153d260f19eeb99ce2f9f975689fb9b9716ce1742556087f65f`.
-- **Classification:** **ARCHITECTURE PROOF / VALIDATED / STAGE CLOSED** for clean regular-BG Main winner provenance driving real BG1/BG2 CGADSUB eligibility on live rendered operands.
+- **Current candidate:** `phase4/gate-c-hcomp-cgwsel-source-clean@762250a95c6d2ef4bda1b2f4d82e255c43889c83`.
+- **Semantic runtime commit:** `6786bf55c08d5ec689b234bc2759d4b3f37ba457`; later commits are host/oracle/pin only.
+- **Exact runtime hashes:** ROM `f4d3c58ea6ae05ef89f8b78b66be3b4c1e8b8efdb4bcae52069f58161a49741a`; ELF `cf43093a37a979ee9c01b0a92402b772a82b2ae5fcb544035fe0c9b3c88a08aa`.
+- **Classification:** **ARCHITECTURE PROOF / VALIDATED / STAGE CLOSED** for clean CGWSEL second-operand selection on the live Main/Sub/provenance path.
 - This candidate is **not merged** and is not yet production compositor authority.
 
 ### Final clean BG1/BG2 winner-provenance result — VALIDATED
@@ -104,17 +104,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ### RESUME NEXT — GATE DRIVER
 
-**Next controlled rung: CGWSEL second-operand source selection on the clean live path.**
+**Next controlled rung: real CGADSUB add/sub/half operation selection on the clean live path.**
 
-1. Start from `phase4/gate-c-hcomp-main-provenance-clean@ef1c3783...`; do not import old cumulative E2g/E3/E4 compositor source.
-2. First audit the exact current `CGWSEL` carrier/register semantics in repo + canonical SNES behavior. Do not assume bit layout from memory.
-3. Freeze the newly validated controls: winner provenance, BG1/BG2 CGADSUB eligibility, compact Sub/Main ownership, TM-end Z cut, row mapping, fixed ABI and one-frame fence.
-4. Build the smallest discriminator where Main winner, CGADSUB eligibility and arithmetic operation stay fixed, while only the **second operand source** changes between semantic Sub and fixed color according to CGWSEL.
-5. Precommit exact RGB555 operands/results and require carrier + live pixels + provenance + mailbox agreement.
-6. Only after CGWSEL source selection is green, add a separate controlled rung for **add vs subtract vs half** mode semantics. Do not combine those variables.
-7. BG3/BG4/OBJ/backdrop provenance, windows/clip/prevent and throughput remain later rungs.
+1. Start from `phase4/gate-c-hcomp-cgwsel-source-clean@762250a9...`.
+2. Audit exact current CGADSUB transport and canonical bit semantics before editing.
+3. Freeze validated winner provenance, BG1 eligibility, CGWSEL=`0x02` live-Sub source, Main/Sub operands, compact ownership, TM-end Z cut, row mapping, fixed ABI and one-frame fence.
+4. Build a four-state discriminator for ADD full / ADD half / SUB full / SUB half with all other variables constant.
+5. Precommit exact RGB555 results; require carrier + selected operand + provenance + result agreement.
+6. Keep HALF suppression for fixed-color/no-Sub as a separate later discriminator.
+7. Only after the mode matrix is green, proceed to the next missing compositor semantic (likely the HALF special case or remaining provenance/window interaction), chosen from evidence.
 
-**Immediate action:** inspect current CGWSEL/fixed-color transport and identify the smallest source-selection hook that reuses the validated live Main/provenance path without changing renderer ownership.
+**Immediate action:** inspect current CGADSUB carrier plus clean/historical arithmetic helpers, then create the minimal child experiment without importing old cumulative compositor state.
 
 **STATUS: VALIDATED / STAGE CLOSED.**
 

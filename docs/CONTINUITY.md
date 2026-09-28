@@ -22,7 +22,11 @@ Canonical live handoff for `ironangelo/sodium64`.
 - The source-selection path adds exactly **19 instructions / 76 B** before the fixed switch region; H-COMP padding is reduced mechanically **`0x134 -> 0xE8`**. Predicted public ABI and total H-COMP size remain unchanged; exact ELF/build is authority.
 - Deterministic guest generator added on host-only head **`d0d0e50a000266d8b59afdb20cb3d88731cc438e`**. It preserves all existing instruction addresses by replacing the original 5-B CGWSEL setup with same-size `JSR $81F0; NOP; NOP`, placing an 11-B subroutine in verified unused NOP padding before frozen NMI `$8200`. Both guests write nonzero fixed blue via `COLDATA=$9F`; only their CGWSEL immediate differs (`0x00` vs `0x02`, plus checksum).
 - Generic **Build and Validate `36376954032`** dispatched on exact host/runtime head `d0d0e50a...`. Dedicated semantic authority is not yet implemented.
-- **STATUS: IMPLEMENTED / BUILD RUNNING.** Reject on any fixed ABI movement or compile/smoke regression before creating the semantic ares matrix.
+- First dedicated **Gate C H-COMP CGWSEL Source Clean `36377226182 FAILURE`** stopped exactly at the intentionally stale parent-ROM pin, after every earlier gate passed. Artifact **`10951970419`**, digest **`sha256:4a2a79cfecf4f8fd3d0d220994717dad70746ddb9b163e887eabea76b409a1f0`**.
+- **ABI/build evidence is green:** source/binary contract reports `HCOMP_CGWSEL_SOURCE_EXEC_CLEAN_CONTRACT_VALIDATED`; regular+Mode7 RSP text remain **0x1000**, H-COMP remains **0x790**, fixed `hcomp_screen_switch=0x1760` and `draw_mode7_entry=0x1788`, resident IMEM growth zero; branch-delay audit passes all three RSP ELFs.
+- Exact new runtime hashes: ROM **`f4d3c58ea6ae05ef89f8b78b66be3b4c1e8b8efdb4bcae52069f58161a49741a`**, ELF **`cf43093a37a979ee9c01b0a92402b772a82b2ae5fcb544035fe0c9b3c88a08aa`**. Guest hashes are deterministic: fixed **`e99050ab961f9f0aef464ccebf48ee4ccb435f2d587e555a061faae6d40a2c54`**, subscreen **`bfc25c9251f60848c145afb44714bc32a62b1e7d19ec480bf27de8994180dd78`**.
+- **RECLASSIFIED:** run `36377226182` is expected **TOOLING/PIN FAILURE ONLY**, with zero semantic captures. Next controlled action is host-only: replace exactly the stale `5cad...` workflow pin with `f4d3...`; runtime, guests, oracle, capture and ares pin remain byte-identical.
+- **STATUS: IMPLEMENTED / ABI VALIDATED / SEMANTIC RERUN NEXT.**
 
 
 ### Phase / authority

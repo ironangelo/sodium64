@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### RERUN CHECKPOINT — dedicated same-frame TS-Z runtime repinned from dedicated authority (2026-09-28 UTC)
+
+- Workflow-only head **`phase4/gate-c-hcomp-transparent-sub-clean@7d68c4a2b1e0249fd6fab92cf134c1037c4ef0fd`** changes only the dedicated runtime pin/comment; semantic runtime remains the current-frame TS-Z candidate from `8a487570ce9053d6a49c4b97fdd7c8bfb9248840` plus the host-only regular/Mode7 contract repair `c65aff7911fc19501a4ed30004d769f4806b16ec`.
+- The pin now uses **dedicated-workflow authority** ROM **`188bb47fe379c277dbad084c6e6c6e90015c9e5b80d76ecd8044df02e92473ea`**, measured by failed-pre-capture run `36475524327`; the generic-build hash `9f719b3b...` remains **REJECTED AS PIN AUTHORITY** for this workflow.
+- No semantic source, guest, oracle, capture fence, ABI contract, or RSP layout changed in this batch. This is deliberately a one-variable rerun.
+- **Acceptance remains unchanged:** all three pinned-ares captures must prove renderer-owned TS absence/presence (`0x0400` / `0x1400`), correct source code, pixel-local HALF-effective decision, invariant Main/provenance/guards, and exact RGB555 result. A build/pin pass alone is not semantic evidence.
+- **Immediate action:** inspect the exact-head dedicated run triggered by `7d68c4a2...`; if it reaches captures, interpret only first-hand artifacts. If the exact dedicated hash changes again, treat that as a reproducibility/toolchain issue and investigate before semantics.
+
+
+
 ### CHECKPOINT — clean CGWSEL second-operand source selection VALIDATED (2026-09-28 UTC)
 
 - **ARCHITECTURE PROOF / VALIDATED / STAGE CLOSED:** exact branch head `phase4/gate-c-hcomp-cgwsel-source-clean@762250a95c6d2ef4bda1b2f4d82e255c43889c83`.

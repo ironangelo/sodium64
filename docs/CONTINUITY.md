@@ -7,6 +7,23 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### FIRST-HAND ARTIFACT AUDIT — TS carrier is sampled before RDP writeback (2026-09-28 UTC)
+
+- Downloaded and inspected all files from artifact **`10996369911`**. All three ares logs contain **zero** `RDP crashed`, zero multi-line-TLUT crash messages and zero cache-coherency diagnostics.
+- Raw 14-word mailboxes:
+  - fixed-half: `001F 03E0 3C0F 0001 0C00 0001 0041 0000 7C00 7C00 0000 0100 55AA 0001`;
+  - sub-present-half: `001F 03E0 01EF 0001 0C00 0001 0041 0000 7C00 03E0 0002 0101 55AA 0001`;
+  - sub-absent-half: `001F 56CA 2974 0001 0C00 0001 0041 0000 7C00 56CA 0002 0101 55AA 0001`.
+- The compact Sub surface is correctly BG2-green in both present states (2048 active `07C1` pixels plus sentinel margins), but is entirely sentinel in the TS-disabled absent state. Main provenance remains correctly `0C00` across all three states.
+- **Key discriminator:** raw saved TS tag is the untouched `0x55AA` sentinel in **all three** states. Therefore this is not a BG identity/tag encoding error and not a mailbox-only corruption after a successful tag sample.
+- Code audit explains the failure: the TS->TM H-COMP helper immediately RSP-DMAs the compact Z sample after resident TS rendering, while `rdp_send` only waits for **DPC command-buffer busy (0x40)** before submission and does not fence completion of prior primitive writes. The final Main provenance read happens later and is valid; the mid-frame TS read has no RDP->RSP DRAM-read fence.
+- SGI/N64 RDP documentation defines **Sync Full (opcode 0x29)** specifically to stall until prior frame/depth-buffer DRAM reads/writes finish before CPU-style reuse/readback; DPC status bit **0x20** is PIPE_BUSY.
+- **Supported interpretation:** the TS winner carrier design remains plausible, but the current helper reads it too early. `0x55AA` being normalized as present is a downstream consequence, not valid presence evidence.
+- **Next controlled experiment:** before the section0 TS Z DMA read, submit a single Sync Full and wait for DPC PIPE_BUSY to clear, then perform the unchanged Z sample. Keep the validated force-blank lifetime guard, exact Z addresses/tags, guest/oracle and Main/TM path unchanged. Preserve fixed public H-COMP switch/Mode7 entry addresses by consuming existing H-COMP padding only.
+- **Falsifier:** raw tag remains `0x55AA`, RDP crash returns, fixed ABI moves, or Main/provenance/three-state results regress. A green result must still prove exact `1400/1400/0400` TS tags and exact source/HALF outputs; no oracle relaxation.
+
+
+
 ### CAUSE VALIDATED / SEMANTIC RUNG STILL OPEN — force-blank lifetime repair removes TLUT/RDP crash (2026-09-28 UTC)
 
 - Exact workflow head **`b440d9f07f664c8e2c6386dfa4246b2e5fc67345`**, semantic runtime **`ba6c879a0bca10c2eee298cd49dd46c7b378d173`**, dedicated **Gate C H-COMP Transparent Sub Clean `36481355107 FAILURE`**, artifact **`10996369911`**, digest **`sha256:3919a6e73ad7ecdea5d810ec25773429d14cadae743fb87f51801b832398989a`**.

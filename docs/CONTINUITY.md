@@ -49,6 +49,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Next controlled change:** reuse/bound the smallest possible depth/coverage carrier around the already-validated compact Sub strip, capture presence before TM overwrites/repurposes provenance, and prove three states: direct-fixed+HALF, Sub-present+HALF, Sub-selected-but-absent fallback with HALF suppressed. No windows/clip/prevent work yet.
 - **Falsifier:** if a bounded clean carrier cannot coexist with the current TM provenance lifetime/guards without new ownership ambiguity or ABI movement, stop and record the representation limitation instead of expanding the old compositor.
 
+### EXPERIMENT IN PROGRESS — alpha coverage carrier + transparent-Sub fallback (2026-09-28 UTC)
+
+- **CANDIDATE:** `phase4/gate-c-hcomp-transparent-sub-clean@c080d141c4699b4243da1ad83f789364b5efb901` (runtime semantic changes are in `src/rsp_main.S` + `src/rsp_hcomp.S`; later files on the branch are deterministic guest/oracle/contract/workflow plumbing).
+- **Controlled representation change:** the compact proof-only Sub backdrop fill no longer forces primitive alpha `0xFF`; its instruction slot is an inert `nop`, leaving backdrop alpha0 while real converted CGRAM texels retain RGBA5551 alpha1. No new per-pixel RDRAM surface was introduced.
+- **H-COMP semantic candidate:** preserve raw Sub bit0 before RGB555 conversion; source code `0=direct fixed`, `1=live Sub`, `2=Sub-selected-but-absent fixed fallback`. Evidence word bit8 means HALF was actually applied. Source code 2 suppresses HALF while retaining fixed-color fallback.
+- **ABI intent:** candidate adds exactly 20 RSP instructions / 80 B before the fixed switch and consumes existing H-COMP padding `0x5C -> 0x0C`; expected public addresses remain `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero.
+- **Three precommitted states, all ADD with `CGADSUB=0x41`:** direct fixed + HALF -> selected blue `0x7C00`, result `0x3C0F`, flags `0x0100`; live Sub present + HALF -> selected green `0x03E0`, result `0x01EF`, flags `0x0101`; Sub selected but absent -> fallback blue `0x7C00`, HALF suppressed, full-add result `0x7C1F`, flags `0x0002`.
+- **Dedicated run:** `36450588298` on exact candidate head. Workflow deliberately retains the parent ROM pin `53df19d9...` for the first pass, so the acceptable first-run outcome is: self-test + build + executable/ABI/delay-slot gates pass, exact new runtime hashes are measured, then the run stops at stale pin before ares captures. Any earlier failure rejects/fixes the candidate before semantic interpretation.
+- **Decision:** if the alpha carrier does not show alpha1 for real Sub and alpha0/non-sentinel for absent Sub, reject this representation and return to a bounded depth carrier. If it does, repin exact runtime and require first-hand three-state capture before closure.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

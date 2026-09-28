@@ -7,6 +7,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### MEASUREMENT CHECKPOINT — PipeSync candidate builds with frozen ABI; dedicated stale-pin measured (2026-09-28 UTC)
+
+- Exact semantic head **`phase4/gate-c-hcomp-transparent-sub-clean@5c10b3b4065f8d54170afddc1b4abf586924e2b2`** now builds cleanly after removing only the zero-length pad directive.
+- Dedicated run **`36479265878 FAILURE`** passed the deterministic oracle/guest self-test, exact build, **`HCOMP_TRANSPARENT_SUB_EXEC_CLEAN_CONTRACT_VALIDATED`**, and all RSP branch-delay checks, then stopped exactly at the deliberately stale pre-PipeSync ROM pin before guest wrapping/ares.
+- Exact dedicated-build runtime authority measured: ROM **`ad96601b62d2104e6428da4c9186849376848595645acf7babb2b25ebbcfd073`**, ELF **`3919a0605bc9f005142d159dbf6d870a82c59f7abeff33860b681b35ab38237c`**.
+- Frozen ABI still holds: regular RSP **0x1000**, Mode7 RSP **0x1000**, H-COMP **0x790**; no branch-delay control hazards.
+- **Classification: REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY.** No pinned-ares capture ran, so the PipeSync hypothesis remains untested semantically.
+- Same-head generic build and PROFILE jobs are green; emulator smoke is still completing at this checkpoint.
+- **Immediate action:** update only the dedicated workflow ROM pin to `ad96601b...`, preserving semantic head `5c10b3...`, then rerun the unchanged three-state discriminator. Do not alter the oracle or proof commands.
+
+
+
 ### STATIC REPAIR — zero-length pad removed, PipeSync experiment preserved (2026-09-28 UTC)
 
 - Follow-up branch head **`phase4/gate-c-hcomp-transparent-sub-clean@5c10b3b4065f8d54170afddc1b4abf586924e2b2`** removes only the invalid zero-repeat `.byte` directive after the eight-command proof table.

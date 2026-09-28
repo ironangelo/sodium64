@@ -78,9 +78,8 @@ jobs:
             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf \
             | tee delay-slots.txt
           sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
-          # Intentionally stale parent-runtime pin on the first run. Update only
-          # this hash after exact build/ABI evidence identifies the new runtime.
-          grep -q '^5cad678264d87f52c402eedb7e1ab8b26af01a979570299dbf947599607dad33  sodium64.z64$' runtime.sha256
+          # Exact runtime pin measured after source/binary ABI validation.
+          grep -q '^f4d3c58ea6ae05ef89f8b78b66be3b4c1e8b8efdb4bcae52069f58161a49741a  sodium64.z64$' runtime.sha256
 
       - name: Wrap both source-selection guests
         shell: bash

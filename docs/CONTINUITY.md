@@ -30,7 +30,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Generic **Build and Validate `36365145121 SUCCESS`** is fully green on exact runtime head **`bc3d525b7b9d9190dbd408bf63ed1082062dde0e`**: normal build, PROFILE build and pinned Mupen/LLE smoke all pass; branch-delay checker reports zero control-in-delay hazards.
 - Build artifact **`10947401492`**, digest **`sha256:962ef1d08db7832bbf6192cfecf3c1e9400d7609020ae201efb4f907ec2b50b9`**. Candidate ROM SHA-256 **`53a9992fd649b30c659d3de9d067659c6714575bd9f0894147e50717b811280a`**.
 - Measured code geometry remains exact at the coarse binary boundary: regular and Mode7 RSP text **4096 B / 0x1000** each; H-COMP text **1936 B / 0x790**, exactly equal to the previous validated stage. Because H-COMP's fixed `0x1760` wrapper occupies the same 40 B immediately before the two-instruction `0x1788` Mode7 fault entry and there is no later code, unchanged `0x790` is strong geometry evidence that the provisional `0x158` pad absorbed the new helper exactly. A dedicated symbol contract will freeze the individual entrypoints before semantic interpretation.
-- **STATUS: IMPLEMENTED / GENERIC VALIDATED / DEDICATED ABI CONTRACT NEXT.** No provenance semantic claim yet.
+- Host/CI authority is now implemented on exact branch head **`f3efe3dd8e1b9fbfe0eb7ad26d4b86674958e20d`** without further runtime edits after `bc3d525b...`:
+  - `test_gate_c_hcomp_main_provenance_exec_clean.py` freezes the size-neutral regular overlay, provenance helper, `0x1760` wrapper and all historical fixed symbols;
+  - capture seeds/reads only provenance rows8..15 at `0xA00F1180..22FF` and expands the frame-end mailbox to 16 B;
+  - deterministic guest family covers **BG1 winner×CGADSUB{1,2} + BG2 winner×CGADSUB{1,2}**;
+  - strict oracle requires exact color operands, exact Z tag, exact `tag>>11` mask, exact queue carrier, exact gate/result and stable semantic operands within each winner pair while allowing physical triple-buffer rotation.
+- Dedicated **Gate C H-COMP Main Provenance Clean `36365547366`** and same-head generic **Build and Validate `36365547289`** are running. Dedicated prechecks include guest determinism, oracle self-test, exact ROM hash `53a9992f...`, readelf symbol contract and branch-delay audit before pinned ares is even built.
+- **STATUS: IMPLEMENTED / SEMANTIC CI RUNNING.** Do not begin BG3/OBJ, CGWSEL or mode semantics until the four-state matrix closes.
 
 
 

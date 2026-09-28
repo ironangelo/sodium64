@@ -54,6 +54,9 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Winner-mask evidence is now stored into `CHAR_DATA+18` immediately after `tag>>11` and **before** E1f can reuse `t4`; the arithmetic and gate decision instructions themselves are unchanged.
 - The new section-lifetime branch costs exactly four H-COMP instructions versus the previous helper, so fixed-slot padding was reduced mechanically **`0x158 -> 0x148`**. Generic **Build and Validate `36366571419`** is dispatched to adjudicate exact 0x790/fixed-layout preservation. Dedicated push run `36366570664` is expected to be superseded because the host contract/workflow still names the pre-repair scratch/padding/hash; do not interpret it semantically.
 - **STATUS: IMPLEMENTED / BUILD + HOST-AUTHORITY REPAIR IN PROGRESS.**
+- **ABI/build checkpoint on repaired runtime:** superseded dedicated run **`36366689305 FAILURE`** reached and passed the updated source/binary contract before failing only the intentionally stale ROM-hash grep. Exact repaired runtime SHA-256 is **`4fb5abb28f1eaeae13f95e7b2479b5a5851d87cdd7d4b7d6843f4ccf79b34c78`**; ELF SHA-256 **`de39fdd3cb459e9ac652f26c13d2741e400bc112e72d35db99a7a29bc543990e`**.
+- Measured geometry remains exact: H-COMP **0x790 / 1936 B**, regular+Mode7 **0x1000 / 4096 B** each, branch-delay checker all green. Updated contract explicitly reports scratch **`0xA00E2000`**, sample **`0xA00E2018`**, Set-Z **`0x000DFD00`**, lifetime **section0_only**, and fixed `draw_bg=0x13A8` / `hcomp_screen_switch=0x1760` / `draw_mode7_entry=0x1788`.
+- **RECLASSIFIED:** `36366689305` is **SUPERSEDED TOOLING/PIN FAILURE ONLY**; it contains positive exact-binary evidence and zero semantic capture. Update only the workflow's expected runtime hash, then rerun the unchanged four-state authority.
 
 
 

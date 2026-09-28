@@ -2648,6 +2648,7 @@ The former append-only E4d audit and subsequent 2026-09-23–25 checkpoint block
 - Next controlled action is host-only: replace exactly the old workflow ROM pin `4fb5...` with `5cad...`; preserve runtime, guests, capture, strict four-state oracle and ares pin byte-identical.
 - **IMPLEMENTED host-only pin `ef1c37839fad4eca1339c92f4ee92f9a3463f301`:** compare vs runtime/contract head `7adf58be...` is exactly one workflow line changed (**+1/-1**), pinning ROM `5cad6782...`. No runtime, guest, capture, oracle or contract code changed.
 - Exact-head runs dispatched: dedicated **Gate C H-COMP Main Provenance Clean `36373014424`** and generic **Build and Validate `36373014434`**. **STATUS: ABI VALIDATED / SEMANTIC RERUNNING.**
+- Same-head generic **Build and Validate `36373014434 SUCCESS`** is now fully green across normal build, PROFILE build and pinned Mupen/LLE smoke. Dedicated prechecks through exact runtime/ABI, wrapping and prelaunch geometry are also green; only pinned-ares build + four captures remain.
 
 
 

@@ -1,0 +1,236 @@
+name: Gate C H-COMP Transparent Sub Clean
+
+on:
+  push:
+    branches:
+      - phase4/gate-c-hcomp-transparent-sub-clean
+    paths:
+      - src/rsp_main.S
+      - src/rsp_hcomp.S
+      - scripts/make_gate_c_hcomp_transparent_sub.py
+      - scripts/check_gate_c_hcomp_transparent_sub_ares.py
+      - scripts/capture_gate_c_hcomp_main_sub_pixels_ares.py
+      - scripts/test_gate_c_hcomp_transparent_sub_exec_clean.py
+      - .github/workflows/gate-c-hcomp-transparent-sub-clean.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sodium64-gate-c-hcomp-transparent-sub-clean-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ares-transparent-sub:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install libdragon
+        run: npm install -g libdragon
+
+      - name: Checkout Sodium64
+        uses: actions/checkout@v4
+
+      - name: Self-test oracle and deterministic guests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            scripts/make_gate_c_hcomp_transparent_sub.py \
+            scripts/check_gate_c_hcomp_transparent_sub_ares.py \
+            scripts/capture_gate_c_hcomp_main_sub_pixels_ares.py \
+            scripts/test_gate_c_hcomp_transparent_sub_exec_clean.py
+          python3 scripts/check_gate_c_hcomp_transparent_sub_ares.py --self-test
+
+          mkdir -p diagnostic
+          for mode in fixed-half sub-present-half sub-absent-half; do
+            python3 scripts/make_gate_c_hcomp_transparent_sub.py \
+              --mode "$mode" "diagnostic/$mode-a.smc"
+            python3 scripts/make_gate_c_hcomp_transparent_sub.py \
+              --mode "$mode" "diagnostic/$mode-b.smc"
+            cmp "diagnostic/$mode-a.smc" "diagnostic/$mode-b.smc"
+            test "$(stat -c %s "diagnostic/$mode-a.smc")" -eq 32768
+          done
+          sha256sum diagnostic/*-a.smc | sort | tee diagnostic/guest-hashes.sha256
+
+      - name: Build exact transparent-Sub runtime and freeze ABI
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          readelf -sW build/src/rsp_main.elf > rsp-main.syms
+          readelf -sW build/src/rsp_mode7.elf > rsp-mode7.syms
+          readelf -sW build/src/rsp_hcomp.elf > rsp-hcomp.syms
+          python3 scripts/test_gate_c_hcomp_transparent_sub_exec_clean.py \
+            --maps build/rsp_main.map build/rsp_mode7.map build/rsp_hcomp.map \
+            --symbols rsp-main.syms rsp-mode7.syms rsp-hcomp.syms \
+            | tee executable-contract.txt
+          grep -q '^HCOMP_TRANSPARENT_SUB_EXEC_CLEAN_CONTRACT_VALIDATED$' executable-contract.txt
+          python3 scripts/check_rsp_branch_delay_slots.py \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf \
+            | tee delay-slots.txt
+          sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
+          # Deliberately stale parent pin for the first run. Replace only after
+          # source/binary/ABI validation measures the exact new runtime.
+          grep -q '^53df19d9d0b9f0996d1bb7aca15f744ab28e67525362656ef01f726eaa9e576c  sodium64.z64$' runtime.sha256
+
+      - name: Wrap three discriminator guests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workload
+          for mode in fixed-half sub-present-half sub-absent-half; do
+            wrap="wrap-$mode"
+            mkdir -p "$wrap"
+            cp sodium64.z64 "$wrap/sodium64.z64"
+            cp rom-converter.py "$wrap/rom-converter.py"
+            cp "diagnostic/$mode-a.smc" "$wrap/guest.smc"
+            (
+              cd "$wrap"
+              python3 rom-converter.py </dev/null
+            )
+            test -s "$wrap/out/guest.z64"
+            dd if="$wrap/out/guest.z64" of="workload/$mode-embedded.smc" \
+              bs=1 skip=$((0x104000)) count=$((32 * 1024)) status=none
+            cmp "diagnostic/$mode-a.smc" "workload/$mode-embedded.smc"
+            rm "workload/$mode-embedded.smc"
+          done
+          sha256sum wrap-*/out/guest.z64 | sort | tee workload/wrapped-hashes.sha256
+
+      - name: Locate fenced runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
+          wram=$(symbol wram)
+          frame_wait=$(symbol frame_wait)
+          test -n "$wram"
+          test -n "$frame_wait"
+          test "$frame_wait" = "8000ae1c"
+          readelf -x .text "$elf" > cpu-text.hex
+          grep -qi '^  0x8000ae20 910886a9 24010002 1101fffc 24080001' cpu-text.hex
+          grep -qi '^  0x8000ae30 3c09a404 01800008 ad280010 3c08800b' cpu-text.hex
+          prelaunch=$(printf '%08x' "$((16#$frame_wait + 0x14))")
+          test "$prelaunch" = "8000ae30"
+          {
+            echo "GUEST_COUNTER_ADDR=0x$wram"
+            echo "PRELAUNCH_ADDR=0x$prelaunch"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - name: Build pinned N64-only ares in established valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Run three first-hand transparent-Sub captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+
+          run_case() {
+            label="$1"
+            port="$2"
+            rom="$3"
+            out="captures/$label"
+            home="$RUNNER_TEMP/ares-home-transparent-sub-$label"
+            settings="$RUNNER_TEMP/ares-transparent-sub-$label.bml"
+            mkdir -p "$out" "$home"
+
+            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+                --no-file-prompt \
+                --system "Nintendo 64" \
+                --settings-file "$settings" \
+                --setting "Developer/DebugServerEnabled=true" \
+                --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" \
+                --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" \
+                --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" \
+                "$rom" > "$out/ares-n64.log" 2>&1 &
+            pid=$!
+
+            rc=0
+            python3 scripts/capture_gate_c_hcomp_main_sub_pixels_ares.py \
+              --port "$port" \
+              --guest-counter-address "$GUEST_COUNTER_ADDR" \
+              --prelaunch-address "$PRELAUNCH_ADDR" \
+              --output-dir "$out" | tee "$out/capture.log" || rc=$?
+
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            return "$rc"
+          }
+
+          run_case fixed-half 9161 wrap-fixed-half/out/guest.z64
+          run_case sub-present-half 9162 wrap-sub-present-half/out/guest.z64
+          run_case sub-absent-half 9163 wrap-sub-absent-half/out/guest.z64
+
+          python3 scripts/check_gate_c_hcomp_transparent_sub_ares.py \
+            --fixed-half captures/fixed-half \
+            --sub-present-half captures/sub-present-half \
+            --sub-absent-half captures/sub-absent-half \
+            --output captures/result.json | tee captures/classifier.log
+          grep -q '"classification": "HCOMP_TRANSPARENT_SUB_HALF_SUPPRESSION_VALIDATED"' captures/result.json
+          grep -q '"passed": true' captures/result.json
+          grep -q '"new_per_pixel_surface": false' captures/result.json
+
+      - name: Upload transparent-Sub evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-hcomp-transparent-sub-clean
+          retention-days: 30
+          path: |
+            captures/
+            diagnostic/guest-hashes.sha256
+            diagnostic/*-a.smc
+            workload/wrapped-hashes.sha256
+            ares-version.txt
+            sodium64-build.log
+            executable-contract.txt
+            delay-slots.txt
+            runtime.sha256
+            rsp-main.syms
+            rsp-mode7.syms
+            rsp-hcomp.syms
+            build/rsp_main.map
+            build/rsp_mode7.map
+            build/rsp_hcomp.map

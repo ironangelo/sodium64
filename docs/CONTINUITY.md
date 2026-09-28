@@ -41,6 +41,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Branch audit against parent `762250a9...`: only `src/rsp_hcomp.S` plus the dedicated generator/oracle/contract/workflow differ; no lateral CPU/PPU/renderer changes entered this rung.
 - **Still NOT PROVEN:** transparent/absent Sub fallback to fixed color and its HALF-suppression rule; direct-fixed HALF control outside the prior fixed-source E1f case; mid-frame fixed-color history; brightness ordering below full brightness; clip/prevent/color windows; BG3/BG4/OBJ/backdrop provenance; OBJ palette exception; production-safe real-N64 RDP->RSP fence; throughput and real-N64 cadence/performance.
 
+### AUDIT CHECKPOINT — current Sub color sample is not a trustworthy coverage carrier (2026-09-28 UTC)
+
+- **MEASUREMENT/REPRESENTATION FINDING:** the clean candidate's H-COMP sample reads only rendered Sub RGBA5551 color. Current palette conversion in `src/ppu.S` forces alpha bit `1` on converted CGRAM colors, so the sampled color word alone cannot prove whether a real Sub layer won that pixel versus backdrop/fallback state.
+- **SUPPORTED INTERPRETATION:** do not infer Sub presence from RGB value or RGBA5551 alpha in the current clean path. Doing so would conflate color with coverage and could suppress HALF on the wrong pixels.
+- **Historical evidence only:** E2g encoded the needed semantic boolean in a Z/depth carrier (`sub_present=true` for a real TS BG winner, false for backdrop). That branch remains **REJECTED as a cumulative solution**; only the representation idea is admissible for a new clean proof.
+- **Next controlled change:** reuse/bound the smallest possible depth/coverage carrier around the already-validated compact Sub strip, capture presence before TM overwrites/repurposes provenance, and prove three states: direct-fixed+HALF, Sub-present+HALF, Sub-selected-but-absent fallback with HALF suppressed. No windows/clip/prevent work yet.
+- **Falsifier:** if a bounded clean carrier cannot coexist with the current TM provenance lifetime/guards without new ownership ambiguity or ABI movement, stop and record the representation limitation instead of expanding the old compositor.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

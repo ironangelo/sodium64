@@ -7,6 +7,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CONTROLLED REPAIR CANDIDATE — transparent-Sub proof lifetime bounded to visible section0 (2026-09-28 UTC)
+
+- Exact candidate **`phase4/gate-c-hcomp-transparent-sub-clean@ba6c879a0bca10c2eee298cd49dd46c7b378d173`** moves only the proof-lifetime arm from frame start to the already-decoded **non-force-blank section0** path, while preserving the existing proof commands/oracle and section0-only evidence lifetime.
+- The renderer now keeps `RDP_FRAME`/palette load at frame start but does **not** submit `HCOMP_PROOF_RDP_CMDS` there. After section state is loaded, signed `STAT_FLAGS` distinguishes force blank; only `not_blank` with `k0==0` submits the proof list. Force-blank frames therefore cannot strand proof OtherModes/Z_UPDATE into the following frame's TLUT load.
+- Host contract was tightened to reject proof arming before force-blank state and to require the nonblank-section0 ordering. Public H-COMP/render ABI is intended to remain frozen.
+- **Hypothesis:** the pinned-ares TLUT/RDP crash was caused by proof OtherModes/Z_UPDATE surviving a startup force-blank frame because that path bypassed the TM-end baseline reset.
+- **Expected evidence:** exact-head generic CI remains green; dedicated pinned-ares no longer reports the prior TLUT/RDP crash, all three guests reach the established capture fence, and the unchanged oracle proves exact TS tags/source/HALF/result invariants.
+- **Falsifiers:** ABI/layout/build regression; same TLUT/RDP crash before capture; guest still stalls at counter 1; or any first-hand mailbox/oracle mismatch after capture.
+- At checkpoint time, exact-head runs **Build and Validate `36481142959`** and **Gate C H-COMP Transparent Sub Clean `36481142950`** are **IN PROGRESS**. No semantic conclusion yet.
+
+
+
 ### SUPPORTED INTERPRETATION — force-blank lifetime can strand proof RDP state across frames (2026-09-28 UTC)
 
 - Code/guest audit strengthens the lifetime hypothesis:

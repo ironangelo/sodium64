@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Strict three-state oracle for transparent-Sub fallback and HALF suppression."""
+"""Strict three-state oracle for Z-tagged transparent-Sub fallback and HALF suppression."""
 
 from __future__ import annotations
 
@@ -27,7 +27,10 @@ GREEN_RGBA5551 = 0x07C1
 RED_RGB555 = 0x001F
 GREEN_RGB555 = 0x03E0
 BLUE_RGB555 = 0x7C00
+BLUE_RGBA5551 = 0x003F
 BLUE_SECTION_N64 = 0x003E
+TS_BACKDROP_TAG = 0x0400
+TS_BG2_TAG = BG_TAG[2]
 
 CGADSUB_HALF_BG1 = 0x41
 WINNER_TAG = BG_TAG[1]
@@ -37,14 +40,17 @@ MODES = {
     "fixed-half": {
         "cgwsel": 0x00, "ts": 0x02, "source_flags": 0x0100,
         "selected": BLUE_RGB555, "result": 0x3C0F, "coverage": "present",
+        "ts_tag": TS_BG2_TAG, "presence": 1,
     },
     "sub-present-half": {
         "cgwsel": 0x02, "ts": 0x02, "source_flags": 0x0101,
         "selected": GREEN_RGB555, "result": 0x01EF, "coverage": "present",
+        "ts_tag": TS_BG2_TAG, "presence": 1,
     },
     "sub-absent-half": {
         "cgwsel": 0x02, "ts": 0x00, "source_flags": 0x0002,
         "selected": BLUE_RGB555, "result": 0x7C1F, "coverage": "absent",
+        "ts_tag": TS_BACKDROP_TAG, "presence": 0,
     },
 }
 
@@ -57,34 +63,6 @@ def words(blob: bytes) -> list[int]:
     if len(blob) != WIDTH * SUB_ROWS * 2:
         raise ValueError(f"Sub capture length {len(blob)}")
     return [int.from_bytes(blob[i:i + 2], "big") for i in range(0, len(blob), 2)]
-
-
-def classify_absent_sub(blob: bytes) -> dict[str, object]:
-    vals = words(blob)
-    active: list[int] = []
-    border: list[int] = []
-    for y in range(SUB_ROWS):
-        for x in range(WIDTH):
-            v = vals[y * WIDTH + x]
-            (active if ACTIVE_X0 <= x < ACTIVE_X1 else border).append(v)
-    if any(v == SENTINEL for v in active):
-        raise ValueError("absent-Sub active region was not written over the seeded sentinel")
-    if any(v & 1 for v in active):
-        raise ValueError("absent-Sub active region contains alpha1 coverage")
-    if any(v != SENTINEL for v in border):
-        raise ValueError("absent-Sub border ownership drift")
-    unique = sorted(set(active))
-    if len(unique) != 1:
-        raise ValueError(f"absent-Sub backdrop is not uniform: {unique[:8]!r}")
-    return {
-        "passed": True,
-        "active_words": len(active),
-        "border_words": len(border),
-        "raw_backdrop_rgba5551": f"0x{unique[0]:04X}",
-        "canonical_backdrop_rgb555": f"0x{rgba5551_to_rgb555(unique[0]):04X}",
-        "coverage_alpha": 0,
-        "active_replaced_sentinel": True,
-    }
 
 
 def section_ext(blob: bytes, mode: str, index: int) -> tuple[int, int]:
@@ -136,25 +114,27 @@ def require_queue(root: Path, *, cgwsel: int, ts: int) -> dict[str, object]:
 
 def mailbox_words(root: Path) -> tuple[int, ...]:
     data = (root / "gating-mailbox.bin").read_bytes()
-    if len(data) != 24:
-        raise ValueError(f"mailbox length {len(data)} != 24")
-    return tuple(int.from_bytes(data[i:i + 2], "big") for i in range(0, 24, 2))
+    if len(data) != 28:
+        raise ValueError(f"mailbox length {len(data)} != 28")
+    return tuple(int.from_bytes(data[i:i + 2], "big") for i in range(0, 28, 2))
 
 
 def classify_state(root: Path, mode: str) -> dict[str, object]:
     cfg = MODES[mode]
     sub_blob = (root / "sub.bin").read_bytes()
     if cfg["coverage"] == "present":
-        sub_report = classify_surface(
-            sub_blob, expected_sub(GREEN_RGBA5551), SUB_ROWS, f"{mode}_sub_present"
-        )
-        if not sub_report["passed"]:
-            raise ValueError(f"{mode} Sub-present surface drift: {sub_report!r}")
+        sub_word = GREEN_RGBA5551
         sub_rgb = GREEN_RGB555
     else:
-        sub_report = classify_absent_sub(sub_blob)
-        raw = int(sub_report["raw_backdrop_rgba5551"], 16)
-        sub_rgb = rgba5551_to_rgb555(raw)
+        # Color is deliberately not the presence authority. Opaque backdrop
+        # remains blue while compact Z carries the independent absence tag.
+        sub_word = BLUE_RGBA5551
+        sub_rgb = BLUE_RGB555
+    sub_report = classify_surface(
+        sub_blob, expected_sub(sub_word), SUB_ROWS, f"{mode}_sub_surface"
+    )
+    if not sub_report["passed"]:
+        raise ValueError(f"{mode} Sub color surface drift: {sub_report!r}")
 
     mains = [(root / f"main{i}.bin").read_bytes() for i in range(1, 4)]
     want_main = expected_main(RED_RGBA5551)
@@ -187,6 +167,7 @@ def classify_state(root: Path, mode: str) -> dict[str, object]:
         RED_RGB555, sub_rgb, cfg["result"], 1,
         WINNER_TAG, WINNER_MASK, CGADSUB_HALF_BG1, 0,
         BLUE_RGB555, cfg["selected"], cfg["cgwsel"], cfg["source_flags"],
+        cfg["ts_tag"], cfg["presence"],
     )
     got = mailbox_words(root)
     if got != want:
@@ -207,6 +188,8 @@ def classify_state(root: Path, mode: str) -> dict[str, object]:
         "mailbox": [f"0x{x:04X}" for x in got],
         "source_code": cfg["source_flags"] & 0x3,
         "half_effective": bool(cfg["source_flags"] & 0x100),
+        "ts_presence_tag": f"0x{cfg['ts_tag']:04X}",
+        "ts_present": bool(cfg["presence"]),
         "selected_rgb555": f"0x{cfg['selected']:04X}",
         "result_rgb555": f"0x{cfg['result']:04X}",
         "capture_state": require_fence(root),
@@ -236,7 +219,7 @@ def classify(roots: dict[str, Path]) -> dict[str, object]:
         "direct_fixed_half_result": "0x3C0F",
         "live_sub_half_result": "0x01EF",
         "transparent_sub_fallback_full_result": "0x7C1F",
-        "coverage_carrier": "compact_Sub_RGBA5551_alpha",
+        "coverage_carrier": "reused_compact_Z16_TS_winner_tag",
         "new_per_pixel_surface": False,
         "windows_clip_prevent": "NOT_PROVEN",
         "real_n64_rdp_rsp_fence": "NOT_PROVEN",
@@ -244,12 +227,7 @@ def classify(roots: dict[str, Path]) -> dict[str, object]:
 
 
 def fixture_sub(present: bool) -> list[int]:
-    if present:
-        return expected_sub(GREEN_RGBA5551)
-    return [
-        0x0000 if ACTIVE_X0 <= x < ACTIVE_X1 else SENTINEL
-        for _y in range(SUB_ROWS) for x in range(WIDTH)
-    ]
+    return expected_sub(GREEN_RGBA5551 if present else BLUE_RGBA5551)
 
 
 def write_fixture(root: Path, mode: str, rendered_main: int) -> None:
@@ -281,6 +259,7 @@ def write_fixture(root: Path, mode: str, rendered_main: int) -> None:
         RED_RGB555, sub_rgb, cfg["result"], 1,
         WINNER_TAG, WINNER_MASK, CGADSUB_HALF_BG1, 0,
         BLUE_RGB555, cfg["selected"], cfg["cgwsel"], cfg["source_flags"],
+        cfg["ts_tag"], cfg["presence"],
     )
     (root / "gating-mailbox.bin").write_bytes(pack(list(got)))
     (root / "capture-state.json").write_text(json.dumps({

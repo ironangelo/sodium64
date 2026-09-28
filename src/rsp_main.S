@@ -240,14 +240,9 @@ table_loop:
     jal rdp_send
     li a1, RDP_FILL
 
-    // Gate-C proof: bind/enable the bounded Z16 carrier in this same renderer
-    // frame before section0 backdrop/TS work. The previous cross-frame setup
-    // was rejected because the first-hand TS sample stayed at the harness
-    // sentinel even when BG2 color rendered. This list ends at the first BG
-    // depth command, so it establishes OtherModes + Set-Z + absence depth only.
-    li a0, HCOMP_PROOF_RDP_CMDS
-    jal rdp_send
-    li a1, HCOMP_PROOF_BG_DEPTH_CMDS
+    // Section0 proof state is armed only after section state proves this is
+    // not a force-blank section. This prevents proof OtherModes/Z_UPDATE from
+    // surviving a startup blank frame into the next frame's palette load.
     li k1, 0 // Section bound
 
 next_section:
@@ -407,15 +402,24 @@ oam_skip:
     li t8, 255 // Right bound
     li t9, 0 // Segment ordinal; zero means first segment
 
-    // Clear the backdrop if force blank is enabled
-    lbu t4, STAT_FLAGS
-    andi t4, t4, 0x80
-    beqz t4, not_blank
+    // Clear the backdrop if force blank is enabled. STAT_FLAGS bit7 is the
+    // sign bit, so preserve the signed byte through fill_backdrop and use
+    // bgez/bltz rather than spending a separate mask instruction.
+    lb t4, STAT_FLAGS
+    bgez t4, not_blank
     lhu s0, SUB_COLOR
     b fill_backdrop
     li s0, 0
 
 not_blank:
+    // Bind/enable the bounded Z16 proof carrier only for section0 of a
+    // non-force-blank frame. Later sections preserve the section0 TS sample
+    // while H-COMP has already cut proof Z_UPDATE at each TM end.
+    bnez k0, hcomp_proof_bound_done
+    li a0, HCOMP_PROOF_RDP_CMDS
+    jal rdp_send
+    li a1, HCOMP_PROOF_BG_DEPTH_CMDS
+hcomp_proof_bound_done:
     // Check if the sub screen color should be applied to backdrop pixels
     lbu t0, CGADSUB
     beqz s0, fill_main
@@ -492,7 +496,7 @@ fill_backdrop:
 
     // Skip layers for force blank, or set the initial lookup offset
     lbu s3, BG_MODE
-    bnez t4, next_section
+    bltz t4, next_section
     andi s3, s3, 0xF
     sll s3, s3, 4
 

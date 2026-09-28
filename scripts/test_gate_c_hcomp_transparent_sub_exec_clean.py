@@ -44,9 +44,6 @@ def prove_source() -> None:
         "li a0, RDP_FRAME",
         "jal rdp_send",
         "li a1, RDP_FILL",
-        "li a0, HCOMP_PROOF_RDP_CMDS",
-        "jal rdp_send",
-        "li a1, HCOMP_PROOF_BG_DEPTH_CMDS",
         "li k1, 0",
     )
     cursor = -1
@@ -54,7 +51,33 @@ def prove_source() -> None:
         try:
             cursor = frame.index(anchor, cursor + 1)
         except ValueError as exc:
-            raise AssertionError(f"same-frame TS-Z setup missing/reordered {anchor!r}") from exc
+            raise AssertionError(f"frame-start sequence missing/reordered {anchor!r}") from exc
+    if "li a0, HCOMP_PROOF_RDP_CMDS" in frame:
+        raise AssertionError("proof state must not be armed before force-blank section state")
+
+    lifetime = insns(section(
+        main,
+        "// Clear the backdrop if force blank is enabled",
+        "// Check if the sub screen color should be applied to backdrop pixels",
+    ))
+    lifetime_required = (
+        "lb t4, STAT_FLAGS",
+        "bgez t4, not_blank",
+        "bnez k0, hcomp_proof_bound_done",
+        "li a0, HCOMP_PROOF_RDP_CMDS",
+        "jal rdp_send",
+        "li a1, HCOMP_PROOF_BG_DEPTH_CMDS",
+    )
+    cursor = -1
+    for anchor in lifetime_required:
+        try:
+            cursor = lifetime.index(anchor, cursor + 1)
+        except ValueError as exc:
+            raise AssertionError(f"nonblank section0 proof lifetime drift {anchor!r}") from exc
+    if "bltz t4, next_section" not in main:
+        raise AssertionError("signed force-blank lifetime branch missing")
+    if "bnez t4, next_section" in main:
+        raise AssertionError("masked force-blank branch unexpectedly retained")
 
     switch = insns(section(main, "next_layer:", "// Fixed renderer overlay begins"))
     if "b overlay_load_slot" not in switch or "li t9, 0x1760" not in switch:

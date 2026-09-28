@@ -175,6 +175,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Host-only `c65aff7911fc19501a4ed30004d769f4806b16ec` changes only the regular-vs-Mode7 `next_layer` contract; semantic runtime source is unchanged. Therefore the measured ROM/ELF remain the exact runtime to pin.
 - **Immediate action:** update only the dedicated workflow ROM pin from `c073800b...` to `9f719b3b...`, rerun pinned ares, and accept only if the three states prove renderer-owned `0x0400` absence, `0x1400` BG2 presence, correct source code/HALF-effective bit, invariant Main provenance and exact color result.
 
+### RERUN CHECKPOINT — exact same-frame TS-Z runtime pinned (2026-09-28 UTC)
+
+- Workflow-only head **`phase4/gate-c-hcomp-transparent-sub-clean@f50dff66145feb047832699e845835cae379a3c5`** pins exact ROM **`9f719b3bc91d836e80ec8242a335eaa8cc979a3cac198a7c47f8075231922e35`**; semantic runtime remains the current-frame TS-Z candidate from `8a487570...`.
+- Dedicated **`36475524327`** and generic **Build and Validate `36475524281`** are running. The dedicated result is now allowed to reach first-hand ares semantics; there is no intentional stale-pin stop remaining.
+- **Acceptance remains strict:** fixed-direct+HALF must preserve HALF; live Sub present+HALF must use BG2/live Sub; Sub absent+HALF must show renderer-owned absence tag `0x0400`, fixed fallback source code and pixel-local HALF suppression. Main/provenance/guards/fence/ABI must remain exact.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

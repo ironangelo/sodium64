@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### REJECTED HYPOTHESIS — PipeSync does not cure same-frame RDP crash (2026-09-28 UTC)
+
+- Exact-head dedicated run **`36479556754 FAILURE`** on workflow head `34b581def460036a32b099ec53a89d68f84a98fb` / semantic runtime `5c10b3b4065f8d54170afddc1b4abf586924e2b2` reached the pinned-ares first-hand capture path.
+- Artifact **`10997016461`**, digest **`sha256:29a32aa0cd8ff5cde5ebd926d944fe21c911de05cb9199b4267fae78c52c9f39`**.
+- The first fixed-half guest again advanced `guest_counter 0 -> 1` then remained at `1` through all 80 warmup probes. ares again emitted **`Load TLUT with height > 1 is not supported`** followed by **`RDP crashed ... Attempting to load multiple lines in TLUT`**, then repeated cache-coherency diagnostics with RSP PC `0xFAC`.
+- This is materially the **same failure signature** as pre-PipeSync artifact `10993629590`. No semantic mailbox capture was reached.
+- **REJECTED:** missing PipeSync before the proof-time OtherModes change is not a sufficient explanation for the crash. Keep the spec-derived sync requirement in mind for any future legal mode transition, but do not stack more sync commands as an empirical fix.
+- **Next hypothesis to audit, not yet implemented:** proof Z/OtherModes is enabled at `draw_frame` before force-blank handling; force-blank sections skip TS/TM traversal and therefore can skip the H-COMP TM-end reset that normally cuts Z_UPDATE. Test whether proof state survives a startup/force-blank frame into the next frame's palette/TLUT load. If confirmed, move/guard only the proof enable lifetime so it exists exclusively around section0 TS/TM work.
+
+
+
 ### EXECUTION CHECKPOINT — PipeSync rerun passed all pre-ares gates (2026-09-28 UTC)
 
 - Exact workflow head **`34b581def460036a32b099ec53a89d68f84a98fb`**, semantic runtime **`5c10b3b4065f8d54170afddc1b4abf586924e2b2`**, dedicated run **`36479556754`**.

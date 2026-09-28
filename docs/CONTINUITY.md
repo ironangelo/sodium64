@@ -2630,6 +2630,8 @@ Historical full continuity before compaction: **`continuity@686f5a1da210f8fcd1b9
 The former append-only E4d audit and subsequent 2026-09-23–25 checkpoint block is preserved verbatim in [CONTINUITY_ARCHIVE_E4D_2026-09-23_25.md](CONTINUITY_ARCHIVE_E4D_2026-09-23_25.md). Consult it for historical diagnostic details; use this file's RESUME HERE section for the current state.
 ` and the latter half of the workflow was duplicated. Dedicated run **`36366854440 FAILURE`** created **zero jobs**, while same-head generic **`36366855246 SUCCESS`** remained fully green. This is workflow syntax corruption only; it provides no semantic verdict and does not touch runtime/guest/oracle code.
 - **Controlled tooling repair:** reconstruct the dedicated workflow byte-for-byte from last structurally valid head `f89324e8...`, changing only the expected ROM SHA from old `53a9992f...` to repaired runtime **`4fb5abb28f1eaeae13f95e7b2479b5a5851d87cdd7d4b7d6843f4ccf79b34c78`**. Preserve all four cases, capture/oracle semantics, ares pin and source/binary contract unchanged.
+- **IMPLEMENTED host-only repair `262ad3db8c809110f1c8c0af3f258c511b943a4d`:** the dedicated workflow was rebuilt from structurally valid `f89324e8...` with only the repaired ROM SHA pin substituted. No `src/`, guest, capture, oracle or contract source changed in this commit. GitHub accepts the YAML again and created the dedicated job normally.
+- Exact-head reruns are live: dedicated **Gate C H-COMP Main Provenance Clean `36371513134`** (job `108768700813`) and generic **Build and Validate `36371513248`**. Until the four ares captures close, repaired runtime `9f6716e9...` remains **IMPLEMENTED / ABI VALIDATED**, not semantically revalidated.
 
 
 

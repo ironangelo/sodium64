@@ -7,6 +7,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### SUPPORTED INTERPRETATION — force-blank lifetime can strand proof RDP state across frames (2026-09-28 UTC)
+
+- Code/guest audit strengthens the lifetime hypothesis:
+  - the discriminator guest explicitly writes **`INIDISP=$80` forced blank** during startup/VRAM/CGRAM/HDMA setup and only later writes **`INIDISP=$0F`** to enable display;
+  - current same-frame renderer sends the proof `OtherModes + SetZ + absence-depth` list at **`draw_frame` before section state/force-blank is inspected**;
+  - force blank is detected later from `STAT_FLAGS&0x80`; after backdrop fill the renderer branches directly to `next_section`, bypassing `next_layer` and therefore bypassing the TS/TM H-COMP traversal whose TM-end path restores baseline `RDP_INIT` OtherModes;
+  - next frame's `RDP_FRAME` begins with palette Texture Image + **Load Block (palette/TLUT)**, exactly the operation pinned ares reports as the fatal hardware-bug path.
+- This also explains why the rejected cross-frame carrier did **not** crash: its proof state was armed from H-COMP, a path force blank already skips.
+- **Classification: SUPPORTED INTERPRETATION, not yet MEASURED cause.** We have not directly sampled RDP OtherModes across the frame boundary.
+- **Next controlled repair design:** preserve the exact proof commands/oracle but arm the proof only after the current section is known non-force-blank, and only for section0. Avoid enabling it on startup blank frames; preserve first-section-only TS presence so later section splits cannot overwrite the evidence. Keep public renderer/H-COMP ABI frozen.
+
+
+
 ### REJECTED HYPOTHESIS — PipeSync does not cure same-frame RDP crash (2026-09-28 UTC)
 
 - Exact-head dedicated run **`36479556754 FAILURE`** on workflow head `34b581def460036a32b099ec53a89d68f84a98fb` / semantic runtime `5c10b3b4065f8d54170afddc1b4abf586924e2b2` reached the pinned-ares first-hand capture path.

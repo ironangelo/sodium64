@@ -26,7 +26,9 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **ABI/build evidence is green:** source/binary contract reports `HCOMP_CGWSEL_SOURCE_EXEC_CLEAN_CONTRACT_VALIDATED`; regular+Mode7 RSP text remain **0x1000**, H-COMP remains **0x790**, fixed `hcomp_screen_switch=0x1760` and `draw_mode7_entry=0x1788`, resident IMEM growth zero; branch-delay audit passes all three RSP ELFs.
 - Exact new runtime hashes: ROM **`f4d3c58ea6ae05ef89f8b78b66be3b4c1e8b8efdb4bcae52069f58161a49741a`**, ELF **`cf43093a37a979ee9c01b0a92402b772a82b2ae5fcb544035fe0c9b3c88a08aa`**. Guest hashes are deterministic: fixed **`e99050ab961f9f0aef464ccebf48ee4ccb435f2d587e555a061faae6d40a2c54`**, subscreen **`bfc25c9251f60848c145afb44714bc32a62b1e7d19ec480bf27de8994180dd78`**.
 - **RECLASSIFIED:** run `36377226182` is expected **TOOLING/PIN FAILURE ONLY**, with zero semantic captures. Next controlled action is host-only: replace exactly the stale `5cad...` workflow pin with `f4d3...`; runtime, guests, oracle, capture and ares pin remain byte-identical.
-- **STATUS: IMPLEMENTED / ABI VALIDATED / SEMANTIC RERUN NEXT.**
+- Host-only pin commit **`762250a95c6d2ef4bda1b2f4d82e255c43889c83`** changes only the dedicated workflow's expected ROM SHA to exact **`f4d3c58e...`**; runtime, guests, capture, strict oracle and ares pin are unchanged.
+- Exact-head reruns dispatched: dedicated **Gate C H-COMP CGWSEL Source Clean `36377395203`** and generic **Build and Validate `36377395162`**.
+- **STATUS: ABI VALIDATED / SEMANTIC RERUNNING.** Do not begin mode semantics until this two-state source matrix closes.
 
 
 ### Phase / authority

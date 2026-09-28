@@ -143,6 +143,15 @@ def prove_source() -> None:
     ))
     helper_required = (
         "bnez k0, hcomp_sub_presence_saved",
+        "lui t0, 0x2900",
+        "sw t0, SCRN_DATA",
+        "sw zero, SCRN_DATA + 4",
+        "li a0, SCRN_DATA",
+        "jal 0xA4001F5C",
+        "li a1, SCRN_DATA + 8",
+        "mfc0 t0, COP0_DP_STATUS",
+        "andi t0, t0, 0x20",
+        "bnez t0, hcomp_sub_presence_rdp_wait",
         "li a0, CHAR_DATA + 32",
         "lui a1, 0xA00E",
         "ori a1, a1, 0x2018",

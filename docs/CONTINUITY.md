@@ -7,7 +7,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-27 UTC)
 
 
-### PRECOMMIT — clean Main winner provenance + BG1/BG2 CGADSUB discriminator (2026-09-28 UTC)
+### VALIDATED — clean Main winner provenance + BG1/BG2 CGADSUB discriminator (2026-09-28 UTC)
 
 - Fresh child **`phase4/gate-c-hcomp-main-provenance-clean`** was created exactly from validated clean gating authority **`69c64fa09d22d71bb653701b0300da6f9ac1eb12`**. Frozen controls remain: compact semantic Sub target, Main target/row mapping, TS->TM H-COMP switch, zero-single-step one-frame fence, raw CGRAM/E1f bridge, live Main/Sub sample addresses and fixed overlay/suffix ABI.
 - **GATE DRIVER / question:** can the clean renderer transport the **actual winning Main BG identity per rendered pixel** and use that provenance to select the corresponding real `CGADSUB` enable bit, rather than hardcoding BG1?

@@ -49,6 +49,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Next controlled change:** reuse/bound the smallest possible depth/coverage carrier around the already-validated compact Sub strip, capture presence before TM overwrites/repurposes provenance, and prove three states: direct-fixed+HALF, Sub-present+HALF, Sub-selected-but-absent fallback with HALF suppressed. No windows/clip/prevent work yet.
 - **Falsifier:** if a bounded clean carrier cannot coexist with the current TM provenance lifetime/guards without new ownership ambiguity or ABI movement, stop and record the representation limitation instead of expanding the old compositor.
 
+### CHECKPOINT — transparent-Sub first build measured; stale-pin run rejected as semantic evidence (2026-09-28 UTC)
+
+- Dedicated **Gate C H-COMP Transparent Sub Clean `36450588298`** reached the deliberate stale parent ROM pin and failed there exactly as intended. Artifact **`10983087624`**, digest **`sha256:d31fa42a970a9f390f06b446c3a3c83829e113176622b2e7f40da3ed62857147`**.
+- **Source/oracle gate passed:** deterministic three-guest generation and oracle self-test succeeded, including the negative fixture that rejects transparent fallback with HALF still active.
+- **Executable/ABI gate passed:** `HCOMP_TRANSPARENT_SUB_EXEC_CLEAN_CONTRACT_VALIDATED`; regular/Mode7 RSP text **0x1000 / 0x1000**, H-COMP **0x790**; `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero; all RSP branch-delay audits pass.
+- Exact runtime measured from semantic candidate: ROM **`998e2132bff4a65167f3a3c257e48c269715b00be2e74dc43d5e6ddffb26e808`**, ELF **`412416a2ea8217f0e7516624faf7ca6ff959e7836c6130e728415171108cbdff`**.
+- This run is permanently **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY** because it stopped before wrapping/capturing the three ares states. It does prove the candidate fits the frozen overlay ABI and compiles cleanly.
+- **Immediate action:** update only the workflow ROM pin to `998e2132...`; semantic runtime stays at commit `42613980631a27925bd13b5b078f47a036169458`. Then require same-head generic hygiene plus first-hand pinned-ares captures before accepting the alpha coverage representation.
+
 ### EXPERIMENT IN PROGRESS — alpha coverage carrier + transparent-Sub fallback (2026-09-28 UTC)
 
 - **CANDIDATE:** `phase4/gate-c-hcomp-transparent-sub-clean@c080d141c4699b4243da1ad83f789364b5efb901` (runtime semantic changes are in `src/rsp_main.S` + `src/rsp_hcomp.S`; later files on the branch are deterministic guest/oracle/contract/workflow plumbing).

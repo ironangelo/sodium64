@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### MEASUREMENT CHECKPOINT — lifetime candidate builds; first dedicated run is stale-pin only (2026-09-28 UTC)
+
+- Exact candidate **`ba6c879a0bca10c2eee298cd49dd46c7b378d173`**, dedicated run **`36481142950 FAILURE`**, artifact **`10996442893`**, digest **`sha256:0d3035dad05be98569ced2bd992449bf2c5e03f4030ef40798822dc5963da8e4`**.
+- Deterministic guest/oracle self-test passed; exact build passed; **`HCOMP_TRANSPARENT_SUB_EXEC_CLEAN_CONTRACT_VALIDATED`** passed; branch-delay audit passed; ABI remained frozen at regular/Mode7 RSP **0x1000** and H-COMP **0x790**, with `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth zero.
+- The job then failed **only** at the deliberately stale exact-ROM pin, before guest wrapping or pinned-ares execution. New dedicated-build authority: ROM **`be9c41a34d9a7b7f5245ca08955c04f0e3ba33a6820428403907cc1b64fff8da`**, ELF **`64191377203267aad158daaac3b144e45d6bced51ea7d63aa8c4156afc212911`**.
+- **Classification: REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY.** The force-blank lifetime hypothesis remains untested at runtime.
+- **Immediate action:** update only the dedicated workflow ROM pin to `be9c41a3...` and rerun the unchanged candidate/oracle. Do not modify proof commands, guest states or capture fence.
+
+
+
 ### CONTROLLED REPAIR CANDIDATE — transparent-Sub proof lifetime bounded to visible section0 (2026-09-28 UTC)
 
 - Exact candidate **`phase4/gate-c-hcomp-transparent-sub-clean@ba6c879a0bca10c2eee298cd49dd46c7b378d173`** moves only the proof-lifetime arm from frame start to the already-decoded **non-force-blank section0** path, while preserving the existing proof commands/oracle and section0-only evidence lifetime.

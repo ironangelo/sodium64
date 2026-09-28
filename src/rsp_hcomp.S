@@ -96,12 +96,12 @@ hcomp_pair_loop:
     jal 0xA4001F40
     li a2, 0x7
 
-    // Read the corresponding per-pixel Main winner tag. The proof-only Z16
-    // logical surface begins at 0xA00F0000 but Main lands in published rows
-    // 8..15 exactly like the owned color target; x12,row8 is 0xA00F1198.
+    // Read the corresponding per-pixel Main winner tag from the bounded
+    // E1c-style 280x8 Z16 scratch. Section0 global y=16..23 is retargeted to
+    // physical scratch row0..7, so the matching active sample is row0,x12.
     li a0, SCRN_DATA + 16
-    lui a1, 0xA00F
-    ori a1, a1, 0x1198
+    lui a1, 0xA00E
+    ori a1, a1, 0x2018
     jal 0xA4001F40
     li a2, 0x7
 
@@ -132,6 +132,10 @@ hcomp_pair_loop:
     lhu t6, SCRN_DATA + 16
     srl t4, t6, 11
     andi t4, t4, 0x3
+    // Preserve the semantic winner mask before E1f reuses t4 for its 0x0421
+    // carry-correction term. This fixes evidence only; gate semantics below
+    // still consume the live t4 value directly.
+    sh t4, CHAR_DATA + 18
     lbu t2, CGADSUB
     and t2, t2, t4
     sltu t2, zero, t2
@@ -155,7 +159,6 @@ hcomp_gate_store:
     sh t3, CHAR_DATA + 12
     sh t2, CHAR_DATA + 14
     sh t6, CHAR_DATA + 16
-    sh t4, CHAR_DATA + 18
     lbu t5, CGADSUB
     sh t5, CHAR_DATA + 20
     sh zero, CHAR_DATA + 22
@@ -204,20 +207,28 @@ hcomp_provenance_switch_helper:
     jal 0xA4001F5C
     li a1, RDP_FRAME + 8
 
-    // After frame-start palette upload is consumed, borrow its two command
-    // slots to enable primitive-depth Z updates without Z compare and bind the
-    // proof-only Z16 provenance surface. The underflow mirrors Main geometry:
-    // logical 0x00F0000 - 16*560 = 0x000EDD00.
+    // Bound provenance lifetime to the first 8-line section. The section0
+    // call has k0==0 and enables primitive-depth Z updates; every later section
+    // uses the baseline OtherModes word with Z update disabled before its TM
+    // pass. Set-Z-Image itself can be resent harmlessly in both paths.
     lui t0, 0x2F00
     ori t0, t0, 0x88FF
     sw t0, RDP_FRAME + 8
     lui t0, 0x0004
+    beqz k0, hcomp_provenance_enable
+    ori t0, t0, 0x0001
+    b hcomp_provenance_mode_ready
+    nop
+hcomp_provenance_enable:
     ori t0, t0, 0x0025
+hcomp_provenance_mode_ready:
     sw t0, RDP_FRAME + 12
+    // Historical E1c dynamically validated this exact compact geometry:
+    // logical scratch 0x00E2000 - global y16*560 = Set-Z base 0x000DFD00.
     lui t0, 0x3E00
     sw t0, RDP_FRAME + 16
-    lui t0, 0x000E
-    ori t0, t0, 0xDD00
+    lui t0, 0x000D
+    ori t0, t0, 0xFD00
     sw t0, RDP_FRAME + 20
     li a0, RDP_FRAME + 8
     jal 0xA4001F5C
@@ -243,7 +254,7 @@ hcomp_provenance_switch_helper:
 
 // Keep the fixed switch address while absorbing the new frame-end/provenance
 // machinery entirely out of previously unused H-COMP padding.
-.byte 0:0x158
+.byte 0:0x148
 
 hcomp_screen_switch:
     b hcomp_provenance_switch_helper

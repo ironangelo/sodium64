@@ -28,7 +28,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **RECLASSIFIED:** run `36377226182` is expected **TOOLING/PIN FAILURE ONLY**, with zero semantic captures. Next controlled action is host-only: replace exactly the stale `5cad...` workflow pin with `f4d3...`; runtime, guests, oracle, capture and ares pin remain byte-identical.
 - Host-only pin commit **`762250a95c6d2ef4bda1b2f4d82e255c43889c83`** changes only the dedicated workflow's expected ROM SHA to exact **`f4d3c58e...`**; runtime, guests, capture, strict oracle and ares pin are unchanged.
 - Exact-head reruns dispatched: dedicated **Gate C H-COMP CGWSEL Source Clean `36377395203`** and generic **Build and Validate `36377395162`**.
-- **STATUS: ABI VALIDATED / SEMANTIC RERUNNING.** Do not begin mode semantics until this two-state source matrix closes.
+- Same-head generic **Build and Validate `36377395162 SUCCESS`** is fully green across normal build, PROFILE build and pinned Mupen/LLE smoke. Dedicated `36377395203` has also passed deterministic guests, strict oracle self-test, exact runtime/hash, source+binary ABI contract, wrapping and frozen prelaunch geometry; it is now in the pinned-ares build.
+- **STATUS: ABI + GENERIC VALIDATED / SEMANTIC CI RUNNING.** Do not begin mode semantics until this two-state source matrix closes.
 
 
 ### Phase / authority

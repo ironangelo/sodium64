@@ -58,6 +58,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - This run is permanently **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY** because it stopped before wrapping/capturing the three ares states. It does prove the candidate fits the frozen overlay ABI and compiles cleanly.
 - **Immediate action:** update only the workflow ROM pin to `998e2132...`; semantic runtime stays at commit `42613980631a27925bd13b5b078f47a036169458`. Then require same-head generic hygiene plus first-hand pinned-ares captures before accepting the alpha coverage representation.
 
+### REJECTED EXPERIMENT — RGBA5551 alpha cannot serve as clean absent-Sub coverage carrier (2026-09-28 UTC)
+
+- Exact-head dedicated **Gate C H-COMP Transparent Sub Clean `36450859892`** reached all three first-hand captures but the semantic classifier correctly rejected the absent-Sub state. Evidence artifact **`10982779716`**, digest **`sha256:e93b36cd2d0479832b6d726134dbcdb44d869eca80cbe4ef62dae20734573d46`**.
+- Fixed/direct and live-Sub controls were internally correct: fixed-half mailbox `001F,03E0,3C0F,0001,0C00,0001,0041,0000,7C00,7C00,0000,0100`; live-Sub-half `001F,03E0,01EF,0001,0C00,0001,0041,0000,7C00,03E0,0002,0101`.
+- In the **Sub-absent** capture, every one of the 2,048 active compact-Sub words remained the seeded sentinel **`0x55AA`**; the 192 border words were also `0x55AA`. Therefore the alpha0 backdrop write did not establish real coverage/absence state in the target.
+- H-COMP happened to read sentinel bit0=0 and produced the intended fallback mailbox `001F,56CA,7C1F,0001,0C00,0001,0041,0000,7C00,7C00,0002,0002`: fixed-color fallback selected, HALF suppressed, exact full-add result `0x7C1F`. **This is NOT semantic proof** because the absence decision was manufactured by harness sentinel state, not by renderer-owned data.
+- **REJECTED:** using compact Sub RGBA5551 alpha as the clean coverage carrier under the current RDP state. Do not weaken the oracle to accept untouched memory and do not treat the numerically correct fallback as success.
+- **SUPPORTED INTERPRETATION:** alpha0 primitive backdrop is discarded/not committed under the current renderer path in the pinned ares lab; real alpha1 texels still draw. The exact low-level RDP reason need not be guessed before choosing the already-supported bounded depth alternative.
+- **Next action:** revert the proof-local alpha0 backdrop change and derive a clean bounded TS-presence depth tag using the already-owned compact Z/provenance arena, sampling it at TS→TM before that arena is cleared/reused for Main provenance. No new full-frame surface and no cumulative E2g/E3 compositor import.
+
 ### HYGIENE CHECKPOINT — exact-head generic CI green (2026-09-28 UTC)
 
 - Same-head **Build and Validate `36450859788 SUCCESS`** on `33a3ec9bf642cf425fe6aa33b0796b54181ad9de`: normal build, PROFILE build, host validation/branch-delay checks and pinned Mupen/LLE smoke all green.

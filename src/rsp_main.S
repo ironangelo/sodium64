@@ -234,10 +234,19 @@ table_loop:
     sw t0, RDP_FRAME + 4
     sw t1, RDP_FRAME + 12
 
-    // Run the RDP to start the frame
+    // Run the RDP to start the frame.
     li a0, RDP_FRAME
     jal rdp_send
     li a1, RDP_FILL
+
+    // Gate-C proof: bind/enable the bounded Z16 carrier in this same renderer
+    // frame before section0 backdrop/TS work. The previous cross-frame setup
+    // was rejected because the first-hand TS sample stayed at the harness
+    // sentinel even when BG2 color rendered. This list ends at the first BG
+    // depth command, so it establishes OtherModes + Set-Z + absence depth only.
+    li a0, HCOMP_PROOF_RDP_CMDS
+    jal rdp_send
+    li a1, HCOMP_PROOF_BG_DEPTH_CMDS
     li k1, 0 // Section bound
 
 next_section:
@@ -518,14 +527,12 @@ next_layer:
     srl s7, s7, 8
     andi s3, s3, 0xF0
     lw a1, OVERLAY_HCOMP_SRC
-    li t9, 0x1760
     b overlay_load_slot
-    nop
+    li t9, 0x1760
 
-    // Removing the direct zero-screen branch saves one resident instruction.
-    // Return that exact 4 B as inert padding so draw_bg remains 0x13A8 and all
-    // fixed overlay/suffix entrypoints stay byte-identical.
-    .byte 0:8
+    // Filling the safe branch delay slot above plus consuming the former 8 B
+    // inert pad pays exactly for the three-instruction same-frame TS-Z setup,
+    // keeping draw_bg and every fixed overlay/suffix entrypoint byte-identical.
 
     // Fixed renderer overlay begins on a 64-bit DMA boundary.
     .align 3

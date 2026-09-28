@@ -38,6 +38,27 @@ def prove_source() -> None:
         if cmd not in main:
             raise AssertionError(f"bounded proof command missing: {cmd}")
 
+    frame = insns(section(main, "draw_frame:", "next_section:"))
+    frame_required = (
+        "li a0, RDP_FRAME",
+        "jal rdp_send",
+        "li a1, RDP_FILL",
+        "li a0, HCOMP_PROOF_RDP_CMDS",
+        "jal rdp_send",
+        "li a1, HCOMP_PROOF_BG_DEPTH_CMDS",
+        "li k1, 0",
+    )
+    cursor = -1
+    for anchor in frame_required:
+        try:
+            cursor = frame.index(anchor, cursor + 1)
+        except ValueError as exc:
+            raise AssertionError(f"same-frame TS-Z setup missing/reordered {anchor!r}") from exc
+
+    switch = insns(section(main, "next_layer:", "// Fixed renderer overlay begins"))
+    if "b overlay_load_slot" not in switch or "li t9, 0x1760" not in switch:
+        raise AssertionError("H-COMP switch delay-slot compaction drift")
+
     draw = insns(section(main, "draw_bg:", "// Check if the BG type or character base changed"))
     for anchor in (
         "sll a0, t3, 3",
@@ -49,7 +70,7 @@ def prove_source() -> None:
             raise AssertionError(f"static depth selection drift: {anchor}")
 
     h = (ROOT / "src/rsp_hcomp.S").read_text()
-    if ".byte 0:0x74" not in h:
+    if ".byte 0:0x80" not in h:
         raise AssertionError("transparent-Sub HCOMP padding drift")
     if "0xA00E6000" in h or "0xA00E6000" in main:
         raise AssertionError("unexpected new per-pixel surface introduced")
@@ -83,9 +104,6 @@ def prove_source() -> None:
         "sh t9, CHAR_DATA + 30",
         "li a1, 0xA00F0008",
         "li a2, 0x1B",
-        "li a0, HCOMP_PROOF_RDP_CMDS",
-        "jal 0xA4001F5C",
-        "li a1, HCOMP_PROOF_BG_DEPTH_CMDS",
     )
     cursor = -1
     for anchor in required:

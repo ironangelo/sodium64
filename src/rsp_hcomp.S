@@ -281,12 +281,10 @@ hcomp_gate_store:
     jal 0xA4001F08
     li a2, 0x1B
 
-    // Prepare the next frame's controlled section0 TS carrier only after the
-    // completed frame has been consumed: enable bounded Z updates, retarget the
-    // compact Z arena, and set the backdrop/absence primitive-depth tag.
-    li a0, HCOMP_PROOF_RDP_CMDS
-    jal 0xA4001F5C
-    li a1, HCOMP_PROOF_BG_DEPTH_CMDS
+    // The rejected cross-frame TS-Z preparation used to live here. Section0
+    // now binds the bounded carrier in draw_frame immediately before its own
+    // backdrop/TS work, so completed-frame H-COMP leaves no next-frame RDP
+    // state dependency.
 
     // Preserve queue ownership through the bridge. Only now select the next
     // slot, then keep the historical halt/resume -> draw_frame contract.
@@ -341,7 +339,7 @@ hcomp_provenance_end:
 
 // Keep the fixed switch address while absorbing the new lifetime cut entirely
 // out of previously unused H-COMP padding.
-.byte 0:0x74
+.byte 0:0x80
 
 hcomp_screen_switch:
     beqz s7, hcomp_provenance_end

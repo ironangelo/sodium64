@@ -138,7 +138,22 @@ overlay_mode7_src: .word 0
 overlay_main_src: .word 0
 overlay_hcomp_src: .word 0
 hcomp_raw_palette_ptrs: .word 0, 0
-.byte 0:(VEC_DATA - (HCOMP_RAW_PALETTE_PTRS + 8))
+// Keep PR #18 CGRAM scratch untouched, then place the proof-only RDP command
+// table at the audited retired DMEM tail. The table is immutable:
+//   +00 OtherModes: alpha test + primitive depth + Z update, no Z compare
+//   +08 Set Z Image: compact E2000 strip aligned to global y=16
+//   +10 backdrop/absence primitive-depth tag 0x0800 -> stored Z 0x0400
+//   +18..+30 BG1..BG4 winner tags
+.byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_RAW_PALETTE_PTRS + 8))
+hcomp_proof_rdp_cmds:
+    .dword 0x2F0088FF00040025
+    .dword 0x3E000000000DFD00
+    .dword 0x2E00000008000000
+    .dword 0x2E00000018000000
+    .dword 0x2E00000028000000
+    .dword 0x2E00000038000000
+    .dword 0x2E00000048000000
+.byte 0:(VEC_DATA - (HCOMP_PROOF_RDP_CMDS + 0x38))
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -446,11 +461,7 @@ fill_backdrop:
     andi t1, s0, 0xF800 // R
     sll t1, t1, 16
     or t0, t0, t1
-    // Clean transparent-Sub proof: this compact offscreen TS target uses
-    // primitive alpha 0 for backdrop/absence. Real palette texels retain the
-    // existing RGBA5551 alpha 1, so bit0 becomes coverage without a new surface.
-    // Keep the instruction slot inert to preserve the fixed renderer ABI.
-    nop
+    ori t0, t0, 0xFF
     sw t0, RDP_FILL + 20
 
     // Run the RDP to fill the segment
@@ -538,13 +549,12 @@ draw_bg:
     srl s4, t9, 2
     addi s4, s4, 3 // Character shift
 
-    // Clean Main provenance proof: H-COMP prepared two 8-byte Set Primitive
-    // Depth commands at RDP_FRAME+8/+16 before semantic TM. Select the command
-    // from the actual regular-BG index t3; the RDP's Z update tags only texels
-    // that this layer really draws, so later winning layers overwrite earlier
-    // provenance exactly as they overwrite Main color.
+    // Gate-C bounded winner/presence proof: select an immutable Set Primitive
+    // Depth command from the actual regular-BG index t3. During section0 TS,
+    // any real layer overwrites the backdrop/absence tag; during TM the same
+    // commands preserve per-BG winner identity in the reused compact Z arena.
     sll a0, t3, 3
-    addi a0, a0, RDP_FRAME + 8
+    addi a0, a0, HCOMP_PROOF_BG_DEPTH_CMDS
     jal rdp_send
     addi a1, a0, 8
 

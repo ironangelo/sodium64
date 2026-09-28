@@ -102,6 +102,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Precommitted discriminator remains:** fixed+HALF -> `0x3C0F`; Sub present+HALF -> `0x01EF`; Sub absent -> opaque backdrop color may remain present in Sub color target, but raw TS Z tag must be exactly `0x0400`, source must fall back fixed blue, HALF must be suppressed, result `0x7C1F`.
 - **First bounded-Z workflow head:** `830d381a...` deliberately retains rejected-alpha ROM pin `998e2132...`. Acceptable first run is self-test/build/executable/ABI pass followed by stale-pin stop; any earlier failure is implementation/test failure. Only after repinning exact measured runtime may pinned-ares semantics be interpreted.
 
+### CHECKPOINT — bounded-Z transparent-Sub candidate first build measured; stale-pin run rejected (2026-09-28 UTC)
+
+- **CANDIDATE:** `phase4/gate-c-hcomp-transparent-sub-clean@2ab71b0adaa722271b88482280c3209317212823`; this supersedes the rejected alpha-carrier attempt while keeping the bounded compact-Z representation described below.
+- Dedicated **Gate C H-COMP Transparent Sub Clean `36453965238`** passed deterministic guest/oracle self-test, exact build, executable contract and RSP branch-delay audit, then stopped at the deliberately stale rejected-alpha ROM pin before any ares semantic capture. Artifact **`10984457416`**, digest **`sha256:1df55665f13061f6b593a2ffd8a85403d1ff6a52b37e4bd383f4f6b12bfab173`**.
+- Exact measured runtime: ROM **`c073800b3adeb19ebaa7b1d295f3fb47470f604d968942dcb89fd670c39bdc5d`**, ELF **`a359504775aa242457423ed0d702b32ccb354af6214efad4799b60e977ca32ce`**.
+- Frozen executable ABI remains intact: regular/Mode7 text **0x1000 / 0x1000**, H-COMP **0x790**, `hcomp_screen_switch=0x1760`, `draw_mode7_entry=0x1788`, resident IMEM growth **0**.
+- Same-head generic **Build and Validate `36453965099 SUCCESS`** is fully green: build artifact **`10984781439`**, PROFILE **`10984172549`**, pinned Mupen/LLE smoke **`10984252793`**.
+- **Classification:** first dedicated run is **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY**, not a bounded-Z failure. Source/oracle/ABI/hygiene gates support repinning this exact runtime.
+- **Immediate action:** change only the dedicated workflow ROM pin to `c073800b...`; leave the semantic runtime untouched, rerun exact-head pinned ares, and require all three precommitted states plus raw TS Z tag/presence/source/HALF/result agreement before closure.
+
 ### ACTIVE — transparent-Sub fixed-color fallback + HALF suppression discriminator (2026-09-28 UTC)
 
 - **GATE DRIVER:** isolate the remaining second-operand/HALF interaction before moving to color windows. Hardware semantics distinguish **direct fixed-color selection** from **Sub selected but transparent at this pixel**: the latter falls back to fixed color and suppresses HALF.

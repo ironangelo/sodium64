@@ -36,7 +36,7 @@ Canonical live handoff for `ironangelo/sodium64`.
   - deterministic guest family covers **BG1 winner×CGADSUB{1,2} + BG2 winner×CGADSUB{1,2}**;
   - strict oracle requires exact color operands, exact Z tag, exact `tag>>11` mask, exact queue carrier, exact gate/result and stable semantic operands within each winner pair while allowing physical triple-buffer rotation.
 - Dedicated **Gate C H-COMP Main Provenance Clean `36365547366`** has passed its strict pre-ares gate on exact head **`f3efe3dd8e1b9fbfe0eb7ad26d4b86674958e20d`**: oracle self-test, all four deterministic guest pairs, exact runtime build/hash, readelf source+binary contract, RSP branch-delay audit, wrapper embedding, and frozen CPU prelaunch geometry are green. The contract explicitly freezes `draw_bg=0xA40013A8`, `hcomp_screen_switch=0xA4001760`, `draw_mode7_entry=0xA4001788` plus the historical resident suffix addresses. Runtime remains the byte-identical `bc3d525b...` executable; later commits are host/guest/workflow authority only.
-- Same-head generic **Build and Validate `36365547289`** is also running; its result remains a hygiene gate, while the dedicated run is now entering the pinned-ares laboratory.
+- Same-head generic **Build and Validate `36365547289 SUCCESS`** is fully green across normal build, PROFILE build and pinned Mupen/LLE smoke; its result remains a hygiene gate, while the dedicated run is now entering the pinned-ares laboratory.
 - **STATUS: IMPLEMENTED / ABI VALIDATED / SEMANTIC CI RUNNING.** Do not begin BG3/OBJ, CGWSEL or mode semantics until the four-state matrix closes.
 
 

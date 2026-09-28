@@ -96,6 +96,15 @@ hcomp_pair_loop:
     jal 0xA4001F40
     li a2, 0x7
 
+    // Read the corresponding per-pixel Main winner tag. The proof-only Z16
+    // logical surface begins at 0xA00F0000 but Main lands in published rows
+    // 8..15 exactly like the owned color target; x12,row8 is 0xA00F1198.
+    li a0, SCRN_DATA + 16
+    lui a1, 0xA00F
+    ori a1, a1, 0x1198
+    jal 0xA4001F40
+    li a2, 0x7
+
     // Canonicalize the rendered Main RGBA5551 sample to SNES RGB555.
     lhu t0, SCRN_DATA + 8
     lhu t1, SCRN_DATA
@@ -116,11 +125,16 @@ hcomp_pair_loop:
     sll t5, t5, 9
     or t1, t4, t5
 
-    // The controlled guest fixes the Main winner to opaque BG1, so bit0 is
-    // the exact eligibility discriminator for this rung. General winner
-    // selection remains deferred until clean per-pixel provenance is wired.
+    // Convert validated primitive-Z winner tags directly to the corresponding
+    // CGADSUB mask: BG1 0x0C00 >> 11 = 1, BG2 0x1400 >> 11 = 2.
+    // This is the first clean rung where eligibility follows rendered winner
+    // provenance rather than a guest-hardcoded BG identity.
+    lhu t6, SCRN_DATA + 16
+    srl t4, t6, 11
+    andi t4, t4, 0x3
     lbu t2, CGADSUB
-    andi t2, t2, 0x1
+    and t2, t2, t4
+    sltu t2, zero, t2
     move t3, t0
     beqz t2, hcomp_gate_store
     nop
@@ -133,15 +147,43 @@ hcomp_pair_loop:
     srl t3, t3, 1
 
 hcomp_gate_store:
-    // Self-describing proof record: Main, Sub, selected result, gate bit.
+    // Self-describing proof record. Keep the validated first 8 B stable, then
+    // append the exact provenance tag/mask and carried CGADSUB value in row0,
+    // which is disjoint from the provenance surface's authoritative rows8..15.
     sh t0, CHAR_DATA + 8
     sh t1, CHAR_DATA + 10
     sh t3, CHAR_DATA + 12
     sh t2, CHAR_DATA + 14
+    sh t6, CHAR_DATA + 16
+    sh t4, CHAR_DATA + 18
+    lbu t5, CGADSUB
+    sh t5, CHAR_DATA + 20
+    sh zero, CHAR_DATA + 22
     li a0, CHAR_DATA + 8
     li a1, 0xA00F0008
     jal 0xA4001F08
-    li a2, 0x7
+    li a2, 0xF
+
+    // Disable the proof-only primitive-Z update before the next frame begins,
+    // then restore the two RDP_FRAME palette commands temporarily borrowed by
+    // the TM provenance pass. draw_frame rewrites the palette address word.
+    lui t5, 0x2F00
+    ori t5, t5, 0x88FF
+    sw t5, RDP_FRAME + 8
+    lui t5, 0x0004
+    ori t5, t5, 0x0001
+    sw t5, RDP_FRAME + 12
+    li a0, RDP_FRAME + 8
+    jal 0xA4001F5C
+    li a1, RDP_FRAME + 16
+
+    lui t5, 0x3D10
+    sw t5, RDP_FRAME + 8
+    sw zero, RDP_FRAME + 12
+    lui t5, 0x3300
+    sw t5, RDP_FRAME + 16
+    lui t5, 0x0040
+    sw t5, RDP_FRAME + 20
 
     // Preserve queue ownership through the bridge. Only now select the next
     // slot, then keep the historical halt/resume -> draw_frame contract.
@@ -151,23 +193,62 @@ hcomp_gate_store:
     j 0xA400103C
     nop
 
-// Mid-frame Main/Sub ownership helper. Its fixed entry 0x1760 is loaded
-// only after semantic TS has completed. Patch Color Image back to the current
-// queue-owned Main framebuffer, publish that one command through resident
-// rdp_send, then reload the regular fixed slot and resume at resident next_layer.
-.byte 0:0x24C
-
-hcomp_screen_switch:
+// Mid-frame clean Main provenance helper. This lives in H-COMP's otherwise
+// unused fixed-slot tail so the externally visible switch entry remains 0x1760.
+hcomp_provenance_switch_helper:
+    // First keep the already-validated semantic Color Image retarget.
     lw t0, FRAMEBUFFER(sp)
     addi t0, t0, 280 * -16
     sw t0, RDP_FRAME + 4
     li a0, RDP_FRAME
     jal 0xA4001F5C
     li a1, RDP_FRAME + 8
+
+    // After frame-start palette upload is consumed, borrow its two command
+    // slots to enable primitive-depth Z updates without Z compare and bind the
+    // proof-only Z16 provenance surface. The underflow mirrors Main geometry:
+    // logical 0x00F0000 - 16*560 = 0x000EDD00.
+    lui t0, 0x2F00
+    ori t0, t0, 0x88FF
+    sw t0, RDP_FRAME + 8
+    lui t0, 0x0004
+    ori t0, t0, 0x0025
+    sw t0, RDP_FRAME + 12
+    lui t0, 0x3E00
+    sw t0, RDP_FRAME + 16
+    lui t0, 0x000E
+    ori t0, t0, 0xDD00
+    sw t0, RDP_FRAME + 20
+    li a0, RDP_FRAME + 8
+    jal 0xA4001F5C
+    li a1, RDP_FILL
+
+    // Reuse those same 16 bytes as two immutable per-layer depth commands for
+    // the regular overlay. Historical E1b dynamically validated these exact
+    // primitive-depth codes as stored winner tags 0x0C00 (BG1) / 0x1400 (BG2).
+    lui t0, 0x2E00
+    lui t1, 0x1800
+    sw t0, RDP_FRAME + 8
+    sw t1, RDP_FRAME + 12
+    sw t0, RDP_FRAME + 16
+    lui t1, 0x2800
+    sw t1, RDP_FRAME + 20
+
+    // Load regular BG/OBJ rendering back over this slot and resume at the
+    // already-validated resident next_layer address.
     lw a1, OVERLAY_MAIN_SRC
     li t9, 0x1364
     j 0xA4001F7C
     nop
+
+// Keep the fixed switch address while absorbing the new frame-end/provenance
+// machinery entirely out of previously unused H-COMP padding.
+.byte 0:0x158
+
+hcomp_screen_switch:
+    b hcomp_provenance_switch_helper
+    nop
+    .byte 0:0x20
 
 // Keep the externally visible Mode7 entry at 0x1788.
 draw_mode7_entry:

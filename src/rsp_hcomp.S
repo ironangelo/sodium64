@@ -125,6 +125,34 @@ hcomp_pair_loop:
     sll t5, t5, 9
     or t1, t4, t5
 
+    // CGWSEL source-selection proof. Legacy section SUB_COLOR carries COLDATA
+    // after brightness conversion. This controlled rung fixes full brightness
+    // and constant COLDATA, so the same lossless N64->SNES adapter yields the
+    // exact fixed RGB555 operand without introducing a new transport path.
+    lhu t5, SUB_COLOR
+    srl t2, t5, 11
+    andi t3, t5, 0x07C0
+    srl t3, t3, 1
+    or t2, t2, t3
+    andi t3, t5, 0x003E
+    sll t3, t3, 9
+    or t5, t2, t3
+
+    // SNES CGWSEL bit1: 0=fixed color, 1=subscreen. Preserve live Sub in t1
+    // for the established mailbox; t7 is the selected arithmetic addend.
+    lbu t2, CGWSEL
+    andi t3, t2, 0x2
+    move t7, t1
+    bnez t3, hcomp_source_ready
+    nop
+    move t7, t5
+hcomp_source_ready:
+    srl t3, t3, 1
+    sh t5, CHAR_DATA + 24
+    sh t7, CHAR_DATA + 26
+    sh t2, CHAR_DATA + 28
+    sh t3, CHAR_DATA + 30
+
     // Convert validated primitive-Z winner tags directly to the corresponding
     // CGADSUB mask: BG1 0x0C00 >> 11 = 1, BG2 0x1400 >> 11 = 2.
     // This is the first clean rung where eligibility follows rendered winner
@@ -144,16 +172,16 @@ hcomp_pair_loop:
     nop
 
     // Reuse the authoritative E1f packed half-add on the live rendered pair.
-    xor t3, t0, t1
+    xor t3, t0, t7
     andi t4, t3, 0x0421
-    add t3, t0, t1
+    add t3, t0, t7
     sub t3, t3, t4
     srl t3, t3, 1
 
 hcomp_gate_store:
-    // Self-describing proof record. Keep the validated first 8 B stable, then
-    // append the exact provenance tag/mask and carried CGADSUB value in row0,
-    // which is disjoint from the provenance surface's authoritative rows8..15.
+    // Self-describing proof record. Keep the validated first 16 B stable
+    // (Main/Sub/result/gate/tag/mask/CGADSUB/guard), then append fixed RGB555,
+    // selected addend, raw CGWSEL and normalized source flag.
     sh t0, CHAR_DATA + 8
     sh t1, CHAR_DATA + 10
     sh t3, CHAR_DATA + 12
@@ -165,7 +193,7 @@ hcomp_gate_store:
     li a0, CHAR_DATA + 8
     li a1, 0xA00F0008
     jal 0xA4001F08
-    li a2, 0xF
+    li a2, 0x17
 
     // Disable the proof-only primitive-Z update before the next frame begins,
     // then restore the two RDP_FRAME palette commands temporarily borrowed by
@@ -265,7 +293,7 @@ hcomp_provenance_end:
 
 // Keep the fixed switch address while absorbing the new lifetime cut entirely
 // out of previously unused H-COMP padding.
-.byte 0:0x134
+.byte 0:0xE8
 
 hcomp_screen_switch:
     beqz s7, hcomp_provenance_end

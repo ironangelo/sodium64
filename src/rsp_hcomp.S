@@ -373,7 +373,7 @@ hcomp_provenance_end:
 
 // Keep the fixed switch address while absorbing the new lifetime cut entirely
 // out of previously unused H-COMP padding.
-.byte 0:0x04
+.byte 0:0x0C
 
 hcomp_screen_switch:
     beqz s7, hcomp_provenance_end

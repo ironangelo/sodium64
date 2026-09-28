@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### EXECUTION CHECKPOINT — PipeSync rerun passed all pre-ares gates (2026-09-28 UTC)
+
+- Exact workflow head **`34b581def460036a32b099ec53a89d68f84a98fb`**, semantic runtime **`5c10b3b4065f8d54170afddc1b4abf586924e2b2`**, dedicated run **`36479556754`**.
+- The run reproduced exact ROM pin **`ad96601b62d2104e6428da4c9186849376848595645acf7babb2b25ebbcfd073`**, passed the strict transparent-Sub self-test/executable ABI/branch-delay gates, wrapped all three deterministic guests, and located the established capture fence.
+- The controlled PipeSync hypothesis is therefore finally past static/tooling gates and entering the pinned-ares laboratory. **No semantic conclusion yet.**
+- Acceptance remains unchanged; do not treat mere guest progression/no-crash as closure without exact raw TS tags, source/HALF decisions, Main/provenance/guards and RGB555 outputs.
+
+
+
 ### RERUN CHECKPOINT — PipeSync runtime repinned without semantic change (2026-09-28 UTC)
 
 - Workflow-only head **`phase4/gate-c-hcomp-transparent-sub-clean@34b581def460036a32b099ec53a89d68f84a98fb`** updates only the dedicated ROM pin from the pre-PipeSync runtime to **`ad96601b62d2104e6428da4c9186849376848595645acf7babb2b25ebbcfd073`**.

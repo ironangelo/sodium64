@@ -155,8 +155,7 @@ hcomp_proof_rdp_cmds:
     .dword 0x2E00000028000000
     .dword 0x2E00000038000000
     .dword 0x2E00000048000000
-.byte 0:(VEC_DATA - (HCOMP_PROOF_RDP_CMDS + 0x40))
-
+// Eight proof commands fill F30..F6F exactly; VEC_DATA starts at F70.
 vec_data:
     // Constants that are always kept in vector registers
     .hword 0x0002, 0x0000, 0x0002, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 // Tile increment

@@ -108,10 +108,15 @@ hcomp_pair_loop:
     // Canonicalize the rendered Main RGBA5551 sample to SNES RGB555.
     lhu t0, SCRN_DATA + 8
     lhu t1, SCRN_DATA
-    // The compact Sub surface deliberately leaves backdrop alpha at 0 while
-    // real palette texels carry alpha 1. Preserve that bit before RGB555
-    // canonicalization; it is the clean per-pixel Sub-presence carrier.
-    andi t9, t1, 0x1
+    // Section0 TS saved its compact-Z winner tag at the TS->TM boundary,
+    // before TM reused the same arena for Main provenance. Backdrop/absence
+    // is the validated stored tag 0x0400; any real regular-BG winner differs.
+    lhu t9, CHAR_DATA + 32
+    li t4, 0x0400
+    xor t4, t9, t4
+    sltu t4, zero, t4
+    sh t4, CHAR_DATA + 34
+    move t9, t4
     srl t2, t0, 11
     andi t3, t0, 0x07C0
     srl t3, t3, 1
@@ -143,8 +148,8 @@ hcomp_pair_loop:
     or t5, t2, t3
 
     // SNES CGWSEL bit1: 0=fixed color, 1=subscreen. When Sub is selected,
-    // the preserved alpha bit distinguishes a real Sub pixel from absence.
-    // Absence falls back to fixed color. t9 becomes source code:
+    // the saved TS winner tag distinguishes a real Sub pixel from backdrop.
+    // Backdrop/absence falls back to fixed color. t9 becomes source code:
     // 0=direct fixed, 1=live Sub, 2=transparent-Sub fixed fallback.
     lbu t2, CGWSEL
     andi t3, t2, 0x2
@@ -269,32 +274,19 @@ hcomp_gate_store:
     sh t5, CHAR_DATA + 20
     sh zero, CHAR_DATA + 22
     // bits1:0 source code (0=fixed,1=Sub,2=fallback); bit8=HALF effective.
+    // CHAR_DATA+32/+34 already hold raw TS tag / normalized presence.
     sh t9, CHAR_DATA + 30
     li a0, CHAR_DATA + 8
     li a1, 0xA00F0008
     jal 0xA4001F08
-    li a2, 0x17
+    li a2, 0x1B
 
-    // Disable the proof-only primitive-Z update before the next frame begins,
-    // then restore the two RDP_FRAME palette commands temporarily borrowed by
-    // the TM provenance pass. draw_frame rewrites the palette address word.
-    lui t5, 0x2F00
-    ori t5, t5, 0x88FF
-    sw t5, RDP_FRAME + 8
-    lui t5, 0x0004
-    ori t5, t5, 0x0001
-    sw t5, RDP_FRAME + 12
-    li a0, RDP_FRAME + 8
+    // Prepare the next frame's controlled section0 TS carrier only after the
+    // completed frame has been consumed: enable bounded Z updates, retarget the
+    // compact Z arena, and set the backdrop/absence primitive-depth tag.
+    li a0, HCOMP_PROOF_RDP_CMDS
     jal 0xA4001F5C
-    li a1, RDP_FRAME + 16
-
-    lui t5, 0x3D10
-    sw t5, RDP_FRAME + 8
-    sw zero, RDP_FRAME + 12
-    lui t5, 0x3300
-    sw t5, RDP_FRAME + 16
-    lui t5, 0x0040
-    sw t5, RDP_FRAME + 20
+    li a1, HCOMP_PROOF_BG_DEPTH_CMDS
 
     // Preserve queue ownership through the bridge. Only now select the next
     // slot, then keep the historical halt/resume -> draw_frame contract.
@@ -307,51 +299,27 @@ hcomp_gate_store:
 // Mid-frame clean Main provenance helper. This lives in H-COMP's otherwise
 // unused fixed-slot tail so the externally visible switch entry remains 0x1760.
 hcomp_provenance_switch_helper:
-    // First keep the already-validated semantic Color Image retarget.
+    // Section0 TS used the same bounded Z arena before TM. Save one first-hand
+    // winner tag now, while it still means Sub presence; later sections must
+    // not overwrite this evidence after Z updates have been disabled.
+    bnez k0, hcomp_sub_presence_saved
+    nop
+    li a0, CHAR_DATA + 32
+    lui a1, 0xA00E
+    ori a1, a1, 0x2018
+    jal 0xA4001F40
+    li a2, 0x7
+hcomp_sub_presence_saved:
+
+    // Keep the already-validated semantic Color Image retarget. The immutable
+    // per-BG depth table is shared by TS and TM, so no RDP_FRAME patching is
+    // needed; TM simply overwrites the active Z tags with Main winner identity.
     lw t0, FRAMEBUFFER(sp)
     addi t0, t0, 280 * -16
     sw t0, RDP_FRAME + 4
     li a0, RDP_FRAME
     jal 0xA4001F5C
     li a1, RDP_FRAME + 8
-
-    // Bound provenance lifetime to the first 8-line section. The section0
-    // call has k0==0 and enables primitive-depth Z updates; every later section
-    // uses the baseline OtherModes word with Z update disabled before its TM
-    // pass. Set-Z-Image itself can be resent harmlessly in both paths.
-    lui t0, 0x2F00
-    ori t0, t0, 0x88FF
-    sw t0, RDP_FRAME + 8
-    lui t0, 0x0004
-    beqz k0, hcomp_provenance_enable
-    ori t0, t0, 0x0001
-    b hcomp_provenance_mode_ready
-    nop
-hcomp_provenance_enable:
-    ori t0, t0, 0x0025
-hcomp_provenance_mode_ready:
-    sw t0, RDP_FRAME + 12
-    // Historical E1c dynamically validated this exact compact geometry:
-    // logical scratch 0x00E2000 - global y16*560 = Set-Z base 0x000DFD00.
-    lui t0, 0x3E00
-    sw t0, RDP_FRAME + 16
-    lui t0, 0x000D
-    ori t0, t0, 0xFD00
-    sw t0, RDP_FRAME + 20
-    li a0, RDP_FRAME + 8
-    jal 0xA4001F5C
-    li a1, RDP_FILL
-
-    // Reuse those same 16 bytes as two immutable per-layer depth commands for
-    // the regular overlay. Historical E1b dynamically validated these exact
-    // primitive-depth codes as stored winner tags 0x0C00 (BG1) / 0x1400 (BG2).
-    lui t0, 0x2E00
-    lui t1, 0x1800
-    sw t0, RDP_FRAME + 8
-    sw t1, RDP_FRAME + 12
-    sw t0, RDP_FRAME + 16
-    lui t1, 0x2800
-    sw t1, RDP_FRAME + 20
 
     // Load regular BG/OBJ rendering back over this slot and resume at the
     // already-validated resident next_layer address.
@@ -373,7 +341,7 @@ hcomp_provenance_end:
 
 // Keep the fixed switch address while absorbing the new lifetime cut entirely
 // out of previously unused H-COMP padding.
-.byte 0:0x0C
+.byte 0:0x5C
 
 hcomp_screen_switch:
     beqz s7, hcomp_provenance_end

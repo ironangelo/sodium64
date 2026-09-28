@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### REJECTED EXPERIMENT — same-frame TS-Z binding stalls before semantic capture (2026-09-28 UTC)
+
+- Exact-head dedicated **Gate C H-COMP Transparent Sub Clean `36477073489 FAILURE`** on `phase4/gate-c-hcomp-transparent-sub-clean@7d68c4a2b1e0249fd6fab92cf134c1037c4ef0fd` passed deterministic guest/oracle self-test, the exact dedicated ROM pin `188bb47f...`, executable/ABI contract, RSP branch-delay audit, guest wrapping, fence-location checks, and pinned ares construction.
+- The first first-hand case (**fixed-half**) did **not** reach the semantic capture fence: guest warmup advanced from counter `0` to `1` and then remained at `1` for all 80 warmup probes; capture aborted with `RuntimeError: guest did not reach warmup counter`.
+- Evidence artifact **`10993629590`**, digest **`sha256:c2e12e2fc693124ebf5a74ec7b3541b1e3da4e57faf8baf05301d35208ed737f`**.
+- **Classification: REJECTED AS SEMANTIC EVIDENCE / RUNTIME-INTEGRATION FAILURE.** This run says nothing yet about fixed-vs-Sub source choice or HALF suppression because no state reached the established fresh-frame fence.
+- Same-head generic **Build and Validate `36477073413 SUCCESS`** is green, so the new failure is narrower than generic build/smoke hygiene and is introduced/exposed by the same-frame proof path under the pinned ares lab.
+- **Next action:** inspect the uploaded fixed-half partial capture/ares log and exact RSP/RDP state to determine whether the same-frame proof command list causes an RDP/RSP ownership stall, a renderer return/control-flow fault, or a guest-specific progression issue. Do not weaken warmup or move to windows/clip/prevent. Fix one identified cause, then rerun the unchanged three-state discriminator.
+
+
+
 ### HYGIENE CHECKPOINT — same-frame transparent-Sub exact-head generic CI green (2026-09-28 UTC)
 
 - Same-head **Build and Validate `36477073413 SUCCESS`** on `phase4/gate-c-hcomp-transparent-sub-clean@7d68c4a2b1e0249fd6fab92cf134c1037c4ef0fd`: normal build, PROFILE build, host validation/branch-delay checks and pinned Mupen/LLE smoke are green.

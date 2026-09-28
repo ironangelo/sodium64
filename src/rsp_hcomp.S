@@ -108,6 +108,10 @@ hcomp_pair_loop:
     // Canonicalize the rendered Main RGBA5551 sample to SNES RGB555.
     lhu t0, SCRN_DATA + 8
     lhu t1, SCRN_DATA
+    // The compact Sub surface deliberately leaves backdrop alpha at 0 while
+    // real palette texels carry alpha 1. Preserve that bit before RGB555
+    // canonicalization; it is the clean per-pixel Sub-presence carrier.
+    andi t9, t1, 0x1
     srl t2, t0, 11
     andi t3, t0, 0x07C0
     srl t3, t3, 1
@@ -138,20 +142,32 @@ hcomp_pair_loop:
     sll t3, t3, 9
     or t5, t2, t3
 
-    // SNES CGWSEL bit1: 0=fixed color, 1=subscreen. Preserve live Sub in t1
-    // for the established mailbox; t7 is the selected arithmetic addend.
+    // SNES CGWSEL bit1: 0=fixed color, 1=subscreen. When Sub is selected,
+    // the preserved alpha bit distinguishes a real Sub pixel from absence.
+    // Absence falls back to fixed color. t9 becomes source code:
+    // 0=direct fixed, 1=live Sub, 2=transparent-Sub fixed fallback.
     lbu t2, CGWSEL
     andi t3, t2, 0x2
-    move t7, t1
-    bnez t3, hcomp_source_ready
+    beqz t3, hcomp_source_fixed
+    nop
+    bnez t9, hcomp_source_sub
     nop
     move t7, t5
+    li t9, 2
+    b hcomp_source_ready
+    nop
+hcomp_source_sub:
+    move t7, t1
+    li t9, 1
+    b hcomp_source_ready
+    nop
+hcomp_source_fixed:
+    move t7, t5
+    move t9, zero
 hcomp_source_ready:
-    srl t3, t3, 1
     sh t5, CHAR_DATA + 24
     sh t7, CHAR_DATA + 26
     sh t2, CHAR_DATA + 28
-    sh t3, CHAR_DATA + 30
 
     // Convert validated primitive-Z winner tags directly to the corresponding
     // CGADSUB mask: BG1 0x0C00 >> 11 = 1, BG2 0x1400 >> 11 = 2.
@@ -177,9 +193,18 @@ hcomp_source_ready:
     bnez t4, hcomp_math_sub
     nop
     andi t4, t8, 0x40
-    bnez t4, hcomp_math_add_half
+    beqz t4, hcomp_math_add_full
+    nop
+    li t5, 2
+    beq t9, t5, hcomp_math_add_full
+    nop
+    // HALF remains effective for direct fixed selection and real Sub pixels.
+    // Mark bit8 in the source/half evidence word only when it is actually used.
+    ori t9, t9, 0x0100
+    b hcomp_math_add_half
     nop
 
+hcomp_math_add_full:
     // Packed per-channel saturating add, matching the established bsnes
     // RGB555 expression while avoiding cross-channel carry leakage.
     add t3, t0, t7
@@ -222,6 +247,10 @@ hcomp_math_sub:
     andi t5, t8, 0x40
     beqz t5, hcomp_math_done
     nop
+    li t4, 2
+    beq t9, t4, hcomp_math_done
+    nop
+    ori t9, t9, 0x0100
     andi t3, t3, 0x7BDE
     srl t3, t3, 1
 
@@ -239,6 +268,8 @@ hcomp_gate_store:
     lbu t5, CGADSUB
     sh t5, CHAR_DATA + 20
     sh zero, CHAR_DATA + 22
+    // bits1:0 source code (0=fixed,1=Sub,2=fallback); bit8=HALF effective.
+    sh t9, CHAR_DATA + 30
     li a0, CHAR_DATA + 8
     li a1, 0xA00F0008
     jal 0xA4001F08
@@ -342,7 +373,7 @@ hcomp_provenance_end:
 
 // Keep the fixed switch address while absorbing the new lifetime cut entirely
 // out of previously unused H-COMP padding.
-.byte 0:0x5C
+.byte 0:0x04
 
 hcomp_screen_switch:
     beqz s7, hcomp_provenance_end

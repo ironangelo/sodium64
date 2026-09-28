@@ -79,9 +79,9 @@ jobs:
             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf \
             | tee delay-slots.txt
           sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
-          # Deliberately stale rejected-alpha runtime pin for the first bounded-Z pass.
-          # Replace only after source/binary/ABI validation measures this candidate.
-          grep -q '^998e2132bff4a65167f3a3c257e48c269715b00be2e74dc43d5e6ddffb26e808  sodium64.z64$' runtime.sha256
+          # Exact bounded-Z runtime pin measured after source/binary/ABI validation.
+          # Semantic runtime is unchanged; this is a host-only pin update.
+          grep -q '^c073800b3adeb19ebaa7b1d295f3fb47470f604d968942dcb89fd670c39bdc5d  sodium64.z64$' runtime.sha256
 
       - name: Wrap three discriminator guests
         shell: bash

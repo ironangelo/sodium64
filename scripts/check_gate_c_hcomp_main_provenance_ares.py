@@ -44,6 +44,8 @@ BG_TAG = {1: 0x0C00, 2: 0x1400}
 BG_MASK = {1: 0x01, 2: 0x02}
 BG_RGBA = {1: RED_RGBA5551, 2: GREEN_RGBA5551}
 BG_RGB = {1: RED_RGB555, 2: GREEN_RGB555}
+PROVENANCE_PREFIX = bytes((0xC3,)) * 0x40
+PROVENANCE_SUFFIX = bytes((0x3C,)) * 0x40
 
 
 def expected_sub(word: int) -> list[int]:
@@ -204,6 +206,15 @@ def classify_state(root: Path, *, winner: int, cgadsub: int) -> dict[str, object
             f"rendered={rendered_indices} untouched={untouched_indices}"
         )
 
+    prefix = (root / "provenance-prefix.bin").read_bytes()
+    suffix = (root / "provenance-suffix.bin").read_bytes()
+    if prefix != PROVENANCE_PREFIX or suffix != PROVENANCE_SUFFIX:
+        raise ValueError(
+            f"provenance guard corruption BG{winner}: "
+            f"prefix_ok={prefix == PROVENANCE_PREFIX} "
+            f"suffix_ok={suffix == PROVENANCE_SUFFIX}"
+        )
+
     provenance_report = classify_surface(
         (root / "provenance.bin").read_bytes(),
         expected_provenance(BG_TAG[winner]),
@@ -246,6 +257,7 @@ def classify_state(root: Path, *, winner: int, cgadsub: int) -> dict[str, object
         "sub_report": sub_report,
         "main_report": rendered[rendered_indices[0] - 1],
         "provenance_report": provenance_report,
+        "provenance_guards_intact": True,
         "queue": queue,
         "capture_state": state,
     }
@@ -268,7 +280,12 @@ def classify(cases: dict[tuple[int, int], Path]) -> dict[str, object]:
         b = cases[(winner, 2)]
         ra = reports[(winner, 1)]
         rb = reports[(winner, 2)]
-        for name in ("sub.bin", "provenance.bin"):
+        for name in (
+            "sub.bin",
+            "provenance-prefix.bin",
+            "provenance.bin",
+            "provenance-suffix.bin",
+        ):
             if (a / name).read_bytes() != (b / name).read_bytes():
                 raise ValueError(f"BG{winner} {name} changed across CGADSUB states")
         if canonical_main(a, ra) != canonical_main(b, rb):
@@ -321,7 +338,9 @@ def write_fixture(root: Path, *, winner: int, cgadsub: int, rendered_main: int) 
     for i in range(1, 4):
         vals = expected_main(BG_RGBA[winner]) if i == rendered_main else UNTOUCHED_MAIN
         (root / f"main{i}.bin").write_bytes(pack(vals))
+    (root / "provenance-prefix.bin").write_bytes(PROVENANCE_PREFIX)
     (root / "provenance.bin").write_bytes(pack(expected_provenance(BG_TAG[winner])))
+    (root / "provenance-suffix.bin").write_bytes(PROVENANCE_SUFFIX)
 
     gate = 1 if cgadsub == BG_MASK[winner] else 0
     result = HALF_ADD_RED_GREEN if gate else BG_RGB[winner]

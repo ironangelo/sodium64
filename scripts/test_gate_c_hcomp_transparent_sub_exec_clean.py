@@ -15,7 +15,7 @@ def prove_source() -> None:
     defines = (ROOT / "src/defines.h").read_text()
     if "#define HCOMP_PROOF_RDP_CMDS 0xF30" not in defines:
         raise AssertionError("bounded proof RDP table address drift")
-    if "#define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x18)" not in defines:
+    if "#define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x20)" not in defines:
         raise AssertionError("BG depth command base drift")
 
     main = (ROOT / "src/rsp_main.S").read_text()
@@ -29,6 +29,7 @@ def prove_source() -> None:
     if "hcomp_proof_rdp_cmds:" not in main:
         raise AssertionError("bounded proof command table missing")
     for cmd in (
+        ".dword 0x2700000000000000",
         ".dword 0x2F0088FF00040025",
         ".dword 0x3E000000000DFD00",
         ".dword 0x2E00000008000000",

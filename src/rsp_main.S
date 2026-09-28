@@ -140,12 +140,14 @@ overlay_hcomp_src: .word 0
 hcomp_raw_palette_ptrs: .word 0, 0
 // Keep PR #18 CGRAM scratch untouched, then place the proof-only RDP command
 // table at the audited retired DMEM tail. The table is immutable:
-//   +00 OtherModes: alpha test + primitive depth + Z update, no Z compare
-//   +08 Set Z Image: compact E2000 strip aligned to global y=16
-//   +10 backdrop/absence primitive-depth tag 0x0800 -> stored Z 0x0400
-//   +18..+30 BG1..BG4 winner tags
+//   +00 PipeSync before the proof-time OtherModes attribute change
+//   +08 OtherModes: alpha test + primitive depth + Z update, no Z compare
+//   +10 Set Z Image: compact E2000 strip aligned to global y=16
+//   +18 backdrop/absence primitive-depth tag 0x0800 -> stored Z 0x0400
+//   +20..+38 BG1..BG4 winner tags
 .byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_RAW_PALETTE_PTRS + 8))
 hcomp_proof_rdp_cmds:
+    .dword 0x2700000000000000
     .dword 0x2F0088FF00040025
     .dword 0x3E000000000DFD00
     .dword 0x2E00000008000000
@@ -153,7 +155,7 @@ hcomp_proof_rdp_cmds:
     .dword 0x2E00000028000000
     .dword 0x2E00000038000000
     .dword 0x2E00000048000000
-.byte 0:(VEC_DATA - (HCOMP_PROOF_RDP_CMDS + 0x38))
+.byte 0:(VEC_DATA - (HCOMP_PROOF_RDP_CMDS + 0x40))
 
 vec_data:
     // Constants that are always kept in vector registers

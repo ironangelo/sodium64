@@ -235,9 +235,11 @@
 #define HCOMP_CGRAM_PAIR_SCRATCH 0xEA8
 #define HCOMP_CGRAM_WRITE_SCRATCH 0xEB0
 // Gate-C proof-only immutable RDP commands in the audited retired DMEM gap.
-// Seven commands occupy F30..F67; VEC_DATA remains frozen at F70.
+// Eight commands occupy F30..F6F; VEC_DATA remains frozen at F70.
+// PipeSync is required before changing OtherModes while prior RDP work may
+// still be in flight; the BG depth table therefore begins one command later.
 #define HCOMP_PROOF_RDP_CMDS 0xF30
-#define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x18)
+#define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x20)
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached

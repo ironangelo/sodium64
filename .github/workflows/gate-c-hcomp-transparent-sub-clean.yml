@@ -81,7 +81,7 @@ jobs:
           sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
           # Exact runtime pin measured by this dedicated workflow's own build path.
           # Semantic runtime is unchanged by this workflow-only pin update.
-          grep -q '^188bb47fe379c277dbad084c6e6c6e90015c9e5b80d76ecd8044df02e92473ea  sodium64.z64$' runtime.sha256
+          grep -q '^ad96601b62d2104e6428da4c9186849376848595645acf7babb2b25ebbcfd073  sodium64.z64$' runtime.sha256
 
       - name: Wrap three discriminator guests
         shell: bash

@@ -12,21 +12,44 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def prove_source() -> None:
+    defines = (ROOT / "src/defines.h").read_text()
+    if "#define HCOMP_PROOF_RDP_CMDS 0xF30" not in defines:
+        raise AssertionError("bounded proof RDP table address drift")
+    if "#define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x18)" not in defines:
+        raise AssertionError("BG depth command base drift")
+
     main = (ROOT / "src/rsp_main.S").read_text()
     fill = insns(section(
         main,
         "fill_backdrop:",
         "// Run the RDP to fill the segment",
     ))
-    if "ori t0, t0, 0xFF" in fill:
-        raise AssertionError("Sub backdrop still forces opaque alpha")
-    if "nop" not in fill or "sw t0, RDP_FILL + 20" not in fill:
-        raise AssertionError("transparent Sub backdrop slot drift")
-    if "compact offscreen TS target uses" not in main:
-        raise AssertionError("transparent Sub ownership comment missing")
+    if "ori t0, t0, 0xFF" not in fill:
+        raise AssertionError("rejected alpha0 backdrop experiment was not reverted")
+    if "hcomp_proof_rdp_cmds:" not in main:
+        raise AssertionError("bounded proof command table missing")
+    for cmd in (
+        ".dword 0x2F0088FF00040025",
+        ".dword 0x3E000000000DFD00",
+        ".dword 0x2E00000008000000",
+        ".dword 0x2E00000018000000",
+        ".dword 0x2E00000028000000",
+    ):
+        if cmd not in main:
+            raise AssertionError(f"bounded proof command missing: {cmd}")
+
+    draw = insns(section(main, "draw_bg:", "// Check if the BG type or character base changed"))
+    for anchor in (
+        "sll a0, t3, 3",
+        "addi a0, a0, HCOMP_PROOF_BG_DEPTH_CMDS",
+        "jal rdp_send",
+        "addi a1, a0, 8",
+    ):
+        if anchor not in draw:
+            raise AssertionError(f"static depth selection drift: {anchor}")
 
     h = (ROOT / "src/rsp_hcomp.S").read_text()
-    if ".byte 0:0x0C" not in h:
+    if ".byte 0:0x74" not in h:
         raise AssertionError("transparent-Sub HCOMP padding drift")
     if "0xA00E6000" in h or "0xA00E6000" in main:
         raise AssertionError("unexpected new per-pixel surface introduced")
@@ -34,7 +57,12 @@ def prove_source() -> None:
     body = insns(section(h, "hcomp_entry:", "// Mid-frame clean Main provenance helper."))
     required = (
         "lhu t1, SCRN_DATA",
-        "andi t9, t1, 0x1",
+        "lhu t9, CHAR_DATA + 32",
+        "li t4, 0x0400",
+        "xor t4, t9, t4",
+        "sltu t4, zero, t4",
+        "sh t4, CHAR_DATA + 34",
+        "move t9, t4",
         "lhu t5, SUB_COLOR",
         "lbu t2, CGWSEL",
         "andi t3, t2, 0x2",
@@ -54,7 +82,10 @@ def prove_source() -> None:
         "beq t9, t4, hcomp_math_done",
         "sh t9, CHAR_DATA + 30",
         "li a1, 0xA00F0008",
-        "li a2, 0x17",
+        "li a2, 0x1B",
+        "li a0, HCOMP_PROOF_RDP_CMDS",
+        "jal 0xA4001F5C",
+        "li a1, HCOMP_PROOF_BG_DEPTH_CMDS",
     )
     cursor = -1
     for anchor in required:
@@ -63,8 +94,32 @@ def prove_source() -> None:
         except ValueError as exc:
             raise AssertionError(f"transparent-Sub sequence missing/reordered {anchor!r}") from exc
 
-    if body.count("andi t9, t1, 0x1") != 1:
-        raise AssertionError("Sub coverage sample count drift")
+    helper = insns(section(
+        h,
+        "hcomp_provenance_switch_helper:",
+        "// TM has just completed",
+    ))
+    helper_required = (
+        "bnez k0, hcomp_sub_presence_saved",
+        "li a0, CHAR_DATA + 32",
+        "lui a1, 0xA00E",
+        "ori a1, a1, 0x2018",
+        "jal 0xA4001F40",
+        "li a2, 0x7",
+        "lw t0, FRAMEBUFFER(sp)",
+        "sw t0, RDP_FRAME + 4",
+        "jal 0xA4001F5C",
+        "lw a1, OVERLAY_MAIN_SRC",
+        "li t9, 0x1364",
+        "j 0xA4001F7C",
+    )
+    cursor = -1
+    for anchor in helper_required:
+        try:
+            cursor = helper.index(anchor, cursor + 1)
+        except ValueError as exc:
+            raise AssertionError(f"TS->TM preservation sequence missing/reordered {anchor!r}") from exc
+
     if body.count("li t9, 2") != 1:
         raise AssertionError("transparent fallback source code drift")
     if body.count("sh t9, CHAR_DATA + 30") != 1:
@@ -98,7 +153,7 @@ def main() -> int:
         prove_binary(args.maps, args.symbols)
 
     print("HCOMP_TRANSPARENT_SUB_EXEC_CLEAN_CONTRACT_VALIDATED")
-    print("coverage_carrier=compact_sub_rgba5551_alpha")
+    print("coverage_carrier=reused_compact_Z16_TS_winner_tag")
     print("source_code_0=direct_fixed")
     print("source_code_1=live_sub")
     print("source_code_2=transparent_sub_fixed_fallback")

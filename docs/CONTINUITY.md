@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CAUSE VALIDATED / SEMANTIC RUNG STILL OPEN — force-blank lifetime repair removes TLUT/RDP crash (2026-09-28 UTC)
+
+- Exact workflow head **`b440d9f07f664c8e2c6386dfa4246b2e5fc67345`**, semantic runtime **`ba6c879a0bca10c2eee298cd49dd46c7b378d173`**, dedicated **Gate C H-COMP Transparent Sub Clean `36481355107 FAILURE`**, artifact **`10996369911`**, digest **`sha256:3919a6e73ad7ecdea5d810ec25773429d14cadae743fb87f51801b832398989a`**.
+- **MEASURED / CAUSE VALIDATED:** all three deterministic guests now progress through warmup and reach the established fresh-frame capture fence. The prior `guest_counter 0 -> 1 -> stuck` / pinned-ares **TLUT hardware-bug RDP crash is gone** after moving proof OtherModes/Z_UPDATE arming out of startup force-blank frames and into nonblank section0.
+- First-hand capture state is healthy in all three runs: one guest-frame advance, one renderer-frame reentry, RSP halted, `DP_CURRENT == DP_END == 0xC10`, RDP command buffer complete/not busy. Therefore the force-blank lifetime hypothesis is now supported by direct before/after runtime evidence, not merely code inspection.
+- The semantic classifier still fails, but **later and for a different reason**: fixed-half mailbox ends with raw saved TS tag **`0x55AA` sentinel** and normalized presence `1`, whereas the strict oracle requires **`0x1400` BG2 tag + presence 1**. All earlier fields are correct: Main `001F`, Sub `03E0`, result `3C0F`, gate `1`, Main winner `0C00`, mask `1`, CGADSUB `41`, fixed/selected `7C00`, CGWSEL `0`, source/HALF `0100`.
+- **Classification:** the crash/lifetime repair is **VALIDATED**, but transparent-Sub/HALF suppression remains **OPEN**. Do not accept `0x55AA != 0x0400` as proof of Sub presence; the sentinel must never be normalized as a valid real-Sub tag.
+- **Next controlled action:** inspect all three first-hand capture files to determine whether (A) section0 TS Z was never written, (B) the TS->TM helper sampled the wrong time/address, or (C) the tag was written but mailbox publication/lifetime lost it. Preserve the now-validated nonblank-section0 lifetime guard; do not revert it and do not weaken the raw-tag oracle.
+
+
+
 ### HYGIENE CHECKPOINT — bounded transparent-Sub exact-head generic CI green (2026-09-28 UTC)
 
 - Workflow-only repin head **`phase4/gate-c-hcomp-transparent-sub-clean@b440d9f07f664c8e2c6386dfa4246b2e5fc67345`** preserves semantic runtime **`ba6c879a0bca10c2eee298cd49dd46c7b378d173`** and changes only the dedicated ROM hash pin.

@@ -58,6 +58,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - This run is permanently **REJECTED AS SEMANTIC EVIDENCE / TOOLING-PIN ONLY** because it stopped before wrapping/capturing the three ares states. It does prove the candidate fits the frozen overlay ABI and compiles cleanly.
 - **Immediate action:** update only the workflow ROM pin to `998e2132...`; semantic runtime stays at commit `42613980631a27925bd13b5b078f47a036169458`. Then require same-head generic hygiene plus first-hand pinned-ares captures before accepting the alpha coverage representation.
 
+### RERUN CHECKPOINT — exact transparent-Sub runtime pinned (2026-09-28 UTC)
+
+- Workflow-only head **`phase4/gate-c-hcomp-transparent-sub-clean@33a3ec9bf642cf425fe6aa33b0796b54181ad9de`** pins the measured ROM hash **`998e2132bff4a65167f3a3c257e48c269715b00be2e74dc43d5e6ddffb26e808`**; semantic runtime remains **`42613980631a27925bd13b5b078f47a036169458`**.
+- Exact-head dedicated run **`36450859892`** and generic **Build and Validate `36450859788`** are active. Dedicated self-test/build/ABI/wrapping/fence-location gates are already green and is building the pinned ares lab before first-hand captures.
+- Same-head generic normal build and PROFILE build are green. Build artifact **`10984066380`**, digest **`sha256:6cb81827cbe66cc3ee613ae3544cefa7f26f0c690030eae6dfe25dd86f9f366f`**; PROFILE artifact **`10983181976`**, digest **`sha256:216e5c1d0f128037cdf80b917456f15b1ab38de5d5a0cc6e65a7e476aa2edf57`**. Pinned Mupen/LLE smoke is still running and remains hygiene-only.
+- **Pending authority:** do not accept the alpha carrier until dedicated ares proves all three precommitted states. Do not infer performance from these CI results; this remains a Gate-C semantic proof.
+
 ### EXPERIMENT IN PROGRESS — alpha coverage carrier + transparent-Sub fallback (2026-09-28 UTC)
 
 - **CANDIDATE:** `phase4/gate-c-hcomp-transparent-sub-clean@c080d141c4699b4243da1ad83f789364b5efb901` (runtime semantic changes are in `src/rsp_main.S` + `src/rsp_hcomp.S`; later files on the branch are deterministic guest/oracle/contract/workflow plumbing).

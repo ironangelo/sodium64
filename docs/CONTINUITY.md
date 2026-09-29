@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CONTROLLED HARNESS REPAIR — inert WH0 split restores 8-row proof geometry (2026-09-29 UTC)
+
+- Exact branch head **`phase4/gate-c-hcomp-transparent-sub-clean@0ac4507d15beafad103d43c7ae7380990fb5944b`** changes only the transparent-Sub guest generator; Sodium64 runtime remains **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`** and the Sync Full readback fence/oracle are unchanged.
+- For `sub-absent-half`, startup/NMI TS remain forced to **0** for the whole frame. The inherited HDMA channel is now retargeted from **TS ($212D)** to **WH0 ($2126)**, and its transfer data is **0 for lines 0..7, 1 thereafter**.
+- `TSW=TMW=0` throughout this discriminator, so WH0 is semantically inert for rendering/color math; its only intended effect is the existing raster-sensitive `write_wh0 -> update_window_frame` split at line8. The guest also explicitly initializes WH0=0 inside the already-unused proof-hook padding without moving the frozen NMI address.
+- This restores the audited compact proof geometry **[0,8)** while keeping the subscreen truly absent. The expected delivered queue returns to `TS=0 split=8 -> TS=0 split=224`, so the existing strict queue oracle can remain unchanged.
+- **Expected first-hand closure:** absent compact Sub is blue backdrop in the bounded first section, raw TS tag **`0x0400`**, source flags **`0x0002`**, selected fixed **`0x7C00`**, Main BG1 red **`0x001F`**, and full (HALF-suppressed) result **`0x7C1F`**. Present controls must remain `0x1400/0x0100/0x3C0F` and `0x1400/0x0101/0x01EF`.
+- **Falsifiers:** WH0 unexpectedly affects pixels despite disabled windows; absent queue does not split exactly at 8/224; carrier/source/HALF/result drift; or generic runtime CI regresses.
+
+
+
 ### CONTROLLED HARNESS REPAIR — absent TS stays zero; WH0 preserves the 8-line proof section (2026-09-29 UTC)
 
 - Exact branch head **`debe608d1cbae43645015dd4d177971208154334`** changes only the transparent-Sub guest generator. Sodium64 runtime remains frozen at semantic **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`**.

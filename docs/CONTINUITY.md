@@ -6,6 +6,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### ACTIVE BATCH — CGWSEL color-window semantic audit and precommitted discriminator (2026-09-29 UTC)
+
+- **Authority refreshed:** master is still `7cc8facfe8643fb85888f301f79995575830521d`; no open PRs. Validated parent is `5e84c8095bdce0385a8832cccec47d41521cc9b6`. Exact-head dedicated `36580550081` and generic `36580550048` are both SUCCESS.
+- **GATE DRIVER / source-audited gap:** CPU section capture already transports WOBJSEL, WOBJLOG, WH0..WH3 and CGWSEL losslessly and changed writes request raster-sensitive sections. The clean H-COMP sample path reads only CGWSEL bit1; it does not yet consume clip bits7:6 or prevent bits5:4. Existing color-window host tests exercise legacy backdrop segmentation, not this winner-dependent H-COMP decision.
+- **Primary reference re-read:** pinned ares `17813a3ccda21ab9bd45f09bfc2f91196dbf50ff`, `ares/sfc/ppu-performance/{io,window,dac}.cpp`. Color selector is WOBJSEL high nibble, logic WOBJLOG bits3:2; inclusive WH0..WH3 intervals, inversion and OR/AND/XOR/XNOR; no enabled window means selected=false. CGWSEL aboveMask=bits7:6, belowMask=bits5:4; both encode ENABLE modes 0=always,1=inside,2=outside,3=never.
+- **SUPPORTED semantic order:** clip Main to black before math, independently prevent math while retaining the clipped/unclipped Main, retain original winner eligibility after clipping, and suppress HALF when Main is clipped. This adds a second HALF-suppression cause beyond already-validated transparent Sub. Layer TMW/TSW do not gate the color window.
+- **Precommitted smallest first-hand matrix:** freeze live BG1 red `001F`, live BG2 green `03E0`, fixed blue `7C00`, CGADSUB `41`, TS presence `1400/1`, bounded 8/224 geometry and provenance. Test control `CGWSEL=02`, clip-inside `82`, prevent-inside `22`, and both `A2`, each with sample x0 inside singleton W1[0,0] or outside W1[1,1], WOBJSEL=20, WOBJLOG=0, TMW=TSW=0.
+- **Exact results:** control inside/outside `01EF`; clip-only inside `03E0` (black+Sub, HALF suppressed), outside `01EF`; prevent-only inside raw Main `001F`, outside `01EF`; both inside `0000`, outside `01EF`. Require raw rendered Main/Sub/provenance unchanged, exact queued window controls, original Main evidence, effective Main, normalized window flags, math gate and HALF flags.
+- **Planned controlled candidate:** reuse unused leading H-COMP fixed-slot padding for a scalar color-window predicate for the existing x0 sample, preserve public ABI and resident IMEM. No new pixel surface; no full-frame compositor or SMW correctness claim. Add reference-backed host edge coverage and strict first-hand ares evidence before declaring this rung validated.
+- **Historical compatibility boundary:** SMW iris remains the Road target, not a measured success. Archived semantic audit confirms the same clip-before-math/HALF ordering; none of the synthetic results establish the commercial iris fix.
+- **Immediate action:** implement this isolated sample decision and deterministic eight-case guest/oracle, run lower-level gates and exact-head ares. Preserve transparent-Sub controls. Real hardware remains final RDP/RSP and cadence authority.
+
+
 
 ### CHECKPOINT — transparent-Sub fixed fallback + pixel-local HALF suppression VALIDATED (2026-09-29 UTC)
 

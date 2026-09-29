@@ -7,6 +7,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### HARNESS CAUSE FOUND — “sub-absent” guest was not actually absent (2026-09-29 UTC)
+
+- First-hand section-queue audit of artifact **`10999050231`** exposes a deterministic guest-construction defect that the classifier had not reached because it failed earlier on the Sub surface.
+- Present controls are as intended: section0 **TS=2 split=8**, section1 **TS=0 split=224**.
+- The supposed **`sub-absent-half`** guest is different: section0 **TS=0 split=0**, section1 **TS=2 split=8**, section2 **TS=0 split=224**.
+- Root cause is in `make_gate_c_hcomp_transparent_sub.py`: the absent variant patches the two literal startup/NMI `LDA #$02; STA $212D` writes to zero, but inherits `build_hdma_ts_table()` unchanged from the lifetime guest. That HDMA table still writes **TS=BG2 for the first eight visible lines** and then TS=0.
+- Because the first section has zero height, `k0` remains 0 entering the next section; the section0-only proof guard/helper therefore executes again for the real BG2 [0,8) section and overwrites the saved “absence” evidence with valid **`0x1400`** presence. The Sync Full result is therefore internally consistent.
+- **Classification: HARNESS DEFECT / REJECTED AS ABSENCE SEMANTIC EVIDENCE.** The `sub-absent-half` result from runs through `4df594c3...` cannot decide transparent-Sub fallback/HALF suppression.
+- This also means the prior conclusion “carrier initialization/lifetime is definitely wrong” is **not yet proven** for a truly absent frame; the current-frame BG2 writer fully explains the observed `0x1400`.
+- **Immediate controlled repair:** make the absent guest neutralize the inherited TS HDMA table as well as startup/NMI TS writes, preserving the runtime, Sync Full fence and raw-tag oracle. Run this repaired guest first without weakening runtime semantics. Update queue/surface expectations only where the corrected guest/reference semantics require it.
+
+
+
 ### FIRST-HAND RESULT — Sync Full fixes present-TS readback; absence carrier remains invalid (2026-09-29 UTC)
 
 - Exact workflow head **`phase4/gate-c-hcomp-transparent-sub-clean@4df594c3c2f927969845641624a4a3fb5d2d55e5`**, semantic runtime **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`**. Dedicated **`36483470386 FAILURE`**; artifact **`10999050231`**, digest **`sha256:ab3f1437dd2a36dfd275fb7419f97befb9bc8b3bd08db4fe7c8616fe1245fc68`**. Same-head generic **Build and Validate `36483470861 SUCCESS`**.

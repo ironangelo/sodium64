@@ -6,6 +6,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### CONTROLLED BASELINE — color-window discriminator published; runtime frozen (2026-09-29 UTC)
+
+- **Exact candidate:** `phase4/gate-c-hcomp-color-window-clean@c2d2502e8dab3720205ffde1e9bc66fec4c2ea21`, from validated `5e84c809...`. Changes only three host files: deterministic eight-case guest generator, strict gap classifier, dedicated workflow. Sodium64 runtime is byte-for-byte unchanged; dedicated ROM pin remains `44e6ce2bf864716d96dfa4fb6c1d15ac59839119ca0c6a0afa36df1bf0575665`.
+- **Decision / controlled experiment:** run the missing-window baseline before implementing a repair. This separates state-capture/guest/window topology defects from the known H-COMP omission. The planned runtime predicate is deferred until first-hand evidence isolates that omission.
+- **Layout audit:** H-COMP loader copies only IMEM `0x13A8..0x178F` (0x3E8 bytes). Leading `0x1000..0x13A7` padding is NOT loaded and cannot safely host a new helper just because it appears free in the H-COMP ELF. Remaining loaded tail padding is only 0x58 bytes. **REJECTED implementation plan:** placing the color-window helper in leading H-COMP padding without changing overlay ownership. Existing regular resident `calc_window_spans=0xA4001CE4` is available beyond the overlay slot, but invoking it requires preserving its audited caller-clobber contract and accounting for bounded loaded-slot space. Do not grow resident IMEM or silently move public entries.
+- **Guest controls:** new setup occupies verified unused startup padding `$81A0..$81C8`, called through inherited frozen `$81F0` hook. NMI remains `$8200`; the original TS HDMA table and 8/224 split remain unchanged. No commercial ROM bytes. Generator permits diffs only in these hook slots and checksum.
+- **Strict baseline expectation:** all eight observed mailboxes remain the parent's exact live-Sub result `01EF`, with raw CGWSEL matching each guest and both queue copies proving WOBJSEL=20, WOBJLOG=0, exact singleton bounds, TMW/TSW=0 and bounded geometry. Only three inside states differ from the independent primary-reference oracle (`03E0 / 001F / 0000`); all five controls agree.
+- **Classification must be** `HCOMP_COLOR_WINDOW_GAP_REPRODUCED` with `runtime_color_windows_validated=false`. Workflow success means a bug was reproduced, not semantic correctness. Any different arithmetic, carrier, guard, geometry or queue outcome fails this baseline rather than being relabeled convenient evidence.
+- **L0 VALIDATED:** deterministic guest construction, positive and corrupt-capture classifier fixtures, reference-vs-precommitted eight-state matrix, parent transparent-Sub classifier and source/ABI contract pass locally. Corrupt window selector, HALF flag, section bound and stale-frame fixtures are rejected.
+- **Running exact-head workflows:** `Gate C H-COMP Color Window Isolation Clean 36627582947` (in_progress); `Build and Validate 36627582887` (in_progress).
+- **Long experiment handoff:** question is whether both delivered queues preserve the requested color window while H-COMP arithmetic ignores it. Accept only frozen runtime hash + healthy three-state transparent-Sub regression + eight coherent first-hand captures. If geometry/state fails, repair guest/harness first; if arithmetic differs, inspect exact first-hand evidence before touching runtime. If the precommitted gap reproduces, close the isolation stage and prepare one bounded clip/prevent repair.
+
+
 ### ACTIVE BATCH — CGWSEL color-window semantic audit and precommitted discriminator (2026-09-29 UTC)
 
 - **Authority refreshed:** master is still `7cc8facfe8643fb85888f301f79995575830521d`; no open PRs. Validated parent is `5e84c8095bdce0385a8832cccec47d41521cc9b6`. Exact-head dedicated `36580550081` and generic `36580550048` are both SUCCESS.

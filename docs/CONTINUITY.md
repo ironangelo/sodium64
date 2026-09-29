@@ -6,6 +6,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### RERUN CHECKPOINT — same runtime and guests; host lifecycle/ABI repaired (2026-09-29 UTC)
+
+- Exact head `phase4/gate-c-hcomp-color-window-clean@9a019599f3a5a5aafa4ffed7dd8b1135db42d809`. Relative to `c2d2502...`, only the host classifier and dedicated workflow change. No runtime, guest generator, arithmetic, screen ownership, provenance, fence or public ABI change.
+- Exact-head runs: `Gate C H-COMP Color Window Isolation Clean 36629523682` (in_progress); `Build and Validate 36629523185` (in_progress).
+- Per-case ares/Xvfb processes now belong to a dedicated process group; TERM/wait/bounded cleanup prevents prior captures from consuming resources during later ones. Group cleanup also runs on workflow failure.
+- Classifier offsets now match the runtime header independently: WHX=46, WOBJSEL=52, WOBJLOG=54. Local positive/negative fixtures and all four complete first-attempt captures pass the corrected host checks.
+- Question/acceptance unchanged: require three frozen source controls plus eight naturally fenced first-hand window captures. All eight baseline results must remain `01EF`; only clip-inside/prevent-inside/both-inside must disagree with primary-reference `03E0/001F/0000`. Runtime hash must remain `44e6ce2b...`; broad/window correctness must stay false.
+- On SUCCESS, close **color-window isolation** only; then implement one bounded runtime clip/prevent/HALF repair. On failure, inspect the exact first failed case and preserve partial artifact authority without calling the whole matrix complete.
+
+
 ### FIRST-HAND PARTIAL RESULT — clip omission reproduced; capture lifecycle repaired (2026-09-29 UTC)
 
 - Exact first attempt `c2d2502e8dab3720205ffde1e9bc66fec4c2ea21`: generic `36627582887 SUCCESS`; dedicated `36627582947 FAILURE`. Artifact `11061313513`, digest `sha256:f9732bf5a92b0ea0e492a02cae7a35df37ae8c9222bd5061676d202f2fd16894`, downloaded/rehashed locally.

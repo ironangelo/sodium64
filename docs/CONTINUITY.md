@@ -6,6 +6,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### ACTIVE BATCH — bounded clip/prevent repair, slot-preserving plan (2026-09-29 UTC)
+
+- Refreshed canonical docs and live refs: master remains `7cc8facf...`; diagnostic remains `9a019599...`. The previous eight-case gap and three source controls are the unchanged discriminator.
+- Implementation plan: call retained regular `calc_window_spans=0xA4001CE4` after the independent palette-pair proof and before Main/Sub operands are loaded. Its clobbers (t0/t1/t2/t3/t4/t6/t7/t8) are dead there; s0/s1 retain normalized Main-visible / math-permitted decisions through DMA and arithmetic. Resident suffix is not overwritten by the H-COMP slot loader.
+- Use selected-span membership at semantic x0 and the primary-reference mode truth table (0=always,1=inside,2=outside,3=never) separately for CGWSEL bits6:7 and4:5. Preserve rendered winner eligibility; clip effective Main before math; suppress HALF on clipped Main or absent selected Sub. TMW/TSW remain independent.
+- Space strategy: preserve the palette proof and all fixed public entries. Recover loaded-slot bytes by equivalent source selection and arithmetic dispatch / branch-delay scheduling, with exact assembled maps and delay-slot checks as authority. Reject any overflow or helper entry drift; no use of unloaded leading padding, new surface, or resident IMEM growth.
+- Evidence plan: extend only the diagnostic record with raw Main and independently visible window decisions. Keep the original 28-byte source controls available. Require strict repaired semantic acceptance for the same eight cases, actual effective Main/gate/HALF decisions, coherent queues, unchanged raw surfaces/provenance and all three regression controls. Existing gap classifier remains diagnostic-only.
+- Still a bounded laboratory sample repair, not full-frame production compositor, SMW validation, real-N64 ownership or Gate-C closure. Record each implementation/run finding before another long experiment.
+
 ### STAGE CLOSED — CGWSEL clip/prevent gap isolated by complete first-hand matrix (2026-09-29 UTC)
 
 - **Phase:** M3 / Gate C remains ACTIVE. **Closed stage:** deterministic color-window **isolation / COMPATIBILITY DIAGNOSTIC**, not the runtime repair and not Gate C.

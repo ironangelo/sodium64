@@ -7,6 +7,21 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### FIRST-HAND RESULT — Sync Full fixes present-TS readback; absence carrier remains invalid (2026-09-29 UTC)
+
+- Exact workflow head **`phase4/gate-c-hcomp-transparent-sub-clean@4df594c3c2f927969845641624a4a3fb5d2d55e5`**, semantic runtime **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`**. Dedicated **`36483470386 FAILURE`**; artifact **`10999050231`**, digest **`sha256:ab3f1437dd2a36dfd275fb7419f97befb9bc8b3bd08db4fe7c8616fe1245fc68`**. Same-head generic **Build and Validate `36483470861 SUCCESS`**.
+- **MEASURED:** all three guests reach the established fresh-frame fence; no RDP crash, TLUT hardware-bug message or cache-coherency diagnostic occurs. Build/PROFILE/Mupen-LLE smoke are green and the frozen RSP/H-COMP ABI remains intact.
+- **MEASURED / fence effect:** first-hand mailbox raw TS tag is now exact **`0x1400`** for both states with a real BG2 subscreen pixel:
+  - fixed-half: `001F 03E0 3C0F 0001 0C00 0001 0041 0000 7C00 7C00 0000 0100 1400 0001`;
+  - sub-present-half: `001F 03E0 01EF 0001 0C00 0001 0041 0000 7C00 03E0 0002 0101 1400 0001`.
+  This directly validates that the prior `0x55AA` in those states was an unfenced RDP->RSP readback race; **Sync Full + PIPE_BUSY is effective for completed TS winner writes in the pinned-ares lab**.
+- **OPEN / absence state:** `sub-absent-half` has TS=0 in the captured section queue and its compact Sub surface remains entirely untouched sentinel `0x55AA` (2240/2240 words), but the saved raw Z sample is nevertheless **`0x1400`** and is normalized as present. Mailbox: `001F 56CA 2974 0001 0C00 0001 0041 0000 7C00 56CA 0002 0101 1400 0001`.
+- External SNES reference semantics agree that when CGWSEL selects the subscreen but the subscreen pixel is transparent, the addend falls back to fixed COLDATA and HALF is suppressed; the transparent Sub color itself is not required to become an opaque fixed-color pixel. Therefore the oracle's current requirement that the compact Sub color surface be blue in the absent state is suspect and must not be used as presence authority.
+- **Supported interpretation:** the remaining blocker is carrier initialization/lifetime, not the readback fence. A present winner can now be read reliably, but the no-winner path lacks a trustworthy per-frame absence value and can expose a stale/otherwise non-absence Z word.
+- **Next controlled action:** audit the deterministic guest and renderer control flow to determine whether the absent state's `0x1400` can be inherited from an earlier TS-enabled frame or is written in the same frame. Do not weaken the raw-tag requirement yet; do not infer absence from RGB/sentinel alone. If no real TS writer exists, explicitly initialize the bounded Z carrier to an absence state before TS rendering, then rerun the unchanged three-state semantic oracle (with only the incorrect absent-color-surface expectation corrected if reference-backed).
+
+
+
 ### MEASURED — Sync Full fixes TS readback race; absent carrier remains stale (2026-09-29 UTC)
 
 - Exact workflow head **`4df594c3c2f927969845641624a4a3fb5d2d55e5`**, semantic runtime **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`**, dedicated run **`36483470386 FAILURE`**, artifact **`10999050231`**, digest **`sha256:ab3f1437dd2a36dfd275fb7419f97befb9bc8b3bd08db4fe7c8616fe1245fc68`**. Same-head **Build and Validate `36483470861 SUCCESS`**.

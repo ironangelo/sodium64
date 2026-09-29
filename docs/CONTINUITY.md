@@ -6,6 +6,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### DIRECTION CHECKPOINT — user concern: proof growth versus visible iris / real hardware (2026-09-29 UTC)
+
+- User asks what current work is, whether iris has actually been exercised, and warns about spending excessive effort on a growing unvalidated system before commercial-ROM real-N64 testing. Treat this as a gate-driving prioritization constraint. Do not answer with only more CI success or imply sample repair is an observable SMW fix.
+- **Audited facts:** current candidate tree `7a421e7d7f44e17a498d17d99db0c474b844339c` versus integrated master tree `fdb617ce9de4551486e68145d79f49501192a45e`: 47 added/changed file paths, 42 host scripts/workflows and 5 runtime source paths (defines.h, main.S, rsp_hcomp.S, rsp_main.S, rsp_mode7.S). Candidate has110 files versus master67. Source-file growth is not executable-size or performance evidence. The large laboratory accumulation is real maintenance/iteration cost even though host scripts/workflows do not ship as N64 runtime code.
+- RSP instruction-memory capacity remains4KiB; final regular/Mode7 maps each occupy0x1000, H-COMP swaps the fixed0x3E8 slot and has only4B spare padding. This demonstrates bounded instruction storage, not low complexity, low bus cost, full-frame throughput or production readiness. Tiny remaining slot budget is an architecture risk to resolve deliberately.
+- **Exact current boundary:** Main/Sub colors and limited winner/source/window arithmetic have first-hand synthetic evidence. Current repair computes semantic x0 and publishes a diagnostic record, not corrected full output. Relevant window/fixed-color state is constant across both guest sections. Dynamic per-section/per-line state, complete pixel output, final brightness, broader winner types, production RDP->RSP ownership/cadence, actual SMW iris and this new route on real N64 are still unproven.
+- Gate-B hardware closure (three open workloads,60/60x5) is valid evidence for the integrated base core. It is NOT hardware validation for these experimental compositor branches, nor commercial-library fidelity authority.
+- **Engineering priority adjustment:** retain current eleven records as regressions; close remaining mode/window checks in the smallest batch needed to protect implementation, preferably reusing current runtime/oracles. Do not make exhaustive or repeatedly bespoke host-only matrices a prerequisite to every visible step. Next material milestone must progress toward an owned visible composed image with changing window state representative of iris, then an early paired baseline/candidate real-N64 test. Preserve lower-level checks, but stop expanding a harness when it ceases to reduce a decision needed for that milestone.
+- A stable-master SMW real-hardware observation can be made earlier as a baseline without waiting for Gate C completion. It will characterize the existing regression, not validate the new repair. Commercial ROMs remain local/private; no upload to repository/CI is required for a real-N64 user milestone. Prepare exact build, settings, reproducible effect/checkpoint and pass/fail question before asking for hardware work; no vague request to test an unfinished proof.
+- Route adjustment does not close Gate C, change Road1.0 targets, authorize claims of SMW success, or merge experimental proof plumbing. After the necessary compact semantic check, choose the next bounded output/ownership rung explicitly and record its hypothesis, resource budget, expected visible result and hardware question before implementing. Preserve existing evidence rather than carrying every historical diagnostic into a production merge.
+
 ### STAGE CLOSED — bounded H-COMP clip/prevent/HALF sample repair validated (2026-09-29 UTC)
 
 - **Phase:** M3 / Gate C remains ACTIVE. **Closed stage:** missing clip/prevent decision repaired and twice validated on the bounded semantic-x0 H-COMP sample. This is not full-frame compositor or SMW/game correctness.
@@ -811,7 +822,9 @@ This snapshot describes that earlier validated stage; the current candidate and 
 
 ### RESUME NEXT — GATE DRIVER
 
-**Expand the validated bounded color-window sample to remaining mode/window boundaries, then earn full output/representative fidelity.**
+**Prioritize the shortest validated route to visible composed output / iris and an early real-N64 milestone.**
+
+Direction update: the user explicitly questioned accumulated proof infrastructure and absence of commercial/hardware evidence. Retain the eleven-case regression set and finish essential mode/window checks compactly; avoid indefinite host-only expansion. The next material milestone must advance owned visible output with changing window state, followed by paired stable baseline/candidate hardware evidence. Stable-master SMW baseline observation can happen before the new path is production-ready; commercial ROMs stay local/private. See the direction checkpoint at RESUME HERE.
 
 1. Start from `phase4/gate-c-hcomp-color-window-repair-clean@77ea8f93c9e7e52a53345005b8dd9a46079ea7b9`, final dedicated `36635722661`, artifact `11065031224`. ROM a10e50ab... / ELF344d5692... are exact dedicated-build authority and directly rehashed. Do not restart the already closed gap isolation or clip/prevent repair.
 2. Freeze all eight repaired records and three source controls, raw Main/Sub ownership, winner eligibility, transparent fallback/HALF, guards, both coherent queue copies, 8/224 geometry, fixed ABI and one-frame fence. Keep old gap oracle diagnostic-only and repaired acceptance separate.

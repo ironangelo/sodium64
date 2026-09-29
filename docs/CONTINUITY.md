@@ -7,6 +7,21 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### MEASURED — Sync Full fixes TS readback race; absent carrier remains stale (2026-09-29 UTC)
+
+- Exact workflow head **`4df594c3c2f927969845641624a4a3fb5d2d55e5`**, semantic runtime **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`**, dedicated run **`36483470386 FAILURE`**, artifact **`10999050231`**, digest **`sha256:ab3f1437dd2a36dfd275fb7419f97befb9bc8b3bd08db4fe7c8616fe1245fc68`**. Same-head **Build and Validate `36483470861 SUCCESS`**.
+- All pre-ares gates passed; all three guests advanced and reached the fresh-frame fence. All three ares logs contain **zero** RDP crashes, zero multi-line-TLUT failures and zero cache-coherency diagnostics.
+- **MEASURED / hypothesis supported:** the architectural Sync Full + PIPE_BUSY fence fixes the prior mid-frame RDP->RSP readback race. Raw TS tags are now exact **`0x1400`** in both states where BG2 is genuinely rendered:
+  - fixed-half mailbox: `001F 03E0 3C0F 0001 0C00 0001 0041 0000 7C00 7C00 0000 0100 1400 0001`;
+  - sub-present-half: `001F 03E0 01EF 0001 0C00 0001 0041 0000 7C00 03E0 0002 0101 1400 0001`.
+- **New isolated failure:** sub-absent-half has an entirely untouched compact Sub surface (**2240 × `0x55AA`**) yet the saved TS tag is still **`0x1400`**, yielding mailbox `001F 56CA 2974 0001 0C00 0001 0041 0000 7C00 56CA 0002 0101 1400 0001`. The strict oracle correctly rejects this state before accepting transparent-Sub fallback.
+- **Supported interpretation:** `0x1400` in the absent case is a **stale valid depth tag from prior rendering**, not a readback sentinel and not evidence of present Sub coverage. The fence works; the absence baseline is simply not being written/initialized when TS has no drawable layer.
+- **REJECTED:** “Sync Full/PIPE_BUSY is insufficient to expose current TS tags” is rejected for real BG2 writes. Do not remove the fence.
+- **Immediate next experiment:** initialize only the proof sample/absence carrier to the exact stored backdrop tag **`0x0400`** before section0 TS rendering, then let any real TS BG winner overwrite it. Preserve current Z address, winner tags, Sync Full fence, force-blank lifetime guard, guest/oracle and public ABI. Do not expand into windows/clip/prevent or a new per-pixel surface.
+- **Falsifiers:** fixed/sub-present cease producing `0x1400`; absent does not remain `0x0400`; any RDP crash/ABI movement returns; or Main/provenance/source/HALF results regress.
+
+
+
 ### MEASUREMENT CHECKPOINT — Sync Full fence builds with frozen ABI; stale pin only (2026-09-28 UTC)
 
 - Exact semantic candidate **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`**, dedicated **`36483249139 FAILURE`**, artifact **`10998465429`**, digest **`sha256:a926999695311f65d3ab2c18ccbfacff05ba82cf9effcc6ca54e5c8c076a0071`**.

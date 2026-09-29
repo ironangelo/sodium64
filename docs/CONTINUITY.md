@@ -6,6 +6,32 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### STAGE CLOSED — bounded H-COMP clip/prevent/HALF sample repair validated (2026-09-29 UTC)
+
+- **Phase:** M3 / Gate C remains ACTIVE. **Closed stage:** missing clip/prevent decision repaired and twice validated on the bounded semantic-x0 H-COMP sample. This is not full-frame compositor or SMW/game correctness.
+- **Integrated truth:** `master@7cc8facfe8643fb85888f301f79995575830521d` unchanged. **Current validated candidate:** `phase4/gate-c-hcomp-color-window-repair-clean@77ea8f93c9e7e52a53345005b8dd9a46079ea7b9`. Runtime implementation is parent `77f4ecf7500e6eae329458ec361c83811283ea5b`; current head adds only exact workflow pins and binary preservation. Git comparison confirms only that workflow differs between the two heads. No PR/merge by this stage.
+- **Exact-head generic:** Build and Validate `36635722686 SUCCESS`: normal + PROFILE + branch-delay + Mupen/LLE smoke. **Exact-head dedicated:** Gate C H-COMP Color Window Sample Repair Clean `36635722661 SUCCESS`, job `109635741436`.
+- **Final evidence:** artifact `11065031224`, digest `sha256:be4e52c07e2191d563bdf939d068f94aab3260556e2812246aadf66f90efc861`. Downloaded/rehashed ZIP and its actual binaries, not just hash text: ROM `a10e50abb748fab37f37952a3b87330783fef4b9dec7394639c46d899e1941de`; ELF `344d5692e188e3942f2fe7baee8c3c917901497fdbc5f78e3c05275dad385e15`. Both equal dedicated pins and first measurement authority.
+- **Independent replay:** both classifiers' full local JSON equals final CI JSON exactly. All eleven semantic mailboxes and canonical raw Main/Sub/provenance/guards match the first measurement run. Source/binary ABI contract and branch-delay checks rerun locally on final artifact; regular/Mode7 text 0x1000, H-COMP 0x790, zero control instructions in delay slots. Public entries, helper 0xA4001CE4 and loaded 13A8..178F ownership unchanged. Only 4 bytes tail padding remain; do not casually add instructions.
+- **Classification:** `HCOMP_COLOR_WINDOW_SAMPLE_REPAIR_VALIDATED`, passed=true, `runtime_color_window_sample_validated=true`. Original `HCOMP_COLOR_WINDOW_GAP_REPRODUCED` classifier remains a separate diagnostic; it was not relabeled a repair pass.
+
+| Case at semantic x0 | CGWSEL | Effective Main | Result | Math gate | HALF effective | Visible/permitted flags |
+|---|---:|---:|---:|---:|---:|---:|
+| control inside | 02 | 001F | 01EF | 1 | 1 | 3 |
+| control outside | 02 | 001F | 01EF | 1 | 1 | 3 |
+| clip inside | 82 | 0000 | 03E0 | 1 | 0 | 2 |
+| clip outside | 82 | 001F | 01EF | 1 | 1 | 3 |
+| prevent inside | 22 | 001F | 001F | 0 | 0 | 1 |
+| prevent outside | 22 | 001F | 01EF | 1 | 1 | 3 |
+| clip+prevent inside | A2 | 0000 | 0000 | 0 | 0 | 0 |
+| clip+prevent outside | A2 | 001F | 01EF | 1 | 1 | 3 |
+
+- Raw Main remains red001F in every appended record and physical surface; Sub green03E0, Main winner0C00/mask1 and TS presence1400/1 remain unchanged. Clipping alters arithmetic input before math without losing original winner eligibility; math prevention is independent; HALF is suppressed by clipping or absent selected Sub.
+- All eight cases pass both queue copies: exact WOBJSEL20/WOBJLOG0, singleton bounds, requested CGWSEL, TMW=TSW=0 and 8/224 geometry. All eleven repeated captures have guest delta1, renderer reentry1, RSP HALT, bufferBusy=false, DPC_CURRENT=DPC_END=0xC10, intact guards. No searched fatal/RDP crash/TLUT/cache-coherency diagnostics or listed surviving ares/Xvfb children.
+- Three frozen regression controls retained: direct fixed+HALF3C0F; live Sub+HALF01EF; absent selected Sub fixed fallback, HALF suppressed7C1F. No new per-pixel surface, no resident IMEM growth, no palette-pair proof removal, no force/reset or master change.
+- **Limits / next:** all16 CGWSEL mode pairs and W2/invert/combine are still L2 TODO; current eight cases use W1 at x0, fixed full brightness and identical relevant state in both sections. Reading the last loaded section is safe only for this frozen discriminator; dynamic per-section window/color epochs and all-pixel output need a later owned compositor rung. Real-N64 RDP->RSP ownership/cadence and SMW iris remain unproven.
+- **STOP / CHECKPOINT:** this bounded sample repair stage is CLOSED. Resume the mode/window boundary expansion from the validated candidate; preserve its eight semantic records and three source controls. Road/roadmap milestone definitions unchanged; Gate C is not closed.
+
 ### MEASURED REPAIR CHECKPOINT — all eleven first-hand captures pass; exact pin rerun started (2026-09-29 UTC)
 
 - Runtime head `77f4ecf7500e6eae329458ec361c83811283ea5b`: dedicated `36634304085 SUCCESS` / job `109631078101`; generic `36634304068` normal/PROFILE/branch-delay/Mupen-LLE smoke jobs all SUCCESS. No runtime merge.
@@ -785,17 +811,17 @@ This snapshot describes that earlier validated stage; the current candidate and 
 
 ### RESUME NEXT — GATE DRIVER
 
-**Implement CGWSEL clip/prevent on the now-isolated clean H-COMP path.**
+**Expand the validated bounded color-window sample to remaining mode/window boundaries, then earn full output/representative fidelity.**
 
-1. Start from `phase4/gate-c-hcomp-color-window-clean@9a019599f3a5a5aafa4ffed7dd8b1135db42d809`, whose eleven-case exact-head lab result is fully inspected.
-2. Freeze raw Main/Sub ownership, BG1 winner/eligibility, source selection, transparent-Sub fallback/HALF suppression, bounded 8/224 geometry, guards, ABI and one-frame fence.
-3. Preserve the precommitted eight-state reference matrix: all five controls stay `01EF`; clip-inside becomes `03E0`, prevent-inside `001F`, both-inside `0000`. Require actual clip/main-effective, prevent/gate and HALF evidence, not just a coincidentally correct output.
-4. Apply Main clipping before arithmetic; clipping must preserve BG winner eligibility and suppress HALF. Prevent math independently. Color-window selection is independent of TMW/TSW layer-window enables.
-5. First audit loaded-slot budget and any resident helper call. Only `13A8..178F` is overwritten by H-COMP; leading ELF padding is not loaded. Reuse existing carrier/state where sufficient, preserve public entries and resident IMEM, and do not revive old cumulative branches.
-6. Build exact runtime authority in the dedicated workflow, retain normal/PROFILE/delay-slot/smoke gates, and rerun all eight cases plus the three frozen source controls. The current green diagnostic explicitly validates bug reproduction, so create a strict repaired-semantic acceptance mode rather than relabeling it.
-7. After this repair, expand remaining CGWSEL modes and W2/inversion/combine edge coverage; then use the SMW iris regression as the representative software target. ALttP rain/tree compositor follows per Road.
+1. Start from `phase4/gate-c-hcomp-color-window-repair-clean@77ea8f93c9e7e52a53345005b8dd9a46079ea7b9`, final dedicated `36635722661`, artifact `11065031224`. ROM a10e50ab... / ELF344d5692... are exact dedicated-build authority and directly rehashed. Do not restart the already closed gap isolation or clip/prevent repair.
+2. Freeze all eight repaired records and three source controls, raw Main/Sub ownership, winner eligibility, transparent fallback/HALF, guards, both coherent queue copies, 8/224 geometry, fixed ABI and one-frame fence. Keep old gap oracle diagnostic-only and repaired acceptance separate.
+3. First expand CGWSEL's full 16 clip/prevent mode pairs with inside/outside membership; then add discriminating W2, inversion, OR/AND/XOR/XNOR, disabled/empty/reversed/full-range window cases. Reuse the same guest/runtime/capture where sufficient; precommit independent reference outcomes and require decision/gate/HALF evidence beyond result equality. Do not build a general second compositor/emulator as host tooling.
+4. Keep the exact runtime pin unless runtime actually changes. Host-only expansion should leave ROM/ELF identical; if a runtime change becomes necessary, first record the hypothesis, respect the nearly full overlay (only4B padding) and measure the dedicated build's own new binary authority before repinning. No leading-pad execution, resident IMEM growth, new surface or cumulative-branch import by default.
+5. Current proof computes one sample, does not publish corrected pixels, and consumes constant window/color state shared by both sections. Before representative correctness claims, establish the owned all-pixel/per-section decision/output path, including relevant CGRAM/fixed-color/brightness epochs and RDP->RSP lifetime. Preserve existing raw-carrier/provenance evidence while measuring the actual composed output.
+6. After the bounded semantics/output rung earns acceptance, use SMW iris/window/color-math as the representative target; ALttP rain/tree compositor follows per Road. No commercial ROM uploads. Real N64 remains final ownership/cadence authority, with hardware requests only for milestone questions that lower layers cannot answer.
+7. Batch -> continuity checkpoint before every material or long experiment. Preserve exact head/run/artifact/binary hashes, hypotheses, rejected explanations, remaining risks and next action. Retain normal/PROFILE/delay/smoke hygiene; do not promote sample correctness to Gate-C or 1.0 completion.
 
-**STATUS: color-window isolation CLOSED / measured gap; clip/prevent runtime repair TODO; M3/Gate C remains ACTIVE.**
+**STATUS: color-window isolation CLOSED; bounded clip/prevent/HALF sample repair CLOSED / twice first-hand VALIDATED; mode/window expansion and owned full output TODO; M3/Gate C remains ACTIVE.**
 
 ---
 
@@ -854,6 +880,13 @@ This snapshot describes that earlier validated stage; the current candidate and 
 - Eight coherent/fenced window captures keep the same `01EF` result despite correctly delivered window controls. Five reference controls agree; clip-inside/prevent-inside/both-inside should be `03E0/001F/0000`.
 - All three transparent-Sub source/HALF controls still pass. Runtime is unchanged.
 - This closes the reproduction/isolation question only; runtime clip/prevent repair and SMW correctness remain TODO.
+
+### 9. Bounded H-COMP clip/prevent/HALF sample repair — CLOSED / VALIDATED
+
+- Validated head `77ea8f93c9e7e52a53345005b8dd9a46079ea7b9`; generic `36635722686 SUCCESS`, dedicated `36635722661 SUCCESS`, artifact `11065031224`, digest `sha256:be4e52c07e2191d563bdf939d068f94aab3260556e2812246aadf66f90efc861`.
+- Eight exact reference records + three transparent-Sub controls pass twice. Clip-inside03E0, prevent-inside001F, combined-inside0000; actual effective Main/gate/HALF/predicate evidence and unchanged raw carriers/provenance rule out coincidental results.
+- Actual downloaded ROM/ELF rehashed to a10e50ab... /344d5692..., matching dedicated workflow pins. Fixed slot/public entries/helper and resident sizes unchanged; only4B tail padding remains.
+- This supersedes the historical runtime-repair TODO in stage8 for this sample only. All16 modes, W2/inversion/combine L2, actual full composed output, SMW and real-N64 production/cadence remain TODO.
 
 ---
 

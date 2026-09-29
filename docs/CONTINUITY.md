@@ -7,6 +7,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CONTROLLED HARNESS REPAIR — absent TS stays zero; WH0 preserves the 8-line proof section (2026-09-29 UTC)
+
+- Exact branch head **`debe608d1cbae43645015dd4d177971208154334`** changes only the transparent-Sub guest generator. Sodium64 runtime remains frozen at semantic **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`**.
+- For `sub-absent-half`, startup writes TS=0 and HDMA is retargeted from **TS $212D** to **WH0 $2126**. Its payload is **0 for visible lines 0..7 and 1 thereafter**, creating exactly one line-8 register transition while TMW/TSW remain disabled. The former NMI TS write is repurposed, same size, to restore WH0=0 before each frame.
+- Generator guards require no remaining literal TS=BG2 write, no HDMA destination targeting TS, exact inherited table length (224 lines), and exact WH0 payload shape.
+- Purpose: restore the original bounded 280x8 proof geometry without ever enabling a real Sub layer. This addresses the measured `d7ee313...` 224-line scratch overrun while preserving the already-correct `0400 / presence0 / source0002` semantic evidence.
+- Exact-head workflows **Build and Validate `36527451478`** and dedicated **`36527451444`** are queued/running. Acceptance remains the original strict three-state oracle; no runtime/oracle weakening is authorized.
+
+
+
 ### FIRST-HAND TRUE-ABSENT RESULT — absence tag is correct; 224-line proof surface overruns (2026-09-29 UTC)
 
 - Exact host-only guest-repair head **`phase4/gate-c-hcomp-transparent-sub-clean@d7ee3131685f14203c45df8bd3c64713018481a2`**; Sodium64 semantic runtime remains **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`** with ROM pin **`44e6ce2bf864716d96dfa4fb6c1d15ac59839119ca0c6a0afa36df1bf0575665`**.

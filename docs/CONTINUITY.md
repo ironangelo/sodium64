@@ -4,7 +4,21 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 > **Continuity compaction / recovery (2026-09-28):** the live handoff again grew past the GitHub Contents API comfort boundary (~1.8 MB), which caused normal `fetch_file` reads to return an empty body. The complete pre-compaction Gate-C operational log is permanently preserved at continuity commit **`f175f2151d4adc0a9d0067e1714c649bc9088c66`**. Older pre-overflow history remains preserved at **`686f5a1da210f8fcd1b9cd6e74d5663f4d359c30`**, and the Sep-23–25 E4d block is also in `docs/CONTINUITY_ARCHIVE_E4D_2026-09-23_25.md`. This live file is intentionally compacted to current state, durable evidence, rejected explanations, risks and immediate next action. **Archived means preserved, not discarded.**
 
-## RESUME HERE — current audited state (2026-09-28 UTC)
+## RESUME HERE — current audited state (2026-09-29 UTC)
+
+
+### FIRST-HAND RESULT — WH0 restores the 8-line bound, but the strict oracle is stale and a zero-height split remains (2026-09-29 UTC)
+
+- Exact candidate head **\`phase4/gate-c-hcomp-transparent-sub-clean@0ac4507d15beafad103d43c7ae7380990fb5944b\`**; Sodium64 semantic runtime remains **\`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca\`** and generic **Build and Validate \`36527516094 SUCCESS\`** is green.
+- Dedicated **\`36527516097 FAILURE\`**, artifact **\`11015427350\`**, digest **\`sha256:7d829bcc6a5901759922771db272cc2a2cf68dc701342a23500d149fe48f6f20\`**. The failure occurs only in the classifier's old absent-Sub color-surface expectation; capture/build/ABI/fresh-frame gates all completed.
+- **MEASURED semantic closure candidate:** fixed-half mailbox is exact **\`001F 03E0 3C0F 0001 0C00 0001 0041 0000 7C00 7C00 0000 0100 1400 0001\`**; sub-present-half is exact **\`001F 03E0 01EF 0001 0C00 0001 0041 0000 7C00 03E0 0002 0101 1400 0001\`**; truly absent is **\`001F 56CA 7C1F 0001 0C00 0001 0041 0000 7C00 7C00 0002 0002 0400 0000\`**. Thus the absent state has exact fixed fallback, HALF suppressed, raw backdrop tag **\`0x0400\`**, presence 0 and final result **\`0x7C1F\`**.
+- In the absent state the compact Sub color surface is intentionally untouched: **2240/2240 words remain sentinel \`0x55AA\`**. Its raw sampled RGB mailbox word becomes **\`0x56CA\`** after the existing RGBA5551->RGB555 conversion. This is consistent with the already-audited rule that Sub color is not the presence authority; Z/tag metadata is. The current classifier comment says this, but still incorrectly requires an opaque blue Sub surface and therefore rejects before inspecting the valid mailbox.
+- **MEASURED queue nuance:** fixed and present controls remain exactly **split 8 -> 224**. The absent guest now records **\`TS=0 split=0 -> TS=0 split=8 -> TS=0 split=224\`**. The leading zero-height record is caused by the explicit WH0 initialization/update path; the desired [0,8) bound is nevertheless restored and no 224-line proof-surface overrun occurs.
+- **Interpretation:** runtime source/HALF semantics are supported strongly, but the rung is not yet VALIDATED because the oracle must be corrected and the zero-height section must be proven harmless or removed without changing the runtime result. Do not weaken raw-tag/source/result requirements.
+- **Immediate next action:** audit the section/proof control flow for the zero-height record. Prefer removing the redundant line-0 WH0 split if a guest-only change can do so safely; otherwise teach the strict queue oracle to accept exactly one leading zero-height inert record while still requiring the bounded [0,8) and [8,224) sections. Separately change absent Sub surface expectation from blue to untouched sentinel and require the mailbox's raw Sub sample to match that sentinel-derived value. Then rerun the unchanged semantic runtime and strict three-state oracle.
+
+
+
 
 
 ### CONTROLLED HARNESS REPAIR — inert WH0 split restores 8-row proof geometry (2026-09-29 UTC)

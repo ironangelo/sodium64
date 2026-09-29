@@ -14,6 +14,7 @@ from make_gate_c_hcomp_main_sub_lifetime import (
 
 CGADSUB_SETUP = bytes((0xA9, 0x01, 0x8D, 0x31, 0x21))
 TS_BG2_SETUP = bytes((0xA9, 0x02, 0x8D, 0x2D, 0x21))
+HDMA_TS_DEST_SETUP = bytes((0xA9, 0x2D, 0x8D, 0x01, 0x43))
 
 MODES = {
     "fixed-half": (0x00, False),
@@ -23,17 +24,25 @@ MODES = {
 
 
 def absent_hdma_table() -> bytes:
-    """Preserve the lifetime table shape while forcing TS=0 in every block."""
+    """Keep the line-8 section split without ever writing TS in absent mode."""
     table = bytearray(build_hdma_ts_table())
     offset = 0
+    line = 0
     while True:
         header = table[offset]
         if header == 0:
             break
         count = header & 0x7F
         offset += 1
-        table[offset:offset + count] = bytes(count)
+        for i in range(count):
+            # Retargeted to WH0: keep its reset value through lines 0..7,
+            # then change once at line 8. Window enables are zero, so this is
+            # a section-boundary carrier only and cannot mask any pixels.
+            table[offset + i] = 0x00 if line < 8 else 0x01
+            line += 1
         offset += count
+    if line != 224:
+        raise ValueError(f"unexpected inherited HDMA line count: {line}")
     return bytes(table)
 
 
@@ -52,19 +61,43 @@ def build_mode(mode: str) -> bytes:
     if len(ts_hits) != 2:
         raise ValueError(f"expected startup+NMI TS=BG2 writes, found {ts_hits!r}")
     if absent:
-        for off in ts_hits:
-            rom[off + 1] = 0x00
+        startup_ts, nmi_ts = ts_hits
+        rom[startup_ts + 1] = 0x00  # TS starts and remains disabled.
 
-        # This guest inherits the lifetime discriminator's direct HDMA table,
-        # which otherwise re-enables BG2 on TS for the first eight visible
-        # lines even after the startup/NMI writes above are cleared.  Preserve
-        # the exact table headers/length but force every transferred TS value
-        # to zero so the absent state has no hidden real-Sub interval.
+        # TS no longer changes in the NMI path, so reuse the same-size write to
+        # restore harmless WH0=0 before each frame. The retargeted HDMA below
+        # changes WH0 only at line 8, preserving the compact proof geometry.
+        rom[nmi_ts:nmi_ts + len(TS_BG2_SETUP)] = bytes((
+            0xA9, 0x00, 0x8D, 0x26, 0x21,
+        ))
+
+        dest_hits = hits(rom, HDMA_TS_DEST_SETUP)
+        if len(dest_hits) != 1:
+            raise ValueError(f"expected one TS HDMA destination setup, found {dest_hits!r}")
+        rom[dest_hits[0] + 1] = 0x26  # $2126 WH0; window enables stay disabled.
+
         table_offset = HDMA_TS_TABLE_ADDRESS - LOAD_ADDRESS
         original = build_hdma_ts_table()
         if bytes(rom[table_offset:table_offset + len(original)]) != original:
             raise ValueError("inherited TS HDMA table drifted")
-        rom[table_offset:table_offset + len(original)] = absent_hdma_table()
+        replacement = absent_hdma_table()
+        rom[table_offset:table_offset + len(original)] = replacement
+
+        # Deterministic construction guards: no instruction/HDMA destination
+        # may re-enable BG2 on TS, and the harmless WH0 carrier must split at 8.
+        if hits(rom, TS_BG2_SETUP):
+            raise ValueError("absent guest still contains a TS=BG2 write")
+        if hits(rom, HDMA_TS_DEST_SETUP):
+            raise ValueError("absent guest still targets TS with HDMA")
+        payload = []
+        offset = 0
+        while replacement[offset] != 0:
+            count = replacement[offset] & 0x7F
+            offset += 1
+            payload.extend(replacement[offset:offset + count])
+            offset += count
+        if payload[:8] != [0] * 8 or payload[8:] != [1] * (len(payload) - 8):
+            raise ValueError("WH0 section-boundary carrier drifted")
 
     finalize_checksum(rom)
     return bytes(rom)

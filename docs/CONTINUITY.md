@@ -6,6 +6,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### IMPLEMENTATION CHECKPOINT — clip/prevent candidate published; build authority pending (2026-09-29 UTC)
+
+- Exact candidate `phase4/gate-c-hcomp-color-window-repair-clean@77f4ecf7500e6eae329458ec361c83811283ea5b`, tree `b5e5be909abe9851c70f877c9347e9ab9a0465a9`, from diagnostic `9a019599...`. Master unchanged.
+- Runtime change confined to `src/rsp_hcomp.S`: retains independent two-pair palette proof and public entry labels; calls identical retained regular/Mode7 window helper before operands are live; stores independent visible/permitted flags. Main clips before math without losing BG1/BG2 winner mask. Effective HALF is computed once after the independent prevent gate, suppressing clipped Main and transparent selected Sub.
+- Reclaimed bytes by equivalent source dispatch and unified HALF dispatch; source estimate is 948 active bytes before the 0x1760 switch plus 4 bytes padding. This is an estimate, not assembled ABI authority. Exact maps and delay-slot checks must pass before semantic capture.
+- Diagnostic record extended from 28 to 32 bytes with raw Main and window flags. Capture defaults to the original 28 bytes for all three source controls; only eight window cases request 32. Parent oracle gained explicit optional expected Main/gate/extension parameters with unchanged defaults; old diagnostic gap oracle remains separate and passes locally.
+- L0: repaired positive fixtures and corrupt effective-Main, gate, HALF, raw-carrier, predicate, queue-layout, geometry and stale-frame fixtures pass/reject as expected; parent source-control and baseline-gap self-tests pass; source carrier/lifetime and new decision contract pass.
+- Dedicated workflow initially measures its own exact ROM/ELF hash without borrowing the old runtime pin. Do not close the stage until the first-hand matrix passes and this dedicated measured hash is repinned and rerun. CI SUCCESS alone is not full-frame/window/game correctness.
+- Exact-head workflows: `Gate C H-COMP Color Window Sample Repair Clean 36634304085` (in_progress); `Build and Validate 36634304068` (pending); `Build and Validate 36634297568` (in_progress).
+- Pending: assembled helper/entry/slot authority, all eleven naturally fenced first-hand captures, local artifact rehash/classifier replay, then exact-build pin checkpoint. Do not expand all16/W2/SMW until this rung closes.
+
 ### ACTIVE BATCH — bounded clip/prevent repair, slot-preserving plan (2026-09-29 UTC)
 
 - Refreshed canonical docs and live refs: master remains `7cc8facf...`; diagnostic remains `9a019599...`. The previous eight-case gap and three source controls are the unchanged discriminator.

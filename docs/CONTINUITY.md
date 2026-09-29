@@ -6,6 +6,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### USER CLARIFICATION — preserve required steps and testing; stop non-driving iteration (2026-09-29 UTC)
+
+- User explicitly clarifies: do not skip obligatory steps or stop testing. Avoid being stuck iterating on things that do not approach the Road, or improving instrumentation instead of the emulator itself.
+- This qualifies the recent priority adjustment: necessary build, regression, semantic, resource/ownership and milestone hardware gates remain required. Pending fidelity cases are not waived; scope and timing must follow what the implementation touches and what the claimed milestone actually proves. Early bounded prototypes must keep their limitations explicit.
+- Before each batch, name the concrete Road/Gate-C blocker or observable emulator improvement, the smallest implementation needed and the evidence required to accept/reject it. Preserve passing controls. Add/repeat tests when changed behavior, a failure, an unresolved risk or a stated acceptance requirement warrants them.
+- Instrumentation work is justified only by a current necessary question that cannot be answered adequately with existing evidence/tools, and should stop once that question is answered. Do not create stand-alone infrastructure-polishing stages, reopen settled sample results without new evidence, or expand matrices indefinitely while deferring owned visible output and representative/hardware validation.
+- Continue toward visible composed output/changing windows/iris with the required checks. This is a prioritization rule, not permission to weaken correctness, hide risks, claim an unfinished compositor is production-ready, or bypass Road milestones.
+
 ### CONFIRMED PRIORITY — tests serve Road outcomes; visible Gate-C progress comes first (2026-09-29 UTC)
 
 - User explicitly confirms concern that testing appears to have become the purpose rather than approaching the Road target, and asks how the Road is currently framed. This strengthens the preceding direction checkpoint into the working priority for continuation.

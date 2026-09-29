@@ -1,0 +1,184 @@
+name: Gate C Stage 1 Visible Band
+on:
+  push:
+    branches: [phase4/gate-c-stage1-visible]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sodium64-stage1-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  visible-band:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+      - name: Build bounded output and verify dispatch ABI
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          readelf -sW build/src/rsp_main.elf > rsp-main.syms
+          readelf -sW build/src/rsp_mode7.elf > rsp-mode7.syms
+          readelf -sW build/src/rsp_hcomp.elf > rsp-hcomp.syms
+          python3 scripts/test_gate_c_stage1_exec.py \
+            --maps build/rsp_main.map build/rsp_mode7.map build/rsp_hcomp.map \
+            --symbols rsp-main.syms rsp-mode7.syms rsp-hcomp.syms | tee executable-contract.txt
+          python3 scripts/check_rsp_branch_delay_slots.py \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf | tee delay-slots.txt
+          sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
+          mkdir -p diagnostic hardware
+          for mode in fixed absent control clip prevent both; do
+            python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode.smc"
+            python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode-replay.smc"
+            cmp "diagnostic/$mode.smc" "diagnostic/$mode-replay.smc"
+            wrap="wrap-$mode"
+            mkdir -p "$wrap"
+            cp sodium64.z64 rom-converter.py "$wrap/"
+            cp "diagnostic/$mode.smc" "$wrap/guest.smc"
+            (cd "$wrap"; python3 rom-converter.py </dev/null)
+            cp "$wrap/out/guest.z64" "hardware/$mode.z64"
+            dd if="hardware/$mode.z64" of="diagnostic/embedded.smc" \
+              bs=1 skip=$((0x104000)) count=32768 status=none
+            cmp "diagnostic/$mode.smc" diagnostic/embedded.smc
+          done
+          sha256sum diagnostic/*.smc hardware/*.z64 | tee guest-hashes.sha256
+      - name: Locate fenced runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
+          wram=$(symbol wram)
+          frame_wait=$(symbol frame_wait)
+          test -n "$wram"
+          test -n "$frame_wait"
+          test "$frame_wait" = "8000ae1c"
+          readelf -x .text "$elf" > cpu-text.hex
+          grep -qi '^  0x8000ae20 910886a9 24010002 1101fffc 24080001' cpu-text.hex
+          grep -qi '^  0x8000ae30 3c09a404 01800008 ad280010 3c08800b' cpu-text.hex
+          prelaunch=$(printf '%08x' "$((16#$frame_wait + 0x14))")
+          test "$prelaunch" = "8000ae30"
+          {
+            echo "GUEST_COUNTER_ADDR=0x$wram"
+            echo "PRELAUNCH_ADDR=0x$prelaunch"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - name: Build pinned N64-only ares in established valid lab mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - name: Capture complete displayed output and provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          pid=""
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+
+          run_case() {
+            label="$1"
+            port="$2"
+            rom="$3"
+            mailbox_bytes="${4:-28}"
+            out="captures/$label"
+            home="$RUNNER_TEMP/ares-home-transparent-sub-$label"
+            settings="$RUNNER_TEMP/ares-transparent-sub-$label.bml"
+            mkdir -p "$out" "$home"
+
+            setsid env HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+                --no-file-prompt \
+                --system "Nintendo 64" \
+                --settings-file "$settings" \
+                --setting "Developer/DebugServerEnabled=true" \
+                --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" \
+                --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" \
+                --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" \
+                "$rom" > "$out/ares-n64.log" 2>&1 &
+            pid=$!
+
+            rc=0
+            python3 scripts/capture_gate_c_stage1_ares.py \
+              --port "$port" \
+              --mailbox-bytes "$mailbox_bytes" \
+              --guest-counter-address "$GUEST_COUNTER_ADDR" \
+              --prelaunch-address "$PRELAUNCH_ADDR" \
+              --output-dir "$out" | tee "$out/capture.log" || rc=$?
+
+            # xvfb-run's PID is a wrapper; killing it alone leaves ares alive.
+            # Each case owns a new session/process group, including Xvfb and
+            # ares. Release the entire group before starting the next case.
+            kill -TERM -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            for attempt in 1 2 3 4 5; do
+              if ! kill -0 -- "-$pid" 2>/dev/null; then break; fi
+              sleep 0.2
+            done
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            pid=""
+            return "$rc"
+          }
+
+          port=9161
+          for mode in fixed absent control clip prevent both; do
+            run_case "$mode" "$port" "hardware/$mode.z64"
+            port=$((port + 1))
+          done
+          python3 scripts/check_gate_c_stage1_ares.py --captures captures --output captures/result.json
+      - name: Preserve exact runtime and first-hand evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-stage1-visible
+          retention-days: 30
+          path: |
+            hardware/
+            diagnostic/*.smc
+            guest-hashes.sha256
+            captures/
+            sodium64.z64
+            sodium64-build.log
+            executable-contract.txt
+            delay-slots.txt
+            runtime.sha256
+            build/**/*.elf
+            build/*.map
+            rsp-*.syms
+            ares-version.txt

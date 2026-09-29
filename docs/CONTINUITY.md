@@ -7,6 +7,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### CONTROLLED HARNESS REPAIR — absent guest neutralizes inherited TS HDMA (2026-09-29 UTC)
+
+- Exact branch head **`phase4/gate-c-hcomp-transparent-sub-clean@d7ee3131685f14203c45df8bd3c64713018481a2`** changes **only** `scripts/make_gate_c_hcomp_transparent_sub.py`; Sodium64 runtime/source and the validated Sync Full readback fence are unchanged.
+- The `sub-absent-half` generator now preserves the inherited HDMA table's block headers/length but forces every transferred TS byte to **0**, after verifying the ROM still contains the exact expected parent table. Startup and NMI TS writes remain patched to 0 as before.
+- Purpose: remove the accidental `TS=2` [0,8) interval and the zero-height `TS=0 -> TS=2` section split so this case finally tests a genuinely transparent/absent subscreen.
+- **Expected:** no section in the absent guest may advertise TS/BG2; the saved TS carrier should now reveal whether the existing proof path actually establishes an absence value when no Sub layer renders. Present controls must remain `0x1400` and unchanged.
+- **Falsifiers:** any TS=2 section remains in the absent capture; present controls change; runtime hash/ABI unexpectedly changes; or the repaired guest cannot reach the same capture fence.
+- Exact-head dedicated **`36526333753`** and generic **`36526333725`** were queued at checkpoint time.
+
+
+
 ### HARNESS CAUSE FOUND — “sub-absent” guest was not actually absent (2026-09-29 UTC)
 
 - First-hand section-queue audit of artifact **`10999050231`** exposes a deterministic guest-construction defect that the classifier had not reached because it failed earlier on the Sub surface.

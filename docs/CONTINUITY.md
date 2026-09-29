@@ -6,6 +6,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### MEASURED REPAIR CHECKPOINT — all eleven first-hand captures pass; exact pin rerun started (2026-09-29 UTC)
+
+- Runtime head `77f4ecf7500e6eae329458ec361c83811283ea5b`: dedicated `36634304085 SUCCESS` / job `109631078101`; generic `36634304068` normal/PROFILE/branch-delay/Mupen-LLE smoke jobs all SUCCESS. No runtime merge.
+- Dedicated artifact `11064635135`, digest `sha256:32acfa359a5215444701cee3ad406064e0e45c082d5ae6d39ec227020c7907cf` downloaded and rehashed. Both classifiers rerun on first-hand data; full local JSON equals CI JSON exactly. Source/binary contract rerun locally on its maps/symbols passes.
+- Exact dedicated runtime: ROM `a10e50abb748fab37f37952a3b87330783fef4b9dec7394639c46d899e1941de`; ELF `344d5692e188e3942f2fe7baee8c3c917901497fdbc5f78e3c05275dad385e15`. Regular/Mode7 0x1000, H-COMP 0x790, frozen entry points and regular/Mode7 helper 0xA4001CE4 hold.
+- **MEASURED:** `HCOMP_COLOR_WINDOW_SAMPLE_REPAIR_VALIDATED`. Eight results equal precommitted oracle: controls/outside 01EF, clip-inside 03E0, prevent-inside 001F, both-inside 0000. Clip effective Main=0000 with original tag0C00/mask1 preserved; prevent gate=0 independently; HALF is suppressed on clipped Main and on prevented math. Raw Main extension=001F in every case; visible/permitted flags are 3 for ordinary controls, 2 for clip-inside, 1 for prevent-inside, 0 for both-inside. This prevents result-only coincidence claims.
+- Three frozen controls remain fixed+HALF=3C0F, live Sub+HALF=01EF, absent selected Sub fallback/no-HALF=7C1F. Both queue copies pass the same exact state, bounded 8/224 geometry and TMW/TSW=0 checks. Raw Main/Sub/provenance/guards invariant across eight cases.
+- All eleven fresh captures: guest delta1, renderer reentry1, RSP HALT, bufferBusy=false, DPC_CURRENT=DPC_END=0xC10. No searched fatal/RDP crash/TLUT/cache-coherency diagnostics. CI's generic orphan-cleanup header occurs, but no surviving ares/Xvfb process is listed.
+- Host refactor preservation additionally checked against the previous baseline artifact: parent control JSON and old gap JSON are byte-for-byte equivalent as parsed JSON; repaired oracle rejects the old 28-byte diagnostic artifact. Packed mode truth agrees with independent primary-reference model for both membership states and all four modes at L0 (not all16 L2 coverage).
+- **Pin-only candidate:** `phase4/gate-c-hcomp-color-window-repair-clean@77ea8f93c9e7e52a53345005b8dd9a46079ea7b9`. Only dedicated workflow changes: pin its own measured ROM AND ELF, preserve actual runtime and three RSP binaries alongside evidence for independent rehash/disassembly. No runtime/guest/classifier change. Runs: `Gate C H-COMP Color Window Sample Repair Clean 36635722661` (in_progress); `Build and Validate 36635722686` (in_progress).
+- Before closing: repinned exact-head dedicated and generic gates must pass; download/re-hash final ZIP and actual ROM/ELF, rerun classifiers/ABI/delay checks, compare all semantic records with the measurement run. Still NOT PROVEN: all16 mode pairs, W2/invert/combine L2, full-frame output, final brightness, SMW iris, real-N64 ownership/cadence, Gate C.
+
 ### L1 CHECKPOINT — repaired loaded-slot ABI accepted; L2 pending (2026-09-29 UTC)
 
 - Exact head `77f4ecf7500e6eae329458ec361c83811283ea5b`, dedicated run `36634304085`, job `109631078101`: self-test/deterministic guests, exact runtime build + assembled source/binary ABI contract + branch-delay checks, and wrapping all eleven guests completed SUCCESS. Artifact/hash readback is still pending job completion.

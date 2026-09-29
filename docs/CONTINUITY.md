@@ -7,6 +7,25 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
 
+### CHECKPOINT — transparent-Sub fixed fallback + pixel-local HALF suppression VALIDATED (2026-09-29 UTC)
+
+- **Stage:** M3 / Gate C H-COMP source-selection special case is **VALIDATED in the pinned ares architecture lab**. Exact candidate head: `phase4/gate-c-hcomp-transparent-sub-clean@5e84c8095bdce0385a8832cccec47d41521cc9b6`. `master` is not changed by this checkpoint.
+- The final change from `0ac4507...` is guest-only: exactly one modified file, `scripts/make_gate_c_hcomp_transparent_sub.py` (+14/-2). Sodium64 semantic runtime is unchanged; exact dedicated runtime hash remains `44e6ce2bf864716d96dfa4fb6c1d15ac59839119ca0c6a0afa36df1bf0575665` for `sodium64.z64`.
+- **Generic hygiene:** Build and Validate `36580550048 SUCCESS`; normal build, PROFILE build, RSP branch-delay checks and emulator smoke all passed.
+- **First-hand authority:** dedicated `36580550081 SUCCESS`; artifact `11039832437`, digest `sha256:5cc42461f6eddd9b508afea12d54e04f2b7b10ea11b237365c65055971fd66e6`. Result classification is exactly `HCOMP_TRANSPARENT_SUB_HALF_SUPPRESSION_VALIDATED`.
+- **Direct fixed + HALF control:** Main `0x001F`, selected fixed `0x7C00`, source code 0, HALF effective, TS tag/presence `0x1400/1`, exact result `0x3C0F`.
+- **Live Sub present + HALF control:** Main `0x001F`, selected live Sub `0x03E0`, source code 1, HALF effective, TS tag/presence `0x1400/1`, exact result `0x01EF`.
+- **Live Sub selected but transparent:** Main `0x001F`, TS stays **0**, saved TS tag/presence is `0x0400/0`, selected operand falls back to fixed `0x7C00`, source code 2, HALF is **suppressed**, exact full-add result is `0x7C1F`.
+- The repaired absent guest now has the same bounded geometry as the controls: exactly `TS=0 split=8 -> TS=0 split=224`; both queue copies agree. Compact Sub active pixels are the expected blue backdrop `0x003F` with only the 192 border words left at sentinel `0x55AA`. Main provenance is identical across all three states and both provenance guards remain intact.
+- Fresh-frame/fence controls pass in all three states: one guest-frame delta, one renderer re-entry, RSP HALT, `bufferBusy=false`, and `DPC_CURRENT==DPC_END==0xC10`. Pinned ares still reports the known sticky `PIPE_BUSY` behavior; this is not used as completion authority.
+- **Rejected prior interpretation:** the `0ac4507...` all-sentinel absent Sub surface / `0x56CA` raw sample did **not** prove that the strict color oracle was stale. It was a consequence of the guest's extra zero-height line-0 section. Resetting WH0 in VBlank removes that section and restores the original strict blue-surface expectation without changing runtime semantics.
+- **Architecture result:** the existing compact Z16 TS winner tag is sufficient as the present-vs-transparent carrier for this rung; no new per-pixel surface is required. Direct fixed, live Sub, transparent-Sub fixed fallback, and HALF-effective/suppressed behavior now agree with the precommitted oracle.
+- **Still NOT PROVEN:** CGWSEL clip/prevent/color-window semantics, broad software compatibility, and the proof bridge's RDP->RSP readback/fencing on real N64. The H-COMP path remains architecture/proof evidence, not a claim that the full production compositor is finished.
+- **STAGE CLOSED. Immediate next gate-driving rung:** isolate and validate CGWSEL clip/prevent + color-window behavior, using the known SMW iris/window/color-math regression as the representative target while freezing all source/HALF/provenance controls validated here.
+
+
+
+
 ### CONTROLLED GUEST REPAIR — restore WH0 in NMI so line-0 write is inert (2026-09-29 UTC)
 
 - Exact candidate head **`phase4/gate-c-hcomp-transparent-sub-clean@5e84c8095bdce0385a8832cccec47d41521cc9b6`** changes only the transparent-Sub guest generator; Sodium64 semantic runtime remains unchanged.
@@ -24,11 +43,11 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ### FIRST-HAND RESULT — WH0 restores the 8-line bound, but the strict oracle is stale and a zero-height split remains (2026-09-29 UTC)
 
-- Exact candidate head **\`phase4/gate-c-hcomp-transparent-sub-clean@0ac4507d15beafad103d43c7ae7380990fb5944b\`**; Sodium64 semantic runtime remains **\`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca\`** and generic **Build and Validate \`36527516094 SUCCESS\`** is green.
-- Dedicated **\`36527516097 FAILURE\`**, artifact **\`11015427350\`**, digest **\`sha256:7d829bcc6a5901759922771db272cc2a2cf68dc701342a23500d149fe48f6f20\`**. The failure occurs only in the classifier's old absent-Sub color-surface expectation; capture/build/ABI/fresh-frame gates all completed.
-- **MEASURED semantic closure candidate:** fixed-half mailbox is exact **\`001F 03E0 3C0F 0001 0C00 0001 0041 0000 7C00 7C00 0000 0100 1400 0001\`**; sub-present-half is exact **\`001F 03E0 01EF 0001 0C00 0001 0041 0000 7C00 03E0 0002 0101 1400 0001\`**; truly absent is **\`001F 56CA 7C1F 0001 0C00 0001 0041 0000 7C00 7C00 0002 0002 0400 0000\`**. Thus the absent state has exact fixed fallback, HALF suppressed, raw backdrop tag **\`0x0400\`**, presence 0 and final result **\`0x7C1F\`**.
-- In the absent state the compact Sub color surface is intentionally untouched: **2240/2240 words remain sentinel \`0x55AA\`**. Its raw sampled RGB mailbox word becomes **\`0x56CA\`** after the existing RGBA5551->RGB555 conversion. This is consistent with the already-audited rule that Sub color is not the presence authority; Z/tag metadata is. The current classifier comment says this, but still incorrectly requires an opaque blue Sub surface and therefore rejects before inspecting the valid mailbox.
-- **MEASURED queue nuance:** fixed and present controls remain exactly **split 8 -> 224**. The absent guest now records **\`TS=0 split=0 -> TS=0 split=8 -> TS=0 split=224\`**. The leading zero-height record is caused by the explicit WH0 initialization/update path; the desired [0,8) bound is nevertheless restored and no 224-line proof-surface overrun occurs.
+- Exact candidate head **`phase4/gate-c-hcomp-transparent-sub-clean@0ac4507d15beafad103d43c7ae7380990fb5944b`**; Sodium64 semantic runtime remains **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`** and generic **Build and Validate `36527516094 SUCCESS`** is green.
+- Dedicated **`36527516097 FAILURE`**, artifact **`11015427350`**, digest **`sha256:7d829bcc6a5901759922771db272cc2a2cf68dc701342a23500d149fe48f6f20`**. The failure occurs only in the classifier's old absent-Sub color-surface expectation; capture/build/ABI/fresh-frame gates all completed.
+- **MEASURED semantic closure candidate:** fixed-half mailbox is exact **`001F 03E0 3C0F 0001 0C00 0001 0041 0000 7C00 7C00 0000 0100 1400 0001`**; sub-present-half is exact **`001F 03E0 01EF 0001 0C00 0001 0041 0000 7C00 03E0 0002 0101 1400 0001`**; truly absent is **`001F 56CA 7C1F 0001 0C00 0001 0041 0000 7C00 7C00 0002 0002 0400 0000`**. Thus the absent state has exact fixed fallback, HALF suppressed, raw backdrop tag **`0x0400`**, presence 0 and final result **`0x7C1F`**.
+- In the absent state the compact Sub color surface is intentionally untouched: **2240/2240 words remain sentinel `0x55AA`**. Its raw sampled RGB mailbox word becomes **`0x56CA`** after the existing RGBA5551->RGB555 conversion. This is consistent with the already-audited rule that Sub color is not the presence authority; Z/tag metadata is. The current classifier comment says this, but still incorrectly requires an opaque blue Sub surface and therefore rejects before inspecting the valid mailbox.
+- **MEASURED queue nuance:** fixed and present controls remain exactly **split 8 -> 224**. The absent guest now records **`TS=0 split=0 -> TS=0 split=8 -> TS=0 split=224`**. The leading zero-height record is caused by the explicit WH0 initialization/update path; the desired [0,8) bound is nevertheless restored and no 224-line proof-surface overrun occurs.
 - **Interpretation:** runtime source/HALF semantics are supported strongly, but the rung is not yet VALIDATED because the oracle must be corrected and the zero-height section must be proven harmless or removed without changing the runtime result. Do not weaken raw-tag/source/result requirements.
 - **Immediate next action:** audit the section/proof control flow for the zero-height record. Prefer removing the redundant line-0 WH0 split if a guest-only change can do so safely; otherwise teach the strict queue oracle to accept exactly one leading zero-height inert record while still requiring the bounded [0,8) and [8,224) sections. Separately change absent Sub surface expectation from blue to untouched sentinel and require the mailbox's raw Sub sample to match that sentinel-derived value. Then rerun the unchanged semantic runtime and strict three-state oracle.
 
@@ -646,19 +665,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ### RESUME NEXT — GATE DRIVER
 
-**Next controlled rung: transparent-Sub fallback to fixed color and pixel-local HALF suppression.**
+**Next controlled rung: CGWSEL clip/prevent + color-window semantics, anchored to the known SMW iris regression.**
 
-1. Start from `phase4/gate-c-hcomp-cgadsub-modes-clean@73d9d08037151457e53c6150c8ebeeb5a176f4ac`.
-2. Audit whether the current live Sub RGBA5551/sample path already carries a trustworthy present-vs-transparent signal; inspect historical clean evidence before adding state.
-3. Freeze validated BG1 winner/eligibility, CGADSUB operation semantics, compact ownership/provenance, TM-end Z cut, section mapping, ABI and one-frame fence.
-4. Keep the arithmetic operation fixed and distinguish direct-fixed HALF, live-Sub-present HALF, and live-Sub-transparent fallback where fixed color is used but HALF is suppressed.
-5. Precommit exact RGB555 results and require source/fallback + half-enable + provenance + result agreement.
-6. Do not begin clip/prevent/color-window implementation until this source/HALF special case is closed.
-7. If current Sub representation cannot prove transparency, document that limitation and design the smallest carrier needed rather than reviving the old cumulative compositor.
+1. Start from the validated transparent-Sub head `phase4/gate-c-hcomp-transparent-sub-clean@5e84c8095bdce0385a8832cccec47d41521cc9b6` or a fresh phase branch from that exact evidence point.
+2. Freeze the validated compact Main/Sub ownership, BG winner provenance, CGADSUB eligibility and add/sub/half arithmetic, CGWSEL second-operand selection, transparent-Sub fixed fallback, HALF suppression, TM-end Z lifetime cut, ABI and one-frame fence.
+3. Build the smallest deterministic discriminator for the remaining **clip/prevent/color-window** behavior before changing production rendering. Precommit exact inside/outside-window outcomes and separate window masking from operand selection/arithmetic.
+4. Use the SMW iris/window/color-math failure as the representative compatibility target once the isolated semantics are understood; do not jump directly to a game-specific fix.
+5. Keep the existing compact carrier model unless the new window semantics produce evidence that it is insufficient. Do not revive the old cumulative compositor or allocate a large proof surface merely to make a test pass.
+6. After the SMW/color-window family is characterized and repaired, return to the Road's second known compositor target: **ALttP rain/tree layer behavior**.
 
-**Immediate action:** inspect current Sub alpha/coverage semantics and the old proof history, then build the minimal present-vs-transparent discriminator.
+**Immediate action:** audit current CGWSEL/window state capture and the historical SMW iris failure, then create a one-variable color-window discriminator. Hardware is not required for this first isolation step; real N64 remains final authority for RDP/RSP synchronization and milestone-level validation.
 
-**STATUS: VALIDATED / STAGE CLOSED.**
+**STATUS: transparent-Sub source/HALF rung VALIDATED / STAGE CLOSED; color-window rung TODO.**
 
 ---
 
@@ -703,6 +721,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Dedicated `36419920887 SUCCESS`, artifact `10968609752`.
 - Exact four-state results: add-full `0x03FF`, add-half `0x01EF`, sub-full `0x001F`, sub-half `0x000F`, with invariant Main/Sub/provenance.
 
+### 7. Transparent-Sub fixed fallback + HALF suppression — VALIDATED
+
+- Final host-only head `phase4/gate-c-hcomp-transparent-sub-clean@5e84c8095bdce0385a8832cccec47d41521cc9b6`.
+- Generic `36580550048 SUCCESS`; dedicated `36580550081 SUCCESS`, artifact `11039832437`, digest `sha256:5cc42461f6eddd9b508afea12d54e04f2b7b10ea11b237365c65055971fd66e6`.
+- Exact source matrix: direct fixed+HALF -> `0x3C0F`; present live Sub+HALF -> `0x01EF`; transparent selected Sub -> fixed fallback with HALF suppressed -> `0x7C1F`.
+- Existing compact Z16 TS tag distinguishes present `0x1400/1` from absent backdrop `0x0400/0`; no new per-pixel surface is required for this semantic rung.
+- Final absent queue is bounded exactly at 8/224 with TS=0 throughout; the prior line-0 split was a guest WH0 reset bug, not a runtime requirement.
+
 ---
 
 ## Rejected explanations / durable negative knowledge
@@ -717,6 +743,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **REJECTED:** disabling Z in the *next* TS→TM switch is sufficient. Section backdrop work occurs before that switch; the cut must happen at **TM end before next_section work**.
 - **REJECTED:** weakening guards or allocating a large full-frame provenance surface to hide the spill. The compact E1c-style ownership model won after correcting lifetime.
 - **REJECTED:** importing the old cumulative E2g/E3/E4 compositor as the clean solution. Historical branches are concept/evidence references only unless a specific piece independently earns reintroduction.
+- **REJECTED:** the `0ac4507...` all-sentinel absent Sub capture proves the strict blue Sub-surface oracle is wrong. The all-sentinel state was caused by a guest-only zero-height line-0 section; the corrected VBlank WH0 reset restores the exact blue absent Sub surface and passes the unchanged oracle.
 
 ---
 

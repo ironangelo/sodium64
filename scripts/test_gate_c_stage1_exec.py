@@ -30,7 +30,8 @@ def main():
     from check_rsp_branch_delay_slots import read_text
     main = read_text(Path('build/src/rsp_main.elf'))[1]
     mode7 = read_text(Path('build/src/rsp_mode7.elf'))[1]
-    assert main[0xCE4:] == mode7[0xCE4:], 'resident window/DMA suffix differs'
+    assert main[0xCE4:0xE8C] == mode7[0xCE4:0xE8C], 'window helper differs'
+    assert main[0xF08:0xFAC] == mode7[0xF08:0xFAC], 'retained DMA/loader differs'
     assert tables[0]['next_layer'] == 0xA4001370
     assert tables[1]['next_layer'] == 0xA4001364
     print('STAGE1_DISPATCH_ABI_VALIDATED')

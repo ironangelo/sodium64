@@ -84,6 +84,25 @@ hcomp_provenance_end:
     b hcomp_fence
     nop
 hcomp_output_start:
+    // Minimal input ownership record for the complete-image oracle. Capture
+    // this section's bounds, not the next section's/end-frame mutable state.
+    lw t0, FRAMEBUFFER(sp)
+    sw t0, SCRN_DATA
+    lhu t0, WHX
+    sh t0, SCRN_DATA + 4
+    lhu t0, WHX + 2
+    sh t0, SCRN_DATA + 6
+    lbu t0, CGWSEL
+    sh t0, SCRN_DATA + 8
+    lbu t0, WOBJSEL
+    sh t0, SCRN_DATA + 10
+    lbu t0, WOBJLOG
+    sh t0, SCRN_DATA + 12
+    sh zero, SCRN_DATA + 14
+    li a0, SCRN_DATA
+    li a1, 0xA00F0000
+    jal 0xA4001F08
+    li a2, 15
     lbu a0, WOBJSEL
     srl a0, a0, 4
     lbu a1, WOBJLOG

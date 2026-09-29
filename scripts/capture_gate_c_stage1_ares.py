@@ -275,6 +275,7 @@ def main() -> int:
             ('ts-provenance-suffix.bin', 0xA00E7180, 64),
         ):
             (out / name).write_bytes(client.read_memory(addr, size, 0x400))
+        (out / 'output-input.bin').write_bytes(client.read_memory(0xA00F0000, 16, 16))
         state = {
             "warm_counter": warm_counter,
             "baseline_counter": baseline_counter,

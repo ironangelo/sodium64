@@ -6,6 +6,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### FIRST-HAND PARTIAL RESULT — clip omission reproduced; capture lifecycle repaired (2026-09-29 UTC)
+
+- Exact first attempt `c2d2502e8dab3720205ffde1e9bc66fec4c2ea21`: generic `36627582887 SUCCESS`; dedicated `36627582947 FAILURE`. Artifact `11061313513`, digest `sha256:f9732bf5a92b0ea0e492a02cae7a35df37ae8c9222bd5061676d202f2fd16894`, downloaded/rehashed locally.
+- **MEASURED partial authority:** the three frozen transparent-Sub controls passed. Four window guests (control inside/outside and clip inside/outside) completed exact fresh-frame fences, healthy surfaces/provenance/guards, correct geometry and raw CGWSEL. Both queues carry WOBJSEL=20, WOBJLOG=0, W1[0,0] or [1,1] exactly.
+- **MEASURED clip-inside discrepancy:** requested CGWSEL=82 still gives mailbox `001F 03E0 01EF 0001 0C00 0001 0041 0000 7C00 03E0 0082 0101 1400 0001`. Reference requires `03E0`, not `01EF`, because Main must clip to black and suppress HALF. Clip-outside and both unconditional controls correctly remain `01EF`.
+- **LAB LIMITATION / incomplete matrix:** prevent-inside timed out in GDB warmup at guest_counter=0; no fenced capture exists for it or the three later cases. Its ares log contains shader-compilation stall warnings but no measured semantic result. This is not evidence of a prevent-math runtime failure.
+- **Harness lifecycle defect:** old inherited run_case killed only the xvfb-run wrapper. Final CI cleanup found eight orphan Xvfb/ares pairs, proving prior emulator children survived each case. Resource contention is a leading explanation for the late warmup timeout, not yet a proved cause. Controlled repair launches each case in its own session/process group, terminates the entire group before the next, and adds failure cleanup. Guest/runtime/oracle semantics remain frozen.
+- **Classifier defect corrected before interpretation:** initial new classifier used WHX=44 and WOBJSEL=50; actual source/header and first-hand queue give WHX=46, WOBJSEL=52, WOBJLOG=54, CGWSEL=55. The fixtures shared the wrong offsets, so self-test alone did not catch this. Added an independent header-derived ABI check. Corrected classifier now accepts all four complete first-hand captures, including both coherent queue copies. This was a host false-negative risk, not broken window transport.
+- **REJECTED:** placing helper in unloaded leading H-COMP padding; interpreting the partial GDB timeout as clip/prevent semantics; treating fixture success as sufficient section-layout authority.
+- **Next:** rerun the same strict eight-state baseline with process-group cleanup and corrected classifier/header contract. The full isolation stage remains OPEN until all eight first-hand cases and the three source controls complete.
+
+
 ### CONTROLLED BASELINE — color-window discriminator published; runtime frozen (2026-09-29 UTC)
 
 - **Exact candidate:** `phase4/gate-c-hcomp-color-window-clean@c2d2502e8dab3720205ffde1e9bc66fec4c2ea21`, from validated `5e84c809...`. Changes only three host files: deterministic eight-case guest generator, strict gap classifier, dedicated workflow. Sodium64 runtime is byte-for-byte unchanged; dedicated ROM pin remains `44e6ce2bf864716d96dfa4fb6c1d15ac59839119ca0c6a0afa36df1bf0575665`.

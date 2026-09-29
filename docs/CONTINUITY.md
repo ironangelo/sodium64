@@ -15,6 +15,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 - The repair keeps startup **TS=0**, but repurposes the inherited same-size NMI instruction slot to **WH0=0**. The startup proof hook still initializes WH0=0 for the first frame. Thus the first per-frame HDMA write of 0 should be a no-op and the only raster-sensitive transition should be WH0 **0->1 at line8**.
 - **Expected:** absent queue becomes exactly **\`TS=0 split=8 -> TS=0 split=224\`** with no leading zero-height record, while raw TS tag **\`0x0400\`**, presence 0, selected fixed **\`0x7C00\`**, source/HALF **\`0x0002\`** and final **\`0x7C1F\`** remain unchanged. The stale absent-color oracle is intentionally not changed in this batch, so the dedicated workflow may still end red after producing usable evidence.
 - **Falsifiers:** split=0 remains; TS becomes nonzero; the line8 bound disappears; present controls or runtime hash change; or semantic mailbox evidence regresses.
+- **Static control-flow confirmation:** NMI runs during VBlank; \`write_wh0\` marks raster state dirty only on the real 1->0 reset, and \`vblank_end\` then clears **\`sect_status\`** before **\`section_init\`** / visible line0. Therefore the NMI reset cannot itself create a visible zero-height section. At visible line0 the HDMA WH0=0 write compares equal and is inert; the first possible visible split is the intended line8 0->1 edge.
 
 
 

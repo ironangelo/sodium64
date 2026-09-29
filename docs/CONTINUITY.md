@@ -9,13 +9,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ### CONTROLLED GUEST REPAIR — restore WH0 in NMI so line-0 write is inert (2026-09-29 UTC)
 
-- Exact candidate head **\`phase4/gate-c-hcomp-transparent-sub-clean@5e84c8095bdce0385a8832cccec47d41521cc9b6\`** changes only the transparent-Sub guest generator; Sodium64 semantic runtime remains unchanged.
-- Source audit resolved the leading zero-height section from **\`0ac4507...\`**. Sodium64 **\`write_wh0\`** compares old/new values and calls **\`update_window_frame\` only on an actual change**, so repeated WH0=0 writes are inert.
+- Exact candidate head **`phase4/gate-c-hcomp-transparent-sub-clean@5e84c8095bdce0385a8832cccec47d41521cc9b6`** changes only the transparent-Sub guest generator; Sodium64 semantic runtime remains unchanged.
+- Source audit resolved the leading zero-height section from **`0ac4507...`**. Sodium64 **`write_wh0`** compares old/new values and calls **`update_window_frame` only on an actual change**, so repeated WH0=0 writes are inert.
 - The prior guest ended each frame with WH0=1 (from the post-line8 HDMA payload) but its NMI still patched the inherited TS restore into **TS=0**. Therefore the next frame's first HDMA transfer changed WH0 **1->0 at line0**, deterministically generating the measured **split=0** record before the intended line8 split.
 - The repair keeps startup **TS=0**, but repurposes the inherited same-size NMI instruction slot to **WH0=0**. The startup proof hook still initializes WH0=0 for the first frame. Thus the first per-frame HDMA write of 0 should be a no-op and the only raster-sensitive transition should be WH0 **0->1 at line8**.
-- **Expected:** absent queue becomes exactly **\`TS=0 split=8 -> TS=0 split=224\`** with no leading zero-height record, while raw TS tag **\`0x0400\`**, presence 0, selected fixed **\`0x7C00\`**, source/HALF **\`0x0002\`** and final **\`0x7C1F\`** remain unchanged. The stale absent-color oracle is intentionally not changed in this batch, so the dedicated workflow may still end red after producing usable evidence.
+- **Expected:** absent queue becomes exactly **`TS=0 split=8 -> TS=0 split=224`** with no leading zero-height record, while raw TS tag **`0x0400`**, presence 0, selected fixed **`0x7C00`**, source/HALF **`0x0002`** and final **`0x7C1F`** remain unchanged. The stale absent-color oracle is intentionally not changed in this batch, so the dedicated workflow may still end red after producing usable evidence.
 - **Falsifiers:** split=0 remains; TS becomes nonzero; the line8 bound disappears; present controls or runtime hash change; or semantic mailbox evidence regresses.
-- **Static control-flow confirmation:** NMI runs during VBlank; \`write_wh0\` marks raster state dirty only on the real 1->0 reset, and \`vblank_end\` then clears **\`sect_status\`** before **\`section_init\`** / visible line0. Therefore the NMI reset cannot itself create a visible zero-height section. At visible line0 the HDMA WH0=0 write compares equal and is inert; the first possible visible split is the intended line8 0->1 edge.
+- **Static control-flow confirmation:** NMI runs during VBlank; `write_wh0` marks raster state dirty only on the real 1->0 reset, and `vblank_end` then clears **`sect_status`** before **`section_init`** / visible line0. Therefore the NMI reset cannot itself create a visible zero-height section. At visible line0 the HDMA WH0=0 write compares equal and is inert; the first possible visible split is the intended line8 0->1 edge.
+- **HYGIENE MEASURED:** exact-head generic **Build and Validate `36580550048` SUCCESS**; normal build, PROFILE build, RSP branch-delay checks and emulator smoke all passed. This guest-only repair does not regress the generic runtime validation surface.
 
 
 

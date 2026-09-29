@@ -6,6 +6,12 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### L1 CHECKPOINT — repaired loaded-slot ABI accepted; L2 pending (2026-09-29 UTC)
+
+- Exact head `77f4ecf7500e6eae329458ec361c83811283ea5b`, dedicated run `36634304085`, job `109631078101`: self-test/deterministic guests, exact runtime build + assembled source/binary ABI contract + branch-delay checks, and wrapping all eleven guests completed SUCCESS. Artifact/hash readback is still pending job completion.
+- This resolves the immediate overflow/helper-entry risk for this candidate: the source estimate survived the actual build contract. It does not establish semantic execution. Runtime-state fence, pinned ares lab and first-hand eight-case repair + three source-control matrix remain required.
+- No expansion to other modes/games and no master merge. Next checkpoint must distinguish a semantic mismatch from capture/build/lab limitations using exact first-hand logs/artifact.
+
 ### IMPLEMENTATION CHECKPOINT — clip/prevent candidate published; build authority pending (2026-09-29 UTC)
 
 - Exact candidate `phase4/gate-c-hcomp-color-window-repair-clean@77f4ecf7500e6eae329458ec361c83811283ea5b`, tree `b5e5be909abe9851c70f877c9347e9ab9a0465a9`, from diagnostic `9a019599...`. Master unchanged.

@@ -172,6 +172,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p captures
+          pid=""
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
 
           run_case() {
             label="$1"
@@ -182,7 +184,7 @@ jobs:
             settings="$RUNNER_TEMP/ares-transparent-sub-$label.bml"
             mkdir -p "$out" "$home"
 
-            HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            setsid env HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
               xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
                 --no-file-prompt \
                 --system "Nintendo 64" \
@@ -204,8 +206,17 @@ jobs:
               --prelaunch-address "$PRELAUNCH_ADDR" \
               --output-dir "$out" | tee "$out/capture.log" || rc=$?
 
-            kill "$pid" 2>/dev/null || true
+            # xvfb-run's PID is a wrapper; killing it alone leaves ares alive.
+            # Each case owns a new session/process group, including Xvfb and
+            # ares. Release the entire group before starting the next case.
+            kill -TERM -- "-$pid" 2>/dev/null || true
             wait "$pid" 2>/dev/null || true
+            for attempt in 1 2 3 4 5; do
+              if ! kill -0 -- "-$pid" 2>/dev/null; then break; fi
+              sleep 0.2
+            done
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            pid=""
             return "$rc"
           }
 

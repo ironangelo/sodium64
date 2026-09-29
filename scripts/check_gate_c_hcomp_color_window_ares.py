@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import tempfile
 from pathlib import Path
 import check_gate_c_hcomp_transparent_sub_ares as parent
@@ -16,13 +17,29 @@ from make_gate_c_hcomp_color_window import CASES, build_case
 from test_gate_c_h_comp_window_contract import decode_select, ares_color_enable_pixel
 
 # Offsets from the CPU's audited 64-byte section layout.
-WHX, WOBJSEL, WOBJLOG = 44, 50, 54
+WHX, WOBJSEL, WOBJLOG = 46, 52, 54
 GOLDEN_RESULTS = {
     "control-inside": 0x01EF, "control-outside": 0x01EF,
     "clip-inside": 0x03E0, "clip-outside": 0x01EF,
     "prevent-inside": 0x001F, "prevent-outside": 0x01EF,
     "both-inside": 0x0000, "both-outside": 0x01EF,
 }
+
+
+def require_section_layout() -> None:
+    # Derive offsets from the runtime header, independently of fixture bytes.
+    # Catch stale classifier constants even if self-test writer shares them.
+    defines = (Path(__file__).resolve().parents[1] / "src/defines.h").read_text()
+    relative = {"BGHOFS": 0}
+    for name, previous, delta in re.findall(
+        r"^#define\s+(\w+)\s+\((\w+)\s*\+\s*(0x[0-9A-Fa-f]+)\)", defines, re.M
+    ):
+        if previous in relative:
+            relative[name] = relative[previous] + int(delta, 16)
+    expected = {"WHX": WHX, "WOBJSEL": WOBJSEL, "WOBJLOG": WOBJLOG,
+                "CGWSEL": parent.CGWSEL, "SUB_COLOR": parent.SUB_COLOR}
+    if any(relative.get(k) != v for k, v in expected.items()):
+        raise ValueError(f"classifier/header section layout conflict: {relative}")
 
 
 def reference(case: str) -> dict[str, object]:
@@ -66,6 +83,7 @@ def require_window_queue(root: Path, case: str, report: dict) -> None:
 
 
 def classify(base: Path) -> dict[str, object]:
+    require_section_layout()
     states = {}
     canonical = None
     invariant = None

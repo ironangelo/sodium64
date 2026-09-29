@@ -7,6 +7,21 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### FIRST-HAND TRUE-ABSENT RESULT — absence tag is correct; 224-line proof surface overruns (2026-09-29 UTC)
+
+- Exact host-only guest-repair head **`phase4/gate-c-hcomp-transparent-sub-clean@d7ee3131685f14203c45df8bd3c64713018481a2`**; Sodium64 semantic runtime remains **`712766f39cb6ffd94709d70bbbbf0cb0e24f21ca`** with ROM pin **`44e6ce2bf864716d96dfa4fb6c1d15ac59839119ca0c6a0afa36df1bf0575665`**.
+- Dedicated **`36526333753 FAILURE`**, artifact **`11014543976`**, digest **`sha256:9d8d58f1fcb3d1e6331cf2b7f921309bc8249198b528d75910d00a5f99593010`**. Same-head generic **`36526333725 SUCCESS`** (build, PROFILE and pinned Mupen/LLE smoke all green).
+- **The harness repair worked:** first-hand queue authority for `sub-absent-half` now begins **CGWSEL=0x02, CGADSUB=0x41, TS=0x00, TM=0x01, split=224**. There is no current-frame TS=BG2 interval before the final visible split.
+- **Critical MEASURED result:** the saved TS carrier is exact **`0x0400`**, normalized presence is **0**, selected operand is exact fixed blue **`0x7C00`**, and source/half flags are exact **`0x0002`**. Therefore the runtime already distinguishes true Sub absence, selects fixed COLDATA, and suppresses HALF correctly. The Sync Full readback fence plus bounded Z carrier are working for both presence (`0x1400`) and absence (`0x0400`).
+- The remaining failure is a **proof-surface geometry defect**, not source/HALF semantics. With no raster split until line224, the test drives a full-height section while the clean compact Sub color/Z proof surfaces were deliberately sized for only **8 rows**. The renderer keeps the compact Sub Color Image active through the first semantic-screen pass; a 224-line section therefore overruns the proof surface before TM. Artifact evidence is diagnostic:
+  - compact Sub active 256px region becomes **`0x0C00`** (the BG1 provenance tag) on all 8 captured rows, while the 24 border pixels remain blue `0x003F`;
+  - handed Main sample canonicalizes from the same `0x0C00` to `0x0201`, giving a meaningless arithmetic result `0x7E01`;
+  - provenance itself remains exact BG1 `0x0C00`; no RDP crash/TLUT/cache-coherency diagnostics occur.
+- **Supported interpretation:** making the absent guest one 224-line section exceeded the deliberately bounded clean proof arena. This does **not** falsify transparent-Sub fallback/HALF suppression; the raw carrier/source/HALF evidence actually moved in the expected direction.
+- **Next controlled harness repair:** keep TS=0 for the entire frame but reintroduce the original **8-line section boundary using a raster-sensitive register that is semantically inert for this test** (window coordinates while TSW/TMW are disabled). This preserves the 8-row proof bound without re-enabling a Sub layer. Then rerun the unchanged runtime and strict raw-tag/source/result oracle.
+
+
+
 ### FIRST-HAND TRUE-ABSENT RESULT — semantics correct, proof geometry lost when TS HDMA became inert (2026-09-29 UTC)
 
 - Exact guest-only head **`d7ee3131685f14203c45df8bd3c64713018481a2`**, dedicated **`36526333753 FAILURE`**, artifact **`11014543976`**, digest **`sha256:9d8d58f1fcb3d1e6331cf2b7f921309bc8249198b528d75910d00a5f99593010`**. Same-head generic **`36526333725 SUCCESS`**.

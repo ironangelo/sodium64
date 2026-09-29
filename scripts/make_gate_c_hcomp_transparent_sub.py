@@ -8,6 +8,9 @@ import hashlib
 from pathlib import Path
 
 from make_gate_c_hcomp_cgwsel_source import build_variant, finalize_checksum, hits
+from make_gate_c_hcomp_main_sub_lifetime import (
+    HDMA_TS_TABLE_ADDRESS, LOAD_ADDRESS, build_hdma_ts_table,
+)
 
 CGADSUB_SETUP = bytes((0xA9, 0x01, 0x8D, 0x31, 0x21))
 TS_BG2_SETUP = bytes((0xA9, 0x02, 0x8D, 0x2D, 0x21))
@@ -17,6 +20,21 @@ MODES = {
     "sub-present-half": (0x02, False),
     "sub-absent-half": (0x02, True),
 }
+
+
+def absent_hdma_table() -> bytes:
+    """Preserve the lifetime table shape while forcing TS=0 in every block."""
+    table = bytearray(build_hdma_ts_table())
+    offset = 0
+    while True:
+        header = table[offset]
+        if header == 0:
+            break
+        count = header & 0x7F
+        offset += 1
+        table[offset:offset + count] = bytes(count)
+        offset += count
+    return bytes(table)
 
 
 def build_mode(mode: str) -> bytes:
@@ -36,6 +54,17 @@ def build_mode(mode: str) -> bytes:
     if absent:
         for off in ts_hits:
             rom[off + 1] = 0x00
+
+        # This guest inherits the lifetime discriminator's direct HDMA table,
+        # which otherwise re-enables BG2 on TS for the first eight visible
+        # lines even after the startup/NMI writes above are cleared.  Preserve
+        # the exact table headers/length but force every transferred TS value
+        # to zero so the absent state has no hidden real-Sub interval.
+        table_offset = HDMA_TS_TABLE_ADDRESS - LOAD_ADDRESS
+        original = build_hdma_ts_table()
+        if bytes(rom[table_offset:table_offset + len(original)]) != original:
+            raise ValueError("inherited TS HDMA table drifted")
+        rom[table_offset:table_offset + len(original)] = absent_hdma_table()
 
     finalize_checksum(rom)
     return bytes(rom)

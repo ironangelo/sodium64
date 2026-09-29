@@ -7,6 +7,23 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### FIRST-HAND TRUE-ABSENT RESULT — semantics correct, proof geometry lost when TS HDMA became inert (2026-09-29 UTC)
+
+- Exact guest-only head **`d7ee3131685f14203c45df8bd3c64713018481a2`**, dedicated **`36526333753 FAILURE`**, artifact **`11014543976`**, digest **`sha256:9d8d58f1fcb3d1e6331cf2b7f921309bc8249198b528d75910d00a5f99593010`**. Same-head generic **`36526333725 SUCCESS`**.
+- All three guests reached the established fresh-frame capture fence; all ares logs contain zero RDP crash, TLUT hardware-bug and cache-coherency diagnostics.
+- Present controls remain exact and unchanged:
+  - fixed-half: `001F 03E0 3C0F 0001 0C00 0001 0041 0000 7C00 7C00 0000 0100 1400 0001`;
+  - sub-present-half: `001F 03E0 01EF 0001 0C00 0001 0041 0000 7C00 03E0 0002 0101 1400 0001`.
+- **Critical semantic evidence in the truly absent state:** despite later geometry corruption, the mailbox's second-operand metadata is already exact: selected fixed **`0x7C00`**, CGWSEL **`0x0002`**, source/HALF **`0x0002`**, raw TS tag **`0x0400`**, normalized presence **0**. Thus the current runtime carrier + Sync Full fence does distinguish real Sub presence from absence and selects fixed color with HALF suppressed.
+- The absent mailbox begins `0201 0201 7E01 ...`: Main/Sub samples and final arithmetic are corrupted because the harness repair accidentally removed the section0 line-8 boundary. Queue evidence shows the absent guest now has **TS=0, split=224** for its first real section instead of the proof's required 8-line compact geometry.
+- Correspondingly, absent `sub.bin` is no longer a bounded 280x8 color proof: histogram **2048 × `0x0C00` + 192 × `0x003F`**, consistent with the 224-line section overrunning/reusing the compact scratch. This is a harness geometry failure, not evidence against transparent-Sub semantics.
+- **Classification: HARNESS GEOMETRY DEFECT / semantic core supported but rung not yet VALIDATED.**
+- **Next controlled repair:** keep TS identically 0 in the absent mode, but retarget its inherited direct-HDMA channel from TS to an otherwise-disabled window coordinate (WH0) and use a harmless **0 for lines 0..7, 1 thereafter** stream. With TMW/TSW disabled this should recreate exactly the line-8 section boundary without enabling a Sub layer or changing visible semantics. Reset WH0 to 0 in NMI using the same-size instruction slot. Keep runtime/oracle/raw-tag requirements frozen.
+- **Expected:** absent queue returns to section0 split=8 + section1 split=224 while TS remains 0 in both; compact Sub stays bounded, raw tag remains `0400`, source/HALF remains `0002`, Main returns `001F`, selected remains `7C00`, final result becomes exact `7C1F`.
+- **Falsifiers:** any TS=2 appears; WH0 creates visible/window masking despite TMW/TSW=0; raw tag/source/HALF regress; or fixed/sub-present controls change.
+
+
+
 ### ROOT CAUSE FOUND — “sub-absent” guest was re-enabling BG2 via inherited HDMA (2026-09-29 UTC)
 
 - First-hand artifact audit of **`10999050231`** resolved the apparent stale-tag contradiction. The generated `sub-absent-half` ROM patches the two explicit TS=BG2 writes (startup + NMI) to TS=0, **but it inherits the base lifetime guest's direct-HDMA TS table unchanged**.

@@ -6,6 +6,38 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
+### STAGE CLOSED — CGWSEL clip/prevent gap isolated by complete first-hand matrix (2026-09-29 UTC)
+
+- **Phase:** M3 / Gate C remains ACTIVE. **Closed stage:** deterministic color-window **isolation / COMPATIBILITY DIAGNOSTIC**, not the runtime repair and not Gate C.
+- **Integrated truth:** `master@7cc8facfe8643fb85888f301f79995575830521d` remains unchanged. **Current diagnostic candidate:** `phase4/gate-c-hcomp-color-window-clean@9a019599f3a5a5aafa4ffed7dd8b1135db42d809`. No runtime source is changed or merged by this stage.
+- **Exact-head generic:** Build and Validate `36629523185 SUCCESS` (normal, PROFILE, branch-delay checks and Mupen/LLE smoke).
+- **Exact-head dedicated:** Gate C H-COMP Color Window Isolation Clean `36629523682 SUCCESS`; artifact `11062067939`, digest `sha256:0abecf86f0a87b958cd261aefdf1c7b244d037afb4cea38083bf79ffe57e8fe8`. Downloaded/rehashed locally; both dedicated classifiers rerun directly on the artifact and their full JSON outputs match CI exactly.
+- **Runtime authority unchanged:** ROM `44e6ce2bf864716d96dfa4fb6c1d15ac59839119ca0c6a0afa36df1bf0575665`; ELF `2a3ae06e5ab446c502dfaa987511cbbf06d47d379293d4fcc69e42b0608c45b9`. Regular/Mode7 text 0x1000 each, H-COMP 0x790, public ABI and resident IMEM unchanged.
+- **Classification:** `HCOMP_COLOR_WINDOW_GAP_REPRODUCED`, passed=true, **runtime_color_windows_validated=false**. Diagnostic SUCCESS means the exact missing semantics were reproduced. It must never be presented as a color-window correctness pass.
+- **All 11 independent captures complete:** eight window cases + three frozen transparent-Sub controls. Every window case has guest_frame_delta=1, one renderer re-entry, RSP HALT, bufferBusy=false, DPC_CURRENT=DPC_END=0xC10, exact bounded 8/224 geometry and intact provenance guards. No searched RDP crash/TLUT hardware/cache-coherency diagnostics occur.
+- **Both queue copies agree** in every window case: WOBJSEL=20, WOBJLOG=0, W1[0,0] or W1[1,1], W2 disabled, TMW=TSW=0, requested raw CGWSEL. Raw Main red `001F`, Sub green `03E0`, BG1 Main provenance `0C00/01`, Sub presence `1400/1`, selected live Sub and HALF flags remain invariant. Canonical Main/Sub surfaces and guarded provenance are byte-identical across cases, allowing physical framebuffer slot rotation.
+
+| Case at semantic x0 | CGWSEL | Reference RGB555 | Measured RGB555 | Reading |
+|---|---:|---:|---:|---|
+| control inside | 02 | 01EF | 01EF | control agrees |
+| control outside | 02 | 01EF | 01EF | control agrees |
+| clip inside | 82 | 03E0 | 01EF | Main clipping + HALF suppression missing |
+| clip outside | 82 | 01EF | 01EF | outside control agrees |
+| prevent inside | 22 | 001F | 01EF | independent math prevention missing |
+| prevent outside | 22 | 01EF | 01EF | outside control agrees |
+| clip+prevent inside | A2 | 0000 | 01EF | combined decision missing |
+| clip+prevent outside | A2 | 01EF | 01EF | outside control agrees |
+
+- **MEASURED conclusion:** this clean H-COMP sample path ignores CGWSEL clip/prevent despite correctly delivered color-window state. This is no longer a missing-state/guest/queue hypothesis. The synthetic mismatch is isolated at the H-COMP decision/arithmetic boundary.
+- **Controls retained:** direct fixed+HALF `3C0F`; live Sub+HALF `01EF`; truly absent Sub fixed fallback with HALF suppressed `7C1F`. The three-state classifier remains `HCOMP_TRANSPARENT_SUB_HALF_SUPPRESSION_VALIDATED`.
+- **Harness repair outcome:** the process-group cleanup rerun completes all cases, and final job logs contain no orphan-process cleanup lines. This supports resource contention from surviving ares children as the earlier warmup-timeout explanation; it does not establish a general ares timing defect. Keep per-case full-session cleanup for larger matrices.
+- **Host false-negative risk closed:** WHX=46 and WOBJSEL=52 now match independently derived header offsets and first-hand queues. Explicit old-offset mutations are rejected independently of fixtures. Do not return to shared-constant-only ABI tests.
+- **Still NOT PROVEN:** repaired clip/prevent execution, all 16 CGWSEL mode pairs, W2/invert/combine behavior on the H-COMP path, full-band/full-frame output, final brightness ordering, SMW iris correctness, ALttP compositor correctness, production-safe real-N64 RDP->RSP ownership and final cadence.
+- **Immediate next gate driver:** implement a bounded H-COMP clip/prevent decision from these frozen controls; clip Main before math, retain original winner eligibility, independently gate math, and suppress HALF for clipped Main as well as transparent selected Sub. Respect the loaded overlay slot and audit every helper clobber. Rerun the same eight-case semantic oracle plus the three source controls with new exact-build authority before expanding to other modes or SMW.
+- **Architecture constraint retained:** H-COMP only loads IMEM 13A8..178F. Leading padding is not executable owned space. Existing retained regular `calc_window_spans=0xA4001CE4` may be reused if preservation and slot budget are proved; do not silently grow resident IMEM, move public ABI, allocate a new pixel surface, or resurrect cumulative compositor branches.
+- **STOP / CHECKPOINT:** color-window isolation stage is CLOSED; runtime repair is TODO. Road/roadmap milestones are unchanged.
+
+
 ### RERUN CHECKPOINT — same runtime and guests; host lifecycle/ABI repaired (2026-09-29 UTC)
 
 - Exact head `phase4/gate-c-hcomp-color-window-clean@9a019599f3a5a5aafa4ffed7dd8b1135db42d809`. Relative to `c2d2502...`, only the host classifier and dedicated workflow change. No runtime, guest generator, arithmetic, screen ownership, provenance, fence or public ABI change.
@@ -641,7 +673,9 @@ Canonical live handoff for `ironangelo/sodium64`.
 - **Immediate action:** audit current Sub pixel coverage/transparency evidence and historical clean branches; then design the smallest present-vs-transparent test without importing the old cumulative compositor or beginning window semantics.
 
 
-### Phase / authority
+### Historical authority — prior CGADSUB operation-selection stage
+
+This snapshot describes that earlier validated stage; the current candidate and next action are in the latest RESUME HERE checkpoint.
 
 - **Phase:** M3 / **Gate C — base-system fidelity and compatibility**.
 - **Integrated truth:** `master@7cc8facfe8643fb85888f301f79995575830521d`, merge of PR #18 (“preserve CGRAM epochs through RSP replay”).
@@ -713,18 +747,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ### RESUME NEXT — GATE DRIVER
 
-**Next controlled rung: CGWSEL clip/prevent + color-window semantics, anchored to the known SMW iris regression.**
+**Implement CGWSEL clip/prevent on the now-isolated clean H-COMP path.**
 
-1. Start from the validated transparent-Sub head `phase4/gate-c-hcomp-transparent-sub-clean@5e84c8095bdce0385a8832cccec47d41521cc9b6` or a fresh phase branch from that exact evidence point.
-2. Freeze the validated compact Main/Sub ownership, BG winner provenance, CGADSUB eligibility and add/sub/half arithmetic, CGWSEL second-operand selection, transparent-Sub fixed fallback, HALF suppression, TM-end Z lifetime cut, ABI and one-frame fence.
-3. Build the smallest deterministic discriminator for the remaining **clip/prevent/color-window** behavior before changing production rendering. Precommit exact inside/outside-window outcomes and separate window masking from operand selection/arithmetic.
-4. Use the SMW iris/window/color-math failure as the representative compatibility target once the isolated semantics are understood; do not jump directly to a game-specific fix.
-5. Keep the existing compact carrier model unless the new window semantics produce evidence that it is insufficient. Do not revive the old cumulative compositor or allocate a large proof surface merely to make a test pass.
-6. After the SMW/color-window family is characterized and repaired, return to the Road's second known compositor target: **ALttP rain/tree layer behavior**.
+1. Start from `phase4/gate-c-hcomp-color-window-clean@9a019599f3a5a5aafa4ffed7dd8b1135db42d809`, whose eleven-case exact-head lab result is fully inspected.
+2. Freeze raw Main/Sub ownership, BG1 winner/eligibility, source selection, transparent-Sub fallback/HALF suppression, bounded 8/224 geometry, guards, ABI and one-frame fence.
+3. Preserve the precommitted eight-state reference matrix: all five controls stay `01EF`; clip-inside becomes `03E0`, prevent-inside `001F`, both-inside `0000`. Require actual clip/main-effective, prevent/gate and HALF evidence, not just a coincidentally correct output.
+4. Apply Main clipping before arithmetic; clipping must preserve BG winner eligibility and suppress HALF. Prevent math independently. Color-window selection is independent of TMW/TSW layer-window enables.
+5. First audit loaded-slot budget and any resident helper call. Only `13A8..178F` is overwritten by H-COMP; leading ELF padding is not loaded. Reuse existing carrier/state where sufficient, preserve public entries and resident IMEM, and do not revive old cumulative branches.
+6. Build exact runtime authority in the dedicated workflow, retain normal/PROFILE/delay-slot/smoke gates, and rerun all eight cases plus the three frozen source controls. The current green diagnostic explicitly validates bug reproduction, so create a strict repaired-semantic acceptance mode rather than relabeling it.
+7. After this repair, expand remaining CGWSEL modes and W2/inversion/combine edge coverage; then use the SMW iris regression as the representative software target. ALttP rain/tree compositor follows per Road.
 
-**Immediate action:** audit current CGWSEL/window state capture and the historical SMW iris failure, then create a one-variable color-window discriminator. Hardware is not required for this first isolation step; real N64 remains final authority for RDP/RSP synchronization and milestone-level validation.
-
-**STATUS: transparent-Sub source/HALF rung VALIDATED / STAGE CLOSED; color-window rung TODO.**
+**STATUS: color-window isolation CLOSED / measured gap; clip/prevent runtime repair TODO; M3/Gate C remains ACTIVE.**
 
 ---
 
@@ -776,6 +809,13 @@ Canonical live handoff for `ironangelo/sodium64`.
 - Exact source matrix: direct fixed+HALF -> `0x3C0F`; present live Sub+HALF -> `0x01EF`; transparent selected Sub -> fixed fallback with HALF suppressed -> `0x7C1F`.
 - Existing compact Z16 TS tag distinguishes present `0x1400/1` from absent backdrop `0x0400/0`; no new per-pixel surface is required for this semantic rung.
 - Final absent queue is bounded exactly at 8/224 with TS=0 throughout; the prior line-0 split was a guest WH0 reset bug, not a runtime requirement.
+
+### 8. CGWSEL clip/prevent color-window isolation — CLOSED / MEASURED GAP
+
+- Diagnostic head `9a019599f3a5a5aafa4ffed7dd8b1135db42d809`; generic `36629523185 SUCCESS`, dedicated `36629523682 SUCCESS`, artifact `11062067939`, digest `sha256:0abecf86f0a87b958cd261aefdf1c7b244d037afb4cea38083bf79ffe57e8fe8`.
+- Eight coherent/fenced window captures keep the same `01EF` result despite correctly delivered window controls. Five reference controls agree; clip-inside/prevent-inside/both-inside should be `03E0/001F/0000`.
+- All three transparent-Sub source/HALF controls still pass. Runtime is unchanged.
+- This closes the reproduction/isolation question only; runtime clip/prevent repair and SMW correctness remain TODO.
 
 ---
 

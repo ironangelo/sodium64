@@ -63,8 +63,20 @@ def build_mode(mode: str) -> bytes:
     if len(ts_hits) != 2:
         raise ValueError(f"expected startup+NMI TS=BG2 writes, found {ts_hits!r}")
     if absent:
-        for off in ts_hits:
-            rom[off + 1] = 0x00
+        startup_ts, nmi_ts = ts_hits
+        if not (startup_ts < NMI_OFFSET <= nmi_ts):
+            raise ValueError(f"startup/NMI TS write layout drifted: {ts_hits!r}")
+
+        # Startup makes Sub genuinely absent. Once the WH0 HDMA discriminator
+        # has run, WH0 ends the frame at 1; repurpose the former NMI TS restore
+        # to reset WH0 to 0 before the next frame. That keeps the first HDMA
+        # write (0 at line 0) inert and leaves exactly the intended 0->1 edge
+        # at line 8. Both edits preserve the original five-byte instruction
+        # slots and the frozen NMI address.
+        rom[startup_ts + 1] = 0x00
+        rom[nmi_ts:nmi_ts + len(TS_BG2_SETUP)] = bytes(
+            (0xA9, 0x00, 0x8D, 0x26, 0x21)
+        )
 
         # The compact clean proof owns only eight Sub rows. Do not remove that
         # section boundary: a 224-line first section would overrun the bounded

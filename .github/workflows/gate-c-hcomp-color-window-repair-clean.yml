@@ -91,9 +91,10 @@ jobs:
             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf \
             | tee delay-slots.txt
           sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
-          # MEASUREMENT BUILD: exact runtime authority comes from this build's
-          # source contract, maps, hashes and first-hand artifact. Repin the
-          # measured ROM before declaring the repaired stage closed.
+          # Exact ROM/ELF pins measured by this dedicated build at 77f4ecf7.
+          # This commit changes workflow authority/artifact preservation only.
+          grep -q '^a10e50abb748fab37f37952a3b87330783fef4b9dec7394639c46d899e1941de  sodium64.z64$' runtime.sha256
+          grep -q '^344d5692e188e3942f2fe7baee8c3c917901497fdbc5f78e3c05275dad385e15  build/sodium64.elf$' runtime.sha256
 
       - name: Wrap regression controls and eight color-window guests
         shell: bash
@@ -266,10 +267,16 @@ jobs:
             executable-contract.txt
             delay-slots.txt
             runtime.sha256
+            sodium64.z64
+            build/sodium64.elf
+            build/src/rsp_main.elf
+            build/src/rsp_mode7.elf
+            build/src/rsp_hcomp.elf
             rsp-main.syms
             rsp-mode7.syms
             rsp-hcomp.syms
             build/rsp_main.map
             build/rsp_mode7.map
             build/rsp_hcomp.map
+
 

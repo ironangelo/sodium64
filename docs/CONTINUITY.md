@@ -4,6 +4,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 > **Continuity compaction / recovery (2026-09-28):** the live handoff again grew past the GitHub Contents API comfort boundary (~1.8 MB), which caused normal `fetch_file` reads to return an empty body. The complete pre-compaction Gate-C operational log is permanently preserved at continuity commit **`f175f2151d4adc0a9d0067e1714c649bc9088c66`**. Older pre-overflow history remains preserved at **`686f5a1da210f8fcd1b9cd6e74d5663f4d359c30`**, and the Sep-23–25 E4d block is also in `docs/CONTINUITY_ARCHIVE_E4D_2026-09-23_25.md`. This live file is intentionally compacted to current state, durable evidence, rejected explanations, risks and immediate next action. **Archived means preserved, not discarded.**
 
+## STAGE 1 IMPLEMENTATION CHECKPOINT — bounded displayed composition (2026-09-29)
+
+User authorized completion of Stage 1. Starting from validated experimental head `77ea8f93c9e7e52a53345005b8dd9a46079ea7b9`; stable master unchanged. Replace the duplicate palette-pair/x0 mailbox diagnostic body with actual section-end composition across the existing 8×256 active band. Retain externally called IMEM entries and the resident renderer/Mode7 suffix; retire the internal `hcomp_pair_loop` proof constraint because it is not a dispatch ABI. Compose at the first TM section end, before subsequent section state replaces CGWSEL/WH bounds, with a real SyncFull readback fence. The former raw-red postcomposition oracle must become a complete expected composed-image oracle.
+
+Per-pixel absent-Sub fallback cannot use the old single saved TS winner sample. Preserve the existing rendered 280×8 TS-Z carrier before TM overwrites it, using a bounded 4480-byte snapshot at E6000..E717F (within the audited gap between compact Sub ending E517F and the mailbox at F0000). Add guards and inspect complete Main/Sub/TS/Main-winner images; this deliberately supersedes the historical no-new-per-pixel-surface rung rather than pretending that sample contract proves region output. Scope remains first 8-row section only, full brightness, original BG1/BG2 guests, and fixed dispatch/geometry checks. No full-frame, commercial, real-N64 cadence or iris claim.
+
+Next evidence: built slot fit and branch-delay/ABI, then first-hand static pixels, followed by changing window and active-audio mixed-load guests and a reproducible normal/HW_PROFILE hardware package. No stage completion until those deliverables are qualified.
+
 ## RESUME HERE — current audited state (2026-09-29 UTC)
 
 ### STAGED ROUTE — remaining work organized around emulator outcomes (2026-09-29 UTC)

@@ -142,6 +142,7 @@ def main() -> int:
     ap.add_argument("--response-timeout", type=float, default=30.0)
     ap.add_argument("--guest-counter-address", type=lambda x: int(x, 0), required=True)
     ap.add_argument("--prelaunch-address", type=lambda x: int(x, 0), required=True)
+    ap.add_argument("--mailbox-bytes", type=int, choices=(28, 32), default=28)
     ap.add_argument("--output-dir", type=Path, required=True)
     args = ap.parse_args()
 
@@ -240,7 +241,7 @@ def main() -> int:
                 client.read_memory(address, SECTION_CAPTURE_BYTES, 0x100)
             )
         (out / "gating-mailbox.bin").write_bytes(
-            client.read_memory(GATING_MAILBOX_ADDR, GATING_MAILBOX_BYTES, GATING_MAILBOX_BYTES)
+            client.read_memory(GATING_MAILBOX_ADDR, args.mailbox_bytes, args.mailbox_bytes)
         )
         (out / "provenance-prefix.bin").write_bytes(
             client.read_memory(
@@ -294,3 +295,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -11,7 +11,7 @@ from test_gate_c_hcomp_main_sub_exec_clean import insns, prove_binary, section
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def prove_source() -> None:
+def prove_carriers() -> None:
     defines = (ROOT / "src/defines.h").read_text()
     if "#define HCOMP_PROOF_RDP_CMDS 0xF30" not in defines:
         raise AssertionError("bounded proof RDP table address drift")
@@ -94,6 +94,47 @@ def prove_source() -> None:
             raise AssertionError(f"static depth selection drift: {anchor}")
 
     h = (ROOT / "src/rsp_hcomp.S").read_text()
+    helper = insns(section(
+        h,
+        "hcomp_provenance_switch_helper:",
+        "// TM has just completed",
+    ))
+    helper_required = (
+        "bnez k0, hcomp_sub_presence_saved",
+        "lui t0, 0x2900",
+        "sw t0, SCRN_DATA",
+        "sw zero, SCRN_DATA + 4",
+        "li a0, SCRN_DATA",
+        "jal 0xA4001F5C",
+        "li a1, SCRN_DATA + 8",
+        "mfc0 t0, COP0_DP_STATUS",
+        "andi t0, t0, 0x20",
+        "bnez t0, hcomp_sub_presence_rdp_wait",
+        "li a0, CHAR_DATA + 32",
+        "lui a1, 0xA00E",
+        "ori a1, a1, 0x2018",
+        "jal 0xA4001F40",
+        "li a2, 0x7",
+        "lw t0, FRAMEBUFFER(sp)",
+        "sw t0, RDP_FRAME + 4",
+        "jal 0xA4001F5C",
+        "lw a1, OVERLAY_MAIN_SRC",
+        "li t9, 0x1370",
+        "j 0xA4001F7C",
+    )
+    cursor = -1
+    for anchor in helper_required:
+        try:
+            cursor = helper.index(anchor, cursor + 1)
+        except ValueError as exc:
+            raise AssertionError(f"TS->TM preservation sequence missing/reordered {anchor!r}") from exc
+
+
+
+def prove_source() -> None:
+    prove_carriers()
+    main = (ROOT / "src/rsp_main.S").read_text()
+    h = (ROOT / "src/rsp_hcomp.S").read_text()
     if ".byte 0:0x58" not in h:
         raise AssertionError("transparent-Sub HCOMP padding drift")
     if "0xA00E6000" in h or "0xA00E6000" in main:
@@ -135,41 +176,6 @@ def prove_source() -> None:
             cursor = body.index(anchor, cursor + 1)
         except ValueError as exc:
             raise AssertionError(f"transparent-Sub sequence missing/reordered {anchor!r}") from exc
-
-    helper = insns(section(
-        h,
-        "hcomp_provenance_switch_helper:",
-        "// TM has just completed",
-    ))
-    helper_required = (
-        "bnez k0, hcomp_sub_presence_saved",
-        "lui t0, 0x2900",
-        "sw t0, SCRN_DATA",
-        "sw zero, SCRN_DATA + 4",
-        "li a0, SCRN_DATA",
-        "jal 0xA4001F5C",
-        "li a1, SCRN_DATA + 8",
-        "mfc0 t0, COP0_DP_STATUS",
-        "andi t0, t0, 0x20",
-        "bnez t0, hcomp_sub_presence_rdp_wait",
-        "li a0, CHAR_DATA + 32",
-        "lui a1, 0xA00E",
-        "ori a1, a1, 0x2018",
-        "jal 0xA4001F40",
-        "li a2, 0x7",
-        "lw t0, FRAMEBUFFER(sp)",
-        "sw t0, RDP_FRAME + 4",
-        "jal 0xA4001F5C",
-        "lw a1, OVERLAY_MAIN_SRC",
-        "li t9, 0x1370",
-        "j 0xA4001F7C",
-    )
-    cursor = -1
-    for anchor in helper_required:
-        try:
-            cursor = helper.index(anchor, cursor + 1)
-        except ValueError as exc:
-            raise AssertionError(f"TS->TM preservation sequence missing/reordered {anchor!r}") from exc
 
     if body.count("li t9, 2") != 1:
         raise AssertionError("transparent fallback source code drift")
@@ -219,3 +225,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -112,11 +112,11 @@ def require_queue(root: Path, *, cgwsel: int, ts: int) -> dict[str, object]:
     return {"authority": authority, "reports": reports}
 
 
-def mailbox_words(root: Path) -> tuple[int, ...]:
+def mailbox_words(root: Path, length: int = 28) -> tuple[int, ...]:
     data = (root / "gating-mailbox.bin").read_bytes()
-    if len(data) != 28:
-        raise ValueError(f"mailbox length {len(data)} != 28")
-    return tuple(int.from_bytes(data[i:i + 2], "big") for i in range(0, 28, 2))
+    if len(data) != length:
+        raise ValueError(f"mailbox length {len(data)} != {length}")
+    return tuple(int.from_bytes(data[i:i + 2], "big") for i in range(0, length, 2))
 
 
 def classify_state(root: Path, mode: str) -> dict[str, object]:
@@ -164,12 +164,13 @@ def classify_state(root: Path, mode: str) -> dict[str, object]:
         raise ValueError(f"{mode} provenance drift: {provenance_report!r}")
 
     want = (
-        RED_RGB555, sub_rgb, cfg["result"], 1,
+        cfg.get("main", RED_RGB555), sub_rgb, cfg["result"], cfg.get("gate", 1),
         WINNER_TAG, WINNER_MASK, CGADSUB_HALF_BG1, 0,
         BLUE_RGB555, cfg["selected"], cfg["cgwsel"], cfg["source_flags"],
         cfg["ts_tag"], cfg["presence"],
     )
-    got = mailbox_words(root)
+    want += tuple(cfg.get("extra", ()))
+    got = mailbox_words(root, len(want) * 2)
     if got != want:
         raise ValueError(
             f"{mode} mailbox " + ",".join(f"{x:04X}" for x in got)
@@ -256,11 +257,12 @@ def write_fixture(root: Path, mode: str, rendered_main: int) -> None:
 
     sub_rgb = GREEN_RGB555 if present else BLUE_RGB555
     got = (
-        RED_RGB555, sub_rgb, cfg["result"], 1,
+        cfg.get("main", RED_RGB555), sub_rgb, cfg["result"], cfg.get("gate", 1),
         WINNER_TAG, WINNER_MASK, CGADSUB_HALF_BG1, 0,
         BLUE_RGB555, cfg["selected"], cfg["cgwsel"], cfg["source_flags"],
         cfg["ts_tag"], cfg["presence"],
     )
+    got += tuple(cfg.get("extra", ()))
     (root / "gating-mailbox.bin").write_bytes(pack(list(got)))
     (root / "capture-state.json").write_text(json.dumps({
         "guest_frame_delta": 1, "renderer_frame_reentries": 1,
@@ -316,3 +318,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

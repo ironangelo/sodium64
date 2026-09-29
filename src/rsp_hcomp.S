@@ -1,10 +1,9 @@
 /*
-    Proof-only Gate C bridge from integrated PR #18 CGRAM replay state into
-    authoritative E1f half-add arithmetic.
+    Bounded Gate C sample path: retained PR #18 palette-pair proof plus
+    rendered Main/Sub, provenance, source selection and color-window math.
 
-    This proves representation/ownership/arithmetic execution only. It is not
-    a production compositor and does not claim Main/Sub provenance, color-math
-    gating, final pixels, cadence, or game correctness.
+    This diagnostic computes one semantic x0 sample. Full-frame output,
+    production ownership, cadence and game correctness remain separate gates.
 */
 #include <rsp.inc>
 #include "defines.h"
@@ -67,17 +66,49 @@ hcomp_pair_loop:
     srl t3, t3, 1
     sh t3, 0(s1)
 
-    addi s0, s0, 16
     addi s1, s1, 2
     addi s2, s2, -1
     bnez s2, hcomp_pair_loop
-    nop
+    addi s0, s0, 16
 
     // Proof-only first-hand mailbox: two RGB555 results plus a zero guard.
     li a0, CHAR_DATA
     li a1, 0xA00F0000
     jal 0xA4001F08
     li a2, 0x7
+
+    // Reuse the retained regular suffix (outside the loaded overlay slot).
+    // No operand is live across calc_window_spans' caller-clobber registers.
+    // At semantic x0, selected iff the first true span begins at zero.
+    lbu a0, WOBJSEL
+    srl a0, a0, 4
+    lbu a1, WOBJLOG
+    srl a1, a1, 2
+    andi a1, a1, 3
+    jal 0xA4001CE4
+    li a2, 1
+    lbu s0, WIN_COUNT
+    sltu s0, zero, s0
+    lbu t0, WIN_BOUNDS
+    sltiu t0, t0, 1
+    and s0, s0, t0
+    sll s0, s0, 2
+    // Truth table bits: selected=0 -> 0101; selected=1 -> 0011.
+    // Two independent CGWSEL modes, unrelated to TMW/TSW layer masks.
+    li t0, 0x35
+    lbu t1, CGWSEL
+    srl t2, t1, 4
+    andi t2, t2, 3
+    or t2, t2, s0
+    srlv s1, t0, t2
+    andi s1, s1, 1
+    srl t1, t1, 6
+    or t1, t1, s0
+    srlv s0, t0, t1
+    andi s0, s0, 1
+    sll t0, s1, 1
+    or t0, t0, s0
+    sh t0, CHAR_DATA + 38
 
     // Gate-C clean CGADSUB discriminator. Read one already-rendered active
     // sample from compact semantic Sub (row0,x12) and the corresponding
@@ -147,25 +178,17 @@ hcomp_pair_loop:
     sll t3, t3, 9
     or t5, t2, t3
 
-    // SNES CGWSEL bit1: 0=fixed color, 1=subscreen. When Sub is selected,
-    // the saved TS winner tag distinguishes a real Sub pixel from backdrop.
-    // Backdrop/absence falls back to fixed color. t9 becomes source code:
-    // 0=direct fixed, 1=live Sub, 2=transparent-Sub fixed fallback.
+    // Source code 0=fixed, 1=live Sub, 2=absent-Sub fixed fallback.
+    // Presence already normalized t9 to 0/1; retain it for live Sub.
     lbu t2, CGWSEL
     andi t3, t2, 0x2
     beqz t3, hcomp_source_fixed
     nop
-    bnez t9, hcomp_source_sub
-    nop
-    move t7, t5
+    bnez t9, hcomp_source_ready
+    move t7, t1
     li t9, 2
     b hcomp_source_ready
-    nop
-hcomp_source_sub:
-    move t7, t1
-    li t9, 1
-    b hcomp_source_ready
-    nop
+    move t7, t5
 hcomp_source_fixed:
     move t7, t5
     move t9, zero
@@ -185,28 +208,34 @@ hcomp_source_ready:
     // carry-correction term. This fixes evidence only; gate semantics below
     // still consume the live t4 value directly.
     sh t4, CHAR_DATA + 18
+    // Preserve raw Main separately; clipping changes only the arithmetic
+    // input, never the rendered surface or its original winner eligibility.
+    sh t0, CHAR_DATA + 36
+    bnez s0, hcomp_main_ready
+    nop
+    move t0, zero
+hcomp_main_ready:
     lbu t8, CGADSUB
     and t2, t8, t4
     sltu t2, zero, t2
-    move t3, t0
+    and t2, t2, s1
     beqz t2, hcomp_gate_store
-    nop
+    move t3, t0
 
-    // Real CGADSUB operation selection on the already-selected live operand.
-    // bit7: 0=add, 1=subtract. bit6: 0=full, 1=half.
+    // Compute HALF eligibility once, before operation dispatch. Clipped Main
+    // and absent selected Sub both suppress it. Evidence bit8 is effective,
+    // so a prevented operation never reports HALF even if CGADSUB requests it.
+    andi t5, t8, 0x40
+    sltu t5, zero, t5
+    sltiu t4, t9, 2
+    and t5, t5, t4
+    and t5, t5, s0
+    sll t5, t5, 8
+    or t9, t9, t5
     andi t4, t8, 0x80
     bnez t4, hcomp_math_sub
-    nop
-    andi t4, t8, 0x40
-    beqz t4, hcomp_math_add_full
-    nop
-    li t5, 2
-    beq t9, t5, hcomp_math_add_full
-    nop
-    // HALF remains effective for direct fixed selection and real Sub pixels.
-    // Mark bit8 in the source/half evidence word only when it is actually used.
-    ori t9, t9, 0x0100
-    b hcomp_math_add_half
+    andi t4, t9, 0x100
+    bnez t4, hcomp_math_add_half
     nop
 
 hcomp_math_add_full:
@@ -236,8 +265,7 @@ hcomp_math_add_half:
 
 hcomp_math_sub:
     // Packed per-channel saturating subtract. If bit6 is also set, halve
-    // the already-clamped difference; transparent-Sub HALF suppression is a
-    // separate later semantic rung and is deliberately not folded in here.
+    // the already-clamped difference, using the effective HALF decision above.
     sub t3, t0, t7
     ori t4, zero, 0x8420
     add t3, t3, t4
@@ -249,13 +277,9 @@ hcomp_math_sub:
     srl t5, t4, 5
     sub t4, t4, t5
     and t3, t3, t4
-    andi t5, t8, 0x40
+    andi t5, t9, 0x100
     beqz t5, hcomp_math_done
     nop
-    li t4, 2
-    beq t9, t4, hcomp_math_done
-    nop
-    ori t9, t9, 0x0100
     andi t3, t3, 0x7BDE
     srl t3, t3, 1
 
@@ -264,7 +288,8 @@ hcomp_math_done:
 hcomp_gate_store:
     // Self-describing proof record. Keep the validated first 16 B stable
     // (Main/Sub/result/gate/tag/mask/CGADSUB/guard), then append fixed RGB555,
-    // selected addend, raw CGWSEL and normalized source flag.
+    // selected addend, raw CGWSEL and normalized source flag. Append raw Main
+    // and window flags (bit0=Main visible, bit1=math permitted) at +36/+38.
     sh t0, CHAR_DATA + 8
     sh t1, CHAR_DATA + 10
     sh t3, CHAR_DATA + 12
@@ -279,7 +304,7 @@ hcomp_gate_store:
     li a0, CHAR_DATA + 8
     li a1, 0xA00F0008
     jal 0xA4001F08
-    li a2, 0x1B
+    li a2, 0x1F
 
     // The rejected cross-frame TS-Z preparation used to live here. Section0
     // now binds the bounded carrier in draw_frame immediately before its own
@@ -356,7 +381,7 @@ hcomp_provenance_end:
 
 // Keep the fixed switch address while absorbing the new lifetime cut entirely
 // out of previously unused H-COMP padding.
-.byte 0:0x58
+.byte 0:0x04
 
 hcomp_screen_switch:
     beqz s7, hcomp_provenance_end
@@ -370,3 +395,4 @@ draw_mode7_entry:
     // H-COMP-resident fault surface for true Mode7 rendering.
     j 0xA4001F78
     li t9, 0x1788
+

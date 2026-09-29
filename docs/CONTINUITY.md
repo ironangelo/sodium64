@@ -7,6 +7,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## RESUME HERE — current audited state (2026-09-28 UTC)
 
 
+### ROOT CAUSE FOUND — “sub-absent” guest was re-enabling BG2 via inherited HDMA (2026-09-29 UTC)
+
+- First-hand artifact audit of **`10999050231`** resolved the apparent stale-tag contradiction. The generated `sub-absent-half` ROM patches the two explicit TS=BG2 writes (startup + NMI) to TS=0, **but it inherits the base lifetime guest's direct-HDMA TS table unchanged**.
+- Exact bytes at guest table address **$B000** are identical in all three generated ROMs: **`FF 02 02 02 02 02 02 02 02 00 ...`**. The eight leading data bytes rewrite **TS=$02 (BG2)** during exactly the first eight visible lines / measured section0.
+- Therefore the dedicated result **`raw TS tag=0x1400`** in the nominal “sub-absent” case is **correct for the guest that actually executed**. It is not stale Z, not a failed Sync Full fence, and not evidence that the runtime ignored TS=0.
+- This also explains the otherwise contradictory artifact: the queue/startup state could show TS=0 while raster HDMA re-enabled BG2 in the measured band.
+- **REJECTED interpretation:** “absence baseline is not written and 0x1400 is stale prior-frame metadata” is rejected by the guest construction audit.
+- **MEASURED support retained:** Sync Full/PIPE_BUSY converted the two valid BG2-present cases from sentinel `0x55AA` to exact `0x1400`, with no RDP crash/coherency diagnostics. Do not change runtime yet.
+- **Immediate controlled repair:** change only `scripts/make_gate_c_hcomp_transparent_sub.py` so `sub-absent-half` also zeros the inherited first-eight-line TS HDMA payload. Keep fixed-half and sub-present-half byte-identical, keep runtime/oracle/capture fence unchanged, and add a deterministic generator assertion that the absent ROM contains no BG2 re-enable in that HDMA band.
+- **Expected after guest-only repair:** absent compact Sub shows backdrop/fallback rather than BG2, raw TS tag `0x0400`, presence=0, source code=2 with HALF suppressed, result `0x7C1F`. If not, only then return to runtime carrier investigation.
+
+
+
 ### CONTROLLED HARNESS REPAIR — absent guest neutralizes inherited TS HDMA (2026-09-29 UTC)
 
 - Exact branch head **`phase4/gate-c-hcomp-transparent-sub-clean@d7ee3131685f14203c45df8bd3c64713018481a2`** changes **only** `scripts/make_gate_c_hcomp_transparent_sub.py`; Sodium64 runtime/source and the validated Sync Full readback fence are unchanged.

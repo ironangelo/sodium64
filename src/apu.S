@@ -78,7 +78,7 @@ apu_reg_y: .byte 0
 apu_accum: .byte 0
 apu_stack: .byte 0xFF
 apu_flags: .byte 0
-apu_clock: .byte APU_CYCLE * 2
+apu_clock: .byte APU_CYCLE
 
 .align 4
 read_iomap:
@@ -713,3 +713,4 @@ write_apuio3: // a1: value
     sb a1, apu_inputs + 3
     jr ra
     nop
+

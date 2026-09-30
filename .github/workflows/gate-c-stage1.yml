@@ -33,8 +33,22 @@ jobs:
           python3 scripts/check_rsp_branch_delay_slots.py \
             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf | tee delay-slots.txt
           sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
+          nm -n build/sodium64.elf > runtime.syms
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          rows = [line.split() for line in Path('runtime.syms').read_text().splitlines()]
+          wanted = ['apu_clock', 'audio_set', 'precision_set', 'skipped_set',
+                    'dsp_pointer', 'apu_outputs', 'apu_control', 'dsp_buffer', 'dsp_regs']
+          result = {}
+          for name in wanted + ['enabled']:
+              found = [r[0] for r in rows if len(r) == 3 and r[2] == name]
+              assert len(found) == 1, (name, found)
+              result['dsp_enabled' if name == 'enabled' else name] = '0x' + found[0]
+          Path('runtime-symbols.json').write_text(json.dumps(result, indent=2)+'\n')
+          PYCODE
           mkdir -p diagnostic hardware
-          for mode in fixed absent control clip prevent both; do
+          for mode in fixed absent control clip prevent both visual mixed; do
             python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode.smc"
             python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode-replay.smc"
             cmp "diagnostic/$mode.smc" "diagnostic/$mode-replay.smc"
@@ -70,6 +84,33 @@ jobs:
             echo "PRELAUNCH_ADDR=0x$prelaunch"
           } | tee -a "$GITHUB_ENV"
 
+      - name: Build hardware capture variant with the existing profiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qualified/normal qualified/hw-profile
+          cp -a build qualified/normal/
+          cp sodium64.z64 qualified/normal/
+          libdragon make clean
+          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
+          python3 scripts/check_rsp_branch_delay_slots.py \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+          cp -a build qualified/hw-profile/
+          cp sodium64.z64 qualified/hw-profile/
+          for mode in visual mixed; do
+            wrap="wrap-hw-$mode"
+            mkdir -p "$wrap"
+            cp sodium64.z64 rom-converter.py "$wrap/"
+            cp "diagnostic/$mode.smc" "$wrap/guest.smc"
+            (cd "$wrap"; python3 rom-converter.py </dev/null)
+            cp "$wrap/out/guest.z64" "hardware/$mode-hw-profile.z64"
+          done
+          sha256sum qualified/normal/sodium64.z64 qualified/normal/build/sodium64.elf \
+            qualified/hw-profile/sodium64.z64 qualified/hw-profile/build/sodium64.elf \
+            hardware/*.z64 | tee qualified-hashes.sha256
+          cp qualified/normal/sodium64.z64 sodium64.z64
+          rm -rf build
+          cp -a qualified/normal/build build
       - name: Install pinned ares dependencies
         run: |
           sudo apt-get update
@@ -77,7 +118,14 @@ jobs:
             ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
             libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
 
+      - uses: actions/cache/restore@v4
+        id: ares-cache
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
       - name: Build pinned N64-only ares in established valid lab mode
+        id: ares-build
+        if: steps.ares-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -101,6 +149,18 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
+      - uses: actions/cache/save@v4
+        if: steps.ares-build.outcome == 'success'
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Locate pinned ares after build or cache restore
+        shell: bash
+        run: |
+          ares_bin=$(find "$RUNNER_TEMP/ares-src/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee ares-version.txt
       - name: Capture complete displayed output and provenance
         shell: bash
         run: |
@@ -113,7 +173,7 @@ jobs:
             label="$1"
             port="$2"
             rom="$3"
-            mailbox_bytes="${4:-28}"
+            frames="${4:-1}"
             out="captures/$label"
             home="$RUNNER_TEMP/ares-home-transparent-sub-$label"
             settings="$RUNNER_TEMP/ares-transparent-sub-$label.bml"
@@ -137,7 +197,8 @@ jobs:
             rc=0
             python3 scripts/capture_gate_c_stage1_ares.py \
               --port "$port" \
-              --mailbox-bytes "$mailbox_bytes" \
+              --frames "$frames" \
+              --runtime-symbols runtime-symbols.json \
               --guest-counter-address "$GUEST_COUNTER_ADDR" \
               --prelaunch-address "$PRELAUNCH_ADDR" \
               --output-dir "$out" | tee "$out/capture.log" || rc=$?
@@ -162,6 +223,9 @@ jobs:
             port=$((port + 1))
           done
           python3 scripts/check_gate_c_stage1_ares.py --captures captures --output captures/result.json
+          run_case visual 9171 hardware/visual.z64 8
+          run_case mixed 9172 hardware/mixed.z64 8
+          python3 scripts/check_gate_c_stage1_motion.py --captures captures --output captures/motion-result.json
       - name: Preserve exact runtime and first-hand evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -170,6 +234,13 @@ jobs:
           retention-days: 30
           path: |
             hardware/
+            qualified/**/*.elf
+            qualified/**/*.map
+            qualified/**/sodium64.z64
+            qualified-hashes.sha256
+            runtime-symbols.json
+            runtime.syms
+            hw-profile-build.log
             diagnostic/*.smc
             guest-hashes.sha256
             captures/

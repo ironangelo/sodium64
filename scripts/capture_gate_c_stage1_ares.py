@@ -142,9 +142,13 @@ def main() -> int:
     ap.add_argument("--response-timeout", type=float, default=30.0)
     ap.add_argument("--guest-counter-address", type=lambda x: int(x, 0), required=True)
     ap.add_argument("--prelaunch-address", type=lambda x: int(x, 0), required=True)
-    ap.add_argument("--mailbox-bytes", type=int, choices=(28, 32), default=28)
+    ap.add_argument("--frames", type=int, default=1)
+    ap.add_argument("--runtime-symbols", type=Path)
     ap.add_argument("--output-dir", type=Path, required=True)
     args = ap.parse_args()
+    if not 1 <= args.frames <= 16:
+        ap.error('--frames must be 1..16')
+    runtime_symbols = json.loads(args.runtime_symbols.read_text()) if args.runtime_symbols else {}
 
     out = args.output_dir
     out.mkdir(parents=True, exist_ok=True)
@@ -177,122 +181,141 @@ def main() -> int:
         validate_stop(client.request("c"), "seed prelaunch")
         seed_state = require_fenced_boundary(client, stage="seed prelaunch")
 
-        sub_sentinel = SENTINEL.to_bytes(2, "big") * (SUB_STRIP_BYTES // 2)
-        main_sentinel = SENTINEL.to_bytes(2, "big") * (MAIN_CAPTURE_BYTES // 2)
-        write_pattern(client, SUB_COLOR_ADDR, sub_sentinel)
-        verify_pattern(client, SUB_COLOR_ADDR, sub_sentinel)
-        for address in FRAMEBUFFER_ADDRS:
-            write_pattern(client, address, main_sentinel)
-            verify_pattern(client, address, main_sentinel)
-
-        # Clean provenance reuses the historical E1c compact 280x8 scratch.
-        # Guard both sides so a green result proves section-lifetime bounding,
-        # not merely that the sampled 8 rows happened to contain correct tags.
-        provenance_sentinel = SENTINEL.to_bytes(2, "big") * (
-            PROVENANCE_CAPTURE_BYTES // 2
-        )
-        provenance_prefix = bytes((0xC3,)) * PROVENANCE_GUARD_BYTES
-        provenance_suffix = bytes((0x3C,)) * PROVENANCE_GUARD_BYTES
-        write_pattern(client, PROVENANCE_PREFIX_ADDR, provenance_prefix)
-        write_pattern(client, PROVENANCE_ACTIVE_ADDR, provenance_sentinel)
-        write_pattern(client, PROVENANCE_SUFFIX_ADDR, provenance_suffix)
-        verify_pattern(client, PROVENANCE_PREFIX_ADDR, provenance_prefix)
-        verify_pattern(client, PROVENANCE_ACTIVE_ADDR, provenance_sentinel)
-        verify_pattern(client, PROVENANCE_SUFFIX_ADDR, provenance_suffix)
-
-        # New bounded TS provenance snapshot: independent ownership guards.
-        write_pattern(client, 0xA00E5FC0, provenance_prefix)
-        write_pattern(client, 0xA00E6000, provenance_sentinel)
-        write_pattern(client, 0xA00E7180, provenance_suffix)
-        baseline_counter = read_u(client, args.guest_counter_address, 1)
-
-        # Advance exactly across the inert +0x14 lui without GDB single-step.
-        # Pinned ares can let an R4300 single-step cross the following jr delay
-        # slot, whose +0x1C store clears SP HALT. Instead, arm a temporary
-        # software breakpoint at +0x18 (the jr itself), remove +0x14, and
-        # continue normally. Stopping before the jr guarantees the unhalt store
-        # has not executed; then re-arm +0x14 behind the PC before releasing
-        # the renderer for one complete frame.
-        stepover_address = args.prelaunch_address + 4
-        set_breakpoint(client, stepover_address, True)
-        set_breakpoint(client, args.prelaunch_address, False)
-        validate_stop(client.request("c"), "prelaunch one-instruction continue")
-        step_state = require_fenced_boundary(client, stage="pre-jr prelaunch")
-        set_breakpoint(client, args.prelaunch_address, True)
-        set_breakpoint(client, stepover_address, False)
-
-        validate_stop(client.request("c"), "fresh-frame prelaunch")
-        final_state = require_fenced_boundary(client, stage="capture prelaunch")
-        set_breakpoint(client, args.prelaunch_address, False)
-
-        current_counter = read_u(client, args.guest_counter_address, 1)
-        delta = (current_counter - baseline_counter) & 0xFF
-        if delta < 1:
-            raise RuntimeError(
-                "renderer reentry did not include fresh guest time: "
-                f"baseline=0x{baseline_counter:02X} current=0x{current_counter:02X}"
+        root = out
+        for frame_index in range(args.frames):
+            out = root if args.frames == 1 else root / f'frame-{frame_index:03d}'
+            out.mkdir(parents=True, exist_ok=True)
+            set_breakpoint(client, args.prelaunch_address, True)
+            seed_state = require_fenced_boundary(client, stage=f'seed#{frame_index}')
+            sub_sentinel = SENTINEL.to_bytes(2, "big") * (SUB_STRIP_BYTES // 2)
+            main_sentinel = SENTINEL.to_bytes(2, "big") * (MAIN_CAPTURE_BYTES // 2)
+            write_pattern(client, SUB_COLOR_ADDR, sub_sentinel)
+            verify_pattern(client, SUB_COLOR_ADDR, sub_sentinel)
+            for address in FRAMEBUFFER_ADDRS:
+                write_pattern(client, address, main_sentinel)
+                verify_pattern(client, address, main_sentinel)
+    
+            # Clean provenance reuses the historical E1c compact 280x8 scratch.
+            # Guard both sides so a green result proves section-lifetime bounding,
+            # not merely that the sampled 8 rows happened to contain correct tags.
+            provenance_sentinel = SENTINEL.to_bytes(2, "big") * (
+                PROVENANCE_CAPTURE_BYTES // 2
             )
-
-        (out / "sub.bin").write_bytes(
-            client.read_memory(SUB_COLOR_ADDR, SUB_STRIP_BYTES, 0x400)
-        )
-        for i, address in enumerate(FRAMEBUFFER_ADDRS, start=1):
-            (out / f"main{i}.bin").write_bytes(
-                client.read_memory(address, MAIN_CAPTURE_BYTES, 0x400)
+            provenance_prefix = bytes((0xC3,)) * PROVENANCE_GUARD_BYTES
+            provenance_suffix = bytes((0x3C,)) * PROVENANCE_GUARD_BYTES
+            write_pattern(client, PROVENANCE_PREFIX_ADDR, provenance_prefix)
+            write_pattern(client, PROVENANCE_ACTIVE_ADDR, provenance_sentinel)
+            write_pattern(client, PROVENANCE_SUFFIX_ADDR, provenance_suffix)
+            verify_pattern(client, PROVENANCE_PREFIX_ADDR, provenance_prefix)
+            verify_pattern(client, PROVENANCE_ACTIVE_ADDR, provenance_sentinel)
+            verify_pattern(client, PROVENANCE_SUFFIX_ADDR, provenance_suffix)
+    
+            # New bounded TS provenance snapshot: independent ownership guards.
+            write_pattern(client, 0xA00E5FC0, provenance_prefix)
+            write_pattern(client, 0xA00E6000, provenance_sentinel)
+            write_pattern(client, 0xA00E7180, provenance_suffix)
+            for i, address in enumerate(SECTION_QUEUE_ADDRS, start=1):
+                (out / f'seed-section-q{i}.bin').write_bytes(client.read_memory(address, SECTION_CAPTURE_BYTES, 0x100))
+            baseline_counter = read_u(client, args.guest_counter_address, 1)
+    
+            # Advance exactly across the inert +0x14 lui without GDB single-step.
+            # Pinned ares can let an R4300 single-step cross the following jr delay
+            # slot, whose +0x1C store clears SP HALT. Instead, arm a temporary
+            # software breakpoint at +0x18 (the jr itself), remove +0x14, and
+            # continue normally. Stopping before the jr guarantees the unhalt store
+            # has not executed; then re-arm +0x14 behind the PC before releasing
+            # the renderer for one complete frame.
+            stepover_address = args.prelaunch_address + 4
+            set_breakpoint(client, stepover_address, True)
+            set_breakpoint(client, args.prelaunch_address, False)
+            validate_stop(client.request("c"), "prelaunch one-instruction continue")
+            step_state = require_fenced_boundary(client, stage="pre-jr prelaunch")
+            set_breakpoint(client, args.prelaunch_address, True)
+            set_breakpoint(client, stepover_address, False)
+    
+            validate_stop(client.request("c"), "fresh-frame prelaunch")
+            final_state = require_fenced_boundary(client, stage="capture prelaunch")
+            set_breakpoint(client, args.prelaunch_address, False)
+    
+            current_counter = read_u(client, args.guest_counter_address, 1)
+            delta = (current_counter - baseline_counter) & 0xFF
+            if delta < 1:
+                raise RuntimeError(
+                    "renderer reentry did not include fresh guest time: "
+                    f"baseline=0x{baseline_counter:02X} current=0x{current_counter:02X}"
+                )
+    
+            (out / "sub.bin").write_bytes(
+                client.read_memory(SUB_COLOR_ADDR, SUB_STRIP_BYTES, 0x400)
             )
-        for i, address in enumerate(SECTION_QUEUE_ADDRS, start=1):
-            (out / f"section-q{i}.bin").write_bytes(
-                client.read_memory(address, SECTION_CAPTURE_BYTES, 0x100)
+            for i, address in enumerate(FRAMEBUFFER_ADDRS, start=1):
+                (out / f"main{i}.bin").write_bytes(
+                    client.read_memory(address, MAIN_CAPTURE_BYTES, 0x400)
+                )
+            for i, address in enumerate(SECTION_QUEUE_ADDRS, start=1):
+                (out / f"section-q{i}.bin").write_bytes(
+                    client.read_memory(address, SECTION_CAPTURE_BYTES, 0x100)
+                )
+            (out / "provenance-prefix.bin").write_bytes(
+                client.read_memory(
+                    PROVENANCE_PREFIX_ADDR,
+                    PROVENANCE_GUARD_BYTES,
+                    PROVENANCE_GUARD_BYTES,
+                )
             )
-        (out / "gating-mailbox.bin").write_bytes(
-            client.read_memory(GATING_MAILBOX_ADDR, args.mailbox_bytes, args.mailbox_bytes)
-        )
-        (out / "provenance-prefix.bin").write_bytes(
-            client.read_memory(
-                PROVENANCE_PREFIX_ADDR,
-                PROVENANCE_GUARD_BYTES,
-                PROVENANCE_GUARD_BYTES,
+            (out / "provenance.bin").write_bytes(
+                client.read_memory(
+                    PROVENANCE_ACTIVE_ADDR,
+                    PROVENANCE_CAPTURE_BYTES,
+                    0x400,
+                )
             )
-        )
-        (out / "provenance.bin").write_bytes(
-            client.read_memory(
-                PROVENANCE_ACTIVE_ADDR,
-                PROVENANCE_CAPTURE_BYTES,
-                0x400,
+            (out / "provenance-suffix.bin").write_bytes(
+                client.read_memory(
+                    PROVENANCE_SUFFIX_ADDR,
+                    PROVENANCE_GUARD_BYTES,
+                    PROVENANCE_GUARD_BYTES,
+                )
             )
-        )
-        (out / "provenance-suffix.bin").write_bytes(
-            client.read_memory(
-                PROVENANCE_SUFFIX_ADDR,
-                PROVENANCE_GUARD_BYTES,
-                PROVENANCE_GUARD_BYTES,
+    
+            for name, addr, size in (
+                ('ts-provenance-prefix.bin', 0xA00E5FC0, 64),
+                ('ts-provenance.bin', 0xA00E6000, PROVENANCE_CAPTURE_BYTES),
+                ('ts-provenance-suffix.bin', 0xA00E7180, 64),
+            ):
+                (out / name).write_bytes(client.read_memory(addr, size, 0x400))
+            (out / 'output-input.bin').write_bytes(client.read_memory(0xA00F0000, 16, 16))
+            # Actual DSP output and live guest/SPC state, separate from settings.
+            (out / 'guest-state.bin').write_bytes(client.read_memory(args.guest_counter_address, 32, 32))
+            (out / 'entities.bin').write_bytes(client.read_memory(args.guest_counter_address + 0x1000, 256, 256))
+            runtime = {}
+            for name, size in (('apu_clock', 1), ('audio_set', 1), ('precision_set', 1),
+                               ('skipped_set', 1), ('dsp_enabled', 1), ('dsp_pointer', 2),
+                               ('apu_outputs', 4), ('apu_control', 1)):
+                if name in runtime_symbols:
+                    runtime[name] = read_u(client, int(runtime_symbols[name], 0), size)
+            if 'dsp_buffer' in runtime_symbols:
+                (out / 'audio-pcm.bin').write_bytes(client.read_memory(int(runtime_symbols['dsp_buffer'], 0), 8192, 0x400))
+            if 'dsp_regs' in runtime_symbols:
+                (out / 'dsp-regs.bin').write_bytes(client.read_memory(int(runtime_symbols['dsp_regs'], 0), 128, 128))
+            (out / 'runtime-state.json').write_text(json.dumps(runtime, indent=2, sort_keys=True) + '\n')
+            state = {
+                "warm_counter": warm_counter,
+                "baseline_counter": baseline_counter,
+                "current_counter": current_counter,
+                "guest_frame_delta": delta,
+                "renderer_frame_reentries": 1,
+                "prelaunch_address": f"0x{args.prelaunch_address:08X}",
+                "stepover_address": f"0x{stepover_address:08X}",
+                "step_over_boundary": step_state,
+                "sentinel": f"0x{SENTINEL:04X}",
+                "seed_boundary": seed_state,
+                **final_state,
+            }
+            (out / "capture-state.json").write_text(
+                json.dumps(state, indent=2, sort_keys=True) + "\n"
             )
-        )
-
-        for name, addr, size in (
-            ('ts-provenance-prefix.bin', 0xA00E5FC0, 64),
-            ('ts-provenance.bin', 0xA00E6000, PROVENANCE_CAPTURE_BYTES),
-            ('ts-provenance-suffix.bin', 0xA00E7180, 64),
-        ):
-            (out / name).write_bytes(client.read_memory(addr, size, 0x400))
-        (out / 'output-input.bin').write_bytes(client.read_memory(0xA00F0000, 16, 16))
-        state = {
-            "warm_counter": warm_counter,
-            "baseline_counter": baseline_counter,
-            "current_counter": current_counter,
-            "guest_frame_delta": delta,
-            "renderer_frame_reentries": 1,
-            "prelaunch_address": f"0x{args.prelaunch_address:08X}",
-            "stepover_address": f"0x{stepover_address:08X}",
-            "step_over_boundary": step_state,
-            "sentinel": f"0x{SENTINEL:04X}",
-            "seed_boundary": seed_state,
-            **final_state,
-        }
-        (out / "capture-state.json").write_text(
-            json.dumps(state, indent=2, sort_keys=True) + "\n"
-        )
-        print(json.dumps(state, indent=2, sort_keys=True))
+            print(json.dumps(state, indent=2, sort_keys=True))
 
         try:
             client.request("D")

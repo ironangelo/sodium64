@@ -111,6 +111,33 @@ jobs:
           cp qualified/normal/sodium64.z64 sodium64.z64
           rm -rf build
           cp -a qualified/normal/build build
+      - name: Build exact stable-master hardware comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          baseline=7cc8facfe8643fb85888f301f79995575830521d
+          git fetch --depth=1 origin "$baseline"
+          git worktree add --detach baseline-source "$baseline"
+          (
+            cd baseline-source
+            libdragon init
+            libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee ../baseline-build.log
+            python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+          )
+          mkdir -p qualified/baseline-hw-profile
+          cp -a baseline-source/build qualified/baseline-hw-profile/
+          cp baseline-source/sodium64.z64 qualified/baseline-hw-profile/
+          for mode in visual mixed; do
+            wrap="wrap-baseline-$mode"
+            mkdir -p "$wrap"
+            cp baseline-source/sodium64.z64 rom-converter.py "$wrap/"
+            cp "diagnostic/$mode.smc" "$wrap/guest.smc"
+            (cd "$wrap"; python3 rom-converter.py </dev/null)
+            cp "$wrap/out/guest.z64" "hardware/baseline-$mode-hw-profile.z64"
+            dd if="hardware/baseline-$mode-hw-profile.z64" of=diagnostic/embedded.smc bs=1 skip=$((0x104000)) count=32768 status=none
+            cmp "diagnostic/$mode.smc" diagnostic/embedded.smc
+          done
+          sha256sum qualified/baseline-hw-profile/sodium64.z64 qualified/baseline-hw-profile/build/sodium64.elf hardware/baseline-*.z64 >> qualified-hashes.sha256
       - name: Install pinned ares dependencies
         run: |
           sudo apt-get update
@@ -226,6 +253,12 @@ jobs:
           run_case visual 9171 hardware/visual.z64 8
           run_case mixed 9172 hardware/mixed.z64 8
           python3 scripts/check_gate_c_stage1_motion.py --captures captures --output captures/motion-result.json
+      - name: Package qualified builds and milestone procedure
+        shell: bash
+        run: |
+          python3 scripts/package_gate_c_stage1.py
+          (cd stage1-package; sha256sum -c SHA256SUMS)
+          sha256sum gate-c-stage1-hardware.zip | tee hardware-package.sha256
       - name: Preserve exact runtime and first-hand evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -253,3 +286,6 @@ jobs:
             build/*.map
             rsp-*.syms
             ares-version.txt
+            baseline-build.log
+            gate-c-stage1-hardware.zip
+            hardware-package.sha256

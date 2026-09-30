@@ -39,11 +39,22 @@ def pcm(root):
                 unique_samples=len(set(left)), pointer=offset)
 
 
+def require_audio_progress(heartbeat, pointers, chronological_pcm):
+    if len(set(heartbeat)) < 6 or len(set(pointers)) < 6 or len(set(chronological_pcm)) < 6:
+        raise ValueError('SPC timer, DSP write pointer or chronological PCM is stale')
+    # The declared one-frame interval produces about 532 stereo samples.
+    # This also rejects a backwards/stationary pointer masked by ring rotation.
+    strides = [(b-a) % 8192 for a, b in zip(pointers, pointers[1:])]
+    if any(not 2000 <= stride <= 2200 or stride % 4 for stride in strides):
+        raise ValueError(f'DSP production differs from declared frame interval: {strides}')
+    return strides
+
+
 def sequence(root, mixed):
     frames = sorted(root.glob('frame-*'))
     if len(frames) != 8:
         raise ValueError('require exactly eight complete naturally fenced frames')
-    records, phases, heartbeat, pcm_bytes = [], [], [], []
+    records, phases, heartbeat, pcm_bytes, pointers = [], [], [], [], []
     for directory in frames:
         result = classify(directory, 'both', animated=True)
         expected_phases = [n for n in range(256) if list(window(n)) == result['window']]
@@ -95,15 +106,20 @@ def sequence(root, mixed):
             if ports[3] != 0x5A or ports[1] != guest[0]:
                 raise ValueError(f'SPC frame echo not current: {ports.hex()}, frame={guest[0]}')
             heartbeat.append(ports[0])
-            pcm_bytes.append((directory / 'audio-pcm.bin').read_bytes())
             result['audio'] = pcm(directory)
+            raw = (directory / 'audio-pcm.bin').read_bytes()
+            offset = result['audio']['pointer']
+            # A periodic waveform can leave identical physical ring bytes.
+            # Compare chronological excerpts and require actual write progress.
+            pcm_bytes.append(raw[offset:] + raw[:offset])
+            pointers.append(offset)
         phases.append(phase)
         records.append(result)
     if any((b-a)&255 != 1 for a, b in zip(phases, phases[1:])):
         raise ValueError('animation skips/repeats guest phases')
-    if mixed and (len(set(heartbeat)) < 6 or len(set(pcm_bytes)) < 6):
-        raise ValueError('SPC timer heartbeat or DSP PCM is stale')
+    strides = require_audio_progress(heartbeat, pointers, pcm_bytes) if mixed else []
     return dict(passed=True, frames=8, phases=phases, records=records,
+                timer_heartbeats=heartbeat, pcm_write_strides=strides,
                 active_voices=8 if mixed else 0, hardware_fps='NOT_MEASURED')
 
 

@@ -82,10 +82,8 @@ def read_engine_state(client: RSPClient) -> dict[str, object]:
     dp_current = read_u(client, DP_CURRENT_ADDR, 4) & DP_ADDR_MASK
     dp = read_u(client, DP_STATUS_ADDR, 4)
 
-    # Pinned ares 17813a3 renders each submitted DP command list synchronously
-    # inside flushCommands(). It clears bufferBusy when render() returns, but
-    # leaves pipeBusy asserted until a Sync Full command. Sodium64 emits no
-    # Sync Full in this proof runtime, so pipeBusy is diagnostic only here.
+    # The candidate emits final SyncFull before queue publication/HALT.
+    # Require both completed commands and drained rendering units.
     commands_complete = not bool(dp & 0x40) and dp_current == dp_end
 
     return {
@@ -111,6 +109,8 @@ def require_fenced_boundary(client: RSPClient, *, stage: str) -> dict[str, objec
         raise RuntimeError(
             f"{stage}: submitted RDP command list is not complete in pinned ares: {state}"
         )
+    if state['rdp_pipe_busy'] or state['rdp_tmem_busy']:
+        raise RuntimeError(f'{stage}: final SyncFull has not drained RDP: {state}')
     return state
 
 
@@ -172,11 +172,8 @@ def main() -> int:
         warm_counter = wait_guest_warm(client, args.guest_counter_address)
 
         # Stop immediately before the existing RSP-unhalt sequence after
-        # frame_wait. In pinned ares, DP command-list execution is synchronous
-        # with DP_END publication; PIPE_BUSY itself is sticky until Sync Full.
-        # Accept only a naturally fenced list (bufferBusy clear and
-        # DPC_CURRENT==DPC_END) with the RSP still HALT. Never manufacture
-        # completion by repeated CPU stepping.
+        # frame_wait. Accept only a naturally drained final SyncFull boundary
+        # with the RSP still HALT. Never manufacture completion by CPU stepping.
         set_breakpoint(client, args.prelaunch_address, True)
         validate_stop(client.request("c"), "seed prelaunch")
         seed_state = require_fenced_boundary(client, stage="seed prelaunch")
@@ -329,4 +326,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

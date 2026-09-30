@@ -13,7 +13,11 @@ draw_bg:
     j 0xA4001F90
     move v0, t0
 hcomp_entry:
-    // All readback/writeback has finished before publishing this queue slot.
+    // Later sections can leave RDP work pending after bounded composition.
+    // Fence the final submitted work before publishing the queue slot/HALT.
+    b hcomp_fence
+    li t8, %lo(hcomp_publish)
+hcomp_publish:
     xori sp, sp, 4
     li t0, 2
     mtc0 t0, COP0_SP_STATUS
@@ -30,7 +34,7 @@ hcomp_fence:
     li a1, SCRN_DATA + 8
 hcomp_fence_wait:
     mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x20
+    andi t0, t0, 0x70 // TMEM, pipeline and command buffer must all finish
     bnez t0, hcomp_fence_wait
     nop
     jr t8

@@ -1,0 +1,374 @@
+{
+  "scope": "Real-N64 final naturally drained snapshots; live presentation and audible output remain open",
+  "expected_candidate": "1fe99cb8329e6ea5019aea8c56604d45f3d6749e",
+  "runtime_identity": "SHA from delivered package; SRAM does not independently embed a ROM hash",
+  "hardware_elf_sha256": "4cd6133e42c78c11607d73169edfa24914b437ac0fd4a052c31b87aedca41d23",
+  "workloads": {
+    "visual": {
+      "source_library_id": "libfile_f52fb7befdfc8191a3db2f36a509aa16",
+      "source_sha256": "d93632c38f0e06ed3fc880c825bb133d5ebe4eefcabdcfc39be1ade5c3c3d0a1",
+      "size": 32768,
+      "S64H": {
+        "capture_format": "canonical big-endian",
+        "version": 1,
+        "warmup_seconds": 2,
+        "measure_seconds": 5,
+        "sample_count": 3585,
+        "sample_interval": 65521,
+        "profile_size": 16416,
+        "snapshot_offset": 256,
+        "frame_budgets": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "skipped_set": 0,
+        "apu_clock": 21,
+        "audio_set": 4,
+        "precision_set": 8,
+        "frame_count": 1,
+        "sp_status": 0,
+        "sp_dma_full": 0,
+        "sp_dma_busy": 0,
+        "sp_pc_raw": 932,
+        "complete": 1
+      },
+      "S64V": {
+        "format": "canonical big-endian",
+        "header": {
+          "magic": 1396061270,
+          "version": 1,
+          "size": 15632,
+          "complete": 1,
+          "valid": 7,
+          "sp_status": 1,
+          "dp_status": 129,
+          "dp_current": 2664,
+          "dp_end": 2664,
+          "sp_dma_busy": 0,
+          "sp_dma_full": 0,
+          "vi_origin": 1126400,
+          "vi_control": 514,
+          "vi_width": 280,
+          "vi_current": 235,
+          "dsp_pointer": 6992,
+          "enabled": 0,
+          "ai_address": 792,
+          "ai_length": 792,
+          "ai_status": 1139802608,
+          "ai_dacrate": 792,
+          "ai_bitrate": 792,
+          "guest_counter": 163,
+          "frame_count": 1,
+          "interrupted_epc": 2149319296,
+          "vi_origin_before": 1126400,
+          "dp_status_before": 129,
+          "sp_status_before": 0,
+          "dsp_address": 413152,
+          "fb1": 992000,
+          "fb2": 1126400,
+          "fb3": 1260800
+        },
+        "frame_budgets": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "measured_samples": 3585,
+        "band": {
+          "reference_matches": true,
+          "phases": [
+            160
+          ],
+          "colors": {
+            "0x7bc1": 1464,
+            "0x0001": 584
+          },
+          "rows_equal": true
+        },
+        "below_band_colors": {
+          "0xf801": 2048
+        },
+        "buffer_rows": [
+          {
+            "0x7bc1": 183,
+            "0x0001": 73
+          },
+          {
+            "0x7bc1": 183,
+            "0x0001": 73
+          },
+          {
+            "0x7bc1": 183,
+            "0x0001": 73
+          }
+        ],
+        "consumed_input": [
+          2685346560,
+          577372160,
+          10616864,
+          0
+        ],
+        "audio": {
+          "nonzero": false,
+          "unique_left": 1,
+          "unique_right": 1,
+          "channels_differ": false,
+          "sample_frames": 1024,
+          "nominal_rate": 32000
+        },
+        "limitations": [
+          "Final snapshot only; no intermittent-flash cadence proof",
+          "Latest renderer provenance may differ from VI-selected frame",
+          "PCM generation and AI state do not certify audible hardware output",
+          "AI address/DAC/bitrate raw readbacks are not configuration authority"
+        ]
+      },
+      "computed_workload_check": {
+        "passed": true,
+        "mixed": false,
+        "active_voices": 0,
+        "silent": true
+      },
+      "independent_buffer_references": [
+        {
+          "reference_matches": true,
+          "phases": [
+            162
+          ],
+          "colors": {
+            "0x7bc1": 1464,
+            "0x0001": 584
+          },
+          "rows_equal": true
+        },
+        {
+          "reference_matches": true,
+          "phases": [
+            160
+          ],
+          "colors": {
+            "0x7bc1": 1464,
+            "0x0001": 584
+          },
+          "rows_equal": true
+        },
+        {
+          "reference_matches": true,
+          "phases": [
+            161
+          ],
+          "colors": {
+            "0x7bc1": 1464,
+            "0x0001": 584
+          },
+          "rows_equal": true
+        }
+      ],
+      "context_color_counts": {
+        "main": {
+          "0x0c00": 256
+        },
+        "ts": {
+          "0x1400": 256
+        },
+        "sub": {
+          "0x07c1": 256
+        }
+      },
+      "dsp_regs_byte_equal_lab": true,
+      "mixed_pcm_exact_rotation_vs_lab": null
+    },
+    "mixed": {
+      "source_library_id": "libfile_6889223986c08191b2e774ecbccda7af",
+      "source_sha256": "275533c73a8d4039f2bcfd7b435ac85a2e9b6000521f50950b3f6b5c92770823",
+      "size": 32768,
+      "S64H": {
+        "capture_format": "canonical big-endian",
+        "version": 1,
+        "warmup_seconds": 2,
+        "measure_seconds": 5,
+        "sample_count": 3581,
+        "sample_interval": 65521,
+        "profile_size": 16416,
+        "snapshot_offset": 256,
+        "frame_budgets": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "skipped_set": 0,
+        "apu_clock": 21,
+        "audio_set": 4,
+        "precision_set": 8,
+        "frame_count": 1,
+        "sp_status": 0,
+        "sp_dma_full": 0,
+        "sp_dma_busy": 0,
+        "sp_pc_raw": 932,
+        "complete": 1
+      },
+      "S64V": {
+        "format": "canonical big-endian",
+        "header": {
+          "magic": 1396061270,
+          "version": 1,
+          "size": 15632,
+          "complete": 1,
+          "valid": 7,
+          "sp_status": 1,
+          "dp_status": 129,
+          "dp_current": 2664,
+          "dp_end": 2664,
+          "sp_dma_busy": 0,
+          "sp_dma_full": 0,
+          "vi_origin": 992000,
+          "vi_control": 514,
+          "vi_width": 280,
+          "vi_current": 235,
+          "dsp_pointer": 4252,
+          "enabled": 255,
+          "ai_address": 3040,
+          "ai_length": 3040,
+          "ai_status": 1140392838,
+          "ai_dacrate": 3040,
+          "ai_bitrate": 3040,
+          "guest_counter": 161,
+          "frame_count": 1,
+          "interrupted_epc": 2147503616,
+          "vi_origin_before": 992000,
+          "dp_status_before": 129,
+          "sp_status_before": 0,
+          "dsp_address": 413152,
+          "fb1": 992000,
+          "fb2": 1126400,
+          "fb3": 1260800
+        },
+        "frame_budgets": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "measured_samples": 3581,
+        "band": {
+          "reference_matches": true,
+          "phases": [
+            158
+          ],
+          "colors": {
+            "0x7bc1": 1472,
+            "0x0001": 576
+          },
+          "rows_equal": true
+        },
+        "below_band_colors": {
+          "0xf801": 2048
+        },
+        "buffer_rows": [
+          {
+            "0x7bc1": 184,
+            "0x0001": 72
+          },
+          {
+            "0x7bc1": 184,
+            "0x0001": 72
+          },
+          {
+            "0x7bc1": 183,
+            "0x0001": 73
+          }
+        ],
+        "consumed_input": [
+          2685615360,
+          543686656,
+          10616864,
+          0
+        ],
+        "audio": {
+          "nonzero": true,
+          "unique_left": 54,
+          "unique_right": 54,
+          "channels_differ": false,
+          "sample_frames": 1024,
+          "nominal_rate": 32000
+        },
+        "limitations": [
+          "Final snapshot only; no intermittent-flash cadence proof",
+          "Latest renderer provenance may differ from VI-selected frame",
+          "PCM generation and AI state do not certify audible hardware output",
+          "AI address/DAC/bitrate raw readbacks are not configuration authority"
+        ]
+      },
+      "computed_workload_check": {
+        "passed": true,
+        "mixed": true,
+        "active_voices": 8,
+        "equal_channels": true,
+        "rms": 1609.963,
+        "minimum": -6223,
+        "maximum": 5842,
+        "unique_samples": 54
+      },
+      "independent_buffer_references": [
+        {
+          "reference_matches": true,
+          "phases": [
+            158
+          ],
+          "colors": {
+            "0x7bc1": 1472,
+            "0x0001": 576
+          },
+          "rows_equal": true
+        },
+        {
+          "reference_matches": true,
+          "phases": [
+            159
+          ],
+          "colors": {
+            "0x7bc1": 1472,
+            "0x0001": 576
+          },
+          "rows_equal": true
+        },
+        {
+          "reference_matches": true,
+          "phases": [
+            160
+          ],
+          "colors": {
+            "0x7bc1": 1464,
+            "0x0001": 584
+          },
+          "rows_equal": true
+        }
+      ],
+      "context_color_counts": {
+        "main": {
+          "0x0c00": 256
+        },
+        "ts": {
+          "0x1400": 256
+        },
+        "sub": {
+          "0x07c1": 256
+        }
+      },
+      "dsp_regs_byte_equal_lab": true,
+      "mixed_pcm_exact_rotation_vs_lab": {
+        "period_samples": 256,
+        "offset_samples": 236,
+        "all_1024_stereo_frames_equal": true
+      }
+    }
+  }
+}

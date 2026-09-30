@@ -181,6 +181,15 @@ jobs:
         with:
           path: ${{ runner.temp }}/ares-src
           key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Restore cached SDL3 runtime into this runner
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The ares cache owns SDL build outputs, not /usr/local installs.
+          # Reinstall exactly those cached outputs; do not fetch a newer SDL.
+          sudo cmake --install "$RUNNER_TEMP/ares-src/SDL/build" --prefix=/usr/local
+          sudo ldconfig
       - name: Locate pinned ares after build or cache restore
         shell: bash
         run: |

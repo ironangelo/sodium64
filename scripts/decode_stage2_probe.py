@@ -7,6 +7,7 @@ intermittent presentation, actual audible output or all-game performance.
 """
 import argparse
 import json
+import math
 import struct
 import wave
 import zlib
@@ -42,6 +43,8 @@ def decode(blob):
     if len(normalized) != 32768:
         raise ValueError('expected a complete 32768-byte SRAM save')
     hw, _ = parse_capture(normalized, strict=True)
+    if (hw.snapshot_offset, hw.profile_size, hw.sample_interval, hw.audio_set) != (0x100, 0x4020, 65521, 4):
+        raise ValueError('unexpected preserved S64H/S64P geometry/settings')
     raw = normalized[OFFSET:OFFSET+SIZE]
     h = dict(zip(HEAD_NAMES, struct.unpack_from('>32I', raw)))
     if (h['magic'], h['version'], h['size'], h['complete']) != (0x53363456, 1, SIZE, 1):
@@ -75,8 +78,33 @@ def decode(blob):
                              sample_frames=1024, nominal_rate=32000),
                   limitations=['Final snapshot only; no intermittent-flash cadence proof',
                                'Latest renderer provenance may differ from VI-selected frame',
-                               'PCM generation and AI state do not certify audible hardware output'])
+                               'PCM generation and AI state do not certify audible hardware output',
+                               'AI address/DAC/bitrate raw readbacks are not configuration authority'])
     return result, raw, pixels, pcm
+
+def qualify_workload(result, raw, mixed):
+    if not result['band']['reference_matches'] or result['frame_budgets'] != [60]*5:
+        raise ValueError('laboratory band/frame-budget regression')
+    samples=struct.unpack('>2048h',raw[0x2D10:0x3D10])
+    left,right=samples[::2],samples[1::2]
+    if mixed:
+        # Original SPC driver uses volume16 in BOTH channels for all voices.
+        if result['header']['enabled'] != 255 or left != right:
+            raise ValueError('original eight-voice equal-channel contract violated')
+        regs=raw[0x2C90:0x2D10]
+        if regs[0x4C]!=255 or regs[0x5D]!=5:
+            raise ValueError('missing original DSP driver')
+        for voice in range(8):
+            if regs[voice*16:voice*16+8] != bytes((16,16,0,4+voice,0,0,0,127)):
+                raise ValueError('DSP voice settings differ from original guest')
+        rms=math.sqrt(sum(x*x for x in left)/len(left))
+        if rms<100 or min(left)>=0 or max(left)<=0 or len(set(left))<16:
+            raise ValueError('inactive/constant/one-sided mixed PCM')
+        return dict(passed=True,mixed=True,active_voices=8,equal_channels=True,
+                    rms=round(rms,3),minimum=min(left),maximum=max(left),unique_samples=len(set(left)))
+    if result['header']['enabled'] or any(samples):
+        raise ValueError('visual-only guest unexpectedly generates audio')
+    return dict(passed=True,mixed=False,active_voices=0,silent=True)
 
 def write_png(path, pixels):
     def chunk(tag, data):

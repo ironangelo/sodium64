@@ -11,7 +11,7 @@ from pathlib import Path
 from gdb_rsp_dump import ARES_N64_GUEST_SIGNALS, connect_with_retry, validate_stop
 from capture_stage2_publication import load_symbols
 from capture_gate_c_stage1_ares import set_breakpoint
-from decode_stage2_probe import decode, OFFSET, SIZE
+from decode_stage2_probe import decode, qualify_workload, OFFSET, SIZE
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
@@ -56,14 +56,7 @@ def main():
         ptr=result['header']['dsp_pointer'];start=(ptr-4096)&8191
         expected=(ring+ring)[start:start+4096]
         assert pcm==expected,'chronological PCM mismatch'
-        assert result['band']['reference_matches'],result
-        assert result['frame_budgets']==[60]*5,result
-        if args.mixed:
-            assert result['header']['enabled']==255,result
-            assert result['audio']['nonzero'] and result['audio']['channels_differ'],result
-            assert result['audio']['unique_left']>16,result
-        else:
-            assert result['header']['enabled']==0 and not result['audio']['nonzero'],result
+        result['workload']=qualify_workload(result,raw,args.mixed)
         result['cart_transport_verified']=True
         result['continuous_execution']=True
         (out/'transport-result.json').write_text(json.dumps(result,indent=2)+'\n')

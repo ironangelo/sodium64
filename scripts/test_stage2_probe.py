@@ -2,7 +2,7 @@
 """Reject bad captures while preserving useful fidelity-failure evidence."""
 import struct
 import unittest
-from decode_stage2_probe import decode, OFFSET, SIZE, HEAD_NAMES, window
+from decode_stage2_probe import decode, qualify_workload, OFFSET, SIZE, HEAD_NAMES, window
 
 def fixture():
     b=bytearray(32768)
@@ -49,5 +49,20 @@ class ProbeTests(unittest.TestCase):
     def test_rejects_copy_disagreement(self):
         b=fixture();struct.pack_into('>H',b,OFFSET+0x2080,0)
         with self.assertRaisesRegex(ValueError,'independent buffer copy'):decode(bytes(b))
+    def test_original_equal_channel_driver_and_corruption_controls(self):
+        b=fixture()
+        struct.pack_into('>I',b,OFFSET+64,255)
+        for voice in range(8):
+            off=OFFSET+0x2C90+16*voice
+            b[off:off+8]=bytes((16,16,0,4+voice,0,0,0,127))
+        b[OFFSET+0x2C90+0x4C]=255;b[OFFSET+0x2C90+0x5D]=5
+        values=[((n%54)-27)*100 for n in range(1024)]
+        struct.pack_into('>2048h',b,OFFSET+0x2D10,*[x for v in values for x in (v,v)])
+        r,raw,_,_=decode(bytes(b));self.assertTrue(qualify_workload(r,raw,True)['equal_channels'])
+        for off in [0x2D12,0x2C90,0x2C90+0x4C]:
+            bad=bytearray(raw);bad[off]^=1
+            with self.assertRaises(ValueError):qualify_workload(r,bad,True)
+        silent=bytearray(raw);silent[0x2D10:]=bytes(4096)
+        with self.assertRaises(ValueError):qualify_workload(r,silent,True)
 
 if __name__=='__main__':unittest.main()

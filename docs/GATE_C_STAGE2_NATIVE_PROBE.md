@@ -55,3 +55,19 @@ continuous pinned-ares execution through actual PI cart writes. Independently
 read cart SRAM and compare with transfer-source bytes and the surviving
 graphics/DSP sources, then decode both workloads. Native Stage 2 remains open
 until returned hardware evidence resolves the fidelity questions.
+
+First-hand qualification: run36716662088 at47398d7016d98058c9841b319ee90e28953319f5
+completed both continuous runs through PI SRAM writes. Both captures have
+valid7, naturally halted SP/drained DP, yellow/black band and60/60x5.
+Cart/source/context/PCM byte equality passed before an incorrect final mixed
+oracle required unequal channels. This is REJECTED: the original driver uses
+left=right=16 for every voice, and its established motion checker requires
+equal channels. Corrected host replay pins the exact executed ROMs and ELF,
+verifies original eight voice settings, equal channels, nonzero bipolar
+varied PCM, and corruption negatives. No runtime or guest repair was needed.
+This replay is not a new emulator/hardware measurement.
+
+LAB LIMITATION: initial pinned-ares AI address/DAC/bitrate raw readbacks
+duplicate AI_LENGTH. Treat those raw fields as diagnostic observations, not
+configuration proof or meaningful sample-rate values. Readable AI status,
+length, stored PCM and the known initialization remain separate evidence.

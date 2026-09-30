@@ -30,6 +30,10 @@
 .globl tlbs_exception
 .globl tlbm_exception
 
+#ifdef SODIUM64_HW_PROFILE
+.globl wram
+#endif
+
 .data
 
 .align 12 // TLB alignment
@@ -816,3 +820,4 @@ write_wmaddh: // a1: value
     sb t0, wmadd + 1
     jr ra
     nop
+

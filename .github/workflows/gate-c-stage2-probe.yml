@@ -1,0 +1,142 @@
+name: Gate C Stage 2 Native Pixel PCM Probe
+on:
+  push:
+    branches: [phase4/gate-c-stage2-native-probe]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: sodium64-native-probe-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+      - name: Build and verify unchanged normal renderer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s scripts -p test_stage2_probe.py -v
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee normal-build.log
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+          gh api repos/${{ github.repository }}/actions/artifacts/11074577102/zip > parent-artifact.zip
+          unzip -q parent-artifact.zip -d parent-artifact
+          python3 - <<'PY'
+          from pathlib import Path
+          from scripts.check_rsp_branch_delay_slots import read_text
+          for name in ['sodium64', 'src/rsp_main', 'src/rsp_mode7', 'src/rsp_hcomp']:
+              assert read_text(Path('build')/(name+'.elf')) == read_text(Path('parent-artifact/qualified/normal/build')/(name+'.elf')), name
+          print('UNCHANGED_NORMAL_RUNTIME_TEXT PASS')
+          PY
+          mkdir -p qualified/normal
+          cp -a build qualified/normal/
+          cp sodium64.z64 qualified/normal/
+      - name: Build bounded native probe and wrap original guests
+        run: |
+          set -euo pipefail
+          libdragon make clean
+          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee probe-build.log
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+          mkdir -p qualified/hw-profile diagnostic hardware
+          cp -a build qualified/hw-profile/
+          cp sodium64.z64 qualified/hw-profile/
+          for mode in visual mixed; do
+            cp "parent-artifact/diagnostic/$mode.smc" "diagnostic/$mode.smc"
+            mkdir -p "wrap-$mode"
+            cp sodium64.z64 rom-converter.py "wrap-$mode/"
+            cp "diagnostic/$mode.smc" "wrap-$mode/guest.smc"
+            (cd "wrap-$mode"; python3 rom-converter.py </dev/null)
+            cp "wrap-$mode/out/guest.z64" "hardware/sodium64-stage2-$mode.z64"
+            dd if="hardware/sodium64-stage2-$mode.z64" of=diagnostic/embedded.smc bs=1 skip=$((0x104000)) count=32768 status=none
+            cmp "diagnostic/$mode.smc" diagnostic/embedded.smc
+          done
+          sha256sum hardware/*.z64 qualified/hw-profile/sodium64.z64 qualified/hw-profile/build/sodium64.elf diagnostic/*.smc > SHA256SUMS
+      - name: Install pinned laboratory dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+      - uses: actions/cache/restore@v4
+        id: ares-cache
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Build pinned N64 lab on cache miss
+        if: steps.ares-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ares/n64/system/system.cpp');s=p.read_text()
+          old='rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old)==1
+          p.write_text(s.replace(old,'rsp.recompiler.enabled = false;',1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+      - name: Restore exact cached SDL runtime
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        run: |
+          sudo cmake --install "$RUNNER_TEMP/ares-src/SDL/build" --prefix=/usr/local
+          sudo ldconfig
+      - name: Qualify continuous execution through actual PI cart writes
+        run: |
+          set -euo pipefail
+          ares_bin=$(find "$RUNNER_TEMP/ares-src/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          "$ares_bin" --version | tee ares-version.txt
+          pid=""
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+          port=9191
+          for mode in visual mixed; do
+            out="captures/$mode"
+            mkdir -p "$out" "$RUNNER_TEMP/native-probe-$mode"
+            setsid env HOME="$RUNNER_TEMP/native-probe-$mode" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ares_bin" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/native-probe-$mode.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-stage2-$mode.z64" > "$out/ares.log" 2>&1 &
+            pid=$!
+            mixed_flag=""
+            if [ "$mode" = mixed ]; then mixed_flag=--mixed; fi
+            python3 scripts/capture_stage2_probe.py --port "$port" --elf build/sodium64.elf --output "$out" $mixed_flag | tee "$out/capture.log"
+            python3 scripts/decode_stage2_probe.py "$out/cart.sav" --output "$out/decoded"
+            python3 scripts/hw_profile_report.py "$out/cart.sav" --snapshot-output "$out/profile.bin" --json-output "$out/hardware.json"
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            pid=""
+            port=$((port+1))
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gate-c-stage2-native-probe
+          retention-days: 30
+          path: |
+            hardware/
+            diagnostic/*.smc
+            qualified/**/*.elf
+            qualified/**/*.map
+            qualified/**/sodium64.z64
+            SHA256SUMS
+            captures/
+            normal-build.log
+            probe-build.log
+            ares-version.txt

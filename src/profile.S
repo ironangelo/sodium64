@@ -314,6 +314,11 @@ hw_profile_finalize:
     li k1, 1
     sw k1, (k0)
 
+    // After all measured windows, capture native pixels/PCM without changing
+    // the timed renderer or audio paths. Finalization never returns to guest.
+    jal hw_probe_capture
+    nop
+
     // PI reads RDRAM, not dirty D-cache lines. Write back both regions before
     // sending them to cartridge SRAM. This happens after measurement is over.
     la k0, profile_magic
@@ -400,3 +405,4 @@ hw_profile_done:
 #endif
 
 #endif // SODIUM64_PROFILE
+

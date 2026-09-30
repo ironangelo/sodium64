@@ -25,6 +25,13 @@
 .globl write_dspaddr
 .globl write_dspdata
 
+#ifdef SODIUM64_HW_PROFILE
+.globl dsp_buffer
+.globl dsp_regs
+.globl dsp_pointer
+.globl enabled
+#endif
+
 .data
 
 .align 4
@@ -763,3 +770,4 @@ write_koff: // a1: value
     sb t0, enabled
     jr ra
     nop
+

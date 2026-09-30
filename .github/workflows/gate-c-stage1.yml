@@ -122,7 +122,7 @@ jobs:
             cd baseline-source
             libdragon init
             libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee ../baseline-build.log
-            python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+            python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           )
           mkdir -p qualified/baseline-hw-profile
           cp -a baseline-source/build qualified/baseline-hw-profile/

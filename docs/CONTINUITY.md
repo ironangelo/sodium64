@@ -35,6 +35,19 @@ Mixed guest runs an original IPL-uploaded SPC700 driver with eight looping filte
 - `36654250035` built the final runtime and stable baseline successfully but failed a workflow inventory error: stable master has only two RSP renderers, no `rsp_hcomp.elf`. Fixed only its baseline checker arguments; generic `36654250143` had already passed.
 - **LAB LIMITATION / CI environment:** `36654491943` passed all builds but cached ares could not load libSDL3.so.0 on a fresh runner. Reinstalling the exact cached SDL build into /usr/local and running ldconfig restored the lab; no newer SDL or ares was substituted. These workflow failures never rejected the compositor. Final runtime sources are byte-identical to `1271c12362d069f3e2bed7a15cb72cbd22753db2`.
 
+### Stage 2 first hardware handoff — two candidate wrappers (2026-09-30 UTC)
+
+Iron requests the two injected candidate ROMs for an initial real-N64 pass. Delivered exact HW_PROFILE bytes from the verified Stage 1 package under simpler filenames:
+
+| Delivered file | Original package entry | SHA256 | Durable file identity |
+| --- | --- | --- | --- |
+| `sodium64-stage1-visual.z64` | `hardware/visual-hw-profile.z64` | `0057e015a7c25467e454a616288f419577e4cb60725ba86c7ec1952eb05940b2` | `libfile_aaf3475521ec81918866aa2b82e4741f` |
+| `sodium64-stage1-mixed.z64` | `hardware/mixed-hw-profile.z64` | `d8fd91b521047b0bc135415f4a8b09dfd6aadc35bdce42daae71ab4cbca0f750` | `libfile_7cc837a072a8819191ee9a7a1c3dd5ee` |
+
+Both are 1097728 bytes, candidate `b18ff622fe475c38207506d8fe7dc5207a2cfef4`, containing their verified original SNES guests at ROM+0x104000. These are self-running HW_PROFILE variants: two warmup60-VI windows, five measured60-VI windows, forced Road settings; SRAM snapshot/header written before intentional solid-red completion halt. User should preserve one raw cart save per ROM and video/audio of actual output; saves contain profile/settings/frame-budget metadata, not screenshots or a PCM recording. Save extensions depend on cart transport (.sav/.sra); inspect magic/normalization and decode against the package's exact HW_PROFILE ELF/map. Cart must flush SRAM by its ordinary save/menu procedure before the files are extracted; retain separate files for both executions.
+
+**PENDING / NOT_MEASURED:** no hardware results have been returned yet. The two candidate captures are the initial pass; exact stable-master matched baseline captures remain required for the planned comparative Stage 2 closure. Do not label Stage 2 complete from delivery, a red screen alone or two candidate throughput vectors without the corresponding defined evidence.
+
 ### Immediate next action — Stage 2, not another Stage 1 isolation batch
 
 Use the verified package for one NTSC real-N64 milestone session: candidate visual/mixed normal observation, then candidate and exact stable-master HW_PROFILE variants for the same guests/settings; preserve four independent complete SRAM saves, matching build symbols/maps, hashes and video/audio observations. Existing capture contract is two60-VI warmup windows and five60-VI measured windows; existing SRAM decoder rejects partial/invalid captures. Baseline's old composition is expected to differ visually; it is the matched stability/cost control.

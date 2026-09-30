@@ -41,16 +41,17 @@ def prove_source() -> None:
 
     row_base = insns(section(
         main,
-        "// Get the base screen address for the BG. t3 is still the real BG index:",
+        "// Recover the BG index on every row:",
         "// Apply the vertical base offset if past the bounds of the first screen",
     ))
-    if row_base[:2] != [
+    if row_base[:3] != [
+        "srl t3, s2, 1",
         "lbu t2, BGXSC(t3)",
         "li a0, SCRN_DATA",
     ]:
-        raise AssertionError(f"t3-preserving row setup drift: {row_base[:3]}")
-    if "srl t3, s2, 1" in row_base:
-        raise AssertionError("redundant BG-index recovery returned")
+        raise AssertionError(f"per-row BG-index recovery drift: {row_base[:3]}")
+    # t3 is tile/cache/window scratch after this lookup. Reconstructing it at
+    # draw_row is necessary on the back edge, including non-windowed rows.
 
     win = insns(section(main, "bg_windows:", "next_segment:"))
     if win != [

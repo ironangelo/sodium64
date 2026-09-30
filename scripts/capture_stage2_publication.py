@@ -34,6 +34,22 @@ def classify_band(data):
                 differing_pixels=sum(a != b for row in rows for a, b in zip(row, reference)))
 
 
+def classify_frame(data):
+    """Original visual/mixed guests own a red Main below the composed band."""
+    if len(data) != 280 * 240 * 2:
+        raise ValueError('expected complete 280x240 RGBA5551 framebuffer')
+    words = struct.unpack('>67200H', data)
+    lower = [p for y in range(16, 232) for p in words[y*280+12:y*280+268]]
+    bad_rows = [y for y in range(16, 232)
+                if any(p != 0xf801 for p in words[y*280+12:y*280+268])]
+    band = classify_band(data)
+    return dict(passed=band['passed'] and not bad_rows, band=band,
+                lower=dict(passed=not bad_rows, pixels=len(lower),
+                           differing_pixels=sum(p != 0xf801 for p in lower),
+                           bad_rows=bad_rows,
+                           colors={f'0x{p:04x}': lower.count(p) for p in set(lower)}))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--port', type=int, required=True)
@@ -64,9 +80,10 @@ def main():
         words = struct.unpack('>32I', hdr)
         packet = c.read_memory(0xa00f0000, 16, 16)
         (out/'output-input.bin').write_bytes(packet)
+        frame = classify_frame(image)
         result = dict(vi_origin=f'0x{origin:06x}', frame_budgets=list(words[8:13]),
                       guest_counter=read_u(c, syms['wram'], 1), engine=read_engine_state(c),
-                      band=classify_band(image), framebuffer_seeding=False,
+                      band=frame['band'], frame=frame, framebuffer_seeding=False,
                       per_frame_breakpoints=False)
         for key, size in [('dsp_pointer', 2), ('enabled', 1), ('apu_outputs', 4)]:
             result[key] = read_u(c, syms[key], size)

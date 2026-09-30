@@ -619,8 +619,9 @@ draw_row:
     andi t0, s6, 0x7
     sub s0, zero, t0
 
-    // Get the base screen address for the BG. t3 is still the real BG index:
-    // neither the provenance dispatch nor cache-clear/DMA setup clobbers it.
+    // Recover the BG index on every row: tile/cache and window paths use t3
+    // as scratch before finish_row loops here. s2 retains BG index * 2.
+    srl t3, s2, 1
     lbu t2, BGXSC(t3)
     li a0, SCRN_DATA
     lw a1, VRAM_ADDRS
@@ -675,8 +676,9 @@ load_screen:
     // combines Main/Sub enables; exact screen separation belongs to H-COMP.
     lbu t0, TMW
     lbu t1, TSW
-    srl t2, s2, 1
-    lbu t2, SHIFT_TABLE(t2)
+    // Row setup and dma_read preserve the recovered t3 up to this lookup.
+    // Reuse it so recovery adds no instructions to the fixed renderer slot.
+    lbu t2, SHIFT_TABLE(t3)
     or t0, t0, t1
     and t0, t0, t2
     bnez t0, bg_windows

@@ -1,87 +1,214 @@
-name: Gate C Stage 2 Native Pixel PCM Probe
+name: Gate C Stage 2 BG Row Repair
 on:
   push:
-    branches: [phase4/gate-c-stage2-native-probe]
+    branches: [phase4/gate-c-stage2-bg-row-repair]
   workflow_dispatch:
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: sodium64-native-probe-${{ github.ref }}
+  group: sodium64-stage2-rows-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   qualify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/setup-node@v4
         with:
           node-version: latest
       - run: npm install -g libdragon
       - uses: actions/checkout@v4
-      - name: Build and verify unchanged normal renderer
+      - name: Host coverage negatives and unchanged probe oracles
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s scripts -p test_stage2_rows.py -v
+          python3 -m unittest discover -s scripts -p test_stage2_probe.py -v
+          python3 scripts/test_hw_profile_report.py
+          python3 scripts/test_profile_report.py
+      - name: Build normal and native variants with frozen ABI and binary scope
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python3 -m unittest discover -s scripts -p test_stage2_probe.py -v
-          libdragon init
-          libdragon make -j"$(nproc)" 2>&1 | tee normal-build.log
-          python3 scripts/check_runtime_arena.py build/sodium64.elf
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
-          gh api repos/${{ github.repository }}/actions/artifacts/11074577102/zip > parent-artifact.zip
+          gh api repos/${{ github.repository }}/actions/artifacts/11097720705/zip > parent-artifact.zip
+          echo "e5496cd28f2396945e4f714034f0bfb4a339601d454278a9d9ae30404a5c351e  parent-artifact.zip" | sha256sum -c -
           unzip -q parent-artifact.zip -d parent-artifact
-          python3 - <<'PY'
-          from pathlib import Path
-          from scripts.check_rsp_branch_delay_slots import read_text
-          for name in ['sodium64', 'src/rsp_main', 'src/rsp_mode7', 'src/rsp_hcomp']:
-              assert read_text(Path('build')/(name+'.elf')) == read_text(Path('parent-artifact/qualified/normal/build')/(name+'.elf')), name
-          print('UNCHANGED_NORMAL_RUNTIME_TEXT PASS')
-          PY
-          mkdir -p qualified/normal
-          cp -a build qualified/normal/
-          cp sodium64.z64 qualified/normal/
-      - name: Build bounded native probe and wrap original guests
-        run: |
-          set -euo pipefail
-          libdragon make clean
-          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee probe-build.log
-          python3 scripts/check_runtime_arena.py build/sodium64.elf
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
-          mkdir -p qualified/hw-profile diagnostic hardware
-          cp -a build qualified/hw-profile/
-          cp sodium64.z64 qualified/hw-profile/
+          libdragon init
+          for variant in normal hw-profile; do
+            if [ "$variant" = hw-profile ]; then libdragon make clean; fi
+            if [ "$variant" = normal ]; then
+              libdragon make -j"$(nproc)" 2>&1 | tee "$variant-build.log"
+            else
+              libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee "$variant-build.log"
+            fi
+            python3 scripts/check_runtime_arena.py build/sodium64.elf
+            python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+            for name in main mode7 hcomp; do readelf -sW "build/src/rsp_$name.elf" > "rsp-$name.syms"; done
+            python3 scripts/test_gate_c_stage1_exec.py --maps build/rsp_main.map build/rsp_mode7.map build/rsp_hcomp.map --symbols rsp-main.syms rsp-mode7.syms rsp-hcomp.syms
+            python3 scripts/check_stage2_row_repair.py --current build --parent "parent-artifact/qualified/$variant/build"
+            mkdir -p "qualified/$variant"
+            cp -a build "qualified/$variant/"
+            cp sodium64.z64 "qualified/$variant/"
+          done
+          mkdir -p diagnostic hardware normal-roms
+          for mode in fixed absent control clip prevent both visual mixed; do
+            python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode.smc"
+            if [ "$mode" = visual ] || [ "$mode" = mixed ]; then cmp "diagnostic/$mode.smc" "parent-artifact/diagnostic/$mode.smc"; fi
+            mkdir -p "wrap-normal-$mode"
+            cp qualified/normal/sodium64.z64 rom-converter.py "wrap-normal-$mode/"
+            cp "diagnostic/$mode.smc" "wrap-normal-$mode/guest.smc"
+            (cd "wrap-normal-$mode"; python3 rom-converter.py </dev/null)
+            cp "wrap-normal-$mode/out/guest.z64" "normal-roms/$mode.z64"
+          done
           for mode in visual mixed; do
-            cp "parent-artifact/diagnostic/$mode.smc" "diagnostic/$mode.smc"
-            mkdir -p "wrap-$mode"
-            cp sodium64.z64 rom-converter.py "wrap-$mode/"
-            cp "diagnostic/$mode.smc" "wrap-$mode/guest.smc"
-            (cd "wrap-$mode"; python3 rom-converter.py </dev/null)
-            cp "wrap-$mode/out/guest.z64" "hardware/sodium64-stage2-$mode.z64"
-            dd if="hardware/sodium64-stage2-$mode.z64" of=diagnostic/embedded.smc bs=1 skip=$((0x104000)) count=32768 status=none
+            mkdir -p "wrap-hw-$mode"
+            cp qualified/hw-profile/sodium64.z64 rom-converter.py "wrap-hw-$mode/"
+            cp "diagnostic/$mode.smc" "wrap-hw-$mode/guest.smc"
+            (cd "wrap-hw-$mode"; python3 rom-converter.py </dev/null)
+            cp "wrap-hw-$mode/out/guest.z64" "hardware/sodium64-stage2-rowfix-$mode.z64"
+            dd if="hardware/sodium64-stage2-rowfix-$mode.z64" of=diagnostic/embedded.smc bs=1 skip=$((0x104000)) count=32768 status=none
             cmp "diagnostic/$mode.smc" diagnostic/embedded.smc
           done
-          sha256sum hardware/*.z64 qualified/hw-profile/sodium64.z64 qualified/hw-profile/build/sodium64.elf diagnostic/*.smc > SHA256SUMS
-      - name: Replay exact first-hand PI captures with corrected equal-channel oracle
-        env:
-          GH_TOKEN: ${{ github.token }}
+          sha256sum hardware/*.z64 qualified/*/sodium64.z64 qualified/*/build/sodium64.elf diagnostic/*.smc > SHA256SUMS
+          nm -n qualified/normal/build/sodium64.elf > runtime.syms
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          rows = [r.split() for r in Path('runtime.syms').read_text().splitlines()]
+          syms = {r[2]: int(r[0],16) for r in rows if len(r)==3}
+          wanted = ['apu_clock','audio_set','precision_set','skipped_set','dsp_pointer','apu_outputs','apu_control','dsp_buffer','dsp_regs','enabled']
+          Path('runtime-symbols.json').write_text(json.dumps({'dsp_enabled' if k=='enabled' else k:hex(syms[k]) for k in wanted})+'\n')
+          Path('runtime-env').write_text('GUEST_COUNTER_ADDR='+hex(syms['wram'])+'\nPRELAUNCH_ADDR='+hex(syms['frame_wait']+0x14)+'\n')
+          PYCODE
+          cat runtime-env >> "$GITHUB_ENV"
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - uses: actions/cache/restore@v4
+        id: ares-cache
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Build pinned N64-only ares in established valid lab mode
+        id: ares-build
+        if: steps.ares-cache.outputs.cache-hit != 'true'
+        shell: bash
         run: |
           set -euo pipefail
-          gh api repos/${{ github.repository }}/actions/artifacts/11097390096/zip > first-hand.zip
-          echo "746a38571fceabeae65021ca5be2a6af8422d5b56a27711136049a2744c21e24  first-hand.zip" | sha256sum -c -
-          unzip -q first-hand.zip -d first-hand
-          python3 scripts/replay_stage2_probe.py --artifact first-hand --output replay
-          mkdir -p captures
-          cp -a first-hand/captures/. captures/
-          for mode in visual mixed; do
-            python3 scripts/decode_stage2_probe.py "captures/$mode/cart.sav" --output "captures/$mode/decoded"
-            python3 scripts/hw_profile_report.py "captures/$mode/cart.sav" --snapshot-output "captures/$mode/profile.bin" --json-output "captures/$mode/hardware.json"
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - uses: actions/cache/save@v4
+        if: steps.ares-build.outcome == 'success'
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Restore cached SDL3 runtime into this runner
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The ares cache owns SDL build outputs, not /usr/local installs.
+          # Reinstall exactly those cached outputs; do not fetch a newer SDL.
+          sudo cmake --install "$RUNNER_TEMP/ares-src/SDL/build" --prefix=/usr/local
+          sudo ldconfig
+      - name: Locate pinned ares after build or cache restore
+        shell: bash
+        run: |
+          ares_bin=$(find "$RUNNER_TEMP/ares-src/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee ares-version.txt
+      - name: Qualify existing controls, all phases and uninterrupted native probe
+        run: |
+          set -euo pipefail
+          mkdir -p captures rows publication native
+          pid=""
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+          port=9190
+          launch() {
+            label="$1"
+            rom="$2"
+            out="$3"
+            mkdir -p "$out" "$RUNNER_TEMP/rowfix-$label"
+            setsid env HOME="$RUNNER_TEMP/rowfix-$label" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/rowfix-$label.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "$rom" > "$out/ares.log" 2>&1 &
+            pid=$!
+          }
+          release() {
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            pid=""
+            port=$((port+1))
+          }
+          for mode in fixed absent control clip prevent both visual mixed; do
+            frames=1
+            if [ "$mode" = visual ] || [ "$mode" = mixed ]; then frames=8; fi
+            launch "control-$mode" "normal-roms/$mode.z64" "captures/$mode"
+            python3 scripts/capture_gate_c_stage1_ares.py --port "$port" --frames "$frames" \
+              --runtime-symbols runtime-symbols.json --guest-counter-address "$GUEST_COUNTER_ADDR" \
+              --prelaunch-address "$PRELAUNCH_ADDR" --output-dir "captures/$mode" > "captures/$mode/capture.log"
+            release
           done
-          cp first-hand/ares-version.txt .
+          python3 scripts/check_gate_c_stage1_ares.py --captures captures --output captures/result.json
+          python3 scripts/check_gate_c_stage1_motion.py --captures captures --output captures/motion-result.json
+          for mode in visual mixed; do
+            launch "rows-$mode" "normal-roms/$mode.z64" "rows/$mode"
+            python3 scripts/capture_stage2_rows.py --port "$port" --elf qualified/normal/build/sodium64.elf --output "rows/$mode"
+            release
+            launch "publication-$mode" "hardware/sodium64-stage2-rowfix-$mode.z64" "publication/$mode"
+            python3 scripts/capture_stage2_publication.py --port "$port" --elf qualified/hw-profile/build/sodium64.elf --output "publication/$mode" > "publication/$mode/capture.log"
+            release
+            launch "native-$mode" "hardware/sodium64-stage2-rowfix-$mode.z64" "native/$mode"
+            extra=()
+            if [ "$mode" = mixed ]; then extra=(--mixed); fi
+            python3 scripts/capture_stage2_probe.py --port "$port" --elf qualified/hw-profile/build/sodium64.elf --output "native/$mode" "${extra[@]}" > "native/$mode/capture.log"
+            release
+            python3 scripts/decode_stage2_probe.py "native/$mode/cart.sav" --output "native/$mode/decoded"
+            python3 scripts/hw_profile_report.py "native/$mode/cart.sav" --snapshot-output "native/$mode/profile.bin" --json-output "native/$mode/hardware.json"
+          done
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          for mode in ['visual','mixed']:
+              r = json.loads(Path(f'publication/{mode}/result.json').read_text())
+              assert r['frame']['passed'] and r['mode7_source_intact'], r
+              assert r['frame_budgets'] == [60]*5, r
+              r = json.loads(Path(f'rows/{mode}/result.json').read_text())
+              assert r['passed'] and r['phases']==256, r
+          print('STAGE2_BG_ROW_REPAIR_QUALIFIED')
+          PYCODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: gate-c-stage2-native-probe
+          name: gate-c-stage2-bg-row-repair
           retention-days: 30
           path: |
             hardware/
@@ -91,7 +218,10 @@ jobs:
             qualified/**/sodium64.z64
             SHA256SUMS
             captures/
-            replay/
+            rows/
+            publication/
+            native/
             normal-build.log
-            probe-build.log
+            hw-profile-build.log
             ares-version.txt
+            runtime-symbols.json

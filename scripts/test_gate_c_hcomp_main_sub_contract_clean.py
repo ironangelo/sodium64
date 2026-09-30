@@ -238,8 +238,8 @@ def prove_rdram_capacity() -> None:
     raw2 = resolve_macro(macros, "HCOMP_RAW_PALETTE_QUEUE2")
     fb1 = resolve_macro(macros, "FRAMEBUFFER1")
 
-    if (q1, q2, cap) != (0xA00BF000, 0xA00D7000, 0x6000):
-        raise AssertionError("PR18 event arena drift")
+    if (q1, q2, cap) != (0xA00C2E00, 0xA00D7000, 0x6000):
+        raise AssertionError("typed event arena drift")
     if raw1 != 0xA00EF000 or raw2 != 0xA00EF800 or fb1 != 0xA00F2300:
         raise AssertionError("lower framebuffer/raw-shadow map drift")
 

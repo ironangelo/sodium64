@@ -132,16 +132,17 @@
 #define FRAMEBUFFER2 (FRAMEBUFFER3 - 0x20D00)
 #define FRAMEBUFFER1 (FRAMEBUFFER2 - 0x20D00)
 
-// Gate-C lossless CGRAM epoch stream.  The typed event queues retain the
-// validated clean producer arena; the raw RGBA5551 shadows consume only the
+// Gate-C lossless CGRAM epoch stream. Q1/base/sideband start at C2000,
+// above the HW_PROFILE static data.
+// Keep this boundary checked against every linked ELF; the raw shadows consume the
 // audited guard below FRAMEBUFFER1.
 #define HCOMP_RAW_PALETTE_QUEUE1 (FRAMEBUFFER1 - 0x3300)
 #define HCOMP_RAW_PALETTE_QUEUE2 (HCOMP_RAW_PALETTE_QUEUE1 + 0x800)
-#define HCOMP_CGRAM_BASE_QUEUE1 0xA00BE200
-#define HCOMP_CGRAM_BASE_QUEUE2 0xA00BE400
-#define HCOMP_CGRAM_SIDEBAND_QUEUE1 0xA00BE600
-#define HCOMP_CGRAM_SIDEBAND_QUEUE2 0xA00BEB00
-#define HCOMP_CGRAM_EVENT_QUEUE1 0xA00BF000
+#define HCOMP_CGRAM_BASE_QUEUE1 0xA00C2000
+#define HCOMP_CGRAM_BASE_QUEUE2 0xA00C2200
+#define HCOMP_CGRAM_SIDEBAND_QUEUE1 0xA00C2400
+#define HCOMP_CGRAM_SIDEBAND_QUEUE2 0xA00C2900
+#define HCOMP_CGRAM_EVENT_QUEUE1 0xA00C2E00
 #define HCOMP_CGRAM_EVENT_QUEUE2 0xA00D7000
 #define HCOMP_CGRAM_EVENT_CAPACITY 0x6000
 

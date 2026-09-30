@@ -163,7 +163,7 @@ jobs:
             close $fd
             expect "(dbg)"
 
-            send "dumpmem 0xA00BF000 256 evidence/snap$n-event-q1.bin\r"
+            send "dumpmem 0xA00C2E00 256 evidence/snap$n-event-q1.bin\r"
             expect "(dbg)"
             send "dumpmem 0xA00EF000 64 evidence/snap$n-raw-q1.bin\r"
             expect "(dbg)"

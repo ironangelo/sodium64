@@ -9,7 +9,7 @@ import json
 import tempfile
 from pathlib import Path
 
-EVENT_Q1 = 0xA00BF000
+EVENT_Q1 = 0xA00C2E00
 RAW_Q1 = 0xA00EF000
 MAILBOX = 0xA00F0000
 MAX_RECORDS = 64

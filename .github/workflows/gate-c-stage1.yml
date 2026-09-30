@@ -1,10 +1,11 @@
-name: Gate C Stage 1 Visible Band
+name: Gate C Stage 2 Publication Repair
 on:
   push:
-    branches: [phase4/gate-c-stage1-visible]
+    branches: [phase4/gate-c-stage1-visible, phase4/gate-c-stage2-hw-repair]
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: sodium64-stage1-${{ github.ref }}
   cancel-in-progress: true
@@ -24,6 +25,7 @@ jobs:
           set -euo pipefail
           libdragon init
           libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
           readelf -sW build/src/rsp_main.elf > rsp-main.syms
           readelf -sW build/src/rsp_mode7.elf > rsp-mode7.syms
           readelf -sW build/src/rsp_hcomp.elf > rsp-hcomp.syms
@@ -95,6 +97,7 @@ jobs:
           libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
           python3 scripts/check_rsp_branch_delay_slots.py \
             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
           cp -a build qualified/hw-profile/
           cp sodium64.z64 qualified/hw-profile/
           for mode in visual mixed; do
@@ -262,6 +265,58 @@ jobs:
           run_case visual 9171 hardware/visual.z64 8
           run_case mixed 9172 hardware/mixed.z64 8
           python3 scripts/check_gate_c_stage1_motion.py --captures captures --output captures/motion-result.json
+      - name: Observe actual VI publication without seeded buffers or frame stops
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api repos/${{ github.repository }}/actions/artifacts/11072720070/zip > old-candidate.zip
+          mkdir -p old-candidate
+          unzip -q old-candidate.zip -d old-candidate
+          echo "ba9ad36751879c40cc68fb54270ecafae6abda6e5b3dc9cdafda55b7e3249459  old-candidate/qualified/hw-profile/sodium64.z64" | sha256sum -c -
+          if python3 scripts/check_runtime_arena.py old-candidate/qualified/hw-profile/build/sodium64.elf --arena-start 0xbe200; then
+            echo "Old HW_PROFILE overlap unexpectedly accepted" >&2
+            exit 1
+          fi
+          port=9181
+          for build in old-candidate current; do
+            for mode in visual mixed; do
+              out="publication/$build-$mode"
+              mkdir -p "$out" "$RUNNER_TEMP/publication-$build-$mode"
+              if [ "$build" = old-candidate ]; then
+                elf=old-candidate/qualified/hw-profile/build/sodium64.elf
+                rom="old-candidate/hardware/$mode-hw-profile.z64"
+              else
+                elf=qualified/hw-profile/build/sodium64.elf
+                rom="hardware/$mode-hw-profile.z64"
+              fi
+              setsid env HOME="$RUNNER_TEMP/publication-$build-$mode" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+                xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+                --settings-file "$RUNNER_TEMP/publication-$build-$mode.bml" \
+                --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" "$rom" > "$out/ares.log" 2>&1 &
+              pid=$!
+              rc=0
+              python3 scripts/capture_stage2_publication.py --port "$port" --elf "$elf" --output "$out" || rc=$?
+              kill -KILL -- "-$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              test "$rc" = 0
+              port=$((port + 1))
+            done
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for mode in ['visual', 'mixed']:
+              old = json.loads(Path(f'publication/old-candidate-{mode}/result.json').read_text())
+              new = json.loads(Path(f'publication/current-{mode}/result.json').read_text())
+              assert not old['mode7_source_intact'], old
+              assert new['mode7_source_intact'], new
+              assert new['band']['passed'], new
+          PY
       - name: Package qualified builds and milestone procedure
         shell: bash
         run: |
@@ -286,6 +341,7 @@ jobs:
             diagnostic/*.smc
             guest-hashes.sha256
             captures/
+            publication/
             sodium64.z64
             sodium64-build.log
             executable-contract.txt

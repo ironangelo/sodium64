@@ -74,6 +74,21 @@ jobs:
         with:
           path: ${{ runner.temp }}/ares-src
           key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Install cached ares runtime libraries
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        timeout-minutes: 4
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          set -euo pipefail
+          # The cached executable needs OpenGL and a virtual X display, but
+          # none of the Qt/GTK/compiler development packages used to build it.
+          for source in /etc/apt/apt-mirrors*.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+            if [ -f "$source" ]; then
+              sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' "$source"
+            fi
+          done
+          timeout 180s sudo -E apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends libopengl0 xauth xvfb
       - name: Install pinned ares dependencies
         if: steps.ares-cache.outputs.cache-hit != 'true'
         timeout-minutes: 8
@@ -139,6 +154,7 @@ jobs:
           ares_bin=$(find "$RUNNER_TEMP/ares-src/build" -type f -name ares -perm -111 | head -n1)
           test -x "$ares_bin"
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          ldd "$ares_bin"
           "$ares_bin" --version | tee ares-version.txt
       - name: Uninterrupted PI trace and separate frozen-frame semantics
         run: |

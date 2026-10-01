@@ -64,11 +64,12 @@ def main():
             return
         set_breakpoint(c,syms['hw_profile_done'],True)
         validate_stop(c.request('c'),'continuous color diagnostic')
-        save=c.read_memory(0xA8000000,32768,chunk)
+        save=c.read_memory(0xA8000000,32768,0x400)
         (args.output/'cart.sav').write_bytes(save)
+        source=c.read_memory(syms['sram']|0x20000000,32768,0x400)
+        (args.output/'source-sram.bin').write_bytes(source)
+        assert save==source,'PI source/cart mismatch'
         result,canonical,raw,pixels,pcm=decode(save)
-        source=c.read_memory(syms['sram']|0x20000000,32768,chunk)
-        assert canonical==source,'PI source/cart mismatch'
         result['workload']=qualify(result,raw,args.mixed)
         ring=c.read_memory(syms['dsp_buffer']|0x20000000,8192,chunk)
         ptr=result['probe_header']['dsp_pointer']

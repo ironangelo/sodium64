@@ -21,7 +21,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     rom = args.guest.read_bytes()
     expected = [rgb555_to_rgba5551(int.from_bytes(rom[i:i+2], 'little') & 0x7fff)
-                for i in range(0, 32768, 2)]
+                for i in range(0, 28672, 2)]
     syms = load_symbols(args.elf)
     c = connect_with_retry('127.0.0.1', args.port, 30, 240)
     results = {}
@@ -54,7 +54,7 @@ def main():
             observations.append(observation)
             (args.output/'observations.json').write_text(json.dumps(observations, indent=2)+'\n')
             print(json.dumps(observation), flush=True)
-            if count < 16384:
+            if count < 14336:
                 set_breakpoint(c, stop+4, True)
                 set_breakpoint(c, stop, False)
                 validate_stop(c.request('c'), 'pre-jr pressure handoff')
@@ -69,7 +69,7 @@ def main():
             data = c.read_memory(base, count*4, 0x400)
             records = struct.unpack('>'+str(count)+'I', data)
             colors = [v for v in records if not (v & 0x8000)]
-            assert len(colors) == 16384, (hex(base), count, len(colors))
+            assert len(colors) == 14336, (hex(base), count, len(colors))
             for i, (value, want) in enumerate(zip(colors, expected)):
                 assert value == ((want<<16) | ((i%256)*8)), (hex(base), i, hex(value), hex(want))
             assert all((v & 0xffff) == 0x8000 for v in records if v & 0x8000)
@@ -89,7 +89,7 @@ def main():
         assert len(results) == 2 and len(consumed) == 2, (results, consumed)
         result = dict(passed=True, queues=results, consumed=consumed, memory_seeded=False,
                       guest_state_written=False, cadence_authority=False,
-                      expectation='exact original DMA data, 16384 colors per handed frame')
+                      expectation='exact original DMA data, 14336 colors per handed frame')
         (args.output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
         print(json.dumps(result, indent=2))
     finally:

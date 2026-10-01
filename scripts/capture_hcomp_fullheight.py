@@ -51,7 +51,8 @@ def main():
         set_breakpoint(c,stop,True);validate_stop(c.request('c'),'full-height first prelaunch')
         observations=[];accepted=None
         for attempt in range(90 if args.case=='sram' else 12):
-            (args.output/f'dmem-{attempt:02d}.bin').write_bytes(c.read_memory(0xa4000000,4096,0x400))
+            dmem=c.read_memory(0xa4000000,4096,0x400)
+            (args.output/f'dmem-{attempt:02d}.bin').write_bytes(dmem)
             (args.output/'sp-pc.bin').write_bytes(c.read_memory(0xa4080000,4,4))
             engine=require_fenced_boundary(c,stage=f'fullheight {args.case} {attempt}')
             guards={}
@@ -65,7 +66,9 @@ def main():
             if owner in FRAMEBUFFER_ADDRS:
                 # Observe the actual last rendered epoch, not just guest source
                 # intent. These controls are constant across every guest epoch.
-                controls=c.read_memory(0xa4000bb7,4,4)
+                # Pinned ares rounds a4-byte unaligned debugger read down.
+                # Slice the aligned full-DMEM snapshot already captured here.
+                controls=dmem[0xbb7:0xbbb]
                 want_cg={'add':1,'sub':0x81,'sub-half':0xc1,'bg2':0x42,'bg3':0x44,'bg4':0x48,
                          'obj-low':0x51,'obj-high':0x51}.get(args.case,0x41)
                 want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11}.get(args.case,1)

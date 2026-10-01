@@ -6,7 +6,7 @@ import json
 import struct
 from pathlib import Path
 from capture_stage2_publication import load_symbols
-from capture_gate_c_stage1_ares import set_breakpoint
+from capture_gate_c_stage1_ares import set_breakpoint, require_fenced_boundary
 from gdb_rsp_dump import ARES_N64_GUEST_SIGNALS, connect_with_retry, validate_stop
 from test_gate_c_cgram_rsp_consumer_clean_contract import rgb555_to_rgba5551
 
@@ -25,15 +25,42 @@ def main():
     syms = load_symbols(args.elf)
     c = connect_with_retry('127.0.0.1', args.port, 30, 240)
     results = {}
+    consumed = {}
+    observations = []
+    previous = None
+    stop = syms['frame_wait']+0x14
     try:
         c.request('qSupported:multiprocess+;swbreak+;hwbreak+')
         c.request('?')
         assert c.request('QPassSignals:'+ARES_N64_GUEST_SIGNALS) == b'OK'
-        set_breakpoint(c, syms['rsp_frame'], True)
+        set_breakpoint(c, stop, True)
+        validate_stop(c.request('c'), 'first natural pressure prelaunch')
         for attempt in range(24):
-            validate_stop(c.request('c'), f'natural pressure handoff {attempt}')
+            engine = require_fenced_boundary(c, stage=f'pressure prelaunch {attempt}')
+            if previous is not None:
+                name, raw_base = previous
+                raw = c.read_memory(raw_base, 0x800, 0x400)
+                want = b''.join(struct.pack('>H', value)*4 for value in expected[-256:])
+                assert raw == want, ('RSP final raw palette', name)
+                (args.output/(name+'-consumed-raw.bin')).write_bytes(raw)
+                consumed[name] = dict(passed=True, raw_base=hex(raw_base),
+                                      sha256=hashlib.sha256(raw).hexdigest(), engine=engine)
+                previous = None
+            if len(results) == 2 and len(consumed) == 2:
+                break
             count = int.from_bytes(c.read_memory(syms['hcomp_cgram_event_count']|0x20000000, 2, 2), 'big')
+            observation = dict(attempt=attempt, count=count,
+                guest_bursts=int.from_bytes(c.read_memory(syms['wram']+0x1010, 1, 1), 'big'))
+            observations.append(observation)
+            (args.output/'observations.json').write_text(json.dumps(observations, indent=2)+'\n')
+            print(json.dumps(observation), flush=True)
             if count < 16384:
+                set_breakpoint(c, stop+4, True)
+                set_breakpoint(c, stop, False)
+                validate_stop(c.request('c'), 'pre-jr pressure handoff')
+                set_breakpoint(c, stop, True)
+                set_breakpoint(c, stop+4, False)
+                validate_stop(c.request('c'), 'next pressure prelaunch')
                 continue
             assert count <= 0x6000, count
             pointer = int.from_bytes(c.read_memory(syms['hcomp_cgram_event_ptr']|0x20000000, 4, 4), 'big')
@@ -52,10 +79,15 @@ def main():
             (args.output/(name+'-stream.bin')).write_bytes(data)
             results[name] = dict(base=hex(base), records=count, color_records=len(colors),
                                  section_markers=count-len(colors), sha256=hashlib.sha256(data).hexdigest())
-            if len(results) == 2:
-                break
-        assert len(results) == 2, results
-        result = dict(passed=True, queues=results, memory_seeded=False,
+            previous = (name, 0xa00ef000 if name == 'q1' else 0xa00ef800)
+            set_breakpoint(c, stop+4, True)
+            set_breakpoint(c, stop, False)
+            validate_stop(c.request('c'), 'pre-jr pressure handoff')
+            set_breakpoint(c, stop, True)
+            set_breakpoint(c, stop+4, False)
+            validate_stop(c.request('c'), 'next pressure prelaunch')
+        assert len(results) == 2 and len(consumed) == 2, (results, consumed)
+        result = dict(passed=True, queues=results, consumed=consumed, memory_seeded=False,
                       guest_state_written=False, cadence_authority=False,
                       expectation='exact original DMA data, 16384 colors per handed frame')
         (args.output/'result.json').write_text(json.dumps(result, indent=2)+'\n')

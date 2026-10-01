@@ -46,7 +46,7 @@ class ColorTests(unittest.TestCase):
         r,_,raw,_,_=decode(b);self.assertFalse(r['trace_complete'])
         with self.assertRaisesRegex(ValueError,'dropped'):qualify(r,raw,False)
     def test_source_phase_and_clock_corruption(self):
-        for off,value in [(256+48+12,20),(256+48+4,1000000),(256+44,3)]:
+        for off,value in [(256+48+12,20),(256+48+4,1000000),(256+44,3),(256+48+4,2400000)]:
             b=fixture();struct.pack_into('>I',b,off,value)
             with self.assertRaises(ValueError):
                 r,_,raw,_,_=decode(b);qualify(r,raw,False)

@@ -135,7 +135,7 @@ color_diag_vi_entry:
     nop
     la k0, color_diag_irq_save
     .set noat
-    sd at, 0(k0)
+    sd $1, 0(k0)
     .set at
     sd t0, 8(k0)
     sd t1, 16(k0)
@@ -256,7 +256,7 @@ color_diag_vi_state:
 color_diag_vi_restore:
     la k0, color_diag_irq_save
     .set noat
-    ld at, 0(k0)
+    ld $1, 0(k0)
     .set at
     ld t0, 8(k0)
     ld t1, 16(k0)

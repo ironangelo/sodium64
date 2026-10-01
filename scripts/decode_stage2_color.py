@@ -3,6 +3,7 @@
 import argparse
 import json
 import struct
+import statistics
 from pathlib import Path
 from decode_stage2_probe import HEAD_NAMES, OFFSET, SIZE, band_info, qualify_workload, write_png
 
@@ -84,7 +85,8 @@ def decode(blob):
         memory_colors_match=all(r['memory_colors_match'] for r in records),
         references_match=refs==[COLORS,COLORS],records=records,
         limitations=['Sparse samples cannot rule out every transient lower stripe',
-            'Per-VI trace starts after warmup and ends with five measured VI windows',
+            'Trace records serviced VI events; timestamp gaps flag coalesced retraces'
+            ,'Per-VI trace starts after warmup and ends with five measured VI windows',
             'Hook timing excludes register save/restore and producer swatch overhead',
             'Physical display hue requires video of live/frozen A/frozen B',
             'Instrumented diagnostic cadence is not baseline performance'])
@@ -99,6 +101,11 @@ def qualify(result,raw,mixed):
         raise ValueError('missing measured VI events')
     if result['frame_budgets'] != [60]*5 or not result['band']['reference_matches']:
         raise ValueError('lab cadence/final band differs')
+    ticks=[r['ticks'] for r in result['records']]
+    gaps=[(b-a)&0xFFFFFFFF for a,b in zip(ticks,ticks[1:])]
+    typical=statistics.median(gaps)
+    if max(gaps)>typical*1.5 or not 740000<=typical<=820000:
+        raise ValueError('VI service clock indicates missing/coalesced retraces')
     producers=[r['producer'] for r in result['records']]
     if any(b-a not in (0,1) for a,b in zip(producers,producers[1:])) or len(set(producers))<290:
         raise ValueError('displayed producer trace skips/stalls')

@@ -107,8 +107,10 @@ $(BUILD_DIR)/%.o: %.S
 		TEXTSECTION="$(basename $@).text"; \
 		DATASECTION="$(basename $@).data"; \
 		BINARY="$(basename $@).elf"; \
+		RSPLINK=rsp.ld; \
+		case "$$FILENAME" in rsp_hcomp|rsp_hcomp_math) RSPLINK=src/rsp_hcomp.ld;; esac; \
 		echo "    [RSP] $<"; \
-		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-Trsp.ld -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
+		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-T$$RSPLINK -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
 		mv "$@" $$BINARY; \
 		$(N64_OBJCOPY) -O binary -j .text $$BINARY $$TEXTSECTION.bin; \
 		$(N64_OBJCOPY) -O binary -j .data $$BINARY $$DATASECTION.bin; \
@@ -145,6 +147,8 @@ all: $(PROJ_NAME).z64
 $(BUILD_DIR)/$(PROJ_NAME).elf: $(OFILES)
 
 $(OFILES): $(HFILES)
+
+$(BUILD_DIR)/src/rsp_hcomp.o $(BUILD_DIR)/src/rsp_hcomp_math.o: src/rsp_hcomp.ld
 
 clean:
 	rm -rf $(BUILD_DIR) $(PROJ_NAME).z64

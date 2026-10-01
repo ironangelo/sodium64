@@ -138,6 +138,11 @@ overlay_mode7_src: .word 0
 overlay_main_src: .word 0
 overlay_hcomp_src: .word 0
 hcomp_raw_palette_ptrs: .word 0, 0
+.byte 0:(HCOMP_ELIGIBILITY_TABLE - (HCOMP_RAW_PALETTE_PTRS + 8))
+hcomp_eligibility_table: .byte 0x20, 1, 2, 4, 8, 0, 0x10, 0
+hcomp_obj_depth_cmds:
+    .dword 0x2E00000058000000
+    .dword 0x2E00000068000000
 // Keep PR #18 CGRAM scratch untouched, then place the proof-only RDP command
 // table at the audited retired DMEM tail. The table is immutable:
 //   +00 PipeSync before the proof-time OtherModes attribute change
@@ -145,7 +150,7 @@ hcomp_raw_palette_ptrs: .word 0, 0
 //   +10 Set Z Image: compact E2000 strip aligned to global y=16
 //   +18 backdrop/absence primitive-depth tag 0x0800 -> stored Z 0x0400
 //   +20..+38 BG1..BG4 winner tags
-.byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_RAW_PALETTE_PTRS + 8))
+.byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_OBJ_DEPTH_CMDS + 16))
 hcomp_proof_rdp_cmds:
     .dword 0x2700000000000000
     .dword 0x2F0088FF00040025
@@ -225,12 +230,10 @@ table_loop:
     bne t1, t2, table_loop
     addi t1, t1, 16
 
-    // Gate-C Main/Sub ownership proof: begin the frame on the compact
-    // 280x8 Sub color surface. Global RDP y=16 maps to compact physical row0.
-    // The H-COMP screen-switch helper retargets to the owned Main framebuffer
-    // before semantic TM is rendered.
-    lui t0, 0x000E
-    ori t0, t0, 0x1D00
+    // Begin on owned Main. The HCOMP phase bank admits and rebases every
+    // compact band after the real section has been loaded, before drawing.
+    lw t0, FRAMEBUFFER(sp)
+    addi t0, t0, 280 * -16
     lw t1, PALETTE_PTR(sp)
     sw t0, RDP_FRAME + 4
     sw t1, RDP_FRAME + 12
@@ -381,11 +384,11 @@ finish_cache:
     addi t7, t7, -0x1000
 
 oam_skip:
-    // Update the RDP scissor and fill bounds for the section
-    lw t0, FB_OFFSET(sp)
-    add t1, t0, k0
-    sll t1, t1, 2
-    sh t1, RDP_FILL + 10
+    // Admit/rebase a <=8-line virtual band before any section RDP write.
+    lw a1, OVERLAY_HCOMP_SRC
+    li t9, 0x1780
+    b overlay_load_slot
+    nop
     sh t1, RDP_FILL + 38
     add t2, t0, k1
     sll t2, t2, 2
@@ -674,12 +677,12 @@ load_screen:
 
     // Check if windows are enabled for the layer. The current renderer still
     // combines Main/Sub enables; exact screen separation belongs to H-COMP.
-    lbu t0, TMW
-    lbu t1, TSW
+    lbu t1, HCOMP_SCREEN
+    addi t1, t1, TSW
     // Row setup and dma_read preserve the recovered t3 up to this lookup.
     // Reuse it so recovery adds no instructions to the fixed renderer slot.
     lbu t2, SHIFT_TABLE(t3)
-    or t0, t0, t1
+    lbu t0, 0(t1)
     and t0, t0, t2
     bnez t0, bg_windows
     li t8, 0 // Span-byte index
@@ -930,8 +933,8 @@ skip_upload:
     .align 3
 draw_mode7_entry:
     // Fault stub: request true Mode7 at its fixed external entry.
-    b overlay_load_mode7
-    li t9, 0x1788
+    b hcomp_mode7_dispatch
+    nop
 
 
 draw_obj:
@@ -973,9 +976,9 @@ start_objects:
 
     // Preserve the current combined Main/Sub screen-enable contract, but use
     // exact W1/W2 selection and OBJ OR/AND/XOR/XNOR logic when enabled.
-    lbu t0, TMW
-    lbu t1, TSW
-    or t0, t0, t1
+    lbu t1, HCOMP_SCREEN
+    addi t1, t1, TSW
+    lbu t0, 0(t1)
     andi t0, t0, 0x10
     beqz t0, obj_no_windows
     lbu a0, WOBJSEL
@@ -1050,7 +1053,7 @@ check_object:
     lw t1, OAM(t9)
 
     // Update mirroring using the shared function
-    jal shared_mirror
+    jal hcomp_obj_mirror
     move t6, t1
 
     // Set initial values for drawing the object
@@ -1311,116 +1314,32 @@ shared_decode4:
 
 
 calc_color_window_segments:
-    // Convert exact color-window truth into the legacy backdrop fill loop's
-    // alternating inclusive segment-end list at WIN_BOUNDS+0..+6.
-    // Preserve the live RDP fill word in t6 and the nested-call return in t9.
-    move a3, t6
-    move t9, ra
+hcomp_obj_mirror:
+    // Palette groups 0..3 are opaque OBJ with math forbidden; 4..7 eligible.
+    move v1, ra
+    andi a0, t1, 0x0800
+    srl a0, a0, 8
+    addi a0, a0, HCOMP_OBJ_DEPTH_CMDS
+    jal rdp_send
+    addi a1, a0, 8
+    j shared_mirror
+    move ra, v1
 
-    lbu t0, CGWSEL
-    srl t1, t0, 4
-    andi t1, t1, 0x3
-    beqz t1, color_window_all
-    li t2, 3
-    beq t1, t2, color_window_none
-    lbu t0, WOBJSEL
+hcomp_mode7_dispatch:
+    // Mode7's one BG is BG1; avoid inheriting a previous layer's depth tag.
+    li a0, HCOMP_PROOF_BG_DEPTH_CMDS
+    jal rdp_send
+    addi a1, a0, 8
+    b overlay_load_mode7
+    li t9, 0x1788
 
-    // Modes 1/2 are selected/complement of the OBJ color-window selector.
-    srl a0, t0, 4
-    lbu t0, WOBJLOG
-    srl t0, t0, 2
-    andi a1, t0, 0x3
-    sltiu a2, t1, 2 // mode1=selected, mode2=complement
-    jal calc_window_spans
+hcomp_cgram_store_marker:
+    sh t7, HCOMP_FIXED_COLOR
+    b hcomp_cgram_return
     nop
 
-    lbu t8, WIN_COUNT
-    beqz t8, color_window_none
-    lbu t0, WIN_BOUNDS + 0 // L1
-
-    // Snapshot all possible span endpoints before overwriting E85 onward.
-    lbu t1, WIN_BOUNDS + 1 // U1
-    lbu t2, WIN_BOUNDS + 2 // L2
-    lbu t3, WIN_BOUNDS + 3 // U2
-    lbu t4, WIN_BOUNDS + 4 // L3
-    lbu t7, WIN_BOUNDS + 5 // U3
-
-    // The first segment uses Sub where math is enabled, Main otherwise.
-    lhu s0, MAIN_COLOR
-    lhu s1, SUB_COLOR
-    bnez t0, color_window_initial_ready
-    move a1, s0
-    move s0, s1
-    move s1, a1
-
-color_window_initial_ready:
-    li a0, WIN_BOUNDS
-
-    // Every true span contributes its upper end; a nonzero lower bound first
-    // contributes the preceding false segment end.
-    beqz t0, color_window_first_upper
-    addi a1, t0, -1
-    sb a1, 0(a0)
-    addi a0, a0, 1
-color_window_first_upper:
-    sb t1, 0(a0)
-    addi a0, a0, 1
-    li a1, 1
-    beq t8, a1, color_window_tail
-    addi a1, t2, -1
-    sb a1, 0(a0)
-    sb t3, 1(a0)
-    addi a0, a0, 2
-    li a1, 2
-    beq t8, a1, color_window_tail
-    addi a1, t4, -1
-    sb a1, 0(a0)
-    sb t7, 1(a0)
-    addi a0, a0, 2
-    move t1, t7
-
-color_window_tail:
-    // t1 is the final true upper bound for count1/2; select U2 when needed.
-    li a1, 1
-    beq t8, a1, color_window_tail_ready
-    nop
-    li a1, 2
-    bne t8, a1, color_window_tail_ready
-    nop
-    move t1, t3
-color_window_tail_ready:
-    li a1, 255
-    beq t1, a1, color_window_finish
-    nop
-    sb a1, 0(a0)
-    b color_window_finish
-    nop
-
-color_window_all:
-    lhu s0, SUB_COLOR
-    lhu s1, MAIN_COLOR
-    li t0, 255
-    sb t0, WIN_BOUNDS + 0
-    b color_window_finish
-    nop
-
-color_window_none:
-    lhu s0, MAIN_COLOR
-    lhu s1, SUB_COLOR
-    li t0, 255
-    sb t0, WIN_BOUNDS + 0
-
-color_window_finish:
-    // not_blank guarantees t4==0; restore the fill loop's live scalar state.
-    move t6, a3
-    li t4, 0
-    li t7, 0
-    lbu t8, WIN_BOUNDS + 0
-    move ra, t9
-    jr ra
-    li t9, 0
-
-
+    // Shared window helper and retained suffix remain at their audited ABI.
+.org 0xCC0
 calc_bg_window_spans:
     // Regular-BG wrapper kept in both RSP variants so resident suffix layout
     // remains byte-for-byte symmetric across overlay swaps.
@@ -1726,5 +1645,5 @@ hcomp_cgram_pair_ready:
     nop
 
 hcomp_cgram_marker:
-    b hcomp_cgram_return
+    b hcomp_cgram_store_marker
     lbu k1, SPLIT_LINE

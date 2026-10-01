@@ -174,8 +174,14 @@ pi_wait1:
     addi t0, t0, 0x3A8
     sw t0, DMEM(OVERLAY_MAIN_SRC)
     la t0, rsp_hcomp_text_start
-    addi t0, t0, 0x3A8
     sw t0, DMEM(OVERLAY_HCOMP_SRC)
+    la t0, rsp_hcomp_math_text_start
+    sw t0, DMEM(OVERLAY_HCOMP_MATH_SRC)
+#ifdef SODIUM64_COLOR_DIAG
+    // Preserve the existing raw reference region below the composed band.
+    li t0, 8
+    sw t0, DMEM(HCOMP_DIAG_COMPOSE_LIMIT)
+#endif
 
     // Publish the raw historical-palette workspaces used by the DMA8 CGRAM
     // replay consumer. sp remains 0/4, matching queue ownership.

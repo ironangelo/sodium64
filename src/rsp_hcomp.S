@@ -1,20 +1,16 @@
-/* Stage 1: bounded first-section output, full brightness, regular BG1/BG2.
- * Scalar RGB555 math uses a permuted channel order (RGBA5551 >> 1); packed
- * formulas are channel symmetric. Only the declared half-add workload is
- * published here. Other operations remain outside this bounded output gate.
+/* Full-height HCOMP phase bank. Real section epochs are consumed once;
+ * virtual <=8-row bands reuse owned Sub/Z/presence surfaces. Every target
+ * is rebased before the first draw, including blank and short sections.
  */
 #include <rsp.inc>
 #include "defines.h"
 .data
 .byte 0
 .text
-.byte 0:0x3A8
 draw_bg:
     j 0xA4001F90
     move v0, t0
 hcomp_entry:
-    // Later sections can leave RDP work pending after bounded composition.
-    // Fence the final submitted work before publishing the queue slot/HALT.
     b hcomp_fence
     li t8, %lo(hcomp_publish)
 hcomp_publish:
@@ -25,7 +21,6 @@ hcomp_publish:
     nop
 
 hcomp_fence:
-    // SyncFull is required before either TS provenance or Main pixels are read.
     lui t0, 0x2900
     sw t0, SCRN_DATA
     sw zero, SCRN_DATA + 4
@@ -34,229 +29,232 @@ hcomp_fence:
     li a1, SCRN_DATA + 8
 hcomp_fence_wait:
     mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x70 // TMEM, pipeline and command buffer must all finish
+    andi t0, t0, 0x70
     bnez t0, hcomp_fence_wait
     nop
     jr t8
     nop
 
-hcomp_provenance_switch_helper:
-    bnez k0, hcomp_sub_presence_saved
-    li t8, %lo(hcomp_copy_ts_start)
-hcomp_copy_ts_fence:
-    b hcomp_fence
+hcomp_band_begin:
+    sw k1, HCOMP_SECTION_END
+hcomp_band_start:
+    lw t0, HCOMP_SECTION_END
+    slt t1, k0, t0
+    beqz t1, hcomp_real_section_done
+    addi k1, k0, 8
+    slt t1, t0, k1
+    beqz t1, hcomp_band_bounds_ready
     nop
-hcomp_copy_ts_start:
-    // Preserve all 280x8 rendered tags, not a uniform-presence assumption.
-    li t6, 0xA00E2000
-    li t7, 0xA00E6000
-    li a3, 70
-hcomp_copy_ts:
-    li a0, SCRN_DATA
-    move a1, t6
-    jal 0xA4001F40
-    li a2, 63
-    move a1, t7
-    jal 0xA4001F08
-    li a2, 63
-    addi t6, t6, 64
-    addi t7, t7, 64
-    addi a3, a3, -1
-    bnez a3, hcomp_copy_ts
+    move k1, t0
+hcomp_band_bounds_ready:
+    sub t0, k1, k0
+    sw t0, HCOMP_BAND_ROWS
+    lw t0, FB_OFFSET(sp)
+    add t0, t0, k0
+    sw t0, HCOMP_BAND_Y
+    // Palette/stat section format admits at most 255 scanlines. CPU border
+    // is 0/8; the published viewport must stay inside its 240-row framebuffer.
+    sltiu t1, t0, 8
+    bnez t1, hcomp_bad_geometry
     nop
-hcomp_sub_presence_saved:
+    lw t1, FB_OFFSET(sp)
+    add t1, t1, k1
+    li t2, 248
+    sltu t1, t2, t1
+    bnez t1, hcomp_bad_geometry
+    nop
+    sll t1, t0, 2
+    sh t1, RDP_FILL + 10
+    sh t1, RDP_FILL + 38
+    lw t1, FB_OFFSET(sp)
+    add t1, t1, k1
+    sll t1, t1, 2
+    sh t1, RDP_FILL + 14
+    sh t1, RDP_FILL + 34
+    // 560-byte stride: y * (512+32+16). Rebase both compact targets.
+    sll t1, t0, 9
+    sll t2, t0, 5
+    add t1, t1, t2
+    sll t2, t0, 4
+    add t1, t1, t2
+    li t2, 0xE2000
+    sub t2, t2, t1
+    sw t2, HCOMP_PROOF_RDP_CMDS + 20
+    li t2, 0xE4000
+    sub t2, t2, t1
+    sw t2, RDP_FRAME + 4
+    sb zero, HCOMP_SCREEN
+    sw zero, HCOMP_BAND_RAW
+    lb t0, STAT_FLAGS
+    bltz t0, hcomp_raw_band
+    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
+    beqz t0, hcomp_check_raw_math
+    sltu t1, k0, t0
+    beqz t1, hcomp_raw_band
+    nop
+hcomp_check_raw_math:
+    // Exact no-op optimization: no eligible math and no Main clipping.
+    lbu t0, CGADSUB
+    andi t0, t0, 0x3F
+    bnez t0, hcomp_compact_band
+    lbu t0, CGWSEL
+    andi t0, t0, 0xC0
+    beqz t0, hcomp_raw_band
+    nop
+hcomp_compact_band:
+    li a0, HCOMP_PROOF_RDP_CMDS
+    jal 0xA4001F5C
+    li a1, HCOMP_PROOF_BG_DEPTH_CMDS
+    lbu s7, TS
+    lbu t0, TM
+    sll t0, t0, 8
+    b hcomp_fill_target
+    or s7, s7, t0
+hcomp_raw_band:
+    li t0, 1
+    sb t0, HCOMP_SCREEN
+    sw t0, HCOMP_BAND_RAW
     lw t0, FRAMEBUFFER(sp)
     addi t0, t0, 280 * -16
     sw t0, RDP_FRAME + 4
-    li a0, RDP_FRAME
-    jal 0xA4001F5C
-    li a1, RDP_FRAME + 8
-    lw a1, OVERLAY_MAIN_SRC
-    li t9, 0x1370
-    j 0xA4001F7C
-    nop
-
-hcomp_provenance_end:
-    // Later sections are untouched. Reject other geometry and operations.
-    bnez k0, hcomp_section_done
-    li t0, 8
-    bne k1, t0, hcomp_section_done
-    lbu v1, CGADSUB
-    li t0, 0x41
-    bne v1, t0, hcomp_section_done
-    li t8, %lo(hcomp_output_start)
-    b hcomp_fence
-    nop
-hcomp_output_start:
-    // Minimal input ownership record for the complete-image oracle. Capture
-    // this section's bounds, not the next section's/end-frame mutable state.
-    lw t0, FRAMEBUFFER(sp)
-    sw t0, SCRN_DATA
-    lhu t0, WHX
-    sh t0, SCRN_DATA + 4
-    lhu t0, WHX + 2
-    sh t0, SCRN_DATA + 6
-    lbu t0, CGWSEL
-    sh t0, SCRN_DATA + 8
-    lbu t0, WOBJSEL
-    sh t0, SCRN_DATA + 10
-    lbu t0, WOBJLOG
-    sh t0, SCRN_DATA + 12
-    sh zero, SCRN_DATA + 14
-    li a0, SCRN_DATA
-    li a1, 0xA00F0000
-    jal 0xA4001F08
-    li a2, 15
-    lbu a0, WOBJSEL
-    srl a0, a0, 4
-    lbu a1, WOBJLOG
-    srl a1, a1, 2
-    andi a1, a1, 3
-    jal 0xA4001CE4
-    li a2, 1
-    lbu v0, CGWSEL
-    lhu gp, SUB_COLOR
-    srl gp, gp, 1
-    lw s0, FRAMEBUFFER(sp)
-    addi s0, s0, 0x1198
-    li s1, 0xA00E4018
-    li s2, 0xA00E2018
-    li s3, 0xA00E6018
-    li s7, 8
-hcomp_row:
-    li s6, 0
-hcomp_batch:
-    // Four 32-pixel inputs occupy only SCRN_DATA..CHAR_DATA+127.
-    li a0, SCRN_DATA
-    move a1, s0
-    jal 0xA4001F40
-    li a2, 63
-    li a0, SCRN_DATA + 64
-    move a1, s1
-    jal 0xA4001F40
-    li a2, 63
-    li a0, SCRN_DATA + 128
-    move a1, s2
-    jal 0xA4001F40
-    li a2, 63
-    li a0, SCRN_DATA + 192
-    move a1, s3
-    jal 0xA4001F40
-    li a2, 63
-    li s5, SCRN_DATA
-hcomp_pixel:
-    // Exact inclusive span membership, including semantic x=255.
-    lbu t9, WIN_COUNT
-    li t2, WIN_BOUNDS
-    move t6, zero
-hcomp_span:
-    beqz t9, hcomp_selected
-    nop
-    lbu t3, 0(t2)
-    lbu t4, 1(t2)
-    sltu t3, s6, t3
-    sltu t4, t4, s6
-    or t3, t3, t4
-    xori t3, t3, 1
-    or t6, t6, t3
-    addi t9, t9, -1
-    b hcomp_span
-    addi t2, t2, 2
-hcomp_selected:
-    sll t6, t6, 2
-    li t3, 0x35
-    srl t4, v0, 6
-    or t4, t4, t6
-    srlv t8, t3, t4
-    andi t8, t8, 1
-    srl t4, v0, 4
-    andi t4, t4, 3
-    or t4, t4, t6
-    srlv t9, t3, t4
-    andi t9, t9, 1
-    lhu t0, 0(s5)
-    srl t0, t0, 1
-    bnez t8, hcomp_main_ready
-    nop
-    move t0, zero
-hcomp_main_ready:
-    lhu t2, 128(s5)
-    srl t2, t2, 11
-    and t2, t2, v1
-    and t2, t2, t9
-    beqz t2, hcomp_store
-    move t3, t0
-    // Fixed operand permits HALF; absent selected Sub suppresses it.
-    move t7, gp
-    andi t2, v0, 2
-    beqz t2, hcomp_add
-    move t5, t8
-    lhu t2, 192(s5)
-    li t4, 0x0400
-    beq t2, t4, hcomp_add
-    move t5, zero
-    lhu t7, 64(s5)
-    srl t7, t7, 1
-    move t5, t8
-hcomp_add:
-    beqz t5, hcomp_add_full
-    add t3, t0, t7
-    xor t4, t0, t7
-    andi t4, t4, 0x0421
-    sub t3, t3, t4
-    b hcomp_store
-    srl t3, t3, 1
-hcomp_add_full:
-    xor t4, t0, t7
-    andi t4, t4, 0x0421
-    sub t4, t3, t4
-    andi t4, t4, 0x8420
-    sub t3, t3, t4
-    srl t5, t4, 5
-    sub t4, t4, t5
-    or t3, t3, t4
-hcomp_store:
-    sll t3, t3, 1
-    ori t3, t3, 1
-    sh t3, 0(s5)
-    addi s6, s6, 1
-    addi s5, s5, 2
-    li t0, SCRN_DATA + 64
-    bne s5, t0, hcomp_pixel
-    nop
-    li a0, SCRN_DATA
-    move a1, s0
-    jal 0xA4001F08
-    li a2, 63
-    addi s0, s0, 64
-    addi s1, s1, 64
-    addi s2, s2, 64
-    addi s3, s3, 64
-    li t0, 256
-    bne s6, t0, hcomp_batch
-    nop
-    addi s0, s0, 48
-    addi s1, s1, 48
-    addi s2, s2, 48
-    addi s3, s3, 48
-    addi s7, s7, -1
-    bnez s7, hcomp_row
-    nop
-hcomp_section_done:
     li a0, RDP_INIT
     jal 0xA4001F5C
     li a1, RDP_INIT + 8
+    lbu s7, TM
+hcomp_fill_target:
+    li a0, RDP_FRAME
+    jal 0xA4001F5C
+    li a1, RDP_FRAME + 8
+    // Both screens get a real backdrop and explicit absence/winner tag.
+    // The second operand for absent Sub comes from fixed color, not this fill.
+    lhu s0, MAIN_COLOR
+    lb t0, STAT_FLAGS
+    bgez t0, hcomp_backdrop_color
+    nop
+    move s0, zero
+hcomp_backdrop_color:
+    li a0, HCOMP_PROOF_RDP_CMDS + 24
+    jal 0xA4001F5C
+    li a1, HCOMP_PROOF_BG_DEPTH_CMDS
+    andi t0, s0, 0x3E
+    sll t0, t0, 10
+    andi t1, s0, 0x7C0
+    sll t1, t1, 13
+    or t0, t0, t1
+    andi t1, s0, 0xF800
+    sll t1, t1, 16
+    or t0, t0, t1
+    ori t0, t0, 0xFF
+    sw t0, RDP_FILL + 20
+    lw t0, FILLREC_MASK
+    lw t1, RDP_FILL + 36
+    and t1, t1, t0
+    lui t2, 3
+    or t1, t1, t2
+    sw t1, RDP_FILL + 36
+    lw t1, RDP_FILL + 32
+    and t1, t1, t0
+    li t2, 268 << 14
+    or t1, t1, t2
+    sw t1, RDP_FILL + 32
+    li a0, RDP_FILL
+    jal 0xA4001F5C
+    li a1, RDP_WINDOW
+    lb t0, STAT_FLAGS
+    bltz t0, hcomp_band_done
+    nop
+    sw zero, PRIO_CHECKS
+    sw zero, PRIO_CHECKS + 4
+    lbu s3, BG_MODE
+    andi s3, s3, 0xF
+    sll s3, s3, 4
+    lw a1, OVERLAY_MAIN_SRC
+    j 0xA4001F7C
+    li t9, 0x1370
+
+hcomp_screen_end:
+    lbu t0, HCOMP_SCREEN
+    bnez t0, hcomp_main_end
+    li t8, %lo(hcomp_copy_ts_start)
+    b hcomp_fence
+    nop
+hcomp_copy_ts_start:
+    li t6, 0xA00E2000
+    li t7, 0xA00E6000
+    lw a3, HCOMP_BAND_ROWS
+    sll t0, a3, 9
+    sll t1, a3, 5
+    add t0, t0, t1
+    sll a3, a3, 4
+    add a3, a3, t0
+hcomp_copy_ts:
+    li a2, 63
+    slti t0, a3, 64
+    beqz t0, hcomp_copy_chunk
+    li a0, SCRN_DATA
+    addi a2, a3, -1
+hcomp_copy_chunk:
+    move a1, t6
+    jal 0xA4001F40
+    nop
+    move a1, t7
+    jal 0xA4001F08
+    nop
+    addi t0, a2, 1
+    add t6, t6, t0
+    add t7, t7, t0
+    sub a3, a3, t0
+    bnez a3, hcomp_copy_ts
+    nop
+    li t0, 1
+    sb t0, HCOMP_SCREEN
+    lw t0, FRAMEBUFFER(sp)
+    addi t0, t0, 280 * -16
+    b hcomp_fill_target
+    sw t0, RDP_FRAME + 4
+hcomp_main_end:
+    lw t0, HCOMP_BAND_RAW
+    bnez t0, hcomp_band_done
+    li t8, %lo(hcomp_math_start)
+    b hcomp_fence
+    nop
+hcomp_math_start:
+    lw a1, OVERLAY_HCOMP_MATH_SRC
+    j 0xA4001F7C
+    li t9, 0x13B0
+hcomp_band_done:
+    // Disable Z before the next epoch/target or final palette load.
+    li a0, HCOMP_PROOF_RDP_CMDS
+    jal 0xA4001F5C
+    li a1, HCOMP_PROOF_RDP_CMDS + 8
+    li a0, RDP_INIT
+    jal 0xA4001F5C
+    li a1, RDP_INIT + 8
+    move k0, k1
+    b hcomp_band_start
+    nop
+hcomp_real_section_done:
     j 0xA40010C0
     nop
+hcomp_bad_geometry:
+    // Fail closed on a corrupt viewport instead of corrupting framebuffer RAM.
+    break
+    b hcomp_bad_geometry
+    nop
 
-// Fixed dispatch ABI. The assembler fails rather than silently moving it.
-.org 0x760
+.org (0x760 - 0x3A8)
 hcomp_screen_switch:
-    beqz s7, hcomp_provenance_end
+    b hcomp_screen_end
     nop
-    b hcomp_provenance_switch_helper
+.org (0x778 - 0x3A8)
+hcomp_math_return:
+    b hcomp_band_done
     nop
-.org 0x788
+.org (0x780 - 0x3A8)
+hcomp_band_entry:
+    b hcomp_band_begin
+    nop
+.org (0x788 - 0x3A8)
 draw_mode7_entry:
     j 0xA4001F78
     li t9, 0x1788

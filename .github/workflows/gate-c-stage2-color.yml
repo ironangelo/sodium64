@@ -42,12 +42,12 @@ jobs:
             libdragon make "${flags[@]}" -j"$(nproc)" 2>&1 | tee "$variant-build.log"
             python3 scripts/check_runtime_arena.py build/sodium64.elf
             python3 scripts/check_event_arena.py --elf build/sodium64.elf --output "$variant-arena.json"
-            python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+            python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_*.elf
             mkdir -p "qualified/$variant"
             cp -a build "qualified/$variant/"
             cp sodium64.z64 "qualified/$variant/"
           done
-          python3 scripts/check_event_arena_scope.py --qualified qualified --parent parent/qualified
+          python3 scripts/check_hcomp_band_scope.py --qualified qualified
           mkdir -p diagnostic hardware
           for mode in visual mixed; do
             python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode.smc"

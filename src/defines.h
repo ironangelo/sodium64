@@ -247,6 +247,17 @@
 #define HCOMP_CGRAM_EVENT_CURSOR 0xEA0
 #define HCOMP_CGRAM_PAIR_SCRATCH 0xEA8
 #define HCOMP_CGRAM_WRITE_SCRATCH 0xEB0
+// Full-height band phase state in the previously retired DMEM tail.
+#define OVERLAY_HCOMP_MATH_SRC 0xEB8
+#define HCOMP_SECTION_END 0xEBC
+#define HCOMP_BAND_Y 0xEC0
+#define HCOMP_BAND_ROWS 0xEC4
+#define HCOMP_SCREEN 0xEC8
+#define HCOMP_DIAG_COMPOSE_LIMIT 0xECC
+#define HCOMP_FIXED_COLOR 0xED0
+#define HCOMP_ELIGIBILITY_TABLE 0xED8
+#define HCOMP_OBJ_DEPTH_CMDS 0xEE0
+#define HCOMP_BAND_RAW 0xEF0
 // Gate-C proof-only immutable RDP commands in the audited retired DMEM gap.
 // Eight commands occupy F30..F6F; VEC_DATA remains frozen at F70.
 // PipeSync is required before changing OtherModes while prior RDP work may

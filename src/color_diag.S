@@ -376,8 +376,8 @@ color_diag_write:
     sw t9, 0(t0)
     li t1, 0x08000000
     sw t1, 4(t0)
-    li t1, 0x41FF
-    sw t1, 8(t0) // trace/header through0x41FF; S64V already saved
+    li t1, 0x7FFF
+    sw t1, 8(t0) // complete32KB including S64V and reserved tail
 2:  lw t1, 0x10(t0)
     andi t1, t1, 1
     bnez t1, 2b

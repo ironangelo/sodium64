@@ -49,4 +49,5 @@ if __name__=='__main__':
     a=ap.parse_args();r=audit(a.qualified,a.captures)
     a.output.parent.mkdir(parents=True,exist_ok=True)
     a.output.write_text(json.dumps(r,indent=2)+'\n')
+    print(json.dumps(r,sort_keys=True),flush=True)
     print('PRIVATE_SMW_PROBE_ADMISSION PASS; synthetic geometry, colors and ordinary SRAM; game/hardware pending')

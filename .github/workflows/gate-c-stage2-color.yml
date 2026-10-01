@@ -69,7 +69,13 @@ jobs:
             cp "wrap-$kind/out/guest.z64" "hardware/sodium64-arena-$kind.z64"
           done
           sha256sum hardware/*.z64 qualified/*/sodium64.z64 qualified/*/build/sodium64.elf diagnostic/*.smc > SHA256SUMS
+      - uses: actions/cache/restore@v4
+        id: ares-cache
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
       - name: Install pinned ares dependencies
+        if: steps.ares-cache.outputs.cache-hit != 'true'
         timeout-minutes: 8
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -87,11 +93,6 @@ jobs:
             ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
             libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
 
-      - uses: actions/cache/restore@v4
-        id: ares-cache
-        with:
-          path: ${{ runner.temp }}/ares-src
-          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
       - name: Build pinned N64-only ares in established valid lab mode
         id: ares-build
         if: steps.ares-cache.outputs.cache-hit != 'true'

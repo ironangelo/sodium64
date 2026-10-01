@@ -79,7 +79,10 @@ def build(case):
     if case == 'sram':
         rom[0x7fd6]=2;rom[0x7fd8]=5
         a=Assembler()
-        a.emit(0xaf,0x10,0,0x70,0x8f,0x10,0,0x7e) # cart-imported sentinel -> WRAM
+        # Echo the imported byte into a different SRAM address. The ordinary
+        # PI save provides coherent first-hand load+write evidence, avoiding
+        # a debugger read of CPU-private cached WRAM as acceptance authority.
+        a.emit(0xaf,0x10,0,0x70,0x8f,0x08,0,0x70)
         for index,value in enumerate(b'S64GAME!'):
             a.emit(0xa9,value,0x8f,index,0,0x70)
         a.emit(0x60);hook_call(rom,0x8300,a.finish())

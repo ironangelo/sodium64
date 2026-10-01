@@ -74,10 +74,9 @@ def main():
             (args.output/'observations.json').write_text(json.dumps(observations,indent=2)+'\n')
             if accepted and args.case!='sram':break
             if accepted and args.case=='sram':
-                imported=c.read_memory(syms['wram']+16,1,1)
-                assert imported==b'\xa7',('ordinary SRAM load/import',imported.hex())
                 cart=c.read_memory(0xa8000000,32768,chunk)
                 if cart[:8]==b'S64GAME!':
+                    assert cart[8]==0xa7,('ordinary SRAM load/import echo',cart[8])
                     assert cart[16]==0xa7
                     (args.output/'cart.sav').write_bytes(cart)
                     accepted['ordinary_sram_import_and_pi_save_passed']=True

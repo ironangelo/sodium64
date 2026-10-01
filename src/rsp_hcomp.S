@@ -40,7 +40,10 @@ hcomp_band_begin:
 hcomp_band_start:
     lw t0, HCOMP_SECTION_END
     slt t1, k0, t0
+    // The taken transition must retain the real epoch end in k1. An ADDI
+    // in this delay slot would skip FRAME_END and read beyond the section queue.
     beqz t1, hcomp_real_section_done
+    move k1, t0
     addi k1, k0, 8
     slt t1, t0, k1
     beqz t1, hcomp_band_bounds_ready

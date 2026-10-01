@@ -1,0 +1,21 @@
+name: Event arena pressure evidence
+on:
+  push:
+    branches: [phase4/gate-c-smw-exploration]
+    paths: [.github/workflows/event-arena-evidence.yml]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Read immutable pressure observations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repos/${{ github.repository }}/actions/artifacts/11177456438/zip > evidence.zip
+          echo "66e40bbbf49586fd29a2df05188615f6d245e106108358cabfc239e11415fabf  evidence.zip" | sha256sum -c -
+          unzip -p evidence.zip captures/pressure/observations.json
+          unzip -p evidence.zip captures/pressure/capture.log

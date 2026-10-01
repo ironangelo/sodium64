@@ -43,16 +43,28 @@ def main():
         assert c.request('QPassSignals:'+ARES_N64_GUEST_SIGNALS)==b'OK'
         if args.frozen_phase:
             name='color_diag_phase_'+args.frozen_phase
-            set_breakpoint(c,syms[name],True)
+            # The B label falls inside a JIT block and is not a reliable
+            # debugger stop. The red routine is a real jump target reached
+            # after B's natural hold/PI write, before any framebuffer edit.
+            stop_name=name if args.frozen_phase=='a' else 'hw_profile_red_start'
+            set_breakpoint(c,syms[stop_name],True)
             validate_stop(c.request('c'),name)
             origin=struct.unpack('>I',c.read_memory(0xA4400004,4,4))[0]
-            frame=c.read_memory(origin|0xA0000000,134400,chunk)
+            frame=c.read_memory(origin|0xA0000000,134400,0x400)
             (args.output/(name+'.bin')).write_bytes(frame)
             result=frame_check(frame)
             result['control']=struct.unpack('>I',c.read_memory(0xA4400000,4,4))[0]
             assert result['control']==(0x202 if args.frozen_phase=='a' else 0x3202)
             result['cadence_authority']=False
             result['fresh_boot']=True
+            result['stop_symbol']=stop_name
+            if args.frozen_phase=='b':
+                save=c.read_memory(0xA8000000,32768,0x400)
+                (args.output/'pre-red-cart.sav').write_bytes(save)
+                decoded,_,raw,_,_=decode(save)
+                qualify(decoded,raw,args.mixed)
+                assert decoded['probe_header']['vi_origin']==origin
+                result['both_holds_and_pi_complete']=True
             (args.output/(name+'.json')).write_text(json.dumps(result,indent=2)+'\n')
             return
         set_breakpoint(c,syms['hw_profile_done'],True)
@@ -73,7 +85,7 @@ def main():
         result['alternate_readback']=dict(chunk=chunk,cart_equal=large==save,
             source_equal=large_source==source,
             first_cart_difference=next((i for i,(a,b) in enumerate(zip(large,save)) if a!=b),None))
-        ring=c.read_memory(syms['dsp_buffer']|0x20000000,8192,chunk)
+        ring=c.read_memory(syms['dsp_buffer']|0x20000000,8192,0x400)
         ptr=result['probe_header']['dsp_pointer']
         start=(ptr-4096)&8191
         assert pcm==(ring+ring)[start:start+4096],'PCM chronological mismatch'

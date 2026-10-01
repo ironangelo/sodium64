@@ -44,7 +44,12 @@ def build(case):
         set_store(rom,0x2131,0x41,0x40|mask)
         # Mode0 BG3/4 reuse BG1's opaque red map and character set, with
         # BG2 green still owning Sub. Only Main winner/eligible bit changes.
-        hook_call(rom,0x8300,bytes((0xa9,0x22,0x8d,0x0c,0x21,0x60)))
+        # BG1 character base is$1000 words (BGNBA nibble1). Keep a
+        # native Mode0 red entry as well as the inherited renderer's red1.
+        palette=65 if case=='bg3' else 97
+        settings=((0x11,0x210c),(palette,0x2121),(0x1f,0x2122),(0,0x2122))
+        body=bytes(v for value,address in settings for v in (0xa9,value,0x8d,address&255,address>>8))+b'\x60'
+        hook_call(rom,0x8300,body)
     if case == 'window':
         # W1[32,95] XOR W2[64,191]; both clip/prevent inside selected pixels.
         settings = ((0xa2,0x2130),(0x9f,0x2132),(0xa0,0x2125),
@@ -83,6 +88,9 @@ def build(case):
         lda_sta_abs(a,0x11,0x212c);lda_sta_abs(a,0x51,0x2131)
         a.emit(0x60);hook_call(rom,0x8300,a.finish())
         rom[0x4800:0x4820]=bytes((0xff,0))*8+bytes(16)
+        # The source hook runs before the final startup CGADSUB write; update
+        # that actual write so it cannot overwrite OBJ eligibility with BG1 only.
+        set_store(rom,0x2131,0x41,0x51)
     if case == 'sram':
         rom[0x7fd6]=2;rom[0x7fd8]=5
         a=Assembler()

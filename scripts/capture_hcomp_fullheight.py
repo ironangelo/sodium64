@@ -54,19 +54,30 @@ def main():
             (args.output/f'dmem-{attempt:02d}.bin').write_bytes(c.read_memory(0xa4000000,4096,0x400))
             (args.output/'sp-pc.bin').write_bytes(c.read_memory(0xa4080000,4,4))
             engine=require_fenced_boundary(c,stage=f'fullheight {args.case} {attempt}')
+            guards={}
             for start in (0xe2000,0xe4000,0xe6000):
                 for address in (start-64,start+0x1180):
                     guard=c.read_memory(address|0xa0000000,64,64)
+                    guards[hex(address)]=guard.hex()
                     assert guard==bytes(64),('compact guard modified',hex(address),guard.hex())
             owner=int.from_bytes(c.read_memory(0xa00f0000,4,4),'big')
             report=dict(passed=False,owner=hex(owner))
             if owner in FRAMEBUFFER_ADDRS:
+                # Observe the actual last rendered epoch, not just guest source
+                # intent. These controls are constant across every guest epoch.
+                controls=c.read_memory(0xa4000bb7,4,4)
+                want_cg={'add':1,'sub':0x81,'sub-half':0xc1,'bg2':0x42,'bg3':0x44,'bg4':0x48,
+                         'obj-low':0x51,'obj-high':0x51}.get(args.case,0x41)
+                want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11}.get(args.case,1)
+                want_ts=1 if args.case=='bg2' else 2
+                want_window=0xa2 if args.case=='window' else 2
+                assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('delivered epoch controls',args.case,controls.hex())
                 image=c.read_memory(owner,280*240*2,chunk)
                 report=classify(image,args.case)
                 if report['passed']:
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,
                                   image_sha256=hashlib.sha256(image).hexdigest(),
-                                  compact_guards_passed=True,framebuffer_seeding=False,
+                                  compact_guards_passed=True,compact_guards=guards,delivered_controls=controls.hex(),framebuffer_seeding=False,
                                   guest_state_writes=False,cadence_authority=False)
                     (args.output/'frame.bin').write_bytes(image)
                 (args.output/'last-frame.bin').write_bytes(image)

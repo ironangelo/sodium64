@@ -19,6 +19,10 @@ def audit(qualified,captures):
         assert result['image_sha256']==hashlib.sha256(frame).hexdigest()
         assert classify(frame,case)['passed'],case
         assert result['compact_guards_passed']
+        keys={hex(x) for start in (0xe2000,0xe4000,0xe6000) for x in (start-64,start+0x1180)}
+        assert set(result['compact_guards'])==keys
+        assert all(value=='00'*64 for value in result['compact_guards'].values())
+        assert len(bytes.fromhex(result['delivered_controls']))==4
         assert not result['framebuffer_seeding'] and not result['guest_state_writes']
         assert not result['cadence_authority']
         engine=result['engine']

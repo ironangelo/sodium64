@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Audit the ordinary build without mistaking it for full-frame game admission.
+"""Historical ordinary-build audit pinned to 01a5242 / artifact 11180227088.
 
-Consumes already qualified ELFs; no ROM, emulator writes or commercial assets.
-The compact-geometry finding is pinned to the current emitted instructions.
+Consumes immutable prior ELFs; no ROM, emulator writes or commercial assets.
+Its compact-geometry BLOCKED finding describes that earlier renderer only.
+Use check_smw_probe_admission.py for the repaired full-height runtime.
 """
 import argparse
 import hashlib

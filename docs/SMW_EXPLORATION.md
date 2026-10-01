@@ -1,74 +1,87 @@
-# SMW exploration: ordinary profile verified, geometry admission blocked
+# SMW exploration: shared full-height admission qualified
 
-Runtime authority: `01a524213cc414ee67b34362b50e115804caaede`.
-The exploration branch retains the shared event-arena repair and all HCOMP
-work. The diagnostic branch and master stay independent. No commercial ROM
-has been run or placed in the repository or CI.
+The working branches `phase4/gate-c-smw-exploration` and
+`phase4/gate-c-stage2-color-diag` carry the same shared renderer repair.
+The event-arena repair, HCOMP and the latest Gate C diagnostics remain included.
+No commercial ROM has been run or committed to the repository or CI.
 
-## Completed admission check
+## Qualification authority
 
-The qualified normal build uses PROFILE=0, HW_PROFILE=0 and COLOR_DIAG=0.
-Its ELF SHA256 is
-`f4e4a08cdf77a6537731b536684b12fa3d6b2f6eaa13363d32f4fb3a86a9e5ae`.
-The audit of immutable artifact11180227088 establishes:
+Executed source: `c2e3b3583142cb032d7e1555bca5328b8749884f`.
+Runtime source last changed at `279f4f0f9b067a877f7e984d9ee8f81d2ddfaf94`.
+Subsequent changes corrected synthetic guest setup and host capture/readout;
+the final documentation commit preserves the qualified runtime files and
+executed qualification scripts.
 
-- No diagnostic or profiling entry points in the ordinary ELF; both
-  instrumented variants are rejected as ordinary builds by negative controls.
-- Startup, PI SRAM load/save, VI and controller instructions are byte-identical
-  to the previous qualified normal build. This is instruction preservation,
-  not an executed game SRAM round trip.
-- Every RSP text/data section in all three variants is unchanged, including
-  the fixed renderer/HCOMP dispatch addresses.
-- Existing compiled arena/cache qualification and original frozen A/B
-  image comparisons still pass. The original emulator evidence is retained;
-  this host-only audit does not manufacture new emulator or hardware evidence.
+- [Dedicated Gate C run 36942594882](https://github.com/ironangelo/sodium64/actions/runs/36942594882).
+- [Normal, PROFILE and Mupen64Plus LLE smoke run 36942594783](https://github.com/ironangelo/sodium64/actions/runs/36942594783).
+- Qualification artifact: [11201360945](https://github.com/ironangelo/sodium64/actions/runs/36942594882/artifacts/11201360945).
+- Artifact ZIP SHA256: `882256343a691b65e5a4f08dec2969f33857bd0ceb7a30eb7e7abc0ddaddbd9a`.
+- Ordinary ELF SHA256: `2c73414b925817003906d897997d1cbfc881a5f6a937140452d014d209ff124f`.
 
-Reproduce using extracted qualified and previous color evidence archives:
+The ordinary build has PROFILE=0, HW_PROFILE=0 and COLOR_DIAG=0. Compiled
+checks verify that diagnostic hooks are absent, arena/cache owners remain
+within the existing 4 MiB budget and fixed RSP dispatch/DMA interfaces survive.
+
+## Shared repair
+
+Geometry is admitted before the first RDP write. Real guest sections are
+processed in owned bands of at most eight rows while retaining their section
+state and Main/Sub controls. Short sections and force-blank use this same path.
+Phase and math overlays each occupy the existing 1,000-byte renderer slot;
+resident Main/Mode7 images remain 4,096 bytes. No enlarged framebuffer, compact
+scratch surface, IMEM or Expansion Pak is required.
+
+The taken branch delay slot preserves the real section end. Winner eligibility
+decodes the actual nonlinear RDP Z representation, including BG4 and eligible
+OBJ palettes. Main/Sub windows and OBJ palette eligibility feed ordinary HCOMP.
+
+## Executed acceptance
+
+All thirteen original synthetic guests pass in the ordinary profile. Each
+accepted image checks all 57,344 pixels of the 256 × 224 game area: add/subtract,
+half math, BG1–4 eligibility, overlapping windows, short HDMA sections,
+force-blank, eligible/ineligible OBJ palettes and SRAM.
+
+Acceptance requires exact delivered epoch controls, a natural RSP halt with
+drained RDP commands and six unchanged compact-target guards. No framebuffer
+seeding or guest-state debugger writes provide acceptance. The SRAM guest
+imports an existing cartridge marker through ordinary startup load, echoes it,
+writes its own marker and completes ordinary PI save. All 32 KiB are compared,
+including the unchanged tail.
+
+The original visual/mixed guests are byte-identical to their immutable parent.
+Their uninterrupted 300-VI traces and separate frozen A/B images pass, along
+with actual ROM paging and high palette pressure. Interrupted snapshots are
+observations, not acceptance or performance authority.
+
+Reproduce from the extracted complete qualification artifact:
 
 ```sh
-python3 scripts/check_smw_normal_profile.py \
-  --qualified /path/to/arena-evidence/qualified \
-  --parent /path/to/previous-color-evidence/qualified \
-  --output /path/to/smw-normal-profile-audit.json
+python3 scripts/check_smw_probe_admission.py \
+  --qualified /path/to/evidence/qualified \
+  --captures /path/to/evidence/captures \
+  --output /path/to/smw-probe-admission.json
 ```
 
-Its success means **the ordinary profile was correctly audited**. The JSON
-explicitly says `game_ready=false` and `geometry_admission=BLOCKED`.
+The resulting `smw-probe-admission.json` reports
+`smw_private_probe_ready=true`: shared geometry/color/SRAM prerequisites pass
+synthetic acceptance and private SMW exploration can begin.
 
-## Full-height blocker
+## Private game probe and remaining limits
 
-The emitted `draw_frame` selects the compact Sub image before loading the
-first section. `not_blank` enables the compact Z carrier for section0 without
-checking its height. The eight-line check in `hcomp_provenance_end` runs only
-after the RDP work has already used those targets. Thus flags alone cannot
-make a full-height first section safe.
+The next input is the user's private SMW ROM. Keep the ROM and game saves out
+of repository/CI assets. Wrap it with the qualified ordinary template and
+retain instrumented variants for the established diagnostic probes.
 
-For SETINI=0, the CPU publishes border8 + offset8 = global y16. With a
-280-pixel, 16-bit stride, the conservative whole-row envelopes are:
+SMW boot, gameplay and iris/color-math fidelity still require that game probe.
+Inherited brightness ordering, per-section RDP palette replay, Mode0 palette
+banking and remaining Mode7 fidelity are not closed by these fixtures.
+Native hue and real-N64 cadence/performance remain open.
 
-| Surface | Owned eight rows | Hypothetical 224 rows |
-| --- | --- | --- |
-| Sub color | E4000..E5180 | E4000..102A00 |
-| Main winner Z | E2000..E3180 | E2000..100A00 |
+## Historical audit
 
-End addresses are exclusive. The full-height envelopes cross preserved TS,
-raw palette workspaces, the consumed-section record and FRAMEBUFFER1. These
-are static address calculations for a hypothetical unsplit full-height
-section, **not observed SMW writes**. Other section layouts and SETINI states
-also need admission; simply capping this one envelope does not earn fidelity.
-
-## Next implementation checkpoint
-
-Establish target ownership and geometry admission **before the first RDP
-write**, including startup/force-blank and border variants, then preserve the
-existing supported eight-line output and its original acceptance. A useful
-SMW candidate additionally needs an owned full-height Main/Sub/output route
-with per-section state; rejecting overflow alone does not supply that route.
-Do not silently bypass HCOMP, render only an eight-line game image, enlarge
-buffers without a simultaneous memory budget, or present raw fallback output
-as an iris/color-math repair.
-
-Keep commercial ROMs and future game saves private and separate from
-diagnostic outputs. Stable master may supply a separately labeled baseline,
-but it is not the candidate containing the Gate-C work. Native hue, SMW
-compatibility/iris and real-N64 cadence remain open.
+`scripts/check_smw_normal_profile.py` is the immutable `01a5242` /
+artifact `11180227088` audit. Its compact-geometry BLOCKED finding describes
+that earlier renderer and is retained for reproduction. Use
+`scripts/check_smw_probe_admission.py` with the new evidence for current admission.

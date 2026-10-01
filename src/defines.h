@@ -112,6 +112,10 @@
 
 // Addresses of data in RDRAM that are shared between CPU and RSP
 #define ROM_BUFFER 0xA0200000
+// Reserve the last 12 ROM paging slots for the full Q2 event stream.
+// Cart ROM size is unchanged; resident cache capacity is 244 x 8 KiB.
+#define ROM_CACHE_SLOTS 244
+#define ROM_CACHE_END (ROM_BUFFER + ROM_CACHE_SLOTS * 0x2000)
 #define JIT_BUFFER (ROM_BUFFER - 0x40000)
 #define TILE_CACHE_BG (JIT_BUFFER - 0x40000)
 #define TILE_CACHE_OBJ (TILE_CACHE_BG - 0x8000)
@@ -143,8 +147,16 @@
 #define HCOMP_CGRAM_SIDEBAND_QUEUE1 0xA00C2400
 #define HCOMP_CGRAM_SIDEBAND_QUEUE2 0xA00C2900
 #define HCOMP_CGRAM_EVENT_QUEUE1 0xA00C2E00
-#define HCOMP_CGRAM_EVENT_QUEUE2 0xA00D7000
+#define HCOMP_CGRAM_EVENT_QUEUE2 0xA03E8000
 #define HCOMP_CGRAM_EVENT_CAPACITY 0x6000
+#define HCOMP_CGRAM_EVENT_BYTES (HCOMP_CGRAM_EVENT_CAPACITY * 4)
+
+#if ROM_CACHE_END != HCOMP_CGRAM_EVENT_QUEUE2
+#error ROM cache must end exactly before the reserved Q2 event arena
+#endif
+#if HCOMP_CGRAM_EVENT_QUEUE2 + HCOMP_CGRAM_EVENT_BYTES != 0xA0400000
+#error Q2 event arena must fit within base 4 MiB RDRAM
+#endif
 
 // RSP addresses of data in DMEM; used to avoid setting the upper address
 #define TEXTURE 0x000

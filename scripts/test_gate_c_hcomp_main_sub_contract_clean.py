@@ -56,7 +56,7 @@ SUB_TARGET_WORD_DMEM = 0xF10
 LATE_DMEM_FREE_END = VEC_DATA
 
 # Clean-lineage RDRAM proposal.  One 280x8 RGB16/Z16 strip is 0x1180 bytes.
-# Q2 ends at A00DD000; raw-palette Q1 begins at A00EF000.
+# Q1 ends at A00DAE00; Q2 resides separately at A03E8000..A0400000.
 STRIP_BYTES = 280 * 8 * 2
 SUB_META = 0xA00DE000
 MAIN_META = 0xA00E0000
@@ -238,13 +238,13 @@ def prove_rdram_capacity() -> None:
     raw2 = resolve_macro(macros, "HCOMP_RAW_PALETTE_QUEUE2")
     fb1 = resolve_macro(macros, "FRAMEBUFFER1")
 
-    if (q1, q2, cap) != (0xA00C2E00, 0xA00D7000, 0x6000):
+    if (q1, q2, cap) != (0xA00C2E00, 0xA03E8000, 0x6000):
         raise AssertionError("typed event arena drift")
     if raw1 != 0xA00EF000 or raw2 != 0xA00EF800 or fb1 != 0xA00F2300:
         raise AssertionError("lower framebuffer/raw-shadow map drift")
 
-    q1r = (q1, q1 + cap)
-    q2r = (q2, q2 + cap)
+    q1r = (q1, q1 + cap * 4)
+    q2r = (q2, q2 + cap * 4)
     rawr = (raw1, raw2 + 0x800)
     proposed = {
         "sub_meta": (SUB_META, SUB_META + STRIP_BYTES),
@@ -257,10 +257,10 @@ def prove_rdram_capacity() -> None:
         if not ranges_overlap(old, old + STRIP_BYTES, *q1r):
             raise AssertionError("expected historical E2g-B/Q1 collision disappeared")
 
-    # Every proposed range must fit strictly between Q2 event storage and raw Q1.
-    gap_lo = q2r[1]
+    # Every proposed range must fit between the full Q1 event slot and raw Q1.
+    gap_lo = q1r[1]
     gap_hi = raw1
-    if gap_lo != 0xA00DD000 or gap_hi != 0xA00EF000:
+    if gap_lo != 0xA00DAE00 or gap_hi != 0xA00EF000:
         raise AssertionError("clean free-gap boundaries drift")
     for name, (lo, hi) in proposed.items():
         if not (gap_lo <= lo < hi <= gap_hi):
@@ -277,7 +277,7 @@ def prove_rdram_capacity() -> None:
 
     # Deliberate guards between authoritative/proposed ranges.
     if SUB_META - gap_lo < 0x1000:
-        raise AssertionError("missing Q2->Sub metadata guard")
+        raise AssertionError("missing Q1->Sub metadata guard")
     if MAIN_META - proposed["sub_meta"][1] < 0x800:
         raise AssertionError("missing Sub/Main metadata guard")
     if SUB_COLOR - proposed["main_meta"][1] < 0x2000:

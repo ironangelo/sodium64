@@ -1,7 +1,7 @@
-name: Gate C Stage 2 Color Diagnostic
+name: Gate C Event Arena and Color Diagnostic
 on:
   push:
-    branches: [phase4/gate-c-stage2-color-diag]
+    branches: [phase4/gate-c-stage2-color-diag, phase4/gate-c-smw-exploration]
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,15 +22,16 @@ jobs:
       - name: Host decoder negatives
         run: |
           set -euo pipefail
+          python3 -m unittest discover -s scripts -p test_event_arena.py -v
           python3 -m unittest discover -s scripts -p test_stage2_color.py -v
           python3 -m unittest discover -s scripts -p test_stage2_probe.py -v
-      - name: Build and qualify immutable renderer and non-diagnostic scope
+      - name: Build and qualify full arena extents and unchanged RSP scope
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh api repos/${{ github.repository }}/actions/artifacts/11134890202/zip > parent.zip
-          echo "9f234916faa79842b91441cbf6b0ba773aa593e4bb73c4432fc062cc9356ffea  parent.zip" | sha256sum -c -
+          gh api repos/${{ github.repository }}/actions/artifacts/11137726435/zip > parent.zip
+          echo "bb935cba090076b45fb8258740566a4184570f4fd110f6d7719b9f8e729a0558  parent.zip" | sha256sum -c -
           unzip -q parent.zip -d parent
           libdragon init
           for variant in normal hw-profile color; do
@@ -40,12 +41,13 @@ jobs:
             if [ "$variant" = color ]; then flags=(COLOR_DIAG=1); fi
             libdragon make "${flags[@]}" -j"$(nproc)" 2>&1 | tee "$variant-build.log"
             python3 scripts/check_runtime_arena.py build/sodium64.elf
+            python3 scripts/check_event_arena.py --elf build/sodium64.elf --output "$variant-arena.json"
             python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
             mkdir -p "qualified/$variant"
             cp -a build "qualified/$variant/"
             cp sodium64.z64 "qualified/$variant/"
           done
-          python3 scripts/check_stage2_color_scope.py --qualified qualified --parent parent/qualified
+          python3 scripts/check_event_arena_scope.py --qualified qualified --parent parent/qualified
           mkdir -p diagnostic hardware
           for mode in visual mixed; do
             python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode.smc"
@@ -57,6 +59,14 @@ jobs:
             cp "wrap-$mode/out/guest.z64" "hardware/sodium64-stage2-color-$mode.z64"
             dd if="hardware/sodium64-stage2-color-$mode.z64" of=diagnostic/embedded.smc bs=1 skip=$((0x104000)) count=32768 status=none
             cmp "diagnostic/$mode.smc" diagnostic/embedded.smc
+          done
+          for kind in paging pressure; do
+            python3 "scripts/make_event_arena_$kind.py" "diagnostic/$kind.smc"
+            mkdir -p "wrap-$kind"
+            cp qualified/normal/sodium64.z64 rom-converter.py "wrap-$kind/"
+            cp "diagnostic/$kind.smc" "wrap-$kind/guest.smc"
+            (cd "wrap-$kind"; python3 rom-converter.py </dev/null)
+            cp "wrap-$kind/out/guest.z64" "hardware/sodium64-arena-$kind.z64"
           done
           sha256sum hardware/*.z64 qualified/*/sodium64.z64 qualified/*/build/sodium64.elf diagnostic/*.smc > SHA256SUMS
       - name: Install pinned ares dependencies
@@ -148,6 +158,32 @@ jobs:
             done
           done
           python3 scripts/check_stage2_color_frozen.py --captures captures
+      - name: Actual ROM paging and high-palette-pressure streams
+        run: |
+          set -euo pipefail
+          port=9300
+          pid=""
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+          for kind in paging pressure; do
+            out="captures/$kind"
+            mkdir -p "$out" "$RUNNER_TEMP/arena-$kind"
+            setsid env HOME="$RUNNER_TEMP/arena-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/arena-$kind.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-arena-$kind.z64" > "$out/ares.log" 2>&1 &
+            pid=$!
+            flags=()
+            if [ "$kind" = pressure ]; then flags+=(--guest diagnostic/pressure.smc); fi
+            python3 "scripts/capture_event_arena_$kind.py" --port "$port" \
+              --elf qualified/normal/build/sodium64.elf --output "$out" "${flags[@]}" > "$out/capture.log"
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            pid=""
+            port=$((port+1))
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -163,3 +199,4 @@ jobs:
             captures/
             *-build.log
             ares-version.txt
+            *-arena.json

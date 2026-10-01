@@ -542,9 +542,14 @@ tlbl_rom:
     li k1, 0x00001FFF // 8KB
     sw k1, 0x000C(k0) // PI_WR_LEN
 
-    // Create an EntryLo0 value and increment the ROM pointer
+    // Wrap before the reserved Q2 event stream, rather than relying on the
+    // byte pointer's old 256-slot rollover. ROM banks still page from cart.
     lbu k0, rom_pointer
+    li k1, ROM_CACHE_SLOTS - 1
+    bne k0, k1, rom_cache_advance
     addi k1, k0, 1
+    move k1, zero
+rom_cache_advance:
     sb k1, rom_pointer
     addi k1, k0, (ROM_BUFFER >> 13) & 0x7FF
     sll k1, k1, 7
@@ -820,4 +825,3 @@ write_wmaddh: // a1: value
     sb t0, wmadd + 1
     jr ra
     nop
-

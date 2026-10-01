@@ -114,8 +114,8 @@ hcomp_selected:
     move t0, zero
 hcomp_main_ready:
     lhu t2, 128(s5)
-    srl t2, t2, 11
-    andi t2, t2, 7
+    srl t2, t2, 10
+    andi t2, t2, 31
     lbu t2, HCOMP_ELIGIBILITY_TABLE(t2)
     and t2, t2, v1
     sltu t2, zero, t2

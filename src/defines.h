@@ -255,7 +255,7 @@
 #define HCOMP_SCREEN 0xEC8
 #define HCOMP_DIAG_COMPOSE_LIMIT 0xECC
 #define HCOMP_FIXED_COLOR 0xED0
-#define HCOMP_ELIGIBILITY_TABLE 0xED8
+#define HCOMP_ELIGIBILITY_TABLE 0xEF8
 #define HCOMP_OBJ_DEPTH_CMDS 0xEE0
 #define HCOMP_BAND_RAW 0xEF0
 // Gate-C proof-only immutable RDP commands in the audited retired DMEM gap.

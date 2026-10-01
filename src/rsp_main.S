@@ -138,11 +138,16 @@ overlay_mode7_src: .word 0
 overlay_main_src: .word 0
 overlay_hcomp_src: .word 0
 hcomp_raw_palette_ptrs: .word 0, 0
-.byte 0:(HCOMP_ELIGIBILITY_TABLE - (HCOMP_RAW_PALETTE_PTRS + 8))
-hcomp_eligibility_table: .byte 0x20, 1, 2, 4, 8, 0, 0x10, 0
+.byte 0:(HCOMP_OBJ_DEPTH_CMDS - (HCOMP_RAW_PALETTE_PTRS + 8))
 hcomp_obj_depth_cmds:
     .dword 0x2E00000058000000
     .dword 0x2E00000068000000
+.byte 0:(HCOMP_ELIGIBILITY_TABLE - (HCOMP_OBJ_DEPTH_CMDS + 16))
+// RDP Z is compressed, not linear primitive-depth / 2 at larger depths.
+// Actual stored tags:0400,0C00,1400,1C00,2800,3800,5000. Index by >>10.
+hcomp_eligibility_table:
+    .byte 0,0x20,0,1,0,2,0,4,0,0,8,0,0,0,0,0
+    .byte 0,0,0,0,0x10,0,0,0,0,0,0,0,0,0,0,0
 // Keep PR #18 CGRAM scratch untouched, then place the proof-only RDP command
 // table at the audited retired DMEM tail. The table is immutable:
 //   +00 PipeSync before the proof-time OtherModes attribute change
@@ -150,7 +155,7 @@ hcomp_obj_depth_cmds:
 //   +10 Set Z Image: compact E2000 strip aligned to global y=16
 //   +18 backdrop/absence primitive-depth tag 0x0800 -> stored Z 0x0400
 //   +20..+38 BG1..BG4 winner tags
-.byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_OBJ_DEPTH_CMDS + 16))
+.byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_ELIGIBILITY_TABLE + 32))
 hcomp_proof_rdp_cmds:
     .dword 0x2700000000000000
     .dword 0x2F0088FF00040025

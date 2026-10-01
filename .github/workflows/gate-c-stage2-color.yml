@@ -68,7 +68,7 @@ jobs:
             (cd "wrap-$kind"; python3 rom-converter.py </dev/null)
             cp "wrap-$kind/out/guest.z64" "hardware/sodium64-arena-$kind.z64"
           done
-          for kind in half add sub sub-half bg2 window short blank obj-low obj-high sram; do
+          for kind in half add sub sub-half bg2 bg3 bg4 window short blank obj-low obj-high sram; do
             python3 scripts/make_hcomp_fullheight.py --case "$kind" "diagnostic/full-$kind.smc"
             mkdir -p "wrap-full-$kind"
             cp qualified/normal/sodium64.z64 rom-converter.py "wrap-full-$kind/"
@@ -201,7 +201,7 @@ jobs:
           pid=""
           failed=0
           trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
-          for kind in half add sub sub-half bg2 window short blank obj-low obj-high sram; do
+          for kind in half add sub sub-half bg2 bg3 bg4 window short blank obj-low obj-high sram; do
             out="captures/full-$kind"
             mkdir -p "$out" "$RUNNER_TEMP/full-$kind"
             setsid env HOME="$RUNNER_TEMP/full-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
@@ -223,6 +223,15 @@ jobs:
             port=$((port+1))
           done
           test "$failed" = 0
+          python3 scripts/check_smw_probe_admission.py --qualified qualified --captures captures --output smw-probe-admission.json
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && env.ARES_BIN != '' }}
+        with:
+          name: hcomp-fullheight-normal-results
+          path: |
+            captures/full-*/
+            smw-probe-admission.json
+          retention-days: 30
       - name: Uninterrupted PI trace and separate frozen-frame semantics
         if: ${{ !cancelled() && env.ARES_BIN != '' }}
         run: |
@@ -306,3 +315,4 @@ jobs:
             *-build.log
             ares-version.txt
             *-arena.json
+            smw-probe-admission.json

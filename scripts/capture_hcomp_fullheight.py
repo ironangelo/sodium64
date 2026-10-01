@@ -50,7 +50,7 @@ def main():
         assert c.request('QPassSignals:'+ARES_N64_GUEST_SIGNALS)==b'OK'
         set_breakpoint(c,stop,True);validate_stop(c.request('c'),'full-height first prelaunch')
         observations=[];accepted=None
-        for attempt in range(12):
+        for attempt in range(90 if args.case=='sram' else 12):
             (args.output/f'dmem-{attempt:02d}.bin').write_bytes(c.read_memory(0xa4000000,4096,0x400))
             (args.output/'sp-pc.bin').write_bytes(c.read_memory(0xa4080000,4,4))
             engine=require_fenced_boundary(c,stage=f'fullheight {args.case} {attempt}')
@@ -75,6 +75,7 @@ def main():
             if accepted and args.case!='sram':break
             if accepted and args.case=='sram':
                 cart=c.read_memory(0xa8000000,32768,chunk)
+                (args.output/'last-cart.sav').write_bytes(cart)
                 if cart[:8]==b'S64GAME!':
                     assert cart[8]==0xa7,('ordinary SRAM load/import echo',cart[8])
                     assert cart[16]==0xa7

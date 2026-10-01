@@ -28,7 +28,7 @@ def validate(qualified):
         assert regular[0xf08:0xfac] == rotated[0xf08:0xfac]
         db, data = elf_section(main, '.data')
         assert db == 0xa4000000 and len(data) == 4096
-        assert data[0xed8:0xee0] == bytes((32,1,2,4,8,0,16,0))
+        assert data[0xef8:0xf18] == bytes((0,32,0,1,0,2,0,4,0,0,8,0,0,0,0,0,0,0,0,0,16,0,0,0,0,0,0,0,0,0,0,0))
         assert data[0xee0:0xef0].hex() == '2e000000580000002e00000068000000'
         cs = load_symbols(cpu)
         cpu_db, cpu_data = elf_section(cpu, '.data')

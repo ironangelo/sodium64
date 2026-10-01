@@ -7,7 +7,7 @@ from make_gate_c_hcomp_cgwsel_source import hits, finalize_checksum, HOOK_OFFSET
 from make_gate_c_hcomp_main_sub_lifetime import Assembler, lda_sta_abs, dma_to_vram
 from make_gate_c_hcomp_color_window import build_case, WINDOW_HOOK_OFFSET
 
-CASES = ('half', 'add', 'sub', 'sub-half', 'bg2', 'window', 'short',
+CASES = ('half', 'add', 'sub', 'sub-half', 'bg2', 'bg3', 'bg4', 'window', 'short',
          'blank', 'obj-low', 'obj-high', 'sram')
 
 
@@ -38,6 +38,13 @@ def build(case):
         set_store(rom, 0x212c, 1, 2)
         set_store(rom, 0x212d, 2, 1, count=2)
         set_store(rom, 0x2131, 0x41, 0x42)
+    if case in ('bg3','bg4'):
+        mask=4 if case=='bg3' else 8
+        set_store(rom,0x212c,1,mask)
+        set_store(rom,0x2131,0x41,0x40|mask)
+        # Mode0 BG3/4 reuse BG1's opaque red map and character set, with
+        # BG2 green still owning Sub. Only Main winner/eligible bit changes.
+        hook_call(rom,0x8300,bytes((0xa9,0x22,0x8d,0x0c,0x21,0x60)))
     if case == 'window':
         # W1[32,95] XOR W2[64,191]; both clip/prevent inside selected pixels.
         settings = ((0xa2,0x2130),(0x9f,0x2132),(0xa0,0x2125),

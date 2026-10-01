@@ -252,10 +252,14 @@ def prove_rdram_capacity() -> None:
         "sub_color": (SUB_COLOR, SUB_COLOR + STRIP_BYTES),
     }
 
-    # Historical E2g-B Z surfaces are now invalid on the clean lineage.
+    # Historical E2g-B Z surfaces remain invalid: C0000 crosses the
+    # qualified profiling runtime tail; C2000 crosses base/sideband and Q1.
+    historical_owners = ((0xA00C0000, 0xA00C2000),
+                         (0xA00C2000, 0xA00C2E00), q1r)
     for old in (0xA00C0000, 0xA00C2000):
-        if not ranges_overlap(old, old + STRIP_BYTES, *q1r):
-            raise AssertionError("expected historical E2g-B/Q1 collision disappeared")
+        if not any(ranges_overlap(old, old + STRIP_BYTES, *owner)
+                   for owner in historical_owners):
+            raise AssertionError("historical E2g-B storage was incorrectly admitted")
 
     # Every proposed range must fit between the full Q1 event slot and raw Q1.
     gap_lo = q1r[1]

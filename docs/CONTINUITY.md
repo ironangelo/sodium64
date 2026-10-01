@@ -4,7 +4,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 > **Continuity compaction / recovery (2026-09-28):** the live handoff again grew past the GitHub Contents API comfort boundary (~1.8 MB), which caused normal `fetch_file` reads to return an empty body. The complete pre-compaction Gate-C operational log is permanently preserved at continuity commit **`f175f2151d4adc0a9d0067e1714c649bc9088c66`**. Older pre-overflow history remains preserved at **`686f5a1da210f8fcd1b9cd6e74d5663f4d359c30`**, and the Sep-23–25 E4d block is also in `docs/CONTINUITY_ARCHIVE_E4D_2026-09-23_25.md`. This live file is intentionally compacted to current state, durable evidence, rejected explanations, risks and immediate next action. **Archived means preserved, not discarded.**
 
-## RESUME HERE — color diagnostic qualification retry; native hue OPEN (Oct1 UTC / Sep30 Chile)
+## RESUME HERE — color diagnostic LAB VALIDATED; native hue OPEN (Oct1 UTC / Sep30 Chile)
+
+**CANDIDATE / LAB VALIDATED:** phase4/gate-c-stage2-color-diag@780645a909747846ded7a27d80b504401091d840. Dedicated run36805204926/job110187888687 and general run36805204847 both SUCCESS. Artifact11137726435,533039B, ZIP SHA256bb935cba090076b45fb8258740566a4184570f4fd110f6d7719b9f8e729a0558. Exact ZIP independently downloaded/rehashed; every manifest entry verified. Local independent replay of both actual32KB PI cart saves, independent SRAM sources, both frozen fullframes and pre-redB saves PASS. Each workload:300records/0drops/all256displayedphases/60x5 instrumented lab budgets, valid ownership/reference/motion; visual silent; mixed8voices/equal channels/RMS1609.963. Both A/B sources differ at exactly128white-markerpixels; band and six reference colors unchanged. NaturalBhold and PI complete before Bcapture. Normal/HW_PROFILE CPUtext/data byte-identical to rowfixparent; all RSPtext/data unchanged; wrapped guests equal originals. Runtime ROMs byte-identical to87ab. The interior-label timeout is therefore a harness stop limitation, resolved by the existing pre-red jump target without runtime edits.
+
+**Immediate action:** finalize/reverify two-ROM delivery and preserve immutable file identities here. When Iron can test, run both exact color wrappers with video through live/frozenA/frozenB/finalred and separate32KB saves. Original liveVI0x0202 retained; only post-measurementB changes to0x3202 on the same drained source. Yellow already returns at frozenA => live-path suspect; composed and CPU-reference yellow both change only atB => VI pixeladvance corroboration; unchanged wrong hue => pixeladvance-only explanation rejected. Sparse samples cannot exclude every transient stripe. These are laboratory results, not native hue/cadence acceptance. Stage2 OPEN; master remains7cc8facfe8643fb85888f301f79995575830521d. No PR/merge/Stage3 claim.
+
+## Previous color qualification retry and retained limitations
+
 
 Candidate phase4/gate-c-stage2-color-diag@87ab166b36e4ed2748c310ef9f6da2a238174211; master remains7cc8facfe8643fb85888f301f79995575830521d. No delivery/merge/Stage2 closure yet. Resume at qualification of visual+mixed continuous and independent frozenA/B.
 

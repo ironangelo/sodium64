@@ -1,0 +1,27 @@
+name: Gate C Local Assembly Tools
+on:
+  push:
+    branches: [phase4/gate-c-assembly-tools]
+permissions:
+  contents: read
+jobs:
+  tools:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+      - run: |
+          set -euo pipefail
+          libdragon init
+          libdragon exec sh -c 'mkdir -p local-assembly/bin local-assembly/include local-assembly/lib; for tool in as ld objcopy objdump nm size; do cp "$N64_INST/bin/mips64-elf-$tool" local-assembly/bin/; done; cp -a "$N64_INST/mips64-elf/include/." local-assembly/include/; cp "$N64_INST/mips64-elf/lib/rsp.ld" "$N64_INST/mips64-elf/lib/n64.ld" local-assembly/lib/; tar -czf local-assembly.tar.gz local-assembly'
+          sha256sum local-assembly.tar.gz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-assembly-tools
+          retention-days: 7
+          path: local-assembly.tar.gz

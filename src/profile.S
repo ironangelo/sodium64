@@ -319,6 +319,12 @@ hw_profile_finalize:
     jal hw_probe_capture
     nop
 
+#ifdef SODIUM64_COLOR_DIAG
+    // The versioned S64C trace owns the old statistical-PC cart region.
+    // Never overwrite it with S64P/S64H. S64V was saved by hw_probe_capture.
+    j color_diag_finalize
+    nop
+#endif
     // PI reads RDRAM, not dirty D-cache lines. Write back both regions before
     // sending them to cartridge SRAM. This happens after measurement is over.
     la k0, profile_magic
@@ -374,6 +380,8 @@ hw_profile_pi_wait_header:
     li k1, 3
     sb k1, (k0)
 
+.globl hw_profile_red_start
+hw_profile_red_start:
     // Halt RSP and paint the currently displayed framebuffer solid red. From
     // here the build intentionally never returns: RED SCREEN = SRAM capture done.
     lui k0, 0xA404

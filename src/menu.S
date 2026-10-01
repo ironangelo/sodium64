@@ -146,6 +146,14 @@ end_string:
 
 .align 5
 update_menu: // a0: framebuffer
+#ifdef SODIUM64_COLOR_DIAG
+    // This is a completed, unpublished CPU-owned buffer. The diagnostic uses
+    // only registers already clobbered by this menu path; t4/t5/t6/a0 survive.
+    j color_diag_producer
+    nop
+.globl color_diag_producer_return
+color_diag_producer_return:
+#endif
     // Open the settings menu if start is pressed
     jal get_pressed
     li v1, 0 // Index

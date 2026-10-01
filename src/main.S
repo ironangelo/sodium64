@@ -18,6 +18,11 @@
 */
 
 #include "defines.h"
+#ifdef SODIUM64_COLOR_DIAG
+#define FRAME_INPUT_RETURN color_diag_vi_entry
+#else
+#define FRAME_INPUT_RETURN input_update
+#endif
 
 .globl framebuffer
 .globl fps_native
@@ -183,6 +188,10 @@ pi_wait1:
 
 #ifdef SODIUM64_PROFILE
     // Arm CP0 Compare before enabling the timer interrupt mask.
+#ifdef SODIUM64_COLOR_DIAG
+    jal color_diag_init
+    nop
+#endif
     jal profile_init
     nop
 #endif
@@ -318,13 +327,13 @@ check_frame:
     addi k0, k1, 1
 skip_reset:
     la k1, skip_native
-    bnez k0, input_update
+    bnez k0, FRAME_INPUT_RETURN
     sb k0, (k1)
 
     // Continue if the next frame is ready; otherwise just update input
     la k0, frame_count
     lbu k1, (k0)
-    beqz k1, input_update
+    beqz k1, FRAME_INPUT_RETURN
     nop
 
     // Get the address of the next of three framebuffers
@@ -348,7 +357,7 @@ set_buffer:
     la k0, frame_count
     lbu k1, (k0)
     addi k1, k1, -1
-    j input_update
+    j FRAME_INPUT_RETURN
     sb k1, (k0)
 
 .align 5

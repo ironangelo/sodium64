@@ -5,6 +5,10 @@ BUILD_DIR := build
 SRC_DIRS := src
 PROFILE ?= 0
 HW_PROFILE ?= 0
+COLOR_DIAG ?= 0
+ifeq ($(COLOR_DIAG),1)
+HW_PROFILE := 1
+endif
 
 # Real-N64 M0 profiling is a specialization of the statistical PROFILE build.
 ifeq ($(HW_PROFILE),1)
@@ -59,6 +63,9 @@ N64_ASFLAGS += -DSODIUM64_PROFILE=1
 endif
 ifeq ($(HW_PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_HW_PROFILE=1
+ifeq ($(COLOR_DIAG),1)
+N64_ASFLAGS += -DSODIUM64_COLOR_DIAG=1
+endif
 endif
 
 COMMA := ,

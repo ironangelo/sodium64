@@ -74,6 +74,11 @@ def main():
         source=c.read_memory(syms['sram']|0x20000000,32768,0x400)
         (args.output/'source-sram.bin').write_bytes(source)
         assert save==source,'PI source/cart mismatch'
+        # Preserve first-hand stopped state even when a semantic oracle rejects.
+        (args.output/'dmem.bin').write_bytes(c.read_memory(0xa4000000,4096,0x400))
+        (args.output/'imem.bin').write_bytes(c.read_memory(0xa4001000,4096,0x400))
+        (args.output/'sp-pc.bin').write_bytes(c.read_memory(0xa4080000,4,4))
+        (args.output/'cpu-registers.txt').write_text(c.request('g').decode()+'\n')
         result,canonical,raw,pixels,pcm=decode(save)
         result['workload']=qualify(result,raw,args.mixed)
         # Same stopped immutable state, alternate transfer size: classify the

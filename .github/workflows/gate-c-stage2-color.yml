@@ -25,7 +25,7 @@ jobs:
           python3 -m unittest discover -s scripts -p test_event_arena.py -v
           python3 -m unittest discover -s scripts -p test_stage2_color.py -v
           python3 -m unittest discover -s scripts -p test_stage2_probe.py -v
-      - name: Build and qualify full arena extents and unchanged RSP scope
+      - name: Build and qualify full arena extents and fixed RSP scope
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -68,6 +68,19 @@ jobs:
             (cd "wrap-$kind"; python3 rom-converter.py </dev/null)
             cp "wrap-$kind/out/guest.z64" "hardware/sodium64-arena-$kind.z64"
           done
+          for kind in half add sub sub-half bg2 window short blank obj-low obj-high sram; do
+            python3 scripts/make_hcomp_fullheight.py --case "$kind" "diagnostic/full-$kind.smc"
+            mkdir -p "wrap-full-$kind"
+            cp qualified/normal/sodium64.z64 rom-converter.py "wrap-full-$kind/"
+            cp "diagnostic/full-$kind.smc" "wrap-full-$kind/guest.smc"
+            (cd "wrap-full-$kind"; python3 rom-converter.py </dev/null)
+            cp "wrap-full-$kind/out/guest.z64" "hardware/sodium64-full-$kind.z64"
+          done
+          python3 - <<'PYRAM'
+          from pathlib import Path
+          b=bytearray(32768);b[16]=0xa7
+          Path('hardware/sodium64-full-sram.ram').write_bytes(b)
+          PYRAM
           sha256sum hardware/*.z64 qualified/*/sodium64.z64 qualified/*/build/sodium64.elf diagnostic/*.smc > SHA256SUMS
       - uses: actions/cache/restore@v4
         id: ares-cache
@@ -156,7 +169,37 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           ldd "$ares_bin"
           "$ares_bin" --version | tee ares-version.txt
+      - name: Full-height normal profile, short sections, blank, OBJ and ordinary SRAM
+        run: |
+          set -euo pipefail
+          port=9340
+          pid=""
+          failed=0
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+          for kind in half add sub sub-half bg2 window short blank obj-low obj-high sram; do
+            out="captures/full-$kind"
+            mkdir -p "$out" "$RUNNER_TEMP/full-$kind"
+            setsid env HOME="$RUNNER_TEMP/full-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/full-$kind.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-full-$kind.z64" > "$out/ares.log" 2>&1 &
+            pid=$!
+            if ! timeout 120s python3 scripts/capture_hcomp_fullheight.py --case "$kind" --port "$port" \
+              --elf qualified/normal/build/sodium64.elf --output "$out" > "$out/capture.log" 2>&1; then
+              cat "$out/capture.log"
+              failed=1
+            fi
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            pid=""
+            port=$((port+1))
+          done
+          test "$failed" = 0
       - name: Uninterrupted PI trace and separate frozen-frame semantics
+        if: ${{ !cancelled() && env.ARES_BIN != '' }}
         run: |
           set -euo pipefail
           port=9290
@@ -187,6 +230,7 @@ jobs:
           done
           python3 scripts/check_stage2_color_frozen.py --captures captures
       - name: Actual ROM paging and high-palette-pressure streams
+        if: ${{ !cancelled() && env.ARES_BIN != '' }}
         run: |
           set -euo pipefail
           port=9300

@@ -4,7 +4,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 > **Continuity compaction / recovery (2026-09-28):** the live handoff again grew past the GitHub Contents API comfort boundary (~1.8 MB), which caused normal `fetch_file` reads to return an empty body. The complete pre-compaction Gate-C operational log is permanently preserved at continuity commit **`f175f2151d4adc0a9d0067e1714c649bc9088c66`**. Older pre-overflow history remains preserved at **`686f5a1da210f8fcd1b9cd6e74d5663f4d359c30`**, and the Sep-23–25 E4d block is also in `docs/CONTINUITY_ARCHIVE_E4D_2026-09-23_25.md`. This live file is intentionally compacted to current state, durable evidence, rejected explanations, risks and immediate next action. **Archived means preserved, not discarded.**
 
-## RESUME HERE — BG row repair LAB VALIDATED; native package ready (2026-09-30 Chile / Oct1 UTC)
+## RESUME HERE — color diagnostic qualification retry; native hue OPEN (Oct1 UTC / Sep30 Chile)
+
+Candidate phase4/gate-c-stage2-color-diag@87ab166b36e4ed2748c310ef9f6da2a238174211; master remains7cc8facfe8643fb85888f301f79995575830521d. No delivery/merge/Stage2 closure yet. Resume at qualification of visual+mixed continuous and independent frozenA/B.
+
+**MEASURED / LAB LIMITATION:** dedicated36803270039/job110182085869 failed waiting for the interior color_diag_phase_b breakpoint even from a fresh boot. Artifact11135944528 ZIPsha256d030e25ba8a08756c97c9d78b0963defb2b4447e7125b5f7faae3b59143181cc independently downloaded and allSHA256SUMS verified. Visual continuousPASS300records/0drops/all256phases, 60x5, both2secondholds, actualequalA/Borigin0x133D00, rawyellow0x7BC1/bothreferencearrayscorrect, source/cart32KBequality, silence. FrozenAwholeframePASS. No mixed/frozenB conclusion yet. General36803270075SUCCESS.
+
+**REJECTED / readback discriminator:** same immutable finalstop, negotiated8259Bcartread differs from established1KBread first atbyte8259; largeRDRAMsource equals1KBsource. Actual1KBcart equalsindependent1KBsource. This directly localizes prior discrepancy to cart debugger large/chunked readback; do not repair/normalize corrupted bytes or infer PI runtime defect. Preserve both original reads.
+
+**Next controlled host-only change:** frozenB stops at hw_profile_red_start, a real jump target reached AFTER naturalBhold+PIwrite and BEFORE first framebuffer mutation. Existing source jumps there with Bimage/CTRL intact. No ROM/runtimechange; readfullframe/PCM in established1KBchunks. RetainfreshA/Bboots, unchanged-frame128markeroracle, validBsave/qualify checks. Newqualificationmustpass BOTHworkloads beforedelivery. Hypothesis: interiorlabelCPUJITbreakpointcoverage causes timeout; exactaresdefectUNKNOWN and outofscope. Continuous execution already disproves failure to reachB. Checkpoint before longretry; Stage2/nativegreen remainOPEN.
+
+## Previous qualified row-repair delivery (2026-09-30 Chile / Oct1 UTC)
 
 **Completed authorized batch:** resumed interrupted repair/qualification/delivery. Candidate phase4/gate-c-stage2-bg-row-repair@eed4a310c8f6d3f98bde816a34371019c429b119; runtime change be50b66e953b5ac989cc67a9f44ae7fea4995b89. Master remains7cc8facfe8643fb85888f301f79995575830521d; no PR/merge or Stage3/iris claim. Classification: LAB VALIDATED / NATIVE HARDWARE PENDING; Stage2 OPEN.
 

@@ -7,6 +7,8 @@ semantic coverage evidence only; uninterrupted profiler runs measure cadence.
 import argparse
 import hashlib
 import json
+import re
+import socket
 from pathlib import Path
 from capture_stage2_publication import load_symbols, classify_frame
 from capture_gate_c_stage1_ares import (FRAMEBUFFER_ADDRS, read_u, set_breakpoint,
@@ -14,6 +16,18 @@ from capture_gate_c_stage1_ares import (FRAMEBUFFER_ADDRS, read_u, set_breakpoin
 from gdb_rsp_dump import ARES_N64_GUEST_SIGNALS, connect_with_retry, validate_stop
 
 VULNERABLE = {p for start in (16, 32, 144, 160) for p in range(start, start+4)}
+
+
+def memory_chunk(supported):
+    # Memory replies use two hex characters per byte. Stay below the server's
+    # advertised packet size and retain the established 1KB fallback.
+    match = re.search(rb'(?:^|;)PacketSize=([0-9a-fA-F]+)(?:;|$)', supported)
+    if not match:
+        return 0x400
+    maximum = (int(match[1], 16)-16)//2
+    if maximum < 1:
+        raise ValueError('invalid advertised GDB packet size')
+    return min(0x4000, maximum)
 
 
 def main():
@@ -28,7 +42,10 @@ def main():
     records = {}
     c = connect_with_retry('127.0.0.1', args.port, 30, 120)
     try:
+        c.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         supported = c.request('qSupported:multiprocess+;swbreak+;hwbreak+')
+        chunk = memory_chunk(supported)
+        print('GDB framebuffer read chunk:', chunk, flush=True)
         c.request('?')
         assert b'QPassSignals+' in supported
         assert c.request('QPassSignals:'+ARES_N64_GUEST_SIGNALS) == b'OK'
@@ -39,7 +56,7 @@ def main():
             origin = read_u(c, 0xa4400004, 4) & 0xffffff
             address = origin | 0xa0000000
             if address in FRAMEBUFFER_ADDRS:
-                image = c.read_memory(address, 280*240*2, 0x400)
+                image = c.read_memory(address, 280*240*2, chunk)
                 result = classify_frame(image)
                 if result['band']['passed']:
                     phase = result['band']['phases'][0]
@@ -69,6 +86,7 @@ def main():
                       vulnerable_phases=sorted(VULNERABLE),
                       framebuffer_seeding=False, guest_state_writes=False,
                       per_frame_breakpoints=True, cadence_authority=False,
+                      memory_read_chunk=chunk,
                       records=[records[p] for p in range(256)])
         (args.output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
         print('STAGE2_ALL_PHASE_LOWER_FRAME PASS')

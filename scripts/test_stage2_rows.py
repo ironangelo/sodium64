@@ -4,6 +4,7 @@ import struct
 import unittest
 from pathlib import Path
 from capture_stage2_publication import classify_frame
+from capture_stage2_rows import memory_chunk
 from make_gate_c_stage1 import window
 from test_gate_c_hcomp_main_sub_exec_clean import insns, section
 
@@ -20,6 +21,14 @@ def reference(phase):
 
 
 class Rows(unittest.TestCase):
+    def test_negotiated_packet_limit(self):
+        self.assertEqual(memory_chunk(b'QPassSignals+'), 0x400)
+        self.assertEqual(memory_chunk(b'PacketSize=4000;QPassSignals+'), 8184)
+        self.assertEqual(memory_chunk(b'QPassSignals+;PacketSize=100000'), 0x4000)
+        self.assertEqual(memory_chunk(b'PacketSize=400;QPassSignals+'), 504)
+        with self.assertRaises(ValueError):
+            memory_chunk(b'PacketSize=10')
+
     def test_complete_reference_all_phases(self):
         for phase in range(256):
             result = classify_frame(struct.pack('>67200H', *reference(phase)))

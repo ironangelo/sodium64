@@ -81,7 +81,7 @@ def main():
                     assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('accepted epoch controls',args.case,controls.hex())
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,
                                   image_sha256=hashlib.sha256(image).hexdigest(),
-                                  compact_guards_passed=True,compact_guards=guards,delivered_controls=controls.hex(),framebuffer_seeding=False,
+                                  compact_guards_passed=True,compact_guards=guards,framebuffer_seeding=False,
                                   guest_state_writes=False,cadence_authority=False)
                     (args.output/'frame.bin').write_bytes(image)
                 (args.output/'last-frame.bin').write_bytes(image)

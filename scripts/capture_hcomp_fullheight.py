@@ -65,7 +65,7 @@ def main():
             report=dict(passed=False,owner=hex(owner))
             if owner in FRAMEBUFFER_ADDRS:
                 # Observe the actual last rendered epoch, not just guest source
-                # intent. These controls are constant across every guest epoch.
+                # intent. Short-section HDMA can change TS during startup.
                 # Pinned ares rounds a4-byte unaligned debugger read down.
                 # Slice the aligned full-DMEM snapshot already captured here.
                 controls=dmem[0xbb7:0xbbb]
@@ -74,10 +74,11 @@ def main():
                 want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11}.get(args.case,1)
                 want_ts=1 if args.case=='bg2' else 2
                 want_window=0xa2 if args.case=='window' else 2
-                assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('delivered epoch controls',args.case,controls.hex())
                 image=c.read_memory(owner,280*240*2,chunk)
                 report=classify(image,args.case)
+                report['delivered_controls']=controls.hex()
                 if report['passed']:
+                    assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('accepted epoch controls',args.case,controls.hex())
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,
                                   image_sha256=hashlib.sha256(image).hexdigest(),
                                   compact_guards_passed=True,compact_guards=guards,delivered_controls=controls.hex(),framebuffer_seeding=False,

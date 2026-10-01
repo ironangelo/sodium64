@@ -14,6 +14,9 @@ Candidate phase4/gate-c-stage2-color-diag@87ab166b36e4ed2748c310ef9f6da2a2381742
 
 **Next controlled host-only change:** frozenB stops at hw_profile_red_start, a real jump target reached AFTER naturalBhold+PIwrite and BEFORE first framebuffer mutation. Existing source jumps there with Bimage/CTRL intact. No ROM/runtimechange; readfullframe/PCM in established1KBchunks. RetainfreshA/Bboots, unchanged-frame128markeroracle, validBsave/qualify checks. Newqualificationmustpass BOTHworkloads beforedelivery. Hypothesis: interiorlabelCPUJITbreakpointcoverage causes timeout; exactaresdefectUNKNOWN and outofscope. Continuous execution already disproves failure to reachB. Checkpoint before longretry; Stage2/nativegreen remainOPEN.
 
+
+**Long retry running:** host-only candidate780645a909747846ded7a27d80b504401091d840, dedicated36805204926/job110187888687; general36805204847. Question: do both continuous PI traces and fresh-bootA/pre-redB fullframes pass unchanged128markeroracle? RuntimeROMbytes expectedidenticalto87ab. IfPASS: download/verifyexactartifact and independentdecode beforepackage; ifFAIL: preservecapture/logs and classifyfailedcontract, no delivery. Decoder negatives5+legacy5PASS; previousvisualcontinuous/frozenAindependentlyrechecked andPASS; compiledscopeagainstrowfixparentPASS.
+
 ## Previous qualified row-repair delivery (2026-09-30 Chile / Oct1 UTC)
 
 **Completed authorized batch:** resumed interrupted repair/qualification/delivery. Candidate phase4/gate-c-stage2-bg-row-repair@eed4a310c8f6d3f98bde816a34371019c429b119; runtime change be50b66e953b5ac989cc67a9f44ae7fea4995b89. Master remains7cc8facfe8643fb85888f301f79995575830521d; no PR/merge or Stage3/iris claim. Classification: LAB VALIDATED / NATIVE HARDWARE PENDING; Stage2 OPEN.

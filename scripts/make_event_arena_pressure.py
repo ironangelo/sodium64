@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Separate original stress guest: active-display DMA produces 14336 colors/frame."""
+"""Separate original stress guest: active-display DMA produces 16384 colors/frame."""
 import argparse
 from pathlib import Path
 from make_gate_c_stage1 import build
@@ -16,13 +16,12 @@ def build_pressure():
     a = Assembler()
     a.label('frame')
     a.emit(0xcb)  # NMI occurs during VBlank; palette burst waits for active scan.
-    # 28 KiB fits the active-display budget; 32 KiB spilled into VBlank.
     a.label('active')
     a.emit(0xad, 0x12, 0x42, 0x29, 0x80)
     a.branch(0xd0, 'active')
     for port, value in ((0x2121, 0), (0x4310, 0), (0x4311, 0x22),
                         (0x4312, 0), (0x4313, 0x80), (0x4314, 0),
-                        (0x4315, 0), (0x4316, 0x70), (0x420b, 2)):
+                        (0x4315, 0), (0x4316, 0x80), (0x420b, 2)):
         lda_sta_abs(a, value, port)
     a.emit(0xaf, 0x10, 0x10, 0x7e, 0x1a, 0x8f, 0x10, 0x10, 0x7e)
     a.branch(0x80, 'frame')

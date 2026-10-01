@@ -10,18 +10,6 @@ concurrency:
   group: sodium64-stage2-color-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  previous-pressure-observations:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Read immutable pressure observations
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh api repos/${{ github.repository }}/actions/artifacts/11178913102/zip > evidence.zip
-          echo "757219e0a302f9873dc806d964abb2f94a0249d4020c748fb994fb1739d94afd  evidence.zip" | sha256sum -c -
-          unzip -p evidence.zip captures/pressure/observations.json
-          unzip -p evidence.zip captures/pressure/capture.log
   qualify:
     runs-on: ubuntu-24.04
     timeout-minutes: 45

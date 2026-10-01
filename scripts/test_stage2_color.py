@@ -10,7 +10,7 @@ def fixture():
     h=[0]*64
     h[:14]=[0x53363443,1,32768,1,320,48,300,300,0,256,0x4200,0x3D10,0x202,0x3202]
     h[14:20]=[100,93750100,93750200,187500200,0xF2300,0xF2300]
-    h[32:37]=[60]*5;h[37]=0x15040800;h[40]=7;h[41]=3
+    h[26:28]=[0x7BC1]*2;h[32:37]=[60]*5;h[37]=0x15040800;h[40]=7;h[41]=3
     struct.pack_into('>64I',b,0,*h)
     for o in (80,92):struct.pack_into('>6H',b,o,*COLORS)
     for i in range(300):
@@ -36,7 +36,7 @@ class ColorTests(unittest.TestCase):
         with self.assertRaises(ValueError):decode(fixture()[:-1])
     def test_valid_capture_retains_memory_failure(self):
         for off,value in [(256+36,0x07C10001),(256+40,0x003F7BC1),
-                          (256+16,0xFFFF0001),(80,0)]:
+                          (256+16,0xFFFF0001),(80,0),(104,0x07C1)]:
             b=fixture();struct.pack_into('>I',b,off,value)
             r,_,raw,_,_=decode(b)
             with self.assertRaises(ValueError):qualify(r,raw,False)

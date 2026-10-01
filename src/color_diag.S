@@ -314,7 +314,6 @@ color_diag_finalize:
     nop
     lw t8, 0xA4400004
     sw t8, 72(t9)
-    sw t8, 76(t9)
     li t0, 0xA0000000
     or t8, t8, t0
     // Actual control readback; no emulator software RGB is hue authority.
@@ -325,6 +324,8 @@ color_diag_phase_a:
     sw t0, 56(t9)
     jal color_diag_reference_copy
     addiu t7, t9, 80
+    lhu t0, 8 * 560 + 24 + 255 * 2(t8)
+    sw t0, 104(t9)
     jal color_diag_hold
     nop
     mfc0 t0, $9
@@ -348,10 +349,14 @@ color_diag_phase_a:
     nop
     sync
 color_diag_phase_b:
+    lw t0, 0xA4400004
+    sw t0, 76(t9)
     mfc0 t0, $9
     sw t0, 64(t9)
     jal color_diag_reference_copy
     addiu t7, t9, 92
+    lhu t0, 8 * 560 + 24 + 255 * 2(t8)
+    sw t0, 108(t9)
     jal color_diag_hold
     nop
     mfc0 t0, $9

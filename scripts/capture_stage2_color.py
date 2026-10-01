@@ -30,7 +30,7 @@ def main():
     ap.add_argument('--elf',type=Path,required=True)
     ap.add_argument('--output',type=Path,required=True)
     ap.add_argument('--mixed',action='store_true')
-    ap.add_argument('--frozen',action='store_true',help='separate semantic frame capture, no cadence authority')
+    ap.add_argument('--frozen-phase',choices=['a','b'],help='fresh-boot semantic capture, no cadence authority')
     args=ap.parse_args();syms=load_symbols(args.elf)
     args.output.mkdir(parents=True,exist_ok=True)
     c=connect_with_retry('127.0.0.1',args.port,30,240)
@@ -41,26 +41,19 @@ def main():
         c.request('?')
         assert b'QPassSignals+' in supported
         assert c.request('QPassSignals:'+ARES_N64_GUEST_SIGNALS)==b'OK'
-        if args.frozen:
-            frames=[]
-            for name in ('color_diag_phase_a','color_diag_phase_b'):
-                set_breakpoint(c,syms[name],True)
-                validate_stop(c.request('c'),name)
-                origin=struct.unpack('>I',c.read_memory(0xA4400004,4,4))[0]
-                frame=c.read_memory(origin|0xA0000000,134400,chunk)
-                frames.append(frame)
-                (args.output/(name+'.bin')).write_bytes(frame)
-                result=frame_check(frame)
-                result['control']=struct.unpack('>I',c.read_memory(0xA4400000,4,4))[0]
-                result['cadence_authority']=False
-                (args.output/(name+'.json')).write_text(json.dumps(result,indent=2)+'\n')
-                set_breakpoint(c,syms[name],False)
-            a,b=[struct.unpack('>67200H',f) for f in frames]
-            changed={i for i,(x,y) in enumerate(zip(a,b)) if x!=y}
-            marker={y*280+x for y in range(200,216) for x in range(260,268)}
-            assert changed==marker,('frozen source changed beyond phase marker',changed)
-            # Reads while stopped advance host time, not CP0 Count. No final
-            # qualification claimed for this separate semantic run.
+        if args.frozen_phase:
+            name='color_diag_phase_'+args.frozen_phase
+            set_breakpoint(c,syms[name],True)
+            validate_stop(c.request('c'),name)
+            origin=struct.unpack('>I',c.read_memory(0xA4400004,4,4))[0]
+            frame=c.read_memory(origin|0xA0000000,134400,chunk)
+            (args.output/(name+'.bin')).write_bytes(frame)
+            result=frame_check(frame)
+            result['control']=struct.unpack('>I',c.read_memory(0xA4400000,4,4))[0]
+            assert result['control']==(0x202 if args.frozen_phase=='a' else 0x3202)
+            result['cadence_authority']=False
+            result['fresh_boot']=True
+            (args.output/(name+'.json')).write_text(json.dumps(result,indent=2)+'\n')
             return
         set_breakpoint(c,syms['hw_profile_done'],True)
         validate_stop(c.request('c'),'continuous color diagnostic')
@@ -71,6 +64,15 @@ def main():
         assert save==source,'PI source/cart mismatch'
         result,canonical,raw,pixels,pcm=decode(save)
         result['workload']=qualify(result,raw,args.mixed)
+        # Same stopped immutable state, alternate transfer size: classify the
+        # prior large-cart-read anomaly without repairing or selecting bytes.
+        large=c.read_memory(0xA8000000,32768,chunk)
+        (args.output/'cart-large-read.bin').write_bytes(large)
+        large_source=c.read_memory(syms['sram']|0x20000000,32768,chunk)
+        (args.output/'source-large-read.bin').write_bytes(large_source)
+        result['alternate_readback']=dict(chunk=chunk,cart_equal=large==save,
+            source_equal=large_source==source,
+            first_cart_difference=next((i for i,(a,b) in enumerate(zip(large,save)) if a!=b),None))
         ring=c.read_memory(syms['dsp_buffer']|0x20000000,8192,chunk)
         ptr=result['probe_header']['dsp_pointer']
         start=(ptr-4096)&8191

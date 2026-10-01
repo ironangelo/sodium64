@@ -125,7 +125,7 @@ jobs:
           pid=""
           trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
           for mode in visual mixed; do
-            for kind in continuous frozen; do
+            for kind in continuous frozen-a frozen-b; do
               out="captures/$mode/$kind"
               mkdir -p "$out" "$RUNNER_TEMP/color-$mode-$kind"
               setsid env HOME="$RUNNER_TEMP/color-$mode-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
@@ -138,7 +138,8 @@ jobs:
               pid=$!
               flags=()
               if [ "$mode" = mixed ]; then flags+=(--mixed); fi
-              if [ "$kind" = frozen ]; then flags+=(--frozen); fi
+              if [ "$kind" = frozen-a ]; then flags+=(--frozen-phase a); fi
+              if [ "$kind" = frozen-b ]; then flags+=(--frozen-phase b); fi
               python3 scripts/capture_stage2_color.py --port "$port" --elf qualified/color/build/sodium64.elf --output "$out" "${flags[@]}" > "$out/capture.log"
               kill -KILL -- "-$pid" 2>/dev/null || true
               wait "$pid" 2>/dev/null || true
@@ -146,6 +147,7 @@ jobs:
               port=$((port+1))
             done
           done
+          python3 scripts/check_stage2_color_frozen.py --captures captures
       - uses: actions/upload-artifact@v4
         if: always()
         with:

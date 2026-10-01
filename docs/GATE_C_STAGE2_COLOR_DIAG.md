@@ -56,10 +56,15 @@ current WRAM phase. Record overflow is counted; no silent wrap or truncation.
 Only reserved k0/k1 are touched before measurement; during recording all
 additional clobbered GPRs are restored at full64bit width. HI/LO untouched.
 
+Separate frozen captures boot independently atA andB; they never rely on
+resuming from the first diagnostic breakpoint. Same-state large and1KBcart
+reads are retained to classify debugger readback, not to repair save bytes.
+
 Header fields (byte offsets):0magic,4version,8size,12complete,16capacity,
 20stride,24attempted,28stored,32dropped,36traceoffset,40probeoffset,
 44probesize,48/52actualCTRLA/B,56/60Astart/end,64/68Bstart/end,
-72/76A/Borigin,80/92sixrawreference halfwordsA/B,112maxhookbodyticks,
+72/76independentlyreadA/Borigin,80/92sixrawreference halfwordsA/B,
+104/108rawupperoutsidepixelA/B,112maxhookbodyticks,
 116totalhookbodyticks,120producercount,128fivebudget words,148settings,
 152finalSP,156finalDP,160S64Vvalid,164phasecompletion,
 168unknownownerevents,172invalidoriginevents. Remaining fields reserved.

@@ -78,12 +78,12 @@ def decode(blob):
     result=dict(format=fmt,header=dict(attempted=attempted,stored=stored,dropped=dropped,
         control_a=h[12],control_b=h[13],origin=h[18],
         phase_a_ticks=[h[14],h[15]],phase_b_ticks=[h[16],h[17]],
-        reference_colors=refs,hook_body_max_ticks=h[28],hook_body_total_ticks=h[29],
+        reference_colors=refs,frozen_band_colors=list(h[26:28]),hook_body_max_ticks=h[28],hook_body_total_ticks=h[29],
         producer_count=h[30],unknown_owner_events=h[42],invalid_origin_events=h[43]),
         frame_budgets=budgets,band=band_info(pixels),probe_header=ph,
         trace_complete=dropped==0 and attempted==stored,
         memory_colors_match=all(r['memory_colors_match'] for r in records),
-        references_match=refs==[COLORS,COLORS],records=records,
+        references_match=refs==[COLORS,COLORS],frozen_band_matches=h[26:28]==(0x7BC1,0x7BC1),records=records,
         limitations=['Sparse samples cannot rule out every transient lower stripe',
             'Trace records serviced VI events; timestamp gaps flag coalesced retraces'
             ,'Per-VI trace starts after warmup and ends with five measured VI windows',
@@ -95,7 +95,7 @@ def decode(blob):
 def qualify(result,raw,mixed):
     if not result['trace_complete']:
         raise ValueError('trace dropped VI records')
-    if not result['memory_colors_match'] or not result['references_match']:
+    if not result['memory_colors_match'] or not result['references_match'] or not result['frozen_band_matches']:
         raise ValueError('lab selected colors/ownership differ')
     if not 295 <= result['header']['stored'] <= 305:
         raise ValueError('missing measured VI events')

@@ -169,6 +169,31 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           ldd "$ares_bin"
           "$ares_bin" --version | tee ares-version.txt
+      - name: Read-only stalled-renderer diagnosis
+        run: |
+          set -euo pipefail
+          port=9320
+          for kind in full-half stage2-color-visual; do
+            out="captures/stall-$kind"
+            mkdir -p "$out" "$RUNNER_TEMP/stall-$kind"
+            setsid env HOME="$RUNNER_TEMP/stall-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/stall-$kind.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-$kind.z64" > "$out/ares.log" 2>&1 &
+            pid=$!
+            python3 scripts/capture_hcomp_stall.py --port "$port" --output "$out" > "$out/capture.log"
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            port=$((port+1))
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hcomp-stall-readonly
+          path: captures/stall-*/
+          retention-days: 7
       - name: Full-height normal profile, short sections, blank, OBJ and ordinary SRAM
         run: |
           set -euo pipefail

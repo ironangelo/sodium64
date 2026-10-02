@@ -44,6 +44,7 @@ jobs:
         run: |
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
 
       - name: Record build metrics
         run: |
@@ -89,6 +90,7 @@ jobs:
         run: |
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
           python3 scripts/check_runtime_arena.py build/sodium64.elf
       - name: Upload empty diagnostic template and decoder
         uses: actions/upload-artifact@v4
@@ -130,6 +132,7 @@ jobs:
         run: |
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
 
       - name: Record profiling build metrics
         run: |

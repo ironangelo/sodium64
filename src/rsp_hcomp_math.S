@@ -126,9 +126,10 @@ hcomp_mask_selected:
     lw s0, FRAMEBUFFER(sp)
     add s0, s0, t1
     addi s0, s0, 24
-    li s1, 0xA00E4018
-    li s2, 0xA00E2018
-    li s3, 0xA00E6018
+hcomp_math_sources:
+    lw s1, HCOMP_BAND_BASES
+    lw s2, HCOMP_BAND_BASES + 4
+    lw s3, HCOMP_BAND_BASES + 8
     lw s7, HCOMP_BAND_ROWS
 hcomp_row:
     li s6, 0

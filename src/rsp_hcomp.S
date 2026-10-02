@@ -74,18 +74,34 @@ hcomp_band_bounds_ready:
     sll t1, t1, 2
     sh t1, RDP_FILL + 14
     sh t1, RDP_FILL + 34
-    // 560-byte stride: y * (512+32+16). Rebase both compact targets.
+    // 560-byte stride: y * (512+32+16). Round the displacement up to
+    // 64 bytes, so both image bases stay aligned at arbitrary section Y.
+    // Move the compact pixel origins back by the same padding; consumers
+    // must use those origins rather than fixed E2000/E4000/E6000 addresses.
     sll t1, t0, 9
     sll t2, t0, 5
     add t1, t1, t2
     sll t2, t0, 4
     add t1, t1, t2
+    sll t3, t0, 4
+    andi t3, t3, 63
+    add t1, t1, t3
     li t2, 0xE2000
     sub t2, t2, t1
     sw t2, HCOMP_PROOF_RDP_CMDS + 20
     li t2, 0xE4000
     sub t2, t2, t1
     sw t2, RDP_FRAME + 4
+    li t2, 0xA00E4018
+    sub t2, t2, t3
+    sw t2, HCOMP_BAND_BASES
+    li t2, 0xA00E2018
+    sub t2, t2, t3
+    sw t2, HCOMP_BAND_BASES + 4
+    li t2, 0xA00E6018
+    sub t2, t2, t3
+    sw t2, HCOMP_BAND_BASES + 8
+hcomp_band_targets_ready:
     sb zero, HCOMP_SCREEN
     sw zero, HCOMP_BAND_RAW
     lb t0, STAT_FLAGS
@@ -182,8 +198,10 @@ hcomp_screen_end:
     b hcomp_fence
     nop
 hcomp_copy_ts_start:
-    li t6, 0xA00E2000
-    li t7, 0xA00E6000
+    lw t6, HCOMP_BAND_BASES + 4
+    addi t6, t6, -24
+    lw t7, HCOMP_BAND_BASES + 8
+    addi t7, t7, -24
     lw a3, HCOMP_BAND_ROWS
     sll t0, a3, 9
     sll t1, a3, 5

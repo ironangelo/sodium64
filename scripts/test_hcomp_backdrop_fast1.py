@@ -67,7 +67,8 @@ src = (ROOT / "src/rsp_hcomp.S").read_text()
 required = [
     "beq t0, t1, hcomp_fast1_probe",
     "xori t0, t0, 0x12",
-    "lbu t1, WIN_COUNT",
+    "jal 0xA4001CE4",
+    "addi t1, t7, -1",
     "lhu t0, MAIN_COLOR",
     "lhu t0, WIN_BOUNDS",
     "li t0, 2",

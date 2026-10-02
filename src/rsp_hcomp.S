@@ -273,11 +273,21 @@ hcomp_fast1_probe:
     lbu t0, CGWSEL
     xori t0, t0, 0x12
     bnez t0, hcomp_compact_band
-    lbu t1, WIN_COUNT
-    addi t1, t1, -1
-    bnez t1, hcomp_compact_band
     lhu t0, MAIN_COLOR
     bnez t0, hcomp_compact_band
+    // WIN_BOUNDS/WIN_COUNT are shared scratch, often left by BG/OBJ drawing.
+    // Recompute the selected COLOR window from the current section before
+    // using its spans to admit the fast path. The helper preserves k0/k1/sp.
+    lbu a0, WOBJSEL
+    srl a0, a0, 4
+    lbu a1, WOBJLOG
+    srl a1, a1, 2
+    andi a1, a1, 3
+    jal 0xA4001CE4
+    li a2, 1
+    // calc_window_spans returns its freshly stored span count in t7.
+    addi t1, t7, -1
+    bnez t1, hcomp_compact_band
     lhu t0, WIN_BOUNDS
     xori t0, t0, 0x00FF
     bnez t0, hcomp_compact_band
@@ -289,15 +299,16 @@ hcomp_fast1_probe:
     b hcomp_screen_masks
     nop
 
+.org (0x760 - 0x3A8)
+hcomp_screen_switch:
+    b hcomp_screen_end
+    nop
+// Reuse the fixed switch entry's otherwise inert tail; the branch above
+// cannot fall through here. This keeps the bank and all entrypoints fixed.
 hcomp_fast1_main:
     li t0, 1
     sb t0, HCOMP_SCREEN
     b hcomp_render_screen
-    nop
-
-.org (0x760 - 0x3A8)
-hcomp_screen_switch:
-    b hcomp_screen_end
     nop
 .org (0x778 - 0x3A8)
 hcomp_math_return:

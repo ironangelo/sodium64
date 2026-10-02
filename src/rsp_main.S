@@ -48,6 +48,7 @@ rdp_frame:
     // RDP commands that run at the start of a frame
     .dword 0x3F10011700000000 // Set Color Image
     .dword 0x3D10000000000000 // Set Texture Image (palette)
+    .dword 0x2600000000000000 // Sync Load
     .dword 0x3300000000400000 // Load Block (palette)
 
 rdp_fill:
@@ -68,7 +69,7 @@ rdp_window:
 rdp_tile:
     // RDP commands that run when a regular tile is drawn
     .dword 0x3D50000300000000 // Set Texture Image (texture)
-    .dword 0x2800000000000000 // Sync Tile
+    .dword 0x2600000000000000 // Sync Load: retire prior texture load before LoadBlock
     .dword 0x330000000101F800 // Load Block (texture)
     .dword 0x2400000002000000 // Texture Rectangle 1
     .dword 0x0000000004000400 // Texture Rectangle 2
@@ -76,7 +77,7 @@ rdp_tile:
 rdp_tile7:
     // RDP commands that run when a mode 7 tile is drawn
     .dword 0x3D50000300000000 // Set Texture Image (texture)
-    .dword 0x2800000000000000 // Sync Tile
+    .dword 0x2600000000000000 // Sync Load: retire prior texture load before LoadBlock
     .dword 0x330000000101F800 // Load Block (texture)
     .dword 0x0A83000000000000 // Texture Triangle 1
     .dword 0x0100000000000000 // Texture Triangle 2

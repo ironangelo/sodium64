@@ -177,6 +177,8 @@ pi_wait1:
     sw t0, DMEM(OVERLAY_HCOMP_SRC)
     la t0, rsp_hcomp_math_text_start
     sw t0, DMEM(OVERLAY_HCOMP_MATH_SRC)
+    la t0, rsp_hcomp_fast_text_start
+    sw t0, DMEM(OVERLAY_HCOMP_FAST_SRC)
 #ifdef SODIUM64_COLOR_DIAG
     // Preserve the existing raw reference region below the composed band.
     li t0, 8

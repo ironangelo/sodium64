@@ -37,6 +37,11 @@ hcomp_fence_wait:
 
 hcomp_band_begin:
     sw k1, HCOMP_SECTION_END
+    // Classify the real epoch once. Exact direct composition owns the whole
+    // section; only the general compositor needs <=8-row compact surfaces.
+    lw a1, OVERLAY_HCOMP_FAST_SRC
+    j 0xA4001F7C
+    li t9, 0x13B0
 hcomp_band_start:
     lw t0, HCOMP_SECTION_END
     slt t1, k0, t0
@@ -44,6 +49,9 @@ hcomp_band_start:
     // in this delay slot would skip FRAME_END and read beyond the section queue.
     beqz t1, hcomp_real_section_done
     move k1, t0
+    lw t1, HCOMP_BAND_RAW
+    bnez t1, hcomp_band_bounds_ready
+    nop
     addi k1, k0, 8
     slt t1, t0, k1
     beqz t1, hcomp_band_bounds_ready
@@ -103,27 +111,30 @@ hcomp_band_bounds_ready:
     sw t2, HCOMP_BAND_BASES + 8
 hcomp_band_targets_ready:
     sb zero, HCOMP_SCREEN
-    sw zero, HCOMP_BAND_RAW
-    lb t0, STAT_FLAGS
-    bltz t0, hcomp_raw_band
     lw t0, HCOMP_DIAG_COMPOSE_LIMIT
-    beqz t0, hcomp_check_raw_math
+    beqz t0, hcomp_dispatch_policy
     sltu t1, k0, t0
-    beqz t1, hcomp_raw_band
+    bnez t1, hcomp_dispatch_policy
     nop
-hcomp_check_raw_math:
-    // Exact no-op optimization: no eligible math and no Main clipping.
-    lbu t0, CGADSUB
-    andi t0, t0, 0x3F
-    bnez t0, hcomp_compact_band
-    lbu t0, CGWSEL
-    andi t0, t0, 0xC0
-    beqz t0, hcomp_raw_band
+    li t0, 1
+    sw t0, HCOMP_BAND_RAW
+hcomp_dispatch_policy:
+    lw t0, HCOMP_BAND_RAW
+    beqz t0, hcomp_compact_band
+    li t1, 1
+    beq t0, t1, hcomp_raw_band
     nop
+    // Direct Sub/black-mask/Main composition writes the final target with Z
+    // disabled. Aligned compact bases above remain unused in this policy.
+    lw t0, FRAMEBUFFER(sp)
+    addi t0, t0, 280 * -16
+    b hcomp_screen_masks
+    sw t0, RDP_FRAME + 4
 hcomp_compact_band:
     li a0, HCOMP_PROOF_RDP_CMDS
     jal 0xA4001F5C
     li a1, HCOMP_PROOF_BG_DEPTH_CMDS
+hcomp_screen_masks:
     lbu s7, TS
     lbu t0, TM
     sll t0, t0, 8
@@ -144,9 +155,12 @@ hcomp_fill_target:
     li a0, RDP_FRAME
     jal 0xA4001F5C
     li a1, RDP_FRAME + 8
-    // Both screens get a real backdrop and explicit absence/winner tag.
-    // The second operand for absent Sub comes from fixed color, not this fill.
-    lhu s0, MAIN_COLOR
+    // Direct Sub starts with fixed color, the exact absent-Sub operand.
+    // The general and Main-only policies keep the ordinary Main backdrop.
+    lw t0, HCOMP_BAND_RAW
+    sltiu t0, t0, 2
+    sll t0, t0, 1
+    lhu s0, SUB_COLOR(t0)
     lb t0, STAT_FLAGS
     bgez t0, hcomp_backdrop_color
     nop
@@ -194,9 +208,16 @@ hcomp_backdrop_color:
 hcomp_screen_end:
     lbu t0, HCOMP_SCREEN
     bnez t0, hcomp_main_end
+    lw t0, HCOMP_BAND_RAW
+    addi t0, t0, -2
+    beqz t0, hcomp_fast_main
     li t8, %lo(hcomp_copy_ts_start)
     b hcomp_fence
     nop
+hcomp_fast_main:
+    lw a1, OVERLAY_HCOMP_FAST_SRC
+    j 0xA4001F7C
+    li t9, 0x1760
 hcomp_copy_ts_start:
     lw t6, HCOMP_BAND_BASES + 4
     addi t6, t6, -24
@@ -268,6 +289,10 @@ hcomp_bad_geometry:
 .org (0x760 - 0x3A8)
 hcomp_screen_switch:
     b hcomp_screen_end
+    nop
+.org (0x768 - 0x3A8)
+hcomp_policy_return:
+    b hcomp_band_start
     nop
 .org (0x778 - 0x3A8)
 hcomp_math_return:

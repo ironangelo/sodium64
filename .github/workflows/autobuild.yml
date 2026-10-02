@@ -42,9 +42,12 @@ jobs:
 
       - name: Check RSP branch delay slots
         run: |
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
-          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
+
+      - name: Check normal runtime arena
+        run: python3 scripts/check_runtime_arena.py build/sodium64.elf
 
       - name: Record build metrics
         run: |
@@ -64,6 +67,7 @@ jobs:
             rom-converter.py
             build/sodium64.elf
             build/*.map
+            build/src/rsp*.elf
             build.log
             build-metrics.txt
 
@@ -88,9 +92,9 @@ jobs:
           libdragon make NATIVE_DIAG=1 -j$(nproc) 2>&1 | tee native-diag-build.log
       - name: Check resident RSP ABI and runtime arena
         run: |
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
-          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
           python3 scripts/check_runtime_arena.py build/sodium64.elf
       - name: Upload empty diagnostic template and decoder
         uses: actions/upload-artifact@v4
@@ -101,6 +105,7 @@ jobs:
             sodium64.z64
             build/sodium64.elf
             build/*.map
+            build/src/rsp*.elf
             native-diag-build.log
             build/src/rsp*.elf
             scripts/native_diag_report.py
@@ -130,9 +135,9 @@ jobs:
 
       - name: Check profiling RSP branch delay slots
         run: |
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
-          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
 
       - name: Record profiling build metrics
         run: |
@@ -152,6 +157,7 @@ jobs:
             rom-converter.py
             build/sodium64.elf
             build/*.map
+            build/src/rsp*.elf
             profile-build.log
             profile-build-metrics.txt
 

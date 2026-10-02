@@ -266,6 +266,7 @@
 // PipeSync is required before changing OtherModes while prior RDP work may
 // still be in flight; the BG depth table therefore begins one command later.
 #define HCOMP_TEXTURE_FENCE 0xF20
+#define OVERLAY_HCOMP_FAST_SRC 0xF28
 #define HCOMP_PROOF_RDP_CMDS 0xF30
 #define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x20)
 #define VEC_DATA 0xF70

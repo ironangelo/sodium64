@@ -2,6 +2,22 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Stage3 local implementation and qualification COMPLETE; private N64 candidate READY, native closure PENDING
+
+**STATUS:** Iron's authorized stage3 work has produced a reviewable ordinary candidate. Stage3 and Gate C remain OPEN for native fidelity, FPS/audio continuity and the reported iris freeze. Master remains `7cc8facfe8643fb85888f301f79995575830521d`; no merge occurred. Working branch `phase4/gate-c-stage3-iris` has documentation HEAD `6ebca5dd149f0374a57b5ee0e07000289a4c300c`; accepted runtime is `f24be2b0de7469533ca948841cb5d15b6eebf14b`.
+
+**REPAIRS:** reset the BG window span index after the helper clobbers it, and preserve exact inclusive/x255 scissor edges. Replace unsafe DMEM command reuse with fetch retirement at the fixed sender entry. A further original row-palette grid exposed cached RDRAM texture reuse while LoadBlock still retained its source: the resident DMA wrapper now submits an immutable SyncFull and retires command/TMEM/pipeline work before replacing that source. The shared resident wrappers retain their fixed suffix and non-control delay-slot ABI; the command is in the audited F20 gap. Arithmetic processes eight lanes with independent five-bit channels, once-per-band window masks, winner/OBJ/absence eligibility and the decoder's empty-v20 return invariant. Sub presence copy uses up to 1024-byte chunks through cache space which the next renderer reloads; the copy's full-height DMA count drops from 3920 to 280, without a native FPS claim.
+
+**IMMUTABLE BUILD:** run36964998162 succeeded for normal/profile builds and original smoke. Normal artifact11209570975. Empty ordinary template98,304 bytes, SHA256 `38dc8252a6606181b4c7858a62cf0fed4cea43028f3302204c3fe34a5f0e0176`. All four locally compiled RSP text images exactly match the ordinary CPU ELF's embedded images; main/mode7 are4096 bytes, phase/math banks1000 bytes. Branch-delay, fixed ABI, immutable fence placement, 4MiB arena and no diagnostic/profiling symbols checks pass.
+
+**ACCEPTED CONTROLS:** 27 original complete-image cases pass1,548,288 pixels plus six compact-arena guards per case, with no guest/framebuffer writes. They include the newly failing-before/passing-after row-palette cache-lifetime cases. The compiled-bank diagnostic harness passes512 cases /1,048,576 pixels over8 rows, explicitly using original seeded operands and an inert CPU loop; this is kernel authority only. Compiled delayed-reader models pass96 command-retirement plus24 texture-retirement cases. See `docs/GATE_C_STAGE3_IRIS.md` for scope and limitations.
+
+**PRIVATE GAME:** the same user guest was locally assembled with the exact ordinary template and checked byte-for-byte unchanged. Read-only private observation shows the logo and wood/copyright foreground, an iris revealing the stage, and the advancing title demo. Thirty sampled observations completed; the last15 displayed frames were distinct. Commercial captures, dumps, wrappers and inputs remained private. Host elapsed time and this observation do not establish native cadence or the hardware freeze's cause.
+
+**DELIVERY/NEXT:** the new private ordinary candidate and Spanish settings/check instructions are saved for Iron as `sodium64-smw-etapa3-f24be2b.zip`; no private download URI or asset ID belongs in public continuity. Initial native settings: Frame Precision MEDIUM(8), Frames Skipped0, APU Underclock OFF, Audio ON, Screen Layer BACK, FPS counter ON when recording (ordinary default OFF). Native observation must cover complete iris/foreground/stage order, subsequent demo progression, any freeze, FPS and audio continuity. Additional texture-retirement waits need native cadence assessment. Do not call stage3 complete, promote master or advance the Gate-C closure merely from synthetic/host evidence.
+
+**PRIVACY:** no commercial ROM/wrapper/game dump/footage entered GitHub, Actions, public artifacts or hosting. Public CI has only empty emulator templates and original synthetic inputs. Preserve this rule across any follow-up. Inherited hue/brightness, per-section palette replay, native Mode0 banks and Mode7 fidelity remain separately scoped open items.
+
 ## 2026-10-02 UTC — Stage3 iris layers FIXED in private reproduction; composition optimization qualification ACTIVE
 
 Iron reiterates authorization to continue. Stage3 is not closed: native N64 fidelity, temporal/audio cadence and the reported hardware freeze still need a new ordinary candidate and native observation. Master remains `7cc8fac`.

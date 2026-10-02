@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Stage3 execution STARTED; exact source and assembler restored, private lab bootstrap ACTIVE
+
+**AUTHORIZED:** Iron explicitly requests stage3 work through completion. Scope is complete iris/SMW fidelity, stability and native temporal/audio cadence, with relevant regression controls; no master merge or Gate-C closure inferred. Commercial ROM/wrapper and derived game dumps stay private and out of Actions.
+
+**REPRODUCIBLE BASE:** restored all157 canonical tracked files from immutable `ce4fdc7`, verified each Git blob digest. Working source is `/workspace/scratch/da60e79e58ef/stage3-sodium64`; private game files remain outside it. Original pinned libdragon/binutils2.45 assembler artifact11197128447 (run36934665977) restored. All four locally rebuilt RSP .text/.data sections match the accepted ordinary ELF byte-for-byte; resident Main/Mode7 stay4096B, both banks1000B, branch-delay checker PASS. No runtime patch yet.
+
+**LAB BOOTSTRAP / necessary privacy constraint:** no N64 emulator was installed locally. Created isolated `phase4/gate-c-stage3-iris` at `ce4fdc7`; tools-only head `f38e141be2d8783ee0855213223a802ee464d040`. Attempt36950039310 failed on branch-scoped cache lookup before any guest execution. Export workflow bridge `a3e6d43704edd4b7c634422704220a39cd230fd0` is on exploration branch only; runtime files remain identical. Run36956360876 restores the established pinned ares17813a3 N64-only/RSP-interpreter laboratory and packages its executable/runtime libraries/source/licenses for local private diagnosis; NO guest software is an export input. Existing synthetic qualification36956360865 and generic36956360856 triggered by that commit, not new native evidence. Diagnostic branch stillce4; master untouched.
+
+**NEXT:** obtain/verify tool export, run the exact private candidate locally with read-only state capture, identify whether missing layers/stalled iris reproduces. Use original public synthetic workloads to qualify actual repairs on CI. Do not substitute lab wall-clock speed or a software-emulated RDP synchronization pass for native performance/ownership acceptance. Stage3 remains IN PROGRESS; final closure requires Iron's native milestone evidence after a substantially repaired candidate is ready.
+
 ## 2026-10-02 UTC — Gate-C direction: resume incomplete iris/layer implementation; targeted diagnostics only
 
 **USER QUESTION / scope:** Iron asks whether further tests are useful or whether work should now address pending BG/layer/iris Gate-C semantics, and whether their incomplete state explains the candidate failure.

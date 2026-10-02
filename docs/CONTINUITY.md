@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Re-uploaded native video INSPECTED: f24be2b title freeze confirmed; follow-up delay-slot repair ACTIVE
+
+**FILMED NATIVE EVIDENCE:** the re-uploaded recording is55.608422seconds. The selected cart filename visibly identifies `sodium64-smw-etapa3-f24be2b`. The menu shows BACK, MEDIUM, frames skipped0, audioON and APU underclockOFF; the FPS counter is initiallyOFF in the menu and becomes visible in the subsequent run. Readable samples show23 during Nintendo Presents (10.5/14/15s),24 at16s,51 during the title fade (16.5/17s), and21 from18s onward. These are displayed counter samples, not a measured average or a matched baseline delta. The title logo, wood/copyright foreground appear; no iris opening or demo stage appears in subsequent samples through55.5s. The21 drawn on the stalled image does NOT establish continued21FPS execution. Loss of menu response is additionally reported by Iron; video cannot reveal the stopped CPU/RSP/DP state.
+
+**STATUS:** f24be2b is FAILED native acceptance despite its earlier scoped host tests. Stage3/GateC remain open. Preserve the filmed visual-content improvement separately from failed progression/cadence.
+
+**FOLLOW-UP REGRESSION CAUGHT BEFORE DELIVERY:** draft `0e9779f` built successfully but local ordinary boot stalled: CPU sampled at rsp_wait, DPC_CURRENT0xEA8 versus END0xC10. Its new first ownership-helper instruction occupied the preceding CGRAM branch's delay slot and incorrectly submitted the CGRAM DMA pointer as DP_START. This is a patch-induced local defect, not the cause of the earlier filmed f24 freeze. The draft was never delivered. Commit `2b4e0de14306331a241c3f94ce00ff1244e8b3cb` restores an inert NOP at2CC and folds the independent-DMA filter's delay slot into the existing status read, retaining the source-fence entry2FC, both fixed resident images and unchanged renderer ABI.
+
+**QUALIFICATION:** compiled model now asserts the semantic safety of that CGRAM branch delay slot, in addition to288 command /24 texture /24 palette /72 independent-DMA cases, all passing. Generic control-transfer-in-delay checking alone missed a legal but side-effecting instruction. Full image/private progression qualification of the corrected immutable build is still pending; do not deliver from draft0e, claim native FPS improvement, or close the gate.
+
+**PRIVACY:** recording and all derived captures remain private and outside repository/Actions/public artifacts/hosting. This public entry records only native setting/observation metadata. Master unchanged.
+
 ## 2026-10-02 UTC — Native follow-up: compiled sender counterexample fixed; targeted source fences BUILD/QUALIFICATION ACTIVE
 
 **RUNTIME:** isolated stage3 branch now `0e9779f151cfb914d12a11e7d70b24a96499ecda`; master unchanged. No new private candidate is accepted/delivered yet. The unavailable recording has still not been inspected; native freeze/FPS/settings remain reported rather than measured.

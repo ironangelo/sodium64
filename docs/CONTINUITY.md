@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — SMW failure scope expanded: missing title artwork and demo scene
+
+**USER-REPORTED / expected opening:** Iron adds that the normal title opening includes the Super Mario World logo, wood frame and copyright year, with the iris revealing the demo stage behind them. He supplies public reference https://youtu.be/oDOt7a0M0Fg and requires the correct images and normal animation rate. Treat the proposed foreground/iris/stage arrangement as a visual description to validate, not a proven mapping to SNES BG/OBJ priorities or window registers.
+
+**VISUALLY CONFIRMED / available private footage:** re-inspected the earlier upstream title/demo contact sheet: it shows the logo, wood border, copyright text, stage scenery and characters. Our candidate's inspected iris samples show only a flat cyan opening against black, without those recognizable title/demo elements. Failure therefore includes missing image content, in addition to extreme slowness and apparent transition stall. Do not narrow diagnosis to iris geometry alone or count an expanding cyan mask as a faithful SMW title transition. Their absence may share a cause with the stall, but independent defects are not established.
+
+**LIMITATION / linked reference:** attempts to open the supplied exact YouTube URL and canonical watch URL through web retrieval returned DisabledError; exact-ID searches did not recover usable content. The linked video's frames, exact phase timings, region and FPS are NOT independently inspected/measured here. Do not imply it was watched or convert a nominal video frame rate into emulated SNES cadence. Existing upstream hardware footage remains useful for visible title content; its observed underclockON setting remains an unmatched performance baseline.
+
+**NEXT DIAGNOSTIC / acceptance:** verify layer enable/routing, priority/provenance and clipping/math behavior at the actual opening epochs, alongside the already pending CPU/RSP/DP progression capture. Require the correct logo/frame/copyright visibility for each corresponding reference phase, the proper demo scene/characters where the iris reveals them, transition completion and native cadence/audio validation. Keep structural fidelity, liveness and performance as separately checked outcomes. No code change or game-qualified replacement is claimed. Privacy constraint unchanged: no commercial ROM/wrapper, video or game dumps in public GitHub/Actions.
+
 ## 2026-10-02 UTC — RESUME HERE: SMW candidate FAILED; bounded static audit complete, freeze root cause OPEN
 
 **MEASURED / private native footage:** our `ce4fdc7` wrapper reaches Nintendo Presents, then a cyan iris opening over black; the sampled opening remains visually unchanged through the end of the approximately62-second recording and title/gameplay is not reached. A clearly visible counter reads10 around38.5seconds. This is a displayed counter value, not a measured live average after the apparent freeze; other early readings are partly clipped by the camera. Menu confirms MEDIUM, skip0, audioON, underclockOFF, BACK. Iron's slow-FPS/freeze report is supported by the visible stalled transition. Exact CPU/RSP/DP state and audio progress are not established by the visual inspection.

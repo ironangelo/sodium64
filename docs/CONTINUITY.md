@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — ACTIVE INDEPENDENT REVIEW: old ROM B FAST1 reads STALE layer spans; adc5338 MUST NOT be used
+
+**USER / INDEPENDENT EVIDENCE:** Iron returned the same 32KiB native diagnostic save and two terminal photos for an independent review, then authorized repairs/new private ROMs toward 60FPS without freezes. Decoder/checksum pass independently. The direct capture, CPU rsp_wait, resident RSP rdp_fetch_wait, fixed DP CURRENT=0xCA8 / END=0xCD0 and status0x161 throughout the last telemetry window agree with the earlier RSP→RDP blocked-state finding. Missing LoadSync is a documented defect and a strong repair hypothesis, not yet a native-proven complete root cause. RSP occupancy supports a renderer bottleneck before the stall; no intra-RSP function share is measured. The 0.156% observation is ISR-body cost only, not the entire observer overhead.
+
+**MATERIAL REFUTATION / ROM B:** the shared WIN_COUNT/WIN_BOUNDS at the stalled instant are NOT the color-window result. They are overwritten by BG/OBJ renderers. Independent decoding of the current section shows WHX=(126,130,0,0), color selector=2, logic=0: only x126..130 (5 pixels) are selected, even though shared scratch says one span[0,255]. Therefore the earlier statement that the captured band has a full selected color window is false, and the adc5338 FAST1 eligibility can render incorrect pixels. The prior package's ROM A remains usable as a synchronization control; its ROM B must be superseded. Do not infer that rejecting this iris band prevents FAST1 from helping earlier full-window title sections; that coverage and native gain remain to measure.
+
+**REPAIR:** isolated branch phase4/gate-c-hcomp-fast1-reviewed, runtime f865a7b1815409b63e224b0bee1f570b6771b699. Recompute the selected color window using resident helper0x1CE4 from current WOBJSEL/WOBJLOG/WHX before admission; use its freshly written count. Reuse the fixed switch tail for the Main transition to retain the 1000-byte phase bank and fixed entries0x1760/1778/1780/1788. Original source/semantic controls pass. New compiled-instruction regression executes the actual ELF dispatcher plus resident helper against poisoned spans, a separate 256-pixel truth oracle, x255/reversed/overlap/OR/AND/XOR/XNOR cases and prerequisite rejection. It already FAILS adc5338 on no-window selector0 + stale full span, exactly exposing the defect rather than mirroring the new code. New build/compiled regression qualification is PENDING; do not deliver the reviewed B until it passes.
+
+**PRIVACY / STATUS:** save/photos/wrappers/derived dumps stay private; only emulator source and original regression cases are public. Master unchanged7cc8fac. Stage3/GateC OPEN. Continue exact new CI/artifact qualification and prepare a replacement private A/reviewed-B package; no claim of 60FPS or native freeze cure before that N64 comparison.
+
 ## 2026-10-02 UTC — RESUME HERE: native follow-up A/B package QUALIFIED and READY; causal hardware session NEXT
 
 **STATUS / PURPOSE:** the planned two-ROM hardware package is complete. It preserves causal separation between the measured real-N64 RDP deadlock and the measured RSP/HCOMP performance ceiling. Master remains `7cc8facfe8643fb85888f301f79995575830521d`; neither candidate is merged. Commercial SMW bytes/wrappers remain private.

@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "admission_cases": 65540,
+  "compiled_window_mask_cases": 8704,
+  "section_geometry_cases": 3495,
+  "pixel_truth_width": 256,
+  "compact_alignment": "separate compiled suite",
+  "native_timing_authority": false
+}

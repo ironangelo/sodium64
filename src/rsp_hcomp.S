@@ -160,7 +160,7 @@ hcomp_backdrop_color:
     li t2, 268 << 14
     or t1, t1, t2
     sw t1, RDP_FILL + 32
-    li a0, RDP_FILL
+    li a0, RDP_FILL + 8
     jal 0xA4001F5C
     li a1, RDP_WINDOW
     lb t0, STAT_FLAGS

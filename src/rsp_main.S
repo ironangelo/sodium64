@@ -706,7 +706,9 @@ bg_windows:
     li t8, 0
     lbu t0, WIN_COUNT
     beqz t0, finish_row
-    nop
+    // The span helper uses t8 through its final edge (256). Restore the
+    // renderer's byte index after it returns, including the empty-span path.
+    li t8, 0
 
 next_segment:
     // Set some values for updating segment bounds
@@ -719,9 +721,11 @@ next_segment:
     lbu t3, WIN_BOUNDS + 1(t8)
 
     // Update the RDP scissor bounds for a window segment
-    sltu t0, zero, t2
+    // Inclusive layer spans use the border offset directly at both edges.
+    // Keep padding in the fixed renderer slot; x=255 may be a singleton.
+    nop
     addi t2, t2, 12
-    add t2, t2, t0
+    nop
     sll t2, t2, 14
     or t0, t6, t2
     sw t0, RDP_WINDOW + 8

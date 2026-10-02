@@ -15,6 +15,10 @@ from make_hcomp_fullheight import CASES
 
 
 def expected(case,x,y):
+    if case in ('layer-window','layer-edge','layer-xor'):
+        visible = (x==255) if case=='layer-edge' else (32<=x<=191)
+        if case=='layer-xor':visible=not ((32<=x<=191)!=(64<=x<=127))
+        return 0x7bc1 if visible else 1
     if case=='blank' and 13<=y<37:return 1
     if case=='window' and ((32<=x<=95) != (64<=x<=191)):return 1
     if case=='short' and (5<=y<13 or 37<=y<39):return 0xf83f

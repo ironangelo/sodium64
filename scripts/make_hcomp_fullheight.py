@@ -8,7 +8,7 @@ from make_gate_c_hcomp_main_sub_lifetime import Assembler, lda_sta_abs, dma_to_v
 from make_gate_c_hcomp_color_window import build_case, WINDOW_HOOK_OFFSET
 
 CASES = ('half', 'add', 'sub', 'sub-half', 'bg2', 'bg3', 'bg4', 'window', 'short',
-         'blank', 'obj-low', 'obj-high', 'sram')
+         'blank', 'obj-low', 'obj-high', 'sram', 'layer-window', 'layer-edge', 'layer-xor')
 
 
 def set_store(rom, address, old, new, count=1):
@@ -56,6 +56,16 @@ def build(case):
                     (32,0x2126),(95,0x2127),(64,0x2128),(191,0x2129),(8,0x212b))
         body = bytes(v for value,address in settings for v in (0xa9,value,0x8d,address&255,address>>8))+b'\x60'
         rom[WINDOW_HOOK_OFFSET:WINDOW_HOOK_OFFSET+len(body)] = body
+    if case in ('layer-window', 'layer-edge', 'layer-xor'):
+        # Original layer-window regression: the helper clobbers the caller's
+        # t8 span index. BG1 must use its returned visible spans, not DMEM+256.
+        left, right = (255, 255) if case == 'layer-edge' else (32, 191)
+        selector = 0xa if case == 'layer-xor' else 3
+        settings = ((selector,0x2123),(left,0x2126),(right,0x2127),
+                    (64,0x2128),(127,0x2129),(2 if case=='layer-xor' else 0,0x212a),
+                    (1,0x212e),(0,0x212f))
+        body = bytes(v for value,address in settings for v in (0xa9,value,0x8d,address&255,address>>8))+b'\x60'
+        hook_call(rom,0x8300,body)
     if case in ('short','blank'):
         # Non-multiples of8, including a2-row section; state changes only through HDMA.
         rows = [2 if y < 5 or 13 <= y < 37 or y >= 39 else 0 for y in range(224)]

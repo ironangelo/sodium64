@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — ACTIVE BATCH: native follow-up ROM A (RDP-SYNC) implemented, CI pending
+
+**GOAL:** produce the first of the planned causal pair from exact measured diagnostic base `7d705e8d12ce0584f7544888290366ffa93dd6fc`. ROM A must change only the RDP texture-load synchronization that the real-N64 SRAM implicated; HCOMP/performance behavior must remain otherwise unchanged.
+
+**IMPLEMENTED:** branch `phase4/gate-c-rdp-loadsync`, current HEAD `3b2536d5085ad1665cfe394bc37a5d03ba007a86`. Regular-tile and Mode7 `LoadBlock` command streams now use RDP **LoadSync (0x26)** immediately before `LoadBlock`, replacing the incorrect TileSync in that role. Palette `LoadBlock` now also receives LoadSync **without expanding or shifting the fixed DMEM map**: `rdp_frame` remains exactly3 commands (SetColorImage, SetTextureImage, LoadSync), the retired first8-byte `rdp_fill` slot carries palette LoadBlock, the frame-start submission extends through `RDP_FILL+8`, and all actual fill/scissor submissions start at `RDP_FILL+8`. This preserves the existing fixed offsets/overlay ABI rather than moving every subsequent command/data symbol.
+
+**CONTROL / TEST:** new `scripts/test_rdp_loadsync_contract.py` asserts the fixed table sizes, palette-slot reuse, LoadSync immediately before every texture `LoadBlock`, unchanged `RDP_FILL/RDP_WINDOW` offsets, and absence of later fill submissions that would replay palette LoadBlock. It is wired into normal CI host validation. No HCOMP optimization is included in ROM A.
+
+**STATUS:** IMPLEMENTED, not yet VALIDATED. CI/build/RSP-ABI/full-image/private progression qualification still pending. Do not deliver ROM A yet. If A reaches native TIME LIMIT instead of FRAME STALL with the same SMW, that causally supports the LoadSync hypothesis; if it still stalls, inspect the returned SRAM before touching HCOMP.
+
 ## 2026-10-02 UTC — RESUME HERE: native SRAM capture SUCCESS; freeze is a real RDP deadlock, FPS loss is RSP/HCOMP saturation
 
 **MEASURED / N64 authority:** Iron returned the exact32KiB save from `sodium64-smw-native-diag-7d705.z64` plus terminal photos. The S64D header is complete and checksum-valid. Trigger=FRAME STALL via the direct wait watchdog after12.543 Count-domain seconds. CPU EPC `0x8000BBE4=rsp_wait+0x30`; direct wait site `0x8000BBB4=rsp_wait`. Pre-stop SP status=0 (RSP running), resident IMEM is byte-identical to `rsp_main`, and the acknowledged post-HALT RSP PC is `0x2D8 = rdp_fetch_wait`. Pre-stop DP status=`0x161` (XBUS DMEM DMA + PIPE_BUSY + CMD_BUSY + DMA_BUSY), START/CURRENT=`0xCA8`, END=`0xCD0`; pending START/END-valid bits are clear but CURRENT never advances. The final telemetry window shows CPU RSP-wait100%, SP running100%, DP command+pipe busy100%, TMEM busy0%, while DP clock/command/pipe cycle counters continue advancing. This is a genuine RDP command/pipeline deadlock, not a stale FPS overlay, CPU emulator loop, menu bug or stopped RSP.

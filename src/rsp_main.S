@@ -462,45 +462,26 @@ use_window:
     b hcomp_cgram_pair_ready
 
 fill_backdrop:
-    // Update the RDP fill bounds for a window segment
-    sltu t0, zero, t9
-    addi t1, t7, 12
-    add t1, t1, t0
-    sll t1, t1, 14
-    or t0, t5, t1
-    sw t0, RDP_FILL + 36
-    addi t1, t8, 13
-    sll t1, t1, 14
-    or t0, t6, t1
-    sw t0, RDP_FILL + 32
-
-    // Update the RDP primitive color for the segment
-    andi t0, s0, 0x3E // B
-    sll t0, t0, 10
-    andi t1, s0, 0x7C0 // G
-    sll t1, t1, 13
-    or t0, t0, t1
-    andi t1, s0, 0xF800 // R
-    sll t1, t1, 16
-    or t0, t0, t1
-    ori t0, t0, 0xFF
-    sw t0, RDP_FILL + 20
-
-    // Run the RDP to fill the segment
-    li a0, RDP_FILL
-    jal rdp_send
-    li a1, RDP_WINDOW
-
-    // Swap the main and sub colors
-    move t0, s0
-    move s0, s1
-    move s1, t0
-
-    // Move to the next segment until the section is done
-    addi t9, t9, 1
-    move t7, t8
-    bne t7, 255, fill_backdrop
-    lbu t8, WIN_BOUNDS(t9)
+    // Former backdrop-fill code is unreachable after oam_skip dispatches
+    // every band to HCOMP. Retain its extent and use a common resident helper.
+    .org 0x2CC
+rdp_emit_owned:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x40
+    bnez t0, rdp_emit_owned
+    nop
+    mtc0 a0, COP0_DP_START
+    mtc0 a1, COP0_DP_END
+rdp_fetch_wait:
+    // DMA_BUSY/END_VALID/START_VALID protect the submitted DMEM bytes.
+    // Pipe/TMEM may still work on their owned copy after these bits clear.
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x700
+    bnez t0, rdp_fetch_wait
+    nop
+    jr ra
+    nop
+    .org 0x348
 
     // Skip layers for force blank, or set the initial lookup offset
     lbu s3, BG_MODE
@@ -1596,12 +1577,13 @@ dma_wait:
 
 
 rdp_send: // a0: start address, a1: end address
-    // Wait for the RDP to be ready and then send commands
-    mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x40 // Command busy
-    bnez t0, rdp_send
-    mtc0 a0, COP0_DP_START
-    mtc0 a1, COP0_DP_END
+    // Keep the public 1F5C entry and ret_jump fixed. Submit/retire DMEM in
+    // the shared resident prefix before a caller may mutate the next list.
+    // dma_wait's JR uses 1F5C as its delay slot.
+    nop
+    b rdp_emit_owned
+    nop
+    .space 8
 ret_jump:
     jr ra
     nop

@@ -41,7 +41,81 @@ hcomp_output_start:
     li a2, 1
     lbu v0, CGWSEL
     lhu gp, SUB_COLOR
-    srl gp, gp, 1
+    li s6, 0
+    li s5, TILE_TABLE
+hcomp_mask_pixel:
+    lbu t9, WIN_COUNT
+    li t2, WIN_BOUNDS
+    move t6, zero
+hcomp_mask_span:
+    beqz t9, hcomp_mask_selected
+    nop
+    lbu t3, 0(t2)
+    lbu t4, 1(t2)
+    sltu t3, s6, t3
+    sltu t4, t4, s6
+    or t3, t3, t4
+    xori t3, t3, 1
+    or t6, t6, t3
+    addi t9, t9, -1
+    b hcomp_mask_span
+    addi t2, t2, 2
+hcomp_mask_selected:
+    sll t6, t6, 2
+    li t3, 0x35
+    srl t4, v0, 6
+    or t4, t4, t6
+    srlv t8, t3, t4
+    andi t8, t8, 1
+    sub t8, zero, t8
+    sh t8, 0(s5)
+    srl t4, v0, 4
+    andi t4, t4, 3
+    or t4, t4, t6
+    srlv t8, t3, t4
+    andi t8, t8, 1
+    sub t8, zero, t8
+    sh t8, 512(s5)
+    addi s6, s6, 1
+    addi s5, s5, 2
+    li t0, 256
+    bne s6, t0, hcomp_mask_pixel
+    nop
+    li t0, 1
+    mtc2 t0, $v15, 0
+    li t0, 0x8000
+    mtc2 t0, $v16, 0
+    li t0, 0x0400
+    mtc2 t0, $v16, 2
+    li t0, 31
+    mtc2 t0, $v19, 0
+    vnor $v21, $v31, $v31, 0
+    mtc2 gp, $v22, 0
+    vor $v22, $v31, $v22, 8
+    sll t0, v1, 31
+    sra t0, t0, 31
+    andi t0, t0, 0x0C00
+    mtc2 t0, $v20, 0
+    sll t0, v1, 30
+    sra t0, t0, 31
+    andi t0, t0, 0x1400
+    mtc2 t0, $v20, 2
+    sll t0, v1, 29
+    sra t0, t0, 31
+    andi t0, t0, 0x1C00
+    mtc2 t0, $v20, 4
+    sll t0, v1, 28
+    sra t0, t0, 31
+    andi t0, t0, 0x2800
+    mtc2 t0, $v20, 6
+    sll t0, v1, 27
+    sra t0, t0, 31
+    andi t0, t0, 0x5000
+    mtc2 t0, $v20, 8
+    sll t0, v1, 26
+    sra t0, t0, 31
+    andi t0, t0, 0x0400
+    mtc2 t0, $v20, 10
     lw t0, HCOMP_BAND_Y
     addi t0, t0, -8
     sll t1, t0, 9
@@ -77,115 +151,96 @@ hcomp_batch:
     jal 0xA4001F40
     li a2, 63
     li s5, SCRN_DATA
-hcomp_pixel:
-    // Exact inclusive span membership, including semantic x=255.
-    lbu t9, WIN_COUNT
-    li t2, WIN_BOUNDS
-    move t6, zero
-hcomp_span:
-    beqz t9, hcomp_selected
+hcomp_vector:
+    // Eight independent pixels. Renderer constants v23..v31 stay intact.
+    lqv $v00, 0, 0, s5
+    lqv $v01, 0, 64, s5
+    lqv $v02, 0, 128, s5
+    lqv $v03, 0, 192, s5
+    addi t1, s6, TILE_TABLE
+    lqv $v04, 0, 0, t1
+    lqv $v05, 0, 512, t1
+    vand $v00, $v00, $v04, 0
+    vand $v07, $v31, $v31, 0
+    ctc2 zero, $0
+    veq $v06, $v02, $v20, 8
+    vmrg $v06, $v21, $v31, 0
+    vor $v07, $v07, $v06, 0
+    veq $v06, $v02, $v20, 9
+    vmrg $v06, $v21, $v31, 0
+    vor $v07, $v07, $v06, 0
+    veq $v06, $v02, $v20, 10
+    vmrg $v06, $v21, $v31, 0
+    vor $v07, $v07, $v06, 0
+    veq $v06, $v02, $v20, 11
+    vmrg $v06, $v21, $v31, 0
+    vor $v07, $v07, $v06, 0
+    veq $v06, $v02, $v20, 12
+    vmrg $v06, $v21, $v31, 0
+    vor $v07, $v07, $v06, 0
+    veq $v06, $v02, $v20, 13
+    vmrg $v06, $v21, $v31, 0
+    vor $v07, $v07, $v06, 0
+    vand $v07, $v07, $v05, 0
+    andi t0, v0, 2
+    beqz t0, hcomp_vector_fixed
     nop
-    lbu t3, 0(t2)
-    lbu t4, 1(t2)
-    sltu t3, s6, t3
-    sltu t4, t4, s6
-    or t3, t3, t4
-    xori t3, t3, 1
-    or t6, t6, t3
-    addi t9, t9, -1
-    b hcomp_span
-    addi t2, t2, 2
-hcomp_selected:
-    sll t6, t6, 2
-    li t3, 0x35
-    srl t4, v0, 6
-    or t4, t4, t6
-    srlv t8, t3, t4
-    andi t8, t8, 1
-    srl t4, v0, 4
-    andi t4, t4, 3
-    or t4, t4, t6
-    srlv t9, t3, t4
-    andi t9, t9, 1
-    lhu t0, 0(s5)
-    srl t0, t0, 1
-    bnez t8, hcomp_main_ready
+    veq $v06, $v03, $v16, 9
+    vmrg $v01, $v22, $v01, 0
+    vmrg $v13, $v31, $v21, 0
+    b hcomp_vector_half
+    vand $v13, $v13, $v04, 0
+hcomp_vector_fixed:
+    vor $v01, $v22, $v31, 0
+    vor $v13, $v04, $v31, 0
+hcomp_vector_half:
+    andi t0, v1, 0x40
+    bnez t0, hcomp_channels_start
     nop
-    move t0, zero
-hcomp_main_ready:
-    lhu t2, 128(s5)
-    srl t2, t2, 10
-    andi t2, t2, 31
-    lbu t2, HCOMP_ELIGIBILITY_TABLE(t2)
-    and t2, t2, v1
-    sltu t2, zero, t2
-    and t2, t2, t9
-    beqz t2, hcomp_store
-    move t3, t0
-    // Fixed operand permits HALF; absent selected Sub suppresses it.
-    move t7, gp
-    andi t5, v1, 0x40
-    sltu t5, zero, t5
-    and t5, t5, t8
-    andi t2, v0, 2
-    beqz t2, hcomp_math
+    vand $v13, $v31, $v31, 0
+hcomp_channels_start:
+    // Extract, saturate and halve each 5-bit channel independently.
+    // Packed carry tricks lose low-channel bits for mixed-color subtraction.
+    vand $v14, $v31, $v31, 0
+    li t1, 0x8000
+    li t2, 3
+    li t3, 2
+hcomp_channel:
+    mtc2 t1, $v16, 4
+    vmudl $v08, $v00, $v16, 10
+    vand $v08, $v08, $v19, 8
+    vmudl $v09, $v01, $v16, 10
+    vand $v09, $v09, $v19, 8
+    andi t0, v1, 0x80
+    beqz t0, hcomp_channel_add
     nop
-    lhu t2, 192(s5)
-    li t4, 0x0400
-    beq t2, t4, hcomp_absent_sub
+    vsub $v10, $v08, $v09, 0
+    vge $v10, $v10, $v31, 0
+    vmudl $v11, $v10, $v16, 8
+    b hcomp_channel_pack
     nop
-    lhu t7, 64(s5)
-    srl t7, t7, 1
-    b hcomp_math
-    nop
-hcomp_absent_sub:
-    move t5, zero
-hcomp_math:
-    andi t2, v1, 0x80
-    bnez t2, hcomp_sub
-    nop
-hcomp_add:
-    beqz t5, hcomp_add_full
-    add t3, t0, t7
-    xor t4, t0, t7
-    andi t4, t4, 0x0421
-    sub t3, t3, t4
-    b hcomp_store
-    srl t3, t3, 1
-hcomp_add_full:
-    xor t4, t0, t7
-    andi t4, t4, 0x0421
-    sub t4, t3, t4
-    andi t4, t4, 0x8420
-    sub t3, t3, t4
-    srl t5, t4, 5
-    sub t4, t4, t5
-    b hcomp_store
-    or t3, t3, t4
-hcomp_sub:
-    li t4, 0x8420
-    sub t3, t0, t7
-    add t3, t3, t4
-    xor t2, t0, t7
-    and t2, t2, t4
-    sub t2, t3, t2
-    and t2, t2, t4
-    sub t3, t3, t2
-    srl t4, t2, 5
-    sub t2, t2, t4
-    and t3, t3, t2
-    beqz t5, hcomp_store
-    nop
-    andi t3, t3, 0x7BDE
-    srl t3, t3, 1
-hcomp_store:
-    sll t3, t3, 1
-    ori t3, t3, 1
-    sh t3, 0(s5)
-    addi s6, s6, 1
-    addi s5, s5, 2
+hcomp_channel_add:
+    vadd $v11, $v08, $v09, 0
+    vlt $v10, $v11, $v19, 8
+    vmudl $v11, $v11, $v16, 8
+hcomp_channel_pack:
+    veq $v06, $v13, $v31, 0
+    vmrg $v10, $v10, $v11, 0
+    mtc2 t3, $v16, 6
+    vmudn $v10, $v10, $v16, 11
+    vor $v14, $v14, $v10, 0
+    srl t1, t1, 5
+    addi t2, t2, -1
+    bnez t2, hcomp_channel
+    sll t3, t3, 5
+    veq $v06, $v07, $v31, 0
+    vmrg $v00, $v00, $v14, 0
+    vor $v00, $v00, $v15, 8
+    sqv $v00, 0, 0, s5
+    addi s6, s6, 16
+    addi s5, s5, 16
     li t0, SCRN_DATA + 64
-    bne s5, t0, hcomp_pixel
+    bne s5, t0, hcomp_vector
     nop
     li a0, SCRN_DATA
     move a1, s0
@@ -195,7 +250,7 @@ hcomp_store:
     addi s1, s1, 64
     addi s2, s2, 64
     addi s3, s3, 64
-    li t0, 256
+    li t0, 512
     bne s6, t0, hcomp_batch
     nop
     addi s0, s0, 48

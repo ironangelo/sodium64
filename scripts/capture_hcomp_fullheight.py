@@ -15,10 +15,13 @@ from make_hcomp_fullheight import CASES
 
 
 def expected(case,x,y):
+    if case.startswith("rgb-"):
+        from make_hcomp_color_grid import expected_rgb
+        return expected_rgb(case,x,y)
     if case in ('layer-window','layer-edge','layer-xor'):
         visible = (x==255) if case=='layer-edge' else (32<=x<=191)
         if case=='layer-xor':visible=not ((32<=x<=191)!=(64<=x<=127))
-        return 0x7bc1 if visible else 1
+        return 0x7bc1 if visible else 0x003f
     if case=='blank' and 13<=y<37:return 1
     if case=='window' and ((32<=x<=95) != (64<=x<=191)):return 1
     if case=='short' and (5<=y<13 or 37<=y<39):return 0xf83f
@@ -74,7 +77,7 @@ def main():
                 # Slice the aligned full-DMEM snapshot already captured here.
                 controls=dmem[0xbb7:0xbbb]
                 want_cg={'add':1,'sub':0x81,'sub-half':0xc1,'bg2':0x42,'bg3':0x44,'bg4':0x48,
-                         'obj-low':0x51,'obj-high':0x51}.get(args.case,0x41)
+                         'obj-low':0x51,'obj-high':0x51,'rgb-add':1,'rgb-half':0x41,'rgb-sub':0x81,'rgb-sub-half':0xc1}.get(args.case,0x41)
                 want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11}.get(args.case,1)
                 want_ts=1 if args.case=='bg2' else 2
                 want_window=0xa2 if args.case=='window' else 2

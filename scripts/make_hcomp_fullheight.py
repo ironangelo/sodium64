@@ -8,7 +8,7 @@ from make_gate_c_hcomp_main_sub_lifetime import Assembler, lda_sta_abs, dma_to_v
 from make_gate_c_hcomp_color_window import build_case, WINDOW_HOOK_OFFSET
 
 CASES = ('half', 'add', 'sub', 'sub-half', 'bg2', 'bg3', 'bg4', 'window', 'short',
-         'blank', 'obj-low', 'obj-high', 'sram', 'layer-window', 'layer-edge', 'layer-xor')
+         'blank', 'obj-low', 'obj-high', 'sram', 'layer-window', 'layer-edge', 'layer-xor', 'rgb-add', 'rgb-half', 'rgb-sub', 'rgb-sub-half')
 
 
 def set_store(rom, address, old, new, count=1):
@@ -29,6 +29,9 @@ def hook_call(rom, address, body):
 
 
 def build(case):
+    if case.startswith("rgb-"):
+        from make_hcomp_color_grid import build_rgb
+        return build_rgb(case,build("half"))
     rom = bytearray(build_case('both-inside') if case == 'window' else build_mode('sub-present-half'))
     if case not in ('short', 'blank'):
         set_store(rom, 0x420c, 1, 0)
@@ -56,7 +59,7 @@ def build(case):
                     (32,0x2126),(95,0x2127),(64,0x2128),(191,0x2129),(8,0x212b))
         body = bytes(v for value,address in settings for v in (0xa9,value,0x8d,address&255,address>>8))+b'\x60'
         rom[WINDOW_HOOK_OFFSET:WINDOW_HOOK_OFFSET+len(body)] = body
-    if case in ('layer-window', 'layer-edge', 'layer-xor'):
+    if case in ('layer-window', 'layer-edge', 'layer-xor', 'rgb-add', 'rgb-half', 'rgb-sub', 'rgb-sub-half'):
         # Original layer-window regression: the helper clobbers the caller's
         # t8 span index. BG1 must use its returned visible spans, not DMEM+256.
         left, right = (255, 255) if case == 'layer-edge' else (32, 191)

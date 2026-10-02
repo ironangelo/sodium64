@@ -45,15 +45,16 @@ rdp_init:
     .dword 0x320000000307F07F // Set Tile Size (mode 7)
 
 rdp_frame:
-    // RDP commands that run at the start of a frame
+    // RDP commands that run at the start of a frame. Keep this fixed at
+    // three commands: the following retired fill slot carries palette LoadBlock.
     .dword 0x3F10011700000000 // Set Color Image
     .dword 0x3D10000000000000 // Set Texture Image (palette)
     .dword 0x2600000000000000 // Sync Load
-    .dword 0x3300000000400000 // Load Block (palette)
 
 rdp_fill:
-    // RDP commands that run when filling the backdrop
-    .dword 0x2800000000000000 // Sync Tile
+    // The first slot is consumed only by the frame-start palette load. Fill/
+    // scissor submissions begin at RDP_FILL+8, preserving the fixed DMEM map.
+    .dword 0x3300000000400000 // Load Block (palette)
     .dword 0x2D030020004303A0 // Set Scissor
     .dword 0x3A00000000000000 // Set Primitive Color
     .dword 0x3C080E10001D86C3 // Set Combine (primitive)
@@ -223,7 +224,7 @@ table_loop:
     // Run the RDP to start the frame
     li a0, RDP_FRAME
     jal rdp_send
-    li a1, RDP_FILL
+    li a1, RDP_FILL + 8
     li k1, 0 // Section bound
 
 next_section:
@@ -1141,7 +1142,7 @@ next_object:
 
 obj_windows_done:
     // Restore this section's full scissor bounds before later layers render.
-    li a0, RDP_FILL
+    li a0, RDP_FILL + 8
     jal rdp_send
     li a1, RDP_FILL + 16
 

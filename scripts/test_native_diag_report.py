@@ -87,4 +87,11 @@ class CaptureTests(unittest.TestCase):
         struct.pack_into(">I",b,0x4240+4,46875000)
         commit(b,h)
         self.assertFalse(parse(b)[0]["events"][1]["dp_counter_delta_unambiguous"])
+    def test_outer_exception_wait_site(self):
+        b,h=make_capture();h['direct_wait_pc']=0x80002000;h['cpu_status']=0x8403
+        commit(b,h)
+        head=parse(b)[0]['header']
+        self.assertEqual(head['capture_via'],'direct wait watchdog')
+        self.assertEqual(head['cpu_epc'],0x80001000)
+        self.assertEqual(head['direct_wait_pc'],0x80002000)
 if __name__=="__main__":unittest.main()

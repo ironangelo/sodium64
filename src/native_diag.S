@@ -18,6 +18,7 @@
 #define DCOUNTERS UNCACHED(sram + 0x7800)
 .globl native_diag_init, native_diag_interrupt, native_diag_state
 .globl native_diag_done, native_diag_saved, native_diag_save_failed
+.globl native_diag_wait_stall_rsp, native_diag_wait_stall_frame
 .data
 .align 5
 native_diag_state: .word 0:32
@@ -382,6 +383,45 @@ native_diag_check_limit:
     b native_diag_finalize
     li t8, 2
 
+// Independent wait-path watchdog, including execution with EXL already set.
+// Record the real wait-site separately from EPC (which can belong to an outer
+// TLB exception), then enter the same terminal capture without ever resuming.
+native_diag_wait_stall_rsp:
+    la k0, native_diag_state
+    la k1, native_diag_rsp_wait
+    sw k1, 120(k0)
+    b native_diag_poll_finalize
+    nop
+native_diag_wait_stall_frame:
+    la k0, native_diag_state
+    la k1, native_diag_frame_wait
+    sw k1, 120(k0)
+native_diag_poll_finalize:
+    mfc0 k1, $12
+    sw k1, 124(k0)
+    ori k1, k1, 2
+    mtc0 k1, $12
+    nop
+    nop
+    la k0, native_diag_irq_save
+    .set push
+    .set noat
+    sd $1, 0(k0)
+    .set pop
+    sd t0, 8(k0)
+    sd t1, 16(k0)
+    sd t2, 24(k0)
+    sd t3, 32(k0)
+    sd t4, 40(k0)
+    sd t5, 48(k0)
+    sd t6, 56(k0)
+    sd t7, 64(k0)
+    sd t8, 72(k0)
+    sd t9, 80(k0)
+    sd ra, 88(k0)
+    b native_diag_finalize
+    li t8, 1
+
 // Finalization is terminal and deliberately intrusive, only after trigger.
 // Pre-stop registers and CPU EPC are captured before SET_HALT/SET_FREEZE.
 // No unsafe timeout ever returns to the renderer or reuses its owned surfaces.
@@ -508,6 +548,12 @@ native_diag_finalize:
     mfc0 t0, $13
     sw t0, 108(s0)
     mfc0 t0, $12
+    lw t1, 120(s1)
+    sw t1, 244(s0)
+    beqz t1, native_diag_status_ready
+    nop
+    lw t0, 124(s1)
+native_diag_status_ready:
     sw t0, 112(s0)
     lw t0, 0xA4040010
     sw t0, 116(s0)
@@ -731,7 +777,11 @@ native_diag_reason_text:
     addu a1, a1, s2
     jal draw_string
     nop
+    lw a0, 244(s0)
+    bnez a0, native_diag_cpu_screen
+    nop
     lw a0, 104(s0)
+native_diag_cpu_screen:
     li a1, 88 * 560 + 112
     addu a1, a1, s2
     jal native_diag_hex

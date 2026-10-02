@@ -666,10 +666,25 @@ vram_loop:
     bne t0, t1, vram_loop
     addi t0, t0, 0x20
 
+#ifdef SODIUM64_NATIVE_DIAG
+    // Timer/VI interrupts cannot run inside an outer TLB exception (EXL=1).
+    // Keep an independent Count deadline for this particular blocking wait.
+    la t0, native_diag_state
+    mfc0 t1, $9
+    sw t1, 116(t0)
+#endif
 rsp_wait:
 #ifdef SODIUM64_NATIVE_DIAG
 .globl native_diag_rsp_wait, native_diag_rsp_wait_end
 native_diag_rsp_wait:
+    mfc0 t0, $9
+    la t1, native_diag_state
+    lw t1, 116(t1)
+    subu t0, t0, t1
+    li t1, 93750000
+    sltu t0, t0, t1
+    beqz t0, native_diag_wait_stall_rsp
+    nop
 #endif
     // Wait until the RSP is finished rendering
     lw t0, 0xA4040010 // SP_STATUS
@@ -745,10 +760,23 @@ set_buffer:
     sw t0, DMEM(VRAM_ADDRS + 4)
     lw t0, 0xA404001C
 
+#ifdef SODIUM64_NATIVE_DIAG
+    la t0, native_diag_state
+    mfc0 t1, $9
+    sw t1, 116(t0)
+#endif
 frame_wait:
 #ifdef SODIUM64_NATIVE_DIAG
 .globl native_diag_frame_wait, native_diag_frame_wait_end
 native_diag_frame_wait:
+    mfc0 t0, $9
+    la t1, native_diag_state
+    lw t1, 116(t1)
+    subu t0, t0, t1
+    li t1, 93750000
+    sltu t0, t0, t1
+    beqz t0, native_diag_wait_stall_frame
+    nop
 #endif
     // Wait for a framebuffer to be available
     lbu t0, frame_count

@@ -26,7 +26,7 @@ FIELDS = [
     "vi_origin", "vi_width", "ai_status", "ai_length", "dsp_pointer", "dsp_enabled",
     "section_pointer", "cur_line", "queue_id", "sp_mem_address", "sp_dram_address",
     "observer_ticks", "observer_max_ticks", "halt_acknowledged", "sp_dma_settled",
-    "pi_status_before", "body_sum32",
+    "pi_status_before", "body_sum32", "direct_wait_pc",
 ]
 EVENT_FIELDS = ["sequence", "elapsed_ticks", "cpu_epc", "frames_completed",
                 "frames_submitted", "sp_status", "dp_status", "dp_start", "dp_end",
@@ -75,6 +75,7 @@ def parse(blob):
     h["observer_fraction"] = h["observer_ticks"]/max(1,h["elapsed_ticks"])
     h["sp_pc_meaningful_after_halt"] = bool(h["halt_acknowledged"] and h["sp_status_after"] & 1)
     h["cpu_epc_instruction"] = h["cpu_epc"] + (4 if h["cpu_cause"] & 0x80000000 else 0)
+    h["capture_via"] = "direct wait watchdog" if h["direct_wait_pc"] else "timer watchdog"
     h["guest_cpu_pc_raw"] = struct.unpack_from(">Q", blob, 0x7C00+23*8)[0]
     capacity = 2048
     count = min(h["sample_count"], capacity)
@@ -168,6 +169,8 @@ def symbolicate(result, elf=None, linker_map=None):
         for pc,n in counts.most_common(30)
     ]
     result["header"]["cpu_epc_symbol"] = lookup(result["header"]["cpu_epc_instruction"])
+    if result["header"]["direct_wait_pc"]:
+        result["header"]["direct_wait_symbol"] = lookup(result["header"]["direct_wait_pc"])
     if linker_map:
         from profile_report import load_text_ranges, object_for_pc
         starts,ranges = load_text_ranges(Path(linker_map))
@@ -183,6 +186,7 @@ def render(result):
     lines = ["Sodium64 S64D diagnostic capture",
              f"Trigger: {'NO COMPLETED FRAME FOR 2s' if h['reason']==1 else '20s TIME LIMIT'}",
              f"CPU EPC: 0x{h['cpu_epc']:08X} ({h.get('cpu_epc_symbol','unsymbolicated')})",
+             f"Capture path: {h['capture_via']}; direct wait PC: 0x{h['direct_wait_pc']:08X}",
              f"Pre-stop SP: 0x{h['sp_status_before']:08X}; DP: 0x{h['dp_status_before']:08X}",
              f"Pre-stop DP CURRENT/END: 0x{h['dp_current_before']:08X}/0x{h['dp_end_before']:08X}",
              f"RSP PC after requested HALT: 0x{h['sp_pc_after']:08X}; valid={h['sp_pc_meaningful_after_halt']}",

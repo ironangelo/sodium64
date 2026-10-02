@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Gate-C direction: resume incomplete iris/layer implementation; targeted diagnostics only
+
+**USER QUESTION / scope:** Iron asks whether further tests are useful or whether work should now address pending BG/layer/iris Gate-C semantics, and whether their incomplete state explains the candidate failure.
+
+**CANONICAL ROUTE RECONFIRMED:** the existing five-stage Gate-C route is unchanged:1 bounded visible composition (closed within scope);2 early native architecture milestone (hardware captures exist, filmed hue/presentation remains open);3 complete iris/SMW checkpoint (partial implementation, OPEN/FAILED commercial candidate);4 specified ALttP rain/tree/layer compositor checkpoint;5 representative corpus/base-system fidelity closure. Full-height synthetic admission repairs prerequisites but does not close stage3. Current outstanding recorded fidelity work includes brightness ordering, section-correct RDP palette replay, relevant layer/window/state combinations; Mode0/Mode7 debts also remain but should not automatically become prerequisites for the demonstrated SMW opening without evidence.
+
+**ENGINEERING RECOMMENDATION / immediate focus:** do not ask Iron to rerun the unchanged failed wrapper or repeat already-passing static cases without a relevant change/question. Resume the required complete iris/layer path work, with the smallest diagnostic needed to distinguish missing BG/OBJ output, enable/routing/priority/provenance, palette/window/color epochs, CPU/RSP progression and DP wait. Keep liveness/cost questions attached to a concrete repair, not a stand-alone expanding instrumentation project. The severe scalar full-frame cost is now a demonstrated structural concern to measure/redesign alongside correctness; static counts are not measured causal attribution.
+
+**CAUSAL LIMIT:** known unfinished semantics can explain some incorrect output, but do not label the missing title/demo, low native performance or apparent freeze as expected until later stages. Upstream filmed title contains graphics absent in this candidate, so investigate a regression on the changed path. No conclusion identifies a single cause yet; completing unrelated fidelity debts is not a substitute for locating this blocker.
+
+**NEXT ACCEPTANCE:** one controlled runtime repair at a time, relevant original synthetic/dynamic changing-window tests and retained resource/build/regression controls, then a substantial private native SMW milestone requiring correct corresponding logo/frame/copyright/demo content, completed iris and native temporal/audio cadence without skips/underclock. ALttP follows its planned scope; broader corpus earns Gate-C closure. Retain unresolved stage2 hue status separately. No runtime edit, additional CI run or replacement game build in this discussion; master remains the best integrated state. Commercial bytes/wrappers/private footage/dumps remain outside public GitHub/CI.
+
 ## 2026-10-02 UTC — SMW failure scope expanded: missing title artwork and demo scene
 
 **USER-REPORTED / expected opening:** Iron adds that the normal title opening includes the Super Mario World logo, wood frame and copyright year, with the iris revealing the demo stage behind them. He supplies public reference https://youtu.be/oDOt7a0M0Fg and requires the correct images and normal animation rate. Treat the proposed foreground/iris/stage arrangement as a visual description to validate, not a proven mapping to SNES BG/OBJ priorities or window registers.

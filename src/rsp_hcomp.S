@@ -97,7 +97,11 @@ hcomp_band_bounds_ready:
     nop
 hcomp_check_raw_math:
     // Exact no-op optimization: no eligible math and no Main clipping.
+    // FAST1 is a semantic specialization of the measured native title state:
+    // backdrop-only full-screen add with black Main backdrop and Sub source.
     lbu t0, CGADSUB
+    li t1, 0x20
+    beq t0, t1, hcomp_fast1_probe
     andi t0, t0, 0x3F
     bnez t0, hcomp_compact_band
     lbu t0, CGWSEL
@@ -108,6 +112,7 @@ hcomp_compact_band:
     li a0, HCOMP_PROOF_RDP_CMDS
     jal 0xA4001F5C
     li a1, HCOMP_PROOF_BG_DEPTH_CMDS
+hcomp_screen_masks:
     lbu s7, TS
     lbu t0, TM
     sll t0, t0, 8
@@ -129,8 +134,13 @@ hcomp_fill_target:
     jal 0xA4001F5C
     li a1, RDP_FRAME + 8
     // Both screens get a real backdrop and explicit absence/winner tag.
-    // The second operand for absent Sub comes from fixed color, not this fill.
-    lhu s0, MAIN_COLOR
+    // FAST1 state2 renders Sub directly into the final target; seed it with
+    // fixed color so transparent/absent Sub pixels already have the exact
+    // fallback operand. States0/1 retain the ordinary Main backdrop.
+    lw t0, HCOMP_BAND_RAW
+    sltiu t0, t0, 2
+    sll t0, t0, 1
+    lhu s0, SUB_COLOR(t0)
     lb t0, STAT_FLAGS
     bgez t0, hcomp_backdrop_color
     nop
@@ -166,6 +176,7 @@ hcomp_backdrop_color:
     lb t0, STAT_FLAGS
     bltz t0, hcomp_band_done
     nop
+hcomp_render_screen:
     sw zero, PRIO_CHECKS
     sw zero, PRIO_CHECKS + 4
     lbu s3, BG_MODE
@@ -178,6 +189,9 @@ hcomp_backdrop_color:
 hcomp_screen_end:
     lbu t0, HCOMP_SCREEN
     bnez t0, hcomp_main_end
+    lw t1, HCOMP_BAND_RAW
+    li t0, 2
+    beq t1, t0, hcomp_fast1_main
     li t8, %lo(hcomp_copy_ts_start)
     b hcomp_fence
     nop
@@ -245,6 +259,40 @@ hcomp_bad_geometry:
     // Fail closed on a corrupt viewport instead of corrupting framebuffer RAM.
     break
     b hcomp_bad_geometry
+    nop
+
+// FAST1 is deliberately narrow and hardware-semantic, not game-specific.
+// For CGADSUB=$20 + CGWSEL=$12 with a full selected color window and black
+// Main backdrop, the required result is:
+//   Main layer pixel -> Main
+//   Main backdrop -> Sub pixel, or fixed color when Sub is absent.
+// Render fixed-color + Sub first into the final target, then draw Main layers
+// transparently over it. This removes the compact copy and software math bank
+// for exactly that family while preserving the general compositor as fallback.
+hcomp_fast1_probe:
+    lbu t0, CGWSEL
+    xori t0, t0, 0x12
+    bnez t0, hcomp_compact_band
+    lbu t1, WIN_COUNT
+    addi t1, t1, -1
+    bnez t1, hcomp_compact_band
+    lhu t0, MAIN_COLOR
+    bnez t0, hcomp_compact_band
+    lhu t0, WIN_BOUNDS
+    xori t0, t0, 0x00FF
+    bnez t0, hcomp_compact_band
+    li t0, 2
+    sw t0, HCOMP_BAND_RAW
+    lw t0, FRAMEBUFFER(sp)
+    addi t0, t0, 280 * -16
+    sw t0, RDP_FRAME + 4
+    b hcomp_screen_masks
+    nop
+
+hcomp_fast1_main:
+    li t0, 1
+    sb t0, HCOMP_SCREEN
+    b hcomp_render_screen
     nop
 
 .org (0x760 - 0x3A8)

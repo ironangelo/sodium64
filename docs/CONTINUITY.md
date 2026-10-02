@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — RESUME HERE: native A2 passes the previous intro freeze; FPS optimization now authorized
+
+Iron reports A2's intro/iris/title faithfully matches SNES including colors, no prior reset crash, and the expected diagnostic TIME LIMIT screen. Independent decoding with the exact 93cf51b native ELF/map confirms a valid complete 20.0395-second capture, 481 submitted/completed frames, no direct wait PC, pre-halt DP idle with CURRENT=END, and an acknowledged settled capture halt. Video also shows iris completion and title/demo continuing. This validates the previously failing intro point, not yet general gameplay or native 60 FPS.
+
+Performance remains open: title samples settle near 17.8 FPS; earlier samples reach roughly 24 FPS and the iris drops near 11 FPS. CPU sample occupancy is dominated by rsp_wait; late SP-running occupancy is 100%. Timer ISR body occupies about 0.18% of capture time (not the entire observer overhead). The new task is to recover native throughput while preserving A2's target alignment, channel arithmetic, source lifetime fences, and visual semantics. Do not use host wall FPS as native performance evidence. Old reviewed B does not include A2 alignment and does not accelerate partial color windows; do not deliver it unchanged.
+
+All commercial ROM/wrappers, native save, photo/video, and extracted DMEM/IMEM remain private. Only emulator source, original fixtures, and observation metadata may go to GitHub/Actions. Work stays on isolated branches; master remains 7cc8facfe8643fb85888f301f79995575830521d; no PR or merge. Current base for optimization is phase4/gate-c-a2-aligned-targets at 42ac349ae4fcc2f0dd1eb25fd550140fd7f03a20 (runtime 93cf51b).
+
 ## 2026-10-02 UTC — RESUME HERE: native A FAIL independently confirmed; A2 alignment candidate prepared; B PAUSED
 
 **USER DIRECTION:** Iron returned A save/photo/video, asks for careful independent analysis, rejects other-window conclusions as authority and explicitly pauses B until A is solved. Preserve commercial ROM/wrappers/saves/footage/extracted state privately. No master change, PR or merge.

@@ -58,6 +58,51 @@ jobs:
           tar -czf stage3-lab-tools.tar.gz lab
           sha256sum stage3-lab-tools.tar.gz > SHA256SUMS
           ls -lh stage3-lab-tools.tar.gz
+      - name: Package software Vulkan device and its runtime dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+          mkdir -p gpu/lib gpu/icd
+          cp /usr/share/vulkan/icd.d/lvp_icd.x86_64.json gpu/icd/
+          cp /usr/lib/x86_64-linux-gnu/libvulkan_lvp.so gpu/lib/
+          python3 - <<'PY'
+          import re,subprocess,shutil
+          from pathlib import Path
+          pending=[Path('/usr/lib/x86_64-linux-gnu/libvulkan_lvp.so')]
+          seen=set()
+          while pending:
+              target=pending.pop()
+              if str(target) in seen:continue
+              seen.add(str(target))
+              result=subprocess.run(['ldd',str(target)],capture_output=True,text=True,check=True)
+              print(str(target)+'\n'+result.stdout)
+              for path in re.findall(r'=> (/\S+)',result.stdout):
+                  p=Path(path)
+                  if p.is_file():
+                      shutil.copyfile(p,Path('gpu/lib')/p.name)
+                      pending.append(p)
+          PY
+          tar -czf stage3-software-vulkan.tar.gz gpu
+          sha256sum stage3-software-vulkan.tar.gz
+          split -b 20M -d stage3-software-vulkan.tar.gz software-vulkan-part-
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage3-software-vulkan-part-0
+          path: software-vulkan-part-00
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage3-software-vulkan-part-1
+          path: software-vulkan-part-01
+          if-no-files-found: ignore
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage3-software-vulkan-part-2
+          path: software-vulkan-part-02
+          if-no-files-found: ignore
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
           name: stage3-local-lab-tools

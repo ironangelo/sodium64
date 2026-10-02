@@ -32,6 +32,7 @@ jobs:
           python3 scripts/test_profile_report.py
           python3 scripts/check_rsp_branch_delay_slots.py --self-test
           python3 scripts/test_rdp_loadsync_contract.py
+          python3 scripts/test_hcomp_backdrop_fast1.py
 
       - name: Compile
         shell: bash

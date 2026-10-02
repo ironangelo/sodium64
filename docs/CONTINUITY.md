@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Stage3 iris layers FIXED in private reproduction; composition optimization qualification ACTIVE
+
+Iron reiterates authorization to continue. Stage3 is not closed: native N64 fidelity, temporal/audio cadence and the reported hardware freeze still need a new ordinary candidate and native observation. Master remains `7cc8fac`.
+
+**Visual defect localized and repaired:** the BG window caller reused `t8` after the span helper clobbered it, indexing bounds from256 rather than0. It now resets the segment index after the helper. Removed an extra nonzero-edge scissor increment, including the singleton right endpoint255. The fixed BG renderer preserves its242-instruction footprint and overlay addresses. Working branch `phase4/gate-c-stage3-iris`, first runtime fix `7a5534465f91f4b78693330fb88b66413275bc26`, generic build run36959175502 succeeded.
+
+**Ordinary visual evidence:** the same private user ROM on that build now presents the title logo and wood/copyright foreground while the iris opens onto the complete stage. The old ordinary baseline privately reproduced the missing layers. All commercial inputs and derived captures remained local/private. Host emulation did not reproduce the native freeze, and host elapsed time is not N64 FPS. Three new original synthetic window cases (interval, XOR, singleton255) each passed57,344 pixels and six compact-arena guards with no guest/framebuffer writes.
+
+**Current runtime qualification:** `a4222c6fa97d9505fe2b22b3acf2916dcaf1d4d4`, generic build run36961008074 succeeded. It adds a shared resident RDP sender that waits for DMA/end/start ownership before returning, preserving fixed entrypoints and delay slots, plus an eight-lane per-channel arithmetic bank and once-per-band window masks. All four RSP images fit4096/1000 bytes and pass delay-slot checks; compiled delayed-fetch sender model passes96 cases. The ordinary full-height half-add control passes57,344 pixels and all six guards. Broader mixed-color and window/eligibility regression qualification is still ACTIVE; do not promote this build as accepted yet.
+
+**Lab recovered:** locally executing the pinned ares interpreter-RSP build with software Vulkan and authenticated TCP Xvfb; exported public tools contain no game inputs. Public workflows only compile source and original synthetic controls. ROM/wrapper/game dumps/footage must never enter GitHub, Actions, public artifacts or hosting.
+
 ## 2026-10-02 UTC — Stage3 execution STARTED; exact source and assembler restored, private lab bootstrap ACTIVE
 
 **AUTHORIZED:** Iron explicitly requests stage3 work through completion. Scope is complete iris/SMW fidelity, stability and native temporal/audio cadence, with relevant regression controls; no master merge or Gate-C closure inferred. Commercial ROM/wrapper and derived game dumps stay private and out of Actions.

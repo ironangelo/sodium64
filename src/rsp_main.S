@@ -155,7 +155,10 @@ hcomp_eligibility_table:
 //   +10 Set Z Image: compact E2000 strip aligned to global y=16
 //   +18 backdrop/absence primitive-depth tag 0x0800 -> stored Z 0x0400
 //   +20..+38 BG1..BG4 winner tags
-.byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_ELIGIBILITY_TABLE + 32))
+.byte 0:(HCOMP_TEXTURE_FENCE - (HCOMP_ELIGIBILITY_TABLE + 32))
+hcomp_texture_fence:
+    .dword 0x2900000000000000
+.byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_TEXTURE_FENCE + 8))
 hcomp_proof_rdp_cmds:
     .dword 0x2700000000000000
     .dword 0x2F0088FF00040025
@@ -481,6 +484,28 @@ rdp_fetch_wait:
     nop
     jr ra
     nop
+
+rdp_texture_retire:
+    // Retire outstanding texture readers before overwriting cached RDRAM.
+    // SyncFull is required: busy flags can remain latched until it executes.
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x70
+    beqz t0, dma_write_owned
+    nop
+    li t0, HCOMP_TEXTURE_FENCE
+    mtc0 t0, COP0_DP_START
+    addi t0, t0, 8
+    mtc0 t0, COP0_DP_END
+rdp_texture_wait:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x770
+    bnez t0, rdp_texture_wait
+    nop
+dma_write_owned:
+    mtc0 a0, COP0_DMA_SPADDR
+    mtc0 a1, COP0_DMA_RAMADDR
+    b dma_wait
+    mtc0 a2, COP0_DMA_WRITE
     .org 0x348
 
     // Skip layers for force blank, or set the initial lookup offset
@@ -1540,11 +1565,11 @@ set_max:
 
 
 dma_write: // a0: RSP address, a1: DRAM address, a2: size
-    // Transfer data from the RSP via DMA
-    mtc0 a0, COP0_DMA_SPADDR
-    mtc0 a1, COP0_DMA_RAMADDR
-    b dma_wait
-    mtc0 a2, COP0_DMA_WRITE
+    // The public entry stays fixed; retire prior RDRAM texture readers first.
+    b rdp_texture_retire
+    nop
+    nop
+    nop
 
 mode7_out:
     // Fill outside of bounds with tile 0, or wrap around if enabled

@@ -444,6 +444,28 @@ rdp_fetch_wait:
     nop
     jr ra
     nop
+
+rdp_texture_retire:
+    // Retire outstanding texture readers before overwriting cached RDRAM.
+    // SyncFull is required: busy flags can remain latched until it executes.
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x70
+    beqz t0, dma_write_owned
+    nop
+    li t0, HCOMP_TEXTURE_FENCE
+    mtc0 t0, COP0_DP_START
+    addi t0, t0, 8
+    mtc0 t0, COP0_DP_END
+rdp_texture_wait:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x770
+    bnez t0, rdp_texture_wait
+    nop
+dma_write_owned:
+    mtc0 a0, COP0_DMA_SPADDR
+    mtc0 a1, COP0_DMA_RAMADDR
+    b dma_wait
+    mtc0 a2, COP0_DMA_WRITE
     .org 0x33C
 
     // Skip layers for force blank, or set the initial lookup offset
@@ -1450,11 +1472,11 @@ set_max:
 
 
 dma_write: // a0: RSP address, a1: DRAM address, a2: size
-    // Transfer data from the RSP via DMA
-    mtc0 a0, COP0_DMA_SPADDR
-    mtc0 a1, COP0_DMA_RAMADDR
-    b dma_wait
-    mtc0 a2, COP0_DMA_WRITE
+    // The public entry stays fixed; retire prior RDRAM texture readers first.
+    b rdp_texture_retire
+    nop
+    nop
+    nop
 
 mode7_out:
     // Fill outside of bounds with tile 0, or wrap around if enabled

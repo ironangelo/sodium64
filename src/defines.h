@@ -262,6 +262,7 @@
 // Eight commands occupy F30..F6F; VEC_DATA remains frozen at F70.
 // PipeSync is required before changing OtherModes while prior RDP work may
 // still be in flight; the BG depth table therefore begins one command later.
+#define HCOMP_TEXTURE_FENCE 0xF20
 #define HCOMP_PROOF_RDP_CMDS 0xF30
 #define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x20)
 #define VEC_DATA 0xF70

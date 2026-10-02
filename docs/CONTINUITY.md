@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Stage3 native candidate REJECTED: severe slowdown and pre-iris full freeze; synchronization audit ACTIVE
+
+**USER-REPORTED / native observation:** Iron tested the latest delivered stage3 candidate and reports correct visible content up to a complete freeze before the iris starts, substantial FPS loss relative to the earlier main repair, and no response even to the Sodium64 menu. Do not record exact FPS, frame timings, image acceptance or a measured freeze location: attachment 1000141396.mp4 was declared unavailable by the upload system and has NOT been inspected. Re-upload requested. Candidate identity and menu settings remain assumed from the ongoing test context, not independently verified from footage.
+
+**DECISION:** f24be2b remains host/synthetic-qualified only and FAILED native acceptance per this report. Stage3 and Gate C remain open. A loss of menu response is consistent with a CPU wait on the RSP/RDP but is not a proven captured hardware state. Investigate the newly added unconditional command ownership and broad per-DMA texture-retirement waits first; distinguish real ownership hazards, protocol deadlocks and serialization cost. Do not require another identical run, hide the defect with skips/underclock, merge master or claim a native fix without evidence.
+
+**ACTIVE/NEXT:** inspect the actual resident sender/DMA wrapper, frame fences and host interrupt path against primary RCP documentation; reproduce relevant asynchronous conditions with original fixtures/models. Preserve visual repairs and vector arithmetic while producing a bounded, justified repair rather than blindly deleting waits. Record concrete evidence and qualification before delivering a new private candidate.
+
+**PRIVACY:** commercial ROM/wrappers, recordings, game dumps and derived captures stay private and out of GitHub/Actions/public artifacts/hosting. This entry contains the user's failure description only.
+
 ## 2026-10-02 UTC — Stage3 local implementation and qualification COMPLETE; private N64 candidate READY, native closure PENDING
 
 **STATUS:** Iron's authorized stage3 work has produced a reviewable ordinary candidate. Stage3 and Gate C remain OPEN for native fidelity, FPS/audio continuity and the reported iris freeze. Master remains `7cc8facfe8643fb85888f301f79995575830521d`; no merge occurred. Working branch `phase4/gate-c-stage3-iris` has documentation HEAD `6ebca5dd149f0374a57b5ee0e07000289a4c300c`; accepted runtime is `f24be2b0de7469533ca948841cb5d15b6eebf14b`.

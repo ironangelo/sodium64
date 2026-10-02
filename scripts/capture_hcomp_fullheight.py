@@ -15,6 +15,9 @@ from make_hcomp_fullheight import CASES
 
 
 def expected(case,x,y):
+    if case.startswith('fast-'):
+        from make_hcomp_direct_backdrop import expected_direct
+        return expected_direct(case,x,y)
     if case.startswith("rgb-"):
         from make_hcomp_color_grid import expected_rgb
         return expected_rgb(case,x,y)
@@ -72,7 +75,7 @@ def main():
                     guards[hex(address)]=guard.hex()
                     assert guard==bytes(64),('compact guard modified',hex(address),guard.hex())
             owner=int.from_bytes(c.read_memory(0xa00f0000,4,4),'big')
-            if args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen'):
+            if args.case.startswith('fast-') or args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen'):
                 owner=int.from_bytes(c.read_memory(0xa4400004,4,4),'big')|0xa0000000
             report=dict(passed=False,owner=hex(owner))
             if owner in FRAMEBUFFER_ADDRS:
@@ -86,11 +89,19 @@ def main():
                 want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11,'rgb-subscreen':2,'rgb-row-subscreen':2}.get(args.case,1)
                 want_ts=1 if args.case=='bg2' else 2
                 want_window=0xa2 if args.case=='window' else 2
+                if args.case.startswith('fast-'):
+                    want_cg=0x20;want_tm=1
+                    want_ts=0 if args.case=='fast-sub-empty' else 2
+                    want_window=2 if args.case=='fast-always' else 0x12
                 image=c.read_memory(owner,280*240*2,chunk)
                 report=classify(image,args.case)
                 report['delivered_controls']=controls.hex()
                 if report['passed']:
                     assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('accepted epoch controls',args.case,controls.hex())
+                    if args.case.startswith('fast-'):
+                        assert int.from_bytes(dmem[0xef0:0xef4],'big')==2,'direct policy not exercised'
+                        rows=int.from_bytes(dmem[0xec4:0xec8],'big')
+                        if args.case!='fast-iris-rows':assert rows>8,('whole section not exercised',rows)
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,
                                   image_sha256=hashlib.sha256(image).hexdigest(),
                                   compact_guards_passed=True,compact_guards=guards,framebuffer_seeding=False,

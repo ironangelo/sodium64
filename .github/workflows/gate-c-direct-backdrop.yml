@@ -1,0 +1,185 @@
+name: Gate C Direct Backdrop Pixel Qualification
+on:
+  push:
+    branches: [phase4/gate-c-a3-direct-backdrop]
+    paths: [src/**, scripts/**, Makefile, .github/workflows/gate-c-direct-backdrop.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sodium64-direct-backdrop-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pixels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - name: Build empty normal template and qualify compiled banks
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j$(nproc) 2>&1 | tee direct-build.log
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp*.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+      - name: Generate original guests only
+        run: |
+          python3 - <<'PYGUEST'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0,'scripts')
+          from make_hcomp_fullheight import CASES,build
+          template=Path('sodium64.z64').read_bytes()
+          assert len(template)<0x104000
+          Path('hardware').mkdir()
+          for case in CASES:
+              Path(f'hardware/sodium64-full-{case}.z64').write_bytes(template+bytes(0x104000-len(template))+build(case))
+          seed=bytearray(32768);seed[16]=0xa7
+          Path('hardware/sodium64-full-sram.ram').write_bytes(seed)
+          PYGUEST
+      - uses: actions/cache/restore@v4
+        id: ares-cache
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Install cached ares runtime libraries
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        timeout-minutes: 4
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          set -euo pipefail
+          # The cached executable needs OpenGL and a virtual X display, but
+          # none of the Qt/GTK/compiler development packages used to build it.
+          for source in /etc/apt/apt-mirrors*.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+            if [ -f "$source" ]; then
+              sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' "$source"
+            fi
+          done
+          timeout 180s sudo -E apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends libopengl0 libgl1 libglx-mesa0 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers xauth xvfb
+      - name: Install pinned ares dependencies
+        if: steps.ares-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 8
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # The first runner repeatedly stalled 30s per package on the Azure
+          # Ubuntu mirror. Keep signed Ubuntu packages, use the official archive.
+          for source in /etc/apt/apt-mirrors*.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+            if [ -f "$source" ]; then
+              sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' "$source"
+            fi
+          done
+          cat /etc/apt/apt-mirrors*.txt
+          timeout 180s sudo -E apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update
+          timeout 300s sudo -E apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - name: Build pinned N64-only ares in established valid lab mode
+        id: ares-build
+        if: steps.ares-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - uses: actions/cache/save@v4
+        if: steps.ares-build.outcome == 'success'
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Restore cached SDL3 runtime into this runner
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The ares cache owns SDL build outputs, not /usr/local installs.
+          # Reinstall exactly those cached outputs; do not fetch a newer SDL.
+          sudo cmake --install "$RUNNER_TEMP/ares-src/SDL/build" --prefix=/usr/local
+          sudo ldconfig
+      - name: Locate pinned ares after build or cache restore
+        shell: bash
+        run: |
+          ares_bin=$(find "$RUNNER_TEMP/ares-src/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          ldd "$ares_bin"
+          "$ares_bin" --version | tee ares-version.txt
+      - name: Whole-frame pixel and guard oracles at natural fences
+        run: |
+          set -euo pipefail
+          cases=$(python3 -c "import sys;sys.path.insert(0,'scripts');from make_hcomp_fullheight import CASES;print(' '.join(CASES))")
+          port=9340
+          pid=""
+          failed=0
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+          for kind in $cases; do
+            out="captures/full-$kind"
+            mkdir -p "$out" "$RUNNER_TEMP/full-$kind"
+            setsid env HOME="$RUNNER_TEMP/full-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/full-$kind.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-full-$kind.z64" > "$out/ares.log" 2>&1 &
+            pid=$!
+            if ! timeout 120s python3 scripts/capture_hcomp_fullheight.py --case "$kind" --port "$port" \
+              --elf build/sodium64.elf --output "$out" > "$out/capture.log" 2>&1; then
+              cat "$out/capture.log"
+              failed=1
+            else
+              cat "$out/capture.log"
+            fi
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            pid=""
+            port=$((port+1))
+          done
+          test "$failed" = 0
+      - name: Print emulator diagnostics on failure
+        if: failure()
+        run: |
+          python3 - <<'PYLOG'
+          from pathlib import Path
+          for path in Path('captures').rglob('ares.log'):
+              print(str(path),flush=True)
+              print(path.read_text(errors='replace')[-6000:],flush=True)
+          PYLOG
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: direct-backdrop-pixels
+          retention-days: 14
+          path: |
+            build/sodium64.elf
+            build/src/rsp*.elf
+            build/*.map
+            sodium64.z64
+            direct-build.log
+            captures/
+            ares-version.txt

@@ -429,23 +429,30 @@ fill_backdrop:
     // every band to HCOMP. Retain its extent and use a common resident helper.
     .org 0x2CC
 rdp_emit_owned:
-    mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x40
-    bnez t0, rdp_emit_owned
-    nop
+    // Every preceding sender retired its complete list; no pending START
+    // remains. Do not serialize this submission against primitive execution.
     mtc0 a0, COP0_DP_START
     mtc0 a1, COP0_DP_END
 rdp_fetch_wait:
-    // DMA_BUSY/END_VALID/START_VALID protect the submitted DMEM bytes.
-    // Pipe/TMEM may still work on their owned copy after these bits clear.
+    // DMA_BUSY can be clear between reads. A cleared pending-pointer latch
+    // and CURRENT == END together establish ownership of the entire list.
+    // Test the latch first so a repeated END cannot match the previous list.
     mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x700
+    andi t0, t0, 0x600
     bnez t0, rdp_fetch_wait
+    mfc0 t0, COP0_DP_CURRENT
+    bne t0, a1, rdp_fetch_wait
     nop
     jr ra
     nop
 
 rdp_texture_retire:
+    // Generic writes to stats/VRAM/presence/output are not texture updates.
+    // Their phase owns any RDP destination dependencies. Decoded textures
+    // use TEXTURE == 0; raw palette updates enter the fence explicitly.
+    bnez a0, dma_write_owned
+    nop
+rdp_source_retire:
     // Retire outstanding texture readers before overwriting cached RDRAM.
     // SyncFull is required: busy flags can remain latched until it executes.
     mfc0 t0, COP0_DP_STATUS
@@ -1472,7 +1479,7 @@ set_max:
 
 
 dma_write: // a0: RSP address, a1: DRAM address, a2: size
-    // The public entry stays fixed; retire prior RDRAM texture readers first.
+    // Fixed entry: only shared texture sources need the retirement fence.
     b rdp_texture_retire
     nop
     nop
@@ -1562,7 +1569,7 @@ hcomp_cgram_pair_ready:
     lw a1, HCOMP_RAW_PALETTE_PTRS(sp)
     add a1, a1, t0
     li a0, HCOMP_CGRAM_WRITE_SCRATCH
-    jal dma_write
+    jal rdp_source_retire
     li a2, 0x7
     b hcomp_cgram_consume
     nop

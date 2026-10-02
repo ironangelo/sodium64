@@ -2,6 +2,20 @@
 
 Stage3 fixes and qualification on `phase4/gate-c-stage3-iris`. This is a candidate for native N64 review; stage3 and Gate C remain open until the native image, audio/cadence and freeze observations are accepted. Master is unchanged.
 
+## Native failure and follow-up repair
+
+Iron reports substantial slowdown and a complete pre-iris freeze with the latest delivered candidate, including loss of menu response. The offered recording was unavailable to the upload system, so this is a user-reported failure: no exact FPS, frame timing, candidate/settings readback or frozen hardware state was independently extracted. The f24be2b host evidence below remains scoped to those controls and does not override failed native acceptance.
+
+The CPU updates the menu only after `rsp_wait` observes RSP HALT. A persistent graphics wait can therefore prevent menu access; the report is consistent with that mechanism but does not identify the actual RSP PC.
+
+The sender previously treated cleared DMA/pending-pointer bits as proof that the complete DMEM list had been read. It did not compare DPC_CURRENT with the submitted END. An asynchronous model with a DMA-idle gap made that compiled sender return after 15 instructions with zero bytes captured. This is protocol counterexample evidence, not captured real-N64 timing. The follow-up waits for both pending pointer latches to clear and CURRENT to reach END; repeated-END tests retain a stale previous CURRENT while the new START is pending. The preceding synchronous sender already retired its list, so the new sender does not additionally wait for the previous primitive's command-busy bit before every submission. SyncFull callers retain their explicit completion waits.
+
+Generic DMA writes no longer retire the entire RDP when copying VRAM, cache statistics, Sub-presence strips or arithmetic outputs. The corresponding phases already own their destination dependencies. Decoded texture writes (TEXTURE == 0) retain the source fence, and historical raw-palette replay enters that same fence explicitly. Main and Mode7 keep identical resident helpers, the fixed suffix and the non-control delay slot at1F5C.
+
+The expanded compiled protocol model passes288 command cases (continuous reads, transient DMA gaps and repeated-END pending START),24 texture cases,24 explicit palette cases and72 independent-DMA cases. These are ownership/serialization checks, not native FPS or freeze acceptance. The repaired ordinary build and complete-image/private progression qualification must be recorded before another candidate is delivered.
+
+Primary command-FIFO description: [RSP Coprocessor0, Controlling the RDP](https://hcs64.com/files/RSPCOP0.pdf). Do not equate a transient DMA-idle sample with CURRENT == END.
+
 ## Runtime repairs
 
 - Reset the BG span index after the shared window helper, which clobbers it through its final transition at 256. Preserve the renderer's fixed 242-instruction slot.

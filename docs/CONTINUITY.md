@@ -2,6 +2,20 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Native follow-up: compiled sender counterexample fixed; targeted source fences BUILD/QUALIFICATION ACTIVE
+
+**RUNTIME:** isolated stage3 branch now `0e9779f151cfb914d12a11e7d70b24a96499ecda`; master unchanged. No new private candidate is accepted/delivered yet. The unavailable recording has still not been inspected; native freeze/FPS/settings remain reported rather than measured.
+
+**CONCRETE COUNTEREXAMPLE:** the compiled f24 sender returned after15 modeled instruction steps with CURRENT3224, END3264, and zero captured bytes when the model allowed a transient idle gap between DMA reads. The old model held all0x700 bits until list end and missed this condition. This establishes a protocol vulnerability under the asynchronous model, not the actual stopped native PC or measured silicon timing. The RCP command-FIFO documentation specifies advancement of CURRENT to END and double-buffered START/END latches.
+
+**REPAIR:** the sender now waits for pending START/END latches0x600 to clear and CURRENT==submitted END. The pending-latch check prevents a repeated END matching stale CURRENT. Each preceding synchronous call has retired its own complete list, so every ordinary submission no longer waits on primitive CMD_BUSY before starting; explicit SyncFull completion waits remain. Resident Main/Mode7 helpers are identical at2CC..33C, preserve4096B images, fixed sender1F5C and its required non-control DMA-return delay slot.
+
+**COST SCOPE:** generic writes to VRAM/stat caches, fenced Sub-presence and arithmetic outputs bypass full RDP retirement. Decoded texture writes (source TEXTURE==0) retain it; raw-palette replay calls the same source-retirement entry explicitly. This removes unnecessary global waits without removing actual texture/palette source ownership. No native FPS improvement is claimed.
+
+**CHECKS SO FAR:** expanded compiled model PASS288 command cases (continuous / transient DMA gap / repeated-END latch),24 texture-source cases,24 explicit palette-source cases and72 independent-DMA cases. All four4096/1000-byte images pass control-transfer delay-slot checks; the524288-case window model remains PASS. The older standalone CGRAM consumer source-snippet test has an already-stale main-publication anchor and is not current runtime/CI authority; no unrelated test/source repair was added. The generic normal/profile/smoke workflow has been triggered; full-height RGB row-palette and window/image controls plus private ordinary progression still need the immutable build.
+
+**NEXT/PRIVACY:** qualify that immutable ordinary build before delivery, and require native observation of FPS/audio, iris completion and menu responsiveness afterward. All commercial bytes, wrappers, captures and uploads remain private and outside GitHub/Actions/public artifacts/hosting.
+
 ## 2026-10-02 UTC — Stage3 native candidate REJECTED: severe slowdown and pre-iris full freeze; synchronization audit ACTIVE
 
 **USER-REPORTED / native observation:** Iron tested the latest delivered stage3 candidate and reports correct visible content up to a complete freeze before the iris starts, substantial FPS loss relative to the earlier main repair, and no response even to the Sodium64 menu. Do not record exact FPS, frame timings, image acceptance or a measured freeze location: attachment 1000141396.mp4 was declared unavailable by the upload system and has NOT been inspected. Re-upload requested. Candidate identity and menu settings remain assumed from the ongoing test context, not independently verified from footage.

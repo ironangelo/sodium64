@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — ACTIVE BATCH: ROM B HCOMP FAST1 implemented on top of RDP-SYNC, CI pending
+
+**BASE / ISOLATION:** branch `phase4/gate-c-hcomp-fast1` was created from ROM-A source HEAD `3b2536d5085ad1665cfe394bc37a5d03ba007a86`. The RDP LoadSync repair is therefore identical to A. B adds one performance architecture change only.
+
+**FAST1 IMPLEMENTED:** current HEAD `adc533871e02052f6f420ec0f3f1eadbd64f2045`. The fast path is deliberately narrow and selected only by SNES state, not game identity: `CGADSUB=$20` (add/full, backdrop-only), `CGWSEL=$12`, black Main backdrop, and one selected full-screen color-window span `[0,255]`. This is the exact family captured in Iron's native SRAM. In that state the general equation is Main layer -> Main; Main backdrop -> Sub pixel, or fixed color when Sub is absent. FAST1 therefore renders fixed color + Sub directly into the final framebuffer, then draws Main layers transparently over it. It skips the compact Sub copy, inter-screen full fence, second backdrop clear and entire software HCOMP math overlay for that band. All other states fall back to the existing general compositor unchanged.
+
+**ABI / FIT STRATEGY:** no new overlay or second renderer was introduced. FAST1 uses HCOMP_BAND_RAW state2 and the audited free phase-overlay tail before fixed entry0x1760; fixed HCOMP switch/return/band entry addresses remain intended to stay unchanged. Existing state0 general math and state1 raw behavior remain. A branchless backdrop-source select maps states0/1 to MAIN_COLOR and state2 to SUB_COLOR. The Main screen transition reuses the existing renderer setup without clearing the final framebuffer.
+
+**TEST:** new `scripts/test_hcomp_backdrop_fast1.py` proves the fast-path pixel equation for all 32,76815-bit source colors with Main/Sub present/absent controls, rejects one-field eligibility perturbations, and asserts the assembly route/source-selection contract. It is wired into autobuild along with the RDP LoadSync contract. This model proves the specialized equation, not native speed or full renderer integration.
+
+**STATUS:** IMPLEMENTED, not yet VALIDATED. Await B build/overlay-size/branch-delay/runtime-arena/emulator-smoke CI. Do not deliver B until exact artifacts are checked. Hardware test order remains A first; run B only if A reaches TIME LIMIT instead of FRAME STALL.
+
 ## 2026-10-02 UTC — ACTIVE BATCH: native follow-up ROM A (RDP-SYNC) implemented, CI pending
 
 **GOAL:** produce the first of the planned causal pair from exact measured diagnostic base `7d705e8d12ce0584f7544888290366ffa93dd6fc`. ROM A must change only the RDP texture-load synchronization that the real-N64 SRAM implicated; HCOMP/performance behavior must remain otherwise unchanged.

@@ -192,6 +192,11 @@ pi_wait1:
 
     sw zero, 0xA4080000 // SP_PC
 
+#ifdef SODIUM64_NATIVE_DIAG
+    jal native_diag_init
+    nop
+#endif
+
 #ifdef SODIUM64_PROFILE
     // Arm CP0 Compare before enabling the timer interrupt mask.
 #ifdef SODIUM64_COLOR_DIAG
@@ -205,7 +210,7 @@ pi_wait1:
     // Enable VI interrupts and start execution
     li t0, 0x00000595 // Set VI mask
     sw t0, 0xA430000C // MI_MASK
-#ifdef SODIUM64_PROFILE
+#if defined(SODIUM64_PROFILE) || defined(SODIUM64_NATIVE_DIAG)
     li t0, 0x00008401 // Enable interrupts, VI (IP2), and CP0 timer (IP7)
 #else
     li t0, 0x00000401 // Enable interrupts
@@ -259,6 +264,15 @@ exception_handler:
 
     // Jump to the appropriate handler for supported interrupts
     mfc0 k0, $13 // Cause
+#ifdef SODIUM64_NATIVE_DIAG
+    // Finalization masks the timer but keeps PRE-NMI/reset enabled. A pending
+    // masked Compare must not steal a later reset interrupt.
+    mfc0 k1, $12
+    and k1, k0, k1
+    andi k1, k1, 0x8000
+    bnez k1, native_diag_interrupt
+    nop
+#endif
 #ifdef SODIUM64_PROFILE
     // CP0 Compare raises IP7. profile_interrupt only clobbers k0/k1 and erets.
     andi k1, k0, 0x8000
@@ -278,6 +292,13 @@ vi_interrupt:
     // Acknowledge the VI interrupt
     lui k0, 0xA440
     sw zero, 0x0010(k0) // VI_CURRENT
+
+#ifdef SODIUM64_NATIVE_DIAG
+    la k0, native_diag_state
+    lw k1, 52(k0)
+    addiu k1, k1, 1
+    sw k1, 52(k0)
+#endif
 
     // Wait one second by counting 60 frames at 60Hz
     la k0, fps_native
@@ -299,6 +320,12 @@ update_fps:
     sb k1, (k0)
 
     // Check if SRAM is dirty
+#ifdef SODIUM64_NATIVE_DIAG
+    // Only finalization writes the diagnostic cart save. Ordinary guest writes
+    // still update its private first 8 KiB in local SRAM.
+    b check_frame
+    nop
+#endif
     la k0, sram_dirty
     lbu k1, (k0)
     beqz k1, check_frame

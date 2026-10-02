@@ -25,6 +25,9 @@
 .globl audio_set
 
 .globl update_menu
+#ifdef SODIUM64_NATIVE_DIAG
+.globl counter_set, underclk_set, draw_string, draw_char
+#endif
 
 .data
 
@@ -158,6 +161,10 @@ color_diag_producer_return:
     jal get_pressed
     li v1, 0 // Index
     andi t0, v0, 0x10 // Start
+#ifdef SODIUM64_NATIVE_DIAG
+    // Capture settings are fixed; an intentional menu pause is not a stall.
+    move t0, zero
+#endif
     bnez t0, start_menu
     move t7, a0
 
@@ -296,4 +303,3 @@ menu_close:
     sw t0, jit_pointer
     b menu_return
     nop
-

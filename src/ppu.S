@@ -88,6 +88,9 @@
 .globl write_nmitimen
 .globl write_vtimel
 .globl write_vtimeh
+#ifdef SODIUM64_NATIVE_DIAG
+.globl cgram, section_ptr, cur_line, queue_id
+#endif
 
 .data
 
@@ -365,6 +368,12 @@ vcount_irq:
 
 .align 5
 make_section: // a0: line
+#ifdef SODIUM64_NATIVE_DIAG
+    la t0, native_diag_state
+    lw t1, 56(t0)
+    addiu t1, t1, 1
+    sw t1, 56(t0)
+#endif
     // Set bounds for the current frame section
     lw t1, section_ptr
     addi t1, t1, -1
@@ -658,11 +667,20 @@ vram_loop:
     addi t0, t0, 0x20
 
 rsp_wait:
+#ifdef SODIUM64_NATIVE_DIAG
+.globl native_diag_rsp_wait, native_diag_rsp_wait_end
+native_diag_rsp_wait:
+#endif
     // Wait until the RSP is finished rendering
     lw t0, 0xA4040010 // SP_STATUS
     andi t0, t0, 0x1 // Halt
     beqz t0, rsp_wait
     xori t6, t5, 0x4
+#ifdef SODIUM64_NATIVE_DIAG
+native_diag_rsp_wait_end:
+.globl native_diag_rsp_wait_size
+.equ native_diag_rsp_wait_size, native_diag_rsp_wait_end - native_diag_rsp_wait
+#endif
 
     // Update the software-rendered UI
     lw a0, DMEM(FRAMEBUFFER)(t6)
@@ -670,6 +688,12 @@ rsp_wait:
     nop
 
 menu_return:
+#ifdef SODIUM64_NATIVE_DIAG
+    la t0, native_diag_state
+    lw t1, 24(t0)
+    addiu t1, t1, 1
+    sw t1, 24(t0)
+#endif
     // Increment the frame counters with VI interrupts disabled
     li t0, 0x40 // Clear VI mask
     sw t0, 0xA430000C // MI_MASK
@@ -722,9 +746,25 @@ set_buffer:
     lw t0, 0xA404001C
 
 frame_wait:
+#ifdef SODIUM64_NATIVE_DIAG
+.globl native_diag_frame_wait, native_diag_frame_wait_end
+native_diag_frame_wait:
+#endif
     // Wait for a framebuffer to be available
     lbu t0, frame_count
     beq t0, 2, frame_wait
+
+#ifdef SODIUM64_NATIVE_DIAG
+native_diag_frame_wait_end:
+.globl native_diag_frame_wait_size
+.equ native_diag_frame_wait_size, native_diag_frame_wait_end - native_diag_frame_wait
+    // The branch's historical delay instruction (li t0,1) remains below.
+    li t0, 1
+    la t0, native_diag_state
+    lw t1, 28(t0)
+    addiu t1, t1, 1
+    sw t1, 28(t0)
+#endif
 
     // Unhalt the RSP so it can render the next frame
     li t0, 0x1 // Clear halt

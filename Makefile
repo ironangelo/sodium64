@@ -6,6 +6,12 @@ SRC_DIRS := src
 PROFILE ?= 0
 HW_PROFILE ?= 0
 COLOR_DIAG ?= 0
+NATIVE_DIAG ?= 0
+ifeq ($(NATIVE_DIAG),1)
+ifneq ($(filter 1,$(PROFILE) $(HW_PROFILE) $(COLOR_DIAG)),)
+$(error NATIVE_DIAG uses its own timer and SRAM format; other profilers must be off)
+endif
+endif
 ifeq ($(COLOR_DIAG),1)
 HW_PROFILE := 1
 endif
@@ -57,6 +63,10 @@ N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
 N64_LDFLAGS = -L$(N64_LIBDIR) -Tn64.ld --gc-sections
 N64_TOOLFLAGS = --title $(N64_ROM_TITLE)
 N64_ED64ROMCONFIGFLAGS = --savetype $(N64_ROM_SAVETYPE) --regionfree
+
+ifeq ($(NATIVE_DIAG),1)
+N64_ASFLAGS += -DSODIUM64_NATIVE_DIAG=1
+endif
 
 ifeq ($(PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_PROFILE=1

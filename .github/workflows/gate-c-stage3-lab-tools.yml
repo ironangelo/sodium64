@@ -31,6 +31,7 @@ jobs:
           test -x "$ares_bin"
           mkdir -p lab/bin lab/lib lab/share
           cp "$ares_bin" lab/bin/ares
+          strip --strip-debug lab/bin/ares
           cp /usr/bin/Xvfb lab/bin/
           cp -a "$RUNNER_TEMP/ares-src/ares/n64" lab/n64-source
           cp "$RUNNER_TEMP/ares-src/LICENSE" lab/ARES-LICENSE

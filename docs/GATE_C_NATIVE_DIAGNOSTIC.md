@@ -26,6 +26,8 @@ Terminal diagnostics never resume the renderer, clear a failing command queue, r
 
 DP pipeline/TMEM bits can remain latched; occupancy percentages of these status bits are not exact independent active-time counters. CPU statistical occupancy also does not give precise per-function timing. The Count-domain rates assume the nominal46.875MHz clock; raw VI/Count progress remains available. Any save collected from a software emulator proves capture mechanics only, never N64 performance or the root cause of Iron's freeze.
 
+Each20Hz telemetry record also has four raw24-bit DP clock/command/pipe/TMEM cycle counters. Reads never clear them. The host retains modulo24-bit deltas and flags gaps >=0.25s as ambiguous for multiple wraps; it does not infer exact independent frame costs from a latched status bit. Primary definitions: [RSP COP0, counters and CPU register view](https://hcs64.com/files/RSPCOP0.pdf).
+
 ## Save format S64D v1
 
 All fields are canonical big-endian. The decoder accepts complete saves with bytes reversed per32-bit word or16-bit halfword.
@@ -38,7 +40,8 @@ All fields are canonical big-endian. The decoder accepts complete saves with byt
 |4200–51FF|64 telemetry records of64bytes|
 |5200–61FF|Captured resident DMEM|
 |6200–71FF|Captured resident IMEM|
-|7200–7BFF|Up to40 measurement records of64bytes (20-second limit uses <=20)|
+|7200–76FF|Up to20 measurement records of64bytes|
+|7800–7BFF|64 sidecar records of four24-bit DP cycle counters|
 |7C00–7D0F|Interrupted CPU64-bit GPRs plus HI/LO; k0/k1 excluded from original-GPR validity|
 |7E00–7FFF|CGRAM snapshot|
 
@@ -59,4 +62,3 @@ The decoder can read the CPU ELF without an installed MIPS toolchain. Keep the e
 - No terminal diagnostic: this recorder did not establish the blocked state. Do not invent a PC or treat a stale save/counter as current evidence; escalate to a different capture transport/watchdog context if needed.
 
 A generic SMW decompilation is optional reference for later guest-behavior questions. It cannot reveal which wait is stuck in this emulator on Iron's hardware. Capturing the actual failing wrapper first gives a concrete instruction/register basis for subsequent changes.
-

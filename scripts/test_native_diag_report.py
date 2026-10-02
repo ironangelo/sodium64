@@ -74,5 +74,17 @@ class CaptureTests(unittest.TestCase):
     def test_no_elf(self):
         result,_=parse(make_capture()[0])
         self.assertEqual(len(symbolicate(result)["cpu_hotspots"]),3)
+    def test_dp_counter_wrap(self):
+        b,h=make_capture()
+        struct.pack_into(">4I",b,0x7800,0xFFFFF0,0,0,0)
+        struct.pack_into(">4I",b,0x7810,0x10,0,0,0)
+        commit(b,h)
+        row=parse(b)[0]["events"][1]
+        self.assertEqual(row["dp_cycle_deltas_mod24"][0],32)
+        self.assertTrue(row["dp_counter_delta_unambiguous"])
+    def test_dp_counter_long_gap(self):
+        b,h=make_capture()
+        struct.pack_into(">I",b,0x4240+4,46875000)
+        commit(b,h)
+        self.assertFalse(parse(b)[0]["events"][1]["dp_counter_delta_unambiguous"])
 if __name__=="__main__":unittest.main()
-

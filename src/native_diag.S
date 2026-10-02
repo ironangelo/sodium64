@@ -15,6 +15,7 @@
 #define DPCS UNCACHED(sram + 0x2200)
 #define DEVENTS UNCACHED(sram + 0x4200)
 #define DSECONDS UNCACHED(sram + 0x7200)
+#define DCOUNTERS UNCACHED(sram + 0x7800)
 .globl native_diag_init, native_diag_interrupt, native_diag_state
 .globl native_diag_done, native_diag_saved, native_diag_save_failed
 .data
@@ -306,6 +307,19 @@ native_diag_no_progress:
     sw t2, 56(t4)
     lw t2, 56(t0)
     sw t2, 60(t4)
+    // Read actual 24-bit DP cycle counters alongside each status sample. They
+    // are not the latched busy status bits, and reads do not reset counters.
+    srl t3, t3, 2
+    la t4, DCOUNTERS
+    addu t4, t4, t3
+    lw t2, 0xA4100010
+    sw t2, 0(t4)
+    lw t2, 0xA4100014
+    sw t2, 4(t4)
+    lw t2, 0xA4100018
+    sw t2, 8(t4)
+    lw t2, 0xA410001C
+    sw t2, 12(t4)
     // Full-second cumulative progress plus per-window occupancy. Partial final
     // windows remain explicitly partial and are never labelled whole-second FPS.
     lw t2, 20(t0)

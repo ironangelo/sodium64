@@ -60,7 +60,7 @@ def parse(blob):
         raise ValueError("unexpected sampling clock/interval")
     if h["sample_capacity"] != 2048 or h["event_capacity"] != 64:
         raise ValueError("unexpected ring capacities")
-    if h["seconds_count"] > 40:
+    if h["seconds_count"] > 20:
         raise ValueError("second records overlap the CPU register snapshot")
     if h["pc_next_byte"] >= 0x2000 or h["pc_next_byte"] % 4:
         raise ValueError("invalid CPU sample ring cursor")
@@ -88,6 +88,15 @@ def parse(blob):
         row = dict(zip(EVENT_FIELDS,values))
         if row["sequence"] != index+1:
             raise ValueError("event ring sequence mismatch")
+        counters = struct.unpack_from(">4I",blob,0x7800+(index%64)*16)
+        row["dp_cycle_counters24"] = [x & 0xFFFFFF for x in counters]
+        if events:
+            dt = row["elapsed_ticks"]-events[-1]["elapsed_ticks"]
+            # A 24-bit RCP counter can wrap in ~0.268s. A long observation gap
+            # cannot establish how many wraps occurred; retain raw values only.
+            row["dp_counter_delta_unambiguous"] = 0 < dt < h["count_hz"]//4
+            row["dp_cycle_deltas_mod24"] = [
+                (a-b)&0xFFFFFF for a,b in zip(row["dp_cycle_counters24"],events[-1]["dp_cycle_counters24"])]
         events.append(row)
     seconds = []
     previous = dict(elapsed_ticks=0,vi_count=0,frames_completed=0,frames_submitted=0,
@@ -212,4 +221,3 @@ def main():
 if __name__ == "__main__":
     try: raise SystemExit(main())
     except (OSError,ValueError,struct.error) as e: raise SystemExit(f"error: {e}")
-

@@ -62,9 +62,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+          timeout 180s sudo apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 install -y --no-install-recommends mesa-vulkan-drivers
+          ls /usr/share/vulkan/icd.d/
+          icd_file=$(find /usr/share/vulkan/icd.d -type f -name 'lvp_icd*.json' | head -n1)
+          test -n "$icd_file"
           mkdir -p gpu/lib gpu/icd
-          cp /usr/share/vulkan/icd.d/lvp_icd.x86_64.json gpu/icd/
+          cp "$icd_file" gpu/icd/
           cp /usr/lib/x86_64-linux-gnu/libvulkan_lvp.so gpu/lib/
           python3 - <<'PY'
           import re,subprocess,shutil

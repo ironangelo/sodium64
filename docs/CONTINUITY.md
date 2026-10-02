@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Upstream SMW reference videos received; UNDERCLOCK setting mismatch observed
+
+**MEASURED / filmed reference:** Iron identifies both videos as the same personal SMW ROM running in the author's original, unmodified Sodium64, not this fork/master/candidate. Exact upstream release/commit and executable hash remain UNKNOWN. Earlier `1000141364.mp4` is USER-REPORTED MAX precision / frameskip0 / underclockOFF; it has not been visually audited here. New `1000141366.mp4` is 32.071689 seconds and was described as using the requested settings. Directly inspected six broad samples and the first seven seconds at one-second intervals.
+
+**OBSERVED / correction to configuration:** the new video's menu at approximately0.5,1.5,2.5seconds shows FPS counterON, Sub layerBACK, precisionMEDIUM, frames skipped0, audioON, **APU UNDERCLOCK ON**, Mode7FastOFF. The menu closes around3seconds and the title/demo progresses afterward; the inspected opening sequence does not show changing underclock toOFF before closing. Therefore do not classify this reference as full-rate APU or a settings-matched performance baseline. Record the visible label; actual clock/routine semantics for the unknown upstream binary are not independently measured.
+
+**DECISION / next input remains candidate hardware:** this video remains useful as an upstream visual reference, with underclock status explicitly labeled. Remind Iron to use APU UNDERCLOCK OFF for the delivered candidate and for any equivalent upstream performance comparison. Shared ordinary candidate defaults remain compiled/verified at frameskip0, precision8/MEDIUM, audio4, underclock0 and apu_clock21. The candidate SMW build has not yet been tested by Iron; neither reference closes candidate boot/gameplay/iris/cadence. Keep original videos and derived frames private; public continuity records status/configuration only.
+
 ## 2026-10-02 UTC — RESUME HERE: private SMW wrapper DELIVERED; game/hardware result pending
 
 **IMPLEMENTED / private preparation complete:** wrapped Iron's supplied headerless SMW USA using the unchanged official converter and accepted ordinary template. Exact wrapper length1,589,248 bytes; guest offset104000; wrapper SHA256 `dd96f697d7ff7ef921d9170aa9c35e82a145928be8bb110e0338bc5e33b9c2c5`. Verified entire template prefix unchanged, the complete intervening gap zero, embedded guest byte-identical and original input preserved. Source head remains `ce4fdc7eab4849280fd07dfd0b704481b10c8ab7` on both working branches; executed qualification remains `c2e3b3583142cb032d7e1555bca5328b8749884f`; master unchanged.

@@ -25,7 +25,7 @@
 .globl write_dspaddr
 .globl write_dspdata
 
-#ifdef SODIUM64_HW_PROFILE
+#if defined(SODIUM64_HW_PROFILE) || defined(SODIUM64_NATIVE_DIAG)
 .globl dsp_buffer
 .globl dsp_regs
 .globl dsp_pointer
@@ -770,4 +770,3 @@ write_koff: // a1: value
     sb t0, enabled
     jr ra
     nop
-

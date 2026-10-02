@@ -99,6 +99,7 @@ jobs:
             build/sodium64.elf
             build/*.map
             native-diag-build.log
+            build/src/rsp*.elf
             scripts/native_diag_report.py
             scripts/profile_report.py
 

@@ -429,6 +429,9 @@ fill_backdrop:
     // every band to HCOMP. Retain its extent and use a common resident helper.
     .org 0x2CC
 rdp_emit_owned:
+    // The preceding CGRAM pair branch executes this instruction as its
+    // delay slot. It must never submit a START using the pair's DMA pointer.
+    nop
     // Every preceding sender retired its complete list; no pending START
     // remains. Do not serialize this submission against primitive execution.
     mtc0 a0, COP0_DP_START
@@ -451,7 +454,6 @@ rdp_texture_retire:
     // Their phase owns any RDP destination dependencies. Decoded textures
     // use TEXTURE == 0; raw palette updates enter the fence explicitly.
     bnez a0, dma_write_owned
-    nop
 rdp_source_retire:
     // Retire outstanding texture readers before overwriting cached RDRAM.
     // SyncFull is required: busy flags can remain latched until it executes.

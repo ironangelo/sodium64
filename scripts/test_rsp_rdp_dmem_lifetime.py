@@ -119,6 +119,7 @@ def main():
     texts=[read_text(p)[1] for p in args.elves]
     assert all(len(t)==4096 for t in texts)
     assert texts[0][0x2cc:0x33c]==texts[1][0x2cc:0x33c],'resident ownership/retirement helper differs'
+    assert texts[0][0x2cc:0x2d0]==bytes(4),'CGRAM branch delay slot submits a spurious DP_START'
     assert texts[0][0xf08:0xfa8]==texts[1][0xf08:0xfa8],'resident DMA/loader differs'
     cases=0
     for text in texts:

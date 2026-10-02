@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — Private SMW ROM received; wrapper preparation ACTIVE
+
+**MEASURED / private input:** Iron supplied his own SMW USA ZIP and explicitly requires keeping ROM bytes out of the public project. Local ZIP contains one 524,288-byte headerless LoROM, title SUPER MARIOWORLD, region1/USA, version0, mapping20, cartridge02, declared SRAM2KiB. SNES checksum/complement and calculated checksum agree; reset vector8000. ROM identity SHA256 `0838e531fe22c077528febe14cb3ff7c492f1f5fa8de354192bdff7137c27f5b`, CRC32 `b19ed489`. These are identity metadata, not commercial bytes.
+
+**PRIVACY / execution boundary:** extracted only into a private scratch directory outside every git worktree; do not upload the ROM, wrapper, SRAM, framebuffer/memory dumps or private archive to repository, public release, Actions inputs/artifacts or public hosting. Private user delivery stays in this conversation. Any public checkpoint is metadata/status only. Shared runtime branches and master are unchanged.
+
+**ACTIVE / next batch:** use qualified ordinary template `6ab58d5317a48c87be2e0c0dde103e6762cf595e55ee8aa58bf7224849678b73` and unchanged official converter; byte-verify template preservation, zero gap and exact embedded ROM, inspect compiled defaults and prepare one bounded hardware probe. No commercial ROM execution has occurred. Local inventory found no ares/Mupen executable or virtual X display; prior emulator qualification ran on remote CI. Treat absent local emulator as a LAB LIMITATION and keep private game bytes out of that remote lab. Do not claim SMW boot/gameplay/iris or native cadence from wrapping alone.
+
 ## 2026-10-02 UTC — RESUME HERE: prerequisite closure reverified; awaiting private SMW ROM
 
 **VALIDATED / bounded resume batch:** read current canonical Road/Roadmap/Profiling/Validation and matched live GitHub refs, exact CI and durable evidence. Both `phase4/gate-c-smw-exploration` and `phase4/gate-c-stage2-color-diag` still point to `ce4fdc7eab4849280fd07dfd0b704481b10c8ab7`; master remains `7cc8facfe8643fb85888f301f79995575830521d`. No open PR was returned by the repository open-PR query. Dedicated run `36942594882` and generic run `36942594783` both remain completed/SUCCESS on executed source `c2e3b3583142cb032d7e1555bca5328b8749884f`. Inspected final commit: only SMW documentation and historical audit docstring changed after that execution.

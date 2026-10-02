@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — A3 direct-backdrop candidate compiled; full-image qualification RUNNING
+
+Iron clarified that FPS loss is sustained before and after the iris, not limited to its transition. New source on isolated phase4/gate-c-a3-direct-backdrop specializes exact black-backdrop-only addition (CGADSUB=20, CGWSEL=02/12). It draws fixed+Sub into final Main, freshly computes and blacks the prevented COLOR-window spans, restores texture combiner/full section scissor, and overlays Main layers. Direct and no-op policies keep the whole real section; only the general policy retains <=8-row compact bands. General Main/Mode7/math bank bytes match A2. Existing RDP source and DMEM command lifetime barriers remain.
+
+Runtime commit 0c82a77b1598b9d1f365f7644446c0f1055e6469; original fixture/workflow commit 771577dc3832f5663ade4a6843e60830a6ac076a; build head 4077278ce930c1eb7952b793e56f25e5dcbcd973 fixes only checker CLI arguments. Build-and-Validate run 37077222372: normal/native/profile and Mupen original smoke all pass. Empty-template normal artifact 11256679219; native artifact 11256549481. Five RSP banks pass delay checks; 408 lifetime cases and 3784 alignment/consumer cases pass; native CPU arena gap is 0x40f0.
+
+New compiled execution test currently local proves 65,540 admission cases, 8,704 exact 256-pixel mask cases (including stale scratch, narrow previous scissor, reversed/singleton/two-window logic), and 3,495 whole/general-section geometry cases. Private replay of the final A2 DMEM state admits direct policy. No native A3 FPS or full-game acceptance claim.
+
+Gate C Direct Backdrop Pixel Qualification run 37077167184 at 771577d is RUNNING, using pinned ares RSP interpreter and 36 original guests (27 existing plus 9 direct/raster/empty/inverted/window cases). Pinned ares needed a rebuild because caches from other branch scopes were not inherited. Build/geometry passed; full-frame oracles now executing. This suite is a delivery gate: inspect actual pixel/guard results, fix any regression, and do not equate host FPS with N64 FPS.
+
+Private normal and 20-second diagnostic wrappers prepared locally with exactly the unchanged guest; not delivered yet. Keep commercial content/private saves/video/DMEM off GitHub/Actions. Master remains 7cc8facfe8643fb85888f301f79995575830521d. Pending: image qualification, publish compiled original-only test/evidence, finish private ZIP and decoder, record final continuity, obtain native A3 FPS/save + separate gameplay results.
+
 ## 2026-10-02 UTC — RESUME HERE: native A2 passes the previous intro freeze; FPS optimization now authorized
 
 Iron reports A2's intro/iris/title faithfully matches SNES including colors, no prior reset crash, and the expected diagnostic TIME LIMIT screen. Independent decoding with the exact 93cf51b native ELF/map confirms a valid complete 20.0395-second capture, 481 submitted/completed frames, no direct wait PC, pre-halt DP idle with CURRENT=END, and an acknowledged settled capture halt. Video also shows iris completion and title/demo continuing. This validates the previously failing intro point, not yet general gameplay or native 60 FPS.

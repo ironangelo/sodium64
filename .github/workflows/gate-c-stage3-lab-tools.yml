@@ -32,7 +32,7 @@ jobs:
           mkdir -p lab/bin lab/lib lab/share
           cp "$ares_bin" lab/bin/ares
           strip --strip-debug lab/bin/ares
-          cp /usr/bin/Xvfb lab/bin/
+          cp /usr/bin/Xvfb /usr/bin/xkbcomp lab/bin/
           cp -a "$RUNNER_TEMP/ares-src/ares/n64" lab/n64-source
           cp "$RUNNER_TEMP/ares-src/LICENSE" lab/ARES-LICENSE
           cp -a /usr/share/X11 lab/share/
@@ -40,7 +40,7 @@ jobs:
           python3 - <<'PY'
           import os,re,subprocess,shutil
           from pathlib import Path
-          targets=[Path(os.environ['ARES_PACKAGE_BIN']),Path('/usr/bin/Xvfb')]
+          targets=[Path(os.environ['ARES_PACKAGE_BIN']),Path('/usr/bin/Xvfb'),Path('/usr/bin/xkbcomp')]
           targets+=list(Path('/usr/local/lib').glob('libSDL3.so*'))
           targets+=list(Path('/usr/lib/x86_64-linux-gnu').glob('libOpenGL.so*'))
           for target in targets:

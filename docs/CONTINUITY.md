@@ -2,6 +2,12 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — IMPORTANT SETTINGS CORRECTION: A2 and A3 diagnostic use MEDIUM, not MAX
+
+Iron correctly challenged the previous MAX instruction. Independently inspected the qualified source src/menu.S and src/native_diag.S: precision_opts order is LOWER, LOW, MEDIUM, HIGH, HIGHER, MAX; precision_set stores the option byte offset (index * 4). Consequently raw value 8 = MEDIUM, and MAX = 20. native_diag_init writes 8. A2's measured save reports 8 and A3's unchanged diagnostic also sets 8; both are MEDIUM. Normal build default is likewise MEDIUM. Prior statements/instructions equating MAX with 8 are erroneous.
+
+Keep comparative tests at FPS ON, precision MEDIUM, frameskip 0, APU underclock OFF, same audio. Do not raise precision to MAX during this comparison. No ROM/code/settings change is necessary; only the A3 readme, private validation notes and continuity were corrected. ROM bytes remain identical to the qualified 4077278 delivery. The private A3 ZIP instructions are being replaced under the same artifact identity.
+
 ## 2026-10-02 UTC — RESUME HERE: A3 performance candidate qualified and privately packaged; NEXT native FPS/save + gameplay
 
 A2 native intro/iris/reset failure is resolved in Iron's latest test: faithful colors/title, previous freeze absent, intentional TIME LIMIT after 20.0395 seconds / 481 completed frames. FPS loss is sustained: ~24 FPS before iris and ~17.8 afterward, with CPU RSP wait dominant. Outside iris the native records show roughly one real section per frame; the general compositor still subdivides it into ~28 compact bands. During iris, real section counts reach ~86–103 per frame. Do not describe the FPS problem as iris-only or infer full-game acceptance from this intro footage.
@@ -14,7 +20,7 @@ Full-image run 37077167184 SUCCESS at 771577dc3832f5663ade4a6843e60830a6ac076a; 
 
 Private ZIP sodium64-A3-fps-4077278.zip prepared and saved: normal wrapper for unrestricted gameplay plus diag-20s wrapper for comparable measurement, exact A3 ELF/map/RSP banks/decoder, Spanish readme/analysis, validation and checksums. Guest bytes are exactly unchanged. No commercial bytes/state/assets/save/video were published or sent to Actions; automated guests remain original fixtures. Master independently rechecked unchanged at 7cc8facfe8643fb85888f301f79995575830521d; no PR or merge.
 
-Next: Iron should first run diag-20s through intro without advancing, then TIME LIMIT -> reset -> provide A3 save/video; compare interval FPS and wait occupancy against A2, explicitly testing the sustained low-FPS scenes. Same settings: FPS on, precision MAX (8), frameskip 0, APU underclock off, same audio. The normal wrapper then permits gameplay without the diagnostic time limit; its SRAM is ordinary game SRAM, not an S64D diagnostic capture. 60 FPS, native A3 stability and full gameplay remain PENDING; do not invent native throughput from host performance. If target not met, inspect the new actual save before widening admission or removing barriers.
+Next: Iron should first run diag-20s through intro without advancing, then TIME LIMIT -> reset -> provide A3 save/video; compare interval FPS and wait occupancy against A2, explicitly testing the sustained low-FPS scenes. Same settings: FPS on, precision MEDIUM (8), frameskip 0, APU underclock off, same audio. The normal wrapper then permits gameplay without the diagnostic time limit; its SRAM is ordinary game SRAM, not an S64D diagnostic capture. 60 FPS, native A3 stability and full gameplay remain PENDING; do not invent native throughput from host performance. If target not met, inspect the new actual save before widening admission or removing barriers.
 
 ## 2026-10-02 UTC — A3 direct-backdrop candidate compiled; full-image qualification RUNNING
 

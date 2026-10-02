@@ -39,3 +39,5 @@ transitions, rather than treating CURRENT as the offending instruction.
 Keep all commercial ROMs, wrappers, saves, footage and extracted contexts
 private. Public CI receives only emulator source and original generated tests.
 Do not move master or create a PR/merge for this candidate.
+
+Compiled qualification: immutable runtime 93cf51ba5da0305b0d8308b7950bef1404a1fa1a, run37073139943 SUCCESS (normal/profile/native/original Mupen LLE smoke; master release skipped). Native artifact11256196473. Address regression PASS3784 original instruction-executed cases; command/source lifetime PASS408. Expanded compact allocation reserves the preceding 64-byte line; the complete-image observer moves its lower 64-byte guard outside that allocation without relaxing pixel comparisons. Native freeze/FPS acceptance remains pending.

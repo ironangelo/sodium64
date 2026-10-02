@@ -64,7 +64,10 @@ def main():
             engine=require_fenced_boundary(c,stage=f'fullheight {args.case} {attempt}')
             guards={}
             for start in (0xe2000,0xe4000,0xe6000):
-                for address in (start-64,start+0x1180):
+                # Arbitrary-Y alignment uses up to 48 bytes before the nominal
+                # compact origin. Reserve that preceding cache line; keep a
+                # complete 64-byte guard outside the expanded allocation.
+                for address in (start-128,start+0x1180):
                     guard=c.read_memory(address|0xa0000000,64,64)
                     guards[hex(address)]=guard.hex()
                     assert guard==bytes(64),('compact guard modified',hex(address),guard.hex())

@@ -191,10 +191,12 @@ hcomp_copy_ts_start:
     sll a3, a3, 4
     add a3, a3, t0
 hcomp_copy_ts:
-    li a2, 63
-    slti t0, a3, 64
+    // Main/OBJ reload their cache before using TILE_TABLE. Borrow its exact
+    // 1024-byte extent after Sub is fenced; retain VRAM_TABLE at0x440.
+    li a2, 1023
+    slti t0, a3, 1024
     beqz t0, hcomp_copy_chunk
-    li a0, SCRN_DATA
+    li a0, TILE_TABLE
     addi a2, a3, -1
 hcomp_copy_chunk:
     move a1, t6

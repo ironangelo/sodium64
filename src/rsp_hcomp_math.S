@@ -161,8 +161,8 @@ hcomp_vector:
     lqv $v04, 0, 0, t1
     lqv $v05, 0, 512, t1
     vand $v00, $v00, $v04, 0
-    vand $v07, $v31, $v31, 0
-    ctc2 zero, $0
+    // Zero eligibility while retiring any incoming vector carry bits.
+    vge $v07, $v31, $v31, 0
     veq $v06, $v02, $v20, 8
     vmrg $v06, $v21, $v31, 0
     vor $v07, $v07, $v06, 0
@@ -261,6 +261,9 @@ hcomp_channel_pack:
     bnez s7, hcomp_row
     nop
 hcomp_section_done:
+    // shared_decode expects its upper-plane accumulator empty on entry.
+    vand $v20, $v31, $v31, 0
+hcomp_return_phase:
     lw a1, OVERLAY_HCOMP_SRC
     j 0xA4001F7C
     li t9, 0x1778

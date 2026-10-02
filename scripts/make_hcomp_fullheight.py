@@ -8,7 +8,7 @@ from make_gate_c_hcomp_main_sub_lifetime import Assembler, lda_sta_abs, dma_to_v
 from make_gate_c_hcomp_color_window import build_case, WINDOW_HOOK_OFFSET
 
 CASES = ('half', 'add', 'sub', 'sub-half', 'bg2', 'bg3', 'bg4', 'window', 'short',
-         'blank', 'obj-low', 'obj-high', 'sram', 'layer-window', 'layer-edge', 'layer-xor', 'rgb-add', 'rgb-half', 'rgb-sub', 'rgb-sub-half')
+         'blank', 'obj-low', 'obj-high', 'sram', 'layer-window', 'layer-edge', 'layer-xor', 'rgb-add', 'rgb-half', 'rgb-sub', 'rgb-sub-half', 'rgb-main', 'rgb-subscreen')
 
 
 def set_store(rom, address, old, new, count=1):

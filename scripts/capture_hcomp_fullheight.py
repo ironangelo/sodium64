@@ -69,6 +69,8 @@ def main():
                     guards[hex(address)]=guard.hex()
                     assert guard==bytes(64),('compact guard modified',hex(address),guard.hex())
             owner=int.from_bytes(c.read_memory(0xa00f0000,4,4),'big')
+            if args.case in ('rgb-main','rgb-subscreen'):
+                owner=int.from_bytes(c.read_memory(0xa4400004,4,4),'big')|0xa0000000
             report=dict(passed=False,owner=hex(owner))
             if owner in FRAMEBUFFER_ADDRS:
                 # Observe the actual last rendered epoch, not just guest source
@@ -77,8 +79,8 @@ def main():
                 # Slice the aligned full-DMEM snapshot already captured here.
                 controls=dmem[0xbb7:0xbbb]
                 want_cg={'add':1,'sub':0x81,'sub-half':0xc1,'bg2':0x42,'bg3':0x44,'bg4':0x48,
-                         'obj-low':0x51,'obj-high':0x51,'rgb-add':1,'rgb-half':0x41,'rgb-sub':0x81,'rgb-sub-half':0xc1}.get(args.case,0x41)
-                want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11}.get(args.case,1)
+                         'obj-low':0x51,'obj-high':0x51,'rgb-add':1,'rgb-half':0x41,'rgb-sub':0x81,'rgb-sub-half':0xc1,'rgb-main':0,'rgb-subscreen':0}.get(args.case,0x41)
+                want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11,'rgb-subscreen':2}.get(args.case,1)
                 want_ts=1 if args.case=='bg2' else 2
                 want_window=0xa2 if args.case=='window' else 2
                 image=c.read_memory(owner,280*240*2,chunk)

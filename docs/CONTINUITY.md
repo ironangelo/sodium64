@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — RESUME HERE: private SMW real-hardware probe FAIL; freeze/cost audit ACTIVE
+
+**MEASURED / real N64 filmed result:** Iron ran our delivered SMW Z64 and supplied private video `1000141368.mp4` (61.930708seconds), reporting extremely low FPS and freeze mid-iris. Confirmed the loaded filename corresponds to `ce4fdc7` candidate and observed its menu at approximately15seconds: precisionMEDIUM, frameskip0, audioON, underclockOFF, Sub layerBACK. Counter initiallyOFF in that observed menu; detailed transition/FPS readout inspection is in progress. Logo is reached, then sampled35/45/55seconds retain the same cyan opening over black; title/gameplay checkpoint is not reached. These are failure observations, not expected stage behavior. Exact frozen CPU/RSP/DP state is UNKNOWN from footage.
+
+**DECISION:** private SMW compatibility probe is **FAILED**, not SMW-qualified. Prior `smw_private_probe_ready=true` remains the limited synthetic admission result only; it never proves game compatibility, iris or native performance. Thirteen synthetic images/ordinary SRAM are not superseded as their own results, but they missed this representative blocker. No master merge or Gate C closure. Upstream reference has an observed underclockON mismatch, so it cannot quantify full-rate performance delta; candidate's visible freeze remains a failure independently of that mismatch.
+
+**ACTIVE / bounded audit:** inspect actual full-height band/overlay path, windows/force-blank/startup/brightness epochs and resident compiled targets. Separate intrinsic scalar composition cost from correctness or hardware synchronization stall. Read-only source review can identify mechanisms/defects, but do not label a static hypothesis as the measured cause of freeze. No local N64 emulator exists; keep game/wrapper/dumps/video out of repository/CI. Use original synthetic dynamic transition workload or ROM-free tooling if remote execution is needed. Record concrete findings before the next long batch; Iron need not repeat this broken candidate.
+
 ## 2026-10-02 UTC — Upstream SMW reference videos received; UNDERCLOCK setting mismatch observed
 
 **MEASURED / filmed reference:** Iron identifies both videos as the same personal SMW ROM running in the author's original, unmodified Sodium64, not this fork/master/candidate. Exact upstream release/commit and executable hash remain UNKNOWN. Earlier `1000141364.mp4` is USER-REPORTED MAX precision / frameskip0 / underclockOFF; it has not been visually audited here. New `1000141366.mp4` is 32.071689 seconds and was described as using the requested settings. Directly inspected six broad samples and the first seven seconds at one-second intervals.

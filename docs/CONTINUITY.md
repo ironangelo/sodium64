@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-02 UTC — RESUME HERE: private SMW wrapper DELIVERED; game/hardware result pending
+
+**IMPLEMENTED / private preparation complete:** wrapped Iron's supplied headerless SMW USA using the unchanged official converter and accepted ordinary template. Exact wrapper length1,589,248 bytes; guest offset104000; wrapper SHA256 `dd96f697d7ff7ef921d9170aa9c35e82a145928be8bb110e0338bc5e33b9c2c5`. Verified entire template prefix unchanged, the complete intervening gap zero, embedded guest byte-identical and original input preserved. Source head remains `ce4fdc7eab4849280fd07dfd0b704481b10c8ab7` on both working branches; executed qualification remains `c2e3b3583142cb032d7e1555bca5328b8749884f`; master unchanged.
+
+**MEASURED / compiled defaults:** read symbol-resolved bytes from the actual accepted ordinary ELF (SHA256 `2c73414b925817003906d897997d1cbfc881a5f6a937140452d014d209ff124f`). counter0, layer0/BACK, precision8/MEDIUM, skipped0, audio4/ON, underclock0/OFF, apu_clock21. Normal PROFILE/HW_PROFILE/COLOR_DIAG remain off. This does not add diagnostic hooks or patch guest/runtime bytes.
+
+**VALIDATED / packaging, NOT game execution:** one private ZIP contains the Z64, Spanish hardware procedure/controls, identity manifest, SHA256SUMS and Sodium64 license. ZIP integrity and every extracted file were checked; saved privately for Iron with identity metadata attached successfully. No ROM/wrapper/game save or private download locator was committed or uploaded to GitHub, Actions, releases or public hosting. Only derived identity/status metadata appears in continuity. Private delivery can be recovered through the conversation's generated-file attachment; do not add its download link or private item IDs here.
+
+**LAB LIMITATION:** no local ares/Mupen executable or virtual display exists in this execution environment. Prior lab results were remote CI; Iron's private game was deliberately kept out of that remote execution path. No commercial game boot/gameplay/audio/iris pass or native performance measurement is claimed. Wrapping is complete, not a substitute for running the game.
+
+**NEXT / bounded hardware probe:** Iron runs the delivered Z64 on his N64, records boot/title/demo/audio, starts a file using N64 A=SNES Start, enters Yoshi's Island1, tests gameplay and preferably records level-end iris/overworld return. Optional ordinary save/reload after a game-provided save point (e.g. Yellow Switch Palace), wait5seconds, return using cart's usual save procedure. Start opens emulator settings; C-down=SNES B jump, C-left=Y run, C-right=A spin jump. The ordinary save contains SMW progress, not per-frame S64H/S64C metrics; an enabled built-in FPS counter is only supplemental observation. On any freeze/color/layer/audio defect, first localize exact screen/transition from that evidence and preserve the private save/video. Do not merge experimental renderer into master or close Gate C from this wrapper.
+
 ## 2026-10-02 UTC — Private SMW ROM received; wrapper preparation ACTIVE
 
 **MEASURED / private input:** Iron supplied his own SMW USA ZIP and explicitly requires keeping ROM bytes out of the public project. Local ZIP contains one 524,288-byte headerless LoROM, title SUPER MARIOWORLD, region1/USA, version0, mapping20, cartridge02, declared SRAM2KiB. SNES checksum/complement and calculated checksum agree; reset vector8000. ROM identity SHA256 `0838e531fe22c077528febe14cb3ff7c492f1f5fa8de354192bdff7137c27f5b`, CRC32 `b19ed489`. These are identity metadata, not commercial bytes.

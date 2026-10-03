@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A4 console map capture identifies a conservative direct-composition opportunity
+
+Iron reports A4 new-game Welcome now60 FPS, most stages60 with occasional57, iris transient~30, world map still slow. Independently viewed the available61.277s diagnostic video: title60, Welcome60, map18, terminal CAPTURE SAVED/TIME LIMIT. Normal2-minute video failed materialization twice; not read and no claims from it. Both uploaded saves read locally/private: diagnostic is valid S64Dv2, normal is ordinary32768B guest SRAM without S64D. Two saves are expected because both normal and diagnostic wrappers use cartridge SRAM; only the diagnostic contains profiler records.
+
+Map capture20.029161s,359 completed/submitted frames,1198 VI, no freeze. Nineteen complete intervals~17.84 FPS (two18.83); CPU RSP wait~75–79%, SP running~99–100%, measured recorder ISRbody0.1985%. All64 PPU companion samples agree: CGWSEL03/CGADSUB30/TM15/TS02, Main black, nonzero fixed, policy0. Final halted DMEM matches, BG_MODE08 (mode0), full real section224 rows still split into8-row general bands. This is actual map evidence, not the earlier title configuration.
+
+Private OAM analysis of the final coherent capture: all25 potentially visible objects use palette groups0..3 (color math prohibited by existing OBJ provenance). Five objects have high math-capable palette groups but are wholly above the viewport after the renderer's Y-wrap and size rules; their bottom<=0. A4 nevertheless rejects CGADSUB30 wholesale and rejects CGWSEL bit0, forcing the full Sub/compact/Z/pixel arithmetic route. Proposed generic exact extension: treat OBJ math as inactive only when Main OBJ disabled or a bounded scan proves every high-palette object wholly above the frame; conservatively retain general composition for every other high-palette object. Ignore CGWSEL direct-color bit in the compositor eligibility predicate only; preserve the BG rendering registers. No game identity checks or copied commercial fixture data. Needs compiled admission counterexamples, original visible/high/wrapped/size fixtures and full image tests before private A5 handoff.
+
+Working base phase4/gate-c-a4-gameplay-capture at4ea23348339a399892f3e7ec4e8ab7c5b6fe2252. Master untouched. Commercial saves/video/ROM/dumps remain private; publish only observational metadata and independently authored tests. No native steady60 claim for map/iris yet.
+
 ## 2026-10-03 UTC — A4 image and manual-recorder qualification complete; private console handoff ready
 
 Runtime: e71a8719eba320714d442e9d69bc305a10ad5ccc on isolated branch `phase4/gate-c-a4-gameplay-capture`. Qualification head: 4ea23348339a399892f3e7ec4e8ab7c5b6fe2252. The later commits change original fixture initialization and laboratory recorder readers, not production binaries. No PR/merge; master remains 7cc8facfe8643fb85888f301f79995575830521d.

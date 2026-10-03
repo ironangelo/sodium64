@@ -5,6 +5,17 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+
+## 2026-10-03 UTC — Actual A10 comparison; combined A11 candidate enters qualification
+
+Iron supplied the actual A10 20-second trace at the same title segment and explicitly requested a batch of multiple optimizations covering both iris and separate action microdips without fidelity loss. Exact A10 ELF/map decoder accepts geometry, checksum, counts and monotonicity: 20.033641 Count-domain seconds, 396/400 observations, overflow 0, 1,169 completed frames and 4,013 sections. A9 recorded 1,168/4,012 over 20.033143 seconds. Different arm alignment prevents treating these as a speed improvement or regression. A10 iris-containing interval records 39.58 FPS, explicit RSP wait 31.4%, SP running 90.3%; later dips include 58.30/58.31/56.33 FPS with no sampled explicit RSP wait. Hidden VRAM semaphore waits are still included in CPU-other. Non-atomic overlay-unknown RSP PCs are not exact routine cost attribution. Original SAVs, private arrays and guest hashes stay private.
+
+Combined source candidate `6209c10ba5aeb589a15e0dc9a1a5c5181f8a14a8` on isolated source branch changes only ten whitelisted emulator/test/workflow paths. Three generic work reductions: skip primitive depth tags only for Z-disabled raw/direct composition, preserving general-compositor provenance; publish only dirty 512-byte VRAM groups while retaining exact dirty queues and full boot publication; reuse each alternating palette queue only when its CGRAM and brightness are unchanged, preserving raw raster epoch capture. Guest writers invalidate both palette queues. No CPU/APU/DSP clocks, guest identity, underclock, audio, precision or raster section semantics change.
+
+Compiled tests cover actual cache operations/addresses, dirty handoff, boot state, independent queue validity/component-scaled palette pixels, CGRAM commit invalidation, fixed resident ABI and conditional depth submission. Full fresh 84-image matrix plus v2/v3 original-guest capture and PI SRAM qualification are required before private handoff. A11 trace adds a bounded optional VRW1 header extension: per-second and partial VRAM semaphore IRQ counts remain a subset of legacy CPU-other; classification reads EPC, never SP_SEMAPHORE. Existing 20-second append-only capacity remains unchanged. Decoder compatibility fixtures pass locally; all new compiled and runtime qualification is pending.
+
+No A11 hardware FPS claim exists. Iris and microdips remain unresolved until measured on N64. Master remains 7cc8facfe8643fb85888f301f79995575830521d; no PR, merge or release. Commercial ROM/wrapper/SAV/video/extracted state never enters GitHub/CI.
+
 ## 2026-10-03 UTC — A10 normal hardware feedback: target iris and microdips unchanged
 
 Iron tested the delivered A10 normal wrapper on the target N64 intro and reports no observable improvement: the same FPS-drop gaps occur in the same places as before. Exact numerical A10 timeline, new diagnostic SAV and aligned video have not yet been supplied. Treat this as negative hardware feedback for the target objective, not a confirmed FPS gain. Potential benefits in other scenes remain unmeasured hypotheses. Compiled equivalence and unchanged image proofs establish correctness of the restricted admission change, not a native speedup.

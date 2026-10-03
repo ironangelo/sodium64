@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A8 compiled seek and Iggy-preservation pass; full image/manual qualification in progress
+
+Active isolated source isd169f38f0bbc9d343c457f06114492ff34b790a0; runtime remains57708db269b0bba9ba0dbf848550af2227821da6. The later commit only corrects new-fixture oracles: use their original nonzero palette0 for masked backdrop, read the actual published image on the raw path, and require the intended CGADSUB controls. No runtime or original guest byte arrays changed in this correction.
+
+Compiled execution passes67656 seek cases and40 independent pixel-coverage cases, including17 backward tile rewinds for nearby spans. It preserves cache/dirty/priority/last-upload state and both rectangle Y fields. Existing fixed BG/Mode7/common entries retain their addresses. Exact downloaded normal/native builds have identical six RSP banks; all five non-Main banks, Main DMEM, and CPU text are byte-identical to A7. Main differences are limited to the BG seek call and helper in formerly unused resident padding. Private compiled Iggy policy/window replay still passes, with direct fixed-color composition and correct fully masked affine region behavior.
+
+Final build run37106805181 passes normal/native/profile/emulator smoke; release job is skipped. Its normal/native templates and CPU ELFs are byte-identical to prior577 builds used for compiled preservation checks. Pixel/manual run37106805182 is testing all82 original images, not only the new six. The earlier577 image run was superseded after the test-harness correction; do not claim a passing82-image result until the final suite and manual recorder complete and downloaded frames/templates match. Private A8 builder refuses unqualified handoff and uses the exact latest A7 normal SRAM.
+
+Real-console A8 iris FPS and residual action/fade performance remain pending. No claim that CPU-bound dips are fixed, no master change, no PR/merge, no unified menu recorder implementation. Commercial files/captures/state/hash stay private.
+
 ## 2026-10-03 UTC — A8 current A7 title capture analyzed; general BG span seek implemented, qualification pending
 
 New private A7 diagnostic and normal SRAM plus title video were read locally, with the exact A7 CPU ELF/map. The completed20.041-second native capture uses MAX/skip0/audioON/APU-clock21 (underclockOFF),1165 completed/submitted frames and4009 sections; observer overhead is about0.386%. Video independently shows the title iris and later brief action dips, followed by expected TIME_LIMIT completion.

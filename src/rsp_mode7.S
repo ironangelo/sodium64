@@ -807,14 +807,20 @@ next_subtile:
     sll t1, v1, 8
     add t0, t0, t1
 
-    // Pack the same eight rows with one vector, leaving room in the fixed slot.
+    // Pack four rows per iteration, retaining the exact eight-row layout.
     addi t1, a0, 0x80
 mode7_pack_row:
     lqv $v00, 0, 0, a0
+    lqv $v01, 0, 0x10, a0
+    lqv $v02, 0, 0x20, a0
+    lqv $v03, 0, 0x30, a0
     spv $v00, 0, 0, t0
-    addi a0, a0, 0x10
+    spv $v01, 0, 0x20, t0
+    spv $v02, 0, 0x40, t0
+    spv $v03, 0, 0x60, t0
+    addi a0, a0, 0x40
     bne a0, t1, mode7_pack_row
-    addi t0, t0, 0x20
+    addi t0, t0, 0x80
 
     // Loop through tiles until the texture is complete
     bnez v0, next_subtile

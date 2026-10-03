@@ -19,6 +19,8 @@ hcomp_fast_entry:
     nop
 
 hcomp_fast_admit:
+    lbu t0, TS
+    sb t0, HCOMP_EFFECTIVE_TS
     sw zero, HCOMP_BAND_RAW
     sw zero, HCOMP_OBJ_ADAPTIVE
     sw k1, HCOMP_FAST_END
@@ -155,8 +157,14 @@ hcomp_fast_obj_next:
     sw t7, HCOMP_FAST_END
 hcomp_fast_direct:
     li t0, 2
-    b hcomp_fast_return
     sw t0, HCOMP_BAND_RAW
+    lbu t0, CGWSEL
+    andi t0, t0, 2
+    bnez t0, hcomp_fast_return
+    nop
+    sb zero, HCOMP_EFFECTIVE_TS
+    b hcomp_fast_return
+    nop
 hcomp_fast_raw:
     li t0, 1
     sw t0, HCOMP_BAND_RAW

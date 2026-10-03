@@ -256,6 +256,8 @@
 #define HCOMP_BAND_Y 0xEC0
 #define HCOMP_BAND_ROWS 0xEC4
 #define HCOMP_SCREEN 0xEC8
+// Per-epoch Sub mask; fixed-operand direct composition does not render TS.
+#define HCOMP_EFFECTIVE_TS 0xEC9
 #define HCOMP_DIAG_COMPOSE_LIMIT 0xECC
 #define HCOMP_FIXED_COLOR 0xED0
 // Per-band compact pixel origins, including the 12-pixel left border.

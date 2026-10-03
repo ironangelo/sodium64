@@ -53,6 +53,10 @@ def build_seek(case):
 def expected_seek(case,x,y):
     l,r,selector=bounds(case,y)
     visible=(l<=x<=r) if selector==3 else not l<=x<=r
-    if not visible: return 1 # backdrop is not math-eligible in these guests
+    if not visible:
+        # The original patterned palette deliberately has nonzero entry0.
+        # Backdrop is not math-eligible in these guests.
+        raw=PALETTE[0]
+        return ((raw&31)<<11)|(((raw>>5)&31)<<6)|(((raw>>10)&31)<<1)|1
     return expected_rgb('rgb-add' if case=='span-seek-math' else 'rgb-main',
                         x+(3 if case=='span-seek-scroll' else 0),y)

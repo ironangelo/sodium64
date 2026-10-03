@@ -83,7 +83,7 @@ def main():
                     guards[hex(address)]=guard.hex()
                     assert guard==bytes(64),('compact guard modified',hex(address),guard.hex())
             owner=int.from_bytes(c.read_memory(0xa00f0000,4,4),'big')
-            if args.case.startswith(('fast-','mode7-')) or args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen'):
+            if args.case.startswith(('fast-','mode7-')) or args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen') or args.case.startswith('span-seek-') and args.case!='span-seek-math':
                 owner=int.from_bytes(c.read_memory(0xa4400004,4,4),'big')|0xa0000000
             report=dict(passed=False,owner=hex(owner))
             if owner in FRAMEBUFFER_ADDRS:
@@ -97,6 +97,8 @@ def main():
                 want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11,'rgb-subscreen':2,'rgb-row-subscreen':2}.get(args.case,1)
                 want_ts=1 if args.case=='bg2' else 2
                 want_window=0xa2 if args.case=='window' else 2
+                if args.case.startswith('span-seek-'):
+                    want_cg=1 if args.case=='span-seek-math' else 0
                 if args.case.startswith('mode7-'):
                     from make_mode7_windows import controls as mode7_controls
                     want_window,want_cg,want_ts,want_tm=mode7_controls(args.case)

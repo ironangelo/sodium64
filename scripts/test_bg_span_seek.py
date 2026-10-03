@@ -110,8 +110,41 @@ def main():
                     current+=8
             assert seen=={x for x in range(256) if any(l<=x<=r for l,r in intervals)}
             coverage+=1
+    early=0; hidden=0
+    bounds_cases=((0,255,0,255),(32,95,64,191),(255,255,0,0),
+                  (200,100,250,2),(0,0,255,255),(80,80,80,80),(2,254,3,253))
+    for index in range(4):
+     for selector in range(16):
+      for logic in range(4):
+       for bounds_tuple in bounds_cases:
+        for screen in (0,1):
+         for masks in range(4):
+          d=bytearray(data);d[0xec8]=screen
+          d[0xbbb]=(1<<index) if masks&1 else 0
+          d[0xbbc]=(1<<index) if masks&2 else 0
+          struct.pack_into('>H',d,0xba4,selector<<(index*4))
+          d[0xbb5]=logic<<(index*2);d[0xbae:0xbb2]=bytes(bounds_tuple)
+          r=[0x13500000+i for i in range(32)];r[0]=0
+          r[4]=0xf50+index*8;r[5]=r[4]+8;r[7]=1<<index
+          r[18]=index*2;r[31]=0xbee
+          frozen={i:r[i] for i in (2,7,*range(16,24),25,26,27,28,29)}
+          protected=d[0x840:0xa60]+d[0xb80:0xbc0]
+          active=bool((masks>>screen)&1)
+          wanted={x for x in range(256) if not active or not vm.selected(x,selector,logic,bounds_tuple)}
+          stop=0xf5c if wanted else 0x370
+          vm.run(code,d,syms['bg_window_depth'],r,stop=stop)
+          assert all(r[i]==value for i,value in frozen.items())
+          assert d[0x840:0xa60]+d[0xb80:0xbc0]==protected
+          if wanted:
+           assert r[4:6]==[0xf50+index*8,0xf58+index*8] and r[31]==0xbee
+          else: hidden+=1
+          if active:
+           seen={x for n in range(d[0xe8a]) for x in range(d[0xe84+2*n],d[0xe85+2*n]+1)}
+           assert seen==wanted
+          early+=1
     result=dict(passed=True,compiled_cases=cases,coverage_cases=coverage,
                 shared_tile_rewinds=rewind,hidden_tile_iterations_avoided=saved,
+                early_window_cases=early,fully_hidden_layer_cases=hidden,
                 maximum_helper_instructions=maximum_steps,
                 preserved_cache_dirty_priority_texture_identity=True,
                 native_fps_authority=False)

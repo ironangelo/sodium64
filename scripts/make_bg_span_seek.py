@@ -5,9 +5,12 @@ from make_gate_c_hcomp_main_sub_lifetime import Assembler, lda_sta_abs
 from make_hcomp_color_grid import PALETTE, expected_rgb
 
 CASES=('span-seek-narrow','span-seek-split','span-seek-scroll',
-       'span-seek-raster','span-seek-math','span-seek-priority')
+       'span-seek-raster','span-seek-math','span-seek-priority',
+       'span-seek-hidden','span-seek-sub-hidden')
 
 def bounds(case,y):
+    if case in ('span-seek-hidden','span-seek-sub-hidden') or case=='span-seek-raster' and y<64:
+        return 255,0,3
     if case=='span-seek-split': return 61,62,2
     if case=='span-seek-raster': return 93+y%32,100+y%32,3
     return 93,148,3
@@ -15,12 +18,13 @@ def bounds(case,y):
 def build_seek(case):
     from make_hcomp_fullheight import build,set_store
     assert case in CASES
-    rom=bytearray(build('rgb-add' if case=='span-seek-math' else 'rgb-main'))
+    rom=bytearray(build('rgb-add' if case in ('span-seek-math','span-seek-sub-hidden') else 'rgb-main'))
     # Extend the existing original palette-load hook, preserving its loop.
     a=Assembler()
     l,r,selector=bounds(case,0)
-    for address,value in ((0x2123,selector),(0x2126,l),(0x2127,r),
-                          (0x212e,0),(0x212f,1)):
+    sub=case=='span-seek-sub-hidden'
+    for address,value in ((0x2123,selector<<4 if sub else selector),(0x2126,l),(0x2127,r),
+                          (0x212e,0 if sub else 1),(0x212f,2 if sub else 0)):
         lda_sta_abs(a,value,address)
     if case=='span-seek-scroll':
         lda_sta_abs(a,3,0x210d); lda_sta_abs(a,0,0x210d)
@@ -51,6 +55,9 @@ def build_seek(case):
     finalize_checksum(rom); return bytes(rom)
 
 def expected_seek(case,x,y):
+    if case=='span-seek-sub-hidden':
+        # Opaque eligible Main + absent Sub falls back to fixed blue.
+        return expected_rgb('rgb-main',x,y)|0x003f
     l,r,selector=bounds(case,y)
     visible=(l<=x<=r) if selector==3 else not l<=x<=r
     if not visible:

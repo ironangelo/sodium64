@@ -593,7 +593,7 @@ draw_bg:
     // commands preserve per-BG winner identity in the reused compact Z arena.
     sll a0, t3, 3
     addi a0, a0, HCOMP_PROOF_BG_DEPTH_CMDS
-    jal rdp_send
+    jal bg_window_depth
     addi a1, a0, 8
 
     // Check if the BG type or character base changed
@@ -719,7 +719,9 @@ bg_windows:
     // span-index initialization into the call delay slot and drop obsolete
     // fixed-slot padding so the four provenance-dispatch instructions above
     // do not move draw_mode7_entry or any resident suffix ABI.
-    jal calc_bg_window_spans
+    // The per-layer setup already owns exact spans for this entire epoch.
+    // Cache/map/texture work does not overwrite WIN_BOUNDS or WIN_COUNT.
+    nop
     li t8, 0
     lbu t0, WIN_COUNT
     beqz t0, finish_row
@@ -1389,6 +1391,28 @@ bg_span_seek:
 bg_span_seek_return:
     jr ra
     nop
+
+bg_window_depth:
+    // Fully masked BGs have no pixels/winner tags. Test before cache and map
+    // DMAs; defer dirty/base handling until the layer next becomes visible.
+    // The same owned spans are reused by every row of this section.
+    lbu t0, HCOMP_SCREEN
+    addi t0, t0, TSW
+    lbu t0, 0(t0)
+    and t0, t0, a3
+    beqz t0, bg_window_depth_send
+    move v1, ra
+    jal calc_bg_window_spans
+    nop
+    lbu t0, WIN_COUNT
+    beqz t0, next_layer
+    nop
+    sll a0, s2, 2
+    addi a0, a0, HCOMP_PROOF_BG_DEPTH_CMDS
+    addi a1, a0, 8
+bg_window_depth_send:
+    j rdp_send
+    move ra, v1
 
     // Shared window helper and retained suffix remain at their audited ABI.
 .org 0xCC0

@@ -83,7 +83,7 @@ def main():
                     guards[hex(address)]=guard.hex()
                     assert guard==bytes(64),('compact guard modified',hex(address),guard.hex())
             owner=int.from_bytes(c.read_memory(0xa00f0000,4,4),'big')
-            if args.case.startswith(('fast-','mode7-')) or args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen') or args.case.startswith('span-seek-') and args.case!='span-seek-math':
+            if args.case.startswith(('fast-','mode7-')) or args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen') or args.case.startswith('span-seek-') and args.case not in ('span-seek-math','span-seek-sub-hidden'):
                 owner=int.from_bytes(c.read_memory(0xa4400004,4,4),'big')|0xa0000000
             report=dict(passed=False,owner=hex(owner))
             if owner in FRAMEBUFFER_ADDRS:
@@ -98,7 +98,7 @@ def main():
                 want_ts=1 if args.case=='bg2' else 2
                 want_window=0xa2 if args.case=='window' else 2
                 if args.case.startswith('span-seek-'):
-                    want_cg=1 if args.case=='span-seek-math' else 0
+                    want_cg=1 if args.case in ('span-seek-math','span-seek-sub-hidden') else 0
                 if args.case.startswith('mode7-'):
                     from make_mode7_windows import controls as mode7_controls
                     want_window,want_cg,want_ts,want_tm=mode7_controls(args.case)
@@ -119,6 +119,9 @@ def main():
                 report['delivered_controls']=controls.hex()
                 if report['passed']:
                     assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('accepted epoch controls',args.case,controls.hex())
+                    if args.case.startswith('span-seek-'):
+                        sub_window=args.case=='span-seek-sub-hidden'
+                        assert dmem[0xbbb:0xbbd]==bytes((2,0) if sub_window else (0,1)),('BG window screen masks',args.case,dmem[0xbbb:0xbbd].hex())
                     if args.case.startswith('fast-'):
                         want_policy=1 if args.case.startswith('fast-identity-') else 2
                         from make_hcomp_obj_backdrop import policy as obj_policy

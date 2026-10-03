@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A8 second general window optimization; fixture screen-mask error corrected; qualification restarted
+
+Thed169 pixel run37106805182 completed76 existing full images successfully, while all six new patterned window fixtures failed. Their captured DMEM showed Main unwindowed: the new fixture author had swapped SNES$212E (Main window mask) and$212F (Sub window mask), so the intended Main window did not run. This is a fixture setup error, not evidence that the seek renderer failed those intended Main cases. The full-frame tests correctly rejected the mismatch. The capture harness now checks those actual delivered screen-mask bytes. Do not call that run an82-case success; manual qualification did not run after its failure.
+
+Active source/runtime now812f9b023d0e1524ad425da4fa0171a725308bdd. In addition to seeking each visible BG span, fully masked regular BG layers now skip depth-tag submission, cache reset/load/store and tile-map DMA before any draw. The exact window spans are computed once per layer/epoch and reused across its rows; real PPU epochs remain intact. Dirty/base handling is deferred until a layer becomes visible and its normal cache validation runs. No windowless skip, pixel approximation, clock/precision/frame-skip change, game identity or Mode7 rewrite.
+
+Added compiled early-window checks cover14336 combinations across all four BGs, both semantic screen masks, selectors/logics/endpoints, and state preservation. Two further original fixtures exercise hidden Main and hidden Sub/fixed-color fallback; raster fixture includes a fully hidden region followed by visible patterned rows. Total84 original full images now qualify the new runtime. This source requires a fresh complete suite; the76 prior images are evidence about the prior runtime only. Build/image/manual checks pending; no handoff or native FPS claim.
+
+CPU/native diagnostic code and five non-Main RSP banks remain unchanged in source, with new compiled byte checks pending. A7's successful native Iggy result remains historical; preserve its Mode7/fixed-color paths and retest briefly on hardware. Unified menu recorder remains deferred. No commercial data/hash/derived memory is published; master remains unchanged.
+
 ## 2026-10-03 UTC — A8 compiled seek and Iggy-preservation pass; full image/manual qualification in progress
 
 Active isolated source isd169f38f0bbc9d343c457f06114492ff34b790a0; runtime remains57708db269b0bba9ba0dbf848550af2227821da6. The later commit only corrects new-fixture oracles: use their original nonzero palette0 for masked backdrop, read the actual published image on the raw path, and require the intended CGADSUB controls. No runtime or original guest byte arrays changed in this correction.

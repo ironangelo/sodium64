@@ -2,6 +2,24 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 07:00 UTC — A7 hardware Iggy success: correct lava/platform presentation and60 FPS; residual iris/action/fade dips remain
+
+At04:00 America/Santiago, Iron reports **correct lava and60 FPS in Iggy** during the ongoing A7 normal-ROM test. This confirms both requested boss outcomes on Iron's N64 as user-observed behavior, superseding the pending boss result below. No A7 diagnostic capture has been decoded for this report, and this does not establish global60 FPS or a settings-matched superiority benchmark against clean upstream.
+
+The general fixed-color compositor and Mode7 BG-window implementation now have both compiled/image qualification and successful native-gameplay feedback for the target boss. The faithful lava/platform result addresses the visual defect Iron also observed in clean upstream; the60 FPS result recovers the serious A6 boss slowdown. Do not attribute that recovery to the small CPU cache-loop change or present it as a new upstream speed advantage by itself.
+
+The next priority is to diagnose the title and stage-end iris using separate current-A7 native captures, retaining faithful rendering,skip0,full audio/APU rate andMAX as the instructed baseline. Already reported action/effect and map-to-stage fade dips remain open. Current A7 manual recorder is suitable for the first CPU-versus-renderer investigation; no new diagnostic binary or runtime patch has been produced from these observations. Source stays8b776a1, master unchanged; all commercial files and captured state stay private.
+
+## 2026-10-03 06:55 UTC — A7 hardware feedback: residual iris/action/fade dips persist; Iggy result still pending
+
+Iron reports the current A7 test still drops to approximately40 FPS during the title/logo iris, approximately57 FPS with some specific enemies/effects, approximately57 FPS during map-to-stage fade-in, and approximately46 FPS during the end-of-stage iris. These are real-console user observations from the normal-ROM test context, not independently decoded captures or controlled benchmarks. This message does not reconfirm every menu setting; A7's instructed test configuration remains MAX/skip0/audioON/APU-underclockOFF.
+
+The small VRAM loop optimization has not eliminated these reported dips. A7's principal fixed-color/Mode7 changes target the independently captured Iggy bottleneck; they do not establish that title iris, stage-end iris, fades, and enemy/action cases share that bottleneck. No A7 Iggy FPS or lava/platform fidelity result is available in this feedback, so both remain pending. No new regression relative to A6 or clean upstream is established by these approximate observations alone.
+
+Existing private native captures cover earlier candidate builds and other routes. They cannot assign current A7 residual costs. The current A7 manual diagnostic already records actual completed-frame timing, CPU samples, SP/DP activity/counters and best-effort live PPU controls/policy. Request a separate20-second capture armed just before the title iris, and another just before finishing a stage if practical, with video for temporal alignment. These non-atomic live control samples must be cross-checked; a final halted RSP PC is not a live cost profile. A7 does not continuously log meaningful running RSP PCs.
+
+Continue the normal Iggy test before requiring additional navigation. No renderer patch or new private wrapper is justified by FPS numbers alone in this checkpoint. Active runtime/source stays8b776a1; master unchanged. Preserve commercial ROM, wrappers, saves, footage, extracted state and guest hashes privately.
+
 ## 2026-10-03 UTC — A7 QUALIFIED AND PRIVATE PACKAGE DELIVERED; native Iggy/iris FPS still pending
 
 Final isolated branch source8b776a17ca735d50710f019211e014f4687f5c1e, runtime6a22494ab5475ce8fcae8d7864097a8fec6b8b5f. Commits after runtime change repair only qualification scripts/workflows. Final normal/native templates and CPU ELFs are byte-identical to the prior5b2a3b6 builds and match the independently qualified templates. Six RSP banks normal/native are identical and embedded in their matching CPU ELFs. Main resident text remains byte-identical to A6.

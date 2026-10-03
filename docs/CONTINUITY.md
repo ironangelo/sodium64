@@ -2,12 +2,19 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — Actual A11 hardware capture reviewed: target dips unchanged; empty normal emulator delivered
 
+The user reports normal A11 has the same title iris and later action microdips, and supplied its matching trace SAV. Independently decoded with the exact A11 ELF/map: valid v3 TIME LIMIT, MAX / skip0 / APU clock21 / audio4 / layer0; 20.036616 Count-domain seconds, 1,171 completed frames, 4,012 sections, 396/400 retained observations, overflow 0. Measured observer ISR-body cost is 0.4108%; this does not cover every possible perturbation. All-IRQ occupancy has 7,127 samples; retained CPU EPCs are one in eight, approximately 45 Hz. No new runtime fix or performance gain is claimed.
 
+The iris-heavy adjacent-observation episode completes 39 frames in 1.010748 seconds with 2,854 raster sections. The analogous A10 episode completes 39 frames in 1.010598 seconds with 2,844 sections. Capture arming differs by about 0.91 seconds in the title timeline, so raw second-window positions and whole-capture +2 frames do not establish a speedup or regression. The A11 iris window averages 38.58 completed FPS; CPU waits for RSP in 31.9% of occupancy samples, SP is running in 94.7%, DP pipe busy is sampled in 93.1%, and DP command busy in 41.9%. This supports a critical graphics chain, but SP-running includes stalls and cannot distinguish rendering/composition work from RDP/DMA waits. Sampled busy bits are not exact ALU utilization or exclusive time budgets.
 
+The strongest later microdip window averages 56.31 completed FPS with no sampled CPU RSP wait, SP running 53.9%, DP pipe busy 50.8%, and DP command busy 40.0%. The new VRW1 VRAM-wait subset is only 1.4% there and 2.0345% across the full capture (145 samples); the capture does not support VRAM semaphore waits as the dominant cause. That subset remains part of CPU-other and must not be added as a separate exclusive bucket. CPU/APU/DSP/PPU/DMA are still mixed inside CPU-other; sparse retained EPCs do not identify an authoritative per-frame culprit. Brief unsampled events and observer perturbation remain limitations.
 
+Before any further solution, the requested EMPTY NORMAL A11 sodium64.z64 was supplied and durably saved: 98,304 bytes, identical to the exact source ac534849002a04d342dd566a6f96ae1707680387 normal build and independently qualified normal artifact. No commercial guest, wrapper patch, or diagnostic Start hook is included; normal Start retains the menu. User can test this unchanged emulator with other games. Such tests are evidence gathering; cross-game improvements have not yet been measured.
 
+Next proposal, not yet implemented: bounded causal profiling by logical frame, including CPU preparation/work domains and explicit waits; active RSP bank/stage with drawing versus RDP/DMA stalls; validated RDP counter deltas and submission/fence/transfer counts correlated with the same frame and raster-section count. Keep the whole 20-second interval as compact frame summaries, with separately bounded detailed retention for the iris and later microdips, and qualify/report observer cost. Then test a controlled alternative against the measured dominant cost before another speculative batch. No need for a repeat of the same A11 SAV at this point. Full clocks, audio, raster precision and visual fidelity remain requirements; constant 60 FPS is still unsolved.
 
+Only this curated documentation update enters the continuity branch. Actual SAV, reports, video, commercial ROM/wrappers, extracted guest state and guest hashes remain private. Isolated runtime source stays ac534849002a04d342dd566a6f96ae1707680387; no PR/merge/release or master mutation.
 
 ## 2026-10-03 UTC — A11 combined optimization batch fully qualified and privately delivered
 

@@ -399,58 +399,45 @@ oam_skip:
     li t9, 0x1780
     b overlay_load_slot
     nop
-    sh t1, RDP_FILL + 38
-    add t2, t0, k1
-    sll t2, t2, 2
-    sh t2, RDP_FILL + 14
-    sh t2, RDP_FILL + 34
-
-    // Set some values for filling the backdrop
-    lw t0, FILLREC_MASK
-    lw t5, RDP_FILL + 36
-    lw t6, RDP_FILL + 32
-    and t5, t5, t0
-    and t6, t6, t0
-    li t7, 0 // Left bound
-    li t8, 255 // Right bound
-    li t9, 0 // Segment ordinal; zero means first segment
-
-    // Clear the backdrop if force blank is enabled. STAT_FLAGS bit7 is the
-    // sign bit, so preserve the signed byte through fill_backdrop and use
-    // bgez/bltz rather than spending a separate mask instruction.
-    lb t4, STAT_FLAGS
-    bgez t4, not_blank
-    lhu s0, SUB_COLOR
-    b fill_backdrop
-    li s0, 0
-
-not_blank:
-    // Bind/enable the bounded Z16 proof carrier only for section0 of a
-    // non-force-blank frame. Later sections preserve the section0 TS sample
-    // while H-COMP has already cut proof Z_UPDATE at each TM end.
-    bnez k0, hcomp_proof_bound_done
-    li a0, HCOMP_PROOF_RDP_CMDS
-    jal rdp_send
-    li a1, HCOMP_PROOF_BG_DEPTH_CMDS
-hcomp_proof_bound_done:
-    // Check if the sub screen color should be applied to backdrop pixels
+// The former backdrop prologue is unreachable after the HCOMP dispatch.
+// Reuse its resident extent without moving the prefix, slot or suffix ABI.
+hcomp_resident_backdrop_admit:
+    // Exact common Sub-backdrop case; every other epoch uses the full admitter.
+    // Dirty OAM must still visit it to certify geometry for later OBJ math.
+    lbu t0, STAT_FLAGS
+    andi t0, t0, 0xC0
+    bnez t0, hcomp_resident_admit_fallback
     lbu t0, CGADSUB
-    beqz s0, fill_main
-    andi t0, t0, 0x20 // Backdrop math
-    sll t0, t0, 26 // Move CGADSUB backdrop bit 5 into the sign bit
-
-    // Call only when backdrop math is enabled; use a non-control delay slot.
-    // The helper sets s0/s1 and alternating segment ends on the taken path.
-    bltzal t0, calc_color_window_segments
-    lhu s0, MAIN_COLOR // Non-taken path uses Main; helper overwrites this
-    b fill_backdrop
+    addi t0, t0, -0x20
+    bnez t0, hcomp_resident_admit_fallback
+    lbu t0, CGWSEL
+    addi t0, t0, -0x12
+    bnez t0, hcomp_resident_admit_fallback
+    lhu t0, MAIN_COLOR
+    bnez t0, hcomp_resident_admit_fallback
+    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
+    bnez t0, hcomp_resident_admit_fallback
+    lhu t0, SUB_COLOR
+    andi t0, t0, 0xFFFE
+    bnez t0, hcomp_resident_admit_direct
+    lbu t0, TS
+    andi t1, t0, 0x1F
+    beqz t1, hcomp_resident_admit_fallback
     nop
+hcomp_resident_admit_direct:
+    sb t0, HCOMP_EFFECTIVE_TS
+    sw zero, HCOMP_OBJ_ADAPTIVE
+    sw k1, HCOMP_FAST_END
+    li t0, 2
+    sw t0, HCOMP_BAND_RAW
+    j 0xA400140C // Existing HCOMP band-start entry; no bank round trip.
+    nop
+hcomp_resident_admit_fallback:
+    lw a1, OVERLAY_HCOMP_FAST_SRC
+    j overlay_load_slot
+    li t9, 0x13B0
 
-fill_main:
-    // No backdrop math: use Main across the whole section.
-    b fill_backdrop
-    lhu s0, MAIN_COLOR
-
+.org 0x2AC // Preserve the following shared CGRAM entry exactly.
 hcomp_cgram_consume:
 fill_win:
     // Reclaim the legacy 8-instruction padding without moving the fixed
@@ -1724,3 +1711,4 @@ hcomp_cgram_pair_ready:
 hcomp_cgram_marker:
     b hcomp_cgram_store_marker
     lbu k1, SPLIT_LINE
+

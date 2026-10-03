@@ -45,6 +45,7 @@ jobs:
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
 
@@ -74,6 +75,7 @@ jobs:
             build/src/rsp*.elf
             direct-compiled.json
             mode7-compiled.json
+            resident-admit-compiled.json
             vram-flush-compiled.json
             build.log
             build-metrics.txt
@@ -103,6 +105,7 @@ jobs:
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf
@@ -119,6 +122,7 @@ jobs:
             build/src/rsp*.elf
             direct-compiled.json
             mode7-compiled.json
+            resident-admit-compiled.json
             vram-flush-compiled.json
             native-diag-build.log
             scripts/native_diag_report.py
@@ -152,6 +156,7 @@ jobs:
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf
@@ -168,6 +173,7 @@ jobs:
             build/src/rsp*.elf
             direct-compiled.json
             mode7-compiled.json
+            resident-admit-compiled.json
             vram-flush-compiled.json
             native-trace-build.log
             native-trace-compiled.json
@@ -201,6 +207,7 @@ jobs:
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
 
@@ -225,6 +232,7 @@ jobs:
             build/src/rsp*.elf
             direct-compiled.json
             mode7-compiled.json
+            resident-admit-compiled.json
             vram-flush-compiled.json
             profile-build.log
             profile-build-metrics.txt
@@ -466,3 +474,4 @@ jobs:
           artifacts: sodium64.zip
           tag: release
           token: ${{ secrets.GITHUB_TOKEN }}
+

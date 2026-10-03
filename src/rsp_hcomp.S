@@ -37,10 +37,11 @@ hcomp_fence_wait:
 
 hcomp_band_begin:
     sw k1, HCOMP_SECTION_END
-    // Classify the epoch; OBJ-sensitive spans are reconsidered at band ends.
-    lw a1, OVERLAY_HCOMP_FAST_SRC
-    j 0xA4001F7C
-    li t9, 0x13B0
+    // Resident admission avoids two slot DMAs for a proven common case.
+    // Other epochs and OBJ-sensitive spans keep the full bank admission.
+    j 0xA400122C
+    nop
+    nop
 hcomp_band_start:
     lw t0, HCOMP_SECTION_END
     slt t1, k0, t0
@@ -306,3 +307,4 @@ hcomp_band_entry:
 draw_mode7_entry:
     j 0xA4001F78
     li t9, 0x1788
+

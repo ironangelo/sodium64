@@ -50,7 +50,7 @@ def main():
         validate_stop(c.request('c'),'PI capture and terminal screen complete')
         blob=c.read_memory(s['sram']|0xa0000000,0x8000,chunk)
         result,_=parse(blob);h=result['header']
-        assert (h['version'],h['reason'],h['precision'],h['frameskip'])==(2,2,8,0)
+        assert (h['version'],h['reason'],h['precision'],h['frameskip'])==(2,2,20,0)
         assert 20<=h['elapsed_seconds_count_domain']<21 and h['frames_completed']>0
         assert h['halt_acknowledged']==1 and h['sp_dma_settled']==1
         assert len(result['events'])==64 and all('ppu_live_sample' in e for e in result['events'])
@@ -69,7 +69,7 @@ def main():
                               pi_registers=c.read_memory(0xa4600000,0x34,0x34).hex())),flush=True)
         assert not mismatches,'cart SRAM PI write differs from the captured local payload'
         proof=dict(passed=True,dormant_vi_before_arm=vi,manual_n64_start=True,cart_pi_bytes_identical=True,
-                   format_version=2,seconds=h['elapsed_seconds_count_domain'],precision='MEDIUM',
+                   format_version=2,seconds=h['elapsed_seconds_count_domain'],precision='MAX',
                    framebuffer_seeding=False,guest_state_writes=False,diagnostic_state_writes=False,
                    input_sample_injection_only=True,native_fps_authority=False)
         (a.output/'qualification.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof))

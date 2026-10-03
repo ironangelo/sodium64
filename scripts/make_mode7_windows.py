@@ -52,10 +52,10 @@ def build_mode7(case):
     body=bytes(v for value,address in settings for v in (0xa9,value,0x8d,address&255,address>>8))+b'\x60'
     hook_call(rom,0x8300,body)
     if case=='mode7-raster':
-        # Restore channel0's inherited HDMA source after the setup DMA.
-        restores=((1,0x4300),(0x26,0x4301),(0,0x4302),(0xb0,0x4303),(0,0x4304))
-        body=body[:-1]+bytes(v for value,address in restores for v in (0xa9,value,0x8d,address&255,address>>8))+b'\x60'
-        hook_call(rom,0x8300,body)
+        # Startup configures HDMA after the hook. Patch those actual later
+        # writes so channel0 delivers paired WH1 bounds, rather than TS.
+        set_store(rom,0x4300,0,1)
+        set_store(rom,0x4301,0x2d,0x26)
         set_store(rom,0x420c,0,1)
         table=bytearray()
         for first,count in ((0,127),(127,97)):

@@ -180,7 +180,11 @@ jobs:
           libdragon make NATIVE_DIAG=1 -j$(nproc) > native-manual-build.log 2>&1
           python3 scripts/test_native_diag_arm.py build/sodium64.elf
           python3 scripts/make_smoke_snes.py hardware/recorder-original.smc
-          python3 rom-converter.py hardware/recorder-original.smc
+          python3 - <<'PYNATIVE'
+          from pathlib import Path
+          template=Path('sodium64.z64').read_bytes()
+          Path('hardware/recorder-original.z64').write_bytes(template+bytes(0x104000-len(template))+Path('hardware/recorder-original.smc').read_bytes())
+          PYNATIVE
           mkdir -p captures/manual-recorder "$RUNNER_TEMP/native-manual"
           setsid env HOME="$RUNNER_TEMP/native-manual" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
             xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
@@ -188,7 +192,7 @@ jobs:
             --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
             --setting "Developer/DebugServerPort=9440" --setting "Developer/HomebrewMode=true" \
             --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
-            --setting "Boot/AwaitGDBClient=true" out/recorder-original.z64 > captures/manual-recorder/ares.log 2>&1 &
+            --setting "Boot/AwaitGDBClient=true" hardware/recorder-original.z64 > captures/manual-recorder/ares.log 2>&1 &
           pid=$!
           trap 'kill -KILL -- "-$pid" 2>/dev/null || true' EXIT
           timeout 240s python3 scripts/capture_native_diag_manual.py --port 9440 \

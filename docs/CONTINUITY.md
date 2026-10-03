@@ -5,6 +5,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+## 2026-10-03 UTC — A9 compiled retention checks pass; full interval qualification pending
+
+Runtime source `8fe730327e0d0dd54e7acb82c3f4869fc79f14e3` implements the requested Start-triggered 20-second append-only diagnostic. CI-only source head `e21dbd6c8310aa9b27ea74143f3d449893a7622b` also adds an independent native-trace-build job. Build and Validate run 37135024211 has passed normal, default native, profile and trace compilation; emulator smoke is still running. Trace compiled tests pass 43 cases including all capacity guards, preserved guest SRAM/IRQ registers, Count wrap, compact seconds, and terminal body preservation. The 19 existing decoder fixtures and 7 new trace fixtures pass, as do 12 compiled arm/init cases.
+
+Pre-handoff review caught and corrected the legacy v2 terminal palette copy at 0x7E00, which would overlap v3 compact second records. TRACE now excludes it, and a compiled finalizer test requires the entire non-header SRAM body to survive. No broken private A9 wrapper was delivered. The earlier 743e0c5 CI run is superseded, not qualified.
+
+Normal and default native templates compare byte-for-byte to A8 (except wrapper-specific cart save ID in existing private wrappers). Default native CPU .text is unchanged. Trace RSP code/data/symbol sections match all six A8 banks; ELF .strtab differs only in random assembler temporary object filenames. Full image/manual v2/whole-interval v3 execution/PI qualification continues in run 37134940112 at runtime 8fe7303; private handoff is pending its result.
+
+Only eight whitelisted source/test/workflow paths have been published; the additional path is .github/workflows/autobuild.yml. Commercial material remains private. A9 is capture-only; A8's hardware iris/microdip performance remains unresolved. Master stays 7cc8facfe8643fb85888f301f79995575830521d; no PR, merge or release.
+
 ## 2026-10-03 UTC — A9 20-second whole-interval diagnostic implementation; qualification pending
 
 Iron requests a Start-triggered 20-second capture covering the brief title iris and separated action microdips, rather than a 2.5-second capture. The short-capture proposal is superseded before any source publication or binary handoff. Current A8 normal title/FPS feedback remains negative; this batch is measurement infrastructure, not a new performance repair.

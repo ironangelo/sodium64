@@ -56,10 +56,16 @@ def main():
         assert len(result['events'])==64 and all('ppu_live_sample' in e for e in result['events'])
         (a.output/'original-capture.sav').write_bytes(blob)
         symbolicate(result,a.elf);(a.output/'decoded-original.json').write_text(json.dumps(result,indent=2)+'\n')
-        cart=c.read_memory(0xa8000000,0x8000,chunk)
+        # ares bulk reads of peripheral memory use 32-bit bus accesses. Keep
+        # every request word-aligned even if its advertised packet budget is
+        # odd; RDRAM's byte-read path does not have this restriction.
+        cart_chunk=chunk & ~3
+        assert cart_chunk>=4,'ares packet budget cannot hold an aligned word'
+        cart=c.read_memory(0xa8000000,0x8000,cart_chunk)
         (a.output/'cart-sram.bin').write_bytes(cart)
         mismatches=[i for i,(x,y) in enumerate(zip(cart,blob)) if x!=y]
         print(json.dumps(dict(cart_pi_mismatches=len(mismatches),first_offsets=mismatches[:16],
+                              cart_read_chunk=cart_chunk,
                               pi_registers=c.read_memory(0xa4600000,0x34,0x34).hex())),flush=True)
         assert not mismatches,'cart SRAM PI write differs from the captured local payload'
         proof=dict(passed=True,dormant_vi_before_arm=vi,manual_n64_start=True,cart_pi_bytes_identical=True,

@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A4 validation continues; Start roles clarified, fixture initialization repaired
+
+A4 runtime e71a8719eba320714d442e9d69bc305a10ad5ccc adds outside-COLOR direct backdrop (CGWSEL22) in addition to prior02/12 and three neutral math admissions. Build/native/profile/normal smoke run37082114518 SUCCESS. Compiled admission65540 + identity57344 + both-window masks17408 +geometry3495 pass; alignment3784 and ownership408 remain checked. All five RSP banks identical between normal/native and embedded exactly; only rsp_hcomp_fast differs from A3.
+
+Whole-image run37082114523 accepted37 original cases (all36 previous plus new outside polarity), but correctly rejected five new identity fixtures because their later startup/NMI writes overwrote the hook's CGADSUB/TS. These are fixture setup failures (observed CGADSUB20/TS02 instead of intended controls), not an accepted production image regression. No candidate delivered from the incomplete qualification. Repaired only original fixture generator in8c87d659e10ab51b39366933e492c5db2bd507a7; emulator runtime bytes/source unchanged frome71. Re-running42 and then original-input manual recorder/PI save qualification. Need complete these before delivery. Private A4 packet staged under private-analysis/a4-delivery, NOT final/saved/delivered yet.
+
+Iron asked whether this is only capture and whether Start conflicts with Sodium menu. Explained: both performance changes and capture. Normal N64 Start still opens settings. Native diagnostic N64 Start arms20s and menu remains disabled with locked Medium/0/audioON/underclockOFF. N64 A remains SNES Start. Capture is one-shot; no auto20s timeout before manual arm. No claim of native60 in remaining map/presentation/iris yet. All ROMs/saves/video/extracted buffers remain private, master untouched, no PR/merge.
+
 ## 2026-10-03 UTC — A3 native 60 FPS recovered; A4 gameplay diagnosis and neutral-math qualification in progress
 
 Iron's three new console videos and private diagnostic save independently reviewed. A3 diagnostic TIME LIMIT 20.029s is healthy, CPU RSP wait falls from A2's ~73–76% after iris to essentially zero on title/demo. Most intervals ~59–60 FPS, iris intervals 53.42 and 41.56 FPS before recovery. Normal cave/outdoor gameplay video shows ~60 FPS, but new-game message and world map are sustained ~18–19 FPS; returning to map reproduces it. Video menu explicitly confirms MEDIUM, frameskip0, audioON, APU underclockOFF. No universal/stable60 claim. Normal save is ordinary guest SRAM, not S64D and cannot identify live PPU state.

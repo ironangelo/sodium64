@@ -2,6 +2,27 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A6 first hardware results: cross-world iris/Donut60 and save dialog without dips
+
+Iron reports initial A6 testing at 01:33–01:34 America/Santiago (04:33–04:34 UTC). These are **user observations on real N64**, not independently decoded A6 diagnostic data. Results apply to the tested route/state; MEDIUM versus MAX and exact settings were not specified in this report. Do not silently assume either precision.
+
+Confirmed by Iron:
+- Cross-world square iris holds **60 FPS**.
+- Yoshi's Island → Donut Plains arrival and destination map hold **60 FPS**. The previously persistent approximately20 FPS condition is absent on this tested transition.
+- Save and Continue dialog appears **without FPS drops**, newly reported at 01:34 Santiago. No exact dialog FPS number supplied; do not invent one.
+
+Residual A6 debts:
+- Title/logo iris varies between approximately **30, 40 and 50 FPS** across attract-loop repetitions. This supersedes the earlier single approximate50 FPS estimate for the latest build, without proving a code regression or assigning a cause.
+- Several enemies still produce approximately **57 FPS**.
+- Map ↔ stage black fade-in/fade-out produces approximately **55 FPS**.
+- Path reveal after clearing a stage produces approximately **55 FPS**.
+
+The hardware result supports the captured-map cache/admission diagnosis and A6 optimization. Do not claim universal60 FPS, all overworld states, every transition, or Gate C closure. The transient fades/path observations differ from earlier estimates, but they are uncontrolled approximate observations; no quantified speedup or shared cause is established.
+
+Source audit confirms remaining workload candidates: every real raster epoch loads admission/phase banks, recomputes window masks and replays BG/OBJ drawing; states requiring full arithmetic still use compact bands. Actual slow-logo controls, section counts, policy mix and CPU/RSP/DP occupancy in A6 are not yet captured. Keep this as a candidate list, not a diagnosis. Prioritize the logo loop for the next existing A6 diag-manual save plus matching FPS video, retaining ordinary baseline settings and noting MEDIUM/MAX for normal testing. The diagnostic pins MEDIUM/0/audio ON/underclock OFF. Its per-second progress/occupancy covers the full20 seconds, but detailed live PPU/PC rings retain only the recent tail and final coherent DMEM is terminal; a transient early iris cannot be assigned detailed terminal state merely from that save. Inspect actual evidence before choosing between repeated raster work and required color arithmetic. No new runtime or ROM built from this partial report; Iron is still testing the same A6 normal.
+
+All private ROM/save/video constraints remain in force. This update changes continuity only; isolated runtime branch stays `b74904e89a528eb408e0980b4704a2d1010d259a`, master unchanged, no PR/merge.
+
 ## 2026-10-03 UTC — A6 private handoff complete; image and recorder qualified, native FPS pending
 
 A6 is ready for Iron's hardware comparison. Qualified source `b74904e89a528eb408e0980b4704a2d1010d259a` on isolated `phase4/gate-c-a4-gameplay-capture`; runtime first introduced at `59a65254423d5df4aba4d355bb1cea533ba5c15a`. The final commit corrects only an independently authored fixture's expected fixed-blue fallback. No PR or merge. Rechecked master: `7cc8facfe8643fb85888f301f79995575830521d`.

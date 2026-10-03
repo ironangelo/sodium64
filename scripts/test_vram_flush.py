@@ -86,11 +86,13 @@ def main():
             palettes+=1
     for color in (0,1,255):
       for flags in range(4):
-        m=base.copy();put(m,s['dpal_dirty'],bytes([flags]));put(m,s['cg_lsb'],b'\x34')
+       for old in (b'\x00\x00',b'\x12\x34'):
+        m=base.copy();put(m,s['dpal_dirty'],bytes([flags]));put(m,s['cg_lsb'],b'\x34');put(m,s['cgram']+color*2,old)
         r=[0]*32;r[8]=color*2+1;r[5]=0x12
         run(m,s['cg_high'],s['dpal_commit_invalidated'],r)
-        assert get(m,s['dpal_dirty'],1)==b'\x03' and get(m,s['cgram']+color*2,2)==b'\x12\x34'
-    proof=dict(passed=True,publication_cases=len(cases),palette_cases=palettes,commit_cases=12,
+        assert get(m,s['dpal_dirty'],1)==bytes([flags if old==b'\x12\x34' else 3])
+        assert get(m,s['cgram']+color*2,2)==b'\x12\x34'
+    proof=dict(passed=True,publication_cases=len(cases),palette_cases=palettes,commit_cases=24,
                startup_all_lines=True,dirty_handoff_exact=True,clean_frame_cache_lines=0,
                palette_pixel_equivalence=True,independent_queue_validity=True,native_fps_authority=False,
                minimum_publication_instructions=min(c['instructions'] for c in cases),
@@ -98,4 +100,3 @@ def main():
     if a.output:a.output.write_text(json.dumps(proof,indent=2)+'\n')
     print('VRAM_PALETTE_PUBLICATION PASS',json.dumps(proof))
 if __name__=='__main__':main()
-

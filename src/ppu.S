@@ -1663,7 +1663,10 @@ cg_high:
     lbu t1, cg_lsb
     sll t2, a1, 8
     or t1, t1, t2
+    lhu t2, cgram(t0)
     sh t1, cgram(t0)
+    beq t2, t1, dpal_commit_invalidated
+    nop
     li t2, 3
     sb t2, dpal_dirty
 dpal_commit_invalidated:

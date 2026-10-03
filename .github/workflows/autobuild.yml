@@ -50,6 +50,7 @@ jobs:
 
       - name: Check normal runtime arena
         run: python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
 
       - name: Record build metrics
         run: |
@@ -72,6 +73,7 @@ jobs:
             build/src/rsp*.elf
             direct-compiled.json
             mode7-compiled.json
+            vram-flush-compiled.json
             build.log
             build-metrics.txt
 
@@ -103,6 +105,7 @@ jobs:
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
       - name: Upload empty diagnostic template and decoder
         uses: actions/upload-artifact@v4
         with:
@@ -115,6 +118,7 @@ jobs:
             build/src/rsp*.elf
             direct-compiled.json
             mode7-compiled.json
+            vram-flush-compiled.json
             native-diag-build.log
             scripts/native_diag_report.py
             scripts/profile_report.py
@@ -170,6 +174,7 @@ jobs:
             build/src/rsp*.elf
             direct-compiled.json
             mode7-compiled.json
+            vram-flush-compiled.json
             profile-build.log
             profile-build-metrics.txt
 

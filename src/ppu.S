@@ -658,13 +658,21 @@ dirty_loop:
     addi t1, t1, 8
 
     // Ensure cached VRAM is written back to memory
+vram_flush_begin:
     la t0, vram
-    add t1, t0, 0xFFE0
+    add t1, t0, 0xFF80
 vram_loop:
     cache 0x19, 0x00(t0)
     cache 0x19, 0x10(t0)
+    cache 0x19, 0x20(t0)
+    cache 0x19, 0x30(t0)
+    cache 0x19, 0x40(t0)
+    cache 0x19, 0x50(t0)
+    cache 0x19, 0x60(t0)
+    cache 0x19, 0x70(t0)
     bne t0, t1, vram_loop
-    addi t0, t0, 0x20
+    addi t0, t0, 0x80
+vram_flush_end:
 
 #ifdef SODIUM64_NATIVE_DIAG
     // Timer/VI interrupts cannot run inside an outer TLB exception (EXL=1).

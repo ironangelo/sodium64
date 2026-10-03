@@ -16,6 +16,7 @@ def main():
     assert len(mt)==4096 and len(pt)==len(ft)==1000
     assert ms['hcomp_resident_backdrop_admit']==0x22c
     assert ms['hcomp_cgram_consume']==0x2ac
+    assert ms['fill_main']==0x2a4 and ms['fill_backdrop']==0x2cc
     assert ps['hcomp_band_start']==0x40c and ps['hcomp_band_entry']==0x780
     defs=dict(re.findall(r'^#define (\w+) ([^\n]+)',(Path(__file__).resolve().parents[1]/'src/defines.h').read_text(),re.M))
     def val(n):

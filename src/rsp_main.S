@@ -437,6 +437,10 @@ hcomp_resident_admit_fallback:
     j overlay_load_slot
     li t9, 0x13B0
 
+.org 0x2A4 // Retain the backdrop jump-table target at its original address.
+fill_main:
+    b fill_backdrop
+    lhu s0, MAIN_COLOR
 .org 0x2AC // Preserve the following shared CGRAM entry exactly.
 hcomp_cgram_consume:
 fill_win:
@@ -1711,4 +1715,3 @@ hcomp_cgram_pair_ready:
 hcomp_cgram_marker:
     b hcomp_cgram_store_marker
     lbu k1, SPLIT_LINE
-

@@ -95,8 +95,8 @@ def main():
                 want_ts=1 if args.case=='bg2' else 2
                 want_window=0xa2 if args.case=='window' else 2
                 if args.case.startswith('mode7-'):
-                    from make_mode7_windows import controls
-                    want_window,want_cg,want_ts,want_tm=controls(args.case)
+                    from make_mode7_windows import controls as mode7_controls
+                    want_window,want_cg,want_ts,want_tm=mode7_controls(args.case)
                 if args.case.startswith('fast-'):
                     from make_hcomp_direct_backdrop import canonical
                     kind=canonical(args.case)
@@ -121,7 +121,7 @@ def main():
                         assert int.from_bytes(dmem[0xef0:0xef4],'big')==want_policy,'direct/identity policy not exercised'
                         rows=int.from_bytes(dmem[0xec4:0xec8],'big')
                         if want_policy==0:assert 1<=rows<=8,('general band not exercised',rows)
-                        elif args.case!='fast-iris-rows':assert rows>8,('whole section not exercised',rows)
+                        elif kind!='fast-iris-rows':assert rows>8,('whole section not exercised',rows)
                         report['composition_policy']=want_policy
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,
                                   image_sha256=hashlib.sha256(image).hexdigest(),

@@ -49,7 +49,8 @@ jobs:
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
 
       - name: Check normal runtime arena
-        run: python3 scripts/check_runtime_arena.py build/sodium64.elf
+        run: |
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
 
       - name: Record build metrics

@@ -2,6 +2,12 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A5 additional console scenes still~20 FPS; map success is state-dependent
+
+Iron continues testing A5 normal and reports perfect visual fidelity but approximately20 FPS upon arriving at the Donut Plains map via Yellow Switch, with moving clouds, circling ghost-house sprite and animated water. Also approximately20 FPS during the Yoshi's Island route-reveal animation opening the path toward Yellow Switch. MEDIUM and MAX behave the same in both slow scenes. No diagnostic save/video for these scenes received yet. Earlier60 FPS reports apply to the initially tested map and Welcome; do not generalize to all overworld maps/transitions.
+
+Initial source audit: A5 direct policy2 is deliberately conservative and switches back to general policy0 for eligible high-palette visible Main OBJ, nonblack Main backdrop, additional effective BG math/HALF/subtract/clipping, unsupported direct-color mode or enabled Main OBJ without a fresh section cache. Palette/window events can also create more real sections. The similar~20 FPS to prior general-path map is consistent with a fallback, but no actual scene state/profiling yet proves which condition or bottleneck applies. Equal MEDIUM/MAX rules out that precision adjustment as an observed remedy, not all possible raster work. Investigate a general performance solution while preserving current correct image; do not disable sprite arithmetic or visual effects to extend a fast path.
+
 ## 2026-10-03 UTC — A5 console breakthrough: world map60 FPS at MEDIUM and MAX
 
 At2026-10-03T02:52 UTC, Iron reports the A5 normal private wrapper world map displays60 FPS with both Frame precision MEDIUM and MAX. This follows Welcome60 FPS at MAX and title/Mario-Yoshi loop/iris reported at equal speed between both settings. The primary sustained A4 map~18 FPS debt is now resolved in this observed console test. Attribution is consistent with the generic Mode0/OBJ direct-composition optimization, already qualified with original full-frame pixel/guard tests and private actual-map compiled admission. These are user console observations; new video/save has not yet been received for independent measurement. Duration/stability across map transitions, other maps/stages, iris dips and occasional gameplay drops still require follow-up. Do not convert this success into an all-scenes/all-games60 FPS or complete Road1.0 claim.

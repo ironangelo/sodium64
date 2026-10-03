@@ -541,7 +541,7 @@ decode_tile256:
 
 draw_mode7_impl:
     // Skip the layer if the BG is disabled
-    // TODO: implement windows for mode 7
+    // The window slot has installed one exact visible span before entry.
     beqz t1, next_layer
     move s1, k0 // Tile Y-coordinate
 
@@ -802,33 +802,23 @@ next_subtile:
     jal dma_read
     li a2, 0x7F
 
-    // Copy the character data into vector registers
-    lqv $v00, 0, 0x00, a0
-    lqv $v01, 0, 0x10, a0
-    lqv $v02, 0, 0x20, a0
-    lqv $v03, 0, 0x30, a0
-    lqv $v04, 0, 0x40, a0
-    lqv $v05, 0, 0x50, a0
-    lqv $v06, 0, 0x60, a0
-    lqv $v07, 0, 0x70, a0
-
     // Get the tile's texture offset
     sll t0, v0, 3
     sll t1, v1, 8
     add t0, t0, t1
 
-    // Copy bytes containing pixels into the texture
-    spv $v00, 0, 0x00, t0
-    spv $v01, 0, 0x20, t0
-    spv $v02, 0, 0x40, t0
-    spv $v03, 0, 0x60, t0
-    spv $v04, 0, 0x80, t0
-    spv $v05, 0, 0xA0, t0
-    spv $v06, 0, 0xC0, t0
+    // Pack the same eight rows with one vector, leaving room in the fixed slot.
+    addi t1, a0, 0x80
+mode7_pack_row:
+    lqv $v00, 0, 0, a0
+    spv $v00, 0, 0, t0
+    addi a0, a0, 0x10
+    bne a0, t1, mode7_pack_row
+    addi t0, t0, 0x20
 
     // Loop through tiles until the texture is complete
     bnez v0, next_subtile
-    spv $v07, 0, 0xE0, t0
+    nop
     move v0, t5
     bnez v1, next_subrow
 
@@ -861,7 +851,7 @@ finish_tile7:
     // Check the section bound before mutating dead next-row coordinates so the
     // exit path never needs a branch immediately before draw_mode7_entry.
     addi s1, s1, 8
-    bge s1, k1, next_layer
+    bge s1, k1, mode7_span_done
     sll t0, s2, 8
     sub t8, t8, t0
     sll t0, s5, 8
@@ -872,9 +862,13 @@ finish_tile7:
     b draw_row7
     add t9, t9, t0
 
+mode7_span_done:
+    b overlay_load_mode7
+    li t9, 0x1780
+
     // Keep the externally visible Mode 7 entry fixed at the far edge of the
     // renderer slot; branch back into the variant-local implementation.
-    .align 3
+    .org 0x788
 draw_mode7_entry:
     b draw_mode7_impl
     nop

@@ -4,6 +4,12 @@ CASES = ('fast-always','fast-inside','fast-outside','fast-xor','fast-edge','fast
          'fast-invert','fast-sub-empty','fast-short','fast-iris-rows',
          'fast-identity-never','fast-identity-fixed-add','fast-identity-fixed-sub',
          'fast-identity-sub-empty-half','fast-identity-sub-empty-subhalf')
+CASES += ('fast-fixed-always','fast-fixed-inside','fast-fixed-outside',
+          'fast-fixed-xor','fast-fixed-edge','fast-fixed-empty','fast-fixed-invert',
+          'fast-fixed-short','fast-fixed-iris-rows')
+
+def canonical(case):
+    return 'fast-'+case[len('fast-fixed-'):] if case.startswith('fast-fixed-') else case
 
 def identity_controls(case):
     return {'fast-identity-never':(0x32,0xff,2),
@@ -13,6 +19,7 @@ def identity_controls(case):
             'fast-identity-sub-empty-subhalf':(0x22,0xff,0)}[case]
 
 def setup(case):
+    case=canonical(case)
     selector,logic,bounds=2,0,(96,191,0,0)
     if case=='fast-xor':selector,logic,bounds=10,2,(32,95,64,191)
     if case=='fast-edge':bounds=(255,255,0,0)
@@ -23,7 +30,9 @@ def setup(case):
 def build_direct(case):
     from make_hcomp_fullheight import build, set_store, hook_call
     from make_gate_c_hcomp_cgwsel_source import finalize_checksum
-    rom=bytearray(build('short' if case=='fast-short' else 'half'))
+    kind=canonical(case)
+    fixed=case.startswith('fast-fixed-')
+    rom=bytearray(build('short' if kind=='fast-short' else 'half'))
     identity=case.startswith('fast-identity-')
     # The hook executes before the final startup CGADSUB and TS writes.
     # Set those actual later writes as well, so they cannot erase this case.
@@ -33,7 +42,7 @@ def build_direct(case):
     if case=='fast-sub-empty':set_store(rom,0x212d,2,0,count=2)
     selector,logic,bounds=setup(case)
     settings=((0,0x2121),(0,0x2122),(0,0x2122),
-              (2 if case=='fast-always' else 0x22 if case=='fast-outside' else 0x12,0x2130),
+              ((0 if fixed else 2)+(0 if kind=='fast-always' else 0x20 if kind=='fast-outside' else 0x10),0x2130),
               (selector<<4,0x2125),(logic<<2,0x212b),
               *((v,0x2126+i) for i,v in enumerate(bounds)))
     if identity:
@@ -51,7 +60,7 @@ def build_direct(case):
     # Sub and fixed blue distinguish presence/fallback and window prevention.
     for tile in range(32):
         rom[0x2000+16*tile:0x2010+16*tile]=bytes((255 if tile<8 else 0,0))*8
-    if case=='fast-iris-rows':
+    if kind=='fast-iris-rows':
         # HDMA mode1 delivers both inclusive WH1 bounds every scanline.
         set_store(rom,0x4300,0,1)
         set_store(rom,0x4301,0x2d,0x26)
@@ -71,14 +80,17 @@ def expected_direct(case,x,y):
     if case.startswith('fast-identity-'):
         # Main CGRAM color0 = 0x2245: independent SNES BGR555 -> RGBA5551.
         return (5<<11)|(18<<6)|(8<<1)|1
+    fixed=case.startswith('fast-fixed-')
+    kind=canonical(case)
     selector,logic,(l1,r1,l2,r2)=setup(case)
-    if case=='fast-iris-rows':l1=min(126,y//2);r1=255-l1
+    if kind=='fast-iris-rows':l1=min(126,y//2);r1=255-l1
     one=(l1<=x<=r1) != bool(selector&1) if selector&2 else False
     two=(l2<=x<=r2) != bool(selector&4) if selector&8 else False
     if selector&10==10:
         selected=(one or two,one and two,one != two,one == two)[logic]
     else:selected=one if selector&2 else two if selector&8 else False
-    allowed=not selected if case=='fast-outside' else selected
-    if case!='fast-always' and not allowed:return 1
+    allowed=not selected if kind=='fast-outside' else selected
+    if kind!='fast-always' and not allowed:return 1
+    if fixed:return 0x003f
     present=case!='fast-sub-empty' and not (case=='fast-short' and (5<=y<13 or 37<=y<39))
     return 0x07c1 if present else 0x003f

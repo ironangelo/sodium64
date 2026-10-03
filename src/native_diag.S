@@ -63,7 +63,7 @@ native_diag_init:
     addiu t0, t0, 4
     bne t0, t1, 3b
     nop
-    li t0, 8
+    li t0, 20 // Match the MAX normal hardware comparison.
     sb t0, precision_set
     sb zero, skipped_set
     sb zero, layer_set

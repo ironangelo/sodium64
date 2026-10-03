@@ -165,11 +165,13 @@ pi_wait1:
     jal rsp_upload
     li a0, 0x0000 // DMEM address
 
-    // Publish all three fixed-slot sources. Main stays at E90, true Mode7
-    // moves to audited E8C, and the proof-only H-COMP bridge owns E94.
+    // Main stays at E90. Mode7 window entry owns E8C; its affine draw bank
+    // uses audited EA4. The H-COMP bridge keeps E94 and all resident entries.
+    la t0, rsp_mode7_window_text_start
+    sw t0, DMEM(OVERLAY_MODE7_SRC)
     la t0, rsp_mode7_text_start
     addi t0, t0, 0x3A8
-    sw t0, DMEM(OVERLAY_MODE7_SRC)
+    sw t0, DMEM(OVERLAY_MODE7_DRAW_SRC)
     la t0, rsp_main_text_start
     addi t0, t0, 0x3A8
     sw t0, DMEM(OVERLAY_MAIN_SRC)

@@ -76,7 +76,7 @@ def main():
             assert cp[11]==0xdeadbeef and not writes,'dormant init must not arm Compare'
             assert bytes(m[sram+i] for i in range(0x2000))==guest
             assert bytes(m[sram+i] for i in range(0x2000,0x8000))==bytes(0x6000)
-            assert word(m,state+112)==0 and m[s['precision_set']&0x1fffffff]==8
+            assert word(m,state+112)==0 and m[s['precision_set']&0x1fffffff]==20
             # Simulate gameplay counters before starting: arm must zero them.
             for i in range(128):m[state+i]=0xab if not 112<=i<116 else 0
             r=[0x80000100+i for i in range(32)];r[0]=0;r[31]=0xdead0000;before=r.copy()

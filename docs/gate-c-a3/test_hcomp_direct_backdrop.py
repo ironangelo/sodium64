@@ -104,7 +104,7 @@ def main():
             d[0xbbd]=0
             r=[0xdead0000+i for i in range(32)];r[0]=0;r[26:30]=[13,224,0xcafe,4]
             run(code,d,0x3b0,r)
-            expected=1 if sel&0xc0==0 and (cg&63==0 or sel&0x30==0x30) else 2 if cg in (0x20,0x30) and sel in (2,3,0x12,0x13,0x22,0x23) else 0
+            expected=1 if sel&0xc0==0 and (cg&63==0 or sel&0x30==0x30) else 2 if cg in (0x20,0x30) and sel in (0,1,2,3,0x10,0x11,0x12,0x13,0x20,0x21,0x22,0x23) else 0
             assert word(d,0xef0)==expected,(cg,sel,word(d,0xef0),expected)
             assert r[26:30]==[13,224,0xcafe,4] and r[25]==0x1768
             admission+=1
@@ -134,7 +134,7 @@ def main():
     # tile-size and unused BG_MODE bits without modifying that register.
     mode_cases=0
     for mode in range(256):
-      for sel in (2,3,0x12,0x13,0x22,0x23):
+      for sel in (0,1,2,3,0x10,0x11,0x12,0x13,0x20,0x21,0x22,0x23):
        for cg in (0x20,0x30):
         d=bytearray(data);d[0xbb7]=sel;d[0xbb8]=cg;d[0xbbd]=mode;d[0xbba]=0
         d[0xba8:0xbaa]=bytes(2);d[0xba6:0xba8]=b'\x00\x3e';d[0xbbe]=0;put(d,0xecc,0)

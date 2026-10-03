@@ -13,6 +13,8 @@ from make_hcomp_direct_backdrop import CASES as DIRECT_CASES
 CASES += DIRECT_CASES
 from make_hcomp_obj_backdrop import CASES as OBJ_BACKDROP_CASES
 CASES += OBJ_BACKDROP_CASES
+from make_mode7_windows import CASES as MODE7_CASES
+CASES += MODE7_CASES
 
 
 def set_store(rom, address, old, new, count=1):
@@ -33,6 +35,9 @@ def hook_call(rom, address, body):
 
 
 def build(case):
+    if case in MODE7_CASES:
+        from make_mode7_windows import build_mode7
+        return build_mode7(case)
     if case in OBJ_BACKDROP_CASES:
         from make_hcomp_obj_backdrop import build_obj
         return build_obj(case)

@@ -1,6 +1,6 @@
 /* Exact backdrop-only specialization. No game identity or content involved.
  * CGADSUB=20 (or30 with no potentially visible math-capable Main OBJ),
- * CGWSEL=02/12/22 (bit0 ignored only in Mode0), Main backdrop=black:
+ * CGWSEL=00/10/20 or02/12/22 (bit0 ignored only in Mode0), Main backdrop=black:
  * opaque Main -> Main; backdrop -> Sub/fixed inside the allowed COLOR set,
  * otherwise black. Draw fixed+Sub, black out the prevented set, then Main.
  * Safe spans need no compact Z/presence/math buffers. Potentially eligible
@@ -80,7 +80,7 @@ hcomp_fast_backdrop_probe:
     lhu t0, MAIN_COLOR
     bnez t0, hcomp_fast_return
     lbu t0, CGWSEL
-    // Always/inside/outside selected, with Sub operand and no Main clip.
+    // Always/inside/outside selected, with fixed or Sub operand, no Main clip.
     // NEVER was admitted above as an identity operation.
     andi t2, t0, 1
     beqz t2, hcomp_fast_color_selector
@@ -91,8 +91,8 @@ hcomp_fast_backdrop_probe:
     bnez t2, hcomp_fast_return
     nop
 hcomp_fast_color_selector:
-    andi t0, t0, 0xCE
-    xori t0, t0, 2
+    andi t0, t0, 0xCC
+    nop
     bnez t0, hcomp_fast_return
     nop
     lbu t0, CGADSUB

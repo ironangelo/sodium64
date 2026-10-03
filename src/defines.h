@@ -236,6 +236,8 @@
 // in E84..E89. Keep the count out of the byte-coordinate domain so x=255
 // remains an ordinary legal endpoint; E8B..E8F stay free before overlay ABI.
 #define WIN_COUNT (WIN_BOUNDS + 0x6)
+// Mode7 consumes these exact spans through a separate small slot image.
+#define MODE7_WINDOW_INDEX (WIN_COUNT + 0x1)
 // Three fixed-slot renderer/H-COMP source pointers. E8C..E8F is the
 // already-audited free word; PR #18 replay state remains at E98 and above.
 #define OVERLAY_MODE7_SRC 0xE8C
@@ -245,6 +247,7 @@
 // Typed CGRAM event cursor published by the CPU while the RSP is halted.
 // EA0 lies in the audited retired DMEM interval below fixed VEC_DATA.
 #define HCOMP_CGRAM_EVENT_CURSOR 0xEA0
+#define OVERLAY_MODE7_DRAW_SRC 0xEA4
 #define HCOMP_CGRAM_PAIR_SCRATCH 0xEA8
 #define HCOMP_CGRAM_WRITE_SCRATCH 0xEB0
 // Full-height band phase state in the previously retired DMEM tail.

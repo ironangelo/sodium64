@@ -42,9 +42,10 @@ jobs:
 
       - name: Check RSP branch delay slots
         run: |
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
 
       - name: Check normal runtime arena
@@ -70,6 +71,7 @@ jobs:
             build/*.map
             build/src/rsp*.elf
             direct-compiled.json
+            mode7-compiled.json
             build.log
             build-metrics.txt
 
@@ -95,9 +97,10 @@ jobs:
       - name: Check resident RSP ABI and runtime arena
         run: |
           python3 scripts/test_native_diag_arm.py build/sodium64.elf
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf
       - name: Upload empty diagnostic template and decoder
@@ -111,9 +114,8 @@ jobs:
             build/*.map
             build/src/rsp*.elf
             direct-compiled.json
+            mode7-compiled.json
             native-diag-build.log
-            build/src/rsp*.elf
-            direct-compiled.json
             scripts/native_diag_report.py
             scripts/profile_report.py
 
@@ -141,9 +143,10 @@ jobs:
 
       - name: Check profiling RSP branch delay slots
         run: |
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
 
       - name: Record profiling build metrics
@@ -166,6 +169,7 @@ jobs:
             build/*.map
             build/src/rsp*.elf
             direct-compiled.json
+            mode7-compiled.json
             profile-build.log
             profile-build-metrics.txt
 

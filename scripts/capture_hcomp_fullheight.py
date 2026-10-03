@@ -15,6 +15,9 @@ from make_hcomp_fullheight import CASES
 
 
 def expected(case,x,y):
+    if case.startswith('mode7-'):
+        from make_mode7_windows import expected_mode7
+        return expected_mode7(case,x,y)
     from make_hcomp_obj_backdrop import CASES as OBJ_BACKDROP_CASES,expected_obj
     if case in OBJ_BACKDROP_CASES:return expected_obj(case,x,y)
     if case.startswith('fast-'):
@@ -77,7 +80,7 @@ def main():
                     guards[hex(address)]=guard.hex()
                     assert guard==bytes(64),('compact guard modified',hex(address),guard.hex())
             owner=int.from_bytes(c.read_memory(0xa00f0000,4,4),'big')
-            if args.case.startswith('fast-') or args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen'):
+            if args.case.startswith(('fast-','mode7-')) or args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen'):
                 owner=int.from_bytes(c.read_memory(0xa4400004,4,4),'big')|0xa0000000
             report=dict(passed=False,owner=hex(owner))
             if owner in FRAMEBUFFER_ADDRS:
@@ -91,10 +94,15 @@ def main():
                 want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11,'rgb-subscreen':2,'rgb-row-subscreen':2}.get(args.case,1)
                 want_ts=1 if args.case=='bg2' else 2
                 want_window=0xa2 if args.case=='window' else 2
+                if args.case.startswith('mode7-'):
+                    from make_mode7_windows import controls
+                    want_window,want_cg,want_ts,want_tm=controls(args.case)
                 if args.case.startswith('fast-'):
+                    from make_hcomp_direct_backdrop import canonical
+                    kind=canonical(args.case)
                     want_cg=0x20;want_tm=1
                     want_ts=0 if args.case=='fast-sub-empty' else 2
-                    want_window=2 if args.case=='fast-always' else 0x22 if args.case=='fast-outside' else 0x12
+                    want_window=(0 if args.case.startswith('fast-fixed-') else 2)+(0 if kind=='fast-always' else 0x20 if kind=='fast-outside' else 0x10)
                     if args.case.startswith('fast-identity-'):
                         from make_hcomp_direct_backdrop import identity_controls
                         want_window,want_cg,want_ts=identity_controls(args.case)

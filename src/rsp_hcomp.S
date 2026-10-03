@@ -134,6 +134,17 @@ hcomp_compact_band:
     li a1, HCOMP_PROOF_BG_DEPTH_CMDS
 hcomp_screen_masks:
     lbu s7, TS
+    // Fixed-color direct composition ignores TS even if layers are enabled.
+    // Keep ordinary Sub and general composition ownership unchanged.
+    lw t0, HCOMP_BAND_RAW
+    addi t0, t0, -2
+    bnez t0, hcomp_pending_main
+    lbu t0, CGWSEL
+    andi t0, t0, 2
+    bnez t0, hcomp_pending_main
+    nop
+    move s7, zero
+hcomp_pending_main:
     lbu t0, TM
     sll t0, t0, 8
     b hcomp_fill_target

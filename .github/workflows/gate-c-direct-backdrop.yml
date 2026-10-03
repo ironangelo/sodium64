@@ -44,6 +44,7 @@ jobs:
           python3 scripts/check_runtime_arena.py build/sodium64.elf
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp*.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
       - name: Generate original guests only
         run: |
           python3 - <<'PYGUEST'
@@ -226,6 +227,7 @@ jobs:
             build/*.map
             sodium64.z64
             direct-build.log
+            mode7-compiled.json
             captures/
             ares-version.txt
             normal-qualified/

@@ -5,6 +5,14 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+## 2026-10-03 UTC — A10 resident admission compiled qualification passes; full image suite pending
+
+Current source `e2b1c89a836b197c93419b498c738309c2e05b6a` supersedes the initial candidate. Build and Validate run 37138749515 passes normal, profile, default native and trace builds plus emulator smoke; release is skipped. The compiled resident-admission differential executes 8,458 cases: 3,858 admitted states match the full existing admitter byte-for-byte, and 4,600 delegated cases preserve input DMEM for the original path. Fixed prefix/slot/suffix entries, shared fill_main entry and section-register state are checked. Aligned-target qualification passes 3,784 cases. Normal and trace CPU .text bytes remain identical to their respective A9 qualified counterparts.
+
+Pre-handoff qualification caught a fill_main table reference in the removed unreachable prologue; its two instructions remain at their original address. The original scalar test VM also needed XORI support to execute the reference admitter. Both are corrected at the current head; prior failed candidates do not qualify a handoff. Six whitelisted paths now include scripts/test_hcomp_aligned_targets.py for that VM support. No faulty A10 wrapper was delivered.
+
+Direct Backdrop run 37138749457 is still running the fresh 84-image matrix and subsequent original-guest v2/v3 recorder qualification. A10 is a real RSP admission optimization, not a capture-only build, but no measured native FPS gain exists yet. The post-iris CPU/APU/DSP and VRAM semaphore costs remain a separate unresolved investigation. Commercial material remains private; master unchanged, no PR/merge/release.
+
 ## 2026-10-03 UTC — Actual A9 hardware trace validates retention; resident admission candidate in qualification
 
 Iron supplied the real A9 trace capture, started shortly before the title iris and including later action microdips. The exact A9 decoder accepts checksum/geometry/count/cursor and monotonic records. Capture spans 20.033143 Count-domain seconds, with 396 observations from 0.052750 to 20.033120 seconds, 7,128 occupancy samples and 891 retained EPCs. Overflow flags are 0; HALT and SP DMA completion are acknowledged. Measured ISR body overhead is 0.36%. This actual capture confirms whole-interval retention. No supplied seed SRAM was needed for this intro capture. The original SAV and complete derived report remain private.

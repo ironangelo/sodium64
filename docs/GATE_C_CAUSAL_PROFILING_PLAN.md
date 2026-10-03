@@ -1,6 +1,8 @@
 # Gate C causal performance diagnosis
 
 Status: proposed design, not an implemented recorder or a demonstrated speedup.
+
+Priority update: [the general renderer architecture experiment](GATE_C_RENDERER_ARCHITECTURE_PLAN.md) now controls the next milestone. This recorder design supports that decision; implementing the full format or expanding fast admission scene by scene is not the next milestone by itself. Start with measurements sufficient to evaluate the complete kernel and producer/dataflow alternatives.
 Runtime baseline: A11, `ac534849002a04d342dd566a6f96ae1707680387`.
 The normal emulator and master stay unchanged while this measurement design is qualified.
 

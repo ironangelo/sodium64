@@ -54,10 +54,14 @@ def main():
         assert 20<=h['elapsed_seconds_count_domain']<21 and h['frames_completed']>0
         assert h['halt_acknowledged']==1 and h['sp_dma_settled']==1
         assert len(result['events'])==64 and all('ppu_live_sample' in e for e in result['events'])
-        cart=c.read_memory(0xa8000000,0x8000,chunk)
-        assert cart==blob,'cart SRAM PI write differs from the captured local payload'
         (a.output/'original-capture.sav').write_bytes(blob)
         symbolicate(result,a.elf);(a.output/'decoded-original.json').write_text(json.dumps(result,indent=2)+'\n')
+        cart=c.read_memory(0xa8000000,0x8000,chunk)
+        (a.output/'cart-sram.bin').write_bytes(cart)
+        mismatches=[i for i,(x,y) in enumerate(zip(cart,blob)) if x!=y]
+        print(json.dumps(dict(cart_pi_mismatches=len(mismatches),first_offsets=mismatches[:16],
+                              pi_registers=c.read_memory(0xa4600000,0x34,0x34).hex())),flush=True)
+        assert not mismatches,'cart SRAM PI write differs from the captured local payload'
         proof=dict(passed=True,dormant_vi_before_arm=vi,manual_n64_start=True,cart_pi_bytes_identical=True,
                    format_version=2,seconds=h['elapsed_seconds_count_domain'],precision='MEDIUM',
                    framebuffer_seeding=False,guest_state_writes=False,diagnostic_state_writes=False,

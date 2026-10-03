@@ -7,6 +7,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+
+## 2026-10-03 UTC — Final A11 compiled proofs pass; images and recorder execution continue
+
+Exact source ac534849002a04d342dd566a6f96ae1707680387 passes all four compilation/contract jobs in Build and Validate 37147168850 (normal, profile, default native and trace). Emulator smoke remains in progress. Compiled publication cases report 1,420 instructions for clean groups and maximum 5,516 even for full publication, below the former 6,144 dirty-copy/full-writeback loop bodies; all required cache lines, initial publication and dirty queue bytes are exact. This is instruction work proof, not CPU cycle or FPS authority. 272 palette cases and 24 changed/identical commit cases pass. Final ELF also passes the private 96-frame alternating-queue/brightness/sparse/burst/identical-refresh interaction check, reusing 24 frames with exact independent component-scaled pixels.
+
+2,560 conditional-depth cases preserve general tags and omit raw/direct tags with fixed resident ABI; 8,458 resident admission, 3,784 aligned targets, 3,584 Mode7 window cases, renderer truth matrix and RDP lifetime tests pass. Trace compiled 55 cases retain append-only guards, register/guest preservation, Count wrap, all seconds, terminal body integrity and both VRAM semaphore instruction ranges. VRW1 occupies only bounded reserved header bytes; old v3/v2 decoder fixtures pass. The optional reader decodes the actual A10 capture identically using its exact A10 ELF/map.
+
+Direct Backdrop 37147168864 is running full fresh 84-image comparison, then default v2/manual v3 original-guest recorder and cart PI save qualification. No final A11 handoff is ready until those and smoke complete. All commercial data remains private. Master unchanged, no PR/merge/release; no constant-60 claim or native A11 performance result exists.
+
 ## 2026-10-03 UTC — Combined A11 compiled contracts pass; dense VRAM loop tightened
 
 Current source `ac534849002a04d342dd566a6f96ae1707680387` retains the three generic reductions (unused depth tags, dirty-group VRAM publication, independent palette conversion reuse) and optional VRW1 wait subset. Prior candidate 7febff6 passed normal/profile/default-native/trace compilation and compiled ABI/publication/renderer checks: 2,560 depth-policy cases, 52 cache-publication cases, 272 component-scaled palette cases and 24 changed/identical commit invalidations. Identical CGRAM writes retain palette validity but still commit guest state and the unchanged raster epoch path. All-dirty publication initially added loop instructions; the current candidate unrolls all 32 cache lines per dirty 512-byte group and requires its maximum compiled instruction count below the old full-writeback plus dirty-copy bodies. Cache bus operations remain identical for dirty/full groups. No clock or guest identity changes.

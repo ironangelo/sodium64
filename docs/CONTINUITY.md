@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — Iron confirms all initial A6 hardware results were at MAX; first-castle route in progress
+
+At 01:40 America/Santiago (04:40 UTC), Iron explicitly confirms **all results in the immediately preceding A6 report were measured while playing at Frame Precision MAX**. This resolves the earlier unreported precision; do not label these A6 observations as MEDIUM. Confirmed MAX results: cross-world square iris60 FPS, Yoshi's Island → Donut Plains60 FPS, and Save and Continue appearing without drops (exact dialog FPS unspecified). Residual MAX observations: title/logo iris varies approximately30–50 FPS by loop, several enemies approximately57, map/stage fades approximately55, path-reveal animation approximately55. Other settings are not newly confirmed in this message; do not invent them.
+
+Iron continues playing the same A6 normal and is at the first castle, checking for abnormalities through its subsequent transition to Donut Plains. **Castle completion, victory/cutscene, route reveal and resulting Donut transition remain in progress, not passed yet.** Preserve this active test and await its actual result; no new normal ROM or runtime mutation from this status update.
+
+Diagnostic comparability: the delivered A6 diag-manual still hard-pins MEDIUM (raw8), whereas the current normal measurements are MAX (raw20). The next existing diagnostic could still provide MEDIUM evidence, but it cannot silently be presented as a matching MAX capture. Before using a new diagnostic to quantify MAX-specific transient drops, align its precision or explicitly establish that the effect reproduces comparably at MEDIUM. Do not ask Iron to change the current normal MAX castle run while it is underway. A dedicated MAX diagnostic variant is a possible next measurement step, not created or delivered in this update. Public changes remain continuity only; private ROM constraints, master unchanged and no PR/merge persist. Universal60/Gate C closure remain open.
+
 ## 2026-10-03 UTC — A6 first hardware results: cross-world iris/Donut60 and save dialog without dips
 
 Iron reports initial A6 testing at 01:33–01:34 America/Santiago (04:33–04:34 UTC). These are **user observations on real N64**, not independently decoded A6 diagnostic data. Results apply to the tested route/state; MEDIUM versus MAX and exact settings were not specified in this report. Do not silently assume either precision.

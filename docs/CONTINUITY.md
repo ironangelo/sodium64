@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 07:06 UTC — Generic A7 usage and unified menu diagnostic proposed; implementation explicitly deferred
+
+Iron will send the current A7 title-iris save/video first. Iron asks whether A7 can replace the usual sodium64.z64 to test other SNES games, and proposes a single emulator whose normal N64 Start settings menu includes an action to resume the current game, record20 seconds, then show capture completion. Iron explicitly says not to implement this yet.
+
+Source/build review confirms the A7 normal build has a generic emulator-only sodium64.z64, while the delivered named SMW normal/diagnostic files include Iron's private SNES guest. A generic replacement would use the emulator-only normal build in the already configured flashcart launcher integration; the existing private SMW wrapper is a game-specific package. No other-game compatibility or performance outcome is inferred from SMW.
+
+The unified capture menu is technically feasible by activating the existing recorder only when selecting the action and after leaving the menu, retaining normal Start behavior. It requires general save ownership/export design first: the current diagnostic reserves the upper24 KiB of a32 KiB cart SRAM and supports guest SRAM only within the first8 KiB, initializes that reserved area at boot, and changes normal save publication. It must not be enabled indiscriminately for arbitrary games or overwrite their saves. Preserve active settings in a future general recorder rather than silently forcing SMW's baseline; record exact build/settings for decoding. Dormant-overhead and save-preservation verification would be required before delivery.
+
+This is a future design note only. No unified implementation, new generic handoff, source/workflow change or ROM publication occurs in this turn. Immediate task remains current A7 native iris evidence and residual-performance diagnosis. Commercial ROMs and all wrappers/captures remain private.
+
 ## 2026-10-03 07:00 UTC — A7 hardware Iggy success: correct lava/platform presentation and60 FPS; residual iris/action/fade dips remain
 
 At04:00 America/Santiago, Iron reports **correct lava and60 FPS in Iggy** during the ongoing A7 normal-ROM test. This confirms both requested boss outcomes on Iron's N64 as user-observed behavior, superseding the pending boss result below. No A7 diagnostic capture has been decoded for this report, and this does not establish global60 FPS or a settings-matched superiority benchmark against clean upstream.

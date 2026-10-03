@@ -740,7 +740,7 @@ next_segment:
     // Update the RDP scissor bounds for a window segment
     // Inclusive layer spans use the border offset directly at both edges.
     // Keep padding in the fixed renderer slot; x=255 may be a singleton.
-    nop
+    jal bg_span_seek
     addi t2, t2, 12
     nop
     sll t2, t2, 14
@@ -1362,6 +1362,32 @@ hcomp_mode7_dispatch:
 hcomp_cgram_store_marker:
     sh t7, HCOMP_FIXED_COLOR
     b hcomp_cgram_return
+    nop
+
+bg_span_seek:
+    // Start at the first 8-pixel tile intersecting this inclusive span.
+    // Recompute from scroll for EVERY span: a later span may share a tile
+    // with the preceding one and must draw that tile again under its scissor.
+    // Keep the pending rectangle in v15 in step with s0. Skipped tiles do not
+    // alter cache/dirty/priority state or v1 (the last uploaded texture).
+    lbu t0, WIN_BOUNDS(t8)
+    add t1, t0, s6
+    andi t1, t1, 7
+    sub t0, t0, t1
+    sub t1, t0, s0
+    beqz t1, bg_span_seek_return
+    move s0, t0
+    sll t1, t1, 14
+    sdv $v15, 0, 0, v0
+    lw t0, RDP_TILE + 24
+    add t0, t0, t1
+    sw t0, RDP_TILE + 24
+    lw t0, RDP_TILE + 28
+    add t0, t0, t1
+    sw t0, RDP_TILE + 28
+    ldv $v15, 0, 0, v0
+bg_span_seek_return:
+    jr ra
     nop
 
     // Shared window helper and retained suffix remain at their audited ABI.

@@ -15,6 +15,9 @@ from make_hcomp_fullheight import CASES
 
 
 def expected(case,x,y):
+    if case.startswith('span-seek-'):
+        from make_bg_span_seek import expected_seek
+        return expected_seek(case,x,y)
     if case.startswith('mode7-'):
         from make_mode7_windows import expected_mode7
         return expected_mode7(case,x,y)

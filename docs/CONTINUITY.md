@@ -4,7 +4,7 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 ## 2026-10-03 UTC — First A5 console feedback: title loop and iris same speed at MAX and MEDIUM
 
-Iron is testing the A5 normal private wrapper and reports that the title/logo intro, Mario/Yoshi loop and iris run at the same speed with Frame precision MAX as with MEDIUM. This is an initial user-observed comparison; no new save/video or numeric FPS measurement received yet, and equal speed does not by itself confirm60 FPS. Iron is returning to MEDIUM for the remaining tests, preserving the A4/A5 baseline for world map, stages and return-to-map. No code/settings change requested or made. Await complete normal/map diagnostic feedback; stable60 everywhere and broader MAX fidelity/performance remain unclosed.
+Iron is testing the A5 normal private wrapper and reports that the title/logo intro, Mario/Yoshi loop and iris run at the same speed with Frame precision MAX as with MEDIUM. This is an initial user-observed comparison; no new save/video or numeric FPS measurement received yet, and equal speed does not by itself confirm60 FPS. Additional console feedback from Iron at2026-10-03T02:51 UTC: new-game Welcome displays60 FPS at Frame precision MAX in the A5 normal wrapper. This numeric FPS is user-reported, without newly received video/save for independent verification. World map result is still pending. Iron is returning to MEDIUM for the remaining tests, preserving the A4/A5 baseline for world map, stages and return-to-map. No code/settings change requested or made. Await complete normal/map diagnostic feedback; stable60 everywhere and broader MAX fidelity/performance remain unclosed.
 
 ## 2026-10-03 UTC — A5 qualified private handoff: general Mode0/OBJ backdrop optimization
 

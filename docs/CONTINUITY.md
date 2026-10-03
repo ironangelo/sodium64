@@ -4,6 +4,19 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+
+## 2026-10-03 UTC — A9 20-second whole-interval diagnostic implementation; qualification pending
+
+Iron requests a Start-triggered 20-second capture covering the brief title iris and separated action microdips, rather than a 2.5-second capture. The short-capture proposal is superseded before any source publication or binary handoff. Current A8 normal title/FPS feedback remains negative; this batch is measurement infrastructure, not a new performance repair.
+
+An opt-in NATIVE_DIAG_TRACE build is being prepared, with separate S64D v3 layout inside the existing upper 24 KiB of cart SRAM. It appends up to 400 compact live render observations at roughly 20 Hz over the entire capture, plus 20 compact occupancy intervals and distributed retained CPU EPCs. All IRQ occupancy counters retain the existing roughly 358 Hz sampler, while only one in eight EPCs is stored (roughly 45 Hz), making the sampling-density tradeoff explicit. Capacity checks stop writes and mark overflow; no wrapping replacement of early trace/EPC/second records. Guest SRAM ownership, manual N64 Start arming, 20-second Count limit, full clocks/audio, MAX and skip0 are unchanged.
+
+The v3 live trace records window/color controls, semantic screen/policy/row geometry, section/frame progress, SP/DP status and observational running-SP PC. These live values are non-atomic; an SP PC alone does not identify an installed overlay or establish instruction cost. V3 does not include v2's terminal DMEM/IMEM/GPR and raw DP cycle-counter dumps. Those diagnostic capabilities remain available through the unchanged default v2 build. Do not present v3 as strictly superior for every crash/debug use or imply a full instruction/frame trace.
+
+Normal and default-native preprocessing tokens match the A8 sources. Host decoder tests pass 19 prior-format tests plus 7 new original-fixture trace tests, covering distinct early/late episodes, bounds, checksum/cursor/sequence corruption, explicit overflow and Count-domain time bounds. Target compilation, executed compiled helper/IRQ checks, default binary/RSP-bank preservation and complete original-guest dormant/Start/PI 20-second qualification remain pending. No new ROM delivered yet.
+
+Source branch is still `812f9b023d0e1524ad425da4fa0171a725308bdd` until the implementation commit; master unchanged. Public writes are limited to diagnostic source/build flags and original tests/workflow/docs. Commercial ROMs, saves, video, captured controls/memory and guest hashes remain private. Unified generic menu recorder, renaming and license/credit changes remain deferred.
+
 ## 2026-10-03 14:45 UTC — A8 normal hardware feedback: no observed baseline performance gain
 
 Iron tested the normal A8 private wrapper and reports that the title screen behaves the same: the iris lasts approximately one second and still produces the FPS drop during that interval. The other previously reported brief dips remain in the same places. Treat this as negative hardware feedback for the target improvement, not a resolved iris or a measured FPS gain. No new A8 diagnostic save/video or exact FPS timeline accompanies this report, and menu settings were not explicitly reconfirmed in this message; the instructed baseline remains MAX / skip0 / audio ON / APU underclock OFF.

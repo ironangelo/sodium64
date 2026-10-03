@@ -2,6 +2,20 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A7 Iggy native evidence and general Mode7/window fixes IN PROGRESS
+
+New private A6 video and normal/manual diagnostic saves were inspected independently, using the exact A6 CPU ELF/map. The native TIME_LIMIT capture is complete: 20.044 seconds, 548 submitted/completed frames, 1200 VI; approximately 60 FPS before the boss and sustained 19–20 FPS during it. Later seconds spend about 65–73% of sampled CPU time waiting for RSP rendering; observer overhead is about 0.244%. This identifies a renderer throughput issue, not a freeze. The terminal hcomp_math overlay is a halt snapshot and does not independently assign its exact live cost.
+
+Live control events show Mode7, a fixed-color backdrop operand, no Sub layers, and changing BG1 window coverage. Most boss events have an empty selected window; some have a full selected window below the lava. Both A6 and upstream omit Mode7 BG windows, explaining why the affine platform remains visible through the lava region. This is an upstream compatibility gap shared by both versions. A6 additionally rejects fixed-color operands from its otherwise exact backdrop-only specialization and falls back to repeated general color-math bands, consistent with its performance regression.
+
+Prepared local fixes (not yet compiled/qualified or delivered):
+- Admit the fixed operand in the exact backdrop-only compositor, without weakening Main clip, eligible OBJ, half/subtract or diagnostic guards. Ignore Sub layer drawing only when the operand is explicitly fixed.
+- Add a small Mode7 window overlay using the existing shared window algebra, both Main/Sub masks, inclusive endpoints, and restored scissor for later OBJ. Fully masked affine regions submit no Mode7 drawing.
+- Keep fixed resident entries and state/geometry ABI; reclaim draw-slot space with equivalent eight-row packing.
+- Expand independently authored fixtures from 53 to 76, including fixed-operand windows and Mode7 rotation/zoom/raster/dual-screen cases, plus exhaustive compiled span checks. Diagnostic A7 starts at MAX, skip0/audioON/underclockOFF.
+
+No hardware 60 FPS claim, title-iris improvement claim, general superiority claim, or A7 handoff exists yet. Active runtime parent remains b74904e on phase4/gate-c-a4-gameplay-capture. Clean upstream baseline a4c75d3 and the corrected old-local-binary comparison above remain authoritative. Master is unchanged. Commercial ROM, private wrappers, captures, saves, guest state and hashes remain private and absent from GitHub/CI.
+
 ## 2026-10-03 UTC — CRITICAL BASELINE CORRECTION: earlier “original Sodium64” hardware references were an old local custom build; clean upstream Iggy60 FPS vs A6~20
 
 At02:10 America/Santiago (05:10 UTC), Iron discovers that the Sodium64 installed as the SummerCart64 default was a **months-old custom build from earlier Mario Kart work**, stored only on Iron's PC/cart. It was not the author's unmodified executable. Earlier title/iris footage described as “original/unmodified Sodium64” was therefore misidentified. Iron then downloads the original author's latest GitHub version and reports no iris malfunction or FPS drops on the newly observed route, slight speed advantage for original, and some original visual glitches on path reveals/world transitions where current A6 may look better. These are user observations, not a completed settings-matched benchmark or pixel-ground-truth comparison.

@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A6 compiled checks pass; corrected palette reading and exact slow-state admission
+
+At04:09 UTC A6 runtime59a65254423d5df4aba4d355bb1cea533ba5c15a is compiled and qualified for scalar semantics. Candidate branch headb74904e89a528eb408e0980b4704a2d1010d259a changes only the independent original HDMA fixture oracle: absent Sub falls back to its delivered fixed blue. The initial pixel run was superseded; full53-case pixel/guard and manual-recorder checks are running at https://github.com/ironangelo/sodium64/actions/runs/37095451786. Build/normal/native/profile checks at https://github.com/ironangelo/sodium64/actions/runs/37095451826. No ROM delivered yet.
+
+**Correction to preliminary palette interpretation:** the visible sprites in coherent terminal A5 OAM use math-ineligible palettes0..3, while potentially eligible high-palette sprites are wholly above the relevant frame region under current wrap/size rules. Do not describe the captured ghost/HUD as requiring mixture. The immediate cause supported by this terminal state is A5's fresh-OAM-only admission guard on subsequent real sections, not visible eligible sprites. The new adaptive row optimization additionally handles scenes where genuinely eligible OBJ rows do exist; original fixtures verify that family independently.
+
+Private execution of actual A5 and A6 compiled banks on copied terminal state: A5 current-flag policy0; A5 with a matching fresh rebuild policy2; A6 with an explicitly matching cached-geometry certificate selects direct composition for the later sections; mismatched geometry remains entirely general. OAM and controls unchanged. Certificate condition is explicit: this is admission replay, not complete guest execution or native FPS measurement. Normal/native bank instructions identical; Main, Mode7 and arithmetic banks identical to A5, only Phase/Fast changed.
+
+Per-second capture counts also distinguish the brief59–60 FPS interval (aboutone real section/frame) from persistent~20 FPS after the transition (aboutthree/frame). The first~five captured seconds are slow with aboutone/frame; detailed PPU ring retains only the recent tail, so do not assign every early/path/iris dip to the later cache guard without further evidence. A6 must be tested across all reported effects.
+
+Compiled results pass:65,540 admission,57,344 arithmetic-identity,3,072 Mode0 control,14,928 OBJ eligibility,4,306 adaptive band/section schedule,17,408 window-mask and3,495 geometry cases; aligned consumer suite3,784; resident branch-delay ABI and disjoint arena pass. Full pixel and diagnostic checks pending. Priority handoff remains a private normal+manual ROM, same guest, MEDIUM/0/audio ON/underclock OFF baseline then MAX comparison, with user's existing normal save copied exactly for convenience. master remains7cc8facfe8643fb85888f301f79995575830521d, no PR/merge; general60 FPS and microbajones remain open.
+
 ## 2026-10-03 UTC — A5 transition capture independently analyzed; A6 candidate in progress
 
 Iron supplied private diagnostic/normal saves and a short transition video at03:36 UTC. Both were read locally; no commercial bytes, extracted guest buffers, images or private wrappers are published. User chronology: path reveal40–50, recovery60, walk60, square iris20, destination stays20. The short video independently shows the square transition and a subsequent slow overworld; it does not unambiguously establish the user's destination-map name. Avoid map-name patches.

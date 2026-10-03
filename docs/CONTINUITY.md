@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — Explicit A5 outstanding performance list; no full60 FPS closure
+
+At03:32 UTC Iron explicitly asks to retain outstanding debts while preparing the transition diagnostic capture. Latest A5 normal user observations:
+- Title/logo iris remains approximately30–40 FPS during the effect.
+- Map modifications/path-reveal animations after completing a stage can fall to approximately40 FPS. Keep this context alongside earlier~20 FPS for the specific route toward Yellow Switch, not as a correction erasing that report.
+- Several enemies can cause approximately57 FPS; other mild dips also occur in circumstances not yet identified.
+- Cross-world square iris can trigger persistent~20 FPS on the destination map until stage entry/exit; separate established outstanding debt from prior reports.
+
+Welcome60 at MAX and initial/recovered map60 at MEDIUM/MAX remain scene/state-scoped successes. Correct visual fidelity is Iron's report and a hard preservation requirement. Road1.0/Gate C/general full-speed performance are not closed. No detailed save/video for the new list has arrived yet; all new numbers are user console observations, not independently measured here. No cause assigned to enemy count or every animation without captured evidence.
+
+Current priority remains user's already planned A5 diag/manual+video sequence just before Yoshi's Island map modification through square transition into slow Donut Plains, ideally ending on the still-slow map within20s. Analyze that evidence first; use it to determine how broadly the next general fix can address persistent and animation drops. Iris and occasional gameplay57 remain explicit follow-up targets even if the persistent map issue is fixed. Do not treat positive isolated60 FPS runs as completion or dismiss57 FPS as irrelevant. No additional user capture requested during this update; no runtime mutation.
+
 ## 2026-10-03 UTC — Cross-world square iris triggers sticky20 FPS until stage re-entry
 
 Iron narrows the A5 normal console reproduction at03:20 UTC: every world change begins a square iris/window transition; performance drops to~20 as it starts shrinking and stays low on the destination map until entering a stage. Returning from that stage restores the same world's map speed. After Donut recovered60, switching to Yoshi's Island made Yoshi's Island~20; thus map name/animated scenery alone does not explain the issue. No settings/ROM change. New matching diagnostic save/video still pending.

@@ -2,7 +2,19 @@
 
 Status: design checkpoint, not a new renderer, benchmark result or claim of native speed.
 Baseline: A11 source ac534849002a04d342dd566a6f96ae1707680387.
-This plan takes precedence over expanding fast-admission conditions as the central performance strategy. The causal profiling plan remains supporting infrastructure; implementing its entire recorder is not a prerequisite for the architecture experiment.
+Immediate decision gate: first obtain a bounded representative capture batch from SMW, ALttP and DKC1 with one reusable diagnostic build. Exact internal ALttP/DKC1 routes are not yet known. Use the batch to rank shared causes and decide whether a generic correction or this architecture experiment is the better investment. The complete renderer candidate remains a hypothesis; neither an unbounded scene campaign nor a large unmeasured rewrite is the next commitment.
+
+## Immediate cross-game evidence gate
+
+Use one empty diagnostic emulator and the existing recorder as the starting point. Capture 20-second representative intervals from SMW's title iris/later intro dips, ALttP's title, and DKC1's animated intro or first-stage slowdown. Include a faster segment or control where practical. Record identical source/settings, valid full-rate audio/APU, no skips and collector cost; retain the matching ELF/map. Add only the stage/work information needed to separate competing explanations.
+
+Analyze the batch together. If a repeated avoidable upload, cache invalidation, ownership wait or state transition dominates, fix that generic cause and remeasure the same set. If necessary complete composition/source work itself exceeds the budget, run the bounded renderer experiment below against that measured structure. If the samples still cannot distinguish the causes, add one discriminating measurement before collecting more scenes.
+
+The proposed operating flow is capture, confirm final save, return to the flashcart menu, launch the next game using the same emulator. Native hot game switching and a new SD file browser are outside this first measurement milestone. Each game/build must have a separate diagnostic save namespace. Qualify the guest SRAM reservation per loaded game; the present recorder's <=8 KiB assumption cannot be applied blindly.
+
+The official N64FlashcartMenu uses the selected game's save path and supports a single SNES emulator plus per-emulator overrides. Current Sodium writes cart SRAM, not named SD files. Diagnostic suffixes therefore need explicit launch/save-path separation. A minimal qualified workflow can use local diagnostic-named game copies/aliases so the launcher selects distinct SAVs; automatic output naming independent of the game filename would require further launcher/SD integration. Keep ordinary save files intact and prevent repeated captures from silently replacing prior outputs.
+
+Primary transport references: [emulator configuration](https://github.com/Polprzewodnikowy/N64FlashcartMenu/blob/main/docs/18_emulators.md), [save loading](https://github.com/Polprzewodnikowy/N64FlashcartMenu/blob/main/src/menu/cart_load.c), [SC64 writeback](https://github.com/Polprzewodnikowy/N64FlashcartMenu/blob/main/src/flashcart/sc64/sc64.c). The installed menu/firmware still needs qualification; current upstream support is not proof of the user's exact setup.
 
 ## Road decision
 

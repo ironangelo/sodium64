@@ -2,7 +2,7 @@
 
 Status: proposed design, not an implemented recorder or a demonstrated speedup.
 
-Priority update: [the general renderer architecture experiment](GATE_C_RENDERER_ARCHITECTURE_PLAN.md) now controls the next milestone. This recorder design supports that decision; implementing the full format or expanding fast admission scene by scene is not the next milestone by itself. Start with measurements sufficient to evaluate the complete kernel and producer/dataflow alternatives.
+Priority update: first qualify one reusable diagnostic build for a bounded SMW/ALttP/DKC1 capture batch, then decide on generic corrections or [the general renderer architecture experiment](GATE_C_RENDERER_ARCHITECTURE_PLAN.md). Reuse the existing recorder and add only discriminating measurements. The full format below is a capacity/design option, not an automatic prerequisite. Neither unlimited scene enumeration nor a large rewrite is justified before the representative cost comparison.
 Runtime baseline: A11, `ac534849002a04d342dd566a6f96ae1707680387`.
 The normal emulator and master stay unchanged while this measurement design is qualified.
 

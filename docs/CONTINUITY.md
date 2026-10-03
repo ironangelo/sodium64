@@ -2,6 +2,20 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — Immediate recommendation: bounded cross-game capture before committing to a renderer rewrite
+
+The user asks sincerely which investment is better: reusable multi-game 20-second diagnostics and cause-based improvements, or a new renderer architecture. Recommendation is the first as a bounded evidence gate, not an endless case-by-case campaign: one diagnostic emulator, a small representative SMW/ALttP/DKC1 batch, then a single combined analysis and a decision on generic fixes versus the renderer experiment. Current internal hardware evidence covers SMW only; ALttP/DKC1 have user-reported fidelity/performance observations. The streamed renderer remains a justified candidate, not the selected expensive implementation.
+
+Updated both planning documents so their sequencing agrees. Reuse the existing recorder; add only measurements needed to distinguish source/composition work, CPU/audio and ownership/transfer waits. Capture settings parity, full audio/APU and no skips, valid whole interval and observer effect, exact source/ELF/map and loader/SRAM admission. Compare a heavy and faster interval where practical. Do not present raw busy percentages as a proven cause.
+
+Decision rule: a repeated avoidable invalidation/upload/wait/state transition calls for one generic fix tested across the same batch; a measured deficit in necessary complete renderer work calls for the bounded architecture prototype; unresolved attribution calls for one discriminating measurement, not a growing scene list. New saves should support ranking shared mechanisms rather than title-specific admission or hope that unrelated patches generalize. SMW progress is useful but cannot establish wider performance; it is also not treated as a trivial PPU workload merely because it is familiar.
+
+Primary transport review: upstream N64FlashcartMenu selects sodium64.z64 for SNES with SRAM256Kbit by default; per-emulator overrides exist. cart_load.c chooses the save path from the loaded game's path, and sc64.c enables writeback to that file's sectors. Current Sodium/native_diag writes the cart SRAM payload and finishes at a saved-capture screen; it does not create named SD files or provide an in-emulator ROM browser. A single SD test session via the flashcart menu between games is a feasible design; hot switching inside Sodium is a separate feature.
+
+Diagnostic/game/build save namespaces must be explicit and verified before delivery. Minimal implementation can use local diagnostic-named game copies/aliases and a single emulator so launcher-derived SAVs stay separate; output suffixes independent of the launch filename require additional launcher/SD integration. Verify preservation of ordinary game saves, bounded guest SRAM admission and complete saved payload. Upstream docs/source are not proof of the user's installed version. No commercial game bytes or saves enter public source/CI.
+
+This turn provides a decision and documentation, not a built generic recorder or a measured cross-game speedup. Runtime baseline remains A11 ac534849002a04d342dd566a6f96ae1707680387; no source runtime change, PR, merge, release or master mutation. Only the three curated documentation paths change.
+
 ## 2026-10-03 UTC — Road-aligned architecture decision: test the complete renderer dataflow
 
 The user rejects an open-ended scene-by-scene fast-admission campaign and asks how to reach Road 1.0 from current fidelity/performance. This is steering of the existing goal. The earlier causal recorder proposal is useful but insufficient as the primary route; Road explicitly warns against hundreds of small builds without measured movement and instrumentation becoming the project.

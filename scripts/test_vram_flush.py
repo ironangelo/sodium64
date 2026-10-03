@@ -92,6 +92,7 @@ def main():
         run(m,s['cg_high'],s['dpal_commit_invalidated'],r)
         assert get(m,s['dpal_dirty'],1)==bytes([flags if old==b'\x12\x34' else 3])
         assert get(m,s['cgram']+color*2,2)==b'\x12\x34'
+    assert max(c['instructions'] for c in cases)<6144 # Old dirty-copy + full writeback bodies.
     proof=dict(passed=True,publication_cases=len(cases),palette_cases=palettes,commit_cases=24,
                startup_all_lines=True,dirty_handoff_exact=True,clean_frame_cache_lines=0,
                palette_pixel_equivalence=True,independent_queue_validity=True,native_fps_authority=False,

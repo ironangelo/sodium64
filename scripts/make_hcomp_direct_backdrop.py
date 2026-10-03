@@ -25,7 +25,11 @@ def build_direct(case):
     from make_gate_c_hcomp_cgwsel_source import finalize_checksum
     rom=bytearray(build('short' if case=='fast-short' else 'half'))
     identity=case.startswith('fast-identity-')
-    set_store(rom,0x2131,0x41,0x20)
+    # The hook executes before the final startup CGADSUB and TS writes.
+    # Set those actual later writes as well, so they cannot erase this case.
+    set_store(rom,0x2131,0x41,identity_controls(case)[1] if identity else 0x20)
+    if identity and identity_controls(case)[2]==0:
+        set_store(rom,0x212d,2,0,count=2)
     if case=='fast-sub-empty':set_store(rom,0x212d,2,0,count=2)
     selector,logic,bounds=setup(case)
     settings=((0,0x2121),(0,0x2122),(0,0x2122),

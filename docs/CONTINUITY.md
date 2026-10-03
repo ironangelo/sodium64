@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — Cross-world square iris triggers sticky20 FPS until stage re-entry
+
+Iron narrows the A5 normal console reproduction at03:20 UTC: every world change begins a square iris/window transition; performance drops to~20 as it starts shrinking and stays low on the destination map until entering a stage. Returning from that stage restores the same world's map speed. After Donut recovered60, switching to Yoshi's Island made Yoshi's Island~20; thus map name/animated scenery alone does not explain the issue. No settings/ROM change. New matching diagnostic save/video still pending.
+
+Source audit provides a concrete generic admission limitation compatible with this pattern: A5 rejects any nonzero CGWSEL Main-clipping selector before calculating its effective COLOR window. A retained clip-outside selector with a full selected window, or clip-inside with an empty selected window, clips zero Main pixels but still selects general policy0. Local execution of actual A5 compiled admission on independently authored register/window data confirmed both false-negative opportunities; no-clip control selected2 and partial/fully effective clip counterexamples remained0. Pixel-wise window truth over256 positions proves the harmless cases; controls unchanged. This is an original-data scalar admission audit only, not evidence that SMW's transition actually leaves those register values, not a full image/FPS test. Do not claim a stale-register bug in the guest/emulator or remove active clipping. Other changed OBJ/math/section states remain possible until captured.
+
+Best next capture: A5 diag-manual, switch worlds to reproduce, let the square transition finish, remain on the still-slow map without entering a stage, then arm N64Start20s and preserve sav/video. Optionally compare a separate same-map capture after enter/exit restores60. Slow stable epoch is the priority because it survives beyond the transition and the existing recorder retains coherent terminal DMEM plus live PPU state. Generic solution should classify effective clipping/admission or optimize genuinely needed composition according to measured state; no runtime mutation made from this report.
+
 ## 2026-10-03 UTC — A5 Donut Plains performance recovers after Yellow Switch; same normal ROM/settings
 
 Iron adds console observations at2026-10-03T03:17 UTC: after the earlier Donut Plains~20 FPS and path-reveal~20 reports, entered Yellow Switch Palace, played/completed it and activated yellow blocks. On return, the map-wide flying-yellow-block animation ran approximately50 FPS; the save-confirmation dialog fell to approximately30 or20 FPS. Chose save; afterward the same Donut Plains map ran60 FPS. No ROM change or settings change; only continued playing. All observations are user-reported, no matching new video/save received yet.

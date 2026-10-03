@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A5 transition capture independently analyzed; A6 candidate in progress
+
+Iron supplied private diagnostic/normal saves and a short transition video at03:36 UTC. Both were read locally; no commercial bytes, extracted guest buffers, images or private wrappers are published. User chronology: path reveal40–50, recovery60, walk60, square iris20, destination stays20. The short video independently shows the square transition and a subsequent slow overworld; it does not unambiguously establish the user's destination-map name. Avoid map-name patches.
+
+The exact A5 diagnostic ELF decoder validates checksummed S64D v2 TIME LIMIT: about20.04s,544 completed/submitted frames,1199 VI,1072 real sections. Per-second sequence includes a brief59–60 FPS interval followed by about20–21 FPS and roughly71–75% CPU wait on the RSP. Observer ISR body cost is approximately0.23%, not sufficient to explain the drop. Normal save remains ordinary SRAM, not a second profiler.
+
+The coherent terminal state and recent live samples **refute the earlier inactive-Main-clipping hypothesis for this captured slow state**. Main clipping is disabled. Most sampled bands use the full general compositor. Source audit identifies two generic admission restrictions: later real sections cannot reuse the already normalized OBJ cache without a fresh OAM flag, and a potentially math-eligible OBJ anywhere causes the whole section to fall back even when its vertical extent is small. Neither constitutes evidence of faulty guest state. Required color math must remain intact.
+
+An A6 candidate is being implemented: certify cached OBJ geometry when Main rebuilds it, reuse only while OBSEL/Y-wrap settings match, and split direct-composition spans around conservative high-palette OBJ row intervals. Stale geometry stays general; hazardous rows keep ordinary <=8-row math. No X/window/transparency guesses, no SMW identity checks, no guest frequency/underclock/precision reduction. Compiled semantic coverage, whole-image original-guest pixel/guard checks and native manual-recorder qualification are still pending. No new private ROM delivered yet. Console FPS gains cannot be claimed before Iron tests it. Logo iris50, fades50, path animation40–50 and occasional gameplay57 remain explicit debts.
+
 ## 2026-10-03 UTC — Explicit A5 outstanding performance list; no full60 FPS closure
 
 At03:32 UTC Iron explicitly asks to retain outstanding debts while preparing the transition diagnostic capture. Latest A5 normal user observations:

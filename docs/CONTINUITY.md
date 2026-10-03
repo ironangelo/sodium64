@@ -5,6 +5,16 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+## 2026-10-03 UTC — Actual A9 hardware trace validates retention; resident admission candidate in qualification
+
+Iron supplied the real A9 trace capture, started shortly before the title iris and including later action microdips. The exact A9 decoder accepts checksum/geometry/count/cursor and monotonic records. Capture spans 20.033143 Count-domain seconds, with 396 observations from 0.052750 to 20.033120 seconds, 7,128 occupancy samples and 891 retained EPCs. Overflow flags are 0; HALT and SP DMA completion are acknowledged. Measured ISR body overhead is 0.36%. This actual capture confirms whole-interval retention. No supplied seed SRAM was needed for this intro capture. The original SAV and complete derived report remain private.
+
+The iris occurs approximately 1.67–2.73 seconds after arm. Raster sections rise from roughly one per ordinary frame to about 70 per completed frame averaged over that interval. The interval ending at 3.037 s averages 41.52 completed FPS, with 29.4% explicit CPU RSP wait and 86.1% sampled RSP running. Later intervals include 58.29, 57.32 and 57.31 completed FPS, with no sampled explicit RSP wait and much lower frame pacing waits. The latter does NOT prove an exclusively CPU bottleneck: retained EPCs also hit VRAM semaphore loops, which the current explicit-wait bucket does not classify. CPU/APU/DSP and that hidden VRAM wait must be separated before attributing microdips to a single routine. Counts over ~1 s are quantized; 59.3/60.3 alternation by itself is not a new slowdown.
+
+Code review identifies an avoidable FAST-bank round trip solely for admission of a proven existing Sub-backdrop specialization. Candidate `0aab92dfd8881f7064a17e29b9e5524b4c1effbe` on isolated source branch uses an unreachable resident Main-prefix extent, keeping shared fixed entries, to admit a restricted equivalent case without two 1,000-byte slot DMAs. Dirty OAM, blank, diagnostic splitting, other math/clip states and identity-zero edge cases delegate to the unchanged full admitter. Accepted states preserve effective TS, band policy/end and adaptive flags; all actual BG/OBJ/window/mask drawing remains the same. No game/guest identity or guest bytes are used.
+
+Five whitelisted source/test/workflow paths are changed: src/rsp_main.S, src/rsp_hcomp.S, scripts/test_hcomp_resident_admit.py, and both build/pixel workflows. Compiled differential tests and the full 84-image/default-v2/manual-v3 qualification are queued. No qualified A10 handoff or hardware gain exists yet. A9's RSP PC is observational without bank identity and is not being used as an exact routine-cost claim. Commercial inputs/state/hashes stay out of GitHub/CI. Master is unchanged; no PR/merge/release.
+
 ## 2026-10-03 UTC — A9 whole-interval diagnostic qualified and privately delivered; N64 SMW capture pending
 
 Iron requested a Start-triggered 20-second capture retaining the brief title iris and separate later microdips. A9 improves diagnostic retention for that objective; it makes no new FPS repair. A8 normal remains the current performance baseline: title iris and remaining action/fade microdips are still unresolved in Iron's hardware feedback.

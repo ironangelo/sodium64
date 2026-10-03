@@ -5,7 +5,8 @@ Canonical live handoff for `ironangelo/sodium64`.
 ## 2026-10-03 UTC — Explicit A5 outstanding performance list; no full60 FPS closure
 
 At03:32 UTC Iron explicitly asks to retain outstanding debts while preparing the transition diagnostic capture. Latest A5 normal user observations:
-- Title/logo iris remains approximately30–40 FPS during the effect.
+- Title/logo iris falls to approximately50 FPS during the effect. Iron corrected the earlier A5 estimate of30–40 at03:34 UTC; use50 as the current A5 observation, while preserving earlier-version historical reports as history.
+- Black fade-in/fade-out transitions between overworld map and stage also fall to approximately50 FPS, newly reported at03:34 UTC.
 - Map modifications/path-reveal animations after completing a stage can fall to approximately40 FPS. Keep this context alongside earlier~20 FPS for the specific route toward Yellow Switch, not as a correction erasing that report.
 - Several enemies can cause approximately57 FPS; other mild dips also occur in circumstances not yet identified.
 - Cross-world square iris can trigger persistent~20 FPS on the destination map until stage entry/exit; separate established outstanding debt from prior reports.

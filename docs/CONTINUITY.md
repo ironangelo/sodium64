@@ -2,6 +2,20 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A7 QUALIFIED AND PRIVATE PACKAGE DELIVERED; native Iggy/iris FPS still pending
+
+Final isolated branch source8b776a17ca735d50710f019211e014f4687f5c1e, runtime6a22494ab5475ce8fcae8d7864097a8fec6b8b5f. Commits after runtime change repair only qualification scripts/workflows. Final normal/native templates and CPU ELFs are byte-identical to the prior5b2a3b6 builds and match the independently qualified templates. Six RSP banks normal/native are identical and embedded in their matching CPU ELFs. Main resident text remains byte-identical to A6.
+
+Build/validate run37103271467 passes normal, native, profile and emulator smoke. Full image run37102379592 produced75 passing images /76; one original Mode7 raster guest incorrectly had its startup overwrite the HDMA target, leaving WH unchanged. Its actual later channel writes were corrected; all13 other Mode7 guest byte arrays are unchanged. Focused run37103271465 passes all14 Mode7 full-frame images and manual recorder. Combined exact downloaded-frame reclassification passes76 cases /4,358,144 pixels, with natural RSP/RDP fences, memory guards, no framebuffer seeding and no guest-state injection. Coverage is explicitly the union of these two image runs, not a claim that the first run passed76.
+
+Compiled checks pass:3584 Mode7 window combinations /3728 spans; exact4096-line VRAM cache operation order (5120 vs8192 loop instructions);65540 policy admissions,17408 COLOR window masks,57344 identity conditions,6144 mode-control cases,14928 OBJ eligibility cases,4306 adaptive schedules and3495 section geometries. Private Iggy-register replay independently confirms A6 general<=8-row bands -> A7 exact direct167-row section and BG1 clipping for empty/full selected windows, preserving controls/OAM. No full commercial guest execution or real-console timing authority is inferred from these tests.
+
+Manual recorder proof: dormant1324 VI before N64 Start,20.003392704 seconds after arm,MAX precision,skip0,audioON,underclockOFF, complete formatv2 native events, and cart SRAM PI bytes identical. Start is capture-only in diagnostic; normal retains Sodium menu. A7 decoders include the exact CPU ELF/map and all six RSP banks.
+
+Private handoff saved successfully: sodium64-A7-mode7-Iggy-8b776a1.zip (892454 bytes), with normal+diag-manual wrappers, exact latest normal A6 SRAM under both new names, Spanish instructions and private validation/decoder files. ROM content is unchanged from A6/A5. No commercial ROM, wrapper, save, footage, extracted guest state or guest hash was sent to GitHub/CI. Master remains7cc8facfe8643fb85888f301f79995575830521d; no PR/merge/release publication.
+
+Next hardware priority: normal A7 at MAX/skip0/audioON/underclockOFF, Iggy first (FPS and platform/lava occlusion), then multiple title-iris loops, transitions and enemy/action cases. Diagnostic may navigate indefinitely before Start; capture20s just before Iggy or title iris if a problem remains.60 FPS in Iggy or iris, removal of all microdips, and global superiority to clean original are NOT yet established. The initial iris has only a small general CPU cache-loop improvement in this iteration, not a proven complete fix. Mario Kart remains an unmeasured next diagnostic target; Mode7 window/color optimizations do not imply correction of perspective deformation or its15 FPS racing case. Preserve corrected upstream baseline history below.
+
 ## 2026-10-03 UTC — A7 implementation checkpoint, compiled proofs pass; image/manual qualification pending
 
 Isolated active branch now5b2a3b61a62fe0b548721e7c7ce0aef94ce8f9b0; runtime code last changed6a22494ab5475ce8fcae8d7864097a8fec6b8b5f. Later5b2a3b6 only repairs two CI commands accidentally folded into one YAML scalar. No master change, PR or merge.

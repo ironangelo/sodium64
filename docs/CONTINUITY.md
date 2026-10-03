@@ -2,6 +2,10 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — First A5 console feedback: title loop and iris same speed at MAX and MEDIUM
+
+Iron is testing the A5 normal private wrapper and reports that the title/logo intro, Mario/Yoshi loop and iris run at the same speed with Frame precision MAX as with MEDIUM. This is an initial user-observed comparison; no new save/video or numeric FPS measurement received yet, and equal speed does not by itself confirm60 FPS. Iron is returning to MEDIUM for the remaining tests, preserving the A4/A5 baseline for world map, stages and return-to-map. No code/settings change requested or made. Await complete normal/map diagnostic feedback; stable60 everywhere and broader MAX fidelity/performance remain unclosed.
+
 ## 2026-10-03 UTC — A5 qualified private handoff: general Mode0/OBJ backdrop optimization
 
 Final runtime/source1751445687d73ffde305250cd3f9ea8a54b7cc5d remains on isolated phase4/gate-c-a4-gameplay-capture. Master verified unchanged7cc8facfe8643fb85888f301f79995575830521d; no PR/merge/release. This is a generic emulator optimization, no game identity check or guest patch. Iron explicitly asked whether it benefits other scenes/games: it can whenever the same verified conditions hold, with no FPS guarantee before console measurement.

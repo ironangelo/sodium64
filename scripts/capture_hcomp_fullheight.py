@@ -15,6 +15,8 @@ from make_hcomp_fullheight import CASES
 
 
 def expected(case,x,y):
+    from make_hcomp_obj_backdrop import CASES as OBJ_BACKDROP_CASES,expected_obj
+    if case in OBJ_BACKDROP_CASES:return expected_obj(case,x,y)
     if case.startswith('fast-'):
         from make_hcomp_direct_backdrop import expected_direct
         return expected_direct(case,x,y)
@@ -96,6 +98,9 @@ def main():
                     if args.case.startswith('fast-identity-'):
                         from make_hcomp_direct_backdrop import identity_controls
                         want_window,want_cg,want_ts=identity_controls(args.case)
+                    from make_hcomp_obj_backdrop import CASES as OBJ_BACKDROP_CASES,controls as obj_controls
+                    if args.case in OBJ_BACKDROP_CASES:
+                        want_window,want_cg,want_ts,want_tm=obj_controls(args.case)
                 image=c.read_memory(owner,280*240*2,chunk)
                 report=classify(image,args.case)
                 report['delivered_controls']=controls.hex()
@@ -103,9 +108,13 @@ def main():
                     assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('accepted epoch controls',args.case,controls.hex())
                     if args.case.startswith('fast-'):
                         want_policy=1 if args.case.startswith('fast-identity-') else 2
+                        from make_hcomp_obj_backdrop import policy as obj_policy
+                        if args.case in OBJ_BACKDROP_CASES:want_policy=obj_policy(args.case)
                         assert int.from_bytes(dmem[0xef0:0xef4],'big')==want_policy,'direct/identity policy not exercised'
                         rows=int.from_bytes(dmem[0xec4:0xec8],'big')
-                        if args.case!='fast-iris-rows':assert rows>8,('whole section not exercised',rows)
+                        if want_policy==0:assert 1<=rows<=8,('general band not exercised',rows)
+                        elif args.case!='fast-iris-rows':assert rows>8,('whole section not exercised',rows)
+                        report['composition_policy']=want_policy
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,
                                   image_sha256=hashlib.sha256(image).hexdigest(),
                                   compact_guards_passed=True,compact_guards=guards,framebuffer_seeding=False,
@@ -116,7 +125,7 @@ def main():
             (args.output/'observations.json').write_text(json.dumps(observations,indent=2)+'\n')
             if accepted and args.case!='sram':break
             if accepted and args.case=='sram':
-                cart=c.read_memory(0xa8000000,32768,chunk)
+                cart=c.read_memory(0xa8000000,32768,chunk&~3)
                 (args.output/'last-cart.sav').write_bytes(cart)
                 if cart[:8]==b'S64GAME!':
                     assert cart[8]==0xa7,('ordinary SRAM load/import echo',cart[8])

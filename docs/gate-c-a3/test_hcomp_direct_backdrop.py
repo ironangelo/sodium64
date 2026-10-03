@@ -43,6 +43,7 @@ def run(code,d,pc,regs,stop=0xf7c):
             fn=w&63;sh=w>>6&31
             if fn==0:regs[rd]=regs[rt]<<sh
             elif fn==2:regs[rd]=regs[rt]>>sh
+            elif fn==6:regs[rd]=regs[rt]>>(regs[rs]&31)
             elif fn==8:target=regs[rs]&0xfff
             elif fn in (32,33):regs[rd]=regs[rs]+regs[rt]
             elif fn in (34,35):regs[rd]=regs[rs]-regs[rt]
@@ -100,9 +101,10 @@ def main():
         for sel in range(256):
             d=bytearray(data);d[0xbb8]=cg;d[0xbb7]=sel;d[0xba8:0xbaa]=bytes(2)
             d[0xbbe]=0;d[0xba6:0xba8]=b'\x00\x3e';put(d,0xecc,0)
+            d[0xbbd]=0
             r=[0xdead0000+i for i in range(32)];r[0]=0;r[26:30]=[13,224,0xcafe,4]
             run(code,d,0x3b0,r)
-            expected=1 if sel&0xc0==0 and (cg&63==0 or sel&0x30==0x30) else 2 if cg==0x20 and sel in (2,0x12,0x22) else 0
+            expected=1 if sel&0xc0==0 and (cg&63==0 or sel&0x30==0x30) else 2 if cg in (0x20,0x30) and sel in (2,3,0x12,0x13,0x22,0x23) else 0
             assert word(d,0xef0)==expected,(cg,sel,word(d,0xef0),expected)
             assert r[26:30]==[13,224,0xcafe,4] and r[25]==0x1768
             admission+=1
@@ -128,6 +130,61 @@ def main():
                               (sel&2 and ts==0 or sel&2==0 and cg&64==0))
                     assert word(d,0xef0)==int(sel&0xc0==0 and identity),(cg,sel,ts,fixed,word(d,0xef0))
                     neutral_cases+=1
+    # Only Mode0 may disregard CGWSEL's direct-color bit. Test all priority,
+    # tile-size and unused BG_MODE bits without modifying that register.
+    mode_cases=0
+    for mode in range(256):
+      for sel in (2,3,0x12,0x13,0x22,0x23):
+       for cg in (0x20,0x30):
+        d=bytearray(data);d[0xbb7]=sel;d[0xbb8]=cg;d[0xbbd]=mode;d[0xbba]=0
+        d[0xba8:0xbaa]=bytes(2);d[0xba6:0xba8]=b'\x00\x3e';d[0xbbe]=0;put(d,0xecc,0)
+        run(code,d,0x3b0,[0]*32)
+        assert word(d,0xef0)==(2 if not sel&1 or mode&7==0 else 0),(mode,sel,cg)
+        assert d[0xbb7:0xbb9]==bytes((sel,cg)) and d[0xbbd]==mode
+        mode_cases+=1
+    # Independent SNES small/large heights, including rectangular OBJ sizes.
+    # Compare compiled admission with the set of rows occupied by each OBJ.
+    # A high-palette OBJ conservatively blocks even below/right of the screen;
+    # only a quad with every row strictly negative is certified harmless.
+    heights=((8,16),(8,32),(8,64),(16,32),(16,64),(32,64),(32,64),(32,32))
+    obj_cases=0
+    def obj_case(index,y,palette,size_mode,large,fb,queue=0,enabled=True,second=False):
+        nonlocal obj_cases
+        d=bytearray(data);d[0x840:0xa60]=bytes(0x220)
+        d[0xbb2]=size_mode<<5;d[0xbb7]=3;d[0xbb8]=0x30;d[0xbbd]=0
+        d[0xbba]=0x11 if enabled else 1;d[0xbbe]=0
+        d[0xba8:0xbaa]=bytes(2);d[0xba6:0xba8]=b'\x00\x3e';put(d,0xecc,0)
+        put(d,0xbc8,fb if queue==0 else 8);put(d,0xbcc,fb if queue==4 else 16)
+        put(d,0x840+index*4,(y<<24)|(127<<16)|(palette<<9))
+        d[0xa40+index//4]=int(large)<<((index%4)*2+1)
+        if second:put(d,0x840+127*4,(10<<24)|(4<<9))
+        before=d[0x840:0xa60];r=[0xdead0000+i for i in range(32)];r[0]=0;r[26:30]=[13,224,0xcafe,queue]
+        run(code,d,0x3b0,r)
+        first_row=y-256 if y>=256-2*fb else y
+        quad_rows=range(first_row,first_row+heights[size_mode][int(large)])
+        potentially_math=enabled and (palette>=4 and any(row>=0 for row in quad_rows) or second)
+        want=0 if potentially_math else 2
+        assert word(d,0xef0)==want,(index,y,palette,size_mode,large,fb,queue,enabled,second,word(d,0xef0),want)
+        assert d[0x840:0xa60]==before and d[0xbb7:0xbb9]==b'\x03\x30'
+        assert r[26:30]==[13,224,0xcafe,queue] and r[25]==0x1768
+        obj_cases+=1
+    for y in range(256):
+      for mode in range(8):
+       for large in (False,True):
+        for fb in (0,8,16):
+         obj_case((y*13+mode+7*large)%128,y,4,mode,large,fb)
+    for index in range(128):
+      for y in (0,240,248,255):
+       for large in (False,True):
+        for queue in (0,4):obj_case(index,y,4,0,large,8,queue)
+    for palette in range(8):
+      for y in (0,239,240,248,255):
+       for mode in (0,6,7):
+        for large in (False,True):
+         for fb in (8,16):obj_case(63,y,palette,mode,large,fb)
+    for palette in range(8):
+      for enabled in (False,True):
+       obj_case(0,240,palette,0,False,8,enabled=enabled,second=True)
     masks=0
     randoms=random.Random(9126)
     all_bounds=[(0,255,0,0),(255,255,0,0),(0,0,255,255),(200,100,0,0),
@@ -175,6 +232,7 @@ def main():
                 geometry+=1
     result=dict(passed=True,admission_cases=admission+4,compiled_window_mask_cases=masks,
                 identity_admission_cases=neutral_cases,
+                mode0_control_cases=mode_cases,obj_eligibility_cases=obj_cases,
                 section_geometry_cases=geometry,pixel_truth_width=256,compact_alignment='separate compiled suite',
                 native_timing_authority=False)
     if a.output:a.output.write_text(json.dumps(result,indent=2)+'\n')

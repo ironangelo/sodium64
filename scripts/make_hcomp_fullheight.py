@@ -11,6 +11,8 @@ CASES = ('half', 'add', 'sub', 'sub-half', 'bg2', 'bg3', 'bg4', 'window', 'short
          'blank', 'obj-low', 'obj-high', 'sram', 'layer-window', 'layer-edge', 'layer-xor', 'rgb-add', 'rgb-half', 'rgb-sub', 'rgb-sub-half', 'rgb-main', 'rgb-subscreen', 'rgb-row-add', 'rgb-row-half', 'rgb-row-sub', 'rgb-row-sub-half', 'rgb-row-subscreen')
 from make_hcomp_direct_backdrop import CASES as DIRECT_CASES
 CASES += DIRECT_CASES
+from make_hcomp_obj_backdrop import CASES as OBJ_BACKDROP_CASES
+CASES += OBJ_BACKDROP_CASES
 
 
 def set_store(rom, address, old, new, count=1):
@@ -31,6 +33,9 @@ def hook_call(rom, address, body):
 
 
 def build(case):
+    if case in OBJ_BACKDROP_CASES:
+        from make_hcomp_obj_backdrop import build_obj
+        return build_obj(case)
     if case in DIRECT_CASES:
         from make_hcomp_direct_backdrop import build_direct
         return build_direct(case)

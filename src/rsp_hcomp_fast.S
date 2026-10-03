@@ -1,5 +1,6 @@
 /* Exact backdrop-only specialization. No game identity or content involved.
- * CGADSUB=20, CGWSEL=02/12/22, Main backdrop=black, normal nonblank rendering:
+ * CGADSUB=20 (or30 with no potentially visible math-capable Main OBJ),
+ * CGWSEL=02/12/22 (bit0 ignored only in Mode0), Main backdrop=black:
  * opaque Main -> Main; backdrop -> Sub/fixed inside the allowed COLOR set,
  * otherwise black. Draw fixed+Sub, black out the prevented set, then Main.
  * This policy needs no compact Z/presence/math buffers or eight-row splits.
@@ -56,18 +57,74 @@ hcomp_fast_fixed_zero:
     nop
 hcomp_fast_backdrop_probe:
     // Other eligible winners, half/subtract and color stay fully general.
-    xori t0, t0, 0x20
-    bnez t0, hcomp_fast_return
+    andi t2, t0, 0xEF
+    xori t2, t2, 0x20
+    bnez t2, hcomp_fast_return
     nop
     lhu t0, MAIN_COLOR
     bnez t0, hcomp_fast_return
     lbu t0, CGWSEL
     // Always/inside/outside selected, with Sub operand and no Main clip.
     // NEVER was admitted above as an identity operation.
-    andi t0, t0, 0xCF
+    andi t2, t0, 1
+    beqz t2, hcomp_fast_color_selector
+    lbu t2, BG_MODE
+    // Mode0 contains only2bpp BGs; its direct-color control is inert.
+    // Keep every other mode with that bit on the existing general path.
+    andi t2, t2, 7
+    bnez t2, hcomp_fast_return
+    nop
+hcomp_fast_color_selector:
+    andi t0, t0, 0xCE
     xori t0, t0, 2
     bnez t0, hcomp_fast_return
     nop
+    lbu t0, CGADSUB
+    andi t0, t0, 0x10
+    beqz t0, hcomp_fast_direct
+    lbu t0, TM
+    andi t0, t0, 0x10
+    beqz t0, hcomp_fast_direct
+    nop
+    // OBJ palettes0..3 never participate in color math. Scan the current
+    // coherent OAM epoch, conservatively rejecting every high-palette OBJ
+    // except one wholly above the frame under the renderer's own Y-wrap
+    // and small/large size rules. X/windows/section visibility are deliberately
+    // not used to broaden admission. This never changes OAM or its cache.
+    lbu t6, OBSEL
+    andi t6, t6, 0xE0
+    srl t6, t6, 3
+    lw t5, FB_OFFSET(sp)
+    sll t5, t5, 1
+    li t4, 255
+    sub t5, t4, t5
+    move t3, zero
+hcomp_fast_obj_probe:
+    lhu t0, OAM + 2(t3)
+    andi t0, t0, 0x0800
+    beqz t0, hcomp_fast_obj_next
+    lbu t0, OAM(t3)
+    slt t1, t5, t0
+    sll t1, t1, 8
+    sub t0, t0, t1
+    srl t1, t3, 4
+    lbu t1, OAM + 0x200(t1)
+    srl t2, t3, 1
+    andi t2, t2, 6
+    srlv t1, t1, t2
+    andi t1, t1, 2
+    or t1, t1, t6
+    lbu t1, OBJ_SIZES + 1(t1)
+    add t0, t0, t1
+    slt t0, zero, t0
+    bnez t0, hcomp_fast_return
+    nop
+hcomp_fast_obj_next:
+    addi t3, t3, 4
+    sltiu t0, t3, 0x200
+    bnez t0, hcomp_fast_obj_probe
+    nop
+hcomp_fast_direct:
     li t0, 2
     b hcomp_fast_return
     sw t0, HCOMP_BAND_RAW

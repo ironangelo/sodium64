@@ -2,6 +2,24 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A4 image and manual-recorder qualification complete; private console handoff ready
+
+Runtime: e71a8719eba320714d442e9d69bc305a10ad5ccc on isolated branch `phase4/gate-c-a4-gameplay-capture`. Qualification head: 4ea23348339a399892f3e7ec4e8ab7c5b6fe2252. The later commits change original fixture initialization and laboratory recorder readers, not production binaries. No PR/merge; master remains 7cc8facfe8643fb85888f301f79995575830521d.
+
+A4 has actual generic composition optimizations plus manually armed diagnostics: neutral color arithmetic (math prevented, fixed black without HALF, empty Sub/fixed black with absent-Sub HALF suppression), and outside-COLOR direct black-backdrop composition alongside the previous inside/always cases. Main clipping or effective arithmetic retain the general compositor. RSP main/mode7/hcomp/math instruction banks match A3; only hcomp_fast changes.
+
+All 42 complete original-guest pixel cases passed in run37083064917, pixel step14, including five neutral identities and outside-COLOR. Its later manual step failed because of the laboratory reader; do not label that whole historical run successful. Independent reclassification accepted all 2,408,448 visible pixels, six zero guard regions per case, settled RSP/RDP natural fences, no framebuffer seeding and no guest-state writes. Compiled runtime admission65540, identity57344, both-polarity window17408, geometry3495, alignment3784/lifetime408 and bank ABI/delay checks passed. Normal/native ROM templates and CPU ELF are byte-identical across the pixel and final manual qualification builds and the private handoff runtime; five RSP instruction banks match, while some standalone ELF metadata differs.
+
+Final manual run37085083991 SUCCESS, artifact11260411829. Original guest navigated unarmed for1327 VI (>22 emulated seconds), an injected N64 controller Start sample armed the recorder, and TIME LIMIT completed after20.003403691 Count-domain seconds at MEDIUM raw8/frameskip0. HALT acknowledged, SP DMA settled, 64 live PPU companion events decoded, and all32768 cart SRAM bytes equal the local v2 payload. Decoder checksum validated. CPU arm suite12 cases passed (guest SRAM preserved, dormant initialization, one-shot, Count wrap and caller registers). Final build/profile/native/normal smoke run37085083952 SUCCESS. These laboratory results establish image/capture operation, not real-N64 FPS.
+
+Reader corrections: CPU-owned counters must be read through their cached alias. The GDB packet budget produced odd8259-byte chunks; ares peripheral bulk reads use word bus accesses, so unaligned chunk starts shifted returned bytes. The entire former difference was explained byte-for-byte. Word-aligned8256-byte SRAM reads give zero mismatches; no ROM change was needed for either reader correction.
+
+User asked whether A4 improves anything or only captures, and whether Start conflicts with the menu. Answer: A4 includes optimizations. Normal N64 Start keeps Sodium settings; native diagnostic N64 Start arms one20-second capture and its settings menu is disabled. N64 A remains SNES Start. Diagnostic comparison options are fixed MEDIUM(raw8), frameskip0, underclockOFF, audioON/FPS ON. MAX is raw20, neverraw8.
+
+Private A4 normal/diag-manual packet assembled, checksum-verified and saved for private handoff, with matching decoder/ELF, image and recorder proofs, A3 observation and Spanish instructions. Guest bytes are identical to A3. No commercial ROM/wrapper/save/video/photo/extracted guest buffer was used in public GitHub, Actions or hosting; public work contains emulator code and original test guests/evidence only.
+
+NEXT: console normal test of new-game presentation and world map, enter a stage, return to map, under the same MEDIUM/0/audioON/underclockOFF settings. Use diag-manual Start after reaching the map, remain there for20 seconds, then CAPTURE SAVED/TIME LIMIT and reset to flush the cart save. Return separate map video/S64D; obtain a separately named new-game Welcome capture if needed, and iris capture if brief dips remain. Existing A3 final PPU belonged to the title, not map/presentation; their real states remain unknown. Real-console steady60 in every scene is still unconfirmed, so do not claim the map or iris is solved.
+
 ## 2026-10-03 UTC — A4 validation continues; Start roles clarified, fixture initialization repaired
 
 A4 runtime e71a8719eba320714d442e9d69bc305a10ad5ccc adds outside-COLOR direct backdrop (CGWSEL22) in addition to prior02/12 and three neutral math admissions. Build/native/profile/normal smoke run37082114518 SUCCESS. Compiled admission65540 + identity57344 + both-window masks17408 +geometry3495 pass; alignment3784 and ownership408 remain checked. All five RSP banks identical between normal/native and embedded exactly; only rsp_hcomp_fast differs from A3.

@@ -93,13 +93,17 @@ def main():
                     want_cg=0x20;want_tm=1
                     want_ts=0 if args.case=='fast-sub-empty' else 2
                     want_window=2 if args.case=='fast-always' else 0x12
+                    if args.case.startswith('fast-identity-'):
+                        from make_hcomp_direct_backdrop import identity_controls
+                        want_window,want_cg,want_ts=identity_controls(args.case)
                 image=c.read_memory(owner,280*240*2,chunk)
                 report=classify(image,args.case)
                 report['delivered_controls']=controls.hex()
                 if report['passed']:
                     assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('accepted epoch controls',args.case,controls.hex())
                     if args.case.startswith('fast-'):
-                        assert int.from_bytes(dmem[0xef0:0xef4],'big')==2,'direct policy not exercised'
+                        want_policy=1 if args.case.startswith('fast-identity-') else 2
+                        assert int.from_bytes(dmem[0xef0:0xef4],'big')==want_policy,'direct/identity policy not exercised'
                         rows=int.from_bytes(dmem[0xec4:0xec8],'big')
                         if args.case!='fast-iris-rows':assert rows>8,('whole section not exercised',rows)
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,

@@ -162,11 +162,30 @@ color_diag_producer_return:
     li v1, 0 // Index
     andi t0, v0, 0x10 // Start
 #ifdef SODIUM64_NATIVE_DIAG
-    // Capture settings are fixed; an intentional menu pause is not a stall.
+    // N64 Start arms a 20-second measurement at the current game scene.
+    // It does not map to SNES Start (N64 A does), or open the settings menu.
+    beqz t0, native_diag_menu_ready
+    nop
+    jal native_diag_arm
+    nop
+native_diag_menu_ready:
     move t0, zero
 #endif
     bnez t0, start_menu
     move t7, a0
+
+#ifdef SODIUM64_NATIVE_DIAG
+    // Show the capture state inside the CPU-owned UI border only.
+    la t0, native_diag_state
+    lw t0, 112(t0)
+    la a0, native_diag_ready_text
+    beqz t0, native_diag_menu_status
+    nop
+    la a0, native_diag_active_text
+native_diag_menu_status:
+    jal draw_string
+    addi a1, t7, 8 * 2
+#endif
 
     // Draw the FPS counter if running and enabled
     lbu t0, counter_set

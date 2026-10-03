@@ -13,12 +13,14 @@
 #define DBASE UNCACHED(sram)
 #define DHDR UNCACHED(sram + 0x2000)
 #define DPCS UNCACHED(sram + 0x2200)
+#define DPPU UNCACHED(sram + 0x3200)
 #define DEVENTS UNCACHED(sram + 0x4200)
 #define DSECONDS UNCACHED(sram + 0x7200)
 #define DCOUNTERS UNCACHED(sram + 0x7800)
-.globl native_diag_init, native_diag_interrupt, native_diag_state
+.globl native_diag_init, native_diag_arm, native_diag_interrupt, native_diag_state
 .globl native_diag_done, native_diag_saved, native_diag_save_failed
 .globl native_diag_wait_stall_rsp, native_diag_wait_stall_frame
+.globl native_diag_ready_text, native_diag_active_text
 .data
 .align 5
 native_diag_state: .word 0:32
@@ -35,6 +37,8 @@ native_diag_dp_text: .string "DP"
 native_diag_end_text: .string "END"
 native_diag_current_text: .string "CUR"
 native_diag_reset_text: .string "RESET TO SAVE FILE"
+native_diag_ready_text: .string "START N64: CAPTURE 20S"
+native_diag_active_text: .string "RECORDING 20S        "
 .text
 .set noreorder
 .align 5
@@ -69,6 +73,30 @@ native_diag_init:
     sb t0, counter_set
     li t0, APU_CYCLE
     sb t0, apu_clock
+    // Manual capture stays dormant until N64 Start. Timer sampling and wait
+    // watchdogs are disabled while navigating to the target scene.
+    jr ra
+    nop
+
+native_diag_arm:
+    // Called at the completed-frame UI boundary. Only t0..t3/k0/k1 are borrowed;
+    // a0 and the renderer's t4/t5/t6 survive. No guest state is reset.
+    mfc0 t3, $12
+    li t0, -2
+    and t0, t3, t0
+    mtc0 t0, $12
+    nop
+    nop
+    la t0, native_diag_state
+    lw t1, 112(t0)
+    bnez t1, native_diag_arm_return
+    nop
+    la t1, native_diag_state + 128
+native_diag_arm_clear:
+    sw zero, (t0)
+    addiu t0, t0, 4
+    bne t0, t1, native_diag_arm_clear
+    nop
     la t0, native_diag_state
     mfc0 t1, $9
     sw t1, 0(t0)
@@ -82,6 +110,13 @@ native_diag_init:
     li t2, DIAG_SAMPLE
     addu t1, t1, t2
     mtc0 t1, $11
+    li t1, 1
+    sw t1, 112(t0)
+native_diag_arm_return:
+    ori t3, t3, 0x8000 // Enable Compare only once the capture is armed
+    mtc0 t3, $12
+    nop
+    nop
     jr ra
     nop
 
@@ -102,7 +137,7 @@ native_diag_interrupt:
     la k1, native_diag_state
     lw k0, 12(k1)
     addiu k0, k0, 4
-    andi k0, k0, 0x1FFF
+    andi k0, k0, 0xFFF
     sw k0, 12(k1)
     lw k0, 8(k1)
     addiu k0, k0, 1
@@ -308,6 +343,38 @@ native_diag_no_progress:
     sw t2, 56(t4)
     lw t2, 56(t0)
     sw t2, 60(t4)
+    // Best-effort live RSP state alongside each event, without halting it.
+    // These samples can straddle an epoch transition; the final halted DMEM
+    // remains the authoritative coherent snapshot. Only renderer registers,
+    // geometry and policy are added, with no guest WRAM/ROM capture.
+    la t4, DPPU
+    addu t4, t4, t3
+    li t5, DMEM(0xBA0)
+    li t6, 32
+native_diag_ppu_copy:
+    lw t2, (t5)
+    sw t2, (t4)
+    addiu t5, t5, 4
+    addiu t4, t4, 4
+    addiu t6, t6, -4
+    bnez t6, native_diag_ppu_copy
+    nop
+    lw t2, DMEM(HCOMP_BAND_RAW)
+    sw t2, 0(t4)
+    lw t2, DMEM(HCOMP_SECTION_END)
+    sw t2, 4(t4)
+    lw t2, DMEM(HCOMP_BAND_Y)
+    sw t2, 8(t4)
+    lw t2, DMEM(HCOMP_BAND_ROWS)
+    sw t2, 12(t4)
+    lw t2, DMEM(HCOMP_SCREEN)
+    sw t2, 16(t4)
+    lw t2, DMEM(HCOMP_CGRAM_EVENT_CURSOR)
+    sw t2, 20(t4)
+    lw t2, section_ptr
+    sw t2, 24(t4)
+    lw t2, DMEM(FB_OFFSET)
+    sw t2, 28(t4)
     // Read actual 24-bit DP cycle counters alongside each status sample. They
     // are not the latched busy status bits, and reads do not reset counters.
     srl t3, t3, 2
@@ -497,7 +564,7 @@ native_diag_finalize:
     sw t8, 12(s0)
     li t0, 0x53363444
     sw t0, 0(s0)
-    li t0, 1
+    li t0, 2
     sw t0, 4(s0)
     li t0, 0x8000
     sw t0, 16(s0)
@@ -505,7 +572,7 @@ native_diag_finalize:
     sw t0, 20(s0)
     li t0, DIAG_SAMPLE
     sw t0, 24(s0)
-    li t0, 2048
+    li t0, 1024
     sw t0, 28(s0)
     lw t0, 8(s1)
     sw t0, 32(s0)

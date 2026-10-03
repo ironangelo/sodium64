@@ -94,6 +94,7 @@ jobs:
           libdragon make NATIVE_DIAG=1 -j$(nproc) 2>&1 | tee native-diag-build.log
       - name: Check resident RSP ABI and runtime arena
         run: |
+          python3 scripts/test_native_diag_arm.py build/sodium64.elf
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf

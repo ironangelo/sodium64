@@ -30,12 +30,35 @@ hcomp_fast_admit:
     b hcomp_fast_return
     nop
 hcomp_fast_probe:
-    // Preserve the diagnostic's composed/raw split and the fully general
-    // fallback for clipping, other eligible winners, half/subtract and color.
+    // Exact identity operations need neither a Sub pass nor pixel arithmetic.
+    // Keep clipping and the diagnostic composed/raw split on the general path.
+    lw t2, HCOMP_DIAG_COMPOSE_LIMIT
+    bnez t2, hcomp_fast_return
+    andi t2, t1, 0xC0
+    bnez t2, hcomp_fast_return
+    andi t2, t1, 0x30
+    xori t2, t2, 0x30
+    beqz t2, hcomp_fast_raw // COLOR prevents math everywhere
+    lhu t2, SUB_COLOR
+    andi t2, t2, 0xFFFE // Ignore the RGBA5551 alpha bit
+    bnez t2, hcomp_fast_backdrop_probe
+    andi t2, t1, 2
+    beqz t2, hcomp_fast_fixed_zero
+    lbu t2, TS
+    andi t2, t2, 0x1F
+    beqz t2, hcomp_fast_raw // Absent Sub uses fixed zero; HALF is suppressed
+    nop
+    b hcomp_fast_backdrop_probe
+    nop
+hcomp_fast_fixed_zero:
+    andi t2, t0, 0x40
+    beqz t2, hcomp_fast_raw // Main +/- fixed zero, with HALF off
+    nop
+hcomp_fast_backdrop_probe:
+    // Other eligible winners, half/subtract and color stay fully general.
     xori t0, t0, 0x20
     bnez t0, hcomp_fast_return
-    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
-    bnez t0, hcomp_fast_return
+    nop
     lhu t0, MAIN_COLOR
     bnez t0, hcomp_fast_return
     lbu t0, CGWSEL

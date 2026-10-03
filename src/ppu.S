@@ -677,14 +677,18 @@ rsp_wait:
 #ifdef SODIUM64_NATIVE_DIAG
 .globl native_diag_rsp_wait, native_diag_rsp_wait_end
 native_diag_rsp_wait:
-    mfc0 t0, $9
     la t1, native_diag_state
+    lw t0, 112(t1)
+    beqz t0, native_diag_rsp_watchdog_end
+    nop
+    mfc0 t0, $9
     lw t1, 116(t1)
     subu t0, t0, t1
     li t1, 93750000
     sltu t0, t0, t1
     beqz t0, native_diag_wait_stall_rsp
     nop
+native_diag_rsp_watchdog_end:
 #endif
     // Wait until the RSP is finished rendering
     lw t0, 0xA4040010 // SP_STATUS
@@ -769,14 +773,18 @@ frame_wait:
 #ifdef SODIUM64_NATIVE_DIAG
 .globl native_diag_frame_wait, native_diag_frame_wait_end
 native_diag_frame_wait:
-    mfc0 t0, $9
     la t1, native_diag_state
+    lw t0, 112(t1)
+    beqz t0, native_diag_frame_watchdog_end
+    nop
+    mfc0 t0, $9
     lw t1, 116(t1)
     subu t0, t0, t1
     li t1, 93750000
     sltu t0, t0, t1
     beqz t0, native_diag_wait_stall_frame
     nop
+native_diag_frame_watchdog_end:
 #endif
     // Wait for a framebuffer to be available
     lbu t0, frame_count

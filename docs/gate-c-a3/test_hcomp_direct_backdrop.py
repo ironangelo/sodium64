@@ -99,18 +99,35 @@ def main():
     for cg in range(256):
         for sel in range(256):
             d=bytearray(data);d[0xbb8]=cg;d[0xbb7]=sel;d[0xba8:0xbaa]=bytes(2)
-            d[0xbbe]=0;put(d,0xecc,0)
+            d[0xbbe]=0;d[0xba6:0xba8]=b'\x00\x3e';put(d,0xecc,0)
             r=[0xdead0000+i for i in range(32)];r[0]=0;r[26:30]=[13,224,0xcafe,4]
             run(code,d,0x3b0,r)
-            expected=1 if cg&63==0 and sel&0xc0==0 else 2 if cg==0x20 and sel in (2,0x12) else 0
+            expected=1 if sel&0xc0==0 and (cg&63==0 or sel&0x30==0x30) else 2 if cg==0x20 and sel in (2,0x12) else 0
             assert word(d,0xef0)==expected,(cg,sel,word(d,0xef0),expected)
             assert r[26:30]==[13,224,0xcafe,4] and r[25]==0x1768
             admission+=1
     for flags,color,diag in ((0x80,0,0),(0,1,0),(0,0xffff,0),(0,0,8)):
         d=bytearray(data);d[0xbb8]=0x20;d[0xbb7]=0x12;d[0xbbe]=flags
+        d[0xba6:0xba8]=b'\x00\x3e'
         d[0xba8:0xbaa]=color.to_bytes(2,'big');put(d,0xecc,diag)
         run(code,d,0x3b0,[0]*32)
         assert word(d,0xef0)==(1 if flags&128 else 0)
+    # Nonblack Main, eligible BG/OBJ winners, zero fixed operand, clipped
+    # counterexamples and absent-Sub HALF suppression. Independent arithmetic
+    # identities are the expected policy; all other states remain general.
+    neutral_cases=0
+    for cg in (1,2,4,8,16,32,63,65,95,127,129,191,193,255):
+        for sel in range(256):
+            for ts in (0,1,16,31):
+                for fixed in (0,1,2,0x8000):
+                    d=bytearray(data);d[0xbb8]=cg;d[0xbb7]=sel;d[0xbb9]=ts
+                    d[0xba6:0xba8]=fixed.to_bytes(2,'big');d[0xba8:0xbaa]=b'\xab\xca'
+                    d[0xbbe]=0;put(d,0xecc,0)
+                    run(code,d,0x3b0,[0]*32)
+                    identity=(sel&0x30==0x30 or fixed&0xfffe==0 and
+                              (sel&2 and ts==0 or sel&2==0 and cg&64==0))
+                    assert word(d,0xef0)==int(sel&0xc0==0 and identity),(cg,sel,ts,fixed,word(d,0xef0))
+                    neutral_cases+=1
     masks=0
     randoms=random.Random(9126)
     all_bounds=[(0,255,0,0),(255,255,0,0),(0,0,255,255),(200,100,0,0),
@@ -156,6 +173,7 @@ def main():
                 assert word(d,0xec4)==want and r[27]==y-8+want
                 geometry+=1
     result=dict(passed=True,admission_cases=admission+4,compiled_window_mask_cases=masks,
+                identity_admission_cases=neutral_cases,
                 section_geometry_cases=geometry,pixel_truth_width=256,compact_alignment='separate compiled suite',
                 native_timing_authority=False)
     if a.output:a.output.write_text(json.dumps(result,indent=2)+'\n')

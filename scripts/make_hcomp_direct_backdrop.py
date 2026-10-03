@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 """Original direct-composition raster guests and independent pixel oracle."""
 CASES = ('fast-always','fast-inside','fast-xor','fast-edge','fast-empty',
-         'fast-invert','fast-sub-empty','fast-short','fast-iris-rows')
+         'fast-invert','fast-sub-empty','fast-short','fast-iris-rows',
+         'fast-identity-never','fast-identity-fixed-add','fast-identity-fixed-sub',
+         'fast-identity-sub-empty-half','fast-identity-sub-empty-subhalf')
+
+def identity_controls(case):
+    return {'fast-identity-never':(0x32,0xff,2),
+            'fast-identity-fixed-add':(0x10,0x3f,2),
+            'fast-identity-fixed-sub':(0x20,0xbf,2),
+            'fast-identity-sub-empty-half':(0x12,0x7f,0),
+            'fast-identity-sub-empty-subhalf':(0x22,0xff,0)}[case]
 
 def setup(case):
     selector,logic,bounds=2,0,(96,191,0,0)
@@ -15,6 +24,7 @@ def build_direct(case):
     from make_hcomp_fullheight import build, set_store, hook_call
     from make_gate_c_hcomp_cgwsel_source import finalize_checksum
     rom=bytearray(build('short' if case=='fast-short' else 'half'))
+    identity=case.startswith('fast-identity-')
     set_store(rom,0x2131,0x41,0x20)
     if case=='fast-sub-empty':set_store(rom,0x212d,2,0,count=2)
     selector,logic,bounds=setup(case)
@@ -22,6 +32,15 @@ def build_direct(case):
               (2 if case=='fast-always' else 0x12,0x2130),
               (selector<<4,0x2125),(logic<<2,0x212b),
               *((v,0x2126+i) for i,v in enumerate(bounds)))
+    if identity:
+        sel,cg,ts=identity_controls(case)
+        # Nonzero Main backdrop and mixed opaque/transparent Main distinguish
+        # identity from the black direct-backdrop specialization. Sub is green,
+        # with zero fixed fallback; all eligible winner bits are enabled.
+        settings=((sel,0x2130),(cg,0x2131),(ts,0x212d),(0xe0,0x2132),
+                  (0,0x2121),(0x45,0x2122),(0x22,0x2122),
+                  (selector<<4,0x2125),(logic<<2,0x212b),
+                  *((v,0x2126+i) for i,v in enumerate(bounds)))
     body=bytes(v for value,address in settings for v in (0xa9,value,0x8d,address&255,address>>8))+b'\x60'
     hook_call(rom,0x8300,body)
     # Opaque red Main strip, with genuine transparent Main elsewhere. Green
@@ -45,6 +64,9 @@ def build_direct(case):
 
 def expected_direct(case,x,y):
     if x<64:return 0xf801
+    if case.startswith('fast-identity-'):
+        # Main CGRAM color0 = 0x2245: independent SNES BGR555 -> RGBA5551.
+        return (5<<11)|(18<<6)|(8<<1)|1
     selector,logic,(l1,r1,l2,r2)=setup(case)
     if case=='fast-iris-rows':l1=min(126,y//2);r1=255-l1
     one=(l1<=x<=r1) != bool(selector&1) if selector&2 else False

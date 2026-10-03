@@ -212,7 +212,9 @@ pi_wait1:
     // Enable VI interrupts and start execution
     li t0, 0x00000595 // Set VI mask
     sw t0, 0xA430000C // MI_MASK
-#if defined(SODIUM64_PROFILE) || defined(SODIUM64_NATIVE_DIAG)
+#if defined(SODIUM64_NATIVE_DIAG)
+    li t0, 0x00000401 // Compare stays masked until native_diag_arm
+#elif defined(SODIUM64_PROFILE)
     li t0, 0x00008401 // Enable interrupts, VI (IP2), and CP0 timer (IP7)
 #else
     li t0, 0x00000401 // Enable interrupts

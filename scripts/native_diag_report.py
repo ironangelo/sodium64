@@ -52,19 +52,20 @@ def normalize(blob):
 def parse(blob):
     blob, order = normalize(blob)
     h = dict(zip(FIELDS, struct.unpack_from(f">{len(FIELDS)}I", blob, HEADER)))
-    if h["version"] != 1 or h["complete"] != 1:
+    if h["version"] not in (1, 2) or h["complete"] != 1:
         raise ValueError("unsupported or incomplete S64D capture")
     if h["reason"] not in (1, 2) or h["save_size"] != SIZE:
         raise ValueError("invalid trigger or save size")
     if h["count_hz"] != 46875000 or h["sample_interval"] != 131071:
         raise ValueError("unexpected sampling clock/interval")
-    if h["sample_capacity"] != 2048 or h["event_capacity"] != 64:
+    capacity = 2048 if h["version"] == 1 else 1024
+    if h["sample_capacity"] != capacity or h["event_capacity"] != 64:
         raise ValueError("unexpected ring capacities")
     if h["seconds_count"] > 20:
         raise ValueError("second records overlap the CPU register snapshot")
-    if h["pc_next_byte"] >= 0x2000 or h["pc_next_byte"] % 4:
+    if h["pc_next_byte"] >= capacity * 4 or h["pc_next_byte"] % 4:
         raise ValueError("invalid CPU sample ring cursor")
-    if h["pc_next_byte"] != (h["sample_count"] % 2048) * 4:
+    if h["pc_next_byte"] != (h["sample_count"] % capacity) * 4:
         raise ValueError("CPU sample count/cursor disagree")
     body = blob[:HEADER] + blob[HEADER+512:]
     checksum = sum(struct.unpack(f">{len(body)//4}I", body)) & 0xFFFFFFFF
@@ -77,10 +78,9 @@ def parse(blob):
     h["cpu_epc_instruction"] = h["cpu_epc"] + (4 if h["cpu_cause"] & 0x80000000 else 0)
     h["capture_via"] = "direct wait watchdog" if h["direct_wait_pc"] else "timer watchdog"
     h["guest_cpu_pc_raw"] = struct.unpack_from(">Q", blob, 0x7C00+23*8)[0]
-    capacity = 2048
     count = min(h["sample_count"], capacity)
     start = h["sample_count"] % capacity if h["sample_count"] >= capacity else 0
-    pcs = list(struct.unpack_from(">2048I", blob, 0x2200))
+    pcs = list(struct.unpack_from(f">{capacity}I", blob, 0x2200))
     pcs = [pcs[(start+i)%capacity] for i in range(count)]
     events = []
     first = max(0,h["event_count"]-64)
@@ -91,6 +91,20 @@ def parse(blob):
             raise ValueError("event ring sequence mismatch")
         counters = struct.unpack_from(">4I",blob,0x7800+(index%64)*16)
         row["dp_cycle_counters24"] = [x & 0xFFFFFF for x in counters]
+        if h["version"] == 2:
+            regs = blob[0x3200+(index%64)*64:0x3240+(index%64)*64]
+            extra = struct.unpack_from(">8I", regs, 32)
+            row["ppu_live_sample"] = dict(
+                main_color_rgba5551=int.from_bytes(regs[8:10], "big"),
+                fixed_color_rgba5551=int.from_bytes(regs[6:8], "big"),
+                window_bounds=list(regs[14:18]),
+                wbgsel=int.from_bytes(regs[4:6], "big"),
+                wobjsel=regs[20], wbglog=regs[21], wobjlog=regs[22],
+                cgwsel=regs[23], cgadsub=regs[24], ts=regs[25], tm=regs[26],
+                tsw=regs[27], tmw=regs[28], bg_mode=regs[29], stat_flags=regs[30],
+                policy=extra[0], section_end=extra[1], band_y=extra[2], band_rows=extra[3],
+                screen_word=extra[4], cgram_cursor=extra[5], section_pointer=extra[6], fb_offset=extra[7],
+                atomic=False)
         if events:
             dt = row["elapsed_ticks"]-events[-1]["elapsed_ticks"]
             # A 24-bit RCP counter can wrap in ~0.268s. A long observation gap
@@ -191,6 +205,7 @@ def render(result):
              f"Pre-stop DP CURRENT/END: 0x{h['dp_current_before']:08X}/0x{h['dp_end_before']:08X}",
              f"RSP PC after requested HALT: 0x{h['sp_pc_after']:08X}; valid={h['sp_pc_meaningful_after_halt']}",
              f"Count-domain duration: {h['elapsed_seconds_count_domain']:.3f}s",
+             f"Precision: {('LOWER','LOW','MEDIUM','HIGH','HIGHER','MAX')[h['precision']//4] if h['precision'] in range(0,24,4) else 'UNKNOWN'} (raw {h['precision']}); frameskip {h['frameskip']}",
              f"Observer cost (measured ISR body): {100*h['observer_fraction']:.2f}%",
              "Diagnostic FPS include observer cost; console origin must be independently established.",
              "DP pipe/TMEM busy bits are sampled status, not independent exact active-time counters.",
@@ -203,6 +218,15 @@ def render(result):
     lines.append("CPU hotspots in retained sample ring:")
     for row in result.get("cpu_hotspots",[])[:12]:
         lines.append(f"  {row['samples']:4d} {row['symbol']}")
+    if h['version'] == 2:
+        states = collections.Counter((e['ppu_live_sample']['cgwsel'], e['ppu_live_sample']['cgadsub'],
+                    e['ppu_live_sample']['tm'], e['ppu_live_sample']['ts'], e['ppu_live_sample']['policy'],
+                    e['ppu_live_sample']['main_color_rgba5551'], e['ppu_live_sample']['fixed_color_rgba5551'])
+                    for e in result['events'])
+        lines.append('Live PPU samples (may straddle section transitions; final halted DMEM is coherent):')
+        for state,n in states.most_common(12):
+            sel,cg,tm,ts,policy,main,fixed=state
+            lines.append(f'  {n:2d} samples CGWSEL={sel:02X} CGADSUB={cg:02X} TM={tm:02X} TS={ts:02X} policy={policy} Main={main:04X} fixed={fixed:04X}')
     return "\n".join(lines)+"\n"
 
 def main():

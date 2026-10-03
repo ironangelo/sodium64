@@ -1,7 +1,7 @@
 name: Gate C Direct Backdrop Pixel Qualification
 on:
   push:
-    branches: [phase4/gate-c-a3-direct-backdrop]
+    branches: [phase4/gate-c-a3-direct-backdrop, phase4/gate-c-a4-gameplay-capture]
     paths: [src/**, scripts/**, Makefile, .github/workflows/gate-c-direct-backdrop.yml]
   workflow_dispatch:
 permissions:

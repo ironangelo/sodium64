@@ -3,21 +3,29 @@
 import struct, unittest
 from native_diag_report import FIELDS, HEADER, SIZE, parse, symbolicate
 
-def make_capture(samples=3, events=2, seconds=1):
+def make_capture(samples=3, events=2, seconds=1, version=1):
     b=bytearray(SIZE)
+    capacity=2048 if version==1 else 1024
     h=dict.fromkeys(FIELDS,0)
-    h.update(magic=0x53363444,version=1,complete=1,reason=1,save_size=SIZE,
-             count_hz=46875000,sample_interval=131071,sample_capacity=2048,
-             sample_count=samples,pc_next_byte=(samples%2048)*4,
+    h.update(magic=0x53363444,version=version,complete=1,reason=1,save_size=SIZE,
+             count_hz=46875000,sample_interval=131071,sample_capacity=capacity,
+             sample_count=samples,pc_next_byte=(samples%capacity)*4,
              event_count=events,event_capacity=64,seconds_count=seconds,
              elapsed_ticks=(seconds+2)*46875000,halt_acknowledged=1,
              sp_status_after=1,sp_pc_after=0x2EC,cpu_epc=0x80001000)
     for i in range(samples):
-        struct.pack_into(">I",b,0x2200+(i%2048)*4,0x80000000+i*4)
+        struct.pack_into(">I",b,0x2200+(i%capacity)*4,0x80000000+i*4)
     for i in range(events):
         values=[0]*16
         values[0]=i+1;values[1]=(i+1)*2343750
         struct.pack_into(">16I",b,0x4200+(i%64)*64,*values)
+        if version==2:
+            at=0x3200+(i%64)*64
+            struct.pack_into('>H',b,at+6,0x003e)
+            struct.pack_into('>H',b,at+8,0xf800)
+            b[at+14:at+18]=bytes((32,191,64,127))
+            b[at+23:at+27]=bytes((0x22,0x41,2,1))
+            struct.pack_into('>8I',b,at+32,0,224,i,8,0,0xc2e00,0x1234,8)
     for i in range(seconds):
         row=[i+1,(i+1)*46875000,(i+1)*60,(i+1)*24,(i+1)*24,
              100,50,10,20,20,90,20,30,10,(i+1)*28,(i+1)*1000]
@@ -31,6 +39,21 @@ def commit(b,h):
     struct.pack_into(f">{len(FIELDS)}I",b,HEADER,*[h[x] for x in FIELDS])
 
 class CaptureTests(unittest.TestCase):
+    def test_v2_wrapped_pc_and_ppu_rings(self):
+        result,_=parse(make_capture(samples=1100,events=70,version=2)[0])
+        self.assertEqual(len(result['cpu_samples']),1024)
+        self.assertEqual(result['cpu_samples'][0],0x80000000+76*4)
+        p=result['events'][0]['ppu_live_sample']
+        self.assertEqual((p['cgwsel'],p['cgadsub'],p['ts'],p['tm']),(0x22,0x41,2,1))
+        self.assertEqual((p['band_y'],p['main_color_rgba5551'],p['fixed_color_rgba5551']),(6,0xf800,0x003e))
+        self.assertEqual(p['window_bounds'],[32,191,64,127])
+        self.assertFalse(p['atomic'])
+    def test_v2_ppu_payload_checksum(self):
+        b,_=make_capture(version=2);b[0x3200+24]^=1
+        with self.assertRaisesRegex(ValueError,'checksum'):parse(b)
+    def test_v2_reject_old_capacity(self):
+        b,h=make_capture(version=2);h['sample_capacity']=2048;commit(b,h)
+        with self.assertRaisesRegex(ValueError,'capacities'):parse(b)
     def test_original_capture(self):
         result,_=parse(make_capture()[0])
         self.assertEqual(result["seconds"][0]["completed_fps_count_domain"],24)

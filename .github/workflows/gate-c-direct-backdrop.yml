@@ -170,6 +170,29 @@ jobs:
               print(str(path),flush=True)
               print(path.read_text(errors='replace')[-6000:],flush=True)
           PYLOG
+      - name: Original-guest manual recorder qualification
+        run: |
+          set -euo pipefail
+          mkdir -p normal-qualified
+          cp sodium64.z64 normal-qualified/
+          cp -r build normal-qualified/
+          libdragon make clean
+          libdragon make NATIVE_DIAG=1 -j$(nproc) > native-manual-build.log 2>&1
+          python3 scripts/test_native_diag_arm.py build/sodium64.elf
+          python3 scripts/make_smoke_snes.py hardware/recorder-original.smc
+          python3 rom-converter.py hardware/recorder-original.smc
+          mkdir -p captures/manual-recorder "$RUNNER_TEMP/native-manual"
+          setsid env HOME="$RUNNER_TEMP/native-manual" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+            --settings-file "$RUNNER_TEMP/native-manual.bml" \
+            --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+            --setting "Developer/DebugServerPort=9440" --setting "Developer/HomebrewMode=true" \
+            --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+            --setting "Boot/AwaitGDBClient=true" out/recorder-original.z64 > captures/manual-recorder/ares.log 2>&1 &
+          pid=$!
+          trap 'kill -KILL -- "-$pid" 2>/dev/null || true' EXIT
+          timeout 240s python3 scripts/capture_native_diag_manual.py --port 9440 \
+            --elf build/sodium64.elf --output captures/manual-recorder
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -183,3 +206,5 @@ jobs:
             direct-build.log
             captures/
             ares-version.txt
+            normal-qualified/
+            native-manual-build.log

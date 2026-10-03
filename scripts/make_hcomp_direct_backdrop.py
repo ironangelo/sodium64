@@ -58,7 +58,7 @@ def build_direct(case):
             for y in range(first,first+count):
                 left=min(126,y//2);table.extend((left,255-left))
         table.append(0);rom[0x3000:0x3000+len(table)]=table
-    rom[0x7fc0:0x7fd5]=('S64 '+case).encode().ljust(21,b' ')
+    rom[0x7fc0:0x7fd5]=('S64 '+case).encode()[:21].ljust(21,b' ')
     finalize_checksum(rom)
     return bytes(rom)
 

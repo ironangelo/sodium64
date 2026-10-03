@@ -2,6 +2,18 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A8 current A7 title capture analyzed; general BG span seek implemented, qualification pending
+
+New private A7 diagnostic and normal SRAM plus title video were read locally, with the exact A7 CPU ELF/map. The completed20.041-second native capture uses MAX/skip0/audioON/APU-clock21 (underclockOFF),1165 completed/submitted frames and4009 sections; observer overhead is about0.386%. Video independently shows the title iris and later brief action dips, followed by expected TIME_LIMIT completion.
+
+The iris interval completes about34.6 FPS, creates2620 sections during that interval, spends38.6% of CPU samples waiting for RSP, and samples SP running98.3% /DP pipe busy95.8%. Post-iris intervals mostly complete59–60 FPS, with56–58 FPS dips but effectively zero CPU-to-RSP wait; late CPU samples span DSP/APU/PPU/CPU/DMA rather than establishing one dominant removable loop. Treat iris render throughput and later CPU frame margin as distinct findings. Only the most recent64 live events are retained; all captured control events here occur after the iris, so they do not identify iris controls. Terminal halted RSP PC is not live cost attribution.
+
+Source review identifies regular BG window traversal starting at the viewport's left tile even when that work is hidden by the selected span's scissor. Isolated source57708db269b0bba9ba0dbf848550af2227821da6 now recomputes the first intersecting8-pixel tile from each span's inclusive left bound and horizontal scroll, and moves both pending rectangle X fields by the same delta. This is general window geometry, no game identification or emulated-clock/precision/frame-skip change. Cache/dirty/priority/last-upload state is preserved for skipped tiles. Every span recalculates its origin, including a negative rewind when two spans share one tile, rather than carrying the previous span's advanced origin and omitting pixels.
+
+The helper consumes resident padding below the fixedCC0 entry; existing BG slot and public Mode7/resident entries remain fixed. Main resident bytes now intentionally differ from A7 only in the new seek call and helper area, so the old A7 resident-byte-identity statement is not an A8 claim. Mode7/fixed-color Iggy paths remain unchanged. Existing full-suite82 original fixtures include six new patterned narrow/split/scroll/raster/math/priority guests, and compiled coverage checks exercise exact pixel coverage and preservation. Fixture generation/host syntax pass; CI build, compiled seek and full image/manual recorder qualification are pending. No A8 private handoff or60-FPS iris claim yet.
+
+Current A7 native Iggy user result (correct lava and60 FPS) remains accepted. The unified menu diagnostic is explicitly deferred as Iron requested. master unchanged. Commercial ROMs, wrappers, saves, video, extracted state and guest hashes remain private and absent from GitHub/CI.
+
 ## 2026-10-03 07:06 UTC — Generic A7 usage and unified menu diagnostic proposed; implementation explicitly deferred
 
 Iron will send the current A7 title-iris save/video first. Iron asks whether A7 can replace the usual sodium64.z64 to test other SNES games, and proposes a single emulator whose normal N64 Start settings menu includes an action to resume the current game, record20 seconds, then show capture completion. Iron explicitly says not to implement this yet.

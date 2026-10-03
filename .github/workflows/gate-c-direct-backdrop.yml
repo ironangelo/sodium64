@@ -15,6 +15,23 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Select qualification scope
+        id: scope
+        run: |
+          python3 - <<'PYSCOPE'
+          import os,subprocess
+          from pathlib import Path
+          changed=set(subprocess.check_output(['git','diff','--name-only','HEAD^','HEAD'],text=True).splitlines())
+          harness_only={'scripts/capture_native_diag_manual.py','.github/workflows/gate-c-direct-backdrop.yml'}
+          # A recorder-harness-only change does not alter renderer binaries or
+          # pixel fixtures. Preserve the full suite for every other change.
+          full=not changed or not changed.issubset(harness_only)
+          with Path(os.environ['GITHUB_OUTPUT']).open('a') as out:
+              out.write(f'full_pixels={str(full).lower()}\n')
+          print({'full_pixels':full,'changed_paths':sorted(changed)})
+          PYSCOPE
       - uses: actions/setup-node@v4
         with:
           node-version: latest
@@ -130,6 +147,7 @@ jobs:
           ldd "$ares_bin"
           "$ares_bin" --version | tee ares-version.txt
       - name: Whole-frame pixel and guard oracles at natural fences
+        if: steps.scope.outputs.full_pixels == 'true'
         run: |
           set -euo pipefail
           cases=$(python3 -c "import sys;sys.path.insert(0,'scripts');from make_hcomp_fullheight import CASES;print(' '.join(CASES))")

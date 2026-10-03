@@ -23,7 +23,9 @@ def main():
         chunk=memory_chunk(c.request('qSupported:multiprocess+;swbreak+;hwbreak+'));c.request('?')
         assert c.request('QPassSignals:'+ARES_N64_GUEST_SIGNALS)==b'OK'
         set_breakpoint(c,s['native_diag_finalize'],True)
-        state=s['native_diag_state']|0xa0000000;deadline=time.monotonic()+150
+        # These CPU counters are cached. The uncached RDRAM alias can contain
+        # stale zeros; ares readDebug follows the CPU cache for this address.
+        state=s['native_diag_state'];deadline=time.monotonic()+150
         while True:
             stop=c.continue_then_interrupt(0.5);validate_stop(stop,'dormant native recorder')
             b=c.read_memory(state,128,128)

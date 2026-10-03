@@ -224,6 +224,35 @@ jobs:
           trap 'kill -KILL -- "-$pid" 2>/dev/null || true' EXIT
           timeout 240s python3 scripts/capture_native_diag_manual.py --port 9440 \
             --elf build/sodium64.elf --output captures/manual-recorder
+      - name: Original-guest whole-interval trace qualification
+        run: |
+          set -euo pipefail
+          python3 scripts/test_native_diag_report.py
+          python3 scripts/test_native_diag_trace_report.py
+          mkdir -p default-native-qualified
+          cp sodium64.z64 default-native-qualified/
+          cp -r build default-native-qualified/
+          libdragon make clean
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 -j$(nproc) > native-trace-build.log 2>&1
+          python3 scripts/test_native_diag_arm.py build/sodium64.elf
+          python3 scripts/test_native_diag_trace.py build/sodium64.elf --json-output native-trace-compiled.json
+          python3 - <<'PYTRACE'
+          from pathlib import Path
+          template=Path('sodium64.z64').read_bytes()
+          Path('hardware/trace-original.z64').write_bytes(template+bytes(0x104000-len(template))+Path('hardware/recorder-original.smc').read_bytes())
+          PYTRACE
+          mkdir -p captures/trace-recorder "$RUNNER_TEMP/native-trace"
+          setsid env HOME="$RUNNER_TEMP/native-trace" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+            xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+            --settings-file "$RUNNER_TEMP/native-trace.bml" \
+            --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+            --setting "Developer/DebugServerPort=9441" --setting "Developer/HomebrewMode=true" \
+            --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+            --setting "Boot/AwaitGDBClient=true" hardware/trace-original.z64 > captures/trace-recorder/ares.log 2>&1 &
+          pid=$!
+          trap 'kill -KILL -- "-$pid" 2>/dev/null || true' EXIT
+          timeout 240s python3 scripts/capture_native_diag_manual.py --port 9441 \
+            --elf build/sodium64.elf --output captures/trace-recorder --trace
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -242,3 +271,7 @@ jobs:
             ares-version.txt
             normal-qualified/
             native-manual-build.log
+            default-native-qualified/
+            native-trace-build.log
+            native-trace-compiled.json
+

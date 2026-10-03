@@ -13,10 +13,17 @@
 #define DBASE UNCACHED(sram)
 #define DHDR UNCACHED(sram + 0x2000)
 #define DPCS UNCACHED(sram + 0x2200)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+// v3 uses an append-only 400 x 48-byte trace and compact second records.
+// Terminal guest/RSP memory snapshots are deliberately omitted in this mode.
+#define DEVENTS UNCACHED(sram + 0x3200)
+#define DSECONDS UNCACHED(sram + 0x7D00)
+#else
 #define DPPU UNCACHED(sram + 0x3200)
 #define DEVENTS UNCACHED(sram + 0x4200)
 #define DSECONDS UNCACHED(sram + 0x7200)
 #define DCOUNTERS UNCACHED(sram + 0x7800)
+#endif
 .globl native_diag_init, native_diag_arm, native_diag_interrupt, native_diag_state
 .globl native_diag_done, native_diag_saved, native_diag_save_failed
 .globl native_diag_wait_stall_rsp, native_diag_wait_stall_frame
@@ -26,7 +33,11 @@
 native_diag_state: .word 0:32
 .align 5
 native_diag_irq_save: .dword 0:12
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+native_diag_title: .string "SODIUM64 TRACE 20S"
+#else
 native_diag_title: .string "SODIUM64 DIAGNOSTIC"
+#endif
 native_diag_saved_text: .string "CAPTURE SAVED"
 native_diag_failed_text: .string "SAVE FAILED"
 native_diag_stall_text: .string "FRAME STALL"
@@ -129,6 +140,36 @@ native_diag_interrupt:
     sw k0, 108(k1)
     mfc0 k0, $14
     sw k0, 4(k1)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // Keep one of eight EPCs over the whole 20 seconds, not only the tail.
+    // All occupancy buckets below still count EVERY timer interrupt.
+    lw k0, 8(k1)
+    andi k0, k0, 7
+    bnez k0, native_diag_pc_sampled
+    nop
+    lw k0, 12(k1)
+    sltiu k0, k0, 4096
+    beqz k0, native_diag_pc_full
+    nop
+    lw k0, 12(k1)
+    la k1, DPCS
+    addu k0, k0, k1
+    mfc0 k1, $14
+    sw k1, (k0)
+    la k1, native_diag_state
+    lw k0, 12(k1)
+    addiu k0, k0, 4
+    sw k0, 12(k1)
+    b native_diag_pc_sampled
+    nop
+native_diag_pc_full:
+    la k1, DHDR + 0x12C
+    lw k0, (k1)
+    ori k0, k0, 2
+    sw k0, (k1)
+    la k1, native_diag_state
+native_diag_pc_sampled:
+#else
     lw k0, 12(k1)
     la k1, DPCS
     addu k0, k0, k1
@@ -139,6 +180,10 @@ native_diag_interrupt:
     addiu k0, k0, 4
     andi k0, k0, 0xFFF
     sw k0, 12(k1)
+#endif
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+native_diag_sample_bookkeeping:
+#endif
     lw k0, 8(k1)
     addiu k0, k0, 1
     sw k0, 8(k1)
@@ -304,6 +349,10 @@ native_diag_tick:
     sw t2, 32(t0)
     sw t1, 36(t0)
 native_diag_no_progress:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    jal native_diag_trace_event
+    nop
+#else
     lw t2, 40(t0)
     andi t3, t2, 63
     sll t3, t3, 6
@@ -388,6 +437,7 @@ native_diag_ppu_copy:
     sw t2, 8(t4)
     lw t2, 0xA410001C
     sw t2, 12(t4)
+#endif
     // Full-second cumulative progress plus per-window occupancy. Partial final
     // windows remain explicitly partial and are never labelled whole-second FPS.
     lw t2, 20(t0)
@@ -397,6 +447,10 @@ native_diag_ppu_copy:
     li t2, DIAG_HZ
     addu t2, t1, t2
     sw t2, 20(t0)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    jal native_diag_trace_second
+    nop
+#else
     lw t2, 44(t0)
     sll t3, t2, 6
     la t4, DSECONDS
@@ -428,6 +482,7 @@ native_diag_second_copy:
     sw t2, 56(t4)
     lw t2, 104(t0)
     sw t2, 60(t4)
+#endif
 native_diag_second_done:
     lw t2, 28(t0)
     beqz t2, native_diag_check_limit
@@ -489,10 +544,133 @@ native_diag_poll_finalize:
     b native_diag_finalize
     li t8, 1
 
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+// Slow IRQ callers already save t0..t7/ra. No HI/LO, guest state or RCP writes.
+// Live controls and PC are observational and can straddle section transitions.
+.align 5
+native_diag_trace_event:
+    lw t2, 40(t0)
+    sltiu t3, t2, 400
+    beqz t3, native_diag_trace_full
+    nop
+    sll t3, t2, 5
+    sll t4, t2, 4
+    addu t3, t3, t4
+    la t4, DEVENTS
+    addu t4, t4, t3
+    addiu t2, t2, 1
+    sw t2, 40(t0)
+    lw t2, 0(t0)
+    subu t2, t1, t2
+    sw t2, 0(t4)
+    lw t2, 24(t0)
+    sw t2, 4(t4)
+    lw t2, 56(t0)
+    sw t2, 8(t4)
+    lw t2, 8(t0)
+    andi t2, t2, 0xFFFF
+    lw t3, 0xA4080000
+    sll t3, t3, 16
+    or t2, t2, t3
+    sw t2, 12(t4)
+    lw t2, 0xA4040010
+    andi t2, t2, 0xFFFF
+    lbu t3, DMEM(BG_MODE)
+    sll t3, t3, 16
+    or t2, t2, t3
+    lbu t3, DMEM(STAT_FLAGS)
+    sll t3, t3, 24
+    or t2, t2, t3
+    sw t2, 16(t4)
+    lw t2, 0xA410000C
+    andi t2, t2, 0xFFFF
+    lbu t3, DMEM(TMW)
+    sll t3, t3, 16
+    or t2, t2, t3
+    lbu t3, DMEM(HCOMP_SCREEN)
+    sll t3, t3, 24
+    or t2, t2, t3
+    sw t2, 20(t4)
+    lhu t2, DMEM(WBGSEL)
+    sll t2, t2, 16
+    lhu t3, DMEM(WHX)
+    or t2, t2, t3
+    sw t2, 24(t4)
+    lhu t2, DMEM(WHX + 2)
+    sll t2, t2, 16
+    lhu t3, DMEM(SUB_COLOR)
+    or t2, t2, t3
+    sw t2, 28(t4)
+    lw t2, DMEM(WOBJSEL)
+    sw t2, 32(t4)
+    lw t2, DMEM(CGADSUB)
+    sw t2, 36(t4)
+    lw t2, DMEM(HCOMP_BAND_RAW)
+    sw t2, 40(t4)
+    lhu t2, DMEM(MAIN_COLOR)
+    sll t2, t2, 16
+    lw t3, DMEM(HCOMP_BAND_ROWS)
+    andi t3, t3, 0xFFFF
+    or t2, t2, t3
+    sw t2, 44(t4)
+    jr ra
+    nop
+native_diag_trace_full:
+    la t3, DHDR + 0x12C
+    lw t2, (t3)
+    ori t2, t2, 1
+    sw t2, (t3)
+    jr ra
+    nop
+
+.align 5
+native_diag_trace_second:
+    lw t2, 44(t0)
+    sltiu t3, t2, 20
+    beqz t3, native_diag_trace_second_full
+    nop
+    sll t3, t2, 5
+    la t4, DSECONDS
+    addu t4, t4, t3
+    addiu t2, t2, 1
+    sw t2, 44(t0)
+    sh t2, 30(t4)
+    lw t2, 0(t0)
+    subu t2, t1, t2
+    sw t2, 0(t4)
+    lw t2, 24(t0)
+    sw t2, 4(t4)
+    lw t2, 56(t0)
+    sw t2, 8(t4)
+    li t2, 0
+native_diag_trace_second_copy:
+    addu t3, t0, t2
+    lw t3, 64(t3)
+    srl t5, t2, 1
+    addu t5, t4, t5
+    sh t3, 12(t5)
+    addu t3, t0, t2
+    sw zero, 64(t3)
+    addiu t2, t2, 4
+    bne t2, 36, native_diag_trace_second_copy
+    nop
+    jr ra
+    nop
+native_diag_trace_second_full:
+    la t3, DHDR + 0x12C
+    lw t2, (t3)
+    ori t2, t2, 4
+    sw t2, (t3)
+    jr ra
+    nop
+#endif
+
 // Finalization is terminal and deliberately intrusive, only after trigger.
 // Pre-stop registers and CPU EPC are captured before SET_HALT/SET_FREEZE.
 // No unsafe timeout ever returns to the renderer or reuses its owned surfaces.
 native_diag_finalize:
+#ifndef SODIUM64_NATIVE_DIAG_TRACE
     la k0, DBASE + 0x7C00
     .set push
     .set noat
@@ -559,12 +737,17 @@ native_diag_finalize:
     sd t1, 200(k0)
     ld t1, 88(t0)
     sd t1, 248(k0)
+#endif
     la s0, DHDR
     la s1, native_diag_state
     sw t8, 12(s0)
     li t0, 0x53363444
     sw t0, 0(s0)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    li t0, 3
+#else
     li t0, 2
+#endif
     sw t0, 4(s0)
     li t0, 0x8000
     sw t0, 16(s0)
@@ -580,7 +763,11 @@ native_diag_finalize:
     sw t0, 36(s0)
     lw t0, 40(s1)
     sw t0, 40(s0)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    li t0, 400
+#else
     li t0, 64
+#endif
     sw t0, 44(s0)
     lw t0, 44(s1)
     sw t0, 48(s0)
@@ -678,6 +865,14 @@ native_diag_partial_copy:
     addiu t2, t2, -4
     bnez t2, native_diag_partial_copy
     nop
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    li t0, 8
+    sw t0, 0x128(s0) // Retained EPC stride; overflow flags at 0x12C stay intact.
+    li t0, 48
+    sw t0, 0x130(s0)
+    li t0, 32
+    sw t0, 0x134(s0)
+#endif
     // Read PC only AFTER HALT is acknowledged. All these waits are bounded.
     li t0, 2
     sw t0, 0xA4040010
@@ -731,6 +926,7 @@ native_diag_dma_record:
     sw t0, 164(s0)
     lw t0, 0xA4100008
     sw t0, 168(s0)
+#ifndef SODIUM64_NATIVE_DIAG_TRACE
     // CPU reads the halted RSP's resident memories; never read its semaphore.
     li t0, 0xA4000000
     la t1, DBASE + 0x5200
@@ -743,6 +939,7 @@ native_diag_rsp_copy:
     addiu t2, t2, -4
     bnez t2, native_diag_rsp_copy
     nop
+#endif
     la t0, cgram
     la t1, DBASE + 0x7E00
     li t2, 512

@@ -7,6 +7,12 @@ PROFILE ?= 0
 HW_PROFILE ?= 0
 COLOR_DIAG ?= 0
 NATIVE_DIAG ?= 0
+NATIVE_DIAG_TRACE ?= 0
+ifeq ($(NATIVE_DIAG_TRACE),1)
+ifneq ($(NATIVE_DIAG),1)
+$(error NATIVE_DIAG_TRACE requires NATIVE_DIAG=1)
+endif
+endif
 ifeq ($(NATIVE_DIAG),1)
 ifneq ($(filter 1,$(PROFILE) $(HW_PROFILE) $(COLOR_DIAG)),)
 $(error NATIVE_DIAG uses its own timer and SRAM format; other profilers must be off)
@@ -66,6 +72,9 @@ N64_ED64ROMCONFIGFLAGS = --savetype $(N64_ROM_SAVETYPE) --regionfree
 
 ifeq ($(NATIVE_DIAG),1)
 N64_ASFLAGS += -DSODIUM64_NATIVE_DIAG=1
+ifeq ($(NATIVE_DIAG_TRACE),1)
+N64_ASFLAGS += -DSODIUM64_NATIVE_DIAG_TRACE=1
+endif
 endif
 
 ifeq ($(PROFILE),1)
@@ -164,3 +173,4 @@ clean:
 	rm -rf $(BUILD_DIR) $(PROJ_NAME).z64
 
 .PHONY: all clean
+

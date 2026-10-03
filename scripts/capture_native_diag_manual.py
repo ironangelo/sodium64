@@ -16,7 +16,8 @@ from gdb_rsp_dump import ARES_N64_GUEST_SIGNALS,connect_with_retry,validate_stop
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--port',type=int,required=True);ap.add_argument('--elf',type=Path,required=True)
-    ap.add_argument('--output',type=Path,required=True);a=ap.parse_args();a.output.mkdir(parents=True,exist_ok=True)
+    ap.add_argument('--output',type=Path,required=True);ap.add_argument('--trace',action='store_true')
+    a=ap.parse_args();a.output.mkdir(parents=True,exist_ok=True)
     s=load_symbols(a.elf);c=connect_with_retry('127.0.0.1',a.port,30,240)
     try:
         c.sock.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
@@ -50,10 +51,18 @@ def main():
         validate_stop(c.request('c'),'PI capture and terminal screen complete')
         blob=c.read_memory(s['sram']|0xa0000000,0x8000,chunk)
         result,_=parse(blob);h=result['header']
-        assert (h['version'],h['reason'],h['precision'],h['frameskip'])==(2,2,20,0)
+        assert (h['version'],h['reason'],h['precision'],h['frameskip'])==(3 if a.trace else 2,2,20,0)
         assert 20<=h['elapsed_seconds_count_domain']<21 and h['frames_completed']>0
         assert h['halt_acknowledged']==1 and h['sp_dma_settled']==1
-        assert len(result['events'])==64 and all('ppu_live_sample' in e for e in result['events'])
+        assert all('ppu_live_sample' in e for e in result['events'])
+        if a.trace:
+            assert 360<=len(result['events'])<=400 and h['trace_overflow_flags']==0
+            assert result['events'][0]['elapsed_ticks']<h['count_hz']//8
+            assert result['events'][-1]['elapsed_ticks']>h['count_hz']*19.8
+            assert result['cpu_timeline'][0]['elapsed_ticks_upper']<h['count_hz']//8
+            assert result['cpu_timeline'][-1]['elapsed_ticks_upper']>h['count_hz']*19.8
+            assert h['retained_cpu_samples']>600
+        else:assert len(result['events'])==64
         (a.output/'original-capture.sav').write_bytes(blob)
         symbolicate(result,a.elf);(a.output/'decoded-original.json').write_text(json.dumps(result,indent=2)+'\n')
         # ares bulk reads of peripheral memory use 32-bit bus accesses. Keep
@@ -69,9 +78,14 @@ def main():
                               pi_registers=c.read_memory(0xa4600000,0x34,0x34).hex())),flush=True)
         assert not mismatches,'cart SRAM PI write differs from the captured local payload'
         proof=dict(passed=True,dormant_vi_before_arm=vi,manual_n64_start=True,cart_pi_bytes_identical=True,
-                   format_version=2,seconds=h['elapsed_seconds_count_domain'],precision='MAX',
+                   format_version=h['version'],seconds=h['elapsed_seconds_count_domain'],precision='MAX',
                    framebuffer_seeding=False,guest_state_writes=False,diagnostic_state_writes=False,
                    input_sample_injection_only=True,native_fps_authority=False)
+        if a.trace:
+            proof.update(whole_interval_retained=True,trace_records=len(result['events']),
+                         trace_overflow_flags=h['trace_overflow_flags'],retained_cpu_samples=h['retained_cpu_samples'],
+                         first_trace_seconds=result['events'][0]['elapsed_ticks']/h['count_hz'],
+                         last_trace_seconds=result['events'][-1]['elapsed_ticks']/h['count_hz'])
         (a.output/'qualification.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof))
     finally:c.close()
 

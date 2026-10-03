@@ -52,12 +52,14 @@ def normalize(blob):
 def parse(blob):
     blob, order = normalize(blob)
     h = dict(zip(FIELDS, struct.unpack_from(f">{len(FIELDS)}I", blob, HEADER)))
-    if h["version"] not in (1, 2) or h["complete"] != 1:
+    if h["version"] not in (1, 2, 3) or h["complete"] != 1:
         raise ValueError("unsupported or incomplete S64D capture")
     if h["reason"] not in (1, 2) or h["save_size"] != SIZE:
         raise ValueError("invalid trigger or save size")
     if h["count_hz"] != 46875000 or h["sample_interval"] != 131071:
         raise ValueError("unexpected sampling clock/interval")
+    if h["version"] == 3:
+        return parse_trace(blob, h, order)
     capacity = 2048 if h["version"] == 1 else 1024
     if h["sample_capacity"] != capacity or h["event_capacity"] != 64:
         raise ValueError("unexpected ring capacities")
@@ -142,6 +144,92 @@ def parse(blob):
     # Export no game memory by default; the original save stays private.
     return {"header":h,"events":events,"seconds":seconds,"cpu_samples":pcs}, blob
 
+
+def parse_trace(blob, h, order):
+    """v3 append-only observations; no terminal memory or DP-cycle dumps."""
+    stride, overflow, event_bytes, second_bytes = struct.unpack_from('>4I', blob, HEADER+0x128)
+    if (h['sample_capacity'], h['event_capacity'], stride, event_bytes, second_bytes)!=(1024,400,8,48,32):
+        raise ValueError('unexpected whole-interval trace geometry')
+    if overflow & ~7 or h['event_count']>400 or h['seconds_count']>20:
+        raise ValueError('trace count/overflow flags invalid')
+    retained=min((h['sample_count']+7)//8,1024)
+    if h['pc_next_byte']!=retained*4:
+        raise ValueError('trace CPU count/cursor disagree')
+    if h['sample_count']>8192 and not overflow & 2:
+        raise ValueError('trace CPU overflow was not marked')
+    body=blob[:HEADER]+blob[HEADER+512:]
+    if sum(struct.unpack(f'>{len(body)//4}I',body))&0xffffffff!=h['body_sum32']:
+        raise ValueError('save payload checksum mismatch; reject truncated/stale capture')
+    h['byte_order']=order
+    h['elapsed_seconds_count_domain']=h['elapsed_ticks']/h['count_hz']
+    h['observer_fraction']=h['observer_ticks']/max(1,h['elapsed_ticks'])
+    h['cpu_epc_instruction']=h['cpu_epc']+(4 if h['cpu_cause']&0x80000000 else 0)
+    h['capture_via']='direct wait watchdog' if h['direct_wait_pc'] else 'timer watchdog'
+    h.update(retained_cpu_stride=stride,retained_cpu_samples=retained,
+             trace_overflow_flags=overflow,terminal_memory_snapshots=False,
+             sp_pc_meaningful_after_halt=False,guest_cpu_pc_raw=None,
+             trace_covers_whole_interval=not bool(overflow),
+             occupancy_sampling_hz=h['count_hz']/h['sample_interval'],
+             retained_cpu_sampling_hz_nominal=h['count_hz']/h['sample_interval']/stride)
+    pcs=list(struct.unpack_from(f'>{retained}I',blob,0x2200))
+    events=[]
+    for i in range(h['event_count']):
+        w=struct.unpack_from('>12I',blob,0x3200+i*48)
+        regs_obj=w[8].to_bytes(4,'big');regs_screen=w[9].to_bytes(4,'big')
+        irq=w[3]&0xffff
+        row=dict(sequence=i+1,elapsed_ticks=w[0],frames_completed=w[1],sections_created=w[2],
+                 irq_sample_count=irq,sp_pc_live=w[3]>>16,sp_status=w[4]&0xffff,
+                 dp_status=w[5]&0xffff,sp_pc_observational=True,
+                 sp_pc_overlay_identity_known=False,
+                 ppu_live_sample=dict(main_color_rgba5551=w[11]>>16,
+                    fixed_color_rgba5551=w[7]&0xffff,window_bounds=[w[6]>>8&255,w[6]&255,w[7]>>24,w[7]>>16&255],
+                    wbgsel=w[6]>>16,wobjsel=regs_obj[0],wbglog=regs_obj[1],wobjlog=regs_obj[2],
+                    cgwsel=regs_obj[3],cgadsub=regs_screen[0],ts=regs_screen[1],tm=regs_screen[2],tsw=regs_screen[3],
+                    tmw=w[5]>>16&255,bg_mode=w[4]>>16&255,stat_flags=w[4]>>24,
+                    policy=w[10],band_rows=w[11]&0xffff,screen=w[5]>>24,atomic=False))
+        previous=events[-1] if events else dict(elapsed_ticks=0,frames_completed=0,sections_created=0,irq_sample_count=0)
+        dt=row['elapsed_ticks']-previous['elapsed_ticks']
+        if dt<=0 or any(row[k]<previous[k] for k in ('frames_completed','sections_created','irq_sample_count')):
+            raise ValueError('non-monotonic trace observation')
+        if row['elapsed_ticks']>h['elapsed_ticks'] or irq>h['sample_count']:
+            raise ValueError('trace observation lies after capture endpoint')
+        row['interval_seconds']=dt/h['count_hz']
+        row['completed_frames_in_interval']=row['frames_completed']-previous['frames_completed']
+        row['sections_in_interval']=row['sections_created']-previous['sections_created']
+        # Short frame-count intervals have quantization; use wider windows for FPS.
+        row['short_interval_fps_authority']=False
+        events.append(row)
+    seconds=[];previous=dict(elapsed_ticks=0,frames_completed=0,sections_created=0)
+    for i in range(h['seconds_count']):
+        tick,frames,sections=struct.unpack_from('>3I',blob,0x7d00+i*32)
+        counts=struct.unpack_from('>9H',blob,0x7d0c+i*32)
+        sequence=struct.unpack_from('>H',blob,0x7d1e+i*32)[0]
+        if sequence!=i+1 or tick<=previous['elapsed_ticks'] or frames<previous['frames_completed'] or tick>h['elapsed_ticks']:
+            raise ValueError('non-monotonic compact second record')
+        if sum(counts[1:5])!=counts[0] or any(n>counts[0] for n in counts[5:]):
+            raise ValueError('compact occupancy buckets disagree')
+        row=dict(zip(SECOND_FIELDS[5:14],counts));dt=tick-previous['elapsed_ticks']
+        row.update(sequence=sequence,elapsed_ticks=tick,frames_completed=frames,sections_created=sections,
+                   duration_seconds_count_domain=dt/h['count_hz'],
+                   completed_frames_in_interval=frames-previous['frames_completed'],
+                   completed_fps_count_domain=(frames-previous['frames_completed'])*h['count_hz']/dt)
+        seconds.append(row);previous=row
+    partial=struct.unpack_from('>9I',blob,HEADER+0x100)
+    if sum(partial[1:5])!=partial[0]:raise ValueError('partial CPU bucket count mismatch')
+    if sum(row['samples'] for row in seconds)+partial[0]!=h['sample_count']:
+        raise ValueError('whole-interval IRQ sample totals disagree')
+    h['partial_window']=dict(zip(SECOND_FIELDS[5:14],partial))
+    # Each stored EPC has its actual IRQ ordinal. Bound its time by neighboring
+    # 20 Hz observations instead of inventing exact per-EPC Count timestamps.
+    timeline=[];j=0
+    for i,pc in enumerate(pcs):
+        ordinal=i*stride+1
+        while j<len(events) and events[j]['irq_sample_count']<ordinal:j+=1
+        lower=events[j-1]['elapsed_ticks'] if j else 0
+        upper=events[j]['elapsed_ticks'] if j<len(events) else h['elapsed_ticks']
+        timeline.append(dict(pc=pc,irq_sequence=ordinal,elapsed_ticks_lower=lower,elapsed_ticks_upper=upper))
+    return dict(header=h,events=events,seconds=seconds,cpu_samples=pcs,cpu_timeline=timeline),blob
+
 def elf_symbols(path):
     """Read the ELF32/64 big-endian symbol table without a local MIPS toolchain."""
     b = Path(path).read_bytes()
@@ -215,15 +303,19 @@ def render(result):
         lines.append(f"{row['sequence']:2d} | {row['completed_fps_count_domain']:6.2f} | {row['samples']:4d} | "
                      f"{100*row['cpu_rsp_wait']/samples:6.1f}% | {100*row['sp_running']/samples:6.1f}% | "
                      f"{100*row['dp_cmd_busy']/samples:6.1f}%")
+    if h['version']==3:
+        lines.append(f"Whole-interval trace: {len(result['events'])}/400 observations; overflow flags={h['trace_overflow_flags']}")
+        lines.append(f"Retained CPU EPCs: one in eight IRQs (~{h['retained_cpu_sampling_hz_nominal']:.1f} Hz); occupancy still ~{h['occupancy_sampling_hz']:.1f} Hz")
+        lines.append("Live RSP PC/PPU controls are non-atomic; overlay identity is not established; terminal memory snapshots are absent.")
     lines.append("CPU hotspots in retained sample ring:")
     for row in result.get("cpu_hotspots",[])[:12]:
         lines.append(f"  {row['samples']:4d} {row['symbol']}")
-    if h['version'] == 2:
+    if h['version'] in (2, 3):
         states = collections.Counter((e['ppu_live_sample']['cgwsel'], e['ppu_live_sample']['cgadsub'],
                     e['ppu_live_sample']['tm'], e['ppu_live_sample']['ts'], e['ppu_live_sample']['policy'],
                     e['ppu_live_sample']['main_color_rgba5551'], e['ppu_live_sample']['fixed_color_rgba5551'])
                     for e in result['events'])
-        lines.append('Live PPU samples (may straddle section transitions; final halted DMEM is coherent):')
+        lines.append('Live PPU samples (may straddle section transitions):')
         for state,n in states.most_common(12):
             sel,cg,tm,ts,policy,main,fixed=state
             lines.append(f'  {n:2d} samples CGWSEL={sel:02X} CGADSUB={cg:02X} TM={tm:02X} TS={ts:02X} policy={policy} Main={main:04X} fixed={fixed:04X}')
@@ -242,6 +334,8 @@ def main():
     print(render(result),end="")
     if a.json_output: a.json_output.write_text(json.dumps(result,indent=2)+"\n")
     if a.extract_private:
+        if result['header']['version']==3:
+            raise ValueError('v3 trace has no terminal DMEM/IMEM snapshot; use a v2 capture for memory extraction')
         a.extract_private.mkdir(parents=True,exist_ok=True)
         (a.extract_private/"dmem.bin").write_bytes(blob[0x5200:0x6200])
         (a.extract_private/"imem.bin").write_bytes(blob[0x6200:0x7200])

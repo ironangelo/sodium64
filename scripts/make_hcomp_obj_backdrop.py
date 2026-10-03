@@ -95,4 +95,6 @@ def expected_obj(case,x,y):
     if x<64:return (31<<11)|1
     selected=96<=x<=191
     allowed=selected if case=='fast-obj-low-inside' else not selected if case=='fast-obj-low-outside' else True
-    return (31<<6)|1 if allowed and not (case=='fast-obj-sections' and 40<=y<57) else 1
+    if allowed and case=='fast-obj-sections' and 40<=y<57:
+        return (31<<1)|1 # Absent Sub uses the explicitly delivered fixed blue.
+    return (31<<6)|1 if allowed else 1

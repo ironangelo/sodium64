@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Original Mode0/OBJ backdrop guests; no commercial state or graphics."""
 CASES=('fast-mode0-bit','fast-obj-low','fast-obj-low-inside','fast-obj-low-outside',
-       'fast-obj-above','fast-obj-disabled','fast-obj-high-visible','fast-obj-high-wrap')
+       'fast-obj-above','fast-obj-disabled','fast-obj-high-visible','fast-obj-high-wrap',
+       'fast-obj-high-late','fast-obj-high-multiple','fast-obj-sections')
 
 def controls(case):
     return (0x13 if case=='fast-obj-low-inside' else 0x23 if case=='fast-obj-low-outside' else 3,
             0x20 if case=='fast-mode0-bit' else 0x30,2,
             1 if case in ('fast-mode0-bit','fast-obj-disabled') else 0x11)
 
-def policy(case):return 0 if case in ('fast-obj-high-visible','fast-obj-high-wrap') else 2
+def policy(case):return 0 if case=='fast-obj-high-late' else 2
 
 def objects(case):
     # Tuples are original SNES X,Y,tile,attributes,large. Blue palette0 is
@@ -20,6 +21,9 @@ def objects(case):
     if case=='fast-obj-disabled':return (high,)
     if case=='fast-obj-high-visible':return (high,)
     if case=='fast-obj-high-wrap':return ((96,252,0,0x38,False),)
+    if case=='fast-obj-high-late':return ((96,220,0,0x38,False),)
+    if case in ('fast-obj-high-multiple','fast-obj-sections'):
+        return ((96,49,0,0x38,False),(96,114,0,0x38,False),(96,122,0,0x38,False))
     return (low,)
 
 def build_obj(case):
@@ -67,6 +71,12 @@ def build_obj(case):
         lda_sta_abs(refresh,value,address)
     refresh.emit(0x60)
     rom[0x600:0x600+len(refresh.code)]=refresh.finish()
+    if case=='fast-obj-sections':
+        # Later HDMA epochs reuse OAM without another upload, changing TS
+        # away and back at non-eight-row boundaries. Independent oracle below.
+        set_store(rom,0x420c,0,1)
+        table=bytes((40,2,17,0,127,2,40,2,0))
+        rom[0x3000:0x3000+len(table)]=table
     rom[0x7fc0:0x7fd5]=('S64 '+case).encode()[:21].ljust(21,b' ')
     finalize_checksum(rom);assert len(rom)==32768
     return bytes(rom)
@@ -77,9 +87,12 @@ def expected_obj(case,x,y):
     if case not in ('fast-mode0-bit','fast-obj-disabled') and 96<=x<104:
         if case=='fast-obj-high-wrap':
             if 0<=y<4:return (31<<6)|(31<<1)|1
-        elif 17<=y<25:
+        elif case=='fast-obj-high-late' and 220<=y<224:return (31<<6)|(31<<1)|1
+        elif case in ('fast-obj-high-multiple','fast-obj-sections') and (49<=y<57 or 114<=y<130):
+            return (0 if case=='fast-obj-sections' and 40<=y<57 else 31<<6)|(31<<1)|1
+        elif case not in ('fast-obj-high-late','fast-obj-high-multiple','fast-obj-sections') and 17<=y<25:
             return ((31<<6) if case=='fast-obj-high-visible' else 0)|(31<<1)|1
     if x<64:return (31<<11)|1
     selected=96<=x<=191
     allowed=selected if case=='fast-obj-low-inside' else not selected if case=='fast-obj-low-outside' else True
-    return (31<<6)|1 if allowed else 1
+    return (31<<6)|1 if allowed and not (case=='fast-obj-sections' and 40<=y<57) else 1

@@ -3,7 +3,8 @@
  * CGWSEL=02/12/22 (bit0 ignored only in Mode0), Main backdrop=black:
  * opaque Main -> Main; backdrop -> Sub/fixed inside the allowed COLOR set,
  * otherwise black. Draw fixed+Sub, black out the prevented set, then Main.
- * This policy needs no compact Z/presence/math buffers or eight-row splits.
+ * Safe spans need no compact Z/presence/math buffers. Potentially eligible
+ * OBJ rows retain the ordinary compositor, without changing cached OAM.
  */
 #include <rsp.inc>
 #include "defines.h"
@@ -19,7 +20,22 @@ hcomp_fast_entry:
 
 hcomp_fast_admit:
     sw zero, HCOMP_BAND_RAW
+    sw zero, HCOMP_OBJ_ADAPTIVE
+    sw k1, HCOMP_FAST_END
+    // Main has already rebuilt normalized OAM when STAT_FLAGS has bit40.
+    // Record even on a raw/neutral epoch, so later sections can reuse it.
+    lbu t6, OBSEL
+    lw t5, FB_OFFSET(sp)
+    sll t4, t5, 8
+    or t4, t4, t6
+    lui t0, 1
+    or t4, t4, t0
     lb t0, STAT_FLAGS
+    andi t1, t0, 0x40
+    beqz t1, hcomp_fast_cache_ready
+    nop
+    sw t4, HCOMP_OBJ_GEOMETRY_KEY
+hcomp_fast_cache_ready:
     bltz t0, hcomp_fast_raw
     lbu t0, CGADSUB
     andi t1, t0, 0x3F
@@ -86,21 +102,20 @@ hcomp_fast_color_selector:
     andi t0, t0, 0x10
     beqz t0, hcomp_fast_direct
     nop
-    // The Main bank just rebuilt its OBJ cache only on this dirty flag.
-    // Without it, cached Y/size may belong to older OBSEL/FB settings.
-    lbu t0, STAT_FLAGS
-    andi t0, t0, 0x40
+    // Reuse only a certified cache with identical size and Y-wrap settings.
+    // Changed settings without a rebuild retain the general compositor.
+    lw t0, HCOMP_OBJ_GEOMETRY_KEY
+    bne t0, t4, hcomp_fast_return
+    sltiu t0, t5, 256
     beqz t0, hcomp_fast_return
     nop
-    // OBJ palettes0..3 never participate in color math. Scan the current
-    // coherent OAM epoch, conservatively rejecting every high-palette OBJ
-    // except one wholly above the frame under the renderer's own Y-wrap
-    // and small/large size rules. X/windows/section visibility are deliberately
-    // not used to broaden admission. This never changes OAM or its cache.
-    lbu t6, OBSEL
+    // Bound safe spans by all potentially eligible high-palette OBJ rows.
+    // Never use X, windows or guessed transparency to broaden admission.
+    li t0, 1
+    sw t0, HCOMP_OBJ_ADAPTIVE
+    move t7, k1
     andi t6, t6, 0xE0
     srl t6, t6, 3
-    lw t5, FB_OFFSET(sp)
     sll t5, t5, 1
     li t4, 255
     sub t5, t4, t5
@@ -121,15 +136,23 @@ hcomp_fast_obj_probe:
     andi t1, t1, 2
     or t1, t1, t6
     lbu t1, OBJ_SIZES + 1(t1)
-    add t0, t0, t1
-    slt t0, zero, t0
-    bnez t0, hcomp_fast_return
+    add t4, t0, t1
+    slt t1, k0, t4
+    beqz t1, hcomp_fast_obj_next
+    slt t1, t0, k1
+    beqz t1, hcomp_fast_obj_next
+    slt t1, k0, t0
+    beqz t1, hcomp_fast_return
+    slt t1, t0, t7
+    beqz t1, hcomp_fast_obj_next
     nop
+    move t7, t0
 hcomp_fast_obj_next:
     addi t3, t3, 4
     sltiu t0, t3, 0x200
     bnez t0, hcomp_fast_obj_probe
     nop
+    sw t7, HCOMP_FAST_END
 hcomp_fast_direct:
     li t0, 2
     b hcomp_fast_return
@@ -214,6 +237,14 @@ hcomp_fast_main:
     j 0xA4001F7C
     li t9, 0x1370
 
+.org (0x740 - 0x3A8)
+hcomp_fast_resume:
+    lw k1, HCOMP_SECTION_END
+    slt t0, k0, k1
+    beqz t0, hcomp_fast_return
+    nop
+    b hcomp_fast_admit
+    nop
 .org (0x760 - 0x3A8)
 hcomp_fast_screen_switch:
     b hcomp_fast_mask

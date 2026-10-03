@@ -37,8 +37,7 @@ hcomp_fence_wait:
 
 hcomp_band_begin:
     sw k1, HCOMP_SECTION_END
-    // Classify the real epoch once. Exact direct composition owns the whole
-    // section; only the general compositor needs <=8-row compact surfaces.
+    // Classify the epoch; OBJ-sensitive spans are reconsidered at band ends.
     lw a1, OVERLAY_HCOMP_FAST_SRC
     j 0xA4001F7C
     li t9, 0x13B0
@@ -50,8 +49,11 @@ hcomp_band_start:
     beqz t1, hcomp_real_section_done
     move k1, t0
     lw t1, HCOMP_BAND_RAW
-    bnez t1, hcomp_band_bounds_ready
-    nop
+    beqz t1, hcomp_general_bounds
+    lw t0, HCOMP_FAST_END
+    b hcomp_band_bounds_ready
+    move k1, t0
+hcomp_general_bounds:
     addi k1, k0, 8
     slt t1, t0, k1
     beqz t1, hcomp_band_bounds_ready
@@ -61,6 +63,7 @@ hcomp_band_bounds_ready:
     sub t0, k1, k0
     sw t0, HCOMP_BAND_ROWS
     lw t0, FB_OFFSET(sp)
+    add t2, t0, k1
     add t0, t0, k0
     sw t0, HCOMP_BAND_Y
     // Palette/stat section format admits at most 255 scanlines. CPU border
@@ -68,18 +71,13 @@ hcomp_band_bounds_ready:
     sltiu t1, t0, 8
     bnez t1, hcomp_bad_geometry
     nop
-    lw t1, FB_OFFSET(sp)
-    add t1, t1, k1
-    li t2, 248
-    sltu t1, t2, t1
-    bnez t1, hcomp_bad_geometry
+    sltiu t1, t2, 249
+    beqz t1, hcomp_bad_geometry
     nop
     sll t1, t0, 2
     sh t1, RDP_FILL + 10
     sh t1, RDP_FILL + 38
-    lw t1, FB_OFFSET(sp)
-    add t1, t1, k1
-    sll t1, t1, 2
+    sll t1, t2, 2
     sh t1, RDP_FILL + 14
     sh t1, RDP_FILL + 34
     // 560-byte stride: y * (512+32+16). Round the displacement up to
@@ -161,8 +159,8 @@ hcomp_fill_target:
     sltiu t0, t0, 2
     sll t0, t0, 1
     lhu s0, SUB_COLOR(t0)
-    lb t0, STAT_FLAGS
-    bgez t0, hcomp_backdrop_color
+    lb t4, STAT_FLAGS
+    bgez t4, hcomp_backdrop_color
     nop
     move s0, zero
 hcomp_backdrop_color:
@@ -193,8 +191,7 @@ hcomp_backdrop_color:
     li a0, RDP_FILL + 8
     jal 0xA4001F5C
     li a1, RDP_WINDOW
-    lb t0, STAT_FLAGS
-    bltz t0, hcomp_band_done
+    bltz t4, hcomp_band_done
     nop
     sw zero, PRIO_CHECKS
     sw zero, PRIO_CHECKS + 4
@@ -275,8 +272,11 @@ hcomp_band_done:
     jal 0xA4001F5C
     li a1, RDP_INIT + 8
     move k0, k1
-    b hcomp_band_start
-    nop
+    lw t0, HCOMP_OBJ_ADAPTIVE
+    beqz t0, hcomp_band_start
+    lw a1, OVERLAY_HCOMP_FAST_SRC
+    j 0xA4001F7C
+    li t9, 0x1740
 hcomp_real_section_done:
     j 0xA40010C0
     nop

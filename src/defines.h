@@ -261,6 +261,11 @@
 #define HCOMP_ELIGIBILITY_TABLE 0xEF8
 #define HCOMP_OBJ_DEPTH_CMDS 0xEE0
 #define HCOMP_BAND_RAW 0xEF0
+// Geometry of the last normalized OBJ cache, plus the current safe span.
+// These words occupy existing zero padding; no resident ABI moves.
+#define HCOMP_OBJ_GEOMETRY_KEY 0xEF4
+#define HCOMP_FAST_END 0xF18
+#define HCOMP_OBJ_ADAPTIVE 0xF1C
 // Gate-C proof-only immutable RDP commands in the audited retired DMEM gap.
 // Eight commands occupy F30..F6F; VEC_DATA remains frozen at F70.
 // PipeSync is required before changing OtherModes while prior RDP work may

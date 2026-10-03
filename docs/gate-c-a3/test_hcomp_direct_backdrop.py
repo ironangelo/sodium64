@@ -144,8 +144,8 @@ def main():
         mode_cases+=1
     # Independent SNES small/large heights, including rectangular OBJ sizes.
     # Compare compiled admission with the set of rows occupied by each OBJ.
-    # A high-palette OBJ conservatively blocks even below/right of the screen;
-    # only a quad with every row strictly negative is certified harmless.
+    # A high-palette OBJ blocks its conservative vertical rows. Safe spans
+    # must end before any future eligible row; X/opacity are never assumed.
     heights=((8,16),(8,32),(8,64),(16,32),(16,64),(32,64),(32,64),(32,32))
     obj_cases=0
     def obj_case(index,y,palette,size_mode,large,fb,queue=0,enabled=True,second=False,fresh=True):
@@ -162,9 +162,13 @@ def main():
         run(code,d,0x3b0,r)
         first_row=y-256 if y>=256-2*fb else y
         quad_rows=range(first_row,first_row+heights[size_mode][int(large)])
-        potentially_math=enabled and (palette>=4 and any(row>=0 for row in quad_rows) or second)
-        want=0 if potentially_math or enabled and not fresh else 2
+        hazard=set(quad_rows) if palette>=4 else set()
+        if second:hazard.update(range(10,18))
+        want=0 if enabled and (13 in hazard or not fresh) else 2
         assert word(d,0xef0)==want,(index,y,palette,size_mode,large,fb,queue,enabled,second,fresh,word(d,0xef0),want)
+        if want==2:
+            end=min((row for row in hazard if 13<row<224),default=224) if enabled else 224
+            assert word(d,0xf18)==end
         assert d[0x840:0xa60]==before and d[0xbb7:0xbb9]==b'\x03\x30'
         assert r[26:30]==[13,224,0xcafe,queue] and r[25]==0x1768
         obj_cases+=1
@@ -192,6 +196,56 @@ def main():
        for fb in (0,8,16):
         for enabled in (False,True):
          obj_case(0,240,palette,mode,False,fb,enabled=enabled,fresh=False)
+    # Exercise compiled Fast and Phase together across arbitrary sections.
+    # Independent sets of occupied rows certify complete coverage and that
+    # no direct band can include even one potentially eligible OBJ pixel row.
+    schedules=0
+    rng=random.Random(43107)
+    for trial in range(256):
+        d=bytearray(data);d[0x840:0xa60]=bytes(0x220)
+        fb=rng.choice((8,16));size=rng.randrange(8)
+        d[0xbb2]=size<<5;d[0xbb7]=3;d[0xbb8]=0x20;d[0xbbd]=0;d[0xbba]=0x11
+        d[0xbbe]=0x40;d[0xba6:0xba8]=b'\x00\x3e';d[0xba8:0xbaa]=bytes(2)
+        put(d,0xbc8,fb);put(d,0xecc,0)
+        hazards=set()
+        for i in range(rng.randrange(1,16)):
+            y=rng.randrange(256);large=rng.randrange(2);pal=rng.randrange(8)
+            put(d,0x840+4*i,(y<<24)|(127<<16)|(pal<<9))
+            d[0xa40+i//4]|=large<<((i%4)*2+1)
+            top=y-256 if y>=256-2*fb else y
+            if pal>=4:hazards.update(range(top,top+heights[size][large]))
+        # A backdrop-only first epoch must still certify its rebuilt cache.
+        r=[0]*32;r[27]=5;run(code,d,0x3b0,r)
+        assert word(d,0xef4)==0x10000|(fb<<8)|(size<<5)
+        d[0xbbe]=0;d[0xbb8]=0x30
+        edges=sorted({0,224,*[rng.randrange(1,224) for _ in range(5)]})
+        for begin,end in zip(edges,edges[1:]):
+            put(d,0xebc,end);r=[0]*32;r[26]=begin;r[27]=end
+            seen=[]
+            while r[26]<end:
+                start=r[26];run(code,d,0x740,r)
+                policy=word(d,0xef0)
+                run_geometry(p,pb&0xfff,d,0x768,{ps['hcomp_band_targets_ready']},r)
+                stop=r[27];assert start<stop<=end
+                rows=set(range(start,stop));seen.extend(range(start,stop))
+                if policy==2:assert not rows&hazards,(trial,start,stop,sorted(rows&hazards))
+                else:assert policy==0 and stop-start<=8 and start in hazards
+                # The actual Phase band-done must select the Fast resume entry
+                # for adaptive bands without consuming a real section epoch.
+                run_geometry(p,pb&0xfff,d,ps['hcomp_band_done'],{0xf5c},r)
+                run_geometry(p,pb&0xfff,d,ps['hcomp_band_done']+24,{0xf7c},r)
+                assert r[26]==stop and r[25]==0x1740
+                schedules+=1
+            assert seen==list(range(begin,end))
+        # Geometry changes without a rebuild must fail closed, even if
+        # current OAM appears harmless. A subsequent rebuild recertifies.
+        for addr,value,n in ((0xbb2,(size^1)<<5,1),(0xbc8,fb^8,4)):
+            prior=d[addr:addr+n];d[addr:addr+n]=value.to_bytes(n,'big')
+            r=[0]*32;r[27]=224;run(code,d,0x3b0,r)
+            assert word(d,0xef0)==0 and word(d,0xf1c)==0
+            d[0xbbe]=0x40;run(code,d,0x3b0,r)
+            assert word(d,0xf1c)==1
+            d[addr:addr+n]=prior;d[0xbbe]=0x40;run(code,d,0x3b0,r);d[0xbbe]=0
     masks=0
     randoms=random.Random(9126)
     all_bounds=[(0,255,0,0),(255,255,0,0),(0,0,255,255),(200,100,0,0),
@@ -231,7 +285,7 @@ def main():
     for y in range(8,248):
         for rows in sorted({1,min(8,248-y),min(9,248-y),min(17,248-y),248-y}):
             for policy in (0,1,2):
-                d=bytearray(data);put(d,0xbc8,8);put(d,0xebc,y-8+rows);put(d,0xef0,policy)
+                d=bytearray(data);put(d,0xbc8,8);put(d,0xebc,y-8+rows);put(d,0xf18,y-8+rows);put(d,0xef0,policy)
                 r=[0]*32;r[26]=y-8;r[27]=0xdead
                 run_geometry(p,pb&0xfff,d,0x768,{ps['hcomp_band_targets_ready']},r)
                 want=min(rows,8) if policy==0 else rows
@@ -240,6 +294,7 @@ def main():
     result=dict(passed=True,admission_cases=admission+4,compiled_window_mask_cases=masks,
                 identity_admission_cases=neutral_cases,
                 mode0_control_cases=mode_cases,obj_eligibility_cases=obj_cases,
+                adaptive_band_schedule_cases=schedules,
                 section_geometry_cases=geometry,pixel_truth_width=256,compact_alignment='separate compiled suite',
                 native_timing_authority=False)
     if a.output:a.output.write_text(json.dumps(result,indent=2)+'\n')

@@ -2,6 +2,21 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+
+## 2026-10-03 UTC — A8 fully qualified; private iris package delivered; native FPS pending
+
+Active source/runtime is `812f9b023d0e1524ad425da4fa0171a725308bdd` on `phase4/gate-c-a4-gameplay-capture`. Build/validate run `37108061988` passes normal/native/profile and emulator smoke; release job is skipped. Full image/manual run `37108061995` succeeds, artifact `11268309186` (public original fixtures only). This is a fresh complete run for the final runtime, not a union with superseded runs: all 84 images / 4,816,896 pixels pass, including the eight new narrow/split/shared-tile/scroll/raster/math/priority/fully-hidden BG window cases. Downloaded frame hashes and all pixel results were independently reclassified, with natural completion fences, memory guards, no framebuffer seeding, no guest-state writes and no cadence authority.
+
+Compiled final Main ELF passes 67,656 span-seek executions, 40 independent coverage cases (17 shared-tile rewinds), and 14,336 early-window combinations across Main/Sub and four BG layers, including 912 fully hidden layer cases. The seek starts at the first tile intersecting each exact visible span and preserves the pending rectangle, cache/dirty/priority/last-upload state. Fully masked BGs skip their cache/map transfers before rendering; visible BGs reuse their owned exact window spans across rows within the same real PPU epoch. Emulated clocks, frame precision, audio, frame skip, game ROM and Mode7 behavior are not changed.
+
+Final normal/native CPU ELF, templates and six embedded RSP banks match the image-qualified artifacts exactly. Five non-Main banks, CPU text, Main DMEM and the existing resident suffix remain byte-identical to A7. Private compiled policy/window replay preserves the Iggy paths; A7's correct lava and 60 FPS user result is historical hardware evidence, not a new A8 hardware measurement. Retest Iggy briefly on A8.
+
+Manual recorder qualification passes: dormant 1,333 VI before N64 Start; 20.003365611 seconds after arm; MAX precision; complete v2 format; cart PI bytes identical. The private handoff includes normal and manual diagnostic wrappers, exact latest user normal SRAM, Spanish instructions, matching decoder ELF/map/six banks, private analysis reference and validations. All package manifest entries were rehashed. The commercial guest bytes remain unchanged from the prior private handoffs. No ROM/wrapper/save/footage/extracted guest memory or guest hash entered GitHub or CI; no private file identifiers or package hashes are published here.
+
+Hardware next: normal A8 with MAX / skip0 / audio ON / APU underclock OFF, several title-iris loops first, then stage-end iris, map/stage fade and a brief Iggy check. The window optimization can benefit other BG-window irises, but neither real-console FPS improvement nor resolved fades/post-iris CPU dips is established yet. The current capture separates renderer-saturated iris work from later CPU frame-margin dips; CPU code is unchanged in A8, so those remaining dips stay open. Compare clean original with matched settings, especially its default-enabled APU underclock. The proposed unified menu capture and generic emulator handoff remain explicitly deferred.
+
+Master is unchanged at `7cc8facfe8643fb85888f301f79995575830521d`; no PR, merge or release publication. Gate C / Road1.0 remain active.
+
 ## 2026-10-03 UTC — A8 second general window optimization; fixture screen-mask error corrected; qualification restarted
 
 Thed169 pixel run37106805182 completed76 existing full images successfully, while all six new patterned window fixtures failed. Their captured DMEM showed Main unwindowed: the new fixture author had swapped SNES$212E (Main window mask) and$212F (Sub window mask), so the intended Main window did not run. This is a fixture setup error, not evidence that the seek renderer failed those intended Main cases. The full-frame tests correctly rejected the mismatch. The capture harness now checks those actual delivered screen-mask bytes. Do not call that run an82-case success; manual qualification did not run after its failure.

@@ -57,6 +57,7 @@ def execute(text, base, dmem, pc, exits, regs):
         elif op==11: regs[rt]=int(regs[rs]<(si&0xffffffff))
         elif op==12: regs[rt]=regs[rs]&imm
         elif op==13: regs[rt]=regs[rs]|imm
+        elif op==14: regs[rt]=regs[rs]^imm
         elif op==15: regs[rt]=imm<<16
         elif op in (32,35,36,37,40,41,43):
             address=(regs[rs]+si)&0xfff

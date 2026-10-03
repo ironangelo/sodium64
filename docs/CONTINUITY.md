@@ -6,6 +6,15 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+
+## 2026-10-03 UTC — Combined A11 compiled contracts pass; dense VRAM loop tightened
+
+Current source `ac534849002a04d342dd566a6f96ae1707680387` retains the three generic reductions (unused depth tags, dirty-group VRAM publication, independent palette conversion reuse) and optional VRW1 wait subset. Prior candidate 7febff6 passed normal/profile/default-native/trace compilation and compiled ABI/publication/renderer checks: 2,560 depth-policy cases, 52 cache-publication cases, 272 component-scaled palette cases and 24 changed/identical commit invalidations. Identical CGRAM writes retain palette validity but still commit guest state and the unchanged raster epoch path. All-dirty publication initially added loop instructions; the current candidate unrolls all 32 cache lines per dirty 512-byte group and requires its maximum compiled instruction count below the old full-writeback plus dirty-copy bodies. Cache bus operations remain identical for dirty/full groups. No clock or guest identity changes.
+
+A private compiled 96-frame interaction test executes alternating queues, repeated identical palette refreshes, sparse/burst color changes and brightness changes. It passes all component-scaled pixel comparisons and reuses 24 queue frames. This is original input qualification, not native FPS evidence, and will be rerun against the final qualified ELF.
+
+Initial compile qualification caught an expanded global palette load in a CPU branch delay slot; it was moved outside the slot before any handoff. Superseded pixel runs were cancelled by branch concurrency; none qualifies the final source. Current Build and Validate 37147168850 and Direct Backdrop 37147168864 must both complete at exact current head before delivery. Full fresh 84 images, default v2 manual recorder, trace v3 20 seconds/PI SRAM and final compiled contracts remain pending. Commercial material stays private, master unchanged, no PR/merge/release or hardware FPS claim.
+
 ## 2026-10-03 UTC — Actual A10 comparison; combined A11 candidate enters qualification
 
 Iron supplied the actual A10 20-second trace at the same title segment and explicitly requested a batch of multiple optimizations covering both iris and separate action microdips without fidelity loss. Exact A10 ELF/map decoder accepts geometry, checksum, counts and monotonicity: 20.033641 Count-domain seconds, 396/400 observations, overflow 0, 1,169 completed frames and 4,013 sections. A9 recorded 1,168/4,012 over 20.033143 seconds. Different arm alignment prevents treating these as a speed improvement or regression. A10 iris-containing interval records 39.58 FPS, explicit RSP wait 31.4%, SP running 90.3%; later dips include 58.30/58.31/56.33 FPS with no sampled explicit RSP wait. Hidden VRAM semaphore waits are still included in CPU-other. Non-atomic overlay-unknown RSP PCs are not exact routine cost attribution. Original SAVs, private arrays and guest hashes stay private.

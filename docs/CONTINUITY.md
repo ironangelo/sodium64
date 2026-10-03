@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A3 native 60 FPS recovered; A4 gameplay diagnosis and neutral-math qualification in progress
+
+Iron's three new console videos and private diagnostic save independently reviewed. A3 diagnostic TIME LIMIT 20.029s is healthy, CPU RSP wait falls from A2's ~73–76% after iris to essentially zero on title/demo. Most intervals ~59–60 FPS, iris intervals 53.42 and 41.56 FPS before recovery. Normal cave/outdoor gameplay video shows ~60 FPS, but new-game message and world map are sustained ~18–19 FPS; returning to map reproduces it. Video menu explicitly confirms MEDIUM, frameskip0, audioON, APU underclockOFF. No universal/stable60 claim. Normal save is ordinary guest SRAM, not S64D and cannot identify live PPU state.
+
+A4 development ecb259e3e71acd8055a65b6179d5224c27e8d1d6 on isolated phase4/gate-c-a4-gameplay-capture; master untouched, no PR/merge. Generic exact identity admission under no Main clipping: math prevented everywhere; +/- zero fixed with HALF off; or Sub-selected/TS=0 and zero fallback (HALF suppressed on absent Sub). Other states and prior direct backdrop policy remain. Added five original full-image fixtures and compiled admission counterexamples; qualification pending, NOT delivered yet. These are generic opportunities, not yet confirmed to be the world-map configuration.
+
+Native diagnostic now stays dormant until N64 Start at a completed-frame boundary, then captures20s. N64 A continues mapping SNES Start; N64 Start is only measurement trigger, settings locked Medium. Timer and wait watchdogs dormant before arm; new one-shot compiled CPU tests cover register/guest SRAM/Count-wrap preservation. S64D v2 retains1024 PCs +64 live PPU/geometry/policy samples, full final halted DMEM/IMEM and per-second CPU/RSP/RDP/progress; decoder supports v1/v2 and labels live PPU samples non-atomic. Need actual captures on slow map and new-game message to assign their remaining bottleneck. All provided videos/saves, extracted data and wrappers remain private, never in public repo/Actions.
+
 ## 2026-10-02 UTC — IMPORTANT SETTINGS CORRECTION: A2 and A3 diagnostic use MEDIUM, not MAX
 
 Iron correctly challenged the previous MAX instruction. Independently inspected the qualified source src/menu.S and src/native_diag.S: precision_opts order is LOWER, LOW, MEDIUM, HIGH, HIGHER, MAX; precision_set stores the option byte offset (index * 4). Consequently raw value 8 = MEDIUM, and MAX = 20. native_diag_init writes 8. A2's measured save reports 8 and A3's unchanged diagnostic also sets 8; both are MEDIUM. Normal build default is likewise MEDIUM. Prior statements/instructions equating MAX with 8 are erroneous.

@@ -2,6 +2,14 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A5 Donut Plains performance recovers after Yellow Switch; same normal ROM/settings
+
+Iron adds console observations at2026-10-03T03:17 UTC: after the earlier Donut Plains~20 FPS and path-reveal~20 reports, entered Yellow Switch Palace, played/completed it and activated yellow blocks. On return, the map-wide flying-yellow-block animation ran approximately50 FPS; the save-confirmation dialog fell to approximately30 or20 FPS. Chose save; afterward the same Donut Plains map ran60 FPS. No ROM change or settings change; only continued playing. All observations are user-reported, no matching new video/save received yet.
+
+This materially narrows the earlier report: Donut Plains is not uniformly20 FPS. Cost is state-dependent across switch/path/dialogue/transitions, and the later60 state must not be substituted for the earlier slow epoch when diagnosing. Fast/general admission changing with render state, residual/invisible high-palette OAM candidates, changed math/backdrop/layer/window state or transient section count remain hypotheses, not established causes. A5 still deliberately rejects potentially math-capable quads unless it can prove them harmless. Do not claim a specific sprite/register bug or disable legitimate arithmetic without captured evidence.
+
+Capture guidance should adapt: existing A5 diag is sufficient; if slow state returns, arm within that slow state and retain a distinct save/video. A capture of the now60 Donut state is a useful control but cannot explain the prior20 state by itself. Do not ask Iron to replay the Switch solely to reproduce this before a new slow occurrence. Avoid promising permanent map60 or a global fix based on one recovery. Perfect visual fidelity remains Iron's reported requirement/observation; performance is the current debt. No code mutation from this observation.
+
 ## 2026-10-03 UTC — A5 additional console scenes still~20 FPS; map success is state-dependent
 
 Iron continues testing A5 normal and reports perfect visual fidelity but approximately20 FPS upon arriving at the Donut Plains map via Yellow Switch, with moving clouds, circling ghost-house sprite and animated water. Also approximately20 FPS during the Yoshi's Island route-reveal animation opening the path toward Yellow Switch. MEDIUM and MAX behave the same in both slow scenes. No diagnostic save/video for these scenes received yet. Earlier60 FPS reports apply to the initially tested map and Welcome; do not generalize to all overworld maps/transitions.

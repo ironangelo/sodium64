@@ -617,6 +617,7 @@ dpal_update_begin:
     sllv t3, t3, t2
     and t6, t1, t3
     bnez t6, dpal_update_needed
+    nop
     lbu t6, dpal_brightness(t2)
     beq t0, t6, dpal_update_end
     nop

@@ -86,6 +86,12 @@ hcomp_fast_color_selector:
     andi t0, t0, 0x10
     beqz t0, hcomp_fast_direct
     nop
+    // The Main bank just rebuilt its OBJ cache only on this dirty flag.
+    // Without it, cached Y/size may belong to older OBSEL/FB settings.
+    lbu t0, STAT_FLAGS
+    andi t0, t0, 0x40
+    beqz t0, hcomp_fast_return
+    nop
     // OBJ palettes0..3 never participate in color math. Scan the current
     // coherent OAM epoch, conservatively rejecting every high-palette OBJ
     // except one wholly above the frame under the renderer's own Y-wrap

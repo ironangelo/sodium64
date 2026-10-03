@@ -148,11 +148,11 @@ def main():
     # only a quad with every row strictly negative is certified harmless.
     heights=((8,16),(8,32),(8,64),(16,32),(16,64),(32,64),(32,64),(32,32))
     obj_cases=0
-    def obj_case(index,y,palette,size_mode,large,fb,queue=0,enabled=True,second=False):
+    def obj_case(index,y,palette,size_mode,large,fb,queue=0,enabled=True,second=False,fresh=True):
         nonlocal obj_cases
         d=bytearray(data);d[0x840:0xa60]=bytes(0x220)
         d[0xbb2]=size_mode<<5;d[0xbb7]=3;d[0xbb8]=0x30;d[0xbbd]=0
-        d[0xbba]=0x11 if enabled else 1;d[0xbbe]=0
+        d[0xbba]=0x11 if enabled else 1;d[0xbbe]=0x40 if fresh else 0
         d[0xba8:0xbaa]=bytes(2);d[0xba6:0xba8]=b'\x00\x3e';put(d,0xecc,0)
         put(d,0xbc8,fb if queue==0 else 8);put(d,0xbcc,fb if queue==4 else 16)
         put(d,0x840+index*4,(y<<24)|(127<<16)|(palette<<9))
@@ -163,8 +163,8 @@ def main():
         first_row=y-256 if y>=256-2*fb else y
         quad_rows=range(first_row,first_row+heights[size_mode][int(large)])
         potentially_math=enabled and (palette>=4 and any(row>=0 for row in quad_rows) or second)
-        want=0 if potentially_math else 2
-        assert word(d,0xef0)==want,(index,y,palette,size_mode,large,fb,queue,enabled,second,word(d,0xef0),want)
+        want=0 if potentially_math or enabled and not fresh else 2
+        assert word(d,0xef0)==want,(index,y,palette,size_mode,large,fb,queue,enabled,second,fresh,word(d,0xef0),want)
         assert d[0x840:0xa60]==before and d[0xbb7:0xbb9]==b'\x03\x30'
         assert r[26:30]==[13,224,0xcafe,queue] and r[25]==0x1768
         obj_cases+=1
@@ -185,6 +185,13 @@ def main():
     for palette in range(8):
       for enabled in (False,True):
        obj_case(0,240,palette,0,False,8,enabled=enabled,second=True)
+    # Current OAM alone cannot certify a cache built with older size/Y-wrap.
+    # Even low palettes or above-frame small quads stay general until rebuild.
+    for palette in (0,4):
+      for mode in range(8):
+       for fb in (0,8,16):
+        for enabled in (False,True):
+         obj_case(0,240,palette,mode,False,fb,enabled=enabled,fresh=False)
     masks=0
     randoms=random.Random(9126)
     all_bounds=[(0,255,0,0),(255,255,0,0),(0,0,255,255),(200,100,0,0),

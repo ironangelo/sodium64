@@ -56,6 +56,17 @@ def build_obj(case):
     # Red opaque Main atx0..63, transparent Main over green Sub elsewhere.
     for tile in range(32):
         rom[0x2000+16*tile:0x2010+16*tile]=bytes((255 if tile<8 else 0,0))*8
+    # Deliver an unchanged high-OAM byte each NMI, just as a normal sprite
+    # upload does. This proves the tested cache was rebuilt with current
+    # OBSEL/Y-wrap settings; the scalar suite separately rejects stale caches.
+    # Keep the original NMI body, counter and vector at$8200 intact.
+    end=rom.index(bytes((0x68,0x40)),0x200,0x240)
+    rom[end:end+5]=bytes((0x20,0x00,0x86,0x68,0x40))
+    refresh=Assembler()
+    for value,address in ((0,0x2102),(1,0x2103),(high[0],0x2104)):
+        lda_sta_abs(refresh,value,address)
+    refresh.emit(0x60)
+    rom[0x600:0x600+len(refresh.code)]=refresh.finish()
     rom[0x7fc0:0x7fd5]=('S64 '+case).encode()[:21].ljust(21,b' ')
     finalize_checksum(rom);assert len(rom)==32768
     return bytes(rom)

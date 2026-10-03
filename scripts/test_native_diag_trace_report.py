@@ -36,6 +36,17 @@ def checksum(b):
     return b
 
 class TraceTests(unittest.TestCase):
+    def test_vram_wait_subset_extension(self):
+        b=make_blob();struct.pack_into('>2I',b,HEADER+0x138,0x56525731,0)
+        struct.pack_into('>20H',b,HEADER+0x140,*range(20))
+        r,_=parse(b)
+        self.assertEqual(r['header']['cpu_vram_wait_subset_total'],190)
+        self.assertEqual(r['seconds'][-1]['cpu_vram_wait_subset'],19)
+        self.assertTrue(r['header']['cpu_other_includes_vram_wait'])
+    def test_vram_wait_cannot_exceed_other(self):
+        b=make_blob();struct.pack_into('>2I',b,HEADER+0x138,0x56525731,0)
+        struct.pack_into('>H',b,HEADER+0x140,65535)
+        with self.assertRaisesRegex(ValueError,'VRAM wait'):parse(b)
     def test_first_and_last_and_separated_costs_survive(self):
         r,_=parse(make_blob());self.assertEqual(len(r['events']),400)
         self.assertEqual(r['events'][0]['ppu_live_sample']['window_bounds'],[0,255,0,255])

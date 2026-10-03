@@ -219,6 +219,17 @@ def parse_trace(blob, h, order):
     if sum(row['samples'] for row in seconds)+partial[0]!=h['sample_count']:
         raise ValueError('whole-interval IRQ sample totals disagree')
     h['partial_window']=dict(zip(SECOND_FIELDS[5:14],partial))
+    marker,tail=struct.unpack_from('>2I',blob,HEADER+0x138)
+    if marker==0x56525731:
+        waits=struct.unpack_from('>20H',blob,HEADER+0x140)
+        for i,row in enumerate(seconds):
+            if waits[i]>row['cpu_other']:raise ValueError('VRAM wait exceeds CPU-other')
+            row['cpu_vram_wait_subset']=waits[i]
+        if tail>h['partial_window']['cpu_other']:raise ValueError('partial VRAM wait exceeds CPU-other')
+        h['partial_window']['cpu_vram_wait_subset']=tail
+        h['cpu_vram_wait_subset_total']=sum(waits[:len(seconds)])+tail
+        h['cpu_other_includes_vram_wait']=True
+        h['vram_wait_extension']='VRW1'
     # Each stored EPC has its actual IRQ ordinal. Bound its time by neighboring
     # 20 Hz observations instead of inventing exact per-EPC Count timestamps.
     timeline=[];j=0

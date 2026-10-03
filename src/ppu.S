@@ -99,6 +99,9 @@ vram: .hword 0:0x8000
 cgram: .hword 0:0x100
 oam: .byte 0:0x220
 vram_table: .byte 0:0x400
+vram_publish_full: .byte 1 // Boot zeroes must reach RDRAM before the first DMA.
+dpal_dirty: .byte 3 // Independent validity of the two alternating palette queues.
+dpal_brightness: .byte 255, 255
 
 .align 4
 section_ptr: .word SECTION_QUEUE1
@@ -604,8 +607,24 @@ skip_reset:
     sw t0, section_ptr
     sw t1, oam_ptr
 
-    // Set initial values for palette conversion
+    // Reuse a queue only when both its CGRAM and brightness remain current.
+    // Raster CGRAM epoch capture is independent and always remains active.
+dpal_update_begin:
     lbu t0, brightness
+    srl t2, t5, 2
+    lbu t1, dpal_dirty
+    li t3, 1
+    sllv t3, t3, t2
+    and t6, t1, t3
+    bnez t6, dpal_update_needed
+    lbu t6, dpal_brightness(t2)
+    beq t0, t6, dpal_update_end
+    nop
+dpal_update_needed:
+    sb t0, dpal_brightness(t2)
+    nor t3, t3, zero
+    and t1, t1, t3
+    sb t1, dpal_dirty
     lw v1, pal_queues(t5)
     addi v1, v1, 0x7F8
     li t6, 0x1FE
@@ -643,8 +662,14 @@ update_dpal:
     addi t6, t6, -2
     bnez t6, update_dpal
     addi v1, v1, -8
+dpal_update_end:
 
-    // Reset and copy the VRAM dirty table to the queue for the next frame
+    // Hand off the unchanged dirty table and publish only changed 512-byte
+    // VRAM groups. Every guest VRAM writer marks its 64-byte block. The first
+    // handoff additionally publishes initialized zeroes, even for clean groups.
+vram_flush_begin:
+    lbu t6, vram_publish_full
+    la v1, vram
     la t0, vram_table
     lw t1, dirty_queues(t5)
     li t2, 0x400
@@ -654,24 +679,30 @@ dirty_loop:
     sd zero, (t0)
     addi t0, t0, 8
     sd t3, (t1)
+    or t3, t3, t6
+    beqz t3, vram_clean_group
+    nop
+    li t3, 4
+vram_loop:
+    cache 0x19, 0x00(v1)
+    cache 0x19, 0x10(v1)
+    cache 0x19, 0x20(v1)
+    cache 0x19, 0x30(v1)
+    cache 0x19, 0x40(v1)
+    cache 0x19, 0x50(v1)
+    cache 0x19, 0x60(v1)
+    cache 0x19, 0x70(v1)
+    addi t3, t3, -1
+    bnez t3, vram_loop
+    addi v1, v1, 0x80
+    b vram_group_done
+    nop
+vram_clean_group:
+    addi v1, v1, 512
+vram_group_done:
     bnez t2, dirty_loop
     addi t1, t1, 8
-
-    // Ensure cached VRAM is written back to memory
-vram_flush_begin:
-    la t0, vram
-    add t1, t0, 0xFF80
-vram_loop:
-    cache 0x19, 0x00(t0)
-    cache 0x19, 0x10(t0)
-    cache 0x19, 0x20(t0)
-    cache 0x19, 0x30(t0)
-    cache 0x19, 0x40(t0)
-    cache 0x19, 0x50(t0)
-    cache 0x19, 0x60(t0)
-    cache 0x19, 0x70(t0)
-    bne t0, t1, vram_loop
-    addi t0, t0, 0x80
+    sb zero, vram_publish_full
 vram_flush_end:
 
 #ifdef SODIUM64_NATIVE_DIAG
@@ -1435,6 +1466,10 @@ write_vmdatal: // a1: value
     lw t0, 0x001C(t1)
     bnez t0, write_vmdatal
     nop
+#ifdef SODIUM64_NATIVE_DIAG
+.globl native_diag_vram_low_end
+native_diag_vram_low_end:
+#endif
     sw zero, 0x001C(t1)
 
     // Write to the low VRAM byte at the current address
@@ -1471,6 +1506,10 @@ write_vmdatah: // a1: value
     lw t0, 0x001C(t1)
     bnez t0, write_vmdatah
     nop
+#ifdef SODIUM64_NATIVE_DIAG
+.globl native_diag_vram_high_end
+native_diag_vram_high_end:
+#endif
     sw zero, 0x001C(t1)
 
     // Write to the high VRAM byte at the current address
@@ -1624,6 +1663,9 @@ cg_high:
     sll t2, a1, 8
     or t1, t1, t2
     sh t1, cgram(t0)
+    li t2, 3
+    sb t2, dpal_dirty
+dpal_commit_invalidated:
 
     // VBlank writes fold into the next frame's base snapshot. During the
     // active frame, append every complete color commit before sectioning.

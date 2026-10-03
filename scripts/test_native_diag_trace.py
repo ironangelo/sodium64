@@ -84,7 +84,7 @@ def main():
         cases+=1
     for index in (0,1,19,20,21):
         m=base.copy();put(m,state,0xffff0000);put(m,state+44,index);put(m,state+24,59);put(m,state+56,75)
-        put(m,sram+0x212c,0);counts=(350,21,10,40,279,320,100,300,4)
+        put(m,sram+0x212c,0);put(m,state+128,17);counts=(350,21,10,40,279,320,100,300,4)
         for i,v in enumerate(counts):put(m,state+64+i*4,v)
         r=[0]*32;r[8]=s['native_diag_state'];r[9]=0x2cb8170;r[31]=0xdead0000
         execute(m,s['native_diag_trace_second'],r,{})
@@ -93,6 +93,7 @@ def main():
             assert struct.unpack('>3I',b[:12])==((0x2cb8170-0xffff0000)&0xffffffff,59,75)
             assert struct.unpack('>9H',b[12:30])==counts and int.from_bytes(b[30:],'big')==index+1
             assert all(get(m,state+64+i*4)==0 for i in range(9))
+            assert get(m,sram+0x2140+index*2,2)==17 and get(m,state+128)==0
         else:assert get(m,sram+0x212c)==4 and get(m,state+44)==index
         cases+=1
     for ordinal in (0,1,7,8,1023,7152,8192):
@@ -106,6 +107,17 @@ def main():
         assert get(m,state+12)==cursor+(4 if kept else 0)
         assert get(m,sram+0x2200+(cursor%4096))==(epc if kept else 0xabcdef12)
         assert get(m,sram+0x212c)==(2 if ordinal%8==0 and cursor==4096 else 0)
+        cases+=1
+    # Every instruction in the two 16-byte semaphore loops is classified.
+    assert s['native_diag_vram_low_end']-s['write_vmdatal']==16
+    assert s['native_diag_vram_high_end']-s['write_vmdatah']==16
+    for entry in (s['write_vmdatal'],s['write_vmdatah']):
+      for delta in (-4,0,4,8,12,16):
+        m=base.copy();put(m,state+128,0);r=[0x80000100+i for i in range(32)];r[0]=0;before=r.copy()
+        execute(m,s['native_diag_classify_vram'],r,{14:entry+delta},s['native_diag_bucket_add'])
+        assert get(m,state+128)==int(0<=delta<16)
+        assert all(r[i]==before[i] for i in set(range(32))-{26,27})
+        assert r[27]==s['native_diag_state']+80
         cases+=1
     # Exercise the compiled terminal path through its body checksum boundary.
     # All populated guest/PC/event/second regions must survive finalization;

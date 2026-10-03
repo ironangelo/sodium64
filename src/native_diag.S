@@ -30,7 +30,7 @@
 .globl native_diag_ready_text, native_diag_active_text
 .data
 .align 5
-native_diag_state: .word 0:32
+native_diag_state: .word 0:34
 .align 5
 native_diag_irq_save: .dword 0:12
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
@@ -69,7 +69,7 @@ native_diag_init:
     bne t0, t1, 2b
     nop
     la t0, native_diag_state
-    la t1, native_diag_state + 128
+    la t1, native_diag_state + 136
 3:  sw zero, (t0)
     addiu t0, t0, 4
     bne t0, t1, 3b
@@ -102,7 +102,7 @@ native_diag_arm:
     lw t1, 112(t0)
     bnez t1, native_diag_arm_return
     nop
-    la t1, native_diag_state + 128
+    la t1, native_diag_state + 136
 native_diag_arm_clear:
     sw zero, (t0)
     addiu t0, t0, 4
@@ -210,6 +210,29 @@ native_diag_sample_bookkeeping:
     sltu k0, k0, k1
     bnez k0, native_diag_bucket_jit
     nop
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // VRAM semaphore waits remain a subset of CPU-other for v3 compatibility.
+    // Classify EPC only: reading SP_SEMAPHORE here would change ownership.
+native_diag_classify_vram:
+    mfc0 k0, $14
+    la k1, write_vmdatal
+    subu k0, k0, k1
+    sltiu k0, k0, 16
+    bnez k0, native_diag_bucket_vram
+    nop
+    mfc0 k0, $14
+    la k1, write_vmdatah
+    subu k0, k0, k1
+    sltiu k0, k0, 16
+    beqz k0, native_diag_vram_counted
+    nop
+native_diag_bucket_vram:
+    la k1, native_diag_state + 128
+    lw k0, (k1)
+    addiu k0, k0, 1
+    sw k0, (k1)
+native_diag_vram_counted:
+#endif
     la k1, native_diag_state + 80
     b native_diag_bucket_add
     nop
@@ -630,6 +653,12 @@ native_diag_trace_second:
     sltiu t3, t2, 20
     beqz t3, native_diag_trace_second_full
     nop
+    sll t3, t2, 1
+    la t4, DHDR + 0x140
+    addu t4, t4, t3
+    lw t3, 128(t0)
+    sh t3, (t4)
+    sw zero, 128(t0)
     sll t3, t2, 5
     la t4, DSECONDS
     addu t4, t4, t3
@@ -872,6 +901,10 @@ native_diag_partial_copy:
     sw t0, 0x130(s0)
     li t0, 32
     sw t0, 0x134(s0)
+    li t0, 0x56525731 // VRW1: optional per-second VRAM wait subset extension.
+    sw t0, 0x138(s0)
+    lw t0, 128(s1)
+    sw t0, 0x13C(s0)
 #endif
     // Read PC only AFTER HALT is acknowledged. All these waits are bounded.
     li t0, 2

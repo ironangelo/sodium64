@@ -49,6 +49,7 @@ jobs:
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp*.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
           python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_bg_span_seek.py build/src/rsp_main.elf --output bg-span-seek-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
@@ -268,6 +269,7 @@ jobs:
             mode7-compiled.json
             bg-span-seek-compiled.json
             resident-admit-compiled.json
+            depth-policy-compiled.json
             vram-flush-compiled.json
             captures/
             ares-version.txt
@@ -276,5 +278,6 @@ jobs:
             default-native-qualified/
             native-trace-build.log
             native-trace-compiled.json
+
 
 

@@ -1339,7 +1339,7 @@ hcomp_obj_mirror:
     andi a0, t1, 0x0800
     srl a0, a0, 8
     addi a0, a0, HCOMP_OBJ_DEPTH_CMDS
-    jal rdp_send
+    jal hcomp_depth_send
     addi a1, a0, 8
     j shared_mirror
     move ra, v1
@@ -1347,7 +1347,7 @@ hcomp_obj_mirror:
 hcomp_mode7_dispatch:
     // Mode7's one BG is BG1; avoid inheriting a previous layer's depth tag.
     li a0, HCOMP_PROOF_BG_DEPTH_CMDS
-    jal rdp_send
+    jal hcomp_depth_send
     addi a1, a0, 8
     b overlay_load_mode7
     li t9, 0x1788
@@ -1402,8 +1402,16 @@ bg_window_depth:
     addi a0, a0, HCOMP_PROOF_BG_DEPTH_CMDS
     addi a1, a0, 8
 bg_window_depth_send:
-    j rdp_send
+    j hcomp_depth_send
     move ra, v1
+
+// Raw/direct bands disable Z; only the general compositor uses depth tags.
+hcomp_depth_send:
+    lw t0, HCOMP_BAND_RAW
+    bnez t0, ret_jump
+    nop
+    j rdp_send
+    nop
 
     // Shared window helper and retained suffix remain at their audited ABI.
 .org 0xCC0

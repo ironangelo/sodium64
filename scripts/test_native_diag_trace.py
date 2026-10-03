@@ -4,10 +4,12 @@ import argparse,json,struct
 from pathlib import Path
 from test_native_diag_arm import load_elf
 
-def execute(memory,pc,regs,cp,stop=0xdead0000):
+def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False):
     pending=None
     def read(a,n):return int.from_bytes(bytes(memory.get((a+i)&0x1fffffff,0) for i in range(n)),'big')
     def write(a,v,n):
+        if terminal_rcp and (a&0x1fffffff)==0x04040010 and v==2:
+            v=1 # SET_HALT is acknowledged immediately by this test device.
         for i,c in enumerate((v&((1<<(n*8))-1)).to_bytes(n,'big')):memory[(a+i)&0x1fffffff]=c
     for step in range(2000):
         if pc==stop:return step
@@ -105,9 +107,22 @@ def main():
         assert get(m,sram+0x2200+(cursor%4096))==(epc if kept else 0xabcdef12)
         assert get(m,sram+0x212c)==(2 if ordinal%8==0 and cursor==4096 else 0)
         cases+=1
+    # Exercise the compiled terminal path through its body checksum boundary.
+    # All populated guest/PC/event/second regions must survive finalization;
+    # only the dedicated header is writable. This catches legacy v2 palette,
+    # GPR or RSP-memory copies that would overlap the new trace geometry.
+    m=base.copy();payload=bytes((i*43+7)&255 for i in range(0x8000))
+    m.update((sram+i,v) for i,v in enumerate(payload));put(m,state,0)
+    for off in (0x18,0x14):put(m,0x04040000+off,0)
+    r=[0]*32;r[24]=2
+    execute(m,s['native_diag_finalize'],r,{9:937600000,12:0x8000,13:0,14:0x80012340},
+            s['native_diag_sum_guest'],terminal_rcp=True)
+    after=bytes(m[sram+i] for i in range(0x8000))
+    assert after[:0x2000]==payload[:0x2000] and after[0x2200:]==payload[0x2200:]
+    cases+=1
     proof=dict(passed=True,cases=cases,
       append_only=True,overflow_marked=True,guest_sram_preserved=True,irq_registers_preserved=True,
-      count_wrap=True,compact_seconds=True,native_fps_authority=False)
+      count_wrap=True,compact_seconds=True,terminal_trace_preserved=True,native_fps_authority=False)
     if a.json_output:a.json_output.write_text(json.dumps(proof,indent=2)+'\n')
     print('NATIVE_DIAG_TRACE_COMPILED PASS',json.dumps(proof))
 

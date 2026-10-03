@@ -940,6 +940,8 @@ native_diag_rsp_copy:
     bnez t2, native_diag_rsp_copy
     nop
 #endif
+#ifndef SODIUM64_NATIVE_DIAG_TRACE
+    // v2 terminal palette storage overlaps v3 whole-interval second records.
     la t0, cgram
     la t1, DBASE + 0x7E00
     li t2, 512
@@ -951,6 +953,7 @@ native_diag_cgram_copy:
     addiu t2, t2, -4
     bnez t2, native_diag_cgram_copy
     nop
+#endif
     // Body integrity checksum excludes the 512-byte header committed last.
     la t0, DBASE
     la t1, DHDR

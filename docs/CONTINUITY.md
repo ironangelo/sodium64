@@ -2,6 +2,22 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A7 implementation checkpoint, compiled proofs pass; image/manual qualification pending
+
+Isolated active branch now5b2a3b61a62fe0b548721e7c7ce0aef94ce8f9b0; runtime code last changed6a22494ab5475ce8fcae8d7864097a8fec6b8b5f. Later5b2a3b6 only repairs two CI commands accidentally folded into one YAML scalar. No master change, PR or merge.
+
+Implemented general fixed-color direct composition and Main/Sub Mode7 windows. A new1000-byte window slot owns span iteration; existing affine slot keeps its fixed entry and uses four-row packing. Main resident4KiB text is byte-identical to A6. The Mode7 file's unused prefix/suffix are unchanged; those legacy copies were already different from Main, and are not the installed resident code. Effective TS lives in the unused EC9 byte and does not alter guest TS.
+
+Compiled Mode7 window proof passes3584 combinations /3728 visible spans, both semantic screens and all selectors/logics/endpoints. Exact private A6 Iggy register replay passes: A6 policy0 /<=8-row bands changes to A7 policy2 /167-row whole-section composition. Empty selected BG1 window yields one whole visible span; full selected window yields no affine submission. PPU controls and OAM remain unchanged. This is register/protocol replay, not full guest execution or a hardware FPS measurement.
+
+General CPU VRAM publication still emits4096 identical Hit_Writeback_D cache operations in the same address order. Grouping eight lines per loop reduces the body from8192 to5120 instructions/frame; compiled exact-address proof passes in native/profile and pixel jobs. This small optimization is relevant to frame margin, not proof that the title iris is now60 FPS.
+
+Qualification runtime6a22494: pixels run37102379592 currently testing76 independently authored full-frame fixtures plus manual recorder. Final build run37102592543 on5b2a3b6 is pending/in progress; earlier normal run37102379556 failed only on the YAML command scalar after compiled renderer proofs passed (native/profile successful). Do not hand off before all image/recorder checks and final template identity checks succeed. Prepared private A7 assembly/LEEME exist, not delivered. Latest normal A6 SRAM should be imported exactly. Diagnostic A7 startsMAX,skip0,audioON,underclockOFF and waits indefinitely before manual N64 Start.
+
+Iron asks whether this may help Mario Kart (~15 FPS and distorted map/track in original). Clarified: benefits apply if the same predicates are used; this patch addresses Mode7 clipping/composition, not yet perspective/track geometry or a measured race throughput fix. Keep immediate objective Iggy; Mario Kart remains an unmeasured later target. Title iris and brief enemy/action dips remain unconfirmed until current-version native captures.
+
+Commercial files/state/hash/private wrappers remain outside GitHub and CI.
+
 ## 2026-10-03 UTC — A7 Iggy native evidence and general Mode7/window fixes IN PROGRESS
 
 New private A6 video and normal/manual diagnostic saves were inspected independently, using the exact A6 CPU ELF/map. The native TIME_LIMIT capture is complete: 20.044 seconds, 548 submitted/completed frames, 1200 VI; approximately 60 FPS before the boss and sustained 19–20 FPS during it. Later seconds spend about 65–73% of sampled CPU time waiting for RSP rendering; observer overhead is about 0.244%. This identifies a renderer throughput issue, not a freeze. The terminal hcomp_math overlay is a halt snapshot and does not independently assign its exact live cost.

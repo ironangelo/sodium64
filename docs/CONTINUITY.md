@@ -5,6 +5,18 @@ Canonical live handoff for `ironangelo/sodium64`.
 
 
 
+## 2026-10-03 UTC — A10 normal hardware feedback: target iris and microdips unchanged
+
+Iron tested the delivered A10 normal wrapper on the target N64 intro and reports no observable improvement: the same FPS-drop gaps occur in the same places as before. Exact numerical A10 timeline, new diagnostic SAV and aligned video have not yet been supplied. Treat this as negative hardware feedback for the target objective, not a confirmed FPS gain. Potential benefits in other scenes remain unmeasured hypotheses. Compiled equivalence and unchanged image proofs establish correctness of the restricted admission change, not a native speedup.
+
+The user asks whether the A10 SAV would help and whether diagnostic capability is already exhausted. The exact A10 diag-trace20 SAV is useful for comparison with actual A9 (same approximate arm point/settings), particularly section/frame progress, RSP/RDP occupancy, explicit waits and bounded CPU timeline. A normal-wrapper SRAM save is game progress and is not the timing trace required here. If only normal was tried, the already delivered A10 diagnostic can capture the same interval; no new ROM is needed for that comparison.
+
+Source review confirms two important blind spots: all-IRQ wait classification handles only rsp_wait and frame_wait ranges, while the VRAM semaphore loops in write_vmdatal/write_vmdatah fall into CPU-other. Retained EPCs may reveal those loops but are sparse (~one in eight IRQs). The sampled live RSP PC lacks overlay identity; shared IMEM slot addresses cannot be attributed to FAST/HCOMP/math/mode7 routines reliably. A9 live samples matching control predicates do not prove every section used A10's resident route.
+
+Diagnostic improvements remain possible: measure resident-admission hits versus fallback and actual bank-load counts; distinguish VRAM semaphore occupancy from productive CPU/APU/DSP work; attach validated bank/phase identity to RSP observations; and retain frame-duration/slow-episode detail rather than only ~one-second averages. These are proposed next measurements, not implemented or qualified claims. Preserve the 20-second overall interval, append-only capacity guards, commercial SRAM ownership and explicit overflow reporting. If higher-density episode detail needs a separate capture or repartitioned bounded storage, make that tradeoff explicit; no claim that arbitrarily more detail fits the existing 32 KiB SAV or has zero observer cost.
+
+Next step is analyze the actual A10 trace before choosing another performance patch. Design any targeted diagnostic around the unresolved attribution, then qualify its observer cost, state preservation and entire save path; do not infer exact RSP routine cost from current SPPC alone. No A11 code/build or 60-FPS resolution exists yet. Source branch remains e2b1c89a836b197c93419b498c738309c2e05b6a. Commercial artifacts stay private. Master unchanged; no PR/merge/release.
+
 ## 2026-10-03 UTC — A10 resident admission fully qualified and private hardware handoff ready
 
 Source `e2b1c89a836b197c93419b498c738309c2e05b6a` on isolated `phase4/gate-c-a4-gameplay-capture` is qualified. Build and Validate run 37138749515 passes all four builds and emulator smoke; release is skipped. Direct Backdrop run 37138749457 succeeds at this exact head: 84 fresh whole-frame images, compact guards, default-v2 recorder and whole-interval-v3 recorder. Downloaded artifact integrity and every frame hash are checked. All 4,816,896 checked pixels and the 84 resulting images match the previously qualified A9 suite; original SRAM import/PI save also passes. These synthetic/original-guest tests are not native commercial-game FPS authority.

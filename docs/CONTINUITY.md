@@ -2,6 +2,12 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A5 console breakthrough: world map60 FPS at MEDIUM and MAX
+
+At2026-10-03T02:52 UTC, Iron reports the A5 normal private wrapper world map displays60 FPS with both Frame precision MEDIUM and MAX. This follows Welcome60 FPS at MAX and title/Mario-Yoshi loop/iris reported at equal speed between both settings. The primary sustained A4 map~18 FPS debt is now resolved in this observed console test. Attribution is consistent with the generic Mode0/OBJ direct-composition optimization, already qualified with original full-frame pixel/guard tests and private actual-map compiled admission. These are user console observations; new video/save has not yet been received for independent measurement. Duration/stability across map transitions, other maps/stages, iris dips and occasional gameplay drops still require follow-up. Do not convert this success into an all-scenes/all-games60 FPS or complete Road1.0 claim.
+
+Keep the remaining A4/A5 comparison at MEDIUM/skip0/audioON/APUunderclockOFF. Manual diagnostic protocol remains navigate to map, press N64Start,20s,TIME LIMIT,cart reset,preserve save/video. MAX performance on the tested map now has direct user feedback; no code mutation required from this report. Master unchanged; private commercial ROM/assets/saves/videos remain outside GitHub/Actions.
+
 ## 2026-10-03 UTC — First A5 console feedback: title loop and iris same speed at MAX and MEDIUM
 
 Iron is testing the A5 normal private wrapper and reports that the title/logo intro, Mario/Yoshi loop and iris run at the same speed with Frame precision MAX as with MEDIUM. This is an initial user-observed comparison; no new save/video or numeric FPS measurement received yet, and equal speed does not by itself confirm60 FPS. Additional console feedback from Iron at2026-10-03T02:51 UTC: new-game Welcome displays60 FPS at Frame precision MAX in the A5 normal wrapper. This numeric FPS is user-reported, without newly received video/save for independent verification. World map result is still pending. Iron is returning to MEDIUM for the remaining tests, preserving the A4/A5 baseline for world map, stages and return-to-map. No code/settings change requested or made. Await complete normal/map diagnostic feedback; stable60 everywhere and broader MAX fidelity/performance remain unclosed.

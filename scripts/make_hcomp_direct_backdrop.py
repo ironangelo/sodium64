@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Original direct-composition raster guests and independent pixel oracle."""
-CASES = ('fast-always','fast-inside','fast-xor','fast-edge','fast-empty',
+CASES = ('fast-always','fast-inside','fast-outside','fast-xor','fast-edge','fast-empty',
          'fast-invert','fast-sub-empty','fast-short','fast-iris-rows',
          'fast-identity-never','fast-identity-fixed-add','fast-identity-fixed-sub',
          'fast-identity-sub-empty-half','fast-identity-sub-empty-subhalf')
@@ -29,7 +29,7 @@ def build_direct(case):
     if case=='fast-sub-empty':set_store(rom,0x212d,2,0,count=2)
     selector,logic,bounds=setup(case)
     settings=((0,0x2121),(0,0x2122),(0,0x2122),
-              (2 if case=='fast-always' else 0x12,0x2130),
+              (2 if case=='fast-always' else 0x22 if case=='fast-outside' else 0x12,0x2130),
               (selector<<4,0x2125),(logic<<2,0x212b),
               *((v,0x2126+i) for i,v in enumerate(bounds)))
     if identity:
@@ -74,6 +74,7 @@ def expected_direct(case,x,y):
     if selector&10==10:
         selected=(one or two,one and two,one != two,one == two)[logic]
     else:selected=one if selector&2 else two if selector&8 else False
-    if case!='fast-always' and not selected:return 1
+    allowed=not selected if case=='fast-outside' else selected
+    if case!='fast-always' and not allowed:return 1
     present=case!='fast-sub-empty' and not (case=='fast-short' and (5<=y<13 or 37<=y<39))
     return 0x07c1 if present else 0x003f

@@ -102,7 +102,7 @@ def main():
             d[0xbbe]=0;d[0xba6:0xba8]=b'\x00\x3e';put(d,0xecc,0)
             r=[0xdead0000+i for i in range(32)];r[0]=0;r[26:30]=[13,224,0xcafe,4]
             run(code,d,0x3b0,r)
-            expected=1 if sel&0xc0==0 and (cg&63==0 or sel&0x30==0x30) else 2 if cg==0x20 and sel in (2,0x12) else 0
+            expected=1 if sel&0xc0==0 and (cg&63==0 or sel&0x30==0x30) else 2 if cg==0x20 and sel in (2,0x12,0x22) else 0
             assert word(d,0xef0)==expected,(cg,sel,word(d,0xef0),expected)
             assert r[26:30]==[13,224,0xcafe,4] and r[25]==0x1768
             admission+=1
@@ -136,7 +136,8 @@ def main():
     for bounds in all_bounds:
         for selector in range(16):
             for logic in range(4):
-                d=bytearray(data);d[0xbb7]=0x12;d[0xbb4]=selector<<4;d[0xbb6]=logic<<2
+              for mode in (0x12,0x22):
+                d=bytearray(data);d[0xbb7]=mode;d[0xbb4]=selector<<4;d[0xbb6]=logic<<2
                 d[0xbae:0xbb2]=bytes(bounds);d[0xe84:0xe8b]=b'\xff'*7
                 y,end=13,231
                 # Poison the prior Sub scissor; the fast bank must restore the
@@ -155,12 +156,12 @@ def main():
                         assert command>>32&0x3fff==end*4 and command&0x3fff==y*4
                         assert 12<=lo<hi<=268
                         for x in range(lo-12,hi-12):painted[x]=True
-                assert painted==[not selected(x,selector,logic,bounds) for x in range(256)],(selector,logic,bounds)
+                assert painted==[selected(x,selector,logic,bounds) != (mode==0x12) for x in range(256)],(mode,selector,logic,bounds)
                 assert not any(c>>56==0x2f and c&0x20 for c in lists),'proof Z enabled'
                 assert lists[-2]==0x3c080e10001c8241,'texture combiner not restored'
                 assert lists[-1]==int.from_bytes(d[0xc68:0xc70],'big'),'whole scissor not restored'
                 assert r[26:30]==[5,223,0xcafe,4] and r[23]==0x15 and r[25]==0x1370
-                assert d[0xec8]==1 and d[0xbb7]==0x12
+                assert d[0xec8]==1 and d[0xbb7]==mode
                 masks+=1
     geometry=0
     for y in range(8,248):

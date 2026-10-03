@@ -92,7 +92,7 @@ def main():
                 if args.case.startswith('fast-'):
                     want_cg=0x20;want_tm=1
                     want_ts=0 if args.case=='fast-sub-empty' else 2
-                    want_window=2 if args.case=='fast-always' else 0x12
+                    want_window=2 if args.case=='fast-always' else 0x22 if args.case=='fast-outside' else 0x12
                     if args.case.startswith('fast-identity-'):
                         from make_hcomp_direct_backdrop import identity_controls
                         want_window,want_cg,want_ts=identity_controls(args.case)

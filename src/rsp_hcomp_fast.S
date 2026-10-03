@@ -1,5 +1,5 @@
 /* Exact backdrop-only specialization. No game identity or content involved.
- * CGADSUB=20, CGWSEL=02/12, Main backdrop=black, normal nonblank rendering:
+ * CGADSUB=20, CGWSEL=02/12/22, Main backdrop=black, normal nonblank rendering:
  * opaque Main -> Main; backdrop -> Sub/fixed inside the allowed COLOR set,
  * otherwise black. Draw fixed+Sub, black out the prevented set, then Main.
  * This policy needs no compact Z/presence/math buffers or eight-row splits.
@@ -62,8 +62,9 @@ hcomp_fast_backdrop_probe:
     lhu t0, MAIN_COLOR
     bnez t0, hcomp_fast_return
     lbu t0, CGWSEL
-    // Mode 0 (always) and 1 (inside selected), with Sub operand and no clip.
-    andi t0, t0, 0xEF
+    // Always/inside/outside selected, with Sub operand and no Main clip.
+    // NEVER was admitted above as an identity operation.
+    andi t0, t0, 0xCF
     xori t0, t0, 2
     bnez t0, hcomp_fast_return
     nop
@@ -80,18 +81,20 @@ hcomp_fast_return:
 
 hcomp_fast_mask:
     lbu t0, CGWSEL
-    andi t0, t0, 0x10
+    andi t0, t0, 0x30
     beqz t0, hcomp_fast_main
     nop
-    // BG/OBJ overwrite the span scratch. Recompute the COLOR complement
+    // BG/OBJ overwrite the span scratch. Recompute the prevented COLOR set
     // from this epoch, including inversion, XOR/XNOR and reversed endpoints.
     lbu a0, WOBJSEL
     srl a0, a0, 4
     lbu a1, WOBJLOG
     srl a1, a1, 2
     andi a1, a1, 3
+    // Inside-math -> black complement; outside-math -> black selected set.
+    srl a2, t0, 5
     jal 0xA4001CE4
-    move a2, zero
+    andi a2, a2, 1
     beqz t7, hcomp_fast_main
     move a3, t7
     // Retire prior primitives before changing the combiner/primitive color.

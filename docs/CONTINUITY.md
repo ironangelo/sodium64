@@ -2,6 +2,12 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-03 UTC — A5 map optimization resumes; qualification tightened before handoff
+
+Resumed after session quota reset. User waived the unavailable normal2-minute video; continue from independently decoded native save and viewed diagnostic video. Runtime candidate765807c6963fc2ccf95adef8598b6139c1a3590e on isolated phase4/gate-c-a4-gameplay-capture passed original-guest whole-frame pixel/guard and manual recorder job37088106851. This is software image/recorder evidence, not console FPS qualification.
+
+Review found an additional cache-coherence counterexample: Main rebuilds normalized OBJ Y/size only when STAT_FLAGS&40. Current OBSEL/FB settings without that rebuild can disagree with cached quads. The local follow-up conservatively requires that fresh-cache flag for CGADSUB30 with Main OBJ enabled; existing CG20 and Main-OBJ-disabled admissions remain intact. Adds stale-cache counterexamples and original NMI unchanged-OAM writes for fresh-cache image cases. Actual private map samples and coherent terminal section have STAT_FLAGS40, so the captured map remains eligible. Follow-up commit/build/qualification pending; no private A5 handoff yet, no claim of60 FPS on N64, master/PR/merge untouched. Only original guests/emulator source/observational metadata public; commercial ROM, saves and extracted guest memory remain private.
+
 ## 2026-10-03 UTC — A4 console map capture identifies a conservative direct-composition opportunity
 
 Iron reports A4 new-game Welcome now60 FPS, most stages60 with occasional57, iris transient~30, world map still slow. Independently viewed the available61.277s diagnostic video: title60, Welcome60, map18, terminal CAPTURE SAVED/TIME LIMIT. Normal2-minute video failed materialization twice; not read and no claims from it. Both uploaded saves read locally/private: diagnostic is valid S64Dv2, normal is ordinary32768B guest SRAM without S64D. Two saves are expected because both normal and diagnostic wrappers use cartridge SRAM; only the diagnostic contains profiler records.

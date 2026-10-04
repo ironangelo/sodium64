@@ -1,3 +1,14 @@
+## 2026-10-04 — A13 candidate final source and palette harness compatibility
+
+- Candidate source is now `b4206144fefe1d77b05397be154115d6328a2965` on the isolated a5 branch. It incorporates the existing shared OBJ-row corrections without changing a4/master.
+- The first replacement run progressed past the new component tests, then stopped at the old `dpal_commit_invalidated` test-only symbol. Update the 24 palette invalidation cases to execute the real unchanged-color return / changed-color continuation, including closed-frame behavior. Locally, 52 VRAM publications, 272 palette conversions, and all 24 commits passed.
+- Minimize the new math admission check: VNE directly publishes nonzero resolved winner/window lanes; preceding winner comparisons clear VCO. Five instructions decide whether to omit channel arithmetic. Use a named compiled active-path label rather than a hard-coded instruction offset in its test. This check still adds work when math is active; only native comparisons can establish its net gain.
+- Exact-head CI: Build `37215187095`; full Gate `37215187161`. Trace Build succeeded with 28,672 complete OBJ progression cases, 6,144 CGRAM commit cases, 1,792 lane-mask cases, sparse JIT publication/reset and existing memory/renderer contracts. Normal/manual builds and full images are pending.
+- The full Gate missed its ares cache and is building the pinned N64 runtime; this is active qualification work, not an emulator freeze. No artifact delivery or hardware-fps claim until qualification completes.
+- A private packager requires both exact-head CI runs to succeed, 94 normal and 12 armed complete images, 20-second recorders, identical independently built binaries/symbols, and an explicit empty-template-only ZIP whitelist. It includes concise installation instructions, current build-tag settings, and a qualified assessment of the unresolved native performance goal.
+- The older frozen CGRAM producer/consumer source checks are milestone-specific: the typed producer test still passed, but consumer checks require an older producer-root or source anchor no longer present in A12 either. They are not substitutes for current compiled and full-image checks; do not loosen old proof assumptions to declare a pass.
+- Privacy and authorization unchanged: no commercial ROM/SAV/video/state uploaded, no master edit, PR, merge or release.
+
 ## 2026-10-04 — Shared-work candidate resumed after interrupted session; signed test-VM bounds repaired
 
 - User reported the interface remained “in process” for more than ten hours. The attached screenshot explicitly showed “Connection interrupted”; do not represent that duration as continuous agent computation. Source and CI records survived. No native A13 result exists yet.

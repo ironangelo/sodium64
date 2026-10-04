@@ -24,7 +24,7 @@ def main():
     ap.add_argument('cpu',type=Path);ap.add_argument('main_rsp',type=Path);ap.add_argument('mode7_rsp',type=Path)
     ap.add_argument('--output',type=Path);a=ap.parse_args()
     image,s=load_elf(a.cpu)
-    rng=random.Random(0x6516);cases=dict(epoch=0,branches=0,obj_rows=0,apu_reset=0,rom_cache=0,row_input=0,hdma_row_phase=0)
+    rng=random.Random(0x6516);cases=dict(epoch=0,branches=0,obj_rows=0,obj_progression=0,apu_reset=0,rom_cache=0,row_input=0,hdma_row_phase=0)
     for queue in (0xa03e7000,0xa03e7200):
         for line in (0,*range(1,242),255,65535):
             m=image.copy();lo=(queue-64)&0x1fffffff
@@ -171,6 +171,45 @@ def main():
                     assert (regs[26],regs[27],regs[30])==(start,end,y&0xffffffff)
                     if overlap:assert regs[15]==16
                     cases['obj_rows']+=1
+
+        # Exercise the real multi-row continuation, not just the clipping
+        # predicate. The first tile row is outside the section and is culled;
+        # the next row crosses into the section and must retain the object's
+        # X origin and character column while advancing exactly one tile row.
+        assert all(n in syms for n in ('next_objy','next_objx','hcomp_obj_row_done'))
+        for width in (8,16,32,64):
+            tiles=width//8
+            for xmirror in (False,True):
+                step=-8 if xmirror else 8
+                v0=(-width if xmirror else width)&0xffffffff
+                xorigin=96+width-8 if xmirror else 96
+                for gp,first_y in ((8,0),(-8,16)):
+                    d=bytearray(4096);struct.pack_into('>I',d,offset,16)
+                    regs=[0]*32
+                    regs[2]=v0;regs[16]=width;regs[17]=16;regs[18]=xorigin
+                    regs[20]=width;regs[21]=0x55;regs[22]=step&0xffffffff
+                    regs[26]=8;regs[27]=16;regs[28]=gp&0xffffffff;regs[30]=first_y
+                    rsp_execute(text,base,d,syms['next_objy'],{syms['next_objx']},regs)
+                    assert regs[30]==8,(path,'culled-to-visible y',width,xmirror,gp,regs[30])
+                    assert regs[18]==xorigin,(path,'culled X ownership',width,xmirror,gp,regs[18],xorigin)
+                    assert regs[21]==((0x55+16)&0x1ff),(path,'culled char row',width,xmirror,gp,regs[21])
+                    assert regs[16]==width and regs[17]==8,(path,'culled row counters',width,xmirror,gp,regs[16],regs[17])
+                    cases['obj_progression']+=1
+
+                # Also preserve the historical drawn-row continuation: after
+                # a complete X row, undo its X/character-column traversal and
+                # advance to the same object's next character row.
+                d=bytearray(4096);struct.pack_into('>I',d,offset,16)
+                regs=[0]*32
+                regs[2]=v0;regs[16]=0;regs[17]=16
+                regs[18]=(xorigin+(v0 if v0<0x80000000 else v0-0x100000000))&0xffffffff
+                regs[20]=width;regs[21]=(0x55+tiles)&0x1ff
+                regs[26]=8;regs[27]=24;regs[28]=8;regs[30]=8
+                rsp_execute(text,base,d,syms['hcomp_obj_row_done'],{syms['next_objy']},regs)
+                assert regs[18]==xorigin,(path,'drawn X rewind',width,xmirror,regs[18],xorigin)
+                assert regs[21]==((0x55+16)&0x1ff),(path,'drawn char row',width,xmirror,regs[21])
+                assert regs[16]==width and regs[17]==8 and regs[30]==16,(path,'drawn row counters',width,xmirror)
+                cases['obj_progression']+=1
     report=dict(passed=True,cases=cases,commercial_data=False,native_timing=False)
     if a.output:a.output.write_text(json.dumps(report,indent=2)+'\n')
     print('RENDERER_BATCHING PASS',json.dumps(report))

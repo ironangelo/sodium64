@@ -1,7 +1,7 @@
 name: Gate C Direct Backdrop Pixel Qualification
 on:
   push:
-    branches: [phase4/gate-c-a3-direct-backdrop, phase4/gate-c-a4-gameplay-capture]
+    branches: [phase4/gate-c-a3-direct-backdrop, phase4/gate-c-a4-gameplay-capture, phase4/gate-c-a5-shared-work]
     paths: [src/**, scripts/**, Makefile, .github/workflows/gate-c-direct-backdrop.yml]
   workflow_dispatch:
 permissions:
@@ -51,6 +51,9 @@ jobs:
           python3 scripts/check_runtime_arena.py build/sodium64.elf
           python3 scripts/check_event_arena.py --elf build/sodium64.elf
           python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
+          python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp*.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
@@ -275,13 +278,13 @@ jobs:
           from pathlib import Path
           from make_hcomp_fullheight import build
           template=Path('sodium64.z64').read_bytes()
-          for case in ('fixed-half-raster','half','sub-half','short','fast-always','fast-iris-rows','fast-obj-high-late','mode7-raster','mode7-general-half'):
+          for case in ('fixed-half-raster','half','sub-half','short','obj-rows-0-xy','obj-rows-31-none','fast-latent-bg2','fast-always','fast-iris-rows','fast-obj-high-late','mode7-raster','mode7-general-half'):
               Path(f'hardware/native-pixels-{case}.z64').write_bytes(template+bytes(0x104000-len(template))+build(case))
           PYPIX
           port=9450
           pid=""
           trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
-          for kind in fixed-half-raster half sub-half short fast-always fast-iris-rows fast-obj-high-late mode7-raster mode7-general-half; do
+          for kind in fixed-half-raster half sub-half short obj-rows-0-xy obj-rows-31-none fast-latent-bg2 fast-always fast-iris-rows fast-obj-high-late mode7-raster mode7-general-half; do
             out="captures/native-pixels-$kind"
             mkdir -p "$out" "$RUNNER_TEMP/native-pixels-$kind"
             setsid env HOME="$RUNNER_TEMP/native-pixels-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
@@ -315,6 +318,9 @@ jobs:
             resident-admit-compiled.json
             depth-policy-compiled.json
             vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sparse-reset-compiled.json
             captures/
             ares-version.txt
             normal-qualified/

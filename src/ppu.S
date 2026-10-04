@@ -1798,11 +1798,12 @@ cg_high:
     or t1, t1, t2
     lhu t2, cgram(t0)
     sh t1, cgram(t0)
-    beq t2, t1, dpal_commit_invalidated
+    // The bus write/latch/address advance still happened. An identical color
+    // changes no palette epoch and must not split or invalidate the renderer.
+    beq t2, t1, cg_same_color_return
     nop
     li t2, 3
     sb t2, dpal_dirty
-dpal_commit_invalidated:
 
     // VBlank writes fold into the next frame's base snapshot. During the
     // active frame, append every complete color commit before sectioning.
@@ -1861,6 +1862,10 @@ cg_epoch_overflow:
 cg_epoch_done:
     beqz t0, update_fill
     nop
+    jr ra
+    nop
+
+cg_same_color_return:
     jr ra
     nop
 

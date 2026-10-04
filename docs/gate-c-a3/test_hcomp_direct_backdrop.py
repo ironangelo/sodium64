@@ -92,7 +92,8 @@ def main():
     assert mb&0xfff==0 and fb&0xfff==pb&0xfff==0x3a8
     assert len(m)==4096 and len(f)==len(p)==1000
     code=bytearray(m);code[0x3a8:0x790]=f
-    data=section(a.main,'.data');assert len(data)==4096
+    data=bytearray(section(a.main,'.data'));assert len(data)==4096
+    data[0xbba]=31 # Existing exhaustive cases keep all latent enables visible.
     fs={n:v&0xfff for v,n in elf_symbols(a.fast)}
     ps={n:v&0xfff for v,n in elf_symbols(a.phase)}
     assert ps['hcomp_policy_return']==0x768 and fs['hcomp_fast_screen_switch']==0x760
@@ -100,7 +101,8 @@ def main():
     for cg in range(256):
         for sel in range(256):
             d=bytearray(data);d[0xbb8]=cg;d[0xbb7]=sel;d[0xba8:0xbaa]=bytes(2)
-            d[0xbbe]=0;d[0xba6:0xba8]=b'\x00\x3e';put(d,0xecc,0)
+            d[0xbbe]=0x40;d[0xba6:0xba8]=b'\x00\x3e';put(d,0xecc,0)
+            d[0x840:0xa60]=bytes(0x220) # Certified low-palette OBJ geometry.
             d[0xbbd]=0
             d[0xbb9]=0x13
             r=[0xdead0000+i for i in range(32)];r[0]=0;r[26:30]=[13,224,0xcafe,4]
@@ -112,6 +114,22 @@ def main():
             assert d[0xbb9]==0x13 and d[0xec9]==(0x13 if sel&2 else 0)
             assert r[26:30]==[13,224,0xcafe,4] and r[25]==0x1768
             admission+=1
+    # Derive expectations from visible winner sets, retaining HALF/subtract
+    # and clipping counterexamples. Raw guest registers must not be modified.
+    latent=0
+    for tm in range(16):
+      for cg in range(256):
+       for sel in (0,2,0x10,0x12,0x20,0x22,0x32,0xc2):
+        d=bytearray(data);d[0xbba]=tm;d[0xbb8]=cg;d[0xbb7]=sel
+        d[0xbbd]=1;d[0xbbe]=0;d[0xba8:0xbaa]=bytes(2)
+        d[0xba6:0xba8]=b'\x00\x3e';put(d,0xecc,0)
+        run(code,d,0x3b0,[0]*32)
+        eligible=bool(cg&0x20) or bool(cg&tm&15)
+        backdrop_only=bool(cg&0x20) and not bool(cg&tm&15) and cg&0xc0==0
+        expected=0 if sel&0xc0 else 1 if not eligible or sel&0x30==0x30 else 2 if backdrop_only else 0
+        assert word(d,0xef0)==expected,('latent Main enables',tm,cg,sel,word(d,0xef0),expected)
+        assert d[0xbb8]==cg and d[0xbba]==tm,'guest register mutation'
+        latent+=1
     for flags,color,diag in ((0x80,0,0),(0,1,0),(0,0xffff,0),(0,0,8)):
         d=bytearray(data);d[0xbb8]=0x20;d[0xbb7]=0x12;d[0xbbe]=flags
         d[0xba6:0xba8]=b'\x00\x3e'
@@ -295,7 +313,7 @@ def main():
                 want=rows
                 assert word(d,0xec4)==want and r[27]==y-8+want
                 geometry+=1
-    result=dict(passed=True,admission_cases=admission+4,compiled_window_mask_cases=masks,
+    result=dict(passed=True,admission_cases=admission+4,latent_main_enable_cases=latent,compiled_window_mask_cases=masks,
                 identity_admission_cases=neutral_cases,
                 mode0_control_cases=mode_cases,obj_eligibility_cases=obj_cases,
                 adaptive_band_schedule_cases=schedules,

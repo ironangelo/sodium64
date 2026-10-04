@@ -17,6 +17,8 @@ from make_mode7_windows import CASES as MODE7_CASES
 CASES += MODE7_CASES
 from make_bg_span_seek import CASES as BG_SEEK_CASES
 CASES += BG_SEEK_CASES
+from make_hcomp_obj_rows import CASES as OBJ_ROWS_CASES
+CASES += OBJ_ROWS_CASES
 
 
 def set_store(rom, address, old, new, count=1):
@@ -37,6 +39,9 @@ def hook_call(rom, address, body):
 
 
 def build(case):
+    if case in OBJ_ROWS_CASES:
+        from make_hcomp_obj_rows import build_rows
+        return build_rows(case)
     if case == 'fixed-half-raster':
         rom=bytearray(build('short'))
         set_store(rom,0x2130,2,0)
@@ -159,4 +164,3 @@ if __name__ == '__main__':
     ap.add_argument('output',type=Path)
     args=ap.parse_args();args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_bytes(build(args.case))
-

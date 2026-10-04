@@ -86,15 +86,18 @@ def main():
     m.update((lookup+i,b) for i,b in enumerate(payload))
     left=bytes((i*17+3)&255 for i in range(64));right=bytes((i*11+5)&255 for i in range(64))
     m.update((lookup-64+i,b) for i,b in enumerate(left))
-    m.update((end+4+i,b) for i,b in enumerate(right));put(m,end,0x801dffe0)
+    flags=s['jit_lookup_live_groups']&0x1fffffff
+    m.update((flags+i,1) for i in range(512))
+    m.update((flags+512+i,b) for i,b in enumerate(right));put(m,end,0x801dffe0)
     regs=[sx(0x12340000+i) for i in range(32)];regs[0]=0;before=regs.copy()
     steps=execute(m,s['reset_buffer'],regs,{},stop=s['compile_block'])
     assert bytes(m.get(lookup+i,0) for i in range(end-lookup))==bytes(end-lookup)
     assert bytes(m[lookup-64+i] for i in range(64))==left
-    assert bytes(m[end+4+i] for i in range(64))==right
+    assert bytes(m[flags+512+i] for i in range(64))==right
+    assert bytes(m[flags+i] for i in range(512))==bytes(512)
     assert int.from_bytes(bytes(m[end+i] for i in range(4)),'big')==0xa01c0000
     # AT is the pre-existing assembler scratch for the absolute pointer store.
-    assert all(regs[i]==before[i] for i in set(range(32))-{1,8,9})
+    assert all(regs[i]==before[i] for i in set(range(32))-{1,8,9,10,11,12})
     assert steps<50000,('lookup reset instruction bound',steps)
     cases['apu_reset']+=1
     current=s['bghofs'];previous=0xa0140000
@@ -215,3 +218,4 @@ def main():
     print('RENDERER_BATCHING PASS',json.dumps(report))
 
 if __name__=='__main__':main()
+

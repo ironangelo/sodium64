@@ -91,6 +91,15 @@ hcomp_math_mask_ready:
     vmrg $v06, $v21, $v31, 0
     vor $v07, $v07, $v06, 0
     vand $v07, $v07, $v05, 0
+hcomp_vector_math_test:
+    // The exact winner/window mask is already resolved. If all eight pixels
+    // forbid math, retain clipped Main without computing either operand.
+    veq $v06, $v07, $v31, 0
+    cfc2 t0, $1
+    andi t0, t0, 0xFF
+    xori t0, t0, 0xFF
+    beqz t0, hcomp_vector_output
+    nop
     andi t0, v0, 2
     beqz t0, hcomp_vector_fixed
     nop
@@ -151,6 +160,7 @@ hcomp_channel_pack:
     sll t3, t3, 5
     veq $v06, $v07, $v31, 0
     vmrg $v00, $v00, $v14, 0
+hcomp_vector_output:
     vor $v00, $v00, $v15, 8
     sqv $v00, 0, 0, s5
     addi s6, s6, 16
@@ -193,4 +203,3 @@ hcomp_screen_switch:
 draw_mode7_entry:
     j 0xA4001F78
     li t9, 0x1788
-

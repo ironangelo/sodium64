@@ -49,6 +49,12 @@ hcomp_fast_operand_ready:
 hcomp_fast_cache_ready:
     bltz t0, hcomp_fast_raw
     lbu t0, CGADSUB
+    // Disabled Main layers cannot own a visible winner. Remove only those
+    // latent math enables; retain backdrop, HALF and subtract unchanged.
+    lbu t2, TM
+    andi t2, t2, 0x1F
+    ori t2, t2, 0xE0
+    and t0, t0, t2
     andi t1, t0, 0x3F
     bnez t1, hcomp_fast_probe
     lbu t1, CGWSEL
@@ -107,6 +113,8 @@ hcomp_fast_color_selector:
     bnez t0, hcomp_fast_return
     nop
     lbu t0, CGADSUB
+    lbu t2, TM
+    and t0, t0, t2
     andi t0, t0, 0x10
     beqz t0, hcomp_fast_direct
     lbu t0, TM

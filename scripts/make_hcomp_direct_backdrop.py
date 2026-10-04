@@ -7,8 +7,10 @@ CASES = ('fast-always','fast-inside','fast-outside','fast-xor','fast-edge','fast
 CASES += ('fast-fixed-always','fast-fixed-inside','fast-fixed-outside',
           'fast-fixed-xor','fast-fixed-edge','fast-fixed-empty','fast-fixed-invert',
           'fast-fixed-short','fast-fixed-iris-rows')
+CASES += ('fast-latent-bg2',)
 
 def canonical(case):
+    if case=='fast-latent-bg2':return 'fast-always'
     return 'fast-'+case[len('fast-fixed-'):] if case.startswith('fast-fixed-') else case
 
 def identity_controls(case):
@@ -36,7 +38,7 @@ def build_direct(case):
     identity=case.startswith('fast-identity-')
     # The hook executes before the final startup CGADSUB and TS writes.
     # Set those actual later writes as well, so they cannot erase this case.
-    set_store(rom,0x2131,0x41,identity_controls(case)[1] if identity else 0x20)
+    set_store(rom,0x2131,0x41,identity_controls(case)[1] if identity else 0x22 if case=='fast-latent-bg2' else 0x20)
     if identity and identity_controls(case)[2]==0:
         set_store(rom,0x212d,2,0,count=2)
     if case=='fast-sub-empty':set_store(rom,0x212d,2,0,count=2)

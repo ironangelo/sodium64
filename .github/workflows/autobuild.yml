@@ -55,6 +55,9 @@ jobs:
           python3 scripts/check_runtime_arena.py build/sodium64.elf
           python3 scripts/check_event_arena.py --elf build/sodium64.elf
           python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
+          python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
 
       - name: Record build metrics
@@ -81,6 +84,9 @@ jobs:
             resident-admit-compiled.json
             depth-policy-compiled.json
             vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sparse-reset-compiled.json
             build.log
             build-metrics.txt
 
@@ -116,6 +122,9 @@ jobs:
           python3 scripts/check_runtime_arena.py build/sodium64.elf
           python3 scripts/check_event_arena.py --elf build/sodium64.elf
           python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
+          python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
       - name: Upload empty diagnostic template and decoder
         uses: actions/upload-artifact@v4
@@ -132,6 +141,9 @@ jobs:
             resident-admit-compiled.json
             depth-policy-compiled.json
             vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sparse-reset-compiled.json
             native-diag-build.log
             scripts/native_diag_report.py
             scripts/native_diag_v4.py
@@ -173,6 +185,9 @@ jobs:
           python3 scripts/check_runtime_arena.py build/sodium64.elf
           python3 scripts/check_event_arena.py --elf build/sodium64.elf
           python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
+          python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
       - name: Upload empty diagnostic template and decoder
         uses: actions/upload-artifact@v4
@@ -189,6 +204,9 @@ jobs:
             resident-admit-compiled.json
             depth-policy-compiled.json
             vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sparse-reset-compiled.json
             native-trace-build.log
             native-trace-compiled.json
             scripts/native_diag_report.py
@@ -251,6 +269,9 @@ jobs:
             resident-admit-compiled.json
             depth-policy-compiled.json
             vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sparse-reset-compiled.json
             profile-build.log
             profile-build-metrics.txt
 

@@ -16,6 +16,9 @@ from test_gate_c_cgram_rsp_consumer_clean_contract import parse_macros
 
 
 def expected(case,x,y):
+    if case.startswith('obj-rows-'):
+        from make_hcomp_obj_rows import expected_rows
+        return expected_rows(case,x,y)
     if case=='fixed-half-raster':
         # Vblank reload runs HDMA at line 0 before the first displayed row.
         # The compiled scheduler/row-input test proves table[y] owns row y.
@@ -130,6 +133,7 @@ def main():
                          'obj-low':0x51,'obj-high':0x51,'rgb-add':1,'rgb-half':0x41,'rgb-sub':0x81,'rgb-sub-half':0xc1,'rgb-main':0,'rgb-subscreen':0,'rgb-row-add':1,'rgb-row-half':0x41,'rgb-row-sub':0x81,'rgb-row-sub-half':0xc1,'rgb-row-subscreen':0}.get(args.case,0x41)
                 want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11,'rgb-subscreen':2,'rgb-row-subscreen':2}.get(args.case,1)
                 want_ts=1 if args.case=='bg2' else 2
+                if args.case.startswith('obj-rows-'):want_tm=0x11
                 want_window=0 if args.case=='fixed-half-raster' else 0xa2 if args.case=='window' else 2
                 if args.case.startswith('span-seek-'):
                     want_cg=1 if args.case in ('span-seek-math','span-seek-sub-hidden') else 0
@@ -140,6 +144,7 @@ def main():
                     from make_hcomp_direct_backdrop import canonical
                     kind=canonical(args.case)
                     want_cg=0x20;want_tm=1
+                    if args.case=='fast-latent-bg2':want_cg=0x22
                     want_ts=0 if args.case=='fast-sub-empty' else 2
                     want_window=(0 if args.case.startswith('fast-fixed-') else 2)+(0 if kind=='fast-always' else 0x20 if kind=='fast-outside' else 0x10)
                     if args.case.startswith('fast-identity-'):

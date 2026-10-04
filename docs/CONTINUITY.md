@@ -1,5 +1,14 @@
 # Sodium64 fork continuity
 
+## 2026-10-04 UTC — A12 real-console follow-up: missed budget and reproduced OBJ regression
+
+The user reports essentially unchanged displayed performance and new small but visible ALttP/DKC glitches, strongest in DKC. Seven supplied A12 v4 captures validate complete 20-second retention, MAX precision, zero skips, full APU/audio and no overflow against the exact A12 symbols. Commercial files and raw state remain private. Aggregate completed-boundary timing improves some heavy states (ALttP telepathy roughly 52ms to40ms; DKC first-stage steady heavy intervals roughly 8–9 to14–16 completed boundaries/s), but this is not stable native60 or a contradiction of the user's on-screen report. Arm offsets differ, so whole-capture totals are not a matched-scene A/B. DKC first stage still creates about114 real sections/completed frame; retained CPU waits locate its major dependency in RSP completion. DKC's late startup/loading interval still has dominant CPU/APU execution and retained PCs in compilation/reset; shortening the lookup-clear instruction loop did not establish a sufficient real hardware gain.
+
+Source audit has found a concrete A12 OBJ row-culling regression in both regular and Mode7 variants. The new cull branches to hcomp_obj_row_done, which assumes that a full X tile row already advanced the X coordinate and character number. A skipped row has performed neither advance, so that continuation incorrectly subtracts one row's X width and tile count before the next visible row. This is independently reproducible from compiled state transitions; the previous helper-only clipping tests missed the continuation. Add a dedicated skipped-row continuation that retains X and character-column ownership, then test multirow progression and full-image original fixtures. This is a plausible source of the newly reported sprite glitches, not proof that every unpictured commercial glitch has the same cause.
+
+No hardware ceiling is demonstrated. A12 qualification covered85 original images but not this multirow-cull progression. Do not claim those passes prove all-game fidelity. Retain v4 attribution limits: live DMEM stage/PPU fields are unvalidated candidates and cannot establish which shader operation dominates. Next authorized work is to reproduce and fix the exact OBJ continuation defect, audit the remaining general math/section costs and justify broader batching or one safe discriminating measurement, without game profiles or emulation-capacity reductions. Runtime is still80a6dd5; master unchanged; no PR/release/merge. Record subsequent implementation and validation in small checkpoints.
+
+
 Canonical live handoff for `ironangelo/sodium64`.
 
 

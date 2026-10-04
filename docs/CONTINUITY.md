@@ -2217,3 +2217,14 @@ Direction update: the user explicitly questioned accumulated proof infrastructur
 The target is unchanged: N64 real, correct native cadence, one SNES frame per corresponding native frame, frameskip 0, full-rate SPC700/APU and correct audio, high CPU/PPU/DMA/HDMA/timing fidelity, broad compatibility, no per-game manual modes, DSP-1 family, SuperFX/SuperFX2, SA-1, and final hardware validation.
 
 Current Gate-C work is moving that road because it is replacing the inherited renderer's Main/Sub/color-math approximation with measured, bounded semantics. Do not let the proof harness become a second project; each next batch must close a compositor/fidelity uncertainty needed by the Road.
+
+
+## 2026-10-03 — Diagnostic audit and single-ROM capture requirement (work in progress)
+
+User authorized auditing and improving the recorder before the representative cross-game batch. v3 retains the 20-second interval without wrap, but second-window busy shares and non-atomic shared RSP PCs do not establish the operation causing an individual deadline miss. Work is ongoing on v4 completed-boundary Count timings, explicit CPU RSP/VI waits, all-IRQ linked CPU-domain attribution and source-backed RSP stage attribution. Proposed packing remains bounded to the existing 24 KiB recorder budget; compilation and execution qualification are not yet complete. No new hardware FPS improvement or ready diagnostic package is claimed.
+
+The user explicitly rejected duplicated/aliased ROM files. Required workflow: repeatedly load the same personal ROM, arm one capture, reset and reload, preserving multiple automatically identified diagnostic SAV files and the ordinary game save. Current Sodium writes raw cart SRAM; the flashcart menu selects the SD filename/writeback sectors before boot. Investigate a narrowly scoped SummerCart menu integration to reserve ROM-name + diagnostic build + monotonic identifier destinations, importing ordinary progress read-only. Do not ship the discarded ROM-alias preparation approach.
+
+The user also challenged activity-only profiling. The report must identify actual source stages/operations where possible, connect them with frame waits and workload evidence, and distinguish causal confirmation from correlation. Unknown overlay transitions and measurement perturbation must be explicit. One-line scene context is useful but the user need not interpret hardware causes. Keep 20-second capture unless qualification gives a measured reason to change it; avoid per-opcode/per-pixel logging.
+
+Runtime published baseline is still A11 ac534849002a04d342dd566a6f96ae1707680387 on phase4/gate-c-a4-gameplay-capture; master remains untouched. All commercial ROMs, game-derived SAV/footage/state/hash data remain private. Only emulator source, original fixtures and curated notes may enter GitHub.

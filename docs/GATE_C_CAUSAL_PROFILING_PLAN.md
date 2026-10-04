@@ -1,10 +1,12 @@
 # Gate C causal performance diagnosis
 
-Status: proposed design, not an implemented recorder or a demonstrated speedup.
+Status: diagnostic v4 compiled and qualified; real-console recorder and SD writeback validation pending. No new FPS improvement is claimed.
 
-Priority update: first qualify one reusable diagnostic build for a bounded SMW/ALttP/DKC1 capture batch, then decide on generic corrections or [the general renderer architecture experiment](GATE_C_RENDERER_ARCHITECTURE_PLAN.md). Reuse the existing recorder and add only discriminating measurements. The full format below is a capacity/design option, not an automatic prerequisite. Neither unlimited scene enumeration nor a large rewrite is justified before the representative cost comparison.
-Runtime baseline: A11, `ac534849002a04d342dd566a6f96ae1707680387`.
-The normal emulator and master stay unchanged while this measurement design is qualified.
+Priority update: collect a bounded SMW/ALttP/DKC1 batch with the qualified reusable diagnostic build, then decide on generic corrections or [the general renderer architecture experiment](GATE_C_RENDERER_ARCHITECTURE_PLAN.md). Repeated launches of one personal ROM create unique diagnostic SAV destinations through the opt-in SummerCart menu; ROM aliases are not required or delivered.
+
+Normal regression baseline remains A11, `ac534849002a04d342dd566a6f96ae1707680387`, with the normal binary byte-identical. Current diagnostic/source head is `bacc62315087eb135d6cf5f60e65e083af96719b`; master remains unchanged.
+
+The delivered layout, attribution boundaries and limitations are documented in [Native diagnostic v4](https://github.com/ironangelo/sodium64/blob/bacc62315087eb135d6cf5f60e65e083af96719b/docs/NATIVE_DIAGNOSTIC_V4.md). It retains every completed interval and CPU RSP/VI wait, classified IRQ sampling and 125 ms observations for the full 20 seconds. RSP bank transitions are validated or classified unknown. One SAV narrows the measured bottleneck; a controlled change and repeated capture establish a causal improvement. The sections below retain proposed design rationale/options and are not a field-by-field description of the shipped format.
 
 ## Decision to make
 

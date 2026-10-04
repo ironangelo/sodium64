@@ -40,6 +40,14 @@ audio_set: .byte 1 << 2
 underclk_set: .byte 0 << 2
 left_str: .string "<"
 right_str: .string ">"
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.align 2
+continuous_menu_status: .word 0
+continuous_ok_text: .string "OK CAPTURE SAVED     "
+continuous_saving_text: .string "SAVING CAPTURE...    "
+continuous_failed_text: .string "SAVE FAILED          "
+continuous_full_text: .string "CAPTURE SLOTS FULL   "
+#endif
 
 .align 4
 title_str: .string "SODIUM64 SETTINGS"
@@ -157,6 +165,28 @@ update_menu: // a0: framebuffer
 .globl color_diag_producer_return
 color_diag_producer_return:
 #endif
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // A completed, unpublished frame belongs to CPU here. Do not let VI use
+    // reserved k0/k1 while the service saves its caller's 64-bit context.
+    lw t0, native_diag_phase
+    addiu t0, t0, -2
+    bnez t0, continuous_menu_service_done
+    nop
+    mfc0 t0, $12
+    sw t0, continuous_menu_status
+    li t1, -2
+    and t1, t0, t1
+    mtc0 t1, $12
+    nop
+    nop
+    jal native_diag_service
+    nop
+    lw t0, continuous_menu_status
+    mtc0 t0, $12
+    nop
+    nop
+continuous_menu_service_done:
+#endif
     // Open the settings menu if start is pressed
     jal get_pressed
     li v1, 0 // Index
@@ -176,6 +206,36 @@ native_diag_menu_ready:
 
 #ifdef SODIUM64_NATIVE_DIAG
     // Show the capture state inside the CPU-owned UI border only.
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw t0, native_diag_continuous_mode
+    beqz t0, native_diag_menu_legacy_status
+    nop
+    lw t0, native_diag_phase
+    la a0, continuous_failed_text
+    beq t0, 4, native_diag_menu_status
+    nop
+    la a0, continuous_full_text
+    beq t0, 5, native_diag_menu_status
+    nop
+    la a0, continuous_saving_text
+    beq t0, 2, native_diag_menu_status
+    nop
+    beq t0, 3, native_diag_menu_status
+    nop
+    la a0, native_diag_active_text
+    beq t0, 1, native_diag_menu_status
+    nop
+    lw t0, native_diag_notice_count
+    beqz t0, native_diag_menu_legacy_status
+    nop
+    mfc0 t0, $9
+    lw t1, native_diag_ok_deadline
+    subu t0, t1, t0
+    la a0, continuous_ok_text
+    bgtz t0, native_diag_menu_status
+    nop
+native_diag_menu_legacy_status:
+#endif
     la t0, native_diag_state
     lw t0, 112(t0)
     la a0, native_diag_ready_text

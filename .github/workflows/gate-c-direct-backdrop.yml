@@ -2,7 +2,7 @@ name: Gate C Direct Backdrop Pixel Qualification
 on:
   push:
     branches: [phase4/gate-c-a3-direct-backdrop, phase4/gate-c-a4-gameplay-capture, phase4/gate-c-a5-shared-work, phase4/gate-c-sub-presence-dataflow, phase4/gate-c-a14-combined]
-    paths: [src/**, scripts/**, Makefile, .github/workflows/gate-c-direct-backdrop.yml]
+    paths: [src/**, scripts/**, tools/sc64-diagnostic-save/**, Makefile, .github/workflows/gate-c-direct-backdrop.yml]
   workflow_dispatch:
 permissions:
   contents: read
@@ -259,6 +259,9 @@ jobs:
           libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 -j$(nproc) > native-trace-build.log 2>&1
           python3 scripts/test_native_diag_arm.py build/sodium64.elf
           python3 scripts/test_native_diag_v4.py build/sodium64.elf --rsp-main build/src/rsp_main.elf --rsp-mode7 build/src/rsp_mode7.elf --rsp-hcomp build/src/rsp_hcomp.elf --json-output native-trace-compiled.json
+          python3 scripts/test_native_diag_continuous.py build/sodium64.elf --json-output continuous-compiled.json
+          python3 scripts/test_native_diag_v5_report.py
+          python3 scripts/test_continuous_save_sink.py --json-output continuous-sink-proof.json
           python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-trace-compiled.json
           python3 scripts/test_hcomp_packed_math.py build/src/rsp_hcomp_math.elf --output packed-math-trace-compiled.json
           python3 - <<'PYTRACE'
@@ -344,6 +347,8 @@ jobs:
             default-native-qualified/
             native-trace-build.log
             native-trace-compiled.json
+            continuous-compiled.json
+            continuous-sink-proof.json
 
 
 

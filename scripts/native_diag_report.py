@@ -52,7 +52,7 @@ def normalize(blob):
 def parse(blob):
     blob, order = normalize(blob)
     h = dict(zip(FIELDS, struct.unpack_from(f">{len(FIELDS)}I", blob, HEADER)))
-    if h["version"] not in (1, 2, 3, 4) or h["complete"] != 1:
+    if h["version"] not in (1, 2, 3, 4, 5) or h["complete"] != 1:
         raise ValueError("unsupported or incomplete S64D capture")
     if h["reason"] not in (1, 2) or h["save_size"] != SIZE:
         raise ValueError("invalid trigger or save size")
@@ -60,7 +60,7 @@ def parse(blob):
         raise ValueError("unexpected sampling clock/interval")
     if h["version"] == 3:
         return parse_trace(blob, h, order)
-    if h["version"] == 4:
+    if h["version"] in (4, 5):
         from native_diag_v4 import parse_v4
         return parse_v4(blob,h,order,SECOND_FIELDS)
     capacity = 2048 if h["version"] == 1 else 1024
@@ -321,9 +321,11 @@ def render(result):
         lines.append(f"Whole-interval trace: {len(result['events'])}/400 observations; overflow flags={h['trace_overflow_flags']}")
         lines.append(f"Retained CPU EPCs: one in eight IRQs (~{h['retained_cpu_sampling_hz_nominal']:.1f} Hz); occupancy still ~{h['occupancy_sampling_hz']:.1f} Hz")
         lines.append("Live RSP PC/PPU controls are non-atomic; overlay identity is not established; terminal memory snapshots are absent.")
-    if h['version']==4:
+    if h['version'] in (4,5):
         from native_diag_v4 import render_v4
         lines.extend(render_v4(result))
+        if h['version']==5:
+            lines.append(f"Continuous capture #{h['capture_session_sequence']}: measurement ends at IRQ cutoff; guest SRAM/context is separately timestamped at its natural frame boundary.")
     lines.append("CPU hotspots in retained samples:")
     for row in result.get("cpu_hotspots",[])[:12]:
         lines.append(f"  {row['samples']:4d} {row['symbol']}")
@@ -351,8 +353,8 @@ def main():
     print(render(result),end="")
     if a.json_output: a.json_output.write_text(json.dumps(result,indent=2)+"\n")
     if a.extract_private:
-        if result['header']['version'] in (3,4):
-            raise ValueError('v3/v4 trace has no terminal DMEM/IMEM snapshot; use a v2 capture for memory extraction')
+        if result['header']['version'] in (3,4,5):
+            raise ValueError('v3/v4/v5 trace has no terminal DMEM/IMEM snapshot; use a v2 capture for memory extraction')
         a.extract_private.mkdir(parents=True,exist_ok=True)
         (a.extract_private/"dmem.bin").write_bytes(blob[0x5200:0x6200])
         (a.extract_private/"imem.bin").write_bytes(blob[0x6200:0x7200])

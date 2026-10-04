@@ -35,11 +35,30 @@
 .globl native_diag_done, native_diag_saved, native_diag_save_failed
 .globl native_diag_wait_stall_rsp, native_diag_wait_stall_frame
 .globl native_diag_ready_text, native_diag_active_text
+.globl native_diag_continuous_mode, native_diag_phase, native_diag_service
+.globl native_diag_notice_count, native_diag_ok_deadline
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_sealed_wait_stall
+#endif
 .data
 .align 5
 native_diag_state: .word 0:80
 .globl native_diag_guest_sram_exp
 native_diag_guest_sram_exp: .word 0
+// Continuous mode is admitted only by the independently validated menu handoff.
+// Phase: 0 ready, 1 recording, 2 sealed, 3 committing, 4 failed, 5 exhausted.
+native_diag_continuous_mode: .word 0
+native_diag_phase: .word 0
+native_diag_notice_count: .word 0
+native_diag_ok_deadline: .word 0
+native_diag_continuous_sealing: .word 0
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.align 3
+native_diag_continuous_irq_save: .dword 0:2
+// This frame-boundary service borrows all ordinary CPU registers temporarily.
+// The transport bridge separately switches to its own O64 stack.
+native_diag_service_save: .dword 0:35
+#endif
 .align 5
 native_diag_irq_save: .dword 0:12
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
@@ -101,6 +120,29 @@ native_diag_init:
     sb t0, counter_set
     li t0, APU_CYCLE
     sb t0, apu_clock
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw t0, continuous_save_available
+    addiu t1, t0, 1
+    bnez t1, native_diag_continuous_init_valid
+    nop
+    // A present but invalid handoff must never fall back to the terminal
+    // SRAM writer: that writer would no longer own a genuine menu save target.
+    li t0, 1
+    sw t0, native_diag_continuous_mode
+    li t0, 4
+    b native_diag_continuous_init_phase
+    nop
+native_diag_continuous_init_valid:
+    addiu t0, t0, -1
+    sltiu t0, t0, 1
+    sw t0, native_diag_continuous_mode
+    move t0, zero
+native_diag_continuous_init_phase:
+    sw t0, native_diag_phase
+    sw zero, native_diag_notice_count
+    sw zero, native_diag_ok_deadline
+    sw zero, native_diag_continuous_sealing
+#endif
     // Manual capture stays dormant until N64 Start. Timer sampling and wait
     // watchdogs are disabled while navigating to the target scene.
     jr ra
@@ -148,6 +190,22 @@ native_diag_arm:
     mtc0 t0, $12
     nop
     nop
+    lw t0, native_diag_continuous_mode
+    beqz t0, native_diag_arm_legacy
+    nop
+    lw t0, native_diag_phase
+    bnez t0, native_diag_arm_restore
+    nop
+    // A new capture must not inherit old overflow bits or retained payload.
+    // The guest's first 8 KiB remain untouched, including progress in-session.
+    la t0, DHDR
+    la t1, DBASE + 0x8000
+native_diag_arm_payload_clear:
+    sw zero, (t0)
+    addiu t0, t0, 4
+    bne t0, t1, native_diag_arm_payload_clear
+    nop
+native_diag_arm_legacy:
     la t0, native_diag_state
     lw t1, 112(t0)
     bnez t1, native_diag_arm_return
@@ -173,8 +231,16 @@ native_diag_arm_clear:
     mtc0 t1, $11
     li t1, 1
     sw t1, 112(t0)
+    lw t2, native_diag_continuous_mode
+    beqz t2, native_diag_arm_return
+    nop
+    la k0, native_diag_phase
+    sw t1, (k0)
+    la k0, native_diag_ok_deadline
+    sw zero, (k0)
 native_diag_arm_return:
     ori t3, t3, 0x8000 // Enable Compare only once the capture is armed
+native_diag_arm_restore:
     mtc0 t3, $12
     nop
     nop
@@ -185,6 +251,26 @@ native_diag_arm_return:
 // The slower observation path explicitly saves all additional registers it touches.
 .align 5
 native_diag_interrupt:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // A stale enabled Compare must never append to a sealed window, even if
+    // a caller restored a Status value captured before the cutoff IRQ.
+    lw k0, native_diag_continuous_mode
+    beqz k0, native_diag_interrupt_sample
+    nop
+    lw k0, native_diag_phase
+    addiu k0, k0, -1
+    beqz k0, native_diag_interrupt_sample
+    nop
+    mfc0 k0, $12
+    li k1, -32769
+    and k0, k0, k1
+    mtc0 k0, $12
+    nop
+    nop
+    eret
+    nop
+native_diag_interrupt_sample:
+#endif
     mfc0 k0, $9
     la k1, native_diag_state
     sw k0, 108(k1)
@@ -543,6 +629,18 @@ native_diag_irq_restore:
     ld t8, 72(k0)
     ld t9, 80(k0)
     ld ra, 88(k0)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw k0, native_diag_continuous_mode
+    beqz k0, native_diag_schedule
+    nop
+    lw k0, native_diag_phase
+    addiu k0, k0, -2
+    bnez k0, native_diag_schedule
+    nop
+    // Compare was masked when the window was sealed; do not rearm it here.
+    eret
+    nop
+#endif
 native_diag_schedule:
     // Report observer cost instead of presenting diagnostic FPS as ordinary FPS.
     la k1, native_diag_state
@@ -966,6 +1064,24 @@ native_diag_frame_complete:
     mtc0 t2, $12
     nop
     nop
+    lw t0, native_diag_continuous_mode
+    beqz t0, native_diag_frame_legacy
+    nop
+    lw t0, native_diag_phase
+    addiu t0, t0, -1
+    beqz t0, native_diag_frame_legacy
+    nop
+    // Phase is checked only under exclusion: an IRQ may have sealed the
+    // interval after this helper read Count/Status but before it masked IE.
+    // Do not resurrect that IRQ's old Compare mask when returning early.
+    li t0, -32769
+    and t3, t3, t0
+    mtc0 t3, $12
+    nop
+    nop
+    jr ra
+    nop
+native_diag_frame_legacy:
     la t0, native_diag_state
     sw t1, 224(t0)
     lw t2, 24(t0)
@@ -1138,8 +1254,24 @@ native_diag_module_add:
 
 // Finalization is terminal and deliberately intrusive, only after trigger.
 // Pre-stop registers and CPU EPC are captured before SET_HALT/SET_FREEZE.
-// No unsafe timeout ever returns to the renderer or reuses its owned surfaces.
+// Actual stalls remain terminal; a continuous normal timeout seals and returns.
 native_diag_finalize:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw k0, native_diag_continuous_mode
+    beqz k0, native_diag_finalize_legacy
+    nop
+    addiu k0, t8, -2
+    bnez k0, native_diag_finalize_legacy
+    nop
+    // The timeout is a normal seal. Save the two additional registers used by
+    // header construction; slow-IRQ t0..t9/at/ra are already saved above.
+    la k0, native_diag_continuous_irq_save
+    sd s0, 0(k0)
+    sd s1, 8(k0)
+    li k0, 1
+    sw k0, native_diag_continuous_sealing
+native_diag_finalize_legacy:
+#endif
 #ifndef SODIUM64_NATIVE_DIAG_TRACE
     la k0, DBASE + 0x7C00
     .set push
@@ -1215,6 +1347,11 @@ native_diag_finalize:
     sw t0, 0(s0)
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
     li t0, 4
+    lw t1, native_diag_continuous_mode
+    beqz t1, native_diag_format_ready
+    nop
+    li t0, 5
+native_diag_format_ready:
 #else
     li t0, 2
 #endif
@@ -1391,6 +1528,26 @@ native_diag_partial_modules:
     sw t0, 0x1D8(s0)
     li t0, 0x42414E34 // BAN4: bank bookending / epoch protocol
     sw t0, 0x1DC(s0)
+    lw t0, native_diag_continuous_mode
+    beqz t0, native_diag_header_ready
+    nop
+    li t0, 0x434F4E35 // CON5: explicit continuous-capture context extension.
+    sw t0, 0x1E0(s0)
+    lw t0, 76(s0)
+    sw t0, 0x1E4(s0) // Recorder cutoff Count; includes the actual IRQ latency.
+    lw t0, native_diag_notice_count
+    addiu t0, t0, 1
+    sw t0, 0x1EC(s0) // Session sequence of this attempted capture.
+    li t0, 2
+    sw t0, 0x1F0(s0) // Fault-terminal context unless this is a normal seal.
+    lw t0, native_diag_continuous_sealing
+    beqz t0, native_diag_header_ready
+    nop
+    li t0, 1
+    sw t0, 0x1F0(s0)
+    b native_diag_continuous_seal
+    nop
+native_diag_header_ready:
 #endif
     // Read PC only AFTER HALT is acknowledged. All these waits are bounded.
     li t0, 2
@@ -1493,6 +1650,25 @@ native_diag_sum_body:
     nop
     sw t4, 240(s0)
     sync
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw t0, native_diag_continuous_mode
+    beqz t0, native_diag_legacy_pi_commit
+    nop
+    // A true stall keeps the terminal evidence path, but uses its own unique
+    // file when a continuous handoff exists. It never resumes owned surfaces.
+    li t0, 1
+    sw t0, 8(s0)
+    sync
+    la a0, DBASE
+    jal continuous_save_capture_bridge
+    li a1, 0x8000
+    addiu t0, v0, -1
+    beqz t0, native_diag_saved
+    nop
+    b native_diag_save_failed
+    nop
+#endif
+native_diag_legacy_pi_commit:
     // Header is last; "CAPTURE SAVED" means PI finished every transfer.
     la a0, DBASE
     li a1, 0x08000000
@@ -1626,6 +1802,231 @@ native_diag_done:
     nop
     b native_diag_done
     nop
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+// The normal interval has already been sealed, but its renderer never reached
+// the export boundary. Preserve that interval rather than adding a two-second
+// hang to its denominator. a0 names the real wait site (not reserved k0/k1).
+// Only a real stalled renderer enters this separate, non-resuming fault path.
+native_diag_sealed_wait_stall:
+    mfc0 t0, $12
+    ori t1, t0, 2
+    mtc0 t1, $12
+    nop
+    nop
+    la s0, DHDR
+    la s1, native_diag_state
+    sw t0, 0x1FC(s0)
+    sw a0, 0x1F8(s0)
+    mfc0 t0, $9
+    sw t0, 0x1F4(s0)
+    li t0, 3
+    sw t0, 0x1F0(s0)
+    li t0, 1
+    sw t0, 12(s0)
+    b native_diag_header_ready
+    nop
+
+// Header, samples and cumulative counters were constructed with EXL set. Their
+// cutoff is now immutable; ordinary game execution resumes until its next
+// naturally completed renderer frame. No SP halt or DP freeze is issued here.
+native_diag_continuous_seal:
+    la t0, native_diag_state
+    sw zero, 112(t0)
+    li t0, 2
+    sw t0, native_diag_phase
+    sw zero, native_diag_continuous_sealing
+    la k0, native_diag_continuous_irq_save
+    ld s0, 0(k0)
+    ld s1, 8(k0)
+    mfc0 k0, $12
+    li k1, -32769
+    and k0, k0, k1
+    mtc0 k0, $12
+    nop
+    nop
+    b native_diag_irq_restore
+    nop
+
+// Called only at the CPU-owned UI boundary after the renderer's natural fence.
+// The completed-frame payload stays sealed throughout the bounded synchronous
+// write. Guest SRAM belongs to this later boundary, explicitly marked in v5.
+// Caller must mask IE (or have EXL set) before entry: UI t0..t3 are already
+// caller-clobbered, so its wrapper can do this without borrowing guest GPRs.
+// Preserve every ordinary register; k0/k1 remain reserved interrupt scratch.
+native_diag_service:
+    la k0, native_diag_service_save
+    .set push
+    .set noat
+    sd $1, 1 * 8(k0)
+    .set pop
+    sd v0, 2 * 8(k0)
+    sd v1, 3 * 8(k0)
+    sd a0, 4 * 8(k0)
+    sd a1, 5 * 8(k0)
+    sd a2, 6 * 8(k0)
+    sd a3, 7 * 8(k0)
+    sd t0, 8 * 8(k0)
+    sd t1, 9 * 8(k0)
+    sd t2, 10 * 8(k0)
+    sd t3, 11 * 8(k0)
+    sd t4, 12 * 8(k0)
+    sd t5, 13 * 8(k0)
+    sd t6, 14 * 8(k0)
+    sd t7, 15 * 8(k0)
+    sd s0, 16 * 8(k0)
+    sd s1, 17 * 8(k0)
+    sd s2, 18 * 8(k0)
+    sd s3, 19 * 8(k0)
+    sd s4, 20 * 8(k0)
+    sd s5, 21 * 8(k0)
+    sd s6, 22 * 8(k0)
+    sd s7, 23 * 8(k0)
+    sd t8, 24 * 8(k0)
+    sd t9, 25 * 8(k0)
+    sd gp, 28 * 8(k0)
+    sd sp, 29 * 8(k0)
+    sd s8, 30 * 8(k0)
+    sd ra, 31 * 8(k0)
+    mfhi k1
+    sd k1, 32 * 8(k0)
+    mflo k1
+    sd k1, 33 * 8(k0)
+    mfc0 k1, $12
+    sd k1, 34 * 8(k0)
+    lw t0, native_diag_continuous_mode
+    beqz t0, native_diag_service_restore
+    nop
+    lw t0, native_diag_phase
+    addiu t0, t0, -2
+    bnez t0, native_diag_service_restore
+    nop
+    // Global interrupt exclusion preserves source/checksum/commit atomicity.
+    // Restore the exact inherited Status, including any outer TLB EXL, below.
+    li t0, -2
+    and t0, k1, t0
+    mtc0 t0, $12
+    nop
+    nop
+    li t0, 3
+    sw t0, native_diag_phase
+    la s0, DHDR
+    mfc0 t0, $9
+    sw t0, 0x1E8(s0) // Natural-frame boundary / guest SRAM snapshot Count.
+    li t0, 1
+    sw t0, 228(s0) // Natural SP halt; distinct from forced terminal halt.
+    sw t0, 232(s0) // Producer frame fence has already retired its work.
+    lw t0, 0xA4040010
+    sw t0, 144(s0)
+    lw t0, 0xA4080000
+    sw t0, 148(s0)
+    lw t0, 0xA4040018
+    sw t0, 152(s0)
+    lw t0, 0xA4040014
+    sw t0, 156(s0)
+    lw t0, 0xA410000C
+    sw t0, 160(s0)
+    lw t0, 0xA4100004
+    sw t0, 164(s0)
+    lw t0, 0xA4100008
+    sw t0, 168(s0)
+    // Independent body checksum, retaining the original header-last protocol.
+    // The first 8 KiB are the guest at this safe boundary, not a savestate.
+    la t0, DBASE
+    la t1, DHDR
+    move t4, zero
+native_diag_service_sum_guest:
+    lw t2, (t0)
+    addu t4, t4, t2
+    addiu t0, t0, 4
+    bne t0, t1, native_diag_service_sum_guest
+    nop
+    la t0, DBASE + 0x2200
+    la t1, DBASE + 0x8000
+native_diag_service_sum_body:
+    lw t2, (t0)
+    addu t4, t4, t2
+    addiu t0, t0, 4
+    bne t0, t1, native_diag_service_sum_body
+    nop
+    sw t4, 240(s0)
+    li t0, 1
+    sw t0, 8(s0)
+    sync
+    la a0, DBASE
+    jal continuous_save_capture_bridge
+    li a1, 0x8000
+    addiu t0, v0, -1
+    beqz t0, native_diag_service_saved
+    nop
+    li t0, 4
+    bgez v0, native_diag_service_result
+    nop
+    li t0, 5
+    b native_diag_service_result
+    nop
+native_diag_service_saved:
+    lw t0, native_diag_notice_count
+    addiu t0, t0, 1
+    sw t0, native_diag_notice_count
+    mfc0 t0, $9
+    li t1, DIAG_STALL // The OK notice lasts two real seconds, independent of FPS.
+    addu t0, t0, t1
+    sw t0, native_diag_ok_deadline
+    move t0, zero
+native_diag_service_result:
+    sw t0, native_diag_phase
+native_diag_service_restore:
+    la k0, native_diag_service_save
+    ld k1, 32 * 8(k0)
+    mthi k1
+    ld k1, 33 * 8(k0)
+    mtlo k1
+    .set push
+    .set noat
+    ld $1, 1 * 8(k0)
+    .set pop
+    ld v0, 2 * 8(k0)
+    ld v1, 3 * 8(k0)
+    ld a0, 4 * 8(k0)
+    ld a1, 5 * 8(k0)
+    ld a2, 6 * 8(k0)
+    ld a3, 7 * 8(k0)
+    ld t0, 8 * 8(k0)
+    ld t1, 9 * 8(k0)
+    ld t2, 10 * 8(k0)
+    ld t3, 11 * 8(k0)
+    ld t4, 12 * 8(k0)
+    ld t5, 13 * 8(k0)
+    ld t6, 14 * 8(k0)
+    ld t7, 15 * 8(k0)
+    ld s0, 16 * 8(k0)
+    ld s1, 17 * 8(k0)
+    ld s2, 18 * 8(k0)
+    ld s3, 19 * 8(k0)
+    ld s4, 20 * 8(k0)
+    ld s5, 21 * 8(k0)
+    ld s6, 22 * 8(k0)
+    ld s7, 23 * 8(k0)
+    ld t8, 24 * 8(k0)
+    ld t9, 25 * 8(k0)
+    ld gp, 28 * 8(k0)
+    ld sp, 29 * 8(k0)
+    ld s8, 30 * 8(k0)
+    ld ra, 31 * 8(k0)
+    // Restore Status last: an enabled VI must never corrupt the save pointer
+    // while the ordinary GPR loads are still using it.
+    ld k1, 34 * 8(k0)
+    mtc0 k1, $12
+    nop
+    nop
+    jr ra
+    nop
+#else
+native_diag_service:
+    jr ra
+    nop
+#endif
 
 // Only finalization calls this. Both PI idle and transfer waits have ~1 s limits.
 native_diag_pi_write:

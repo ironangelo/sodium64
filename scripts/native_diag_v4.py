@@ -38,6 +38,26 @@ def parse_v4(blob,h,order,second_fields):
     if not overflow&8 and nframes!=max(0,h['frames_completed']-baseline_ordinal):
         raise ValueError('v4 completed-frame totals disagree')
     if nframes and not baseline_ordinal:raise ValueError('v4 completed-frame baseline missing')
+    if h['version']==5:
+        marker5,cutoff,boundary,sequence,context=struct.unpack_from('>5I',blob,head+0x1e0)
+        if marker5!=0x434f4e35 or cutoff!=h['stop_count'] or not sequence or context not in (1,2,3):
+            raise ValueError('invalid continuous capture context')
+        if context==1 and (h['reason']!=2 or not h['halt_acknowledged'] or not h['sp_status_after']&1):
+            raise ValueError('continuous capture did not retire its natural frame')
+        h.update(continuous_capture=True,capture_session_sequence=sequence,
+                 recorder_cutoff_count=cutoff,guest_snapshot_boundary_count=boundary,
+                 guest_snapshot_at_later_natural_boundary=context==1,
+                 measurement_and_guest_snapshot_are_distinct_instants=True,
+                 renderer_forced_halt=context in (2,3),
+                 boundary_delay_ticks=(boundary-cutoff)&0xffffffff if context==1 else None,
+                 sd_persistence_not_proven_by_file_alone=True)
+        if context==3:
+            fault_count,fault_wait_pc,fault_status=struct.unpack_from('>3I',blob,head+0x1f4)
+            if h['reason']!=1 or not fault_wait_pc:
+                raise ValueError('sealed capture fault lacks its later watchdog context')
+            h.update(sealed_window_later_fault=True,fault_count=fault_count,
+                     fault_wait_pc=fault_wait_pc,fault_cpu_status=fault_status,
+                     recorder_duration_excludes_later_fault_wait=True)
     h.update(byte_order=order,elapsed_seconds_count_domain=h['elapsed_ticks']/hz,
         observer_fraction=h['observer_ticks']/max(1,h['elapsed_ticks']),
         observer_frame_hook_ticks=hook_ticks,observer_frame_hook_max_ticks=hook_max,

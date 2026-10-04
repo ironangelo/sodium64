@@ -1,4 +1,5 @@
 # Based on n64.mk from libdragon
+.DEFAULT_GOAL := all
 
 PROJ_NAME := sodium64
 BUILD_DIR := build
@@ -30,6 +31,9 @@ endif
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
+ifeq ($(NATIVE_DIAG_TRACE),1)
+OFILES += $(BUILD_DIR)/src/continuous_save_c.o
+endif
 
 N64_ROM_TITLE = "$(PROJ_NAME)"
 N64_ROM_SAVETYPE = sram256k
@@ -153,6 +157,12 @@ $(BUILD_DIR)/%.o: %.S
 		echo "    [AS] $<"; \
 		$(CC) -c $(ASFLAGS) -o $@ $<; \
 	fi
+
+# Only the trace recorder links this SD sink. Sodium uses sp as a queue index;
+# its assembly bridge supplies a private O64 stack and preserves guest GPR64.
+$(BUILD_DIR)/src/continuous_save_c.o: src/continuous_save.c tools/sc64-diagnostic-save/continuous_save_abi.h
+	@mkdir -p $(dir $@)
+	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

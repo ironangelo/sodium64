@@ -232,6 +232,13 @@ pi_wait1:
     sw zero, 0xA4080000 // SP_PC
 
 #ifdef SODIUM64_NATIVE_DIAG
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // Metadata remains in cart SDRAM across boot. The paired menu has already
+    // disabled automatic writeback and closed its reserved diagnostic files.
+    jal continuous_save_init_bridge
+    nop
+    sw v0, continuous_save_available
+#endif
     jal native_diag_init
     nop
 #endif
@@ -335,10 +342,25 @@ vi_interrupt:
     sw zero, 0x0010(k0) // VI_CURRENT
 
 #ifdef SODIUM64_NATIVE_DIAG
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    la k0, native_diag_continuous_mode
+    lw k1, (k0)
+    beqz k1, native_diag_vi_count
+    nop
+    la k0, native_diag_phase
+    lw k1, (k0)
+    addiu k1, k1, -1
+    bnez k1, native_diag_vi_count_done
+    nop
+native_diag_vi_count:
+#endif
     la k0, native_diag_state
     lw k1, 52(k0)
     addiu k1, k1, 1
     sw k1, 52(k0)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+native_diag_vi_count_done:
+#endif
 #endif
 
     // Wait one second by counting 60 frames at 60Hz

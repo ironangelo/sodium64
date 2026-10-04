@@ -1,7 +1,7 @@
 name: SC64 Diagnostic Save Menu
 on:
   push:
-    branches: [phase4/gate-c-a4-gameplay-capture]
+    branches: [phase4/gate-c-a4-gameplay-capture, phase4/gate-c-a14-combined]
     paths: [tools/sc64-diagnostic-save/**, .github/workflows/sc64-diagnostic-menu.yml]
   workflow_dispatch:
 permissions:
@@ -18,7 +18,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Qualify exclusive reservations and failure handling
-        run: python3 tools/sc64-diagnostic-save/test_save.py
+        run: python3 tools/sc64-diagnostic-save/test_save.py --json-output pool-proof.json
       - name: Checkout pinned upstream menu
         uses: actions/checkout@v4
         with:
@@ -37,13 +37,14 @@ jobs:
           imageName: ghcr.io/polprzewodnikowy/n64flashcartmenu-ci-devcontainer
           cacheFrom: ghcr.io/polprzewodnikowy/n64flashcartmenu-ci-devcontainer
           push: never
-          runCmd: make all -j2 MENU_VERSION='"Sodium64 diagnostic v4"'
+          runCmd: make all -j2 MENU_VERSION='"Sodium64 capture v5"'
         env:
           FLAGS: -DNDEBUG
       - name: Record source pins
         run: |
           mkdir -p sc64-menu/output/diagnostic-source
-          cp tools/sc64-diagnostic-save/{apply.py,diagnostic_save.c,diagnostic_save.h,README.md} sc64-menu/output/diagnostic-source/
+          cp tools/sc64-diagnostic-save/{apply.py,diagnostic_save.c,diagnostic_save.h,diagnostic_pool.c,diagnostic_pool.h,diagnostic_pool_menu.c,continuous_save_abi.h,README.md,test_save.py} sc64-menu/output/diagnostic-source/
+          cp -r tools/sc64-diagnostic-save/host sc64-menu/output/diagnostic-source/
           git -C sc64-menu diff -- src/menu/cart_load.c Makefile > sc64-menu/output/diagnostic-source/menu-integration.patch
           git rev-parse HEAD > sc64-menu/output/diagnostic-source/sodium-source.txt
           git -C sc64-menu rev-parse HEAD > sc64-menu/output/diagnostic-source/menu-upstream-source.txt
@@ -56,3 +57,4 @@ jobs:
             sc64-menu/output/sc64menu.n64
             sc64-menu/output/diagnostic-source
             sc64-menu/build/N64FlashcartMenu.elf
+            pool-proof.json

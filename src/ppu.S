@@ -471,9 +471,13 @@ section_init:
 hcomp_new_section:
 #ifdef SODIUM64_NATIVE_DIAG
     la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_section_count_done
+    nop
     lw t1, 56(t0)
     addiu t1, t1, 1
     sw t1, 56(t0)
+native_diag_section_count_done:
 #endif
     // Check if OAM should be updated
     lbu t0, stat_flags
@@ -824,8 +828,12 @@ vram_flush_end:
     // Timer/VI interrupts cannot run inside an outer TLB exception (EXL=1).
     // Keep an independent Count deadline for this particular blocking wait.
     la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_rsp_wait_start_done
+    nop
     mfc0 t1, $9
     sw t1, 116(t0)
+native_diag_rsp_wait_start_done:
 #endif
 rsp_wait:
 #ifdef SODIUM64_NATIVE_DIAG
@@ -833,8 +841,29 @@ rsp_wait:
 native_diag_rsp_wait:
     la t1, native_diag_state
     lw t0, 112(t1)
-    beqz t0, native_diag_rsp_watchdog_end
+    bnez t0, native_diag_rsp_watchdog_active
     nop
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw t0, native_diag_phase
+    addiu t0, t0, -2
+    bnez t0, native_diag_rsp_watchdog_end
+    nop
+    mfc0 t0, $9
+    la t1, UNCACHED(sram + 0x204C)
+    lw t1, (t1)
+    subu t0, t0, t1
+    li t1, 93750000
+    sltu t0, t0, t1
+    bnez t0, native_diag_rsp_watchdog_end
+    nop
+    la a0, native_diag_rsp_wait
+    b native_diag_sealed_wait_stall
+    nop
+#else
+    b native_diag_rsp_watchdog_end
+    nop
+#endif
+native_diag_rsp_watchdog_active:
     mfc0 t0, $9
     lw t1, 116(t1)
     subu t0, t0, t1
@@ -852,11 +881,15 @@ native_diag_rsp_watchdog_end:
 #ifdef SODIUM64_NATIVE_DIAG
 native_diag_rsp_wait_end:
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
-    mfc0 t1, $9
     la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_rsp_wait_metric_done
+    nop
+    mfc0 t1, $9
     lw t2, 116(t0)
     subu t1, t1, t2
     sw t1, 204(t0)
+native_diag_rsp_wait_metric_done:
 #endif
 .globl native_diag_rsp_wait_size
 .equ native_diag_rsp_wait_size, native_diag_rsp_wait_end - native_diag_rsp_wait
@@ -932,8 +965,12 @@ set_buffer:
 
 #ifdef SODIUM64_NATIVE_DIAG
     la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_frame_wait_start_done
+    nop
     mfc0 t1, $9
     sw t1, 116(t0)
+native_diag_frame_wait_start_done:
 #endif
 frame_wait:
 #ifdef SODIUM64_NATIVE_DIAG
@@ -941,8 +978,29 @@ frame_wait:
 native_diag_frame_wait:
     la t1, native_diag_state
     lw t0, 112(t1)
-    beqz t0, native_diag_frame_watchdog_end
+    bnez t0, native_diag_frame_watchdog_active
     nop
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw t0, native_diag_phase
+    addiu t0, t0, -2
+    bnez t0, native_diag_frame_watchdog_end
+    nop
+    mfc0 t0, $9
+    la t1, UNCACHED(sram + 0x204C)
+    lw t1, (t1)
+    subu t0, t0, t1
+    li t1, 93750000
+    sltu t0, t0, t1
+    bnez t0, native_diag_frame_watchdog_end
+    nop
+    la a0, native_diag_frame_wait
+    b native_diag_sealed_wait_stall
+    nop
+#else
+    b native_diag_frame_watchdog_end
+    nop
+#endif
+native_diag_frame_watchdog_active:
     mfc0 t0, $9
     lw t1, 116(t1)
     subu t0, t0, t1
@@ -955,24 +1013,35 @@ native_diag_frame_watchdog_end:
     // Wait for a framebuffer to be available
     lbu t0, frame_count
     beq t0, 2, frame_wait
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    nop // Keep the conditional trace metric's LA outside the delay slot.
+#endif
 
 #ifdef SODIUM64_NATIVE_DIAG
 native_diag_frame_wait_end:
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
-    mfc0 t1, $9
     la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_frame_wait_metric_done
+    nop
+    mfc0 t1, $9
     lw t2, 116(t0)
     subu t1, t1, t2
     sw t1, 208(t0)
+native_diag_frame_wait_metric_done:
 #endif
 .globl native_diag_frame_wait_size
 .equ native_diag_frame_wait_size, native_diag_frame_wait_end - native_diag_frame_wait
     // The branch's historical delay instruction (li t0,1) remains below.
     li t0, 1
     la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_submit_count_done
+    nop
     lw t1, 28(t0)
     addiu t1, t1, 1
     sw t1, 28(t0)
+native_diag_submit_count_done:
 #endif
 
     // Unhalt the RSP so it can render the next frame

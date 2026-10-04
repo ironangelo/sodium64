@@ -1109,11 +1109,16 @@ draw_objtile:
     andi s5, s5, 0x1FF
 
 hcomp_obj_row_done:
-    // Loop through object tiles in the Y-direction
+    // A drawn row has consumed s0 to zero and advanced X/character columns.
+    // A culled row arrives with s0 still equal to s4 and must not undo work
+    // that never happened. Normalize s0 for the next row in the delay slot,
+    // but backtrack X/character columns only for an actually drawn row.
+    bnez s0, hcomp_obj_row_advance
     move s0, s4
     sub s2, s2, v0
     srl t7, s0, 3
     sub s5, s5, t7
+hcomp_obj_row_advance:
     addi s5, s5, 16
     andi s5, s5, 0x1FF
     addi s1, s1, -8

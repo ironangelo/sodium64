@@ -91,6 +91,17 @@ def main():
     assert (ps['hcomp_screen_switch'],ps['hcomp_math_return'],ps['hcomp_band_entry'])==(0x760,0x778,0x780)
     a=constants();cases=0
     def word(d,n): return struct.unpack_from('>I',d,n)[0]
+    for queue in (0,4):
+        for tm in (0,1,2,4,16,17,31):
+            for ts in (0,1,2,16,31):
+                d=bytearray(4096)
+                d[ev.name('TM')]=tm;d[ev.name('HCOMP_EFFECTIVE_TS')]=ts
+                struct.pack_into('>I',d,ev.name('FRAMEBUFFER')+queue,0xa00f4000)
+                regs=[0]*32;regs[29]=queue
+                execute(phase,pb,d,ps['hcomp_screen_masks'],{ps['hcomp_fill_target']},regs)
+                assert regs[23]==(tm if ts==0 else (tm<<8)|ts),('screen enable ownership',queue,tm,ts)
+                assert d[ev.name('HCOMP_SCREEN')]==(1 if ts==0 else 0)
+                cases+=1
     for y in range(8,248):
         for rows in sorted(set((1, min(8,248-y), min(9,248-y), min(224,248-y),248-y))):
             for queue in (0,4):
@@ -125,4 +136,3 @@ def main():
     print(f'HCOMP_ALIGNED_TARGETS PASS cases={cases} all_y=8..247 rows=1..240 queues=both consumers=executed native_timing=false')
 
 if __name__=='__main__': main()
-

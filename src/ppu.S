@@ -243,13 +243,17 @@ run_line:
 
     // Own the exact fixed operand for every displayed guest row. HDMA below
     // changes the following row; row N-1 uses the state sampled at line N.
-    lhu t0, sub_color
+hcomp_record_row_input:
     lhu t1, cur_line
     addi t1, t1, -1
+    sltiu t0, t1, 240
+    beqz t0, hcomp_row_fixed_recorded
     sll t1, t1, 1
+    lhu t0, sub_color
     lw t2, hcomp_row_fixed_ptr
     add t2, t2, t1
     sh t0, 0(t2)
+hcomp_row_fixed_recorded:
 
     // Decrement the section cooldown if non-zero
     lhu t0, sect_status

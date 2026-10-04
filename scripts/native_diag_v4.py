@@ -86,7 +86,8 @@ def parse_v4(blob,h,order,second_fields):
             raise ValueError('v4 non-monotonic observation')
         row=dict(sequence=i+1,elapsed_ticks=tick,frames_completed=fc,sections_created=sections,
             irq_sample_count=irq,sp_pc_live=pc,sp_status=sp,dp_status=dp,
-            sp_pc_observational=True,sp_pc_overlay_identity_known=bank!=0,
+            sp_pc_observational=True,sp_pc_overlay_identity_known=False,
+            sp_pc_overlay_identity_candidate=bank!=0,
             rsp_bank_id=bank,rsp_bank=RSP_BANKS[bank],rsp_stage_samples=rsp_stages,
             rsp_stage_counts_are_sampled=True,rsp_bank_bookend_max_ticks=bookend_ticks,
             cpu_module_samples=modules,module_counts_saturated=bool(overflow&16),
@@ -94,7 +95,8 @@ def parse_v4(blob,h,order,second_fields):
             ppu_live_sample=dict(bg_mode=flags&15,policy=(flags>>4)&3,screen=(flags>>6)&1,
                 stat_flags_force_blank=bool(flags&128),other_stat_flags_omitted=True,
                 cgwsel=controls[0],cgadsub=controls[1],ts=controls[2],tm=controls[3],
-                tsw=controls[4],tmw=controls[5],band_rows=controls[6],atomic=False),
+                tsw=controls[4],tmw=controls[5],band_rows=controls[6],atomic=False,
+                hardware_access_validated=False),
             interval_seconds=(tick-previous['elapsed_ticks'])/hz,
             completed_frames_in_interval=fc-previous['frames_completed'],
             sections_in_interval=sections-previous['sections_created'],
@@ -161,8 +163,11 @@ def parse_v4(blob,h,order,second_fields):
         all_full_boundaries_retained=not bool(overflow&8),
         completed_cadence_is_presentation_fps=False,
         shader_operation_counts_available=False,
-        rsp_overlay_stage_attribution_available=True,
-        rsp_overlay_pc_validated_by_epoch=True,
+        rsp_overlay_stage_attribution_available=False,
+        rsp_overlay_pc_validated_by_epoch=False,
+        rsp_overlay_stage_candidates_retained=True,
+        rsp_bank_bookend_protocol_present=True,
+        live_dmem_access_hardware_validated=False,
         arithmetic_operands_or_exact_operation_counts_available=False,
         root_cause_is_not_automatically_confirmed=True)
     return dict(header=h,frames=frames,events=events,seconds=seconds,cpu_samples=pcs,cpu_timeline=timeline),blob
@@ -179,7 +184,6 @@ def render_v4(result):
     lines.append('Remainder includes preparation/UI/interrupts; it is not measured active CPU time.')
     totals={name:sum(s['cpu_module_samples'][name] for s in result['seconds'])+h['partial_window']['cpu_module_samples'][name] for name in CPU_MODULES}
     lines.append('All-IRQ CPU modules: '+', '.join(f'{k}={v}' for k,v in totals.items()))
-    lines.append('All-IRQ RSP stages: '+', '.join(f'{k}={v}' for k,v in h['rsp_stage_samples_total'].items()))
-    lines.append('RSP banks are epoch-bookended; concurrent/slow overlay reads remain unknown. Counts are samples, not measured operation durations.')
+    lines.append('All-IRQ RSP stage candidates (not hardware-validated): '+', '.join(f'{k}={v}' for k,v in h['rsp_stage_samples_total'].items()))
+    lines.append('v4 reads live DMEM for bank/PPU candidates, including sub-word reads. Epoch bookends do not validate that hardware access. Do not use bank/stage/PPU candidates as exact causal evidence; use CPU samples, completed-boundary timing and explicit RSP/VI waits.')
     return lines
-

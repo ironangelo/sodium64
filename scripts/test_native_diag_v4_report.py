@@ -72,7 +72,11 @@ class V4Tests(unittest.TestCase):
         r,_=parse(make_blob())
         self.assertEqual(r['events'][0]['rsp_bank'],'main')
         self.assertEqual(r['events'][0]['sp_pc_live'],0xf4c)
-        self.assertTrue(r['header']['frame_analysis']['rsp_overlay_stage_attribution_available'])
+        self.assertFalse(r['header']['frame_analysis']['rsp_overlay_stage_attribution_available'])
+        self.assertFalse(r['header']['frame_analysis']['rsp_overlay_pc_validated_by_epoch'])
+        self.assertTrue(r['header']['frame_analysis']['rsp_overlay_stage_candidates_retained'])
+        self.assertFalse(r['events'][0]['sp_pc_overlay_identity_known'])
+        self.assertFalse(r['events'][0]['ppu_live_sample']['hardware_access_validated'])
         self.assertEqual(sum(r['header']['rsp_stage_samples_total'].values()),r['header']['sample_count'])
         b=make_blob();struct.pack_into('>H',b,0x620a,0x8f4c);checksum(b)
         with self.assertRaisesRegex(ValueError,'snapshot'):parse(b)
@@ -110,4 +114,3 @@ class V4Tests(unittest.TestCase):
         self.assertTrue(all(not x['bounds_valid'] for x in parse(b)[0]['cpu_timeline']))
 
 if __name__=='__main__':unittest.main()
-

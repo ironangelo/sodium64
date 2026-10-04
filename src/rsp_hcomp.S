@@ -225,6 +225,7 @@ hcomp_copy_ts_start:
 hcomp_copy_ts_done:
     li t0, 1
     sb t0, HCOMP_SCREEN
+    lbu s7, TM // Also set Main enables when the Sub pass was skipped entirely.
     lw t0, FRAMEBUFFER(sp)
     addi t0, t0, 280 * -16
     b hcomp_fill_target
@@ -286,5 +287,4 @@ hcomp_band_entry:
 draw_mode7_entry:
     j 0xA4001F78
     li t9, 0x1788
-
 

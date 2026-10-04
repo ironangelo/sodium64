@@ -24,7 +24,32 @@ def main():
     ap.add_argument('cpu',type=Path);ap.add_argument('main_rsp',type=Path);ap.add_argument('mode7_rsp',type=Path)
     ap.add_argument('--output',type=Path);a=ap.parse_args()
     image,s=load_elf(a.cpu)
-    rng=random.Random(0x6516);cases=dict(epoch=0,branches=0,obj_rows=0,apu_reset=0)
+    rng=random.Random(0x6516);cases=dict(epoch=0,branches=0,obj_rows=0,apu_reset=0,rom_cache=0,row_input=0)
+    for queue in (0xa03e7000,0xa03e7200):
+        for line in (0,*range(1,242),255,65535):
+            m=image.copy();lo=(queue-64)&0x1fffffff
+            original=bytes([0xa5])*640
+            m.update((lo+i,b) for i,b in enumerate(original))
+            put(m,s['cur_line'],line,2);put(m,s['sub_color'],0xbeee,2)
+            put(m,s['hcomp_row_fixed_ptr'],queue)
+            execute(m,s['hcomp_record_row_input'],[0]*32,{},stop=s['hcomp_row_fixed_recorded'])
+            want=bytearray(original)
+            if 1<=line<=240:want[64+2*(line-1):66+2*(line-1)]=b'\xbe\xee'
+            assert bytes(m[lo+i] for i in range(640))==want,('row producer bounds',hex(queue),line)
+            cases['row_input']+=1
+    # The resized ROM pager must wrap at the new owner boundary. Execute its
+    # compiled PI-address and slot transition; no cart DMA timing is simulated.
+    for slot in range(194):
+        m=image.copy();put(m,s['rom_pointer'],slot,1)
+        put(m,s['rom_entries']+slot*4,0)
+        regs=[0]*32;regs[27]=0x10123400
+        execute(m,s['tlbl_rom'],regs,{},stop=s['set_entry'],terminal_rcp=True)
+        dram=int.from_bytes(bytes(m[0x04600000+i] for i in range(4)),'big')
+        assert dram==0x200000+slot*8192 and dram+8192<=0x384000
+        assert m[s['rom_pointer']&0x1fffffff]==(slot+1)%194
+        assert regs[27]&0xffffffff==((0x100+slot)<<7)|0x1b
+        assert regs[26]==slot*4
+        cases['rom_cache']+=1
     # Execute the entire compiled JIT reset. Every lookup pointer is invalidated,
     # adjacent owners and scheduler registers survive, and compilation resumes.
     lookup=s['jit_lookup']&0x1fffffff;end=s['jit_pointer']&0x1fffffff

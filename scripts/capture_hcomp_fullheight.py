@@ -151,6 +151,10 @@ def main():
                 report['delivered_controls']=controls.hex()
                 if report['passed']:
                     assert controls==bytes((want_window,want_cg,want_ts,want_tm)),('accepted epoch controls',args.case,controls.hex())
+                    if args.case=='fixed-half-raster':
+                        rows=int.from_bytes(dmem[0xec4:0xec8],'big')
+                        assert rows>=220,('fixed HALF raster was not coalesced',rows)
+                        report['coalesced_fixed_half_rows']=rows
                     if args.case.startswith('span-seek-'):
                         sub_window=args.case=='span-seek-sub-hidden'
                         assert dmem[0xbbb:0xbbd]==bytes((2,0) if sub_window else (0,1)),('BG window screen masks',args.case,dmem[0xbbb:0xbbd].hex())
@@ -190,5 +194,4 @@ def main():
 
 
 if __name__=='__main__':main()
-
 

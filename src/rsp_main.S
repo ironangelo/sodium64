@@ -1413,6 +1413,33 @@ hcomp_depth_send:
     j rdp_send
     nop
 
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+// Resident hole: leave every historical bank entry / DMA / window PC fixed.
+// Tagged source addresses are stripped before DMA. Pending is published before
+// IMEM writes; completion advances the epoch so a PC read can be bookended.
+.org 0xC60
+native_diag_overlay_load:
+    lhu t0, NATIVE_DIAG_RSP_BANK
+    andi t0, t0, 0xFFF0
+    andi a0, a1, 7
+    or t0, t0, a0
+    ori t0, t0, 8
+    sh t0, NATIVE_DIAG_RSP_BANK
+    li a0, -8
+    and a1, a1, a0
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    lhu t0, NATIVE_DIAG_RSP_BANK
+    addi t0, t0, 8
+    sh t0, NATIVE_DIAG_RSP_BANK
+    jr t9
+    move t0, zero
+native_diag_overlay_main_return:
+    b draw_bg
+    move t0, v0
+#endif
+
     // Shared window helper and retained suffix remain at their audited ABI.
 .org 0xCC0
 calc_bg_window_spans:
@@ -1677,19 +1704,32 @@ ret_jump:
 overlay_load_mode7:
     lw a1, OVERLAY_MODE7_SRC
 overlay_load_slot:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    j native_diag_overlay_load
+    nop
+    .space 12
+#else
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
     jr t9
     nop
+#endif
 
 overlay_load_main:
     lw a1, OVERLAY_MAIN_SRC
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    li t9, %lo(native_diag_overlay_main_return)
+    j native_diag_overlay_load
+    nop
+    .space 8
+#else
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
     b draw_bg
     move t0, v0
+#endif
 
 
 hcomp_cgram_pair_ready:
@@ -1723,3 +1763,4 @@ hcomp_cgram_pair_ready:
 hcomp_cgram_marker:
     b hcomp_cgram_store_marker
     lbu k1, SPLIT_LINE
+

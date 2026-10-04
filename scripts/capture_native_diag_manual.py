@@ -51,17 +51,23 @@ def main():
         validate_stop(c.request('c'),'PI capture and terminal screen complete')
         blob=c.read_memory(s['sram']|0xa0000000,0x8000,chunk)
         result,_=parse(blob);h=result['header']
-        assert (h['version'],h['reason'],h['precision'],h['frameskip'])==(3 if a.trace else 2,2,20,0)
+        assert (h['version'],h['reason'],h['precision'],h['frameskip'])==(4 if a.trace else 2,2,20,0)
         assert 20<=h['elapsed_seconds_count_domain']<21 and h['frames_completed']>0
         assert h['halt_acknowledged']==1 and h['sp_dma_settled']==1
         assert all('ppu_live_sample' in e for e in result['events'])
         if a.trace:
-            assert 360<=len(result['events'])<=400 and h['trace_overflow_flags']==0
+            assert 150<=len(result['events'])<=160 and h['trace_overflow_flags']==0
             assert result['events'][0]['elapsed_ticks']<h['count_hz']//8
             assert result['events'][-1]['elapsed_ticks']>h['count_hz']*19.8
             assert result['cpu_timeline'][0]['elapsed_ticks_upper']<h['count_hz']//8
             assert result['cpu_timeline'][-1]['elapsed_ticks_upper']>h['count_hz']*19.8
-            assert h['retained_cpu_samples']>600
+            assert h['retained_cpu_samples']>180
+            assert sum(h['rsp_stage_samples_total'].values())==h['sample_count']
+            assert len(result['frames'])==h['frames_completed']-h['frame_baseline_ordinal']
+            assert 1000<=len(result['frames'])<=1280
+            assert all(f['cpu_rsp_wait_ticks']+f['cpu_vi_wait_ticks']<=f['interval_ticks'] for f in result['frames'])
+            assert result['frames'][0]['elapsed_ticks']<h['count_hz']//10
+            assert result['frames'][-1]['elapsed_ticks']>h['count_hz']*19.8
         else:assert len(result['events'])==64
         (a.output/'original-capture.sav').write_bytes(blob)
         symbolicate(result,a.elf);(a.output/'decoded-original.json').write_text(json.dumps(result,indent=2)+'\n')
@@ -82,7 +88,7 @@ def main():
                    framebuffer_seeding=False,guest_state_writes=False,diagnostic_state_writes=False,
                    input_sample_injection_only=True,native_fps_authority=False)
         if a.trace:
-            proof.update(whole_interval_retained=True,trace_records=len(result['events']),
+            proof.update(whole_interval_retained=True,trace_records=len(result['events']),frame_records=len(result['frames']),observer_body_fraction=h['observer_measured_fraction'],
                          trace_overflow_flags=h['trace_overflow_flags'],retained_cpu_samples=h['retained_cpu_samples'],
                          first_trace_seconds=result['events'][0]['elapsed_ticks']/h['count_hz'],
                          last_trace_seconds=result['events'][-1]['elapsed_ticks']/h['count_hz'])
@@ -90,3 +96,4 @@ def main():
     finally:c.close()
 
 if __name__=='__main__':main()
+

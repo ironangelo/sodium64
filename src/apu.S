@@ -95,6 +95,10 @@ write_iomap:
     .word write_t2div, write_unk, write_unk, write_unk // 0xFC-0xFF
 
 .text
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_apu_start
+native_diag_apu_start:
+#endif
 .set noreorder
 
 .align 5
@@ -713,4 +717,5 @@ write_apuio3: // a1: value
     sb a1, apu_inputs + 3
     jr ra
     nop
+
 

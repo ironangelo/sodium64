@@ -130,6 +130,7 @@ jobs:
             vram-flush-compiled.json
             native-diag-build.log
             scripts/native_diag_report.py
+            scripts/native_diag_v4.py
             scripts/profile_report.py
 
   native-trace-build:
@@ -147,6 +148,7 @@ jobs:
         run: |
           python3 scripts/test_native_diag_report.py
           python3 scripts/test_native_diag_trace_report.py
+          python3 scripts/test_native_diag_v4_report.py
       - name: Compile empty native diagnostic template
         shell: bash
         run: |
@@ -156,7 +158,7 @@ jobs:
       - name: Check resident RSP ABI and runtime arena
         run: |
           python3 scripts/test_native_diag_arm.py build/sodium64.elf
-          python3 scripts/test_native_diag_trace.py build/sodium64.elf --json-output native-trace-compiled.json
+          python3 scripts/test_native_diag_v4.py build/sodium64.elf --rsp-main build/src/rsp_main.elf --rsp-mode7 build/src/rsp_mode7.elf --rsp-hcomp build/src/rsp_hcomp.elf --json-output native-trace-compiled.json
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
@@ -184,6 +186,7 @@ jobs:
             native-trace-build.log
             native-trace-compiled.json
             scripts/native_diag_report.py
+            scripts/native_diag_v4.py
             scripts/profile_report.py
 
   profile-build:
@@ -482,5 +485,6 @@ jobs:
           artifacts: sodium64.zip
           tag: release
           token: ${{ secrets.GITHUB_TOKEN }}
+
 
 

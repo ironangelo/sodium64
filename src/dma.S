@@ -81,6 +81,10 @@ unit_lengths: .byte 1, 2, 2, 4, 4, 4, 2, 4 // Transfer mode unit lengths
 address_steps: .byte 1, 0, -1, 0 // CPU address steps
 
 .text
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_dma_start
+native_diag_dma_start:
+#endif
 .set noreorder
 
 .align 5
@@ -610,3 +614,9 @@ write_unusedx: // a0: address, a1: value
     sb a1, unusedx(t0)
     jr ra
     nop
+
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_dma_end
+native_diag_dma_end:
+#endif

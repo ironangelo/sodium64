@@ -7,17 +7,24 @@
 #ifdef SODIUM64_NATIVE_DIAG
 #define DIAG_HZ 46875000
 #define DIAG_SAMPLE 131071
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+#define DIAG_TICK 5859375
+#else
 #define DIAG_TICK 2343750
+#endif
 #define DIAG_STALL 93750000
 #define DIAG_LIMIT 937500000
 #define DBASE UNCACHED(sram)
 #define DHDR UNCACHED(sram + 0x2000)
 #define DPCS UNCACHED(sram + 0x2200)
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
-// v3 uses an append-only 400 x 48-byte trace and compact second records.
-// Terminal guest/RSP memory snapshots are deliberately omitted in this mode.
-#define DEVENTS UNCACHED(sram + 0x3200)
-#define DSECONDS UNCACHED(sram + 0x7D00)
+// v4: exact completed-boundary timings for the full interval, plus 8 Hz
+// workload observations and all-IRQ module / resident-wait attribution.
+// All buffers append only; each overflow is explicit. Exact 24 KiB layout:
+// 512 header + 256 EPCs + 1280*12 frames + 160*40 observations + 20*64 seconds.
+#define DFRAMES UNCACHED(sram + 0x2600)
+#define DEVENTS UNCACHED(sram + 0x6200)
+#define DSECONDS UNCACHED(sram + 0x7B00)
 #else
 #define DPPU UNCACHED(sram + 0x3200)
 #define DEVENTS UNCACHED(sram + 0x4200)
@@ -30,7 +37,9 @@
 .globl native_diag_ready_text, native_diag_active_text
 .data
 .align 5
-native_diag_state: .word 0:34
+native_diag_state: .word 0:80
+.globl native_diag_guest_sram_exp
+native_diag_guest_sram_exp: .word 0
 .align 5
 native_diag_irq_save: .dword 0:12
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
@@ -48,14 +57,22 @@ native_diag_dp_text: .string "DP"
 native_diag_end_text: .string "END"
 native_diag_current_text: .string "CUR"
 native_diag_reset_text: .string "RESET TO SAVE FILE"
+native_diag_unsupported_text: .string "DIAGNOSTIC UNSUPPORTED"
+native_diag_sram_text: .string "GUEST SRAM ABOVE 8KB"
+native_diag_normal_text: .string "USE NORMAL EMULATOR"
 native_diag_ready_text: .string "START N64: CAPTURE 20S"
 native_diag_active_text: .string "RECORDING 20S        "
 .text
 .set noreorder
 .align 5
 native_diag_init:
-    // The shipped wrapper is verified LoROM with 2 KiB guest SRAM. Preserve the
-    // guest region; invalidate every cached recorder alias before uncached use.
+    // Generic template: memory_init records the selected header's SRAM size.
+    // Refuse before touching ANY SRAM when the guest needs the recorder area.
+    lw t0, native_diag_guest_sram_exp
+    sltiu t0, t0, 4
+    beqz t0, native_diag_unsupported
+    nop
+    // Preserve guest SRAM; invalidate recorder aliases before uncached use.
     la t0, sram + 0x2000
     la t1, sram + 0x8000
 1:  cache 0x15, (t0)
@@ -69,7 +86,7 @@ native_diag_init:
     bne t0, t1, 2b
     nop
     la t0, native_diag_state
-    la t1, native_diag_state + 136
+    la t1, native_diag_state + 320
 3:  sw zero, (t0)
     addiu t0, t0, 4
     bne t0, t1, 3b
@@ -89,6 +106,39 @@ native_diag_init:
     jr ra
     nop
 
+
+.align 5
+native_diag_unsupported:
+    lw s2, framebuffer
+    li t0, 0xA0000000
+    or s2, s2, t0
+    move t0, s2
+    li t1, 0x00010001
+    li t2, 560 * 240
+    addu t2, t2, t0
+native_diag_unsupported_clear:
+    sw t1, (t0)
+    addiu t0, t0, 4
+    bne t0, t2, native_diag_unsupported_clear
+    nop
+    la a0, native_diag_unsupported_text
+    li a1, 32 * 560 + 32
+    addu a1, a1, s2
+    jal draw_string
+    nop
+    la a0, native_diag_sram_text
+    li a1, 48 * 560 + 32
+    addu a1, a1, s2
+    jal draw_string
+    nop
+    la a0, native_diag_normal_text
+    li a1, 64 * 560 + 32
+    addu a1, a1, s2
+    jal draw_string
+    nop
+    b native_diag_done
+    nop
+
 native_diag_arm:
     // Called at the completed-frame UI boundary. Only t0..t3/k0/k1 are borrowed;
     // a0 and the renderer's t4/t5/t6 survive. No guest state is reset.
@@ -102,7 +152,7 @@ native_diag_arm:
     lw t1, 112(t0)
     bnez t1, native_diag_arm_return
     nop
-    la t1, native_diag_state + 136
+    la t1, native_diag_state + 320
 native_diag_arm_clear:
     sw zero, (t0)
     addiu t0, t0, 4
@@ -132,7 +182,7 @@ native_diag_arm_return:
     nop
 
 // The fast path uses only reserved k0/k1, no HI/LO, at or ordinary GPRs.
-// The 20 Hz path explicitly saves all additional registers it touches.
+// The slower observation path explicitly saves all additional registers it touches.
 .align 5
 native_diag_interrupt:
     mfc0 k0, $9
@@ -141,14 +191,14 @@ native_diag_interrupt:
     mfc0 k0, $14
     sw k0, 4(k1)
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
-    // Keep one of eight EPCs over the whole 20 seconds, not only the tail.
+    // Keep one of 32 EPCs; every IRQ still enters module / occupancy counters.
     // All occupancy buckets below still count EVERY timer interrupt.
     lw k0, 8(k1)
-    andi k0, k0, 7
+    andi k0, k0, 31
     bnez k0, native_diag_pc_sampled
     nop
     lw k0, 12(k1)
-    sltiu k0, k0, 4096
+    sltiu k0, k0, 1024
     beqz k0, native_diag_pc_full
     nop
     lw k0, 12(k1)
@@ -250,15 +300,165 @@ native_diag_bucket_add:
     lw k0, (k1)
     addiu k0, k0, 1
     sw k0, (k1)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // Reuse the already selected wait/JIT bucket before static module lookup.
+    la k0, native_diag_state + 68
+    beq k0, k1, native_diag_module_rsp
+    nop
+    la k0, native_diag_state + 72
+    beq k0, k1, native_diag_module_vi
+    nop
+    la k0, native_diag_state + 76
+    beq k0, k1, native_diag_module_apu
+    nop
+    b native_diag_module_static
+    nop
+#endif
+native_diag_sp_sample:
     lui k1, 0xA404
     lw k0, 16(k1)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    la k1, native_diag_state
+    sw k0, 300(k1)
+    sw zero, 264(k1)
+#endif
     andi k0, k0, 1
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    bnez k0, native_diag_rsp_halted_sample
+#else
     bnez k0, native_diag_sp_counted
+#endif
     nop
     la k1, native_diag_state + 84
     lw k0, (k1)
     addiu k0, k0, 1
     sw k0, (k1)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // A stable epoch excludes a concurrent overlay DMA. Slow (>1ms) reads
+    // are discarded as unknown, preventing 12-bit epoch wrap ambiguity.
+    la k1, native_diag_state
+    mfc0 k0, $9
+    sw k0, 248(k1)
+    lhu k0, DMEM(NATIVE_DIAG_RSP_BANK)
+    sw k0, 256(k1)
+    lw k0, 0xA4080000
+    andi k0, k0, 0xFFF
+    sw k0, 260(k1)
+    sw k0, 264(k1)
+    lhu k0, DMEM(NATIVE_DIAG_RSP_BANK)
+    lw k1, 256(k1)
+    bne k0, k1, native_diag_rsp_classify
+    nop
+    andi k0, k0, 8
+    bnez k0, native_diag_rsp_classify
+    nop
+    mfc0 k0, $9
+    lw k1, native_diag_state + 248
+    subu k0, k0, k1
+    sltiu k0, k0, 46875
+    beqz k0, native_diag_rsp_classify
+    nop
+    lw k0, native_diag_state + 256
+    andi k0, k0, 7
+    addiu k1, k0, -1
+    sltiu k1, k1, 6
+    beqz k1, native_diag_rsp_classify
+    nop
+    sll k0, k0, 12
+    lw k1, native_diag_state + 260
+    or k0, k0, k1
+    la k1, native_diag_state
+    sw k0, 264(k1)
+native_diag_rsp_classify:
+    // Invariant resident waits are identifiable even while a bank is loading.
+    lw k0, native_diag_state + 260
+    addiu k0, k0, -0xF4C
+    sltiu k0, k0, 12
+    bnez k0, native_diag_rsp_dma_sample
+    nop
+    lw k0, native_diag_state + 260
+    addiu k0, k0, -0x2D8
+    sltiu k0, k0, 24
+    bnez k0, native_diag_rsp_fetch_sample
+    nop
+    lw k0, native_diag_state + 260
+    addiu k0, k0, -0x31C
+    sltiu k0, k0, 16
+    bnez k0, native_diag_rsp_texture_sample
+    nop
+    lw k0, native_diag_state + 264
+    srl k0, k0, 12
+    beqz k0, native_diag_rsp_unknown_sample
+    nop
+    addiu k0, k0, -3
+    beqz k0, native_diag_rsp_phase_sample
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_direct_sample
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_math_sample
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_prepare_sample
+    nop
+    b native_diag_rsp_draw_sample
+    nop
+native_diag_rsp_phase_sample:
+    lw k0, native_diag_state + 260
+    addiu k0, k0, -0x3E4
+    sltiu k0, k0, 16
+    bnez k0, native_diag_rsp_rdp_sample
+    nop
+native_diag_rsp_prepare_sample:
+    la k1, native_diag_state + 284
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_direct_sample:
+    la k1, native_diag_state + 292
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_math_sample:
+    la k1, native_diag_state + 288
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_draw_sample:
+    la k1, native_diag_state + 296
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_unknown_sample:
+    la k1, native_diag_state + 272
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_halted_sample:
+    la k1, native_diag_state + 268
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_dma_sample:
+    la k1, native_diag_state + 236
+    lw k0, (k1)
+    addiu k0, k0, 1
+    sw k0, (k1)
+    la k1, native_diag_state + 276
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_fetch_sample:
+    la k1, native_diag_state + 240
+    b native_diag_rsp_resident_rdp_sample
+    nop
+native_diag_rsp_texture_sample:
+    la k1, native_diag_state + 244
+native_diag_rsp_resident_rdp_sample:
+    lw k0, (k1)
+    addiu k0, k0, 1
+    sw k0, (k1)
+native_diag_rsp_rdp_sample:
+    la k1, native_diag_state + 280
+native_diag_rsp_stage_add:
+    lw k0, (k1)
+    addiu k0, k0, 1
+    sw k0, (k1)
+#endif
 native_diag_sp_counted:
     lui k1, 0xA410
     lw k0, 12(k1)
@@ -569,16 +769,16 @@ native_diag_poll_finalize:
 
 
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
-// Slow IRQ callers already save t0..t7/ra. No HI/LO, guest state or RCP writes.
-// Live controls and PC are observational and can straddle section transitions.
+// 8 Hz observations bound all-IRQ CPU / RSP stage counts to about eight frames.
+// Per-frame wait measurements below supply the precise completed boundaries.
 .align 5
 native_diag_trace_event:
     lw t2, 40(t0)
-    sltiu t3, t2, 400
+    sltiu t3, t2, 160
     beqz t3, native_diag_trace_full
     nop
     sll t3, t2, 5
-    sll t4, t2, 4
+    sll t4, t2, 3
     addu t3, t3, t4
     la t4, DEVENTS
     addu t4, t4, t3
@@ -588,55 +788,82 @@ native_diag_trace_event:
     subu t2, t1, t2
     sw t2, 0(t4)
     lw t2, 24(t0)
-    sw t2, 4(t4)
+    sh t2, 8(t4)
     lw t2, 56(t0)
-    sw t2, 8(t4)
-    lw t2, 8(t0)
-    andi t2, t2, 0xFFFF
-    lw t3, 0xA4080000
-    sll t3, t3, 16
-    or t2, t2, t3
-    sw t2, 12(t4)
-    lw t2, 0xA4040010
-    andi t2, t2, 0xFFFF
-    lbu t3, DMEM(BG_MODE)
-    sll t3, t3, 16
-    or t2, t2, t3
-    lbu t3, DMEM(STAT_FLAGS)
-    sll t3, t3, 24
-    or t2, t2, t3
-    sw t2, 16(t4)
+    sw t2, 4(t4)
+    lw t2, 264(t0) // bookended PC / bank from this IRQ, not a second PC read
+    sh t2, 10(t4)
+    lw t2, 300(t0)
+    sb t2, 12(t4)
     lw t2, 0xA410000C
-    andi t2, t2, 0xFFFF
-    lbu t3, DMEM(TMW)
-    sll t3, t3, 16
-    or t2, t2, t3
-    lbu t3, DMEM(HCOMP_SCREEN)
-    sll t3, t3, 24
-    or t2, t2, t3
-    sw t2, 20(t4)
-    lhu t2, DMEM(WBGSEL)
-    sll t2, t2, 16
-    lhu t3, DMEM(WHX)
-    or t2, t2, t3
-    sw t2, 24(t4)
-    lhu t2, DMEM(WHX + 2)
-    sll t2, t2, 16
-    lhu t3, DMEM(SUB_COLOR)
-    or t2, t2, t3
-    sw t2, 28(t4)
-    lw t2, DMEM(WOBJSEL)
-    sw t2, 32(t4)
-    lw t2, DMEM(CGADSUB)
-    sw t2, 36(t4)
+    sh t2, 14(t4)
+    lbu t3, DMEM(BG_MODE)
+    andi t3, t3, 15
     lw t2, DMEM(HCOMP_BAND_RAW)
-    sw t2, 40(t4)
-    lhu t2, DMEM(MAIN_COLOR)
-    sll t2, t2, 16
-    lw t3, DMEM(HCOMP_BAND_ROWS)
-    andi t3, t3, 0xFFFF
+    andi t2, t2, 3
+    sll t2, t2, 4
+    or t3, t3, t2
+    lbu t2, DMEM(STAT_FLAGS)
+    andi t2, t2, 0x80
+    or t3, t3, t2
+    lbu t2, DMEM(HCOMP_SCREEN)
+    sll t2, t2, 6
     or t2, t2, t3
-    sw t2, 44(t4)
+    sb t2, 13(t4)
+    lw t2, DMEM(CGADSUB)
+    srl t3, t2, 24
+    sb t3, 17(t4)
+    srl t3, t2, 16
+    sb t3, 18(t4)
+    srl t3, t2, 8
+    sb t3, 19(t4)
+    sb t2, 20(t4)
+    lbu t2, DMEM(CGWSEL)
+    sb t2, 16(t4)
+    lbu t2, DMEM(TMW)
+    sb t2, 21(t4)
+    lw t2, DMEM(HCOMP_BAND_ROWS)
+    sh t2, 22(t4)
+    li t2, 0
+native_diag_trace_module_copy:
+    addu t3, t0, t2
+    lw t5, 136(t3)
+    sw zero, 136(t3)
+    sltiu t6, t5, 256
+    bnez t6, native_diag_trace_module_fits
+    nop
+    li t5, 255
+    la t6, DHDR + 0x12C
+    lw t7, (t6)
+    ori t7, t7, 16
+    sw t7, (t6)
+native_diag_trace_module_fits:
+    srl t6, t2, 2
+    addu t6, t4, t6
+    sb t5, 24(t6)
+    addiu t2, t2, 4
+    bne t2, 32, native_diag_trace_module_copy
+    nop
+    li t2, 0
+native_diag_trace_rsp_copy:
+    addu t3, t0, t2
+    lw t5, 268(t3)
+    sw zero, 268(t3)
+    sltiu t6, t5, 256
+    bnez t6, native_diag_trace_rsp_fits
+    nop
+    li t5, 255
+    la t6, DHDR + 0x12C
+    lw t7, (t6)
+    ori t7, t7, 16
+    sw t7, (t6)
+native_diag_trace_rsp_fits:
+    srl t6, t2, 2
+    addu t6, t4, t6
+    sb t5, 32(t6)
+    addiu t2, t2, 4
+    bne t2, 32, native_diag_trace_rsp_copy
+    nop
     jr ra
     nop
 native_diag_trace_full:
@@ -653,13 +880,7 @@ native_diag_trace_second:
     sltiu t3, t2, 20
     beqz t3, native_diag_trace_second_full
     nop
-    sll t3, t2, 1
-    la t4, DHDR + 0x140
-    addu t4, t4, t3
-    lw t3, 128(t0)
-    sh t3, (t4)
-    sw zero, 128(t0)
-    sll t3, t2, 5
+    sll t3, t2, 6
     la t4, DSECONDS
     addu t4, t4, t3
     addiu t2, t2, 1
@@ -684,6 +905,33 @@ native_diag_trace_second_copy:
     addiu t2, t2, 4
     bne t2, 36, native_diag_trace_second_copy
     nop
+    li t2, 0
+native_diag_trace_second_modules:
+    addu t3, t0, t2
+    lw t5, 168(t3)
+    sw zero, 168(t3)
+    srl t3, t2, 1
+    addu t3, t4, t3
+    sh t5, 32(t3)
+    addiu t2, t2, 4
+    bne t2, 32, native_diag_trace_second_modules
+    nop
+    lw t2, 128(t0)
+    sh t2, 48(t4)
+    sw zero, 128(t0)
+    lw t2, 236(t0)
+    sh t2, 50(t4)
+    sw zero, 236(t0)
+    lw t2, 240(t0)
+    sh t2, 52(t4)
+    sw zero, 240(t0)
+    lw t2, 244(t0)
+    sh t2, 54(t4)
+    sw zero, 244(t0)
+    lw t2, 104(t0)
+    sw t2, 56(t4)
+    lw t2, 228(t0)
+    sw t2, 60(t4)
     jr ra
     nop
 native_diag_trace_second_full:
@@ -692,6 +940,188 @@ native_diag_trace_second_full:
     ori t2, t2, 4
     sw t2, (t3)
     jr ra
+    nop
+#endif
+
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_frame_complete
+.align 5
+native_diag_frame_complete:
+    mfc0 t1, $9
+    mfc0 t3, $12
+    li t0, -2
+    and t2, t3, t0
+    mtc0 t2, $12
+    nop
+    nop
+    la t0, native_diag_state
+    sw t1, 224(t0)
+    lw t2, 24(t0)
+    addiu t2, t2, 1
+    sw t2, 24(t0)
+    lw t2, 112(t0)
+    beqz t2, native_diag_frame_return
+    nop
+    lw t2, 216(t0)
+    bnez t2, native_diag_frame_append
+    nop
+    li t2, 1
+    sw t2, 216(t0)
+    lw t2, 0(t0)
+    subu t2, t1, t2
+    sw t2, 220(t0)
+    lw t2, 24(t0)
+    sw t2, 252(t0)
+    b native_diag_frame_update
+    nop
+native_diag_frame_append:
+    lw t2, 212(t0)
+    sltiu k0, t2, 1280
+    beqz k0, native_diag_frames_full
+    nop
+    sll k0, t2, 3
+    sll k1, t2, 2
+    addu k0, k0, k1
+    la k1, DFRAMES
+    addu k0, k0, k1
+    lw k1, 0(t0)
+    subu k1, t1, k1
+    sw k1, 0(k0)
+    lw k1, 204(t0)
+    sw k1, 4(k0)
+    lw k1, 208(t0)
+    sw k1, 8(k0)
+    addiu t2, t2, 1
+    sw t2, 212(t0)
+    b native_diag_frame_update
+    nop
+native_diag_frames_full:
+    la k0, DHDR + 0x12C
+    lw k1, (k0)
+    ori k1, k1, 8
+    sw k1, (k0)
+native_diag_frame_update:
+    sw t1, 200(t0)
+    sw zero, 204(t0)
+    sw zero, 208(t0)
+native_diag_frame_return:
+    mfc0 k0, $9
+    lw k1, 224(t0)
+    subu k0, k0, k1
+    lw k1, 228(t0)
+    addu k1, k1, k0
+    sw k1, 228(t0)
+    lw k1, 232(t0)
+    sltu k1, k1, k0
+    beqz k1, native_diag_frame_max_done
+    nop
+    sw k0, 232(t0)
+native_diag_frame_max_done:
+    mtc0 t3, $12
+    nop
+    nop
+    jr ra
+    nop
+
+native_diag_module_static:
+    mfc0 k0, $14
+    la k1, native_diag_cpu_start
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_after_cpu
+    nop
+    mfc0 k0, $14
+    la k1, native_diag_cpu_end
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_cpu
+    nop
+native_diag_module_after_cpu:
+    mfc0 k0, $14
+    la k1, native_diag_apu_start
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_after_apu
+    nop
+    mfc0 k0, $14
+    la k1, native_diag_apu_end
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_apu
+    nop
+native_diag_module_after_apu:
+    mfc0 k0, $14
+    la k1, native_diag_dsp_start
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_after_dsp
+    nop
+    mfc0 k0, $14
+    la k1, native_diag_dsp_end
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_dsp
+    nop
+native_diag_module_after_dsp:
+    mfc0 k0, $14
+    la k1, native_diag_dma_start
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_after_dma
+    nop
+    mfc0 k0, $14
+    la k1, native_diag_dma_end
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_dma
+    nop
+native_diag_module_after_dma:
+    mfc0 k0, $14
+    la k1, native_diag_ppu_start
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_after_ppu
+    nop
+    mfc0 k0, $14
+    la k1, native_diag_ppu_end
+    sltu k0, k0, k1
+    bnez k0, native_diag_module_ppu
+    nop
+native_diag_module_after_ppu:
+    b native_diag_module_other
+    nop
+native_diag_module_cpu:
+    la k1, native_diag_state + 136
+    b native_diag_module_add
+    nop
+native_diag_module_apu:
+    la k1, native_diag_state + 140
+    b native_diag_module_add
+    nop
+native_diag_module_dsp:
+    la k1, native_diag_state + 144
+    b native_diag_module_add
+    nop
+native_diag_module_dma:
+    la k1, native_diag_state + 148
+    b native_diag_module_add
+    nop
+native_diag_module_ppu:
+    la k1, native_diag_state + 152
+    b native_diag_module_add
+    nop
+native_diag_module_rsp:
+    la k1, native_diag_state + 156
+    b native_diag_module_add
+    nop
+native_diag_module_vi:
+    la k1, native_diag_state + 160
+    b native_diag_module_add
+    nop
+native_diag_module_other:
+    la k1, native_diag_state + 164
+    b native_diag_module_add
+    nop
+native_diag_module_add:
+    lw k0, (k1)
+    addiu k0, k0, 1
+    sw k0, (k1)
+    lw k0, 32(k1)
+    addiu k0, k0, 1
+    sw k0, 32(k1)
+    b native_diag_sp_sample
     nop
 #endif
 
@@ -773,7 +1203,7 @@ native_diag_finalize:
     li t0, 0x53363444
     sw t0, 0(s0)
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
-    li t0, 3
+    li t0, 4
 #else
     li t0, 2
 #endif
@@ -784,7 +1214,11 @@ native_diag_finalize:
     sw t0, 20(s0)
     li t0, DIAG_SAMPLE
     sw t0, 24(s0)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    li t0, 256
+#else
     li t0, 1024
+#endif
     sw t0, 28(s0)
     lw t0, 8(s1)
     sw t0, 32(s0)
@@ -793,7 +1227,7 @@ native_diag_finalize:
     lw t0, 40(s1)
     sw t0, 40(s0)
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
-    li t0, 400
+    li t0, 160
 #else
     li t0, 64
 #endif
@@ -895,16 +1329,57 @@ native_diag_partial_copy:
     bnez t2, native_diag_partial_copy
     nop
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
-    li t0, 8
-    sw t0, 0x128(s0) // Retained EPC stride; overflow flags at 0x12C stay intact.
-    li t0, 48
-    sw t0, 0x130(s0)
     li t0, 32
+    sw t0, 0x128(s0) // Retained EPC stride; overflow flags stay intact.
+    li t0, 40
+    sw t0, 0x130(s0)
+    li t0, 64
     sw t0, 0x134(s0)
-    li t0, 0x56525731 // VRW1: optional per-second VRAM wait subset extension.
+    li t0, 0x46524D34 // FRM4: full-interval completed-boundary records.
     sw t0, 0x138(s0)
-    lw t0, 128(s1)
+    lw t0, 212(s1)
     sw t0, 0x13C(s0)
+    li t0, 1280
+    sw t0, 0x140(s0)
+    li t0, 12
+    sw t0, 0x144(s0)
+    lw t0, 220(s1)
+    sw t0, 0x148(s0)
+    lw t0, 228(s1)
+    sw t0, 0x14C(s0)
+    lw t0, 232(s1)
+    sw t0, 0x150(s0)
+    li t0, 0
+native_diag_partial_modules:
+    addu t1, s1, t0
+    lw t2, 168(t1)
+    addu t3, s0, t0
+    sw t2, 0x158(t3)
+    lw t2, 136(t1)
+    sw t2, 0x198(t3)
+    lw t2, 268(t1)
+    sw t2, 0x1B8(t3)
+    addiu t0, t0, 4
+    bne t0, 32, native_diag_partial_modules
+    nop
+    lw t0, 128(s1)
+    sw t0, 0x178(s0)
+    lw t0, 236(s1)
+    sw t0, 0x17C(s0)
+    lw t0, 240(s1)
+    sw t0, 0x180(s0)
+    lw t0, 244(s1)
+    sw t0, 0x184(s0)
+    li t0, DIAG_TICK
+    sw t0, 0x188(s0)
+    lw t0, native_diag_guest_sram_exp
+    sw t0, 0x18C(s0)
+    lw t0, 252(s1)
+    sw t0, 0x190(s0)
+    li t0, 46875
+    sw t0, 0x1D8(s0)
+    li t0, 0x42414E34 // BAN4: bank bookending / epoch protocol
+    sw t0, 0x1DC(s0)
 #endif
     // Read PC only AFTER HALT is acknowledged. All these waits are bounded.
     li t0, 2

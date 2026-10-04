@@ -762,3 +762,9 @@ cpu_mvn16: // MVN ss,dd (16-bit)
     sh t1, (t2)
     j cpu_execute
     addi s7, s7, 3
+
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_cpu_end
+native_diag_cpu_end:
+#endif

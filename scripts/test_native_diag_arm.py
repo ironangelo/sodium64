@@ -19,13 +19,13 @@ def load_elf(path):
             memory.update((s[3]+j&0x1fffffff,v) for j,v in enumerate(raw))
     return memory,dict((n,v&0xffffffff) for v,n in elf_symbols(path))
 
-def execute(memory,pc,regs,cp):
+def execute(memory,pc,regs,cp,stop=0xdead0000):
     writes=[];pending=None
     def read(a,n):return int.from_bytes(bytes(memory.get((a+i)&0x1fffffff,0) for i in range(n)),'big')
     def write(a,v,n):
         for i,c in enumerate((v&((1<<(n*8))-1)).to_bytes(n,'big')):memory[(a+i)&0x1fffffff]=c
     for step in range(100000):
-        if pc==0xdead0000:return writes
+        if pc==stop:return writes
         w=read(pc,4);op=w>>26;rs=w>>21&31;rt=w>>16&31;rd=w>>11&31
         imm=w&65535;si=imm if imm<32768 else imm-65536;target=None
         if op==0:
@@ -40,6 +40,7 @@ def execute(memory,pc,regs,cp):
         elif op in (4,5):
             if (regs[rs]==regs[rt])==(op==4):target=pc+4+(si<<2)
         elif op in (8,9):regs[rt]=regs[rs]+si
+        elif op==11:regs[rt]=int(regs[rs]<(si&0xffffffff))
         elif op==12:regs[rt]=regs[rs]&imm
         elif op==13:regs[rt]=regs[rs]|imm
         elif op==15:regs[rt]=imm<<16
@@ -84,13 +85,25 @@ def main():
             assert cp[11]==(now+131071)&0xffffffff and cp[12]==status|0x8000
             assert writes[0]==(12,status&~1) and writes[-1]==(12,status|0x8000)
             for i in set(range(32))-{8,9,10,11,26,27}:assert r[i]==before[i],('register',i)
-            expected={0:now,16:(now+2343750)&0xffffffff,20:(now+46875000)&0xffffffff,36:now,112:1}
+            period=5859375 if 'native_diag_frame_complete' in s else 2343750
+            expected={0:now,16:(now+period)&0xffffffff,20:(now+46875000)&0xffffffff,36:now,112:1}
             for i in range(0,128,4):assert word(m,state+i)==expected.get(i,0),(i,word(m,state+i))
             saved=bytes(m[state+i] for i in range(128));cp[9]=(now+999999)&0xffffffff
             r[31]=0xdead0000;again=execute(m,s['native_diag_arm'],r,cp)
             assert not any(reg==11 for reg,value in again),'second Start must not reset Compare'
             assert bytes(m[state+i] for i in range(128))==saved,'one-shot arm changed counters'
             count+=1
+    # Unsupported headers must reject before modifying any of the 32 KiB save.
+    for exponent in (4,5,15,255):
+        m=base.copy();save=bytes((i*43+7)&255 for i in range(0x8000))
+        m.update((sram+i,v) for i,v in enumerate(save))
+        address=s['native_diag_guest_sram_exp']&0x1fffffff
+        for i,v in enumerate(exponent.to_bytes(4,'big')):m[address+i]=v
+        r=[0]*32;r[31]=0xdead0000;cp={9:0,11:0xdeadbeef,12:0x401}
+        writes=execute(m,s['native_diag_init'],r,cp,stop=s['native_diag_unsupported'])
+        assert bytes(m[sram+i] for i in range(0x8000))==save
+        assert not writes and cp[11]==0xdeadbeef
+        count+=1
     print('NATIVE_DIAG_ARM PASS',json.dumps(dict(cases=count,guest_sram_preserved=True,
           dormant_init=True,one_shot=True,count_wrap=True,renderer_registers_preserved=True)))
 

@@ -231,13 +231,14 @@ jobs:
           set -euo pipefail
           python3 scripts/test_native_diag_report.py
           python3 scripts/test_native_diag_trace_report.py
+          python3 scripts/test_native_diag_v4_report.py
           mkdir -p default-native-qualified
           cp sodium64.z64 default-native-qualified/
           cp -r build default-native-qualified/
           libdragon make clean
           libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 -j$(nproc) > native-trace-build.log 2>&1
           python3 scripts/test_native_diag_arm.py build/sodium64.elf
-          python3 scripts/test_native_diag_trace.py build/sodium64.elf --json-output native-trace-compiled.json
+          python3 scripts/test_native_diag_v4.py build/sodium64.elf --rsp-main build/src/rsp_main.elf --rsp-mode7 build/src/rsp_mode7.elf --rsp-hcomp build/src/rsp_hcomp.elf --json-output native-trace-compiled.json
           python3 - <<'PYTRACE'
           from pathlib import Path
           template=Path('sodium64.z64').read_bytes()
@@ -278,6 +279,7 @@ jobs:
             default-native-qualified/
             native-trace-build.log
             native-trace-compiled.json
+
 
 
 

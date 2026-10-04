@@ -202,6 +202,10 @@ vram_funcs: .word 0, vram_trans8, vram_trans9, vram_trans10 // VRAM address tran
 vram_incrs: .byte 1, 32, 128, 128 // VRAM access address increments
 
 .text
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_ppu_start
+native_diag_ppu_start:
+#endif
 .set noreorder
 
 .align 5
@@ -754,6 +758,13 @@ native_diag_rsp_watchdog_end:
     xori t6, t5, 0x4
 #ifdef SODIUM64_NATIVE_DIAG
 native_diag_rsp_wait_end:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    mfc0 t1, $9
+    la t0, native_diag_state
+    lw t2, 116(t0)
+    subu t1, t1, t2
+    sw t1, 204(t0)
+#endif
 .globl native_diag_rsp_wait_size
 .equ native_diag_rsp_wait_size, native_diag_rsp_wait_end - native_diag_rsp_wait
 #endif
@@ -764,7 +775,10 @@ native_diag_rsp_wait_end:
     nop
 
 menu_return:
-#ifdef SODIUM64_NATIVE_DIAG
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    jal native_diag_frame_complete
+    nop
+#elif defined(SODIUM64_NATIVE_DIAG)
     la t0, native_diag_state
     lw t1, 24(t0)
     addiu t1, t1, 1
@@ -849,6 +863,13 @@ native_diag_frame_watchdog_end:
 
 #ifdef SODIUM64_NATIVE_DIAG
 native_diag_frame_wait_end:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    mfc0 t1, $9
+    la t0, native_diag_state
+    lw t2, 116(t0)
+    subu t1, t1, t2
+    sw t1, 208(t0)
+#endif
 .globl native_diag_frame_wait_size
 .equ native_diag_frame_wait_size, native_diag_frame_wait_end - native_diag_frame_wait
     // The branch's historical delay instruction (li t0,1) remains below.
@@ -1965,3 +1986,9 @@ write_vtimeh: // a1: value
     sb t0, vtime
     jr ra
     nop
+
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_ppu_end
+native_diag_ppu_end:
+#endif

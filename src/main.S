@@ -168,19 +168,41 @@ pi_wait1:
     // Main stays at E90. Mode7 window entry owns E8C; its affine draw bank
     // uses audited EA4. The H-COMP bridge keeps E94 and all resident entries.
     la t0, rsp_mode7_window_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 6 // aligned source pointer carries the diagnostic bank ID
+#endif
     sw t0, DMEM(OVERLAY_MODE7_SRC)
     la t0, rsp_mode7_text_start
     addi t0, t0, 0x3A8
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 2 // aligned source pointer carries the diagnostic bank ID
+#endif
     sw t0, DMEM(OVERLAY_MODE7_DRAW_SRC)
     la t0, rsp_main_text_start
     addi t0, t0, 0x3A8
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 1 // aligned source pointer carries the diagnostic bank ID
+#endif
     sw t0, DMEM(OVERLAY_MAIN_SRC)
     la t0, rsp_hcomp_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 3 // aligned source pointer carries the diagnostic bank ID
+#endif
     sw t0, DMEM(OVERLAY_HCOMP_SRC)
     la t0, rsp_hcomp_math_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5 // aligned source pointer carries the diagnostic bank ID
+#endif
     sw t0, DMEM(OVERLAY_HCOMP_MATH_SRC)
     la t0, rsp_hcomp_fast_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 4 // aligned source pointer carries the diagnostic bank ID
+#endif
     sw t0, DMEM(OVERLAY_HCOMP_FAST_SRC)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    li t0, 1 // the initial full Main upload is complete
+    sh t0, DMEM(NATIVE_DIAG_RSP_BANK)
+#endif
 #ifdef SODIUM64_COLOR_DIAG
     // Preserve the existing raw reference region below the composed band.
     li t0, 8
@@ -411,3 +433,4 @@ loop:
     // Wait until the system resets
     b loop
     nop
+

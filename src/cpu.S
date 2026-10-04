@@ -390,6 +390,10 @@ opcodes_a8d: OPS_A8 d
 opcodes_16d: OPS_16 d
 
 .text
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_cpu_start
+native_diag_cpu_start:
+#endif
 .set noreorder
 
 .align 5
@@ -554,3 +558,4 @@ check_bcd:
     nop
     j cpu_execute
     addi s6, s6, opcodes_ed - opcodes_e
+

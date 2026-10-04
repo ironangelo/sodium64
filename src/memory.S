@@ -262,6 +262,9 @@ map_lorom:
     // Set the SRAM mask using the header size
     lw t9, 0xA0007FD8(t8)
     srl t9, t9, 24
+#ifdef SODIUM64_NATIVE_DIAG
+    sw t9, native_diag_guest_sram_exp
+#endif
     beqz t9, build_lomap
     li t3, 0x400
     sll t9, t3, t9
@@ -401,6 +404,9 @@ check_hirom:
     // Set the SRAM mask using the header size
     lw t9, 0xA000FFD8(t8)
     srl t9, t9, 24
+#ifdef SODIUM64_NATIVE_DIAG
+    sw t9, native_diag_guest_sram_exp
+#endif
     beqz t9, build_himap
     li t3, 0x400
     sll t9, t3, t9
@@ -825,3 +831,4 @@ write_wmaddh: // a1: value
     sb t0, wmadd + 1
     jr ra
     nop
+

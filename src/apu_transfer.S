@@ -467,3 +467,9 @@ apu_ppp: // POP PSW
     EMIT_OP OR(S1, ZERO, V0)
     j finish_opcode
     nop
+
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_apu_end
+native_diag_apu_end:
+#endif

@@ -107,6 +107,10 @@ timer_rates: // Lookup table for timer rates and offsets
     .hword 2, 0,  1, 0
 
 .text
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_dsp_start
+native_diag_dsp_start:
+#endif
 .set noreorder
 
 .align 5
@@ -770,3 +774,9 @@ write_koff: // a1: value
     sb t0, enabled
     jr ra
     nop
+
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_dsp_end
+native_diag_dsp_end:
+#endif

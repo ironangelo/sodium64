@@ -258,6 +258,8 @@
 #define HCOMP_SCREEN 0xEC8
 // Per-epoch Sub mask; fixed-operand direct composition does not render TS.
 #define HCOMP_EFFECTIVE_TS 0xEC9
+// Diagnostic-only 16-bit seqlock: epoch[15:4], loading[3], bank[2:0].
+#define NATIVE_DIAG_RSP_BANK 0xECA
 #define HCOMP_DIAG_COMPOSE_LIMIT 0xECC
 #define HCOMP_FIXED_COLOR 0xED0
 // Per-band compact pixel origins, including the 12-pixel left border.
@@ -287,3 +289,4 @@
 
 // Macro that converts an RSP DMEM address to a CPU address
 #define DMEM(addr) (0xA4000000 + (addr))
+

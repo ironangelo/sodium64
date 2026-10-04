@@ -57,6 +57,7 @@ jobs:
           python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
           python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-compiled.json
           python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
 
@@ -86,6 +87,7 @@ jobs:
             vram-flush-compiled.json
             obj-rows-compiled.json
             redundant-work-compiled.json
+            sub-presence-compiled.json
             sparse-reset-compiled.json
             build.log
             build-metrics.txt
@@ -124,6 +126,7 @@ jobs:
           python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
           python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-compiled.json
           python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
       - name: Upload empty diagnostic template and decoder
@@ -143,6 +146,7 @@ jobs:
             vram-flush-compiled.json
             obj-rows-compiled.json
             redundant-work-compiled.json
+            sub-presence-compiled.json
             sparse-reset-compiled.json
             native-diag-build.log
             scripts/native_diag_report.py
@@ -187,6 +191,7 @@ jobs:
           python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
           python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-compiled.json
           python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
       - name: Upload empty diagnostic template and decoder
@@ -206,6 +211,7 @@ jobs:
             vram-flush-compiled.json
             obj-rows-compiled.json
             redundant-work-compiled.json
+            sub-presence-compiled.json
             sparse-reset-compiled.json
             native-trace-build.log
             native-trace-compiled.json
@@ -244,6 +250,7 @@ jobs:
           python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
+          python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-compiled.json
 
       - name: Record profiling build metrics
         run: |
@@ -271,6 +278,7 @@ jobs:
             vram-flush-compiled.json
             obj-rows-compiled.json
             redundant-work-compiled.json
+            sub-presence-compiled.json
             sparse-reset-compiled.json
             profile-build.log
             profile-build-metrics.txt

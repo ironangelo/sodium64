@@ -94,7 +94,9 @@ hcomp_band_bounds_ready:
     sll t3, t0, 4
     andi t3, t3, 63
     add t1, t1, t3
-    li t2, (HCOMP_WINNER_ORIGIN & 0x1FFFFFFF)
+    // Sub writes presence tags directly to their owned surface. Main uses
+    // the independent winner surface after the existing Sub completion fence.
+    li t2, (HCOMP_PRESENCE_ORIGIN & 0x1FFFFFFF)
     sub t2, t2, t1
     sw t2, HCOMP_PROOF_RDP_CMDS + 20
     li t2, (HCOMP_SUB_ORIGIN & 0x1FFFFFFF)
@@ -224,10 +226,21 @@ hcomp_fast_main:
     j 0xA4001F7C
     li t9, 0x1760
 hcomp_copy_ts_start:
-    lw a1, OVERLAY_HCOMP_SETUP_SRC
-    j 0xA4001F7C
-    li t9, 0x1760
+    // Sub presence is already in its final target; no Z/presence DMA copy.
+    b hcomp_copy_ts_done
+    nop
 hcomp_copy_ts_done:
+    // This transition occurs exactly once per general band, including TS=0.
+    // Both Z surfaces use the same stride/Y/padding, so their aligned bases
+    // differ by the immutable origin displacement. Keep this after the Sub
+    // SyncFull fence when Sub was drawn; no framebuffer/tag work is skipped.
+    lw t0, HCOMP_PROOF_RDP_CMDS + 20
+    li t1, HCOMP_PRESENCE_ORIGIN - HCOMP_WINNER_ORIGIN
+    sub t0, t0, t1
+    sw t0, HCOMP_PROOF_RDP_CMDS + 20
+    li a0, HCOMP_PROOF_RDP_CMDS + 16
+    jal 0xA4001F5C
+    addi a1, a0, 8
     li t0, 1
     sb t0, HCOMP_SCREEN
     lbu s7, TM // Also set Main enables when the Sub pass was skipped entirely.

@@ -29,10 +29,17 @@ def constants():
 
 def signed(n): return n if n < 0x80000000 else n-0x100000000
 
-def execute(text, base, dmem, pc, exits, regs):
+def execute(text, base, dmem, pc, exits, regs, hooks=None, cop0=None):
     pending = None
+    hooks = hooks or {}
+    cop0 = cop0 or {}
     for _ in range(4000):
         if pc in exits: return regs
+        if pc in hooks:
+            assert pending is None
+            hooks[pc](dmem, regs)
+            pc=regs[31]&0xfff
+            continue
         w = struct.unpack_from('>I', text, pc-base)[0]
         op=w>>26; rs=(w>>21)&31; rt=(w>>16)&31; rd=(w>>11)&31
         imm=w&65535; si=imm if imm<32768 else imm-65536; target=None
@@ -60,6 +67,8 @@ def execute(text, base, dmem, pc, exits, regs):
         elif op==13: regs[rt]=regs[rs]|imm
         elif op==14: regs[rt]=regs[rs]^imm
         elif op==15: regs[rt]=imm<<16
+        elif op==16 and rs==0:
+            regs[rt]=cop0(rd) if callable(cop0) else cop0.get(rd,0)
         elif op in (32,35,36,37,40,41,43):
             address=(regs[rs]+si)&0xfff
             size={32:1,35:4,36:1,37:2,40:1,41:2,43:4}[op]
@@ -98,7 +107,8 @@ def main():
                 d[ev.name('TM')]=tm;d[ev.name('HCOMP_EFFECTIVE_TS')]=ts
                 struct.pack_into('>I',d,ev.name('FRAMEBUFFER')+queue,0xa00f4000)
                 regs=[0]*32;regs[29]=queue
-                execute(phase,pb,d,ps['hcomp_screen_masks'],{ps['hcomp_fill_target']},regs)
+                execute(phase,pb,d,ps['hcomp_screen_masks'],{ps['hcomp_fill_target']},regs,
+                        hooks={0xf5c:lambda d,r:None})
                 assert regs[23]==(tm if ts==0 else (tm<<8)|ts),('screen enable ownership',queue,tm,ts)
                 assert d[ev.name('HCOMP_SCREEN')]==(1 if ts==0 else 0)
                 cases+=1
@@ -122,7 +132,7 @@ def main():
                 assert struct.unpack_from('>H',d,a['RDP_FILL']+14)[0]==(y+rows)*4
                 for r in (0,rows-1):
                     for x in (0,12,139,267,279):
-                        assert z+2*((y+r)*280+x)==(origins[1]&0x1fffffff)-24+2*(r*280+x)
+                        assert z+2*((y+r)*280+x)==(origins[2]&0x1fffffff)-24+2*(r*280+x)
                         assert sub+2*((y+r)*280+x)==(origins[0]&0x1fffffff)-24+2*(r*280+x)
                 for i,bank in enumerate(arenas):
                     lo=(origins[i]&0x1fffffff)-24

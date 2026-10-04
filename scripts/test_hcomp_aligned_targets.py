@@ -31,6 +31,7 @@ def signed(n): return n if n < 0x80000000 else n-0x100000000
 
 def execute(text, base, dmem, pc, exits, regs):
     pending = None
+    vectors = [bytearray(16) for _ in range(32)]
     for _ in range(4000):
         if pc in exits: return regs
         w = struct.unpack_from('>I', text, pc-base)[0]
@@ -60,6 +61,10 @@ def execute(text, base, dmem, pc, exits, regs):
         elif op==13: regs[rt]=regs[rs]|imm
         elif op==14: regs[rt]=regs[rs]^imm
         elif op==15: regs[rt]=imm<<16
+        elif op==18 and rs==4:  # MTC2: arithmetic-bank constants, no scalar side effect.
+            element=(w>>7)&15
+            assert element<15, ('unsupported wrapped MTC2',hex(pc),element)
+            vectors[rd][element:element+2]=(regs[rt]&65535).to_bytes(2,'big')
         elif op in (32,35,36,37,40,41,43):
             address=(regs[rs]+si)&0xfff
             size={32:1,35:4,36:1,37:2,40:1,41:2,43:4}[op]
@@ -136,3 +141,4 @@ def main():
     print(f'HCOMP_ALIGNED_TARGETS PASS cases={cases} all_y=8..247 rows=1..240 queues=both consumers=executed native_timing=false')
 
 if __name__=='__main__': main()
+

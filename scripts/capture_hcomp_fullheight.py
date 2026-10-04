@@ -71,7 +71,7 @@ def main():
             assert args.case!='sram','ordinary save fixture requires normal build'
             set_breakpoint(c,syms['get_pressed'],True)
             validate_stop(c.request('c'),'native pixel arming input sample')
-            joy=syms['joy_buf'];buttons=bytearray(c.read_memory(joy,8,8))
+            joy=syms['joybus_cmd']|0xa0000000;buttons=bytearray(c.read_memory(joy,8,8))
             buttons[2]&=0x3f;buttons[4]=0x10;buttons[5:8]=bytes(3)
             c.write_memory(joy,bytes(buttons))
             set_breakpoint(c,syms['get_pressed'],False)

@@ -25,7 +25,7 @@ jobs:
           from pathlib import Path
           changed=set(subprocess.check_output(['git','diff','--name-only','HEAD^','HEAD'],text=True).splitlines())
           harness_only={'scripts/capture_native_diag_manual.py','.github/workflows/gate-c-direct-backdrop.yml'}
-          native_only=harness_only|{'src/native_diag.S','scripts/test_native_diag_v4.py','tools/sc64-diagnostic-save/apply.py','.github/workflows/sc64-diagnostic-menu.yml'}
+          native_only=harness_only|{'scripts/capture_hcomp_fullheight.py','src/native_diag.S','scripts/test_native_diag_v4.py','tools/sc64-diagnostic-save/apply.py','.github/workflows/sc64-diagnostic-menu.yml'}
           mode7_only=harness_only|{'scripts/make_mode7_windows.py'}
           # Fixture-only changes keep the full renderer immutable; rerun all
           # Mode7 guests for their generator, plus the recorder. Source changes

@@ -107,7 +107,9 @@ def main():
             run(code,d,0x3b0,r)
             expected=1 if sel&0xc0==0 and (cg&63==0 or sel&0x30==0x30) else 2 if cg in (0x20,0x30) and sel in (0,1,2,3,0x10,0x11,0x12,0x13,0x20,0x21,0x22,0x23) else 0
             assert word(d,0xef0)==expected,(cg,sel,word(d,0xef0),expected)
-            assert d[0xbb9]==0x13 and d[0xec9]==(0 if expected==2 and not sel&2 else 0x13)
+            # Fixed operands never observe Sub. TS remains unmodified, while
+            # effective TS is zero for every fixed policy, including general.
+            assert d[0xbb9]==0x13 and d[0xec9]==(0x13 if sel&2 else 0)
             assert r[26:30]==[13,224,0xcafe,4] and r[25]==0x1768
             admission+=1
     for flags,color,diag in ((0x80,0,0),(0,1,0),(0,0xffff,0),(0,0,8)):
@@ -231,7 +233,7 @@ def main():
                 stop=r[27];assert start<stop<=end
                 rows=set(range(start,stop));seen.extend(range(start,stop))
                 if policy==2:assert not rows&hazards,(trial,start,stop,sorted(rows&hazards))
-                else:assert policy==0 and stop-start<=8 and start in hazards
+                else:assert policy==0 and stop==end and start in hazards
                 # The actual Phase band-done must select the Fast resume entry
                 # for adaptive bands without consuming a real section epoch.
                 run_geometry(p,pb&0xfff,d,ps['hcomp_band_done'],{0xf5c},r)
@@ -290,7 +292,7 @@ def main():
                 d=bytearray(data);put(d,0xbc8,8);put(d,0xebc,y-8+rows);put(d,0xf18,y-8+rows);put(d,0xef0,policy)
                 r=[0]*32;r[26]=y-8;r[27]=0xdead
                 run_geometry(p,pb&0xfff,d,0x768,{ps['hcomp_band_targets_ready']},r)
-                want=min(rows,8) if policy==0 else rows
+                want=rows
                 assert word(d,0xec4)==want and r[27]==y-8+want
                 geometry+=1
     result=dict(passed=True,admission_cases=admission+4,compiled_window_mask_cases=masks,

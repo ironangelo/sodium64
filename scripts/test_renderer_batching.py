@@ -41,7 +41,8 @@ def main():
     assert bytes(m[lookup-64+i] for i in range(64))==left
     assert bytes(m[end+4+i] for i in range(64))==right
     assert int.from_bytes(bytes(m[end+i] for i in range(4)),'big')==0xa01c0000
-    assert all(regs[i]==before[i] for i in set(range(32))-{8,9})
+    # AT is the pre-existing assembler scratch for the absolute pointer store.
+    assert all(regs[i]==before[i] for i in set(range(32))-{1,8,9})
     assert steps<50000,('lookup reset instruction bound',steps)
     cases['apu_reset']+=1
     current=s['bghofs'];previous=0xa0140000
@@ -86,6 +87,18 @@ def main():
                     assert regs[23]&0xffffffff==want,(name,hex(pc),disp,hex(regs[23]),hex(want))
                     assert regs[21]==992,(name,'guest read cycle count',regs[21])
                     cases['branches']+=1
+    for bank in (0,1,0x7e,0xff):
+        for low in (0,1,0x7fff,0xff7f,0xfffd,0xfffe,0xffff):
+            for disp in (-32768,-32767,-4,-1,0,1,32767):
+                m=image.copy();pc=(bank<<16)|low
+                put(m,pc+1,disp&255,1);put(m,pc+2,(disp>>8)&255,1)
+                regs=[0]*32;regs[21]=1000;regs[23]=pc
+                execute(m,s['cpu_brl'],regs,{},stop=s['cpu_execute'])
+                base=(pc+3)&0xffffffff
+                want=(base&0xffff0000)|((base+disp)&0xffff)
+                assert regs[23]&0xffffffff==want,('cpu_brl',hex(pc),disp,hex(regs[23]),hex(want))
+                assert regs[21]==984,('cpu_brl','guest read cycle count',regs[21])
+                cases['branches']+=1
     from test_hcomp_aligned_targets import constants
     offset=constants()['FB_OFFSET']
     for path in (a.main_rsp,a.mode7_rsp):

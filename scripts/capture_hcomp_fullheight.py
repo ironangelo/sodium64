@@ -69,6 +69,16 @@ def main():
         assert c.request('QPassSignals:'+ARES_N64_GUEST_SIGNALS)==b'OK'
         if args.native_armed:
             assert args.case!='sram','ordinary save fixture requires normal build'
+            # Initial get_pressed also belongs to controller/menu setup. Wait
+            # for actual completed guest frames, then inject at the gameplay UI.
+            set_breakpoint(c,stop,True)
+            validate_stop(c.request('c'),'native pixel dormant frame boundary')
+            for _ in range(16):
+                count=int.from_bytes(c.read_memory(syms['native_diag_state']+24,4,4),'big')
+                if count>=6:break
+                advance(c,stop)
+            else:raise AssertionError('guest never reached dormant frame progress')
+            set_breakpoint(c,stop,False)
             set_breakpoint(c,syms['get_pressed'],True)
             validate_stop(c.request('c'),'native pixel arming input sample')
             joy=syms['joybus_cmd']|0xa0000000;buttons=bytearray(c.read_memory(joy,8,8))

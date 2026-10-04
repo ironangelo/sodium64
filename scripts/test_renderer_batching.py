@@ -24,7 +24,26 @@ def main():
     ap.add_argument('cpu',type=Path);ap.add_argument('main_rsp',type=Path);ap.add_argument('mode7_rsp',type=Path)
     ap.add_argument('--output',type=Path);a=ap.parse_args()
     image,s=load_elf(a.cpu)
-    rng=random.Random(0x6516);cases=dict(epoch=0,branches=0,obj_rows=0)
+    rng=random.Random(0x6516);cases=dict(epoch=0,branches=0,obj_rows=0,apu_reset=0)
+    # Execute the entire compiled JIT reset. Every lookup pointer is invalidated,
+    # adjacent owners and scheduler registers survive, and compilation resumes.
+    lookup=s['jit_lookup']&0x1fffffff;end=s['jit_pointer']&0x1fffffff
+    assert end-lookup==0x40000 and lookup%8==0 and end%8==0
+    m=image.copy()
+    payload=bytes((i*43+7)&255 for i in range(end-lookup))
+    m.update((lookup+i,b) for i,b in enumerate(payload))
+    left=bytes((i*17+3)&255 for i in range(64));right=bytes((i*11+5)&255 for i in range(64))
+    m.update((lookup-64+i,b) for i,b in enumerate(left))
+    m.update((end+4+i,b) for i,b in enumerate(right));put(m,end,0x801dffe0)
+    regs=[sx(0x12340000+i) for i in range(32)];regs[0]=0;before=regs.copy()
+    steps=execute(m,s['reset_buffer'],regs,{},stop=s['compile_block'])
+    assert bytes(m.get(lookup+i,0) for i in range(end-lookup))==bytes(end-lookup)
+    assert bytes(m[lookup-64+i] for i in range(64))==left
+    assert bytes(m[end+4+i] for i in range(64))==right
+    assert int.from_bytes(bytes(m[end+i] for i in range(4)),'big')==0xa01c0000
+    assert all(regs[i]==before[i] for i in set(range(32))-{8,9})
+    assert steps<50000,('lookup reset instruction bound',steps)
+    cases['apu_reset']+=1
     current=s['bghofs'];previous=0xa0140000
     # Stop before either path performs queue/OAM publication.
     for changed in [None,*range(64),'cgram','dirty','sub2','first','nonuniform','not_half']:

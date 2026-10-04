@@ -401,15 +401,19 @@ section_init:
     lbu t0, stat_flags
     andi t0, t0, 0x40
     bnez t0, hcomp_new_section
+    nop
     lbu t0, cgwsel
     andi t0, t0, 0xF2
     bnez t0, hcomp_new_section
+    nop
     lbu t0, cgadsub
     andi t0, t0, 0x40
     beqz t0, hcomp_new_section
+    nop
     lhu t0, hcomp_cgram_event_count
     lhu t1, hcomp_last_section_count
     bne t0, t1, hcomp_new_section
+    nop
     lbu t0, queue_id
     lw t1, sect_queues(t0)
     lw t0, section_ptr
@@ -2073,4 +2077,3 @@ write_vtimeh: // a1: value
 .globl native_diag_ppu_end
 native_diag_ppu_end:
 #endif
-

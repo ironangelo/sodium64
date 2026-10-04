@@ -1,73 +1,195 @@
 # Gate C general renderer architecture experiment
 
-Status: design checkpoint, not a new renderer, benchmark result or claim of native speed.
-Baseline: A11 source ac534849002a04d342dd566a6f96ae1707680387.
-Immediate decision gate: first obtain a bounded representative capture batch from SMW, ALttP and DKC1 with one reusable diagnostic build. Exact internal ALttP/DKC1 routes are not yet known. Use the batch to rank shared causes and decide whether a generic correction or this architecture experiment is the better investment. The complete renderer candidate remains a hypothesis; neither an unbounded scene campaign nor a large unmeasured rewrite is the next commitment.
+Status: the initial bounded cross-game evidence gate is met. Current qualified
+reference is A13 `b4206144fefe1d77b05397be154115d6328a2965`; A11 remains a
+regression control. Thirteen complete physical-console captures yield six
+A11/A13 scene pairs and one unpaired A13 ALttP intro. The named A11 intro
+capture was unavailable. See [curated cadence/wait evidence](GATE_C_CAUSAL_PROFILING_PLAN.md)
+and [Continuity](CONTINUITY.md) for the current checkpoint.
 
-## Immediate cross-game evidence gate
+The immediate work is two independent bounded experiments: packed arithmetic
+`3a0c7fc` and Sub-presence dataflow `76f3f9`. Both have compiled contract passes;
+complete pixel qualification has passed; physical-console comparison is pending.
+Neither is part of A13 or a proven native speedup. Keep them separate until each
+comparison establishes its effect. A complete renderer implementation and newly
+qualified internal-stage instrumentation are not the next commitment.
 
-Use one empty diagnostic emulator and the existing recorder as the starting point. Capture 20-second representative intervals from SMW's title iris/later intro dips, ALttP's title, and DKC1's animated intro or first-stage slowdown. Include a faster segment or control where practical. Record identical source/settings, valid full-rate audio/APU, no skips and collector cost; retain the matching ELF/map. Add only the stage/work information needed to separate competing explanations.
+Reliable current evidence consists of completed-boundary Count timings, explicit
+CPU RSP/VI waits and exact linked CPU EPC attribution. Live-DMEM RSP bank/stage
+and PPU controls are unvalidated candidates; they cannot identify the internal
+operation responsible for a miss. CPU and RSP overlap. Completed boundaries are
+not presented FPS, and sampled percentages are not an additive frame budget.
 
-Analyze the batch together. If a repeated avoidable upload, cache invalidation, ownership wait or state transition dominates, fix that generic cause and remeasure the same set. If necessary complete composition/source work itself exceeds the budget, run the bounded renderer experiment below against that measured structure. If the samples still cannot distinguish the causes, add one discriminating measurement before collecting more scenes.
+Both candidates passed exact-head Build and full Gate qualification: 94 normal complete images (5,390,336 pixels) and 12 armed v4 images (688,128 pixels) per candidate, with all compact guards passing. Manual and v4 original-guest recorders completed approximately 20 seconds, retained the whole v4 interval without overflow, and preserved cartridge PI payload bytes. Physical-console speed, normal output and audio comparisons remain pending.
 
-The proposed operating flow is capture, confirm final save, return to the flashcart menu, launch the next game using the same emulator. Native hot game switching and a new SD file browser are outside this first measurement milestone. Each game/build must have a separate diagnostic save namespace. Qualify the guest SRAM reservation per loaded game; the present recorder's <=8 KiB assumption cannot be applied blindly.
+## Current evidence and operating constraints
 
-The official N64FlashcartMenu uses the selected game's save path and supports a single SNES emulator plus per-emulator overrides. Current Sodium writes cart SRAM, not named SD files. Diagnostic suffixes therefore need explicit launch/save-path separation. A minimal qualified workflow can use local diagnostic-named game copies/aliases so the launcher selects distinct SAVs; automatic output naming independent of the game filename would require further launcher/SD integration. Keep ordinary save files intact and prevent repeated captures from silently replacing prior outputs.
+The sustained DKC intro/stage and ALttP room/exterior windows have long explicit
+CPU waits for RSP completion and remain far below the target cadence. DKC's
+developer-logo capture also contains a separate CPU/APU compiler/emitter-heavy
+plateau. SMW's later near-60 interval has almost no RSP waiting, while its worst
+iris intervals contain an RSP-wait component. No one internal color-math cause
+or physical N64 ceiling has been established.
 
-Primary transport references: [emulator configuration](https://github.com/Polprzewodnikowy/N64FlashcartMenu/blob/main/docs/18_emulators.md), [save loading](https://github.com/Polprzewodnikowy/N64FlashcartMenu/blob/main/src/menu/cart_load.c), [SC64 writeback](https://github.com/Polprzewodnikowy/N64FlashcartMenu/blob/main/src/flashcart/sc64/sc64.c). The installed menu/firmware still needs qualification; current upstream support is not proof of the user's exact setup.
+The current general renderer consumes real PPU sections and can process a whole
+section; it is not capped at eight virtual rows. Short real epochs and
+OBJ-sensitive spans still fragment work. Older eight-row descriptions are
+historical, not the current ownership or scheduling contract.
+
+Use the existing reusable empty diagnostic emulator and paired menu. Capture,
+confirm completion/save, return to the flashcart menu and reload the same game
+or launch the next game. The opt-in `tools/sc64-diagnostic-save` integration
+reserves a unique game/build/identifier writeback target at every launch,
+imports ordinary progress read-only and preserves previous reservations. An
+unarmed launch can leave an incomplete reserved file. Require a complete record
+and valid checksum rather than counting filenames. No duplicate or aliased ROM
+files, hot game switching or new SD file browser are required.
+
+The physical batch confirms usable capture transport on the tested menu/setup.
+It does not qualify every upstream menu/firmware/storage combination. Preserve
+the per-guest <=8 KiB recorder contract and ordinary saves. Commercial inputs,
+raw saves, state, footage and hashes remain private.
 
 ## Road decision
 
-Road 1.0 requires fidelity and native cadence together, including full audio and APU rate, no required skips and real-console evidence. It explicitly warns against hundreds of tiny builds without measured movement and instrumentation becoming the project.
+Road 1.0 requires fidelity and native cadence together: full audio/APU rate,
+frameskip 0, required work intact and reproducible real-console evidence. It
+warns against hundreds of small builds without measured movement and against
+instrumentation becoming the project.
 
-A11 is a valuable qualified regression reference. It is not a proven fast general renderer or an exhaustive SNES correctness oracle. Keep its normal artifact and established fidelity tests available while evaluating a bounded replacement of the PPU rendering/composition subsystem. Reuse Sodium64's CPU, APU/DSP, guest timing, loader, typed PPU event stream, cache knowledge and tile decoding where practical. This is not a separate emulator project.
+A13 is the current qualified comparison reference. A11 remains a valuable
+regression control; neither is an exhaustive SNES correctness oracle or a proven
+fast general renderer. Retain their artifacts and fidelity controls while testing
+a bounded replacement of rendering/composition structure. Reuse Sodium64's CPU,
+APU/DSP, guest timing, loader, typed PPU event stream, caches and tile decoding
+where practical.
 
-The user's ALttP/DKC1 observations show substantial performance deficits in visually improved scenes. Their exact internal routes remain unmeasured. SMW's iris and later dips mostly sample the direct route, so a general arithmetic kernel alone cannot be assumed to cure those scenes. These facts justify testing the rendering dataflow, not declaring one common cause or a hardware limit.
+Current evidence justifies investigating dataflow and complete rendering cost.
+It does not justify a game whitelist, a common-cause assumption across all
+scenes or abandoning the native target. CPU/APU costs still require their own
+evidence when they block a particular interval.
 
-## Structural opportunity
+## Two immediate independent candidates
 
-Current general composition draws Sub and Main, preserves provenance/presence, fences phases, copies intermediate data and reads it back for vector arithmetic. The arithmetic already uses eight-pixel vector operations. Merely enabling SIMD would not be a new architecture.
+**Sub-presence dataflow, `76f3f9`:** select the owned presence surface as Sub's
+Z destination, then select the independent winner surface for Main after the
+existing Sub SyncFull fence. Remove only the Sub-tag snapshot and its overlay
+trip. Preserve Sub colors, all source production, Main enables including TS=0,
+raw/direct Z-disabled paths, arbitrary-Y 64-byte alignment, fixed bank entries
+and the unchanged 32-pixel resolver. Compiled transitions exercise both queues,
+short/full sections and the retained fence. Full RDP pixel controls pass; native gain
+remains pending.
 
-Source-derived composition traffic for a full-width nonblank general row is 2,560 bytes for four inputs plus one output, and 1,120 bytes for a two-way Sub/provenance snapshot. At 224 rows these transfers alone total 824,320 bytes, excluding RDP, textures and overlays. There are 40 arithmetic DMA operations per full-width row. General bands also rebuild horizontal masks in workspace that renderers reuse. Many raster sections can repeat setup, traversal and overlay work even on the direct route.
+**Packed arithmetic, `3a0c7fc`:** use component-guarded packed channel arithmetic
+for the complete add/subtract/full/half operator. Preserve mask/clipping,
+winner/OBJ eligibility, Sub presence/fallback, source production and DMA
+grouping. Independent compiled operator checks pass; full images pass; native
+complete-cost measurements remain pending.
 
-These counts identify eliminable structures to investigate. They do not establish a bandwidth bottleneck or predict a speedup. A replacement also has to produce the input pixels: eliminating RDP intermediates could increase RSP tile/priority work enough to lose performance.
+Use A13 as the same reference for both candidates. Qualify full normal/armed
+outputs, guards and recorder progression first. Then compare physical cadence,
+waits, normal output and audio in the same scene set/settings. Combining them
+before independent comparison would confound attribution. Neither candidate
+alone is assumed sufficient for every long wait or the SMW CPU-side dips.
 
-## Preferred candidate: streamed block resolution
+## Structural opportunity beyond these candidates
 
-Evaluate an RSP block pipeline that brings Main/Sub candidate data, priority/eligibility and window state together before committing final pixels. Resolve pixel winners and exact color operations in owned local working storage, then write final output once per block. Avoid creating a full intermediate image solely to recover metadata or reread values that the producer already knew.
+A13 general composition draws Sub and Main, preserves provenance/presence,
+fences phases, snapshots Sub tags and reads inputs for vector arithmetic. The
+arithmetic already uses eight-pixel SIMD operations. Enabling SIMD alone would
+not be a new architecture.
 
-Organize work by actual PPU state epochs and visible spans. Separate reusable geometry, tile decoding, palette state, sprite preparation, windows and arithmetic. Recompute only the dependencies that changed, while preserving every guest-visible event and real raster boundary. A window change may expose a lower layer; applying a mask to an already flattened Main image is not a valid substitute for winner resolution.
+A full-width nonblank general row requiring all Sub reads transfers 2,560 bytes for four inputs plus
+one output and 1,120 bytes for the two-way tag snapshot. At 224 rows that totals
+824,320 bytes, excluding RDP framebuffer, texture and overlay traffic. There
+are 40 arithmetic DMA operations per full-width row. Snapshot elision removes
+250,880 of those structural bytes while leaving 573,440 arithmetic bytes and
+the source renderer intact. These counts are not measured bandwidth, elapsed
+fractions or FPS predictions.
 
-Use a complete operator family for sum/subtract, full/half intensity, fixed/Sub operands, absent Sub, Main clipping, math windows and layer/OBJ eligibility. Parameterize or generate kernels from hardware state so constant decisions are outside pixel loops. This is a finite hardware-semantic implementation, not recognized scenes or game identities. Mode7 should supply candidates through the same resolution interface rather than require title-specific behavior.
+General resolution also rebuilds horizontal masks in storage shared with
+renderers and the A13 snapshot. Real raster sections can repeat setup,
+traversal and overlays on either direct or general paths. Reducing intermediate
+images may help, but a replacement must also produce correct source pixels:
+RSP tile/priority work can cost more than the RDP work it replaces.
 
-Audit ownership explicitly. The current TILE_TABLE mask workspace is overwritten by renderer/snapshot use, and fixed overlay entry points constrain local edits. The experimental kernel may need a different owned DMEM/IMEM layout and task schedule. Do not preserve an expensive allocation solely to avoid changing internal ABI, and do not remove required RDP retirement barriers without a replacement dependency proof.
+## Subsequent bounded option: streamed block resolution
 
-## Bounded experiment, not a wholesale rewrite
+If the independent candidates leave a substantial complete-cost deficit,
+evaluate a block pipeline that brings Main/Sub candidates, priority/eligibility
+and windows together before committing final pixels. Resolve winners and exact
+color operations in owned working storage, then write final output once per
+block. Avoid creating an intermediate image solely to recover metadata the
+producer already knew.
 
-1. **Complete resolution kernel.** Build the entire color/window/eligibility operator over controlled Main/Sub candidate blocks, with exact independent expected pixels. Test the new data representation, transfer grouping and owned working storage. This establishes a measured lower bound for the candidate, not complete renderer performance.
+Organize work around real PPU state epochs and visible spans. Separate reusable
+geometry, tile decoding, palette state, sprite preparation, windows and
+arithmetic. Recompute changed dependencies while preserving every guest-visible
+event and real raster boundary. A window can expose a lower layer; masking an
+already flattened image cannot replace winner resolution.
 
-2. **Include source production.** Add representative tile/sprite candidate production and raster state changes using existing decode knowledge. Compare fused RSP source/resolution against retaining accelerated RDP source production plus streamed RSP resolution. Select on complete cost, including decode, transfers, synchronization, metadata and memory contention. The preferred fused candidate is a hypothesis; its replacement of RDP work must earn its place.
+Use the complete operator family: add/subtract, full/half, fixed/Sub operands,
+absent Sub, Main clipping, math windows and layer/OBJ eligibility. Move constant
+state decisions outside pixel loops. Dispatch from hardware state, not game
+identity. Mode7 should later supply candidates through the same interface.
 
-3. **Evaluate direct and general workloads.** The experiment must cover both full general arithmetic and frequent short state epochs. It must not win only by expanding the existing backdrop-only admission. Repeated geometry/OAM traversal and phase setup matter to the already-direct SMW iris.
+Metadata representation must preserve opaque black, transparent index-zero,
+priority and OBJ eligibility independently. RDP framebuffer alpha/coverage is
+not a qualified general-purpose eligibility channel; do not assume an alpha
+bit survives unchanged or disable alpha comparison and silently alter occlusion.
+RSP-owned indexed candidate words are a viable experiment only with explicit
+ownership and independent winner/pixel controls.
 
-4. **Integrate behind one renderer boundary.** Feed both implementations the same renderer inputs and compare complete outputs and progression. Move finite PPU features to the new engine after their contracts pass. Preserve the old implementation as a test/reference backend during migration. Guest CPU, full-rate audio and timing remain active during integrated qualification.
+Audit DMEM/IMEM lifetime deliberately. TILE_TABLE is currently reused by renderers,
+masks and A13's snapshot, and overlay entry points constrain local edits. A
+source/resolution experiment may require a separately owned layout and task
+schedule. Do not retain an expensive allocation solely to preserve an internal
+ABI; do not remove an RDP retirement barrier without a replacement dependency proof.
 
-5. **Validate a fixed cross-game corpus.** SMW iris/action, ALttP title/dark exterior and DKC1 intro/stage contrast test the same backend. Games reveal regressions and workload diversity; they do not determine dispatch rules. Keep all commercial inputs, saves, snapshots and hashes private.
+## Scope and viability controls
 
-## Measurements that enable this decision
+1. **Complete resolution.** Use the entire operator over independently expected Main/Sub blocks, including mixed eligibility, clipping, opaque-black Sub, absent-Sub HALF suppression and channel carry/borrow/rounding edges. Packed arithmetic is the current isolated lead. Include metadata, transfers and synchronization in its cost; instruction count alone is not a physical lower bound.
 
-Use enough instrumentation to separate source production, pixel resolution, data movement and ownership waits, with logical frame identities across the CPU/RSP pipeline. A full 20-second cross-game recorder is useful later, but not the next milestone by itself.
+2. **Representative source production.** Add bounded Mode1 BG and OBJ candidate production with both Main/Sub selection, BG3 priority variants, tile flips/scroll and windows. Compare fused RSP source/resolution against retaining accelerated RDP source production plus streamed RSP resolution. Include cold/warm decode, map/tile/palette transfers, sprite preparation, priority, synchronization and memory contention. Fused production must earn its place on complete cost.
 
-Architecture controls use original deterministic PPU workloads and exact shader/operator inputs. They can isolate algorithmic cost and verify pixels; they cannot replace real-game progression or physical-N64 timing. Emulator timing is lab evidence, not proof of hardware FPS.
+3. **Short real epochs.** Cover one/two-row raster changes and nonaligned section boundaries, in addition to a full general frame. Do not win solely through backdrop-only admission. Repeated geometry/OAM traversal and setup can dominate even when arithmetic is cheap. Keep direct and general workloads in the experiment.
 
-Measure isolated kernel cost first, then source production and complete frame scheduling with full CPU/APU/DSP activity. Concurrent work is not an additive percentage budget. An isolated kernel that already exceeds the native frame deadline fails the viability filter. One that fits still needs source, handoff, presentation and audio qualification.
+4. **One renderer boundary.** Feed reference and experimental backends the same original deterministic inputs; compare complete outputs and progression. Preserve the old backend as a control during migration. Integration retains CPU, full APU/DSP, presentation and audio. A kernel-only pass is not integrated renderer qualification.
 
-## Acceptance and abandonment
+5. **Fixed physical corpus.** SMW iris/action, ALttP intro/room/exterior and DKC logo/intro/stage exercise the same hardware-state backend. Games reveal workload diversity and regressions; they do not determine dispatch. Reuse the existing bounded scene set rather than start an open-ended capture campaign.
 
-Correctness: independent SNES arithmetic/window/priority rules plus the existing qualified outputs, including rounding/saturation order, absent-Sub half suppression, clipping, palettes, OBJ eligibility and raster changes. Passing the current images alone is insufficient for new semantics.
+These are subsequent viability controls, not a commitment to implement a whole
+renderer now. Begin only after the two immediate candidates are qualified and
+their complete-cost results justify the next structural experiment.
 
-Performance: measured complete-cost reduction large enough to close a defined deadline deficit, followed by native cadence in the measured integrated corpus with no output/timing/audio regression. A tiny improvement that leaves the complete path far outside its budget does not justify a long migration.
+## Measurements and acceptance
 
-If the streamed candidate is not viable, report which source/compute/transfer dependency exceeds budget and revise that structure. Do not replace that failed hypothesis with a growing scene whitelist or declare N64-alone impossible from one implementation. The Road destination remains unchanged; CPU/audio and later coprocessor bottlenecks still require their own evidence when encountered.
+Use enough evidence to distinguish source production, resolution, data movement
+and ownership waits, with logical frame identities across the CPU/RSP pipeline.
+Add one safe discriminating measurement only if existing timings and controlled
+changes cannot resolve the choice. Precise RSP stages need qualified publication;
+the shipped live-DMEM candidates are not such evidence.
 
-The next proposed deliverable is a bounded architecture proof with pixels and a cost report, not another speculative performance wrapper or an open-ended diagnostic framework.
+Original deterministic PPU workloads isolate semantics and algorithmic cost;
+emulator timing is laboratory evidence. Physical N64 is the authority for native
+cadence, memory contention, DMA/RDP retirement and audio/presentation behavior.
+Measure isolated cost, then source production and complete scheduling with
+CPU/APU/DSP active. Concurrent work is not additive. A kernel that fits the
+deadline still needs its input production and integration costs established.
+
+Correctness requires independent SNES arithmetic/window/priority rules and the
+qualified complete outputs: saturation/rounding order, absent-Sub half behavior,
+clipping, palettes, OBJ eligibility, transparent holes and raster changes. New
+semantics need new independent controls; existing image passes are not universal
+fidelity proof.
+
+Performance requires a defined complete-cost reduction and reproducible native
+cadence in the measured integrated corpus without output, timing, progression
+or audio regression. A small gain that leaves the path far outside its budget
+does not justify a long migration or constant-60 claim.
+
+If a candidate is insufficient, identify which source/compute/transfer/ownership
+dependency remains and revise it. Do not grow scene-specific dispatch or declare
+N64-alone impossible from one implementation. The immediate deliverable remains
+two qualified, independently measured candidates; the later renderer experiment
+is a bounded pixels-and-cost proof when the results require it.

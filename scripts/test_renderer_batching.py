@@ -99,7 +99,7 @@ def main():
     cases['apu_reset']+=1
     current=s['bghofs'];previous=0xa0140000
     # Stop before either path performs queue/OAM publication.
-    for changed in [None,*range(64),'cgram','dirty','sub2','first','nonuniform','not_half']:
+    for changed in [None,*range(64),'cgram','dirty','sub2','first','nonuniform','not_half','brightness']:
         m=image.copy();packet=bytearray(rng.randrange(256) for _ in range(64))
         packet[0x37]=0;packet[0x38]=0x42;packet[0x3e]=0
         old=bytearray(packet);old[0x3e]=0x40;old[0x3f]=37
@@ -115,6 +115,8 @@ def main():
         put(m,s['sect_queues'],previous+64 if changed=='first' else previous-64)
         put(m,s['hcomp_cgram_event_count'],3 if changed=='cgram' else 2,2)
         put(m,s['hcomp_last_section_count'],2,2)
+        put(m,s['brightness'],8 if changed=='brightness' else 16,1)
+        put(m,s['hcomp_last_section_brightness'],16,1)
         regs=[sx(0x11110000+i) for i in range(32)];regs[0]=0;regs[31]=EXIT
         before=regs.copy()
         sentinel=s['hcomp_new_section'];put(m,sentinel,0x03e00008);put(m,sentinel+4,0x24020001)

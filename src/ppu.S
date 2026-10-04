@@ -194,7 +194,7 @@ hcomp_row_fixed_queues: .word HCOMP_ROW_FIXED_QUEUE1, HCOMP_ROW_FIXED_QUEUE2
 hcomp_last_section_count: .hword 0
 hcomp_cgram_event_count: .hword 0
 hcomp_cgram_event_overflow: .byte 0
-.byte 0
+hcomp_last_section_brightness: .byte 0
 
 .align 4
 // Values that control the cooldown between frame sections (shift, minimum, increment)
@@ -414,6 +414,10 @@ section_init:
     andi t0, t0, 0x40
     beqz t0, hcomp_new_section
     nop
+    lbu t0, brightness
+    lbu t1, hcomp_last_section_brightness
+    bne t0, t1, hcomp_new_section
+    nop
     lhu t0, hcomp_cgram_event_count
     lhu t1, hcomp_last_section_count
     bne t0, t1, hcomp_new_section
@@ -539,6 +543,8 @@ section_loop:
     addi t0, t0, 1
     sh t0, hcomp_cgram_event_count
     sh t0, hcomp_last_section_count
+    lbu t0, brightness
+    sb t0, hcomp_last_section_brightness
     b hcomp_cgram_marker_done
     nop
 

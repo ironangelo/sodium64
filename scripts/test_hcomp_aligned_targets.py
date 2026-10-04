@@ -31,6 +31,7 @@ def signed(n): return n if n < 0x80000000 else n-0x100000000
 
 def execute(text, base, dmem, pc, exits, regs, hooks=None, cop0=None):
     pending = None
+    vectors = [bytearray(16) for _ in range(32)]
     hooks = hooks or {}
     cop0 = cop0 or {}
     for _ in range(4000):
@@ -67,6 +68,10 @@ def execute(text, base, dmem, pc, exits, regs, hooks=None, cop0=None):
         elif op==13: regs[rt]=regs[rs]|imm
         elif op==14: regs[rt]=regs[rs]^imm
         elif op==15: regs[rt]=imm<<16
+        elif op==18 and rs==4:  # MTC2 constants have no scalar-address side effect.
+            element=(w>>7)&15
+            assert element<15, ('unsupported wrapped MTC2',hex(pc),element)
+            vectors[rd][element:element+2]=(regs[rt]&65535).to_bytes(2,'big')
         elif op==16 and rs==0:
             regs[rt]=cop0(rd) if callable(cop0) else cop0.get(rd,0)
         elif op in (32,35,36,37,40,41,43):

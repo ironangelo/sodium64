@@ -12,6 +12,19 @@ draw_bg:
     move v0, t0
 hcomp_entry:
 hcomp_math_sources:
+    // Packed RGB555 uses unsigned wrapping lanes. VADD/VSUB would saturate
+    // as signed16 and destroy channel carry guards; use VADDC/VSUBC below.
+    // Keep the setup, winner/presence, masks and memory ownership unchanged.
+    li t0, 0x0421
+    mtc2 t0, $v19, 0
+    li t0, 0x8420
+    mtc2 t0, $v19, 2
+    li t0, 0x7BDE
+    mtc2 t0, $v19, 4
+    li t0, 0x0800
+    mtc2 t0, $v16, 4
+    li t0, 2
+    mtc2 t0, $v16, 6
     lw s1, HCOMP_BAND_BASES
     lw s2, HCOMP_BAND_BASES + 4
     lw s3, HCOMP_BAND_BASES + 8
@@ -126,40 +139,51 @@ hcomp_vector_half:
     nop
     vand $v13, $v31, $v31, 0
 hcomp_channels_start:
-    // Extract, saturate and halve each 5-bit channel independently.
-    // Packed carry tricks lose low-channel bits for mixed-color subtraction.
-    vand $v14, $v31, $v31, 0
-    li t1, 0x8000
-    li t2, 3
-    li t3, 2
-hcomp_channel:
-    mtc2 t1, $v16, 4
-    vmudl $v08, $v00, $v16, 10
-    vand $v08, $v08, $v19, 8
-    vmudl $v09, $v01, $v16, 10
-    vand $v09, $v09, $v19, 8
+    // Drop the framebuffer alpha bit before packed arithmetic. All inputs
+    // are <=7FFF, so addition fits unsigned16; subtraction's bit16 is
+    // immaterial because the final guard mask removes it. HALF add must
+    // average before saturation; HALF subtract halves saturated difference.
+    vmudl $v08, $v00, $v16, 8
+    vmudl $v09, $v01, $v16, 8
     andi t0, v1, 0x80
-    beqz t0, hcomp_channel_add
+    beqz t0, hcomp_packed_add
     nop
-    vsub $v10, $v08, $v09, 0
-    vge $v10, $v10, $v31, 0
-    vmudl $v11, $v10, $v16, 8
-    b hcomp_channel_pack
-    nop
-hcomp_channel_add:
-    vadd $v11, $v08, $v09, 0
-    vlt $v10, $v11, $v19, 8
+    // d = x-y+8420; b = (d-((x^y)&8420))&8420;
+    // full = (d-b)&(b-(b>>5)). Each guard selects its channel independently.
+    vsubc $v10, $v08, $v09, 0
+    vaddc $v10, $v10, $v19, 9
+    vxor $v11, $v08, $v09, 0
+    vand $v11, $v11, $v19, 9
+    vsubc $v11, $v10, $v11, 0
+    vand $v11, $v11, $v19, 9
+    vsubc $v10, $v10, $v11, 0
+    vmudl $v12, $v11, $v16, 10
+    vsubc $v11, $v11, $v12, 0
+    vand $v10, $v10, $v11, 0
+    vand $v11, $v10, $v19, 10
     vmudl $v11, $v11, $v16, 8
-hcomp_channel_pack:
+    b hcomp_packed_select
+    nop
+hcomp_packed_add:
+    // s=x+y; q=s-((x^y)&0421); c=q&8420;
+    // full=(s-c)|(c-(c>>5)); half=q>>1.
+    vaddc $v10, $v08, $v09, 0
+    vxor $v11, $v08, $v09, 0
+    vand $v11, $v11, $v19, 8
+    vsubc $v11, $v10, $v11, 0
+    vand $v12, $v11, $v19, 9
+    vmudl $v11, $v11, $v16, 8
+    vsubc $v10, $v10, $v12, 0
+    vmudl $v14, $v12, $v16, 10
+    vsubc $v12, $v12, $v14, 0
+    vor $v10, $v10, $v12, 0
+hcomp_packed_select:
+    // Wrapping arithmetic leaves VCO carry/borrow bits. Retire them before
+    // VEQ; otherwise equal zero HALF masks can inherit unrelated borrow.
+    vge $v06, $v31, $v31, 0
     veq $v06, $v13, $v31, 0
     vmrg $v10, $v10, $v11, 0
-    mtc2 t3, $v16, 6
-    vmudn $v10, $v10, $v16, 11
-    vor $v14, $v14, $v10, 0
-    srl t1, t1, 5
-    addi t2, t2, -1
-    bnez t2, hcomp_channel
-    sll t3, t3, 5
+    vmudn $v14, $v10, $v16, 11
     veq $v06, $v07, $v31, 0
     vmrg $v00, $v00, $v14, 0
 hcomp_vector_output:

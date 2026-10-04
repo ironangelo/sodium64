@@ -1,5 +1,5 @@
 /* Full-height HCOMP phase bank. Real section epochs are consumed once;
- * virtual <=8-row bands reuse owned Sub/Z/presence surfaces. Every target
+ * whole real sections reuse owned Sub/Z/presence surfaces. Every target
  * is rebased before the first draw, including blank and short sections.
  */
 #include <rsp.inc>
@@ -55,10 +55,6 @@ hcomp_band_start:
     b hcomp_band_bounds_ready
     move k1, t0
 hcomp_general_bounds:
-    addi k1, k0, 8
-    slt t1, t0, k1
-    beqz t1, hcomp_band_bounds_ready
-    nop
     move k1, t0
 hcomp_band_bounds_ready:
     sub t0, k1, k0
@@ -93,19 +89,19 @@ hcomp_band_bounds_ready:
     sll t3, t0, 4
     andi t3, t3, 63
     add t1, t1, t3
-    li t2, 0xE2000
+    li t2, (HCOMP_WINNER_ORIGIN & 0x1FFFFFFF)
     sub t2, t2, t1
     sw t2, HCOMP_PROOF_RDP_CMDS + 20
-    li t2, 0xE4000
+    li t2, (HCOMP_SUB_ORIGIN & 0x1FFFFFFF)
     sub t2, t2, t1
     sw t2, RDP_FRAME + 4
-    li t2, 0xA00E4018
+    li t2, HCOMP_SUB_ORIGIN + 24
     sub t2, t2, t3
     sw t2, HCOMP_BAND_BASES
-    li t2, 0xA00E2018
+    li t2, HCOMP_WINNER_ORIGIN + 24
     sub t2, t2, t3
     sw t2, HCOMP_BAND_BASES + 4
-    li t2, 0xA00E6018
+    li t2, HCOMP_PRESENCE_ORIGIN + 24
     sub t2, t2, t3
     sw t2, HCOMP_BAND_BASES + 8
 hcomp_band_targets_ready:
@@ -135,6 +131,12 @@ hcomp_compact_band:
     li a1, HCOMP_PROOF_BG_DEPTH_CMDS
 hcomp_screen_masks:
     lbu s7, HCOMP_EFFECTIVE_TS
+    lw t0, HCOMP_BAND_RAW
+    bnez t0, hcomp_screen_masks_ready
+    nop
+    beqz s7, hcomp_copy_ts_done
+    nop
+hcomp_screen_masks_ready:
     lbu t0, TM
     sll t0, t0, 8
     b hcomp_fill_target
@@ -217,37 +219,10 @@ hcomp_fast_main:
     j 0xA4001F7C
     li t9, 0x1760
 hcomp_copy_ts_start:
-    lw t6, HCOMP_BAND_BASES + 4
-    addi t6, t6, -24
-    lw t7, HCOMP_BAND_BASES + 8
-    addi t7, t7, -24
-    lw a3, HCOMP_BAND_ROWS
-    sll t0, a3, 9
-    sll t1, a3, 5
-    add t0, t0, t1
-    sll a3, a3, 4
-    add a3, a3, t0
-hcomp_copy_ts:
-    // Main/OBJ reload their cache before using TILE_TABLE. Borrow its exact
-    // 1024-byte extent after Sub is fenced; retain VRAM_TABLE at0x440.
-    li a2, 1023
-    slti t0, a3, 1024
-    beqz t0, hcomp_copy_chunk
-    li a0, TILE_TABLE
-    addi a2, a3, -1
-hcomp_copy_chunk:
-    move a1, t6
-    jal 0xA4001F40
-    nop
-    move a1, t7
-    jal 0xA4001F08
-    nop
-    addi t0, a2, 1
-    add t6, t6, t0
-    add t7, t7, t0
-    sub a3, a3, t0
-    bnez a3, hcomp_copy_ts
-    nop
+    lw a1, OVERLAY_HCOMP_SETUP_SRC
+    j 0xA4001F7C
+    li t9, 0x1760
+hcomp_copy_ts_done:
     li t0, 1
     sb t0, HCOMP_SCREEN
     lw t0, FRAMEBUFFER(sp)
@@ -261,7 +236,7 @@ hcomp_main_end:
     b hcomp_fence
     nop
 hcomp_math_start:
-    lw a1, OVERLAY_HCOMP_MATH_SRC
+    lw a1, OVERLAY_HCOMP_SETUP_SRC
     j 0xA4001F7C
     li t9, 0x13B0
 hcomp_band_done:
@@ -295,6 +270,10 @@ hcomp_screen_switch:
 hcomp_policy_return:
     b hcomp_band_start
     nop
+.org (0x770 - 0x3A8)
+hcomp_copy_return:
+    b hcomp_copy_ts_done
+    nop
 .org (0x778 - 0x3A8)
 hcomp_math_return:
     b hcomp_band_done
@@ -307,4 +286,5 @@ hcomp_band_entry:
 draw_mode7_entry:
     j 0xA4001F78
     li t9, 0x1788
+
 

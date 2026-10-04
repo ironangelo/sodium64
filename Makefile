@@ -128,7 +128,7 @@ $(BUILD_DIR)/%.o: %.S
 		DATASECTION="$(basename $@).data"; \
 		BINARY="$(basename $@).elf"; \
 		RSPLINK=rsp.ld; \
-		case "$$FILENAME" in rsp_hcomp|rsp_hcomp_math|rsp_hcomp_fast|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
+		case "$$FILENAME" in rsp_hcomp|rsp_hcomp_math|rsp_hcomp_fast|rsp_hcomp_setup|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
 		echo "    [RSP] $<"; \
 		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-T$$RSPLINK -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
 		mv "$@" $$BINARY; \
@@ -168,7 +168,7 @@ $(BUILD_DIR)/$(PROJ_NAME).elf: $(OFILES)
 
 $(OFILES): $(HFILES)
 
-$(BUILD_DIR)/src/rsp_hcomp.o $(BUILD_DIR)/src/rsp_hcomp_math.o $(BUILD_DIR)/src/rsp_hcomp_fast.o $(BUILD_DIR)/src/rsp_mode7_window.o: src/rsp_hcomp.ld
+$(BUILD_DIR)/src/rsp_hcomp.o $(BUILD_DIR)/src/rsp_hcomp_math.o $(BUILD_DIR)/src/rsp_hcomp_fast.o $(BUILD_DIR)/src/rsp_hcomp_setup.o $(BUILD_DIR)/src/rsp_mode7_window.o: src/rsp_hcomp.ld
 
 clean:
 	rm -rf $(BUILD_DIR) $(PROJ_NAME).z64

@@ -189,6 +189,9 @@ hcomp_cgram_sideband_queues: .word HCOMP_CGRAM_SIDEBAND_QUEUE1, HCOMP_CGRAM_SIDE
 hcomp_cgram_event_queues: .word HCOMP_CGRAM_EVENT_QUEUE1, HCOMP_CGRAM_EVENT_QUEUE2
 hcomp_cgram_event_ptr: .word HCOMP_CGRAM_EVENT_QUEUE1
 hcomp_cgram_sideband_ptr: .word HCOMP_CGRAM_SIDEBAND_QUEUE1
+hcomp_row_fixed_ptr: .word HCOMP_ROW_FIXED_QUEUE1
+hcomp_row_fixed_queues: .word HCOMP_ROW_FIXED_QUEUE1, HCOMP_ROW_FIXED_QUEUE2
+hcomp_last_section_count: .hword 0
 hcomp_cgram_event_count: .hword 0
 hcomp_cgram_event_overflow: .byte 0
 .byte 0
@@ -237,6 +240,16 @@ run_line:
     andi t0, t0, 0x80
     bnez t0, next_line
     nop
+
+    // Own the exact fixed operand for every displayed guest row. HDMA below
+    // changes the following row; row N-1 uses the state sampled at line N.
+    lhu t0, sub_color
+    lhu t1, cur_line
+    addi t1, t1, -1
+    sll t1, t1, 1
+    lw t2, hcomp_row_fixed_ptr
+    add t2, t2, t1
+    sh t0, 0(t2)
 
     // Decrement the section cooldown if non-zero
     lhu t0, sect_status
@@ -375,12 +388,6 @@ vcount_irq:
 
 .align 5
 make_section: // a0: line
-#ifdef SODIUM64_NATIVE_DIAG
-    la t0, native_diag_state
-    lw t1, 56(t0)
-    addiu t1, t1, 1
-    sw t1, 56(t0)
-#endif
     // Set bounds for the current frame section
     lw t1, section_ptr
     addi t1, t1, -1
@@ -388,6 +395,74 @@ make_section: // a0: line
     sb a0, (t1)
 
 section_init:
+    // Merge only fixed-operand HALF epochs with uniform COLOR masks. Every
+    // source byte must match, with no new CGRAM event or dirty OAM. Row colors
+    // retain the operand at each line, so no palette/window/geometry is lost.
+    lbu t0, stat_flags
+    andi t0, t0, 0x40
+    bnez t0, hcomp_new_section
+    lbu t0, cgwsel
+    andi t0, t0, 0xF2
+    bnez t0, hcomp_new_section
+    lbu t0, cgadsub
+    andi t0, t0, 0x40
+    beqz t0, hcomp_new_section
+    lhu t0, hcomp_cgram_event_count
+    lhu t1, hcomp_last_section_count
+    bne t0, t1, hcomp_new_section
+    lbu t0, queue_id
+    lw t1, sect_queues(t0)
+    lw t0, section_ptr
+    beq t0, t1, hcomp_new_section
+    addi t0, t0, -SECTION_SIZE
+    la t1, bghofs
+    ld t2, 0(t0)
+    ld t3, 0(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 8(t0)
+    ld t3, 8(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 16(t0)
+    ld t3, 16(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 24(t0)
+    ld t3, 24(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 40(t0)
+    ld t3, 40(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 48(t0)
+    ld t3, 48(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 32(t0)
+    ld t3, 32(t1)
+    xor t2, t2, t3
+    li t3, -65536 // Exclude only SUB_COLOR, bytes38..39.
+    and t2, t2, t3
+    bnez t2, hcomp_new_section
+    nop
+    ld t2, 56(t0)
+    ld t3, 56(t1)
+    xor t2, t2, t3
+    li t3, -16640 // Exclude SPLIT_LINE and historical OAM dirty bit40.
+    and t2, t2, t3
+    bnez t2, hcomp_new_section
+    nop
+    jr ra
+    nop
+hcomp_new_section:
+#ifdef SODIUM64_NATIVE_DIAG
+    la t0, native_diag_state
+    lw t1, 56(t0)
+    addiu t1, t1, 1
+    sw t1, 56(t0)
+#endif
     // Check if OAM should be updated
     lbu t0, stat_flags
     andi t1, t0, 0x40
@@ -455,6 +530,7 @@ section_loop:
     sw t1, hcomp_cgram_event_ptr
     addi t0, t0, 1
     sh t0, hcomp_cgram_event_count
+    sh t0, hcomp_last_section_count
     b hcomp_cgram_marker_done
     nop
 
@@ -476,6 +552,9 @@ hcomp_cgram_begin_frame:
     // The raw shadow is now the handed frame's historical-base workspace,
     // not a frame-final diagnostic snapshot.
     lbu t0, queue_id
+    lw t1, hcomp_row_fixed_queues(t0)
+    sw t1, hcomp_row_fixed_ptr
+    sh zero, hcomp_last_section_count
     lw t1, hcomp_cgram_base_queues(t0)
     lw t2, hcomp_cgram_event_queues(t0)
     lw t3, hcomp_cgram_sideband_queues(t0)
@@ -829,6 +908,8 @@ set_buffer:
     // halted. The future consumer will advance its private EA0 cursor.
     lw t0, hcomp_cgram_event_queues(t5)
     sw t0, DMEM(HCOMP_CGRAM_EVENT_CURSOR)
+    lw t0, hcomp_row_fixed_queues(t5)
+    sw t0, DMEM(HCOMP_ROW_FIXED_SRC)
 
     // Provide an address and set the semaphore for copying VRAM
     la t0, UNCACHED(vram)
@@ -1992,3 +2073,4 @@ write_vtimeh: // a1: value
 .globl native_diag_ppu_end
 native_diag_ppu_end:
 #endif
+

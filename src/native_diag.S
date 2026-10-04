@@ -362,7 +362,7 @@ native_diag_sp_sample:
     lw k0, native_diag_state + 256
     andi k0, k0, 7
     addiu k1, k0, -1
-    sltiu k1, k1, 6
+    sltiu k1, k1, 7
     beqz k1, native_diag_rsp_classify
     nop
     sll k0, k0, 12
@@ -406,6 +406,9 @@ native_diag_rsp_classify:
     nop
     addiu k0, k0, -1
     beqz k0, native_diag_rsp_math_sample
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_prepare_sample
     nop
     addiu k0, k0, -1
     beqz k0, native_diag_rsp_prepare_sample
@@ -1684,3 +1687,4 @@ native_diag_hex_digit:
     jr s5
     nop
 #endif
+

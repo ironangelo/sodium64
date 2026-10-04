@@ -7,7 +7,7 @@ from make_gate_c_hcomp_cgwsel_source import hits, finalize_checksum, HOOK_OFFSET
 from make_gate_c_hcomp_main_sub_lifetime import Assembler, lda_sta_abs, dma_to_vram
 from make_gate_c_hcomp_color_window import build_case, WINDOW_HOOK_OFFSET
 
-CASES = ('half', 'add', 'sub', 'sub-half', 'bg2', 'bg3', 'bg4', 'window', 'short',
+CASES = ('fixed-half-raster', 'half', 'add', 'sub', 'sub-half', 'bg2', 'bg3', 'bg4', 'window', 'short',
          'blank', 'obj-low', 'obj-high', 'sram', 'layer-window', 'layer-edge', 'layer-xor', 'rgb-add', 'rgb-half', 'rgb-sub', 'rgb-sub-half', 'rgb-main', 'rgb-subscreen', 'rgb-row-add', 'rgb-row-half', 'rgb-row-sub', 'rgb-row-sub-half', 'rgb-row-subscreen')
 from make_hcomp_direct_backdrop import CASES as DIRECT_CASES
 CASES += DIRECT_CASES
@@ -37,6 +37,20 @@ def hook_call(rom, address, body):
 
 
 def build(case):
+    if case == 'fixed-half-raster':
+        rom=bytearray(build('short'))
+        set_store(rom,0x2130,2,0)
+        set_store(rom,0x4301,0x2d,0x32)
+        body=bytes((0xa9,0xe0,0x8d,0x32,0x21,0x60))
+        hook_call(rom,0x8300,body)
+        rows=[0x80|(y&31) for y in range(223)]+[0x80]
+        table=bytearray()
+        for at in range(0,224,127):
+            part=rows[at:at+127];table.append(0x80|len(part));table.extend(part)
+        table.append(0);rom[0x3000:0x3000+len(table)]=table
+        rom[0x7fc0:0x7fd5]=b'S64 FIXED HALF RASTER'.ljust(21,b' ')
+        finalize_checksum(rom)
+        return bytes(rom)
     if case in BG_SEEK_CASES:
         from make_bg_span_seek import build_seek
         return build_seek(case)
@@ -145,3 +159,4 @@ if __name__ == '__main__':
     ap.add_argument('output',type=Path)
     args=ap.parse_args();args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_bytes(build(args.case))
+

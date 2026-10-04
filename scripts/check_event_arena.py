@@ -20,11 +20,15 @@ def layout(defines):
         name = f'HCOMP_RAW_PALETTE_QUEUE{queue}'
         start = value(name)
         owners[name] = (start, start + 0x800)
-    for name, start, size in [('main_winner', 0xe2000, 0x1180),
-                              ('sub_color', 0xe4000, 0x1180),
-                              ('preserved_ts', 0xe6000, 0x1180),
-                              ('consumed_section', 0xf0000, 16)]:
-        owners[name] = (start, start + size)
+    for name, owner in [('main_winner','HCOMP_WINNER_ARENA'),
+                        ('sub_color','HCOMP_SUB_ARENA'),
+                        ('preserved_ts','HCOMP_PRESENCE_ARENA')]:
+        start=value(owner)
+        owners[name]=(start,start+ev.name('HCOMP_SURFACE_BYTES'))
+    for queue in (1,2):
+        name=f'HCOMP_ROW_FIXED_QUEUE{queue}'
+        start=value(name);owners[name]=(start,start+512)
+    owners['consumed_section']=(0xf0000,0xf0010)
     chain = ['FRAMEBUFFER1', 'FRAMEBUFFER2', 'FRAMEBUFFER3', 'MODE7_TEXTURE',
              'VRAM_BUFFER', 'PALETTE_QUEUE1', 'PALETTE_QUEUE2', 'OAM_QUEUE1',
              'OAM_QUEUE2', 'DIRTY_QUEUE1', 'DIRTY_QUEUE2', 'SECTION_QUEUE1',
@@ -35,8 +39,8 @@ def layout(defines):
         owners[first] = (value(first), value(last))
     assert ev.name('HCOMP_CGRAM_EVENT_CAPACITY') == 0x6000
     assert ev.name('HCOMP_CGRAM_EVENT_BYTES') == 0x18000
-    assert ev.name('ROM_CACHE_SLOTS') == 244
-    assert value('ROM_CACHE_END') == value('HCOMP_CGRAM_EVENT_QUEUE2') == 0x3e8000
+    assert ev.name('ROM_CACHE_SLOTS') == 194
+    assert value('ROM_CACHE_END') == value('HCOMP_WINNER_ARENA') == 0x384000
     assert owners['HCOMP_CGRAM_EVENT_QUEUE2'][1] == 0x400000
     assert owners['HCOMP_CGRAM_EVENT_QUEUE1'][1] == 0xdae00
     return owners
@@ -82,4 +86,5 @@ if __name__ == '__main__':
     result = check(args.defines, args.elf)
     if args.output:
         args.output.write_text(json.dumps(result, indent=2) + '\n')
-    print('EVENT_ARENA_FULL_EXTENTS PASS', len(result), 'owners; cap=24576; ROM slots=244')
+    print('EVENT_ARENA_FULL_EXTENTS PASS', len(result), 'owners; cap=24576; ROM slots=194')
+

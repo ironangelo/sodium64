@@ -20,6 +20,15 @@ hcomp_fast_entry:
 
 hcomp_fast_admit:
     lbu t0, TS
+    andi t1, t0, 0x1F
+    beqz t1, hcomp_fast_operand_ready
+    lbu t1, CGWSEL
+    andi t1, t1, 2
+    bnez t1, hcomp_fast_operand_ready
+    nop
+    // A fixed-color operand cannot observe Sub, even when TS enables layers.
+    move t0, zero
+hcomp_fast_operand_ready:
     sb t0, HCOMP_EFFECTIVE_TS
     sw zero, HCOMP_BAND_RAW
     sw zero, HCOMP_OBJ_ADAPTIVE

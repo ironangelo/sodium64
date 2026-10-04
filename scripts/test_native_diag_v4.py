@@ -36,6 +36,7 @@ def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False,inject_irq=Fals
             elif fn in (34,35):regs[rd]=sx(regs[rs]-regs[rt])
             elif fn==36:regs[rd]=regs[rs]&regs[rt]
             elif fn==37:regs[rd]=regs[rs]|regs[rt]
+            elif fn==38:regs[rd]=regs[rs]^regs[rt]
             elif fn==43:regs[rd]=int(regs[rs]<regs[rt])
             else:raise AssertionError(('forbidden/unhandled special instruction',hex(pc),hex(w)))
         elif op in (2,3):
@@ -59,10 +60,10 @@ def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False,inject_irq=Fals
             elif rs==4:cp[rd]=regs[rt]&0xffffffff
             elif w==0x42000018:return step+1
             else:raise AssertionError((hex(pc),hex(w)))
-        elif op in (35,36,37,40,41,43,55,63):
+        elif op in (32,35,36,37,40,41,43,55,63):
             adr=(regs[rs]+si)&0xffffffff;n=8 if op in (55,63) else 4 if op in (35,43) else 2 if op in (37,41) else 1
-            if op in (35,36,37,55):
-                value=read(adr,n);regs[rt]=sx(value) if op==35 else value
+            if op in (32,35,36,37,55):
+                value=read(adr,n);regs[rt]=sx(value) if op==35 else sx(value-256 if value>=128 else value) if op==32 else value
             else:write(adr,regs[rt],n)
         elif op==47:pass
         else:raise AssertionError((hex(pc),hex(w)))
@@ -106,7 +107,7 @@ def main():
         return m
     for bankmem,bs in ((rb,rs),(mb,ms)):
       for epoch in (0,0x1230,0xfff0):
-       for bank in range(1,7):
+       for bank in range(1,8):
         m=bankmem.copy();put(m,0x04000eca,epoch|1,2)
         r=[0]*32;r[5]=0x80123458|bank;r[25]=0xdead0000
         cp={6:0}
@@ -116,7 +117,7 @@ def main():
         # Re-enter the caller after the actual resident DMA loop returns.
         r[8]=0
         execute(m,r[31]&0xffffffff,r,cp,terminal_rcp=True,rsp=True)
-        assert get(m,0x04000eca,2)==((epoch+16)&0xffff)|bank and r[8]==0
+        assert get(m,0x04000eca,2)==((epoch+16)&0xffff)|bank and (r[8]&15)==bank
         cases+=1
     for index in (0,1,99,159,160,161):
       for start,now in ((0,4687500),(0xffff0000,0x004686ac)):
@@ -192,15 +193,15 @@ def main():
         assert [get(m,state+off) for off in (236,240,244)]==[int(off==stage) for off in (236,240,244)]
         assert sum(get(m,state+268+i*4) for i in range(8))==1
         cases+=1
-    for bank in range(7):
+    for bank in range(8):
       for pc in (0x3a8,0x3e4,0xf4c,0xccc):
         m=memory();put(m,state+16,0x60000000);put(m,0x04080000,pc);put(m,0x04000eca,0x120+bank,2)
         r=registers();execute(m,s['native_diag_interrupt'],r,{9:1,14:s['native_diag_cpu_start']})
-        idx=2 if pc==0xf4c else 7 if pc==0xccc else 3 if bank==3 and pc==0x3e4 else {0:1,1:7,2:7,3:4,4:6,5:5,6:4}[bank]
+        idx=2 if pc==0xf4c else 7 if pc==0xccc else 3 if bank==3 and pc==0x3e4 else {0:1,1:7,2:7,3:4,4:6,5:5,6:4,7:4}[bank]
         assert get(m,state+268+idx*4)==1,(bank,pc,idx)
         assert get(m,state+264)==pc|(bank<<12)
         cases+=1
-    for tag,cp9 in ((0x12b,1),(0x127,1),(0x121,lambda step:step*100000)):
+    for tag,cp9 in ((0x12b,1),(0x120,1),(0x121,lambda step:step*100000)):
         m=memory();put(m,state+16,0x60000000);put(m,0x04080000,0x400);put(m,0x04000eca,tag,2)
         r=registers();execute(m,s['native_diag_interrupt'],r,{9:cp9,14:s['native_diag_cpu_start']})
         assert get(m,state+272)==1 and get(m,state+264)==0x400,(tag,get(m,state+272),get(m,state+264))
@@ -233,3 +234,4 @@ def main():
     print('NATIVE_DIAG_V4_COMPILED PASS',json.dumps(proof))
 
 if __name__=='__main__':main()
+

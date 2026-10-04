@@ -74,7 +74,7 @@ class V4Tests(unittest.TestCase):
         self.assertEqual(r['events'][0]['sp_pc_live'],0xf4c)
         self.assertTrue(r['header']['frame_analysis']['rsp_overlay_stage_attribution_available'])
         self.assertEqual(sum(r['header']['rsp_stage_samples_total'].values()),r['header']['sample_count'])
-        b=make_blob();struct.pack_into('>H',b,0x620a,0x7f4c);checksum(b)
+        b=make_blob();struct.pack_into('>H',b,0x620a,0x8f4c);checksum(b)
         with self.assertRaisesRegex(ValueError,'snapshot'):parse(b)
     def test_foreign_sram_rejected(self):
         b=make_blob();struct.pack_into('>I',b,HEADER+0x18c,4)
@@ -110,3 +110,4 @@ class V4Tests(unittest.TestCase):
         self.assertTrue(all(not x['bounds_valid'] for x in parse(b)[0]['cpu_timeline']))
 
 if __name__=='__main__':unittest.main()
+

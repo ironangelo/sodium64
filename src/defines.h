@@ -112,9 +112,9 @@
 
 // Addresses of data in RDRAM that are shared between CPU and RSP
 #define ROM_BUFFER 0xA0200000
-// Reserve the last 12 ROM paging slots for the full Q2 event stream.
-// Cart ROM size is unchanged; resident cache capacity is 244 x 8 KiB.
-#define ROM_CACHE_SLOTS 244
+// Full-section composition surfaces replace repeated eight-row redraws.
+// Cartridge capacity is unchanged; ROM pages still use the ordinary pager.
+#define ROM_CACHE_SLOTS 194
 #define ROM_CACHE_END (ROM_BUFFER + ROM_CACHE_SLOTS * 0x2000)
 #define JIT_BUFFER (ROM_BUFFER - 0x40000)
 #define TILE_CACHE_BG (JIT_BUFFER - 0x40000)
@@ -151,8 +151,26 @@
 #define HCOMP_CGRAM_EVENT_CAPACITY 0x6000
 #define HCOMP_CGRAM_EVENT_BYTES (HCOMP_CGRAM_EVENT_CAPACITY * 4)
 
-#if ROM_CACHE_END != HCOMP_CGRAM_EVENT_QUEUE2
-#error ROM cache must end exactly before the reserved Q2 event arena
+// Three disjoint 240-row surfaces, with alignment padding and guard lines.
+// Their lifetime is one RSP-owned section; CPU writes only the row-color queues.
+#define HCOMP_SURFACE_BYTES 0x21000
+#define HCOMP_WINNER_ARENA 0xA0384000
+#define HCOMP_SUB_ARENA (HCOMP_WINNER_ARENA + HCOMP_SURFACE_BYTES)
+#define HCOMP_PRESENCE_ARENA (HCOMP_SUB_ARENA + HCOMP_SURFACE_BYTES)
+#define HCOMP_WINNER_ORIGIN (HCOMP_WINNER_ARENA + 0x80)
+#define HCOMP_SUB_ORIGIN (HCOMP_SUB_ARENA + 0x80)
+#define HCOMP_PRESENCE_ORIGIN (HCOMP_PRESENCE_ARENA + 0x80)
+#define HCOMP_ROW_FIXED_QUEUE1 0xA03E7000
+#define HCOMP_ROW_FIXED_QUEUE2 0xA03E7200
+
+#if ROM_CACHE_END != HCOMP_WINNER_ARENA
+#error ROM cache must end before the composition surfaces
+#endif
+#if HCOMP_PRESENCE_ARENA + HCOMP_SURFACE_BYTES > HCOMP_ROW_FIXED_QUEUE1
+#error Composition surfaces overlap row colors
+#endif
+#if HCOMP_ROW_FIXED_QUEUE2 + 512 > HCOMP_CGRAM_EVENT_QUEUE2
+#error Row colors overlap the Q2 event arena
 #endif
 #if HCOMP_CGRAM_EVENT_QUEUE2 + HCOMP_CGRAM_EVENT_BYTES != 0xA0400000
 #error Q2 event arena must fit within base 4 MiB RDRAM
@@ -262,10 +280,13 @@
 #define NATIVE_DIAG_RSP_BANK 0xECA
 #define HCOMP_DIAG_COMPOSE_LIMIT 0xECC
 #define HCOMP_FIXED_COLOR 0xED0
+#define HCOMP_ROW_FIXED_SRC HCOMP_FIXED_COLOR
 // Per-band compact pixel origins, including the 12-pixel left border.
 // RDP image bases are 64-byte aligned even for scanline-sized sections.
 #define HCOMP_BAND_BASES 0xED4
 #define HCOMP_ELIGIBILITY_TABLE 0xEF8
+// The former scalar lookup table is unused by the vector compositor.
+#define OVERLAY_HCOMP_SETUP_SRC HCOMP_ELIGIBILITY_TABLE
 #define HCOMP_OBJ_DEPTH_CMDS 0xEE0
 #define HCOMP_BAND_RAW 0xEF0
 // Geometry of the last normalized OBJ cache, plus the current safe span.

@@ -49,9 +49,11 @@ jobs:
           libdragon init
           libdragon make -j$(nproc) 2>&1 | tee direct-build.log
           python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf
+          python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp*.elf
-          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
           python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
           python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_bg_span_seek.py build/src/rsp_main.elf --output bg-span-seek-compiled.json
@@ -320,6 +322,7 @@ jobs:
             default-native-qualified/
             native-trace-build.log
             native-trace-compiled.json
+
 
 
 

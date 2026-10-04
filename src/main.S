@@ -77,6 +77,14 @@ clear_vram:
     bne t0, t1, clear_vram
     addi t0, t0, 8
 
+    // Clear the new renderer owners and their guards, excluding ROM pages.
+    li t0, HCOMP_WINNER_ARENA
+    li t1, HCOMP_CGRAM_EVENT_QUEUE2 - 8
+clear_hcomp_surfaces:
+    sd zero, (t0)
+    bne t0, t1, clear_hcomp_surfaces
+    addi t0, t0, 8
+
     // Initialize the VI to display a 16-bit 256x224 framebuffer
     lui t0, 0xA440 // VI register upper address
     li t1, 0x00000202 // 16-bit pixel format, no anti-aliasing
@@ -194,6 +202,11 @@ pi_wait1:
     ori t0, t0, 5 // aligned source pointer carries the diagnostic bank ID
 #endif
     sw t0, DMEM(OVERLAY_HCOMP_MATH_SRC)
+    la t0, rsp_hcomp_setup_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 7
+#endif
+    sw t0, DMEM(OVERLAY_HCOMP_SETUP_SRC)
     la t0, rsp_hcomp_fast_text_start
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
     ori t0, t0, 4 // aligned source pointer carries the diagnostic bank ID

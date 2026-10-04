@@ -1103,9 +1103,9 @@ object_ymir:
     addi gp, zero, -8
 
 next_objy:
-    // Build a base value for the draw command with the row's Y-coordinate
-    lw t7, FB_OFFSET(sp)
-    lui t6, 0x0200 // Tile index
+    // Cull tile rows that the exact section scissor cannot display.
+    jal hcomp_obj_row_clip
+    slt t0, s8, k1
     add t7, t7, s8
     andi t7, t7, 0x1FF
     sll t7, t7, 2
@@ -1185,6 +1185,7 @@ draw_objtile:
     bnez s0, next_objx
     andi s5, s5, 0x1FF
 
+hcomp_obj_row_done:
     // Loop through object tiles in the Y-direction
     move s0, s4
     sub s2, s2, v0
@@ -1353,7 +1354,7 @@ hcomp_mode7_dispatch:
     li t9, 0x1788
 
 hcomp_cgram_store_marker:
-    sh t7, HCOMP_FIXED_COLOR
+    nop // The former unused raw-color slot now holds the row-color queue.
     b hcomp_cgram_return
     nop
 
@@ -1432,13 +1433,22 @@ native_diag_overlay_load:
     li a2, 0x3E7
     lhu t0, NATIVE_DIAG_RSP_BANK
     addi t0, t0, 8
-    sh t0, NATIVE_DIAG_RSP_BANK
     jr t9
-    move t0, zero
+    sh t0, NATIVE_DIAG_RSP_BANK // t0 is scratch; Main restores its saved layer.
 native_diag_overlay_main_return:
     b draw_bg
     move t0, v0
 #endif
+
+.org 0xCA4
+hcomp_obj_row_clip:
+    beqz t0, hcomp_obj_row_done
+    addi t7, s8, 8
+    slt t0, k0, t7
+    beqz t0, hcomp_obj_row_done
+    lw t7, FB_OFFSET(sp)
+    jr ra
+    lui t6, 0x0200
 
     // Shared window helper and retained suffix remain at their audited ABI.
 .org 0xCC0
@@ -1763,4 +1773,5 @@ hcomp_cgram_pair_ready:
 hcomp_cgram_marker:
     b hcomp_cgram_store_marker
     lbu k1, SPLIT_LINE
+
 

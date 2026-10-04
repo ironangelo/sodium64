@@ -42,9 +42,9 @@ jobs:
 
       - name: Check RSP branch delay slots
         run: |
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
-          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
           python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
           python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
@@ -53,6 +53,8 @@ jobs:
       - name: Check normal runtime arena
         run: |
           python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf
+          python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
 
       - name: Record build metrics
@@ -104,14 +106,16 @@ jobs:
       - name: Check resident RSP ABI and runtime arena
         run: |
           python3 scripts/test_native_diag_arm.py build/sodium64.elf
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
-          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
           python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
           python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf
+          python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
       - name: Upload empty diagnostic template and decoder
         uses: actions/upload-artifact@v4
@@ -159,14 +163,16 @@ jobs:
         run: |
           python3 scripts/test_native_diag_arm.py build/sodium64.elf
           python3 scripts/test_native_diag_v4.py build/sodium64.elf --rsp-main build/src/rsp_main.elf --rsp-mode7 build/src/rsp_mode7.elf --rsp-hcomp build/src/rsp_hcomp.elf --json-output native-trace-compiled.json
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
-          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
           python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
           python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf
+          python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
       - name: Upload empty diagnostic template and decoder
         uses: actions/upload-artifact@v4
@@ -213,9 +219,9 @@ jobs:
 
       - name: Check profiling RSP branch delay slots
         run: |
-          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
-          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
           python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
           python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
@@ -485,6 +491,7 @@ jobs:
           artifacts: sodium64.zip
           tag: release
           token: ${{ secrets.GITHUB_TOKEN }}
+
 
 
 

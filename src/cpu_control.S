@@ -72,11 +72,10 @@ cpu_bra: // BRA disp8
     MEM_READ8 1(s7), lb
     addi s7, s7, 2
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_brl: // BRL disp16
@@ -84,11 +83,10 @@ cpu_brl: // BRL disp16
     MEM_READ16 1(s7)
     addi s7, s7, 3
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_jmp: // JMP nnnn
@@ -326,11 +324,10 @@ cpu_bpl: // BPL disp8
 
     // Add the signed 8-bit immediate value to the PC
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_bmi: // BMI disp8
@@ -342,11 +339,10 @@ cpu_bmi: // BMI disp8
 
     // Add the signed 8-bit immediate value to the PC
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_bvc: // BVC disp8
@@ -358,11 +354,10 @@ cpu_bvc: // BVC disp8
 
     // Add the signed 8-bit immediate value to the PC
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_bvs: // BVS disp8
@@ -374,11 +369,10 @@ cpu_bvs: // BVS disp8
 
     // Add the signed 8-bit immediate value to the PC
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_bcc: // BCC disp8
@@ -390,11 +384,10 @@ cpu_bcc: // BCC disp8
 
     // Add the signed 8-bit immediate value to the PC
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_bcs: // BCS disp8
@@ -406,11 +399,10 @@ cpu_bcs: // BCS disp8
 
     // Add the signed 8-bit immediate value to the PC
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_bne: // BNE disp8
@@ -422,11 +414,10 @@ cpu_bne: // BNE disp8
 
     // Add the signed 8-bit immediate value to the PC
     add t0, s7, v0
+    xor t0, t0, s7
     andi t0, t0, 0xFFFF
-    andi t1, s7, 0xFFFF
-    sub s7, s7, t1
     j cpu_execute
-    add s7, s7, t0
+    xor s7, s7, t0
 
 .align 5
 cpu_beq: // BEQ disp8
@@ -670,3 +661,4 @@ cpu_nop: // NOP
     // Do nothing
     j cpu_execute
     addi s7, s7, 1
+

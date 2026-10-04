@@ -12,7 +12,7 @@ import struct
 CPU_MODULES=('s_cpu','apu_static_or_jit','dsp','dma','ppu','rsp_wait','vi_wait','other')
 STAGES=('rsp_dma_wait','rsp_command_fetch_wait','rsp_texture_retire_wait')
 RSP_STAGES=('halted','unknown_or_bank_transition','dma_wait','rdp_wait','composition_phase_or_mode7_window','general_math','direct_composition','source_draw_or_resident_control')
-RSP_BANKS={0:'unknown',1:'main',2:'mode7_draw',3:'hcomp_phase',4:'hcomp_fast',5:'hcomp_math',6:'mode7_window'}
+RSP_BANKS={0:'unknown',1:'main',2:'mode7_draw',3:'hcomp_phase',4:'hcomp_fast',5:'hcomp_math',6:'mode7_window',7:'hcomp_setup'}
 
 def parse_v4(blob,h,order,second_fields):
     head=0x2000;hz=h['count_hz']
@@ -182,3 +182,4 @@ def render_v4(result):
     lines.append('All-IRQ RSP stages: '+', '.join(f'{k}={v}' for k,v in h['rsp_stage_samples_total'].items()))
     lines.append('RSP banks are epoch-bookended; concurrent/slow overlay reads remain unknown. Counts are samples, not measured operation durations.')
     return lines
+

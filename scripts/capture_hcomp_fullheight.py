@@ -12,9 +12,13 @@ from capture_gate_c_stage1_ares import set_breakpoint, require_fenced_boundary, 
 from capture_event_arena_pressure import advance
 from gdb_rsp_dump import ARES_N64_GUEST_SIGNALS, connect_with_retry, validate_stop
 from make_hcomp_fullheight import CASES
+from test_gate_c_cgram_rsp_consumer_clean_contract import parse_macros
 
 
 def expected(case,x,y):
+    if case=='fixed-half-raster':
+        blue=0 if y==0 else (y-1)&31
+        return 0x7801|((blue//2)<<1)
     if case.startswith('span-seek-'):
         from make_bg_span_seek import expected_seek
         return expected_seek(case,x,y)
@@ -60,6 +64,8 @@ def main():
     ap.add_argument('--output',type=Path,required=True)
     ap.add_argument('--native-armed',action='store_true',help='arm at one natural N64 input sample and observe before diagnostic UI')
     args=ap.parse_args();args.output.mkdir(parents=True,exist_ok=True)
+    ev=parse_macros(Path(__file__).resolve().parents[1])
+    arenas=[ev.name(n)&0x1fffffff for n in ('HCOMP_WINNER_ARENA','HCOMP_SUB_ARENA','HCOMP_PRESENCE_ARENA')]
     syms=load_symbols(args.elf);stop=syms['native_diag_rsp_wait_end'] if args.native_armed else syms['frame_wait']+0x14
     c=connect_with_retry('127.0.0.1',args.port,30,240)
     try:
@@ -93,11 +99,11 @@ def main():
             (args.output/'sp-pc.bin').write_bytes(c.read_memory(0xa4080000,4,4))
             engine=require_fenced_boundary(c,stage=f'fullheight {args.case} {attempt}')
             guards={}
-            for start in (0xe2000,0xe4000,0xe6000):
+            for start in arenas:
                 # Arbitrary-Y alignment uses up to 48 bytes before the nominal
                 # compact origin. Reserve that preceding cache line; keep a
                 # complete 64-byte guard outside the expanded allocation.
-                for address in (start-128,start+0x1180):
+                for address in (start,start+0x20fc0):
                     guard=c.read_memory(address|0xa0000000,64,64)
                     guards[hex(address)]=guard.hex()
                     assert guard==bytes(64),('compact guard modified',hex(address),guard.hex())
@@ -122,7 +128,7 @@ def main():
                          'obj-low':0x51,'obj-high':0x51,'rgb-add':1,'rgb-half':0x41,'rgb-sub':0x81,'rgb-sub-half':0xc1,'rgb-main':0,'rgb-subscreen':0,'rgb-row-add':1,'rgb-row-half':0x41,'rgb-row-sub':0x81,'rgb-row-sub-half':0xc1,'rgb-row-subscreen':0}.get(args.case,0x41)
                 want_tm={'bg2':2,'bg3':4,'bg4':8,'obj-low':0x11,'obj-high':0x11,'rgb-subscreen':2,'rgb-row-subscreen':2}.get(args.case,1)
                 want_ts=1 if args.case=='bg2' else 2
-                want_window=0xa2 if args.case=='window' else 2
+                want_window=0 if args.case=='fixed-half-raster' else 0xa2 if args.case=='window' else 2
                 if args.case.startswith('span-seek-'):
                     want_cg=1 if args.case in ('span-seek-math','span-seek-sub-hidden') else 0
                 if args.case.startswith('mode7-'):
@@ -154,7 +160,7 @@ def main():
                         if args.case in OBJ_BACKDROP_CASES:want_policy=obj_policy(args.case)
                         assert int.from_bytes(dmem[0xef0:0xef4],'big')==want_policy,'direct/identity policy not exercised'
                         rows=int.from_bytes(dmem[0xec4:0xec8],'big')
-                        if want_policy==0:assert 1<=rows<=8,('general band not exercised',rows)
+                        if want_policy==0:assert 1<=rows<=240,('general section not exercised',rows)
                         elif kind!='fast-iris-rows':assert rows>8,('whole section not exercised',rows)
                         report['composition_policy']=want_policy
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,
@@ -184,4 +190,5 @@ def main():
 
 
 if __name__=='__main__':main()
+
 

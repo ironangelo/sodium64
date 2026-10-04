@@ -11,127 +11,21 @@ draw_bg:
     j 0xA4001F90
     move v0, t0
 hcomp_entry:
-hcomp_output_start:
-    // Minimal input ownership record for the complete-image oracle. Capture
-    // this section's bounds, not the next section's/end-frame mutable state.
-    lbu v1, CGADSUB
-    lw t0, FRAMEBUFFER(sp)
-    sw t0, SCRN_DATA
-    lhu t0, WHX
-    sh t0, SCRN_DATA + 4
-    lhu t0, WHX + 2
-    sh t0, SCRN_DATA + 6
-    lbu t0, CGWSEL
-    sh t0, SCRN_DATA + 8
-    lbu t0, WOBJSEL
-    sh t0, SCRN_DATA + 10
-    lbu t0, WOBJLOG
-    sh t0, SCRN_DATA + 12
-    sh zero, SCRN_DATA + 14
-    li a0, SCRN_DATA
-    li a1, 0xA00F0000
-    jal 0xA4001F08
-    li a2, 15
-    lbu a0, WOBJSEL
-    srl a0, a0, 4
-    lbu a1, WOBJLOG
-    srl a1, a1, 2
-    andi a1, a1, 3
-    jal 0xA4001CE4
-    li a2, 1
-    lbu v0, CGWSEL
-    lhu gp, SUB_COLOR
-    li s6, 0
-    li s5, TILE_TABLE
-hcomp_mask_pixel:
-    lbu t9, WIN_COUNT
-    li t2, WIN_BOUNDS
-    move t6, zero
-hcomp_mask_span:
-    beqz t9, hcomp_mask_selected
-    nop
-    lbu t3, 0(t2)
-    lbu t4, 1(t2)
-    sltu t3, s6, t3
-    sltu t4, t4, s6
-    or t3, t3, t4
-    xori t3, t3, 1
-    or t6, t6, t3
-    addi t9, t9, -1
-    b hcomp_mask_span
-    addi t2, t2, 2
-hcomp_mask_selected:
-    sll t6, t6, 2
-    li t3, 0x35
-    srl t4, v0, 6
-    or t4, t4, t6
-    srlv t8, t3, t4
-    andi t8, t8, 1
-    sub t8, zero, t8
-    sh t8, 0(s5)
-    srl t4, v0, 4
-    andi t4, t4, 3
-    or t4, t4, t6
-    srlv t8, t3, t4
-    andi t8, t8, 1
-    sub t8, zero, t8
-    sh t8, 512(s5)
-    addi s6, s6, 1
-    addi s5, s5, 2
-    li t0, 256
-    bne s6, t0, hcomp_mask_pixel
-    nop
-    li t0, 1
-    mtc2 t0, $v15, 0
-    li t0, 0x8000
-    mtc2 t0, $v16, 0
-    li t0, 0x0400
-    mtc2 t0, $v16, 2
-    li t0, 31
-    mtc2 t0, $v19, 0
-    vnor $v21, $v31, $v31, 0
-    mtc2 gp, $v22, 0
-    vor $v22, $v31, $v22, 8
-    sll t0, v1, 31
-    sra t0, t0, 31
-    andi t0, t0, 0x0C00
-    mtc2 t0, $v20, 0
-    sll t0, v1, 30
-    sra t0, t0, 31
-    andi t0, t0, 0x1400
-    mtc2 t0, $v20, 2
-    sll t0, v1, 29
-    sra t0, t0, 31
-    andi t0, t0, 0x1C00
-    mtc2 t0, $v20, 4
-    sll t0, v1, 28
-    sra t0, t0, 31
-    andi t0, t0, 0x2800
-    mtc2 t0, $v20, 6
-    sll t0, v1, 27
-    sra t0, t0, 31
-    andi t0, t0, 0x5000
-    mtc2 t0, $v20, 8
-    sll t0, v1, 26
-    sra t0, t0, 31
-    andi t0, t0, 0x0400
-    mtc2 t0, $v20, 10
-    lw t0, HCOMP_BAND_Y
-    addi t0, t0, -8
-    sll t1, t0, 9
-    sll t2, t0, 5
-    add t1, t1, t2
-    sll t2, t0, 4
-    add t1, t1, t2
-    lw s0, FRAMEBUFFER(sp)
-    add s0, s0, t1
-    addi s0, s0, 24
 hcomp_math_sources:
     lw s1, HCOMP_BAND_BASES
     lw s2, HCOMP_BAND_BASES + 4
     lw s3, HCOMP_BAND_BASES + 8
     lw s7, HCOMP_BAND_ROWS
+    sll s4, k0, 1
+    addi s4, s4, TILE_TABLE + 512
 hcomp_row:
+    andi t0, v0, 0xF2
+    bnez t0, hcomp_row_color_ready
+    nop
+    lhu gp, 0(s4)
+    mtc2 gp, $v22, 0
+    vor $v22, $v31, $v22, 8
+hcomp_row_color_ready:
     li s6, 0
 hcomp_batch:
     // Four 32-pixel inputs occupy only SCRN_DATA..CHAR_DATA+127.
@@ -139,18 +33,24 @@ hcomp_batch:
     move a1, s0
     jal 0xA4001F40
     li a2, 63
-    li a0, SCRN_DATA + 64
-    move a1, s1
-    jal 0xA4001F40
-    li a2, 63
     li a0, SCRN_DATA + 128
     move a1, s2
+    jal 0xA4001F40
+    li a2, 63
+    andi t0, v0, 2
+    beqz t0, hcomp_optional_sub_done
+    lbu t0, HCOMP_EFFECTIVE_TS
+    beqz t0, hcomp_optional_sub_done
+    nop
+    li a0, SCRN_DATA + 64
+    move a1, s1
     jal 0xA4001F40
     li a2, 63
     li a0, SCRN_DATA + 192
     move a1, s3
     jal 0xA4001F40
     li a2, 63
+hcomp_optional_sub_done:
     li s5, SCRN_DATA
 hcomp_vector:
     // Eight independent pixels. Renderer constants v23..v31 stay intact.
@@ -160,7 +60,15 @@ hcomp_vector:
     lqv $v03, 0, 192, s5
     addi t1, s6, TILE_TABLE
     lqv $v04, 0, 0, t1
+    andi t0, v0, 0xF2
+    beqz t0, hcomp_uniform_math_mask
+    nop
     lqv $v05, 0, 512, t1
+    b hcomp_math_mask_ready
+    nop
+hcomp_uniform_math_mask:
+    vor $v05, $v21, $v31, 0
+hcomp_math_mask_ready:
     vand $v00, $v00, $v04, 0
     // Zero eligibility while retiring any incoming vector carry bits.
     vge $v07, $v31, $v31, 0
@@ -186,11 +94,18 @@ hcomp_vector:
     andi t0, v0, 2
     beqz t0, hcomp_vector_fixed
     nop
+    lbu t0, HCOMP_EFFECTIVE_TS
+    beqz t0, hcomp_vector_absent
+    nop
     veq $v06, $v03, $v16, 9
     vmrg $v01, $v22, $v01, 0
     vmrg $v13, $v31, $v21, 0
     b hcomp_vector_half
     vand $v13, $v13, $v04, 0
+hcomp_vector_absent:
+    vor $v01, $v22, $v31, 0
+    b hcomp_channels_start
+    vand $v13, $v31, $v31, 0
 hcomp_vector_fixed:
     vor $v01, $v22, $v31, 0
     vor $v13, $v04, $v31, 0
@@ -258,6 +173,7 @@ hcomp_channel_pack:
     addi s1, s1, 48
     addi s2, s2, 48
     addi s3, s3, 48
+    addi s4, s4, 2
     addi s7, s7, -1
     bnez s7, hcomp_row
     nop
@@ -277,3 +193,4 @@ hcomp_screen_switch:
 draw_mode7_entry:
     j 0xA4001F78
     li t9, 0x1788
+

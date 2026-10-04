@@ -1,3 +1,15 @@
+## 2026-10-04 — Shared-work candidate resumed after interrupted session; signed test-VM bounds repaired
+
+- User reported the interface remained “in process” for more than ten hours. The attached screenshot explicitly showed “Connection interrupted”; do not represent that duration as continuous agent computation. Source and CI records survived. No native A13 result exists yet.
+- Isolated candidate `phase4/gate-c-a5-shared-work` advanced from `ca3f6f59a66bf9d7c15bfac7e4577fa0c6e06e65` to `bd87989876c9412f7fca500f4dd94626682df0a0`. Shared a4 and master were not modified.
+- The ca3f6f5 empty normal/manual/trace builds compiled. Their qualification stopped in the new CGRAM test because its CPU mini-VM did not implement signed SLT (SPECIAL function 42). This was a harness limitation, not a native crash. Add correct signed 64-bit GPR comparison; 49 positive/negative 32/64-bit boundary pairs passed locally.
+- Executing the actual compiled ca3f6f5 normal binary with the repaired VM passed 3,072 identical and 3,072 changed CGRAM commits across all 256 indices, active/VBlank/closed-frame cases, and 1,792 independent eight-lane winner/window masks.
+- Compiled sparse JIT publication/reset passed 1,536 publication cases and 58 reset cases. All published and stale lookup entries reset to zero, tags/cycle debit and adjacent owners survive. Empty reset scans 512 flags (3,083 interpreted instructions) without lookup stores; a fully populated table still clears all 262,144 bytes (45,579 interpreted instructions). These counts are not hardware timings; fully populated bookkeeping has instruction overhead relative to A12.
+- The candidate branch now requires the full image suite even for a harness-only follow-up: a failed prior run cannot establish inherited pixel qualification.
+- Exact-head replacement CI pending: Build `37214721744`; full pixel/recorder Gate `37214721758`. Intended coverage: 94 complete normal guest images, 12 armed trace images, manual and v4 whole-interval capture. Do not distribute this candidate until the complete checks pass.
+- No evidence establishes an N64 hardware ceiling. CPU wait/cadence evidence points to heavy renderer work in most captures and additional APU work in late DKC logo; unsupported live DMEM candidates cannot establish exact stage causality. Preserve the bounded general renderer/dataflow experiment as the next architectural step if measured native gains remain insufficient.
+- Public update contains only emulator source, original test programs and this curated checkpoint. Commercial game ROM/SAV/video/state remain private; no PR, merge or release.
+
 # Sodium64 fork continuity
 
 ## 2026-10-04 UTC — Follow-up candidate isolates measured redundant work; qualification pending

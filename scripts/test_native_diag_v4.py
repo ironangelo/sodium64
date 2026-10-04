@@ -193,10 +193,10 @@ def main():
         assert sum(get(m,state+268+i*4) for i in range(8))==1
         cases+=1
     for bank in range(7):
-      for pc in (0x3a8,0x3e4,0xf4c):
+      for pc in (0x3a8,0x3e4,0xf4c,0xccc):
         m=memory();put(m,state+16,0x60000000);put(m,0x04080000,pc);put(m,0x04000eca,0x120+bank,2)
         r=registers();execute(m,s['native_diag_interrupt'],r,{9:1,14:s['native_diag_cpu_start']})
-        idx=2 if pc==0xf4c else 3 if bank==3 and pc==0x3e4 else {0:1,1:7,2:7,3:4,4:6,5:5,6:4}[bank]
+        idx=2 if pc==0xf4c else 7 if pc==0xccc else 3 if bank==3 and pc==0x3e4 else {0:1,1:7,2:7,3:4,4:6,5:5,6:4}[bank]
         assert get(m,state+268+idx*4)==1,(bank,pc,idx)
         assert get(m,state+264)==pc|(bank<<12)
         cases+=1

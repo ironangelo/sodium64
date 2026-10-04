@@ -25,11 +25,14 @@ jobs:
           from pathlib import Path
           changed=set(subprocess.check_output(['git','diff','--name-only','HEAD^','HEAD'],text=True).splitlines())
           harness_only={'scripts/capture_native_diag_manual.py','.github/workflows/gate-c-direct-backdrop.yml'}
+          native_only=harness_only|{'src/native_diag.S','scripts/test_native_diag_v4.py','tools/sc64-diagnostic-save/apply.py','.github/workflows/sc64-diagnostic-menu.yml'}
           mode7_only=harness_only|{'scripts/make_mode7_windows.py'}
           # Fixture-only changes keep the full renderer immutable; rerun all
           # Mode7 guests for their generator, plus the recorder. Source changes
-          # always retain the complete image suite.
-          scope='none' if changed and changed.issubset(harness_only) else 'mode7' if changed and changed.issubset(mode7_only) else 'all'
+          # retain the complete image suite except recorder-only source, which
+          # is entirely preprocessed away in normal builds and byte-checked.
+          # Armed native pixels and full recorder qualification still run.
+          scope='none' if changed and changed.issubset(native_only) else 'mode7' if changed and changed.issubset(mode7_only) else 'all'
           full=scope=='all'
           with Path(os.environ['GITHUB_OUTPUT']).open('a') as out:
               out.write(f'full_pixels={str(full).lower()}\n')
@@ -155,6 +158,10 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           ldd "$ares_bin"
           "$ares_bin" --version | tee ares-version.txt
+      - name: Confirm unchanged normal emulator for recorder-only changes
+        if: steps.scope.outputs.pixel_scope == 'none'
+        run: |
+          echo '12347820b723c21b8ca87f2ef0b2794cfb10dd875719d25bfac9da320813a942  sodium64.z64' | sha256sum --check
       - name: Whole-frame pixel and guard oracles at natural fences
         if: steps.scope.outputs.pixel_scope != 'none'
         env:

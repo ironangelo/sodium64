@@ -16,7 +16,7 @@ replace('    uint32_t emulated_file_offset = 0;', '    uint32_t emulated_file_of
 replace('            ini_free(cfg);', '''            diagnostic_saves = ini_get_int(cfg, emu_section, "diagnostic_saves", 0) == 1;
             const char *tag = ini_get_string(cfg, emu_section, "diagnostic_tag", "v4");
             strncpy(diagnostic_tag, tag, sizeof(diagnostic_tag) - 1);
-            diagnostic_tag[sizeof(diagnostic_tag) - 1] = '\\0';
+            diagnostic_tag[sizeof(diagnostic_tag) - 1] = 0;
             ini_free(cfg);''')
 # Apply only inside the emulator loader; preserve every ordinary N64 save path.
 pos=s.index('cart_load_err_t cart_load_emulator (')

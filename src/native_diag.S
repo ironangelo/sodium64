@@ -387,6 +387,13 @@ native_diag_rsp_classify:
     sltiu k0, k0, 16
     bnez k0, native_diag_rsp_texture_sample
     nop
+    // Shared resident helpers are source-known control/drawing, irrespective
+    // of which 1000-byte bank currently occupies 0x3A8..0x78F.
+    lw k0, native_diag_state + 260
+    addiu k0, k0, -0x3A8
+    sltiu k0, k0, 0x3E8
+    beqz k0, native_diag_rsp_draw_sample
+    nop
     lw k0, native_diag_state + 264
     srl k0, k0, 12
     beqz k0, native_diag_rsp_unknown_sample

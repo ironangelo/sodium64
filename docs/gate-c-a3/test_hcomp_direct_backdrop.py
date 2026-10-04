@@ -233,7 +233,7 @@ def main():
                 stop=r[27];assert start<stop<=end
                 rows=set(range(start,stop));seen.extend(range(start,stop))
                 if policy==2:assert not rows&hazards,(trial,start,stop,sorted(rows&hazards))
-                else:assert policy==0 and stop==end and start in hazards
+                else:assert policy==0 and rows.issubset(hazards)
                 # The actual Phase band-done must select the Fast resume entry
                 # for adaptive bands without consuming a real section epoch.
                 run_geometry(p,pb&0xfff,d,ps['hcomp_band_done'],{0xf5c},r)

@@ -24,7 +24,7 @@ def main():
     ap.add_argument('cpu',type=Path);ap.add_argument('main_rsp',type=Path);ap.add_argument('mode7_rsp',type=Path)
     ap.add_argument('--output',type=Path);a=ap.parse_args()
     image,s=load_elf(a.cpu)
-    rng=random.Random(0x6516);cases=dict(epoch=0,branches=0,obj_rows=0,apu_reset=0,rom_cache=0,row_input=0)
+    rng=random.Random(0x6516);cases=dict(epoch=0,branches=0,obj_rows=0,apu_reset=0,rom_cache=0,row_input=0,hdma_row_phase=0)
     for queue in (0xa03e7000,0xa03e7200):
         for line in (0,*range(1,242),255,65535):
             m=image.copy();lo=(queue-64)&0x1fffffff
@@ -37,6 +37,33 @@ def main():
             if 1<=line<=240:want[64+2*(line-1):66+2*(line-1)]=b'\xbe\xee'
             assert bytes(m[lo+i] for i in range(640))==want,('row producer bounds',hex(queue),line)
             cases['row_input']+=1
+    # Independently execute the existing HDMA scheduler and COLdata writer.
+    # Vblank end reloads HDMA and runs line 0 before any displayed row: table
+    # entry y therefore becomes the fixed operand of displayed row y. This
+    # proves the fixture's expected phase without using its rendered pixels.
+    from make_hcomp_fullheight import build
+    table=build('fixed-half-raster')[0x3000:0x3100]
+    row_values=[y&31 for y in range(223)]+[0]
+    for queue in (0xa03e7000,0xa03e7200):
+        m=image.copy();table_address=0x00600000
+        m.update((table_address+i,b) for i,b in enumerate(table))
+        put(m,s['hdma_mask'],1,1);put(m,s['end_mask'],0,1)
+        put(m,s['ntrlx'],1,1);put(m,s['dmapx'],0,1)
+        put(m,s['bbadx'],0x32,1);put(m,s['a2abx'],table_address)
+        put(m,s['write_iomap']+0x32*4,s['write_coldata'])
+        put(m,s['brightness'],16,1);put(m,s['coldata'],0,2)
+        put(m,s['sub_color'],0,2);put(m,s['hcomp_row_fixed_ptr'],queue)
+        for line in range(225):
+            put(m,s['cur_line'],line,2)
+            execute(m,s['hcomp_record_row_input'],[0]*32,{},stop=s['hcomp_row_fixed_recorded'])
+            if line:
+                addr=(queue+2*(line-1))&0x1fffffff
+                got=int.from_bytes(bytes(m[addr+i] for i in range(2)),'big')
+                assert got==row_values[line-1]*2,('HDMA row phase',line-1,got,row_values[line-1]*2)
+                cases['hdma_row_phase']+=1
+            regs=[0]*32;regs[31]=EXIT
+            execute(m,s['trigger_hdma'],regs,{},stop=EXIT)
+        assert m[s['hdma_mask']&0x1fffffff]==0
     # The resized ROM pager must wrap at the new owner boundary. Execute its
     # compiled PI-address and slot transition; no cart DMA timing is simulated.
     for slot in range(194):

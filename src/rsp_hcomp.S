@@ -55,7 +55,12 @@ hcomp_band_start:
     b hcomp_band_bounds_ready
     move k1, t0
 hcomp_general_bounds:
+    // An eligible OBJ span needs general math only through its owned end.
+    // Re-probe afterward so later safe rows regain the direct compositor.
+    lw t1, HCOMP_OBJ_ADAPTIVE
+    beqz t1, hcomp_band_bounds_ready
     move k1, t0
+    lw k1, HCOMP_FAST_END
 hcomp_band_bounds_ready:
     sub t0, k1, k0
     sw t0, HCOMP_BAND_ROWS
@@ -287,4 +292,3 @@ hcomp_band_entry:
 draw_mode7_entry:
     j 0xA4001F78
     li t9, 0x1788
-

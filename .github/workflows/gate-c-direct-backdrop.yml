@@ -275,13 +275,13 @@ jobs:
           from pathlib import Path
           from make_hcomp_fullheight import build
           template=Path('sodium64.z64').read_bytes()
-          for case in ('half','sub-half','short','fast-always','fast-iris-rows','fast-obj-high-late','mode7-raster','mode7-general-half'):
+          for case in ('fixed-half-raster','half','sub-half','short','fast-always','fast-iris-rows','fast-obj-high-late','mode7-raster','mode7-general-half'):
               Path(f'hardware/native-pixels-{case}.z64').write_bytes(template+bytes(0x104000-len(template))+build(case))
           PYPIX
           port=9450
           pid=""
           trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
-          for kind in half sub-half short fast-always fast-iris-rows fast-obj-high-late mode7-raster mode7-general-half; do
+          for kind in fixed-half-raster half sub-half short fast-always fast-iris-rows fast-obj-high-late mode7-raster mode7-general-half; do
             out="captures/native-pixels-$kind"
             mkdir -p "$out" "$RUNNER_TEMP/native-pixels-$kind"
             setsid env HOME="$RUNNER_TEMP/native-pixels-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
@@ -322,7 +322,6 @@ jobs:
             default-native-qualified/
             native-trace-build.log
             native-trace-compiled.json
-
 
 
 

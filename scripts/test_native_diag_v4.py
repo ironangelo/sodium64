@@ -10,7 +10,7 @@ def sx(v):
     return (v if v<0x80000000 else v-0x100000000)&MASK
 
 def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False,inject_irq=False,rsp=False):
-    pending=None
+    pending=None;lo=0
     def read(a,n):
         a&=0x1fffffff
         if rsp and a<0x1000:a+=0x04000000
@@ -31,12 +31,18 @@ def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False,inject_irq=Fals
             fn=w&63
             if fn==0:regs[rd]=sx((regs[rt]&0xffffffff)<<(w>>6&31))
             elif fn==2:regs[rd]=sx((regs[rt]&0xffffffff)>>(w>>6&31))
+            elif fn==4:regs[rd]=sx((regs[rt]&0xffffffff)<<(regs[rs]&31))
             elif fn==8:target=regs[rs]&0xffffffff
+            elif fn==9:
+                target=regs[rs]&0xffffffff;regs[rd]=sx(pc+8)
+            elif fn==18:regs[rd]=sx(lo)
+            elif fn==24:lo=(regs[rs]*regs[rt])&0xffffffff
             elif fn in (32,33):regs[rd]=sx(regs[rs]+regs[rt])
             elif fn in (34,35):regs[rd]=sx(regs[rs]-regs[rt])
             elif fn==36:regs[rd]=regs[rs]&regs[rt]
             elif fn==37:regs[rd]=regs[rs]|regs[rt]
             elif fn==38:regs[rd]=regs[rs]^regs[rt]
+            elif fn==39:regs[rd]=~(regs[rs]|regs[rt])&MASK
             elif fn==43:regs[rd]=int(regs[rs]<regs[rt])
             else:raise AssertionError(('forbidden/unhandled special instruction',hex(pc),hex(w)))
         elif op in (2,3):
@@ -52,6 +58,7 @@ def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False,inject_irq=Fals
         elif op==11:regs[rt]=int(regs[rs]<(si&MASK))
         elif op==12:regs[rt]=regs[rs]&imm
         elif op==13:regs[rt]=regs[rs]|imm
+        elif op==14:regs[rt]=regs[rs]^imm
         elif op==15:regs[rt]=sx(imm<<16)
         elif op==16:
             if rs==0:
@@ -234,4 +241,3 @@ def main():
     print('NATIVE_DIAG_V4_COMPILED PASS',json.dumps(proof))
 
 if __name__=='__main__':main()
-

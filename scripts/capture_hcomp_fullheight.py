@@ -17,7 +17,9 @@ from test_gate_c_cgram_rsp_consumer_clean_contract import parse_macros
 
 def expected(case,x,y):
     if case=='fixed-half-raster':
-        blue=0 if y==0 else (y-1)&31
+        # Vblank reload runs HDMA at line 0 before the first displayed row.
+        # The compiled scheduler/row-input test proves table[y] owns row y.
+        blue=(y&31) if y<223 else 0
         return 0x7801|((blue//2)<<1)
     if case.startswith('span-seek-'):
         from make_bg_span_seek import expected_seek
@@ -194,4 +196,3 @@ def main():
 
 
 if __name__=='__main__':main()
-

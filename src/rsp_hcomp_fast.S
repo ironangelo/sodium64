@@ -153,7 +153,7 @@ hcomp_fast_obj_probe:
     slt t1, t0, k1
     beqz t1, hcomp_fast_obj_next
     slt t1, k0, t0
-    beqz t1, hcomp_fast_return
+    beqz t1, hcomp_fast_obj_general
     slt t1, t0, t7
     beqz t1, hcomp_fast_obj_next
     nop
@@ -164,6 +164,19 @@ hcomp_fast_obj_next:
     bnez t0, hcomp_fast_obj_probe
     nop
     sw t7, HCOMP_FAST_END
+    b hcomp_fast_direct
+    nop
+hcomp_fast_obj_general:
+    // The intersecting eligible object's end is a conservative exact bound.
+    // Clamp to the real section; overlapping objects are re-probed there.
+    slt t0, t4, k1
+    bnez t0, hcomp_fast_obj_general_end
+    nop
+    move t4, k1
+hcomp_fast_obj_general_end:
+    sw t4, HCOMP_FAST_END
+    b hcomp_fast_return
+    nop
 hcomp_fast_direct:
     li t0, 2
     sw t0, HCOMP_BAND_RAW

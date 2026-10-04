@@ -1,3 +1,75 @@
+# 2026-10-04 - A14 with combined renderer and continuous captures
+
+The user chose one paired menu/emulator installation with repeated captures:
+N64 Start -> approximately 20 s -> verified unique SAV -> OK -> keep playing
+and rearm without reset. A13+A+B are combined. The menu reserves 16 files per
+game session (512 KiB SD); unused reservations are not measured scenes.
+
+Source: phase4/gate-c-a14-combined at 018630ffb8944f22dcdfd3dcafb427a7b2e4cd42.
+Prior combined control 328b65a passed Build 37235470435 and Gate 37235470458.
+New source passed Build and paired menu. The user explicitly requested immediate delivery
+and deferred remaining checks to the next prompt; final Gate was still running.
+Normal whole-frame images and original v2/v4 recorder steps had passed, but
+armed image qualification/artifact verification remain pending for this package. Exact candidate workflows:
+Build 37238884074, Gate 37238884032 and paired menu 37238884035.
+
+S64D v5 retains v4 geometry and adds CON5 timestamps/context. Measurements seal
+at the timer IRQ cutoff; guest SRAM and retired renderer context come from a
+separately timestamped natural frame boundary. Normal completion never forces
+RSP HALT/DP FREEZE. The O64 bridge owns a private stack and preserves ordinary
+GPR64, HI/LO, Status/EXL and queue-index sp. SD work and OK display are outside
+the retained interval. Later stalls remain terminal, with their own context
+and without inflating the sealed measurement denominator.
+
+The paired menu pins e28c26e1aeae3c18851fc24118080e23e5a86a9f. It closes and syncs
+exclusive FA_CREATE_NEW reservations, checks prior writeback, disables automatic
+writeback via load_save(NULL), imports ordinary guest SRAM read-only and passes
+fragmented sector lists, CSD/CID and data bounds in a checksummed S64C descriptor
+at cart offsets 0x102000..0x104000. Sodium writes only these bounded, globally
+disjoint data sectors: incomplete header first, each body sector read back,
+then complete header verified before OK. Slots never wrap, including partial
+writes. Soft restart skips nonzero diagnostic regions. Exhaustion or failure
+blocks rearm while gameplay can continue. Failure retains the diagnostic 24 KiB;
+the guest 8 KiB remains mutable. No retry, full immutable snapshot or USB sink
+is implemented.
+
+Qualification: 79 compiled cases, including 36 captures across 12 sessions, 8 failure/
+exhaustion cases, 24 actual O64 bridges, 4 invalid handoffs, 4 post-seal faults,
+2 IRQ/frame races and legacy behavior. The actual C SD algorithm passed 268 host
+cases; the real menu helper passed 26. Linux ASan/UBSan passed. Hardware boundaries
+are mocked, so these tests do not establish physical persistence, latency,
+audio/gameplay resumption or FPS. Live DMEM bank/stage/PPU candidates retain
+the existing hardware-access and attribution limits.
+
+Work removed: A core 67/73 -> 22/26 issued instructions per 8 active add/sub pixels;
+B removes 250,880 DMA bytes per 224-row general Sub section while retaining Sub
+drawing/SyncFull and selecting Main's separate Z owner. Counts are not native
+cycles/FPS; net physical gain is unmeasured. No constant 60 FPS claim is made.
+
+Deliverable: Sodium64-A14-capturas-continuas.zip (1789095 bytes;
+SHA256 687faf1f856369eb0ef50b1e63d0d9e4b6e3084b6d442f36406a8d52f817af7c; 49 entries). One empty trace.z64, paired menu, one INI, exact CPU/RSP
+symbols/maps, decoder v5, available Build/menu proof metadata, integration/source pins and
+licenses. ROMs, SAVs and private frames/dumps are excluded. The SD is unchanged.
+Instructions require one installation with menu/INI backups and preserve A13
+and old SAVs. Menu assets are unchanged from the pinned upstream; identity
+with the installed customized UI is unverified.
+
+Future USB iteration needs acknowledged safe upload/reboot, frame-indexed input
+replay, capture receipt and visual/audio export. COM3 was not opened; firmware
+is unchanged. Continuous v5 writes directly to SD, so generic USB SRAM-memory
+download does not retrieve this new sink's files.
+
+Master at 7cc8fac, gameplay a4 at 7381c17 and A13 at b420614 remain unchanged. No PR,
+merge, release or hardware acceptance occurred. Next: finish deferred final Gate verification and paired physical A14 trials
+on the same SMW/DKC1/ALttP scenes without INI swaps or reset between captures.
+
+---
+
+
+Delivery is a candidate, not final Gate-qualified or hardware-accepted. The strict
+packager remains intact at work/package_continuous.py for the later qualified
+replacement; this user-authorized candidate used work/package_continuous_pending.py.
+
 ## 2026-10-04 — Physical A11/A13 batch analyzed; two independent experiments fully qualified
 
 - User confirmed A13 DKC/ALttP 000002/000003/000004 correspond to scenes 1/2/3; A11 uses 000001/000002/000003. Thirteen complete v4 captures pass checksum, waits/counters, full retention and zero-overflow checks, with MAX, frameskip 0, full APU clock 21 and audio ON. The named A11 ALttP intro save is absent. Additional A13 000001 files have no diagnostic header and a zero diagnostic region; they are launch reservations, not fourth captured scenes. Ordinary guest-save areas were preserved. All commercial ROM/SAV/raw analyses/state/footage/hash data remain private.

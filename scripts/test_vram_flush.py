@@ -3,6 +3,7 @@
 import argparse,json,random,struct
 from pathlib import Path
 from test_native_diag_arm import load_elf
+from test_native_diag_v4 import execute as cpu_run
 def run(m,pc,stop,r):
     pending=None;seen=[];lo=0
     def read(a,n):return int.from_bytes(bytes(m.get((a+i)&0x1fffffff,0) for i in range(n)),'big')
@@ -88,8 +89,13 @@ def main():
       for flags in range(4):
        for old in (b'\x00\x00',b'\x12\x34'):
         m=base.copy();put(m,s['dpal_dirty'],bytes([flags]));put(m,s['cg_lsb'],b'\x34');put(m,s['cgram']+color*2,old)
-        r=[0]*32;r[8]=color*2+1;r[5]=0x12
-        run(m,s['cg_high'],s['dpal_commit_invalidated'],r)
+        # Closed-frame commits fold into the next base snapshot. Exercise the
+        # actual equal-color return and changed-color tail rather than stopping
+        # at a label that preceded A13's idempotent return.
+        put(m,s['frame_done'],b'\x01')
+        r=[0]*32;r[8]=color*2+1;r[5]=0x12;r[31]=0xdead0000
+        stop=s['update_fill'] if color==0 and old!=b'\x12\x34' else 0xdead0000
+        cpu_run(m,s['cg_high'],r,{},stop=stop)
         assert get(m,s['dpal_dirty'],1)==bytes([flags if old==b'\x12\x34' else 3])
         assert get(m,s['cgram']+color*2,2)==b'\x12\x34'
     assert max(c['instructions'] for c in cases)<6144 # Old dirty-copy + full writeback bodies.

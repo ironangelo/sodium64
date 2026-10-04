@@ -27,8 +27,8 @@ def gate(text,base,pc,exits,mask):
         op=w>>26;rs=w>>21&31;rt=w>>16&31;imm=w&65535
         si=imm if imm<32768 else imm-65536;target=None
         if op==18 and rs&16:
-            assert w&63==0x21 and w>>11&31==7 and rt==31,'expected VEQ exact mask,zero'
-            vcc=sum(int(lane==0)<<i for i,lane in enumerate(mask))
+            assert w&63==0x22 and w>>11&31==7 and rt==31,'expected VNE exact mask,zero'
+            vcc=sum(int(lane!=0)<<i for i,lane in enumerate(mask))
         elif op==18 and rs==2:
             assert w>>11&31==1,'expected CFC2 VCC'
             r[rt]=vcc
@@ -78,7 +78,7 @@ def main():
             else:changed+=1
     base,text=read_text(a.math_rsp);base&=0xfff
     ms={n:addr&0xfff for addr,n in elf_symbols(a.math_rsp)}
-    start=ms['hcomp_vector_math_test'];normal=start+24;skip=ms['hcomp_vector_output']
+    start=ms['hcomp_vector_math_test'];normal=ms['hcomp_vector_math_active'];skip=ms['hcomp_vector_output']
     masks=0
     for eligible in range(256):
       for allowed in (0,1,3,0x55,0xaa,0x80,0xff):

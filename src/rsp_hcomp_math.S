@@ -94,12 +94,14 @@ hcomp_math_mask_ready:
 hcomp_vector_math_test:
     // The exact winner/window mask is already resolved. If all eight pixels
     // forbid math, retain clipped Main without computing either operand.
-    veq $v06, $v07, $v31, 0
+    // Winner comparisons above have already retired VCO. VNE directly
+    // reports eligible lanes without inverting the equality mask in scalar.
+    vne $v06, $v07, $v31, 0
     cfc2 t0, $1
     andi t0, t0, 0xFF
-    xori t0, t0, 0xFF
     beqz t0, hcomp_vector_output
     nop
+hcomp_vector_math_active:
     andi t0, v0, 2
     beqz t0, hcomp_vector_fixed
     nop

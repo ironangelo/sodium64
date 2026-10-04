@@ -1,0 +1,58 @@
+name: SC64 Diagnostic Save Menu
+on:
+  push:
+    branches: [phase4/gate-c-a4-gameplay-capture]
+    paths: [tools/sc64-diagnostic-save/**, .github/workflows/sc64-diagnostic-menu.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sc64-diagnostic-menu-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  menu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Qualify exclusive reservations and failure handling
+        run: python3 tools/sc64-diagnostic-save/test_save.py
+      - name: Checkout pinned upstream menu
+        uses: actions/checkout@v4
+        with:
+          repository: Polprzewodnikowy/N64FlashcartMenu
+          ref: e28c26e1aeae3c18851fc24118080e23e5a86a9f
+          path: sc64-menu
+          submodules: recursive
+          persist-credentials: false
+      - name: Apply opt-in diagnostic integration
+        run: python3 tools/sc64-diagnostic-save/apply.py sc64-menu
+      - name: Build pinned menu with upstream toolchain
+        uses: devcontainers/ci@v0.3
+        with:
+          subFolder: sc64-menu
+          configFile: .devcontainer/ci/devcontainer.json
+          imageName: ghcr.io/polprzewodnikowy/n64flashcartmenu-ci-devcontainer
+          cacheFrom: ghcr.io/polprzewodnikowy/n64flashcartmenu-ci-devcontainer
+          push: never
+          runCmd: make all -j2 MENU_VERSION='"Sodium64 diagnostic v4"'
+        env:
+          FLAGS: -DNDEBUG
+      - name: Record source pins
+        run: |
+          mkdir -p sc64-menu/output/diagnostic-source
+          cp tools/sc64-diagnostic-save/{apply.py,diagnostic_save.c,diagnostic_save.h,README.md} sc64-menu/output/diagnostic-source/
+          git -C sc64-menu diff -- src/menu/cart_load.c Makefile > sc64-menu/output/diagnostic-source/menu-integration.patch
+          git rev-parse HEAD > sc64-menu/output/diagnostic-source/sodium-source.txt
+          git -C sc64-menu rev-parse HEAD > sc64-menu/output/diagnostic-source/menu-upstream-source.txt
+          sha256sum sc64-menu/output/sc64menu.n64 > sc64-menu/output/diagnostic-source/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sc64-diagnostic-menu
+          retention-days: 14
+          path: |
+            sc64-menu/output/sc64menu.n64
+            sc64-menu/output/diagnostic-source
+            sc64-menu/build/N64FlashcartMenu.elf

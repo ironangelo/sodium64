@@ -355,7 +355,8 @@ native_diag_sp_sample:
     mfc0 k0, $9
     lw k1, native_diag_state + 248
     subu k0, k0, k1
-    sltiu k0, k0, 46875
+    li k1, 46875
+    sltu k0, k0, k1
     beqz k0, native_diag_rsp_classify
     nop
     lw k0, native_diag_state + 256

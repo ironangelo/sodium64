@@ -203,7 +203,7 @@ def main():
     for tag,cp9 in ((0x12b,1),(0x127,1),(0x121,lambda step:step*100000)):
         m=memory();put(m,state+16,0x60000000);put(m,0x04080000,0x400);put(m,0x04000eca,tag,2)
         r=registers();execute(m,s['native_diag_interrupt'],r,{9:cp9,14:s['native_diag_cpu_start']})
-        assert get(m,state+272)==1 and get(m,state+264)==0x400
+        assert get(m,state+272)==1 and get(m,state+264)==0x400,(tag,get(m,state+272),get(m,state+264))
         cases+=1
     m=memory();put(m,state+16,0x60000000);put(m,0x04040010,1)
     execute(m,s['native_diag_interrupt'],registers(),{9:1,14:s['native_diag_cpu_start']})

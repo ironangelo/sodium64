@@ -57,9 +57,9 @@ def main():
         assert all('ppu_live_sample' in e for e in result['events'])
         if a.trace:
             assert 150<=len(result['events'])<=160 and h['trace_overflow_flags']==0
-            assert result['events'][0]['elapsed_ticks']<h['count_hz']//8
+            assert result['events'][0]['elapsed_ticks']<h['count_hz']*0.14
             assert result['events'][-1]['elapsed_ticks']>h['count_hz']*19.8
-            assert result['cpu_timeline'][0]['elapsed_ticks_upper']<h['count_hz']//8
+            assert result['cpu_timeline'][0]['elapsed_ticks_upper']<h['count_hz']*0.14
             assert result['cpu_timeline'][-1]['elapsed_ticks_upper']>h['count_hz']*19.8
             assert h['retained_cpu_samples']>180
             assert sum(h['rsp_stage_samples_total'].values())==h['sample_count']

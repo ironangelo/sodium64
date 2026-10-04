@@ -58,14 +58,23 @@ def main():
     ap.add_argument('--port',type=int,required=True)
     ap.add_argument('--elf',type=Path,required=True)
     ap.add_argument('--output',type=Path,required=True)
+    ap.add_argument('--native-armed',action='store_true',help='arm at one natural N64 input sample and observe before diagnostic UI')
     args=ap.parse_args();args.output.mkdir(parents=True,exist_ok=True)
-    syms=load_symbols(args.elf);stop=syms['frame_wait']+0x14
+    syms=load_symbols(args.elf);stop=syms['native_diag_rsp_wait_end'] if args.native_armed else syms['frame_wait']+0x14
     c=connect_with_retry('127.0.0.1',args.port,30,240)
     try:
         c.sock.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
         supported=c.request('qSupported:multiprocess+;swbreak+;hwbreak+')
         chunk=memory_chunk(supported);c.request('?')
         assert c.request('QPassSignals:'+ARES_N64_GUEST_SIGNALS)==b'OK'
+        if args.native_armed:
+            assert args.case!='sram','ordinary save fixture requires normal build'
+            set_breakpoint(c,syms['get_pressed'],True)
+            validate_stop(c.request('c'),'native pixel arming input sample')
+            joy=syms['joy_buf'];buttons=bytearray(c.read_memory(joy,8,8))
+            buttons[2]&=0x3f;buttons[4]=0x10;buttons[5:8]=bytes(3)
+            c.write_memory(joy,bytes(buttons))
+            set_breakpoint(c,syms['get_pressed'],False)
         set_breakpoint(c,stop,True);validate_stop(c.request('c'),'full-height first prelaunch')
         observations=[];accepted=None
         for attempt in range(90 if args.case=='sram' else 12):
@@ -85,6 +94,13 @@ def main():
             owner=int.from_bytes(c.read_memory(0xa00f0000,4,4),'big')
             if args.case.startswith(('fast-','mode7-')) or args.case in ('rgb-main','rgb-subscreen','rgb-row-subscreen') or args.case.startswith('span-seek-') and args.case not in ('span-seek-math','span-seek-sub-hidden'):
                 owner=int.from_bytes(c.read_memory(0xa4400004,4,4),'big')|0xa0000000
+            if args.native_armed:
+                addr=syms['queue_id'];aligned=addr&~3
+                queue=c.read_memory(aligned,4,4)[addr&3]
+                assert queue in (0,4),queue
+                owner=int.from_bytes(dmem[0xc00+queue:0xc04+queue],'big')|0xa0000000
+                state=c.read_memory(syms['native_diag_state']+112,4,4)
+                assert int.from_bytes(state,'big')==1,'diagnostic was not armed'
             report=dict(passed=False,owner=hex(owner))
             if owner in FRAMEBUFFER_ADDRS:
                 # Observe the actual last rendered epoch, not just guest source
@@ -134,7 +150,7 @@ def main():
                     accepted=dict(case=args.case,**report,framebuffer=hex(owner),engine=engine,
                                   image_sha256=hashlib.sha256(image).hexdigest(),
                                   compact_guards_passed=True,compact_guards=guards,framebuffer_seeding=False,
-                                  guest_state_writes=False,cadence_authority=False)
+                                  guest_state_writes=False,native_armed=args.native_armed,cadence_authority=False)
                     (args.output/'frame.bin').write_bytes(image)
                 (args.output/'last-frame.bin').write_bytes(image)
             observations.append(dict(attempt=attempt,**report))
@@ -158,3 +174,4 @@ def main():
 
 
 if __name__=='__main__':main()
+

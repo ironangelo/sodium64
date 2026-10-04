@@ -2,6 +2,16 @@
 
 Canonical live handoff for `ironangelo/sodium64`.
 
+## 2026-10-04 UTC — Preserve the user's existing customized SummerCart menu; source needed
+
+The user now explicitly requires adding unique diagnostic save naming to THEIR existing customized menu, preserving its different interface, background MP3 playback and images. Do not replace it with the separately qualified upstream-based menu as an assumed equivalent. The paired v4 diagnostic emulator remains qualified and unchanged; automatic destination naming is a launcher responsibility.
+
+The supplied compiled menu was inspected read-only: N64FlashcartMenu title, internal build timestamp 2024-07-03 22:13:58 UTC, resident MP3/background/box-art functions and embedded address/source-location symbols. Those features and the timestamp do not prove it contains the user's later modifications, nor that the source can be reconstructed faithfully. No patched custom binary is delivered. The matching historical upstream loader and the uploaded loader's decoded call/string evidence use the fixed /menu/emulators/sodium64.z64 destination and 32 KiB SNES saves; this old binary does not contain the newer emulators.ini selection keys. The earlier INI instructions were for the new menu and must not be assumed to configure this supplied old menu. The v4 emulator itself supports both SNES injection offsets 0x104000 and 0x200000.
+
+Accessible repository and targeted prior-context/source-artifact searches did not locate the customized menu project. To apply the change while verifying preservation, obtain the user's actual customized source project (src, Makefile and build/dependency configuration) or its repository/branch. First establish that the supplied binary is the menu actually in use, if its identity remains uncertain. Port only the loader save-reservation hook/helper to that project, compile with matching dependencies, validate guest save/capture preservation and retain all UI/audio/assets. Do not substitute historical upstream source and claim that arbitrary private modifications were preserved.
+
+Until that source is available, the task is blocked on input, not permission. The existing menu can still run the empty diagnostic emulator under its expected sodium64.z64 filename with manual save backup/export; automatic per-launch IDs remain pending for the custom menu. One personal game ROM, full APU, no skips and fidelity requirements continue. No commercial ROM/SAV/footage or uploaded custom menu bytes are placed in GitHub/CI; source/runtime branch and master remain unchanged. This note records the new constraint and the source blocker only.
+
 ## 2026-10-04 UTC — Diagnostic v4 qualified and single-ROM capture package ready
 
 Current runtime branch `phase4/gate-c-a4-gameplay-capture` is `bacc62315087eb135d6cf5f60e65e083af96719b`. This supersedes the earlier work-in-progress recorder/ROM-alias notes. Runtime and menu helper semantics were finalized at `b9f1163d5940ea5c44395d436cee2d15407568df`; subsequent commits repair only the armed-image harness. Master remains `7cc8facfe8643fb85888f301f79995575830521d`. No PR, merge or release was made.

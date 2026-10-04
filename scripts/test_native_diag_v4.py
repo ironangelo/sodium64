@@ -43,6 +43,10 @@ def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False,inject_irq=Fals
             elif fn==37:regs[rd]=regs[rs]|regs[rt]
             elif fn==38:regs[rd]=regs[rs]^regs[rt]
             elif fn==39:regs[rd]=~(regs[rs]|regs[rt])&MASK
+            elif fn==42:
+                left=regs[rs] if regs[rs]<1<<63 else regs[rs]-(1<<64)
+                right=regs[rt] if regs[rt]<1<<63 else regs[rt]-(1<<64)
+                regs[rd]=int(left<right)
             elif fn==43:regs[rd]=int(regs[rs]<regs[rt])
             else:raise AssertionError(('forbidden/unhandled special instruction',hex(pc),hex(w)))
         elif op in (2,3):

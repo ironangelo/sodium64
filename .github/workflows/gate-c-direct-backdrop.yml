@@ -33,6 +33,10 @@ jobs:
           # is entirely preprocessed away in normal builds and byte-checked.
           # Armed native pixels and full recorder qualification still run.
           scope='none' if changed and changed.issubset(native_only) else 'mode7' if changed and changed.issubset(mode7_only) else 'all'
+          # This isolated candidate still needs its first complete qualification.
+          # A harness repair must not inherit skipped pixels from a failed run.
+          if os.environ.get('GITHUB_REF_NAME')=='phase4/gate-c-a5-shared-work':
+              scope='all'
           full=scope=='all'
           with Path(os.environ['GITHUB_OUTPUT']).open('a') as out:
               out.write(f'full_pixels={str(full).lower()}\n')
@@ -328,7 +332,6 @@ jobs:
             default-native-qualified/
             native-trace-build.log
             native-trace-compiled.json
-
 
 
 

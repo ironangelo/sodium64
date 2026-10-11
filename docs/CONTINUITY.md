@@ -1,3 +1,44 @@
+# 2026-10-11 - R29 production dry-mix cost measured; cache optimization in progress
+
+Executable reference/source4f3cadb22839fa3dd7f4a5cca0ef14fb89193211.
+Master unchanged7cc8fac, PR21 draft. Full goal active; no release acceptance.
+
+Production dry candidate f2265c2332cadac97e1f2b062fd4c8bb5bf9d843b46aa71f3941d3786549b288
+ELFd9f47db97b53829b9e44e32d65e47c5f932ec95042db39f2785608b2c2831bed.
+MIX_OBSERVER=0/BRR_OBSERVER=0; existing AI-block/release counters remain1,
+SECTION0. Four268800 RGB pixels unchanged, all three full checksum-valid
+traces/settings pass; PCM changes7844/7011/7493 bytes versus release-only.
+Six release endpoint checks pass. Coordinate8 restored/readback verified
+and menu responds after this completed three-scene reference measurement.
+
+One quiet window per scene, completed-boundary cadence (not TV FPS):
+- Title first30054.319590 ->48.854496, -10.061 percent.
+- Room59.846049 ->54.202852, -9.430 percent.
+- Rain32.461939 ->32.220722, -0.743 percent.
+Audio production fractions0.909885/0.902134/0.534866 of nominal AI.
+Changed PCM and correct arithmetic do not compensate for this measured CPU
+cost. Defaults remain off; the full fidelity-and60 requirement is not waived.
+No final analog/DAC waveform or universal thermal/cost conclusion is inferred.
+
+Next candidate removes only the now-unused legacy quantized volume-cache
+updater when DSP_DRY_MIX=1. Linked release maximum60 ->39 instructions;
+4096 direct volume writes,2048 paired real scheduler samples and2048 paired
+actual APU volume writes preserve PCM, active registers/envelopes/timers and
+APU tag/cycle debit. Cached unused values are explicitly excluded. Host proofs
+are not a native gain. Distinct title/room physical comparison is running;
+rain remains a later full qualification requirement. The old reference process
+is completed, not restarted. Current experimental cache-skip archive/flags and
+ongoing transport evidence stay in the private2026-10-11 preflight/results.
+
+Exact4f3cadb Build38184026520 now passes all required jobs, CGRAM38184029950
+passes; Ares38184029931 must be checked independently. No new source push for
+this continuity-only measurement record. Three source files have the pending
+cache optimization; do not confuse that dirty state with the measured reference.
+All raw commercial artifacts/hashes and replay/transport remain private.
+Previous continuity is preserved byte for byte below.
+
+---
+
 # 2026-10-11 - Corrected dry mixing and native arithmetic proof (R29)
 
 Source phase4/usb-hardware-loop: 4f3cadb22839fa3dd7f4a5cca0ef14fb89193211.

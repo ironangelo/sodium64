@@ -1,3 +1,19 @@
+# 2026-10-11 - R30 exact CI failure and import repair
+
+Source phase4/usb-hardware-loop: 1c23f23591f56d9684b7a88adf5a7d9159ff9afb.
+Exact c77634a Ares38185476694 failed: the new paired DSP CLI parsed argv
+during unittest discovery. main guard fixes import; emulator bytes unchanged.
+110 host discovery tests and explicit2048 scheduler/2048 APU comparisons pass.
+First local run lacked compiler PATH; configured installed compiler then passes.
+CGRAM38185476743 passes; Build38185473355 had not completed at this record.
+Fresh corrected CI must be checked separately. Current COM3 menu responds,
+coordinate8 remains selected; no new hardware mutation for this repair.
+[Details](DSP_DRY_CACHE_2026-10-11.md). Master preserved, PR21 draft; full goal
+active and unqualified. Commercial data stays private. Previous history follows
+byte for byte.
+
+---
+
 # 2026-10-11 - Dry cost and equivalent cache elimination (R30)
 
 Source phase4/usb-hardware-loop: c77634ae0e25dde409e3da946364223f7442b1d3.

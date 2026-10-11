@@ -55,3 +55,13 @@ CGRAM38184029950 and Ares38184029931 all succeed; fresh CI of this checkpoint
 must be checked separately. Master is unchanged; PR21 draft. Next, reduce DSP
 address/scheduling overhead while preserving PCM and the remaining full DSP
 requirements. Complete sound/visual output and requested60fps matrix remain open.
+
+## R30 CI import repair
+
+Exact c77634a Ares38185476694 failed during host discovery: the paired
+ELF script parsed command-line arguments at import. Its CLI now runs only
+from main. No emulator code/binary changes. Host discovery passes110 tests;
+the explicit paired2048 scheduler samples/2048 APU writes still pass with
+identical PCM and active state. The first local discovery omitted the host
+compiler PATH; after supplying the installed compiler, all110 pass. Fresh CI
+must qualify the corrected commit independently; no inherited success claim.

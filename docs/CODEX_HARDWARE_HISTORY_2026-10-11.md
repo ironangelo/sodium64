@@ -297,6 +297,14 @@ Native installation and timing remain pending menu recovery; no FPS effect
 is claimed. Previous measured launches203.703/209.703s are not fully attributed
 to probing without a physical timing comparison.
 
+## R27 - Corrected RSP arena native cycle verified
+
+[Physical correction](BRR_ARENA_NATIVE_2026-10-11.md) passes600/1380/1980
+replay with quiet20s, zero67200 RGB/8192 PCM differences and128 BRR samples
+matching the primary compiled method. USB return and coordinate8 restoration
+readback pass without Reset. The preceding blocker is cleared. Exact7d83886
+Build/CGRAM/Ares all succeed. No speed, full DAC or60fps matrix claim follows.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

@@ -1,0 +1,62 @@
+{
+  "checkpoint": "R27",
+  "executable_code_commit": "7d8388661ae30f55e625e1462c98766a7328a8af",
+  "menu_recovery_observed": true,
+  "physical_reset_action_inferred": false,
+  "pre_restore_readback_verified": true,
+  "empty_template_bytes": 147456,
+  "empty_template_sha256": "18db14833af29d0c664ff43abe94cbd01b7f9cf828bda9c999ff84863357941a",
+  "elf_sha256": "78095cbe990ca747e75a08ff9107cd5f061d3d608359facadc22664fbefb4999",
+  "actual_RSP_backup": "0xD4400",
+  "acknowledged_retired_frames": [
+    600,
+    1380,
+    1980
+  ],
+  "quiet_after_step_seconds": 20,
+  "start_acknowledged_at": 1380,
+  "image": {
+    "compared": 67200,
+    "differences": 0
+  },
+  "PCM": {
+    "bytes": 8192,
+    "differences": 0,
+    "dsp_state_equal": true
+  },
+  "decoder": {
+    "blocks": 32,
+    "half_samples": 128,
+    "differences": 0,
+    "voices_observed": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "filters_observed": [
+      2
+    ],
+    "ranges_observed": [
+      5,
+      6,
+      7
+    ],
+    "reference": "unmodified compiled Snes9x1.63 decode_brr",
+    "not_full_dac_audio_acceptance": true
+  },
+  "return_menu_without_reset": true,
+  "coordinate8_restoration_readback_verified": true,
+  "paired_menu_responsive": true,
+  "exact_CI": {
+    "Build38179750510": "success",
+    "CGRAM38179753273": "success",
+    "Ares38179753196": "success"
+  },
+  "speed_claim": false,
+  "complete_audio_or60fps_acceptance": false,
+  "commercial_data_included": false
+}

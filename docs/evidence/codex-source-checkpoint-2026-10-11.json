@@ -1,0 +1,396 @@
+{
+  "schema": 1,
+  "checkpoint_date": "2026-10-11",
+  "source_parent": "018630ffb8944f22dcdfd3dcafb427a7b2e4cd42",
+  "provenance": "Reconstructed from the current local source and private historical receipts; no historical commits fabricated.",
+  "source_eol": "UTF-8 source normalized CRLF to LF for Git; no runtime logic changed during synchronization.",
+  "qualification": "development_checkpoint_not_road_1_0; exact new GitHub CI and complete paired rebuild pending",
+  "physical_metrics_kind": "full_completed_boundary_intervals_not_tv_presentation_fps",
+  "selected_empty_emulator": {
+    "sha256": "a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2",
+    "bytes": 131072,
+    "crc32": "2d5daff8"
+  },
+  "selected_empty_menu": {
+    "sha256": "803a716bb51ebef672c43a80671776fcae4a0330d5348aeeda8954666113a144",
+    "bytes": 1736704,
+    "crc32": "fddd021a"
+  },
+  "firmware": "2.20.2 unchanged",
+  "same_settings": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu": 21,
+    "audio": 4,
+    "layer_mask": 0
+  },
+  "scenes": [
+    {
+      "scene": "story",
+      "baseline": 52.39929542354876,
+      "candidate": 55.6354620924943,
+      "comparison": "story checkpoint1852; historical best reference",
+      "rsp_wait_ms_before": 4.055225431,
+      "rsp_wait_ms_after": 2.8474878468
+    },
+    {
+      "scene": "title_first300",
+      "baseline": 52.73299168179571,
+      "candidate": 52.69759069838077,
+      "comparison": "previous same-config native baseline; not simultaneous pair"
+    },
+    {
+      "scene": "room",
+      "baseline": 57.984848862338474,
+      "candidate": 58.00842328699588,
+      "comparison": "previous same-config native baseline; not simultaneous pair"
+    },
+    {
+      "scene": "rain",
+      "baseline": 32.11847012451413,
+      "candidate": 32.106767969699135,
+      "comparison": "previous same-config native baseline; not simultaneous pair"
+    }
+  ],
+  "fidelity": {
+    "native_checkpoints": 9,
+    "pixels_compared": 604800,
+    "pixel_differences": 0,
+    "scope": "sampled retired framebuffer comparisons; not final output/full game/audio proof"
+  },
+  "rejected": [
+    "general direct full RDP arithmetic",
+    "generic atlas32",
+    "generic atlas8 because rain -7.08%",
+    "flat COLOR TLUT admission: no measurable gain",
+    "coordinate atlas4: -0.72% story"
+  ],
+  "source_files": [
+    {
+      "path": "src/continuous_save.c",
+      "git_blob_sha1_lf": "f4c699e36eaed40fcd2dcf2764a06427d11426d1",
+      "bytes_lf": 13760
+    },
+    {
+      "path": "src/defines.h",
+      "git_blob_sha1_lf": "e28807023beccfe524b1db359393d3bb719db9f1",
+      "bytes_lf": 14296
+    },
+    {
+      "path": "src/diagnostic_memory.ld",
+      "git_blob_sha1_lf": "5fee17f08e4367afe32e29ceb14db4aca5e7773b",
+      "bytes_lf": 165
+    },
+    {
+      "path": "src/input.S",
+      "git_blob_sha1_lf": "56b43dd7874d7f92e61acbb3f9c1f4f252b5efa6",
+      "bytes_lf": 5474
+    },
+    {
+      "path": "src/main.S",
+      "git_blob_sha1_lf": "37363ce7a1fa081872769d3b8a61b11408a6c214",
+      "bytes_lf": 15701
+    },
+    {
+      "path": "src/menu.S",
+      "git_blob_sha1_lf": "d5145516fc436214b069531da42aa10481a1bf15",
+      "bytes_lf": 10847
+    },
+    {
+      "path": "src/native_diag.S",
+      "git_blob_sha1_lf": "46e7e7b9376fd0fac1a9498f45923d44d30bf92c",
+      "bytes_lf": 56606
+    },
+    {
+      "path": "src/ppu.S",
+      "git_blob_sha1_lf": "0a1ff1d431665dc5ae4bde6d087c57c7e7a370b7",
+      "bytes_lf": 49016
+    },
+    {
+      "path": "src/rdp_math_probe.h",
+      "git_blob_sha1_lf": "f4c8bc1ff82afbb93cfd431392dda162f7ec580a",
+      "bytes_lf": 13962
+    },
+    {
+      "path": "src/remote_control.c",
+      "git_blob_sha1_lf": "bb166e78c7e914e48df7f164b7a0c436299e8deb",
+      "bytes_lf": 32158
+    },
+    {
+      "path": "src/remote_control.h",
+      "git_blob_sha1_lf": "2c73d67d9315704fc84034f8897f464ced6b0f2a",
+      "bytes_lf": 1340
+    },
+    {
+      "path": "src/remote_control.S",
+      "git_blob_sha1_lf": "cd012b662937e38b11ca07d7e4304a3ecb8c4ca9",
+      "bytes_lf": 5673
+    },
+    {
+      "path": "src/rsp_hcomp_fast.S",
+      "git_blob_sha1_lf": "1c48e232cab3c43df0a13a36a7d933240056de9a",
+      "bytes_lf": 8405
+    },
+    {
+      "path": "src/rsp_hcomp_fixed_window.S",
+      "git_blob_sha1_lf": "89066b3803ffdd695a356ffd9efeeb37ba125494",
+      "bytes_lf": 4020
+    },
+    {
+      "path": "src/rsp_hcomp_math.S",
+      "git_blob_sha1_lf": "75e64ab37a8e57f6f136c89d56bc9a279281a80f",
+      "bytes_lf": 10692
+    },
+    {
+      "path": "src/rsp_hcomp_packed_math.inc",
+      "git_blob_sha1_lf": "7cb2711b8001ee728d463ed497f9059bcd7188dd",
+      "bytes_lf": 1696
+    },
+    {
+      "path": "src/rsp_hcomp_rdp_fixed.S",
+      "git_blob_sha1_lf": "02c6341fa32d778a2dbf1b019b0c50386f1a3a29",
+      "bytes_lf": 6581
+    },
+    {
+      "path": "src/rsp_hcomp_rdp.S",
+      "git_blob_sha1_lf": "149e52939b629d0bd9ef108757e875eb4293f055",
+      "bytes_lf": 7090
+    },
+    {
+      "path": "src/rsp_hcomp_setup.S",
+      "git_blob_sha1_lf": "0781df77080c1356036083742a00a398eb20ab6a",
+      "bytes_lf": 6049
+    },
+    {
+      "path": "src/rsp_hcomp_tlut.S",
+      "git_blob_sha1_lf": "8bf50c51a15e742f58b12fc8f21f2788041ecc00",
+      "bytes_lf": 7517
+    },
+    {
+      "path": "src/rsp_hcomp.S",
+      "git_blob_sha1_lf": "738a56d96a9c8e4cb1b39bd7624c3420a41cfd43",
+      "bytes_lf": 8810
+    },
+    {
+      "path": "src/rsp_main.S",
+      "git_blob_sha1_lf": "2d185cf23253642f3bf5d65fb1d8c19f3a7a7663",
+      "bytes_lf": 55773
+    },
+    {
+      "path": "src/rsp_mode7.S",
+      "git_blob_sha1_lf": "4529f0228309946d27d299a6c9e02e4a54276b2e",
+      "bytes_lf": 47823
+    },
+    {
+      "path": "src/rsp_object_cache.S",
+      "git_blob_sha1_lf": "83c0f8760a438594d856480e9863491c50cbf615",
+      "bytes_lf": 2934
+    },
+    {
+      "path": "src/rsp_tmem_atlas.inc",
+      "git_blob_sha1_lf": "c5bfd141e0ec51321cf97345fe7573ab1937164b",
+      "bytes_lf": 2227
+    },
+    {
+      "path": "src/rsp_tmem_coord.inc",
+      "git_blob_sha1_lf": "1a137fe19f2c6332f4b02834f17f486adb5ba198",
+      "bytes_lf": 2889
+    },
+    {
+      "path": "scripts/check_event_arena.py",
+      "git_blob_sha1_lf": "b40797ce13662d86c2752ae01c1139ed89d788ed",
+      "bytes_lf": 6517
+    },
+    {
+      "path": "scripts/check_remote_boot.py",
+      "git_blob_sha1_lf": "fa7d304dc0dc574b9fba0e884244f6c2ebd0a239",
+      "bytes_lf": 5595
+    },
+    {
+      "path": "scripts/check_runtime_arena.py",
+      "git_blob_sha1_lf": "c4f4393f5871aeebdf35402866cfd8be5ff656dd",
+      "bytes_lf": 2394
+    },
+    {
+      "path": "scripts/native_diag_v4.py",
+      "git_blob_sha1_lf": "5cabdc7801443db7f49a8cd283b24e40c2df4a41",
+      "bytes_lf": 17962
+    },
+    {
+      "path": "scripts/test_continuous_save_sink.py",
+      "git_blob_sha1_lf": "d2deadd8288f553c7961fe99ecc12633a128443e",
+      "bytes_lf": 3058
+    },
+    {
+      "path": "scripts/test_event_arena.py",
+      "git_blob_sha1_lf": "b52bd010793703c8afc0131796fc36b79bf94803",
+      "bytes_lf": 3068
+    },
+    {
+      "path": "scripts/test_hcomp_eligibility_tags.py",
+      "git_blob_sha1_lf": "525dd850dd2424c4850d8fd5dd60fc3877d7bbb6",
+      "bytes_lf": 12332
+    },
+    {
+      "path": "scripts/test_hcomp_packed_math.py",
+      "git_blob_sha1_lf": "e435ee0807d42048a5ec0032b9bebaa1e48d540b",
+      "bytes_lf": 10627
+    },
+    {
+      "path": "scripts/test_hcomp_tlut_candidate.py",
+      "git_blob_sha1_lf": "e4d37925339f9cc66579859a8f5e854976b02337",
+      "bytes_lf": 17505
+    },
+    {
+      "path": "scripts/test_hcomp_tlut_flat_window.py",
+      "git_blob_sha1_lf": "56087672df730ad1d38064f0f8d9e0706377ad73",
+      "bytes_lf": 7094
+    },
+    {
+      "path": "scripts/test_hcomp_tlut_transform.py",
+      "git_blob_sha1_lf": "42125376b67af68df8d94f7fedf3ca3e406917ef",
+      "bytes_lf": 15204
+    },
+    {
+      "path": "scripts/test_native_diag_continuous.py",
+      "git_blob_sha1_lf": "18648c82f881d3ae37fdc315b43998dfcb765b6c",
+      "bytes_lf": 36984
+    },
+    {
+      "path": "scripts/test_remote_control.py",
+      "git_blob_sha1_lf": "faab45920ee6dcadc12914854003140f0f28077b",
+      "bytes_lf": 1726
+    },
+    {
+      "path": "scripts/test_remote_sections.py",
+      "git_blob_sha1_lf": "6e6fe2a296a746be324cf286690322002438da04",
+      "bytes_lf": 2391
+    },
+    {
+      "path": "scripts/test_rsp_fetch_signal.py",
+      "git_blob_sha1_lf": "c79decc8111c55627335aba0fe0ec6b79c1b38cc",
+      "bytes_lf": 3501
+    },
+    {
+      "path": "scripts/test_rsp_fixed_window.py",
+      "git_blob_sha1_lf": "bd6651047d8f59c685ac30fd3c7d2e38d1a3e909",
+      "bytes_lf": 9277
+    },
+    {
+      "path": "scripts/test_rsp_math_dma.py",
+      "git_blob_sha1_lf": "032890c441a428ff0415f820c905d5371a86750b",
+      "bytes_lf": 19645
+    },
+    {
+      "path": "scripts/test_rsp_math_fullrow.py",
+      "git_blob_sha1_lf": "4ea4481a8732d49918666c4de36d971cc03964c7",
+      "bytes_lf": 15084
+    },
+    {
+      "path": "scripts/test_rsp_math_masks.py",
+      "git_blob_sha1_lf": "bcd043b28e0b02acb87a206ccc99e45061fe54a9",
+      "bytes_lf": 7396
+    },
+    {
+      "path": "scripts/test_rsp_rdp_fixed.py",
+      "git_blob_sha1_lf": "5077a487eb12e514e447d73143eeafd374e24515",
+      "bytes_lf": 11754
+    },
+    {
+      "path": "scripts/test_rsp_rdp_half.py",
+      "git_blob_sha1_lf": "b08f3cfad7bdaf36c507c37223c9bed2734af064",
+      "bytes_lf": 11461
+    },
+    {
+      "path": "scripts/test_rsp_signal_profile.py",
+      "git_blob_sha1_lf": "002791eba3c36c44f92659ae12ee2347d182bc13",
+      "bytes_lf": 14605
+    },
+    {
+      "path": "scripts/test_rsp_sparse_vram.py",
+      "git_blob_sha1_lf": "ffc90cb52e9697d0d7985d18412dcdccf4b1a834",
+      "bytes_lf": 21613
+    },
+    {
+      "path": "scripts/test_rsp_tmem_atlas.py",
+      "git_blob_sha1_lf": "ab6364d07812a54b66af401acd1ecfdbfab0c16b",
+      "bytes_lf": 15712
+    },
+    {
+      "path": "scripts/fixtures/continuous_save_host.c",
+      "git_blob_sha1_lf": "c04d5eb869a9b303e7262e7a672fcf545212253e",
+      "bytes_lf": 7803
+    },
+    {
+      "path": "scripts/fixtures/continuous_save_transport_host.c",
+      "git_blob_sha1_lf": "c4c2f65d1cb65fe4d63c9cc054aaed70ed7a0f3f",
+      "bytes_lf": 6197
+    },
+    {
+      "path": "scripts/fixtures/remote_control_host.c",
+      "git_blob_sha1_lf": "51bb8b862cc6f4e71252894325f9ecd0bbca8960",
+      "bytes_lf": 13746
+    },
+    {
+      "path": "scripts/fixtures/remote_sections_host.c",
+      "git_blob_sha1_lf": "38cd9fbcab6d257e0b4da650768c34bb492432c2",
+      "bytes_lf": 8970
+    },
+    {
+      "path": "tools/sc64-diagnostic-save/diagnostic_pool_menu.c",
+      "git_blob_sha1_lf": "ac2c82f33e6043ee37f8d202da75f1996cb94298",
+      "bytes_lf": 5414
+    },
+    {
+      "path": "tools/sc64-diagnostic-save/diagnostic_pool.c",
+      "git_blob_sha1_lf": "f7958d6960b8562e8efae503d2e4a23eda6c7e32",
+      "bytes_lf": 5783
+    },
+    {
+      "path": "tools/sc64-diagnostic-save/diagnostic_pool.h",
+      "git_blob_sha1_lf": "a6d241369eef2980a90a87e1b77732ad606f9e84",
+      "bytes_lf": 1410
+    },
+    {
+      "path": "tools/sc64-diagnostic-save/diagnostic_save.c",
+      "git_blob_sha1_lf": "83e4c93e7666e1c436696dbc339ae8c291faabdb",
+      "bytes_lf": 3420
+    },
+    {
+      "path": "tools/sc64-diagnostic-save/diagnostic_save.h",
+      "git_blob_sha1_lf": "2906db03faaabad11fb6f9deca0817ba6904ba73",
+      "bytes_lf": 692
+    },
+    {
+      "path": "tools/sc64-diagnostic-save/recorder_runtime_abi.h",
+      "git_blob_sha1_lf": "6154015b940e96a2ecde92bf84f5841625d8dbd0",
+      "bytes_lf": 1785
+    },
+    {
+      "path": "tools/sc64-diagnostic-save/host/test_save.c",
+      "git_blob_sha1_lf": "ca31f5c6b9114b4b147bd6b3121d296cfe0a71a8",
+      "bytes_lf": 10133
+    },
+    {
+      "path": "tools/sc64-bench/bench.py",
+      "git_blob_sha1_lf": "4e4eed008af9a3b942e1a1d237fa1819d786ae4b",
+      "bytes_lf": 12821
+    },
+    {
+      "path": "tools/sc64-bench/mailbox.py",
+      "git_blob_sha1_lf": "8f66b0ba5e55c2e40679a49f1a838e3cb24370d4",
+      "bytes_lf": 1134
+    },
+    {
+      "path": "tools/sc64-bench/test_bench.py",
+      "git_blob_sha1_lf": "fa071e195dec2b689a1223600b88baba6ad0e7d1",
+      "bytes_lf": 10926
+    },
+    {
+      "path": "Makefile",
+      "git_blob_sha1_lf": "99cc2a97c0002fbd627f4ef6a8567427177ef08c",
+      "bytes_lf": 11729
+    }
+  ],
+  "privacy": "No ROMs, SAVs, screenshots, replay logs, game-derived raw dumps or binaries included. Aggregate measurements and source only."
+}

@@ -1,3 +1,160 @@
+# 2026-10-11 - Codex hardware-loop reconstruction and selected coordinate8 checkpoint
+
+The user requested synchronizing code and the existing continuity format before
+any further iteration. The previous public checkpoint was A14 source
+018630ffb8944f22dcdfd3dcafb427a7b2e4cd42; local post-A14 work had not been
+committed/pushed. This entry is reconstructed from the local source, private
+journal, build archives, verified installation receipts and benchmark summaries.
+It does not invent intermediate historical commits or historical CI results.
+
+Published development source: phase4/usb-hardware-loop at
+c82e5d40e0d78a75b2693f724f49eec586436015.
+Draft integration PR: https://github.com/ironangelo/sodium64/pull/21.
+Principal branch is master at7cc8facfe8643fb85888f301f79995575830521d;
+continuity parent4a6fdc819d6a50b8b0b1170fce761d3659203277.
+The checkpoint preserves the existing A14 ancestry; master is much older,
+so the PR includes the earlier phase history as well as this local checkpoint.
+The runtime is not yet qualified for a whole merge or Road1.0 release.
+
+Full reconstructed stages and rejected hypotheses:
+[Codex hardware history](CODEX_HARDWARE_HISTORY_2026-10-11.md).
+Selected build flags and checks:
+[Native USB build recipe](USB_HARDWARE_LOOP.md).
+Only source, original numeric tests and aggregate evidence are eligible for
+publication. No commercial ROM, SAV, screenshot, state, replay log, video,
+game-derived raw dump or private build archive is included.
+
+## Recorder and control results
+
+- A14's extra files were exclusive menu reservations, not completed captures.
+  The inspected batch of80 is invalid for FPS comparison. Each launch prepares
+  up to16 files; no OK/S64D complete means no measurement.
+- Preserve first SC64/PI error, DATA0 and error phase; initialize/check card
+  state and serialize PI/register ownership. Bounded data sectors, incomplete
+  header, body readback, final complete header/readback and no slot wrap remain.
+  Two successive physical SD captures with valid checksums resumed gameplay.
+  Immutable USB snapshot and notice-expiry wrap fixes are now included.
+- USB responds while N64 is on. Menu-mediated permanent file replacement is
+  verified; direct PC SD ownership while console owns it is still excluded.
+- Launch selects the ROM through the real INI/emulator/save/pool loader and
+  offset0x104000, not execution of the empty emulator alone.
+- Missing rom:/cursorsound.wav64 was mismatched menu DFS/assets. FatFs80386
+  headers must match linked libdragon55aac1355773169d87e45424b772faf0dfb9432a
+  across all consumers. f_rename replaces unsupported POSIX rename.
+- Bootloader return preserves H/V timing and waits for VI_CURRENT0 before
+  stopping output. TV type is captured from DMEM+9 before RSP overwrites it;
+  RDRAM0x300 is not the modern N64 TV-type source. The user confirmed SMW→menu
+  visible over USB without Reset. Nonresponsive code may still need power off.
+- Menu and emulator expose cooperative launch/install, retired pause/step,
+  acknowledged controller injection, capture/frame/SAV/profile/sections and
+  return. USB framebuffer precedes VI/analog/HDMI/TV; no physical power control.
+- Pool cursor scans existing names once per batch:112 attempts for96 old+16 new;
+  26 cases and native launch30.328s, versus previous216s. Reservations stay
+  distinct from captures and are not silently deleted/reused.
+
+## Retained renderer work and negative results
+
+Sparse dirty-VRAM copies provide only a small room gain; they are not the main
+bottleneck. Atomic SP SIG4–6 residency identifies Math/Main, including DMA/
+resident helpers, and replaces unsafe non-atomic bank/PC attribution.
+
+Retained: guarded128-pixel Math batches; compact eligibility tags; effective-mask
+scanning; exact unary TLUT classes for fixed/absent Sub; full-row Math DMA with
+VRAM/OAM restoration; narrowly admitted RDP half arithmetic; exact fixed-window
+Math; bounded small-fixed RDP arithmetic and batching; coordinate atlas8 with
+legacy visible-Sub fallback, version/palette/source fences and mask/scissor
+restoration. Original packed RGB555 semantics and forbidden-class fallbacks
+remain required. Most experimental flags are opt-in; unflagged make is not
+the selected native configuration.
+
+Rejected: general full RDP add/sub and half-then-double (native synthetic
+mismatches); atlas32 (slower); generic atlas8 (story gain but rain-7.08%);
+flat COLOR-window TLUT (no measurable gain); coordinate atlas4 (story-0.72%).
+The initial flat-window oracle inverted selectors1/2; original compiled Setup
+and independent primary clip semantics caught it before hardware. Corrected
+truth tests do not turn its near-zero timing result into a gain.
+
+Selected coordinate8 native checkpoint:
+empty emulator SHA256
+a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2,
+131072B,CRC2d5daff8; CPU ELF463df084e71b9525bbbd183018fcc2283e53acfc7bb1a2d92e250ac0212e9efa.
+Paired menu803a716bb51ebef672c43a80671776fcae4a0330d5348aeeda8954666113a144,
+1736704B,CRCfddd021a. Firmware2.20.2 unchanged. These are last verified
+installation references, not a fresh hardware query during synchronization.
+The October7 delivered package28360985 remains older than this selected build.
+
+Completed-boundary cadence:
+- story52.3992954235→55.6354620925/s (+6.175974%), RSPwait4.055→2.847ms;
+- title first30052.7329916818→52.6975906984/s (-0.067%);
+- room57.9848488623→58.0084232870/s (+0.041%);
+- rain32.1184701245→32.1067679697/s (-0.036%).
+
+Title/room/rain reference measurements are previous native baselines with
+matching configuration, not simultaneous paired runs. Nine retired-frame
+checkpoints604800 pixels,0 differences. Quiet captures complete/checksummed,
+fulltrace/nooverflow, precision20/skip0/APU21/audio4/alllayers. These measurements
+are not TV presentation FPS, audio fidelity or whole-game acceptance.
+
+PROFILE-only overflow0xC2B10>0xC2000 was caught by the strict gate; PROFILE arena
+now0xD2000 in both CPU/RSP preprocessing and --profile checks. New40-owner
+layout/cap/lastDMA8 and six tests pass, no weakened gate. Not physically
+installed PROFILE. Native selected end0xD15C8 leaves0xA38.
+
+User-observed Uncle-face/bed-flicker problems both disappeared after reconnecting
+N64 video, without emulator changes. Independent Snes9x1.63 RGB5 comparison
+matched Uncle783,bed1680,room17664 pixels; this is software reference, not SNES
+hardware authority. Do not change palette/VI to fix the resolved connection.
+
+## Exact checkpoint CI at synchronization
+
+Source c82e5d40e0d78a75b2693f724f49eec586436015 is published, but CI is not green.
+[Ares Profile Validation38160840370](https://github.com/ironangelo/sodium64/actions/runs/38160840370)
+fails in host profiling tests: the new preprocessed arena cases attempt
+C:/n64-toolchain/bin/mips64-elf-gcc on Linux before an N64 toolchain is available.
+This is a portability/setup failure; the six local arena cases pass with the
+installed Windows toolchain. Do not silently skip the trace/PROFILE assertions.
+
+[Gate C CGRAM Epoch Replay38160840350](https://github.com/ironangelo/sodium64/actions/runs/38160840350)
+fails at the source anchor "// Publish the fixed renderer-slot sources".
+Both the anchor-dependent test and missing anchor already exist in018630ff;
+Main/Mode7 publication order is also different from that test's expected order.
+Thus this is an inherited A14 source-oracle drift exposed by synchronization,
+not evidence that the new branch passed the complete legacy Gate. Reconcile
+the proof against actual publication/retirement semantics before merger;
+do not restore a comment merely to hide an ordering mismatch or weaken a gate.
+
+[Build and Validate38160821885](https://github.com/ironangelo/sodium64/actions/runs/38160821885)
+is still running at this entry's publication. The selected flagged hardware
+configuration remains distinct from these default/profile/native jobs.
+The draft PR must remain unmerged pending CI repair and complete qualification.
+No emulator/SD/firmware change was made during this synchronization.
+
+## Road1.0 and next resumption
+
+ALttP title/story/rain still below sustained60; finish ALttP, then DKC1 and SMW.
+User's approximate older-version backlog: DKC logos near60, intro improved,
+stage1≤20; SMW similar; Mario Kart race≤20 plus layers/HUD defects; Metroid
+around40 with fewer glitches; All-Stars+SMW Welcome freeze and RPG nonboot.
+These are not revalidated selected-build results and do not redirect priority.
+
+Synchronization checks rerun:17 host transport tests,6 event-arena tests,
+139 Python source syntax parses, pinned clean menu-overlay application and65
+indexed source blob hashes. No game/build payload paths were staged. Historical
+compiled/native evidence is not relabelled as a new exact-commit CI PASS.
+Two inherited whitespace notices remain (an assembly EOF and a FatFs comment);
+they are cosmetic, and the pinned ABI header is preserved.
+
+No new CPU pitch cache or audio change is implemented. Future APU/DSP/title
+and texture/submission hypotheses require scoped compiled guards and quiet
+physical replay/pixel comparison; sampled residency is not exclusive cost.
+Do not repeat rejected mechanisms unchanged. Existing gates remain intact;
+exact new branch CI/armed images/paired rebuild must be reported separately.
+Before each iteration record source+flags+binary identity, hypothesis, evidence,
+outcome and retained/restored version; prepend bounded results to continuity.
+
+---
+
+
 # 2026-10-04 - A14 with combined renderer and continuous captures
 
 The user chose one paired menu/emulator installation with repeated captures:

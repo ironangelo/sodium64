@@ -1,3 +1,39 @@
+# 2026-10-11 - Corrected dry mixing and native arithmetic proof (R29)
+
+Source phase4/usb-hardware-loop: 4f3cadb22839fa3dd7f4a5cca0ef14fb89193211.
+Master unchanged7cc8fac, PR21 draft. Full goal active, ALttP first.
+
+DSP_DRY_MIX default0: full selected signal/envelope, even output, signed
+voice coefficients, ordered per-voice saturation, signed master and mute.
+Echo/Gaussian/pmod/feedback/register-envelope timing and clock remain open.
+16384 voice/32768 output/128 actual scheduler samples reject7 mutations.
+Unmodified primary methods agree on16384 eight-voice synthetic mixes.
+
+MIX_OBSERVER default0 requires dry+audio. Pause-only80-byte audio-mix inputs
+and output at1024th samples;84 hook cases/193-208 parser cases+1000 fuzz pass.
+Per-eight-voice hook overhead58 ordinary/193 selected instructions disclosed.
+Actual native room sample matches both primary stereo values and its PCM word.
+67200 RGB pixels unchanged;7011/8192 PCM bytes change, not a quality score.
+USB return and coordinate8 restoration/readback pass; new scanner menu retained.
+
+Initial observer link catchesD2000 overlap before install; sharedD4000 CPU/RSP
+selection now includes mixer, with both base flags initialized before appends.
+Actual4 DMA sites/3 mutations,12 arena/41-owner, boot12/5, recorder102, DMA/
+windows pass. Combined local BRR+mix build passes new gates/release cases.
+Default new flags0 matches855212 allocated coordinate8 bytes exactly.
+Patch-line mismatch and missing host compiler PATH were setup failures,
+repaired before qualification. Fresh exact CI for this new commit pending.
+
+[Dry stage and limits](DSP_DRY_MIX_2026-10-11.md).
+[Curated proof](evidence/dry-mix-2026-10-11.json).
+Next: production dry timing in title/room/rain with both sample observers off;
+then offset redundant work and implement remaining DSP functions. No full
+waveform/DAC/final video,60fps or requested-game-matrix acceptance is claimed.
+All raw commercial artifacts/hashes and transport remain private. Previous
+continuity preserved byte-identically below.
+
+---
+
 # 2026-10-11 - Native directory-scan menu and repeated SD capture (R28)
 
 Source phase4/usb-hardware-loop: cc95ffb278530f05f66bbe736deee556554ae5d9.

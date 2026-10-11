@@ -199,6 +199,17 @@ guards and source-oracle/arena portability repairs. This does not implement
 an audio algorithm change. Coordinate8 was restored; the menu responded.
 The expanded qualification queue includes visual and audio fidelity.
 
+## R19 - Exact pitch cache, preserved PCM and native measurements
+
+[Pitch cache evidence](DSP_PITCH_CACHE_2026-10-11.md) records the opt-in cache,
+exhaustive linked byte/voice tests, four unchanged images and three unchanged
+PCM rings. Title improves modestly, room approaches its nominal cadence and
+rain remains around32 completed boundaries/s. Quiet AI production exposes
+rain undersupply. The selected coordinate8 emulator is restored. A separate
+synthetic BRR audit against the pinned reference identifies signed-rounding,
+invalid-range and saturation discrepancies for the next fidelity change.
+The preceding d4cc32f source checkpoint passes all three GitHub workflows.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

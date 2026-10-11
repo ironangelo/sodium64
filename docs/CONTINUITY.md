@@ -1,3 +1,85 @@
+# 2026-10-11 - Exact DSP pitch cache, physical preservation and BRR discrepancy (R19)
+
+Source phase4/usb-hardware-loop:
+84531758f4c70d7958d5267b740d4517f4a4c4f3 (parent d4cc32f).
+Draft integration PR: https://github.com/ironangelo/sodium64/pull/21.
+Master remains7cc8facfe8643fb85888f301f79995575830521d; no merge/release.
+The same active speed/visual/audio goal and qualification order apply.
+Current work remains on ALttP; all older entries below are preserved.
+
+[Pitch-cache source proof and native comparison](DSP_PITCH_CACHE_2026-10-11.md).
+[Curated aggregate evidence](evidence/pitch-cache-2026-10-11.json).
+[Native history](CODEX_HARDWARE_HISTORY_2026-10-11.md).
+[USB recipe and evidence limits](USB_HARDWARE_LOOP.md).
+
+## Hypothesis, implementation and evidence
+
+- DSP_PITCH_CACHE=1 is opt-in and defaults0. Both pitch-byte handlers update
+  a raw14-bit cache after the original register store; invalid writes return
+  before either store. No host-clock/DSP_SAMPLE-dependent conversion is cached.
+- Actual sample conversion7->3 instructions, register writer15->26. Frequent
+  writes can erase the saving; no universal performance claim. Raw reads,
+  guest/APU cycle debit and memory-tag updates survive.
+- Linked tests:131072 writes,524288 cached loads,65536 uncached conversions,
+  128 invalid writes,80 ordinary writes,2048 interleaved/read cases and16
+  production APU caller cases. A high-mask mutation is rejected.
+- Disabled CPU text/rodata/data is byte-identical to selected coordinate8;
+  all24 RSP text/data sections match.41-owner arena and runtime bounds PASS;
+  12 reboot/5 frame,16 observer and102 recorder cases PASS.
+- Physical input replay at matching retired boundaries compares4 images:
+  268800 pixels,0 differences. Three rings:24576 PCM bytes,0 differences,
+  same ring heads, enabled voices and128 DSP registers. This preserves old
+  PCM; it does not prove SNES sound fidelity.
+- Three quiet USB-only20s captures have complete checksum-valid traces,
+  overflow0, settings precision20/skip0/APU21/audio4/layers0. Title first300
+  cadence53.645934->55.009215 (+2.541%), room59.515700->59.854494 (+0.569%).
+  Rain32.185454->32.233815 (+0.150%) is not claimed as a win from one window.
+- Quiet audio production versus nominal AI: title94.45%,room99.54%,rain53.52%.
+  In rain361/361 submits observe idle,FULL0. Low guest progress causes a
+  concrete undersupply mechanism. Initial paused drain/endpoint overhead
+  remain; these are not exact lost-sample or DAC-waveform counts.
+
+## Discovery and next condition
+
+A synthetic BRR audit uses7168 blocks, all four filters/ranges and selected
+previous-sample states. Its arithmetic oracle matches the unmodified compiled
+Snes9x1.63 decode_brr method in all7168 cases; fetched source matches the local
+reference after newline normalization. Current sodium64 differs in5660 blocks
+(321 filter0,1730 filter1,1778 filter2,1831 filter3): invalid ranges13-15,
+signed filter rounding and saturation/wrapping. No commercial audio is used.
+This is a specific decoder discrepancy, not an audible-defect attribution.
+
+Next: isolate a mathematically faithful BRR correction with an independent
+reference and mutation checks, then measure on N64 without changing image.
+Pitch cache remains available to offset CPU work; whole audio still lacks
+qualified echo/master volume/interpolation/release/PMON/mixing. Rain still
+requires renderer work. No Road1.0 completion or constant60 presentation.
+
+## Publication, CI and restored state
+
+All preceding d4cc32f workflows PASS:
+Build and Validate38167286862, Ares Profile Validation38167289602,
+CGRAM Epoch Replay38167289552. The updated observer CI now builds a disabled
+reference and enabled cache and executes its exhaustive linked proof.
+Fresh8453175 CI must be checked independently; prior PASS is not reused.
+
+Measured empty candidatea940f6f8d47c115705f80ee62df8c0454d9b6a992c1860b8889c35d9f78db811,
+ELF0467aaea80bc314844215cd5a17fd31557b083d5d7dee3abf94ef287c0b53d86.
+Flags match R18 quiet observer (SECTION_OBSERVER0,AUDIO_OBSERVER1), adding
+DSP_PITCH_CACHE1; all retained renderer flags match. Candidate is optional.
+The selected coordinate8 empty emulatora58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2
+was restored/readback verified (131072 bytes,CRC2d5daff8).
+Console remains on, paired menu responsive; firmware2.20.2/menu unchanged.
+Source and continuity are published separately; master stays stable.
+
+Private date2026-10-11 bench keeps pitch-physical.json, decoded captures,
+images/rings, transport/replay, linked proofs and synthetic BRR reference.
+Raw game material and its hashes are never published. Only original code,
+synthetic tests and whitelisted numeric summaries go to GitHub.
+
+---
+
+
 # 2026-10-11 - Native audio evidence and CI selection repair (R18)
 
 Source phase4/usb-hardware-loop:

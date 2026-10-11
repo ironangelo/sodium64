@@ -99,3 +99,9 @@ Completed-boundary cadence measures retired renderer work over full intervals.
 It is not TV presentation FPS. Frame exports precede VI, cable, HDMI adapter
 and TV processing; sampled PC/bank residency is not exclusive function time.
 Full visual/audio output and sustained 60 for every scene remain unqualified.
+
+`DSP_PITCH_CACHE=1` is an optional CPU candidate. Its raw pitch cache updates
+on both VxPITCH byte writes, retaining the current PCM exactly in the tested
+scenes. It defaults off and has additional cost for frequent pitch writes.
+[Linked proof and native evidence](DSP_PITCH_CACHE_2026-10-11.md) record its
+bounded improvements and remaining audio/renderer work.

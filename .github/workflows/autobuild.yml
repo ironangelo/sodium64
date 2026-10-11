@@ -515,7 +515,7 @@ jobs:
         run: |
           python3 scripts/test_remote_control.py
           python3 scripts/test_remote_control.py --audio-observer --json-output audio-parser.json
-      - name: Compile the selected renderer with the optional audio observer
+      - name: Compile audio reference and pitch-cache candidate
         shell: bash
         run: |
           set -o pipefail
@@ -524,10 +524,17 @@ jobs:
             WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
             FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
             TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 \
+            BUILD_DIR=build_audio_reference PROJ_NAME=sodium64-audio-reference \
+            -j$(nproc) 2>&1 | tee audio-reference-build.log
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+            WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+            FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 DSP_PITCH_CACHE=1 \
             -j$(nproc) 2>&1 | tee audio-observer-build.log
       - name: Execute linked observer, caller, transport and arena gates
         run: |
           python3 scripts/test_audio_observer.py build/sodium64.elf --json-output audio-hook.json
+          python3 scripts/test_dsp_pitch_cache.py build/sodium64.elf --reference-elf build_audio_reference/sodium64-audio-reference.elf --json-output audio-pitch-cache.json
           python3 scripts/check_remote_boot.py --elf build/sodium64.elf --json-output audio-boot.json
           python3 scripts/test_native_diag_continuous.py build/sodium64.elf --json-output audio-recorder.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace
@@ -543,6 +550,8 @@ jobs:
           path: |
             audio-*.json
             audio-observer-build.log
+            audio-reference-build.log
+            build_audio_reference/sodium64-audio-reference.elf
             build/sodium64.elf
             build/*.map
             build/src/rsp_*.elf

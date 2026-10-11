@@ -38,6 +38,17 @@
 dsp_buffer: .word 0:0x800
 dsp_regs: .byte 0:0x80
 
+#ifdef SODIUM64_DSP_PITCH_CACHE
+// Same 16-byte voice stride as the existing register/voice arrays. These are
+// raw 14-bit pitches, independent of the host clock and DSP_SAMPLE setting.
+.globl dsp_pitches, dsp_pitch_load_begin, dsp_pitch_load_end, write_pitch
+.align 4
+dsp_pitches: .word 0:0x20
+#define PITCH_WRITE write_pitch
+#else
+#define PITCH_WRITE write_reg
+#endif
+
 #ifdef SODIUM64_AUDIO_OBSERVER
 .globl dsp_audio_blocks, dsp_audio_idle, dsp_audio_full
 .globl dsp_audio_gap_max, dsp_audio_last_count
@@ -76,31 +87,31 @@ gain_jumps: .word linear_dec, expon_dec, linear_inc, bent_inc
 
 .align 4
 write_iomap:
-    .word write_vol, write_vol, write_reg, write_reg // 0x00-0x03
+    .word write_vol, write_vol, PITCH_WRITE, PITCH_WRITE // 0x00-0x03
     .word write_reg, write_adsr, write_reg, write_reg // 0x04-0x07
     .word write_reg:(0x0F - 0x07) // 0x08-0x0F
-    .word write_vol, write_vol, write_reg, write_reg // 0x10-0x13
+    .word write_vol, write_vol, PITCH_WRITE, PITCH_WRITE // 0x10-0x13
     .word write_reg, write_adsr, write_reg, write_reg // 0x14-0x17
     .word write_reg:(0x1F - 0x17) // 0x18-0x1F
-    .word write_vol, write_vol, write_reg, write_reg // 0x20-0x23
+    .word write_vol, write_vol, PITCH_WRITE, PITCH_WRITE // 0x20-0x23
     .word write_reg, write_adsr, write_reg, write_reg // 0x24-0x27
     .word write_reg:(0x2F - 0x27) // 0x28-0x2F
-    .word write_vol, write_vol, write_reg, write_reg // 0x30-0x33
+    .word write_vol, write_vol, PITCH_WRITE, PITCH_WRITE // 0x30-0x33
     .word write_reg, write_adsr, write_reg, write_reg // 0x34-0x37
     .word write_reg:(0x3F - 0x37) // 0x38-0x3F
-    .word write_vol, write_vol, write_reg, write_reg // 0x40-0x43
+    .word write_vol, write_vol, PITCH_WRITE, PITCH_WRITE // 0x40-0x43
     .word write_reg, write_adsr, write_reg, write_reg // 0x44-0x47
     .word write_reg:(0x4B - 0x47) // 0x48-0x4B
     .word write_kon, write_reg, write_reg, write_reg // 0x4C-0x4F
-    .word write_vol, write_vol, write_reg, write_reg // 0x50-0x53
+    .word write_vol, write_vol, PITCH_WRITE, PITCH_WRITE // 0x50-0x53
     .word write_reg, write_adsr, write_reg, write_reg // 0x54-0x57
     .word write_reg:(0x5B - 0x57) // 0x58-0x5B
     .word write_koff, write_reg, write_reg, write_reg // 0x5C-0x5F
-    .word write_vol, write_vol, write_reg, write_reg // 0x60-0x63
+    .word write_vol, write_vol, PITCH_WRITE, PITCH_WRITE // 0x60-0x63
     .word write_reg, write_adsr, write_reg, write_reg // 0x64-0x67
     .word write_reg:(0x6B - 0x67) // 0x68-0x6B
     .word time_noise, write_reg, write_reg, write_reg // 0x6C-0x6F
-    .word write_vol, write_vol, write_reg, write_reg // 0x70-0x73
+    .word write_vol, write_vol, PITCH_WRITE, PITCH_WRITE // 0x70-0x73
     .word write_reg, write_adsr, write_reg, write_reg // 0x74-0x77
     .word write_reg:(0x7F - 0x77) // 0x78-0x7F
 
@@ -173,11 +184,17 @@ next_voice:
 
 get_pitch:
     // Get the pitch scaler for the current voice
+#ifdef SODIUM64_DSP_PITCH_CACHE
+dsp_pitch_load_begin:
+    lhu t0, dsp_pitches(t8)
+dsp_pitch_load_end:
+#else
     lhu t0, dsp_regs + 0x2(t8) // VxPITCH(L/H)
     sll t1, t0, 8
     srl t0, t0, 8
     or t0, t0, t1
     andi t0, t0, 0x3FFF
+#endif
 
     // Increase the voice's position counter by the scaler
     lhu t9, counters(t8)
@@ -733,6 +750,22 @@ write_reg:
     // Do nothing extra for regular register writes
     jr ra
     nop
+
+#ifdef SODIUM64_DSP_PITCH_CACHE
+.align 5
+write_pitch: // t0: address; the raw byte has already been stored
+    // Both pitch-byte handlers update the cache before returning to the APU.
+    // Invalid DSP addresses branch to write_reg before either store/handler.
+    andi t0, t0, 0x70
+    lhu t1, dsp_regs + 0x2(t0)
+    sll t2, t1, 8
+    srl t1, t1, 8
+    or t1, t1, t2
+    andi t1, t1, 0x3FFF
+    sh t1, dsp_pitches(t0)
+    jr ra
+    nop
+#endif
 
 .align 5
 write_vol: // t0: address

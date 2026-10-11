@@ -1,3 +1,33 @@
+# 2026-10-11 - Corrected RSP arena native cycle verified (R27)
+
+Source phase4/usb-hardware-loop: 2729289db2108368566ab2ec41ddaa5d71cad0cb.
+Executable code remains7d83886. Master unchanged7cc8fac, PR21 draft.
+Full prior history remains byte-identical below.
+
+COM3 reports paired menu/recovery0: prior physical blocker is cleared. No
+manual Reset action is inferred. Coordinate8 pre-restored/readback verified,
+then exact corrected combined observer installed/readback verified. Actual
+N64 replay reaches600, quiet20s step to1380, acknowledged START, room1980.
+All transport/menu faults zero.67200 RGB pixels and8192 PCM bytes match
+controls exactly; ring head/DSP registers/enabled mask equal.128 native BRR
+half samples match unmodified compiled Snes9x1.63,7 voices/filter2/ranges5-7.
+
+USB return succeeds without Reset; coordinate8 restored/readback verified
+and paired menu status responds. This qualifies removal of the identified
+RSP/USB-state overlap for this cycle. No speed, full DAC, final video or
+requested60fps/game-matrix claim follows. Full goal remains active.
+
+Exact7d83886 Build38179750510/CGRAM38179753273/Ares38179753196 allPASS.
+Older pending/cancelled CI entries remain historical, not erased.
+Next: separately built directory-scan menu install/readback, original SD menu
+retention, warm return, same-ROM launch latency and capture persistence.
+
+[Native correction and limits](BRR_ARENA_NATIVE_2026-10-11.md).
+[Curated evidence](evidence/brr-arena-native-2026-10-11.json).
+All commercial artifacts, raw hashes and transport/replay stay private.
+
+---
+
 # 2026-10-11 - Physical recovery blocker confirmed across three goal turns
 
 Source remains7d8388661ae30f55e625e1462c98766a7328a8af, clean.

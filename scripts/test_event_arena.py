@@ -89,11 +89,27 @@ class EventArenaTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'requires --diagnostic-trace'):
             layout(ROOT/'src/defines.h',brr_observer=True)
 
+    def test_mix_observer_selects_the_same_extended_owner(self):
+        actual=layout(ROOT/'src/defines.h',diagnostic_trace=True,mix_observer=True)
+        expected=layout(ROOT/'src/defines.h',diagnostic_trace=True,brr_observer=True)
+        self.assertEqual(actual,expected)
+        actual['ELF:synthetic_mix_growth']=(0xe000,0xd2500)
+        prove_disjoint(actual)
+        actual['HCOMP_CGRAM_BASE_QUEUE1']=(0xd2000,0xd2200)
+        with self.assertRaisesRegex(AssertionError,'overlaps'):
+            prove_disjoint(actual)
+
+    def test_mix_observer_cannot_select_normal_layout(self):
+        with self.assertRaisesRegex(ValueError,'requires --diagnostic-trace'):
+            layout(ROOT/'src/defines.h',mix_observer=True)
+
     def test_host_preprocessor_preserves_all_conditional_owners(self):
         compiler=shutil.which('gcc') or shutil.which('clang') or shutil.which('cc')
         self.assertIsNotNone(compiler,'host CI requires a C preprocessor')
         for selection in ({'diagnostic_trace':True},{'profile':True},
-                          {'diagnostic_trace':True,'brr_observer':True}):
+                          {'diagnostic_trace':True,'brr_observer':True},
+                          {'diagnostic_trace':True,'mix_observer':True},
+                          {'diagnostic_trace':True,'mix_observer':True,'brr_observer':True}):
             expected=layout(ROOT/'src/defines.h',**selection)
             actual=layout(ROOT/'src/defines.h',cc=compiler,**selection)
             self.assertEqual(actual,expected)

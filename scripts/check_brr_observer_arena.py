@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check actual CPU tables and embedded RSP DMA owners in a BRR trace build."""
+"""Check actual CPU tables and embedded RSP DMA owners in extended observers."""
 import argparse
 import hashlib
 import json
@@ -16,11 +16,13 @@ def require(condition, message):
 
 def inspect(path, cpu_overrides=None, bank_overrides=None):
     symbols, original = elf(path)
-    require('dsp_brr_records' in symbols, 'expected linked BRR observer')
+    require('dsp_brr_records' in symbols or 'dsp_mix_records' in symbols, 'expected linked extended observer')
     cpu_overrides = cpu_overrides or {}
     word = lambda address: cpu_overrides.get(address, original(address))
     defines = Path(__file__).resolve().parents[1] / 'src/defines.h'
-    macros = selected_macros(defines, diagnostic_trace=True, brr_observer=True)
+    macros = selected_macros(defines, diagnostic_trace=True,
+                             brr_observer='dsp_brr_records' in symbols,
+                             mix_observer='dsp_mix_records' in symbols)
     tables = [('hcomp_cgram_base_queues', 'BASE'),
               ('hcomp_cgram_sideband_queues', 'SIDEBAND'),
               ('hcomp_cgram_event_queues', 'EVENT')]

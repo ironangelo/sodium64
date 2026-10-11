@@ -1,0 +1,103 @@
+{
+  "checkpoint": "R29",
+  "flags_default_zero": [
+    "DSP_DRY_MIX",
+    "MIX_OBSERVER"
+  ],
+  "dry_arithmetic": {
+    "passed": true,
+    "voice_cases": 16384,
+    "output_cases": 32768,
+    "actual_scheduler_samples": 128,
+    "negative_mutations_rejected": [
+      "envelope_scale",
+      "even_envelope_output",
+      "signed_channel_volume",
+      "voice_saturation",
+      "signed_master_volume",
+      "master_scale",
+      "mute"
+    ],
+    "maximum_voice_instructions": 36,
+    "maximum_output_instructions": 21,
+    "maximum_scheduler_sample_instructions": 641,
+    "memory_and_unrelated_registers_preserved_by_arithmetic": true,
+    "reference": "Snes9x1.63 envelope/voice_output and zero-echo master contribution",
+    "compiled_primary_method_executed_here": false,
+    "full_DSP_or_DAC_fidelity_claim": false,
+    "commercial_data": false,
+    "elf_sha256": "d9f47db97b53829b9e44e32d65e47c5f932ec95042db39f2785608b2c2831bed"
+  },
+  "primary_oracle": {
+    "passed": true,
+    "synthetic_eight_voice_samples": 16384,
+    "stereo_values": 32768,
+    "differences": 0,
+    "unmodified_primary_methods": true,
+    "source": "Snes9x1.63 voice_output/echo_output with zero echo",
+    "full_audio_or_native_claim": false
+  },
+  "observer_hooks": {
+    "passed": true,
+    "hook_cases": 84,
+    "selected_sample_hook_instructions": 193,
+    "ordinary_eight_voice_sample_hook_instructions": 58,
+    "counter_wrap_and_both_ring_halves": true,
+    "only_observer_owned_writes": true,
+    "unrelated_gprs_HI_LO_CP0_preserved": true,
+    "physical_acceptance": false,
+    "elf_sha256": "4e79a061f92cd4632f5cf77b84e63cfc3c60a7e6920fb7965e4fcf761fb624e8"
+  },
+  "parser_cases": {
+    "mix_release": 193,
+    "all_observers": 208,
+    "fuzz_each": 1000
+  },
+  "native": {
+    "empty_sha256": "9ad542d80828422b648294bca332e90895e1e6d06ae1f7723d826c39ebee9982",
+    "elf_sha256": "4e79a061f92cd4632f5cf77b84e63cfc3c60a7e6920fb7965e4fcf761fb624e8",
+    "RGB": {
+      "compared": 67200,
+      "differences": 0
+    },
+    "PCM_byte_comparison": {
+      "bytes": 8192,
+      "differences": 7011,
+      "different_from_old_dry_mixer": true
+    },
+    "conditional_eight_voice_sample": {
+      "voices": 8,
+      "stereo_values": 2,
+      "differences": 0,
+      "PCM_ring_word_matches_trace": true,
+      "reference": "unmodified compiled Snes9x1.63 voice_output/echo_output, zero echo",
+      "complete_audio_fidelity_claim": false
+    },
+    "restoration_readback_verified": true,
+    "menu_responsive": true
+  },
+  "memory": {
+    "observer_arena": "D4000",
+    "static_end": "D25C8",
+    "gap": "1A38",
+    "source_and_actual_embedded_DMA_checked": true,
+    "arena_regressions": 12,
+    "owners": 41,
+    "initial_D2000_link_rejected_before_install": true
+  },
+  "disabled_feature_proof": {
+    "disabled_features_allocated_bytes_identical_to_coordinate8": true,
+    "allocated_bytes_compared": 855212,
+    "production_uses_new_code_without_flags": false
+  },
+  "combined_local_build": {
+    "elf_sha256": "d54e3f4d4b88f38c71281a0fd7c859dac085d2b8f513d970e172caf68d86f8f3",
+    "dry_arithmetic_and_hooks_pass": true,
+    "release_cases": 16384,
+    "release_mutations": 2
+  },
+  "native_production_timing": "not yet measured",
+  "fresh_CI": "pending exact new commit",
+  "full_audio_DAC_or60fps_acceptance": false,
+  "commercial_data_included": false
+}

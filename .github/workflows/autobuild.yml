@@ -519,6 +519,8 @@ jobs:
           python3 scripts/test_remote_control.py --brr-observer --json-output audio-brr-parser.json
           python3 scripts/test_remote_control.py --koff-release --json-output audio-release-parser.json
           python3 scripts/test_remote_control.py --brr-observer --koff-release --json-output audio-combined-parser.json
+          python3 scripts/test_remote_control.py --mix-observer --koff-release --json-output audio-mix-parser.json
+          python3 scripts/test_remote_control.py --mix-observer --brr-observer --koff-release --json-output audio-all-parser.json
       - name: Compile audio reference and faithful-BRR trace candidate
         shell: bash
         run: |
@@ -533,7 +535,7 @@ jobs:
           libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
             WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
             FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
-            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 BRR_OBSERVER=1 DSP_KOFF_RELEASE=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 BRR_OBSERVER=1 DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 MIX_OBSERVER=1 \
             -j$(nproc) 2>&1 | tee audio-observer-build.log
       - name: Execute linked observer, caller, transport and arena gates
         run: |
@@ -542,10 +544,12 @@ jobs:
           python3 scripts/test_dsp_brr_accuracy.py build/sodium64.elf --legacy-elf build_audio_reference/sodium64-audio-reference.elf --json-output audio-brr.json
           python3 scripts/test_brr_observer.py build/sodium64.elf --json-output audio-brr-hook.json
           python3 scripts/test_dsp_koff_release.py build/sodium64.elf --legacy-elf build_audio_reference/sodium64-audio-reference.elf --json-output audio-release.json
+          python3 scripts/test_dsp_dry_mix.py build/sodium64.elf --json-output audio-dry-mix.json
+          python3 scripts/test_mix_observer.py build/sodium64.elf --json-output audio-mix-hook.json
           python3 scripts/check_remote_boot.py --elf build/sodium64.elf --json-output audio-boot.json
           python3 scripts/test_native_diag_continuous.py build/sodium64.elf --json-output audio-recorder.json
-          python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace --brr-observer
-          python3 scripts/check_event_arena.py --elf build/sodium64.elf --diagnostic-trace --brr-observer --output audio-arena.json
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace --brr-observer --mix-observer
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf --diagnostic-trace --brr-observer --mix-observer --output audio-arena.json
           python3 scripts/check_brr_observer_arena.py build/sodium64.elf --json-output audio-compiled-arena.json
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_*.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf

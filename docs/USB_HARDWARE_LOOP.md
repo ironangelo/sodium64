@@ -138,3 +138,18 @@ disclosed in timing comparisons.
 After the R22 combined observer timeout, physical Reset recovered the menu.
 R23 confirms coordinate8 installation/readback and responsive menu mode.
 Use that known version for recovery; the combined observer remains unqualified.
+
+## Current native menu and dry-mix diagnostic checkpoint
+
+The installed scanner menu is1736704B, SHA256
+1e5fd76febfe2405fbea0f855dad63514960502631af1a1cd081d1f907c2c6f5.
+Its prior SD object is retained under a unique previous name. R28 verifies
+warm boot, faster same-ROM launch and two USB-triggered SD captures.
+
+DSP_DRY_MIX=1 selects the corrected dry arithmetic; it defaults0.
+MIX_OBSERVER=1 additionally requires that flag and AUDIO_OBSERVER=1, uses
+CPU/RSP arenaD4000 and enables pause-only audio-mix export. Use runtime/event
+gates with --diagnostic-trace --mix-observer and the actual embedded DMA guard.
+[Current proof/limits](DSP_DRY_MIX_2026-10-11.md) disclose per-sample hook cost.
+Production timing must disable MIX_OBSERVER and BRR_OBSERVER. Coordinate8
+is restored after the bounded diagnostic, not an accepted full-audio release.

@@ -423,6 +423,10 @@ extern unsigned char enabled;
 extern volatile uint32_t dsp_audio_blocks, dsp_audio_idle, dsp_audio_full;
 extern volatile uint32_t dsp_audio_gap_max, dsp_audio_last_count;
 extern const uint32_t dsp_audio_dac_rate;
+#ifdef SODIUM64_MIX_OBSERVER
+extern unsigned char dsp_mix_records[80];
+extern volatile uint32_t dsp_mix_ready, dsp_mix_count, dsp_mix_ring_offset, dsp_mix_enabled;
+#endif
 #ifdef REMOTE_CONTROL_HOST
 extern uint32_t remote_host_audio_register(unsigned offset);
 #endif
@@ -438,6 +442,9 @@ static void audio_observation(const char *id,int reset,uint32_t framebuffer) {
         dsp_audio_gap_max=dsp_audio_last_count=0;
 #ifdef SODIUM64_DSP_KOFF_RELEASE
         dsp_release_steps=dsp_release_last=0;
+#endif
+#ifdef SODIUM64_MIX_OBSERVER
+        dsp_mix_ready=dsp_mix_count=0;
 #endif
     } else {
 #ifdef REMOTE_CONTROL_HOST
@@ -497,6 +504,23 @@ static void brr_observation(const char *id,uint32_t framebuffer) {
     (void)finish();
 }
 #endif
+#ifdef SODIUM64_MIX_OBSERVER
+static void mix_observation(const char *id,uint32_t framebuffer) {
+    if(!present||transport_error||menu_error){error(id,"audio_transport_unready");return;}
+    if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+    if(!remote_paused){error(id,"not_paused");return;}
+    if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
+    if(dsp_mix_ready!=1){error(id,"mix_not_ready");return;}
+    uint32_t offset=dsp_mix_ring_offset,mask=dsp_mix_enabled;
+    if((offset!=4092&&offset!=8188)||mask>255){error(id,"mix_state");return;}
+    if(!send_packet(2,dsp_mix_records,80)){error(id,"usb_export_failed");return;}
+    prefix(id,1);append(" exported=audio-mix bytes=80 voices=8 stride=8 endian=be");
+    field(" completed_mod32=",dsp_mix_count);field(" ring_sample_offset_bytes=",offset);
+    field(" render_frame_id=",remote_render_frames);
+    append(" provenance=native_dry_mix_input_output_not_dac no_full_audio_fidelity_claim=1");
+    (void)finish();
+}
+#endif
 static void status(const char *id) {
     uint32_t now=count();if(now<count_last)count_wraps++;count_last=now;
     prefix(id,1);
@@ -506,6 +530,9 @@ static void status(const char *id) {
 #endif
 #ifdef SODIUM64_BRR_OBSERVER
     append(",audio-brr");
+#endif
+#ifdef SODIUM64_MIX_OBSERVER
+    append(",audio-mix");
 #endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER
     append(",sections");
@@ -592,6 +619,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     if(eq(verb,"audio")||eq(verb,"audio-reset")) {
         if(nt!=3){error(id,"argument_count");return;}
         audio_observation(id,eq(verb,"audio-reset"),retired_framebuffer);return;
+    }
+#endif
+#ifdef SODIUM64_MIX_OBSERVER
+    if(eq(verb,"audio-mix")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        mix_observation(id,retired_framebuffer);return;
     }
 #endif
 #if defined(SODIUM64_RDP_MATH_PROBE) && !defined(REMOTE_CONTROL_HOST)

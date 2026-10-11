@@ -78,6 +78,21 @@ dsp_brr_count: .word 0
 dsp_brr_records: .word 0:128
 #endif
 
+#ifdef SODIUM64_MIX_OBSERVER
+.globl dsp_mix_records, dsp_mix_parameters, dsp_mix_output, dsp_mix_ring_offset
+.globl dsp_mix_enabled, dsp_mix_count, dsp_mix_ready
+.align 4
+// Private inputs from the last complete AI-block-ending DSP sample.
+// Eight records: full signal16/env16/signed volumes8+8/zero16.
+dsp_mix_records: .word 0:16
+dsp_mix_parameters: .word 0 // MVOLL8/MVOLR8/zero8/FLG8
+dsp_mix_output: .word 0 // Final left16/right16 PCM, before AI.
+dsp_mix_ring_offset: .word 0
+dsp_mix_enabled: .word 0
+dsp_mix_count: .word 0
+dsp_mix_ready: .word 0
+#endif
+
 .align 4
 noise_sample: .hword 0x4000
 noise_step: .hword 0x8000
@@ -181,6 +196,26 @@ skip_noise:
     li t5, 0 // Left sample
     li t4, 0 // Right sample
     lbu sp, enabled
+#ifdef SODIUM64_MIX_OBSERVER
+.globl dsp_mix_init_begin, dsp_mix_init_end
+dsp_mix_init_begin:
+    lhu t0, dsp_pointer
+    andi t0, t0, 0xFFF
+    li t1, 0xFFC
+    bne t0, t1, dsp_mix_init_end
+    nop
+    sw zero, dsp_mix_ready
+    sw sp, dsp_mix_enabled
+    la t0, dsp_mix_records
+    li t1, 8
+dsp_mix_clear:
+    sd zero, (t0)
+    addiu t0, t0, 8
+    addiu t1, t1, -1
+    bnez t1, dsp_mix_clear
+    nop
+dsp_mix_init_end:
+#endif
 
 next_voice:
     // Check if a voice is enabled
@@ -246,6 +281,67 @@ load_sample:
     nop
 
 skip_sample:
+#ifdef SODIUM64_DSP_DRY_MIX
+.globl dsp_dry_voice_begin, dsp_dry_voice_end
+dsp_dry_voice_begin:
+    // BRR samples are half-scaled; noise keeps its unsigned15-bit LFSR.
+    // Doubling with signed16 wrap recovers the full selected signal in both.
+    sll t0, t0, 17
+    lhu t1, envelopes(t8)
+    sra t0, t0, 16
+    mult t0, t1
+    lb t2, dsp_regs + 0x0(t8)
+    lb t3, dsp_regs + 0x1(t8)
+#ifdef SODIUM64_MIX_OBSERVER
+.globl dsp_mix_input_begin, dsp_mix_input_end
+dsp_mix_input_begin:
+    lhu t7, dsp_pointer
+    andi t7, t7, 0xFFF
+    li t9, 0xFFC
+    bne t7, t9, dsp_mix_input_end
+    nop
+    la t7, dsp_mix_records
+    sll t9, t6, 3
+    addu t7, t7, t9
+    sh t0, 0(t7)
+    sh t1, 2(t7)
+    sb t2, 4(t7)
+    sb t3, 5(t7)
+dsp_mix_input_end:
+#endif
+    mflo t0
+    sra t0, t0, 11
+    // The DSP clears bit0 after applying the full eleven-bit envelope.
+    sra t0, t0, 1
+    sll t0, t0, 1
+
+    mult t0, t2
+    mflo t1
+    sra t1, t1, 7
+    addu t5, t5, t1
+    // Saturate after each voice in hardware order, before master volume.
+    sll t7, t5, 16
+    sra t7, t7, 16
+    beq t7, t5, dsp_dry_left_ready
+    sra t9, t5, 31
+    xori t5, t9, 0x7FFF
+dsp_dry_left_ready:
+    beq t2, t3, dsp_dry_same_volume
+    nop
+    mult t0, t3
+    mflo t1
+    sra t1, t1, 7
+dsp_dry_same_volume:
+    addu t4, t4, t1
+    sll t7, t4, 16
+    sra t7, t7, 16
+    beq t7, t4, dsp_dry_voice_end
+    sra t9, t4, 31
+    xori t4, t9, 0x7FFF
+dsp_dry_voice_end:
+    b next_voice
+    nop
+#else
     // Get the cached volumes for each channel
     lh t2, cached_vols + 0(t8)
     lh t3, cached_vols + 2(t8)
@@ -264,15 +360,66 @@ skip_sample:
 same_volume:
     b next_voice
     addu t4, t4, t1
+#endif
 
 .align 5
-write_sample: // t4: left, t5: right
+write_sample: // t5: left, t4: right
+#ifdef SODIUM64_DSP_DRY_MIX
+.globl dsp_dry_output_begin, dsp_dry_output_end
+dsp_dry_output_begin:
+    // Signed master volume applies to each already saturated dry accumulator.
+    // Echo/FIR, Gaussian selection and DSP register timing remain separate.
+    lb t0, dsp_regs + 0x0C
+    lb t1, dsp_regs + 0x1C
+    mult t5, t0
+    lbu t2, dsp_regs + 0x6C
+    mflo t5
+    sra t5, t5, 7
+    mult t4, t1
+    mflo t4
+    sra t4, t4, 7
+    // Reference dry contributions cast to signed16 before adding echo.
+    sll t5, t5, 16
+    sra t5, t5, 16
+    sll t4, t4, 16
+    sra t4, t4, 16
+    andi t2, t2, 0x40
+    beqz t2, dsp_dry_output_end
+    nop
+    move t5, zero
+    move t4, zero
+dsp_dry_output_end:
+#endif
     // Write a sample to the buffer
     andi t4, t4, 0xFFFF
     sll t5, t5, 16
     or t0, t4, t5
     lhu t1, dsp_pointer
     sw t0, UNCACHED(dsp_buffer)(t1)
+#ifdef SODIUM64_MIX_OBSERVER
+.globl dsp_mix_commit_begin, dsp_mix_commit_end
+dsp_mix_commit_begin:
+    andi t7, t1, 0xFFF
+    li t9, 0xFFC
+    bne t7, t9, dsp_mix_commit_end
+    nop
+    sw t0, dsp_mix_output
+    sw t1, dsp_mix_ring_offset
+    lbu t2, dsp_regs + 0x0C
+    lbu t3, dsp_regs + 0x1C
+    lbu t7, dsp_regs + 0x6C
+    sll t2, t2, 24
+    sll t3, t3, 16
+    or t2, t2, t3
+    or t2, t2, t7
+    sw t2, dsp_mix_parameters
+    lw t2, dsp_mix_count
+    addiu t2, t2, 1
+    sw t2, dsp_mix_count
+    li t2, 1
+    sw t2, dsp_mix_ready
+dsp_mix_commit_end:
+#endif
 
     // Increment the sample pointer
     addi a0, t1, 4

@@ -317,6 +317,19 @@ and paused session, without recapturing it. Prior host-backup hash assumption
 was rejected before writes. Physical Start/TV OK and menu-download verification
 are not inferred. New menu retained; coordinate8 selected; firmware unchanged.
 
+## R29 - Signed dry mixing and actual native sample proof
+
+[Dry stage](DSP_DRY_MIX_2026-10-11.md) corrects full envelope precision, signal
+scale, signed voice/master volumes, per-voice clipping and mute.16384 voice/
+32768 output/128 scheduler cases reject seven mutations. An unmodified primary
+adapter agrees on16384 eight-voice synthetic mixes. Actual N64 eight-voice
+input/output matches both primary stereo values and its PCM ring word;67200
+RGB pixels unchanged,7011 PCM bytes change. Coordinate8 restored/readback
+verified. A mixer trace adds58 ordinary/193 selected instructions per full
+eight-voice sample, not just block cost. Its initial strict link failure is
+repaired by shared checked D4000 CPU/RSP owners; default855212 bytes unchanged.
+Full DSP/DAC/60fps and observer-free production timing remain open.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

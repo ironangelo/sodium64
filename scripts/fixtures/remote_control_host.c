@@ -28,6 +28,10 @@ uint32_t remote_host_audio_register(unsigned offset){if(offset!=4&&offset!=12)ab
 volatile uint32_t dsp_brr_next,dsp_brr_count;
 unsigned char dsp_brr_records[512];
 #endif
+#ifdef SODIUM64_MIX_OBSERVER
+unsigned char dsp_mix_records[80];
+volatile uint32_t dsp_mix_ready,dsp_mix_count,dsp_mix_ring_offset,dsp_mix_enabled;
+#endif
 static uint32_t clock_value;
 static unsigned cases, packets, types[3], sizes[3], menu_calls;
 static int fail_send;
@@ -51,6 +55,9 @@ int remote_host_send(unsigned type,const void *data,unsigned bytes){
 #endif
 #ifdef SODIUM64_BRR_OBSERVER
     if(type==2&&bytes==512&&data!=dsp_brr_records)abort();
+#endif
+#ifdef SODIUM64_MIX_OBSERVER
+    if(type==2&&bytes==80&&data!=dsp_mix_records)abort();
 #endif
     return 1;
 }
@@ -281,6 +288,35 @@ int main(void){
     dsp_brr_count=1;expect("s64 12345678 audio-brr","valid_records=1");
     fail_send=1;run("s64 12345678 audio-brr");check(packets==0);fail_send=0;
     remote_paused=0;
+#endif
+ #ifdef SODIUM64_MIX_OBSERVER
+    remote_render_frames=10;remote_paused=0;remote_arm_pending=0;native_diag_phase=0;
+    expect("s64 12345678 audio-mix","ERR not_paused");check(packets==1);
+    remote_paused=1;native_diag_phase=1;
+    expect("s64 12345678 audio-mix","ERR capture_busy");check(packets==1);
+    native_diag_phase=0;remote_arm_pending=1;
+    expect("s64 12345678 audio-mix","ERR capture_busy");remote_arm_pending=0;
+    remote_render_frames=0;expect("s64 12345678 audio-mix","ERR frame_unavailable");
+    remote_render_frames=10;dsp_mix_ready=0;
+    expect("s64 12345678 audio-mix","ERR mix_not_ready");
+    dsp_mix_ready=2;expect("s64 12345678 audio-mix","ERR mix_not_ready");
+    dsp_mix_ready=1;dsp_mix_ring_offset=4091;
+    expect("s64 12345678 audio-mix","ERR mix_state");
+    dsp_mix_ring_offset=4092;dsp_mix_enabled=256;
+    expect("s64 12345678 audio-mix","ERR mix_state");
+    dsp_mix_enabled=127;dsp_mix_count=0xffffffff;
+    for(unsigned i=0;i<80;++i)dsp_mix_records[i]=(unsigned char)(i*17);
+    unsigned char saved_mix[80];memcpy(saved_mix,dsp_mix_records,80);
+    expect("s64 12345678 audio-mix extra","ERR argument_count");
+    expect("s64 12345678 audio-mix","OK exported=audio-mix bytes=80 voices=8 stride=8 endian=be");
+    check(packets==2&&sizes[0]==80&&types[0]==2);
+    check(strstr(response,"completed_mod32=4294967295 ring_sample_offset_bytes=4092")!=NULL);
+    check(dsp_mix_ready==1&&dsp_mix_count==0xffffffff&&!memcmp(saved_mix,dsp_mix_records,80));
+    dsp_mix_ring_offset=8188;dsp_mix_count=0;
+    expect("s64 12345678 audio-mix","completed_mod32=0 ring_sample_offset_bytes=8188");
+    fail_send=1;run("s64 12345678 audio-mix");check(packets==0);fail_send=0;
+    expect("s64 12345678 audio-reset","OK audio_reset=1");check(!dsp_mix_ready&&!dsp_mix_count);
+    check(!memcmp(saved_mix,dsp_mix_records,80));remote_paused=0;
 #endif
     /* Random text and adversarial bounds exercise the same production parser.
      * Each case must remain within buffers and may never boot or arm. */

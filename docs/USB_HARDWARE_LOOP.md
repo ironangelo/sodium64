@@ -134,3 +134,7 @@ caller proofs from open register-latching, complete mixing and DAC accuracy.
 With AUDIO_OBSERVER=1, private audio metadata also exports a release-step count
 and last transition; the additional 12 instructions per release step must be
 disclosed in timing comparisons.
+
+After the R22 combined observer timeout, physical Reset recovered the menu.
+R23 confirms coordinate8 installation/readback and responsive menu mode.
+Use that known version for recovery; the combined observer remains unqualified.

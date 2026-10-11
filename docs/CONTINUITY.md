@@ -1,3 +1,38 @@
+# 2026-10-11 - Exact R26 build and regression CI verified
+
+Source phase4/usb-hardware-loop remains
+7d8388661ae30f55e625e1462c98766a7328a8af. Master unchanged7cc8fac;
+PR21 remains draft/unmerged. No new source push for this CI-only record.
+
+Build and Validate38179750510 completed SUCCESS. All six required jobs pass:
+build114589663259, profile114589663268, native-diag114589663330,
+native-trace114589663046, usb-audio-observer114589663314,
+emulator-smoke114590864822. Release job skipped on this development branch.
+CGRAM38179753273 completed SUCCESS. Ares38179753196 is still in progress,
+so it is not PASS and is not inherited from an earlier commit.
+
+Actual observer job logs confirm six CPU queue words, two embedded RSP banks
+and four DMA addresses allA00D4400; all three negative mutations rejected.
+Linked static endD25C8 < arenaD4000, gap1A38; all41 declared owners pass.
+Build logs confirm the real pool helper:26 prior cases, one read-only scan,
+96 existing captures +16 slots =16 exclusive-create attempts. The Linux test
+entry uses ASan/UBSan; creation races and scan open/read/close failures pass.
+These are build/host/emulator checks, not physical audio or60fps acceptance.
+
+A fresh COM3 application hello still times out. The user was already asked
+for physical Reset/power-cycle to recover the paired menu. No corrected
+observer or new menu has been installed, and no restoration after the second
+failed combined trial is claimed. The private corrected native harness is now
+prepared: restore coordinate8 first, verify the exact corrected archive,
+compare room RGB/PCM/native BRR and restore coordinate8 on completion.
+Do not execute it until the running menu is verified responsive.
+
+All commercial data and transport artifacts stay private. Full constant60,
+visual/audio fidelity and the requested game matrix remain open. The entire
+preceding continuity is preserved byte for byte below.
+
+---
+
 # 2026-10-11 - One read-only capture filename scan (R26)
 
 Source phase4/usb-hardware-loop: 7d8388661ae30f55e625e1462c98766a7328a8af.

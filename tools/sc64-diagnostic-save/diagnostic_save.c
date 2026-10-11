@@ -18,8 +18,15 @@ static const char *fat_path(const char *path) {
 }
 
 bool diagnostic_save_reserve(const char *normal_path, const char *tag, char **output_path) {
+    unsigned next_id = 1;
+    return diagnostic_save_reserve_from(normal_path, tag, &next_id, output_path);
+}
+
+bool diagnostic_save_reserve_from(const char *normal_path, const char *tag,
+                                 unsigned *next_id, char **output_path) {
+    if (!output_path) return true;
     *output_path = NULL;
-    if (!normal_path || !tag) return true;
+    if (!normal_path || !tag || !next_id || !*next_id || *next_id > MAX_IDENT) return true;
     size_t tag_len = strlen(tag), len = strlen(normal_path);
     if (!tag_len || tag_len > 24 || len < 4 || len > 1024 || strcmp(normal_path + len - 4, ".sav")) return true;
     for (size_t i = 0; i < tag_len; i++) {
@@ -46,11 +53,12 @@ bool diagnostic_save_reserve(const char *normal_path, const char *tag, char **ou
         /* A short existing save is not silently treated as new progress. */
         if (result != FR_OK || closed != FR_OK || count != GUEST_BYTES) goto failure;
     } else if (result != FR_NO_FILE) goto failure;
-    for (unsigned id = 1; id <= MAX_IDENT; id++) {
+    for (unsigned id = *next_id; id <= MAX_IDENT; id++) {
         snprintf(target, len + tag_len + 32, "%.*s-diag-%s-%06u.sav", (int)(len - 4), normal_path, tag, id);
         result = f_open(&output, fat_path(target), FA_WRITE | FA_CREATE_NEW);
-        if (result == FR_EXIST) continue;
+        if (result == FR_EXIST) { *next_id = id + 1; continue; }
         if (result != FR_OK) goto failure;
+        *next_id = id + 1; /* Retain failed reservations and skip them too. */
         result = f_write(&output, data, SAVE_BYTES, &count);
         FRESULT synced = f_sync(&output);
         FRESULT closed = f_close(&output);

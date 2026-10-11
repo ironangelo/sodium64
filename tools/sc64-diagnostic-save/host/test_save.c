@@ -16,8 +16,10 @@
 static int fail_mode;
 static char ordinary[1024];
 static unsigned normal_write_attempts;
+static unsigned reservation_attempts;
 FRESULT f_open(FIL *f, const char *path, unsigned flags) {
     f->writing = flags & FA_WRITE;
+    if (f->writing) ++reservation_attempts;
     if (f->writing && !strcmp(path, ordinary)) normal_write_attempts++;
     if ((fail_mode == 1 && !f->writing) || (fail_mode == 2 && f->writing)) return FR_DENIED;
     int fd = open(path, (f->writing ? O_WRONLY | O_CREAT | O_EXCL : O_RDONLY) | O_BINARY, 0600);
@@ -110,6 +112,7 @@ static void test_pools(void) {
     assert(!diagnostic_pool_prepare(ordinary,"pool",3,0x104000,114688,&backend,&path));
     assert(!strcmp(path,"Progress-diag-pool-000001.sav"));free(path);
     assert(pool_maps==3 && pool_publishes==1);check_descriptor(3,1);++pool_cases;
+    assert(!strcmp(diagnostic_pool_report()->stage,"ready"));
     /* Fill an earlier completed capture with unmistakable bytes; the second
      * session must leave it untouched and choose all fresh IDs. */
     create("Progress-diag-pool-000002.sav",32768);
@@ -126,6 +129,12 @@ static void test_pools(void) {
         pool_setup(mode);char tag[24];snprintf(tag,sizeof tag,"poolfault%02u",mode);
         assert(diagnostic_pool_prepare(ordinary,tag,3,0x104000,114688,&backend,&path)&&!path);
         assert(pool_publishes==(mode==13?1u:0u));++pool_cases;
+        const char *stage = mode==7 || mode==16 ? "card_identity" : mode==17 ? "card_info" :
+            mode==8 || mode==11 || mode==14 ? "lba_bounds" : mode==9 || mode==10 ? "lba_duplicate" :
+            mode==12 ? "map_region" : mode==13 ? "publish" : "map";
+        assert(!strcmp(diagnostic_pool_report()->stage,stage));
+        if(mode==9) assert(diagnostic_pool_report()->sector==63 && diagnostic_pool_report()->limit==0);
+        if(mode==10) assert(diagnostic_pool_report()->slot==1 && diagnostic_pool_report()->limit==0);
     }
     const struct {unsigned count;uint32_t offset;uint64_t size;} invalid[]={
         {0,0x104000,114688},{17,0x104000,114688},{16,0x100000,114688},
@@ -166,5 +175,19 @@ int main(int argc, char **argv) {
     assert(diagnostic_save_reserve("missing/directory.sav","v4",&p)&&!p);
     assert(normal_write_attempts==0);
     test_pools();
+    diagnostic_pool_backend_t cursor_backend={NULL,pool_info,pool_sectors,pool_publish};
+    create("Cursor.sav",32768);
+    for(unsigned id=1;id<=96;id++) {
+        char old[128];snprintf(old,sizeof old,"Cursor-diag-cursor-%06u.sav",id);create(old,32768);
+    }
+    pool_setup(0);unsigned attempts_before=reservation_attempts;
+    assert(!diagnostic_pool_prepare("Cursor.sav","cursor",16,0x104000,0x20000,&cursor_backend,&p));
+    assert(reservation_attempts-attempts_before==112);check_descriptor(16,97);free(p);
+    unsigned cursor=999999;
+    assert(!diagnostic_save_reserve_from("Cursor.sav","last",&cursor,&p));
+    assert(cursor==1000000);free(p);p=(char*)1;
+    assert(diagnostic_save_reserve_from("Cursor.sav","last",&cursor,&p)&&!p);
+    cursor=0;assert(diagnostic_save_reserve_from("Cursor.sav","last",&cursor,&p)&&!p);
+    puts("SC64_CURSOR PASS 96 existing captures + 16 slots = 112 exclusive-create attempts; no wrap");
     puts("SC64_DIAGNOSTIC_SAVE PASS repeated single-ROM launches, existing captures/progress preserved, exclusive writes, I/O failure rejection");
 }

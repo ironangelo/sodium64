@@ -182,6 +182,75 @@ hcomp_copy_chunk:
     j 0xA4001F7C
     li t9, 0x1770
 
+.org (0x628 - 0x3A8)
+hcomp_vram_snapshot:
+    // Each dirty byte owns one64-byte VRAM block. Keep only one bit per
+    // 1KiB copy group in t8/t9, before TILE_TABLE becomes DMA scratch.
+    // VRAM_TABLE retains the exact historical per-layer dirty-bit OR.
+    li a0, TILE_TABLE
+    lw a1, DIRTY_PTR(sp)
+    jal 0xA4001F40
+    li a2, 0x3FF
+    li t1, VRAM_TABLE
+    li t2, TILE_TABLE
+    move t8, zero
+    move t9, zero
+    // A previous arithmetic bank may leave VCO; clear it before VNE so
+    // clean zero lanes cannot inherit old subtraction carry/borrow bits.
+    vge $v02, $v31, $v31, 0
+hcomp_vram_dirty_bitmap:
+    lqv $v00, 0, 0, t1
+    lqv $v01, 0, 0, t2
+    vor $v00, $v00, $v01, 0
+    sqv $v00, 0, 0, t1
+    vne $v02, $v01, $v31, 0
+    cfc2 t0, $1
+    andi t0, t0, 0xFF
+    sltu t0, zero, t0
+    srl t3, t8, 31
+    sll t9, t9, 1
+    or t9, t9, t3
+    sll t8, t8, 1
+    or t8, t8, t0
+    addi t2, t2, 16
+    li t3, VRAM_TABLE
+    bne t2, t3, hcomp_vram_dirty_bitmap
+    addi t1, t1, 16
+    // Startup must initialize the complete snapshot even when every dirty
+    // byte is zero. This state is independent of dirty bits and OAM caches.
+    lw t0, HCOMP_VRAM_SNAPSHOT_READY
+    bnez t0, hcomp_vram_snapshot_ready
+    lw t4, VRAM_ADDRS + 4
+    li t8, -1
+    li t9, -1
+hcomp_vram_snapshot_ready:
+    lw t3, VRAM_ADDRS
+    li t1, 0xFC00
+    li a0, TILE_TABLE
+    li a2, 0x3FF
+hcomp_vram_copy_group:
+    andi t0, t8, 1
+    beqz t0, hcomp_vram_group_done
+    add a1, t4, t1
+    jal 0xA4001F40
+    nop
+    jal 0xA4001F08
+    add a1, t3, t1
+hcomp_vram_group_done:
+    srl t8, t8, 1
+    sll t0, t9, 31
+    or t8, t8, t0
+    srl t9, t9, 1
+    bnez t1, hcomp_vram_copy_group
+    addi t1, t1, -0x400
+    li t0, 1
+    sw t0, HCOMP_VRAM_SNAPSHOT_READY
+    // The R4300 may write guest VRAM only after every selected copy retired.
+    mtc0 zero, COP0_SEMAPHORE
+    lw a1, OVERLAY_MAIN_SRC
+    j 0xA4001F7C
+    li t9, 0x109C
+
 .org (0x760 - 0x3A8)
 hcomp_screen_switch:
     b hcomp_setup_copy

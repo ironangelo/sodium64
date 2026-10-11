@@ -20,6 +20,16 @@
 #include <rsp.inc>
 #include "defines.h"
 
+#ifndef SODIUM64_SPARSE_VRAM
+#define SODIUM64_SPARSE_VRAM 1
+#endif
+#if SODIUM64_ELIGIBILITY_TAGS && !SODIUM64_SPARSE_VRAM
+#error "ELIGIBILITY_TAGS requires the sparse VRAM resident helper hole"
+#endif
+#if SODIUM64_HCOMP_TLUT_SHADER && !SODIUM64_ELIGIBILITY_TAGS
+#error "HCOMP_TLUT_SHADER requires ELIGIBILITY_TAGS"
+#endif
+
 .data
 
 // Empty values that are defined as macros
@@ -140,7 +150,14 @@ overlay_mode7_src: .word 0
 overlay_main_src: .word 0
 overlay_hcomp_src: .word 0
 hcomp_raw_palette_ptrs: .word 0, 0
+#if SODIUM64_ELIGIBILITY_TAGS
+.byte 0:(HCOMP_TAG_ENABLE_LUT - (HCOMP_RAW_PALETTE_PTRS + 8))
+hcomp_tag_enable_lut:
+    .byte 0x20,1,2,4,8,0,0x10
+.byte 0:(VEC_DATA - (HCOMP_TAG_ENABLE_LUT + 7))
+#else
 .byte 0:(VEC_DATA - (HCOMP_RAW_PALETTE_PTRS + 8))
+#endif
 
 vec_data:
     // Constants that are always kept in vector registers
@@ -177,6 +194,48 @@ main:
     li sp, 0 // Frame index
 
 draw_frame:
+#if SODIUM64_ELIGIBILITY_TAGS
+    // Match Main's resident prefix: this retired full-copy hole belongs to
+    // the eligibility helper, including when a full Mode7 image is loaded.
+    lw a1, OVERLAY_HCOMP_SETUP_SRC
+    j overlay_load_slot
+    li t9, 0x1628
+.org 0x048
+hcomp_eligibility_depth_send:
+    lbu t0, HCOMP_SCREEN
+    beqz t0, hcomp_eligibility_depth_submit
+#if SODIUM64_HCOMP_TLUT_SHADER
+    lw t0, 4(a0)
+#else
+    nop
+    lw t0, 4(a0)
+#endif
+    srl t0, t0, 28
+    lbu t0, HCOMP_TAG_ENABLE_LUT(t0)
+    lbu a1, CGADSUB
+    and t0, t0, a1
+    sltu t0, zero, t0
+#if SODIUM64_HCOMP_TLUT_SHADER
+    lbu a1, HCOMP_TLUT_CLASS
+    andi a1, a1, 0x80
+    bnez a1, main
+    lui a1, 0x0800
+    sll t0, t0, 28
+#else
+    sll t0, t0, 28
+    lui a1, 0x0800
+#endif
+    or t0, t0, a1
+    lui a1, 0x2E00
+    sw a1, SCRN_DATA
+    sw t0, SCRN_DATA + 4
+    li a0, SCRN_DATA
+    li a1, SCRN_DATA + 8
+hcomp_eligibility_depth_submit:
+    j rdp_send
+    nop
+.org 0x09C
+#else
     // Set initial values for copying VRAM
     li a0, TILE_TABLE
     li a2, 0x3FF
@@ -210,6 +269,7 @@ table_loop:
     sqv $v00, 0, 0, t1
     bne t1, t2, table_loop
     addi t1, t1, 16
+#endif
 
     // Gate-C Main/Sub ownership proof: begin the frame on the compact
     // 280x8 Sub color surface. Global RDP y=16 maps to compact physical row0.
@@ -1268,7 +1328,11 @@ hcomp_obj_mirror:
     andi a0, t1, 0x0800
     srl a0, a0, 8
     addi a0, a0, HCOMP_OBJ_DEPTH_CMDS
+#if SODIUM64_ELIGIBILITY_TAGS
+    jal hcomp_depth_send
+#else
     jal rdp_send
+#endif
     addi a1, a0, 8
     j shared_mirror
     move ra, v1
@@ -1276,7 +1340,11 @@ hcomp_obj_mirror:
 hcomp_mode7_dispatch:
     // Mode7's one BG is BG1; avoid inheriting a previous layer's depth tag.
     li a0, HCOMP_PROOF_BG_DEPTH_CMDS
+#if SODIUM64_ELIGIBILITY_TAGS
+    jal hcomp_depth_send
+#else
     jal rdp_send
+#endif
     addi a1, a0, 8
     b overlay_load_mode7
     li t9, 0x1788
@@ -1286,12 +1354,45 @@ hcomp_cgram_store_marker:
     b hcomp_cgram_return
     nop
 
+#if SODIUM64_ELIGIBILITY_TAGS
+.org 0xC4C
+hcomp_depth_send:
+#if SODIUM64_HCOMP_TLUT_SHADER
+    j hcomp_eligibility_depth_send
+    nop
+    .space 12
+#else
+    lw t0, HCOMP_BAND_RAW
+    bnez t0, ret_jump
+    nop
+    j hcomp_eligibility_depth_send
+    nop
+#endif
+#endif
+
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
 // Resident hole: leave every historical bank entry / DMA / window PC fixed.
 // Tagged source addresses are stripped before DMA. Pending is published before
 // IMEM writes; completion advances the epoch so a PC read can be bookended.
 .org 0xC60
 native_diag_overlay_load:
+#if SODIUM64_SIGNAL_PROFILE
+    lui t0, 0x002A
+    mtc0 t0, COP0_SP_STATUS
+    andi a0, a1, 7
+    sll a0, a0, 1
+    lhu t0, NATIVE_DIAG_SIGNAL_MASKS(a0)
+    sh t0, NATIVE_DIAG_RSP_BANK
+    li a0, -8
+    and a1, a1, a0
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    lhu t0, NATIVE_DIAG_RSP_BANK
+    sll t0, t0, 16
+    jr t9
+    mtc0 t0, COP0_SP_STATUS
+#else
     lhu t0, NATIVE_DIAG_RSP_BANK
     andi t0, t0, 0xFFF0
     andi a0, a1, 7
@@ -1307,6 +1408,7 @@ native_diag_overlay_load:
     addi t0, t0, 8
     jr t9
     sh t0, NATIVE_DIAG_RSP_BANK // t0 is scratch; Main restores its saved layer.
+#endif
 native_diag_overlay_main_return:
     b draw_bg
     move t0, v0

@@ -199,6 +199,20 @@ hcomp_fast_raw:
     li t0, 1
     sw t0, HCOMP_BAND_RAW
 hcomp_fast_return:
+#if SODIUM64_HCOMP_TLUT_SHADER
+    // Keep every proven raw/backdrop specialization and every nonflat COLOR
+    // epoch on its original path. The owned shader proves operand/row color.
+    lw t0, HCOMP_BAND_RAW
+    bnez t0, hcomp_fast_no_tlut
+    lbu t0, CGWSEL
+    andi t0, t0, 0xF1
+    bnez t0, hcomp_fast_no_tlut
+    nop
+    lw a1, OVERLAY_HCOMP_TLUT_SRC
+    j 0xA4001F7C
+    li t9, 0x13B0
+hcomp_fast_no_tlut:
+#endif
     lw a1, OVERLAY_HCOMP_SRC
     j 0xA4001F7C
     li t9, 0x1768

@@ -22,14 +22,26 @@ def main():
         print(result.stdout,end='')
         match=re.search(r'PASS cases=(\d+) operations=(\d+)',result.stdout)
         assert match and int(match[1])>0
+        driver_exe=Path(tmp)/('transport.exe' if os.name=='nt' else 'transport')
+        driver_cmd=[a.cc,'-std=c11','-O1','-g','-Wall','-Wextra','-Werror']
+        if os.name!='nt':driver_cmd+=['-fsanitize=address,undefined','-fno-omit-frame-pointer','-no-pie']
+        driver_cmd += [str(root/'scripts/fixtures/continuous_save_transport_host.c'),'-o',str(driver_exe)]
+        subprocess.run(driver_cmd,check=True)
+        driver_result=subprocess.run([str(driver_exe)],check=True,capture_output=True,text=True)
+        print(driver_result.stdout,end='')
+        driver_match=re.search(r'PASS cases=(\d+)',driver_result.stdout)
+        assert driver_match and int(driver_match[1])>0
         proof=dict(passed=True,cases=int(match[1]),operations_per_success=int(match[2]),
                    actual_production_c_algorithm=True,hardware_boundary_mocked=True,
                    fragmented_maps=True,no_overwrite=True,explicit_sector_readback=True,
                    incomplete_header_before_body_complete_header_last=True,
                    failure_blocks_reuse=True,soft_restart_skips_used_slots=True,
                    native_sd_persistence_authority=False,
+                   production_transport_driver_cases=int(driver_match[1]),physical_mmio_mocked=True,
                    source_sha256={n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in
-                                  ('src/continuous_save.c','scripts/fixtures/continuous_save_host.c')})
+                                  ('src/continuous_save.c','scripts/fixtures/continuous_save_host.c',
+                                   'scripts/fixtures/continuous_save_transport_host.c',
+                                   'tools/sc64-diagnostic-save/recorder_runtime_abi.h')})
         if a.json_output:a.json_output.write_text(json.dumps(proof,indent=2)+'\n')
 
 if __name__=='__main__':main()

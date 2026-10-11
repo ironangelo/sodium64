@@ -1,0 +1,203 @@
+# Codex native hardware history, 2026-10-04 through 2026-10-11
+
+This ledger reconstructs the local work since the last published A14 checkpoint
+`018630ffb8944f22dcdfd3dcafb427a7b2e4cd42`. The reconstruction is published
+as a current coherent source snapshot; it does not invent intermediate Git
+commits or claim historical CI ran against this new commit. The private journal,
+build archives, verified installation receipts and benchmark summaries were
+read to assemble these decisions. Raw commercial material is excluded.
+
+The working target remains full fidelity and sustained 60 in all selected
+ALttP scenes, then DKC1 and SMW. No iteration in this ledger completes Road 1.0.
+A13 DKC/ALttP 000002/000003/000004 map to scenes 1/2/3. A11/A13 filenames and
+build provenance retain their previously documented interpretation.
+
+## 2026-10-04 to 2026-10-08: recorder and physical control
+
+**H01 — A14 recording failure.** The user pressed Start, saw no OK, and found
+more SAVs than presses. The inspected A14-labelled files were menu reservations
+without completed S64D captures; the earlier batch of 80 cannot measure FPS.
+Each launch reserves up to 16 fresh 32 KiB targets. A filename/size/magic alone
+does not validate a capture. The extra reservations are expected capacity,
+not spontaneous measurements. Do not delete or reuse them automatically.
+Direct PC access to SD while the N64 owns it is unsupported, but that fact
+alone did not explain all recorder failures.
+
+**H02 — continuous sink and error attribution.** Retain the first SC64/PI error,
+DATA0 response and phase instead of losing them to another register read.
+Initialize/check SD/card state, serialize PI/SC64 unlock/register access, bound
+waits, verify the descriptor and globally disjoint reserved sectors. Measurements
+seal at cutoff and persist after a natural retired boundary. Header complete=0,
+readback every body sector, then commit/readback complete=1 before OK. A fully
+sealed immutable USB snapshot is separate from mutable guest SRAM. Two
+successive physical SD captures sealed with valid checksums and resumed gameplay.
+The notice now expires with an active bit: a 32-bit deadline wrap no longer
+re-displays old OK. Start during a capture is ignored, exhaustion/failure is
+explicit, and slots never wrap. Tests include actual bridges, SD failure phases,
+post-seal races and transport mocks; mocks remain distinct from physical proof.
+
+**H03 — USB ownership on a powered N64.** Queries and messages responded in
+the stock menu and A14 while the user confirmed normal SMW operation. A unique
+scratch file sent through the running menu was independently read after power
+off and removed. This proves menu-mediated writes, not concurrent PC filesystem
+ownership. Runtime transport initialization first disabled USB after boot;
+serializing PI ownership and preserving first errors corrected the failure.
+S64R mailbox attribution, bounded polling and application receipts were retained.
+
+**H04 — paired menu and actual game launch.** Running an empty emulator or the
+synthetic fixture is not running the user's selected game. Launch must resolve
+the game path and call the existing cart_load_emulator/INI/save/pool pipeline,
+including the injected ROM offset 0x104000 and supported copier-header offset.
+The fixed path API avoids relying on a currently selected browser entry.
+Host tests execute the real parser and loader with synthetic files; loader,
+pool and acknowledgement failures are covered. Early black screens and a pink
+fixture were not accepted as real-game captures.
+
+**H05 — packaging/ABI failures.** ASSERTION FAILED: File not found:
+rom:/cursorsound.wav64 was a menu DFS/assets mismatch. Preserve original assets
+and match libdragon tools to the linked library; do not repair by removing
+sounds. FatFs FIL/FATFS layout differed between new headers and old library.
+Pin FatFs R0.16 revision 80386 and rebuild all eight consumers, including
+flashcart_utils and USB/menu diagnostics. POSIX rename is unsupported here:
+use f_rename, verify the closed temporary file, retain the previous destination,
+and rollback on commit failure. The paired asset guard has 16 host cases;
+menu protocol/loader recorded 52 checks and host transport 17 at that checkpoint.
+Failed or frozen menu instances could not service USB and required power off.
+
+**H06 — cooperative return to the menu.** First return stalled the bootloader:
+wait boundedly for VI_CURRENT=0 before stopping output and preserve H/V sync.
+Another return answered USB while TV remained black: the runtime read TV type
+from RDRAM 0xA0000300, an iQue path. Modern IPL3 passes it at DMEM+9, which RSP
+uploads overwrite. Capture it before RSP, retain valid 0/1/2, use NTSC1 fallback
+for invalid input, and pass it through the owned bootstrap. On October 8 SMW
+returned over USB and the user confirmed the normal menu, without Reset.
+Boot checks: 12 cases plus five TV cases; recorder 102 compiled cases, parser
+45 plus 1000 fuzz at that milestone. A responsive runtime can return; an
+unresponsive CPU/bootloader may still need a human power cycle.
+
+**H07 — loop actually available.** Menu: hello/status/list/listdir/launch/install.
+Emulator: pause, future pause-at, step, resume, bounded acknowledged buttons/
+release, capture, frame, sav, profile, menu and optional retired sections.
+Pause/export use retired RSP/DP ownership; sections are read from the completed
+queue, not guest registers already describing the next frame. Permanent
+emulator/menu replacements go through the running menu, with CRC and closed-file
+readback, temporary name, retained previous file and rollback. This is a
+compile → cooperative return → install → launch game → replay → measure loop.
+It is not live source editing, arbitrary hard reset or power control.
+Only one host owns COM3. A launch acknowledgement precedes emulator USB
+initialization; wait for mode=emu before frame commands. Late status timeouts
+after successful measurements must be separated from measurement failures.
+
+## 2026-10-08 to 2026-10-10: renderer experiments
+
+All rates below are **completed-boundary cadence**, using full retained intervals,
+not physical TV FPS. Keep scene/replay identity and measurement scope: early
+intro-attract is not the later first-300-interval title measurement. Retained
+comparisons used precision 20, skip 0, APU 21, audio 4 and unrestricted layers.
+
+| ID / hypothesis | Native observation | Decision and limits |
+|---|---|---|
+| R00 baseline USB build | intro-attract 30.794/s; room 30.340/s; rain 21.665/s; RSP waits 17.656/19.258/26.201 ms | Baseline, not completed 60. |
+| R01 sparse 1 KiB dirty VRAM snapshots | paired room 30.294→30.691/s (+1.31%); rain 21.721/s | Retain exact ownership/copy path; reject VRAM-copy-as-main-bottleneck hypothesis. Two 1057-case guards each compared 69,271,552 bytes. |
+| R02 atomic SP SIG4–6 bank residency | room Math 65.73%, Main 32.41%; rain Math 51.89%, Main 46.44% | Retain opt-in profiler. Resident helpers and DMA count with their bank; not exclusive cost/instruction tracing. Old non-atomic PC/DMEM bank labels are unsuitable attribution. |
+| R03 128-pixel wide Math, uniform policy | room 30.729→34.255/s (+11.47%); rain 21.767/s vs21.882 | Retain safe admission and old 32-pixel fallback; rain improvement not established. Exact RGB555 kernel retained. |
+| R04 compact Main eligibility tags | room 39.495/s; rain 23.842/s | Retain. Actual Main/Mode7/phase/backdrop producer-consumer guards and forbidden-winner cases; operands/kernel unchanged. |
+| R05 pre-scan effective Math masks | room about39.428/s; rain 26.989/s | Retain uniform-vector batching including COLOR windows; mixed policies fall back. Preserve fixed-row operand semantics. |
+| R06 TLUT unary color transform | room 59.841/s, wait about0.001524 ms; user reported TV60 | Retain only fixed operand or absent-Sub, uniform policy classes and exact palette transform. Not a general Sub replacement. |
+| R07 full-row exact Math DMA | rain 26.989→27.391/s (+1.49%) | Retain full Main/Winner/Allow streaming with VRAM/OAM save/restore; three row DMAs replace 24 narrow transfers. 12 cases/70,912 pixels plus three negative mutations. |
+| R08 RDP half arithmetic, v4→v6 | rain30.918→31.733/s; v6 +15.85% over R07 | Retain narrowly admitted BG1 half/real Sub/fixed0 path. ENV_ALPHA251/256 and presence∩winner depth gates; final palette/FullSync retirement and source leases preserved. Five native checkpoints,336000 pixels,0 differences. |
+| R09 no-input scene characterization | title first30052.668/s, wait0.0023 ms; story36.175/s, wait12.921 ms | Title CPU-side limitation; story still RSP-heavy. CPU/APU/DSP sampled buckets are not exclusive function timings. Do not label a20s title/story mixture as title. |
+| R10 direct full RDP add/sub probes | seeded probe fullADD144/fullSUB128 mismatches; half-then-double368/272 | Reject general direct full arithmetic. Correct texture copies do not prove correct combiner arithmetic. Native synthetic data, not game golden output. |
+| R11 full fixed operand with per-column COLOR allowance | paired story36.176→42.116/s (+16.42%); wait12.919→8.905 ms | Retain exact packed fixed-window bank/fallback; do not globally admit nonuniform COLOR windows into the older unary path. Five336000 native pixels,0 differences. |
+| R12 bounded small fixed RDP operand | synthetic all544 pairs with fixed0..16 correct; outside range fullADD240/fullSUB240 mismatches | Admit only each RGB5 component≤16, exact spans/clip restrictions; unrestricted full math stays rejected. |
+| R13 RDP fixed bank and command batching | story52.295/s; batchv2 52.399/s, wait4.055 ms | Retain scoped fixed-bank path. Batchv2 +0.199% alone is not convincing new FPS gain. Scissor/coalesced allow spans, palette restore and retirement remain required. |
+| R14 generic TMEM atlas32/atlas8 | 32-entry variants50.376/50.767/s; atlas8 story54.196 but rain32.118→29.844/s (-7.08%) | Reject global selection despite story gain. Four268800 native pixels,0 differences; baseline restored/readback verified. |
+| R15 flat COLOR-window TLUT admission | corrected isolated story52.407 vs52.399/s (~0.014%) | Reject performance case; default off. Initial selector1/2 oracle inversion caught before hardware by original compiled Setup and Snes9x clip semantics. Corrected4480 policies/1,146,880 truth checks plus960 old-Setup cases/245760 masks. |
+| R16 coordinate atlas4 | story52.020/s (-0.72%); five336000 native pixels,0 differences | Reject performance case. A smaller group alone does not guarantee lower runtime cost. |
+| R17 coordinate atlas8 with visible-Sub fallback | story55.635/s (+6.176%), wait2.847 ms; title52.698,room58.008,rain32.107/s | Retain selected candidate. Nine native checkpoints604800 pixels,0 differences; title/room/rain use previously measured same-config baselines, not simultaneous pairs. Still no60 qualification. |
+
+R17 fetches 512-byte groups, changes maskT to6 only on miss and offsets the
+rectangle's T by (character&7)<<8. S, gradients and other coordinates are
+preserved. Restore maskT5 and the original scissor before other paths.
+Visible Sub uses the legacy single-texture protocol; fresh decode invalidates
+the cached group, and palette/version/source-fence rules precede both paths.
+No foreign VRAM/OAM metadata or upper TLUT scratch is borrowed. Host guard:
+64 object cases,1832 draws/117248 numeric pixels, four mirrors,120 invalidations
+and six negative mutations. Default-off CPU text and ten RSP text/data images
+match the preceding best checkpoint. Public entry ABI remains fixed.
+
+## October 10: supporting fixes and fidelity findings
+
+**H08 — reservation cursor.** Repeated FA_CREATE_NEW scans restarted from1 for
+every slot, making a launch take up to216s. A shared next-ID cursor scans old
+names once per pool:112 attempts for96 existing names plus16 new reservations.
+26 pool cases pass; native launch30.328s, first checkpoint unchanged. Finite
+reservations are still not completed captures; no wrap/deletion was introduced.
+
+**H09 — PROFILE arena.** Strict checks caught PROFILE allocated end0xC2B10
+crossing old0xC2000 by0xB10. PROFILE now uses0xD2000 consistently in CPU/RSP
+preprocessing and --profile arena checks. New build gap0xF4F0;40 simultaneous
+owners, lastDMA8,24576-byte cap and six event tests including the old-boundary
+negative pass. Normal/native layouts stay intact; PROFILE was not installed
+for physical acceptance. Selected native end0xD15C8 leaves0xA38 before arena.
+The gate was not loosened or suppressed.
+
+**H10 — Uncle sprite / bed flicker.** Retired-frame samples were stable.
+Independent local Snes9x1.63 RGB5 comparison matched783/783 Uncle pixels,
+1680/1680 bed and17664/17664 room pixels. This is an independent software
+reference, not SNES hardware authority. The user reconnected N64 video and
+confirmed both distorted sprite edges and minute bed flashes disappeared,
+without an emulator change. Do not change palettes/VI to fix that resolved
+connection problem. USB exports end before VI/analog/HDMI/TV and cannot alone
+certify the final signal or audio.
+
+## Selected state and remaining work
+
+The current installed empty emulator is R17 coordinate8, SHA256
+a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2,
+CRC2d5daff8,131072B; paired menu803a716bb51ebef672c43a80671776fcae4a0330d5348aeeda8954666113a144,
+CRCfddd021a,1736704B; firmware2.20.2 unchanged. These describe the last verified
+installation, not a fresh live query during this documentation synchronization.
+The October7 user package still contains the earlier28360985 emulator; it
+must not be mistaken for this later candidate. Rejected builds and prior best
+are retained privately for recovery. No commercial payload is published.
+
+Final R17 comparisons:
+- story52.3992954235→55.6354620925/s, +6.175974%;
+- title52.7329916818→52.6975906984/s, -0.067%;
+- room57.9848488623→58.0084232870/s, +0.041%;
+- rain32.1184701245→32.1067679697/s, -0.036%.
+
+Quiet captures are complete/checksummed, full trace/no overflow, same fidelity
+settings. These three near-zero deltas are not meaningful FPS improvements.
+Nine identical sampled frames do not prove every frame of every game correct.
+Do not repeat R10/R14/R15/R16 unchanged; reopen only with a changed mechanism
+and a scoped physical comparison that can overturn the rejection.
+
+User's approximate manual backlog was from a version before the latest work:
+ALttP title improved below60, automatic story about30, rain unfinished;
+DKC1 logos about60, Cranky/DK intro improved below60, stage1≤20; SMW similar.
+Mario Kart menus about60 but character selection layers and race timer/items
+wrong, races≤20. Super Metroid averaged about40 with some near60/fewer glitches.
+All-Stars+SMW freezes after Welcome/world message; Mario RPG does not boot.
+These are user observations, not revalidated R17 results. Keep as backlog,
+not a detour from finishing ALttP before DKC/SMW.
+
+Next investigations remain proposals: title/room APU/DSP CPU costs (e.g. pitch
+conversion caching only after register-write invalidation is proved), and
+story/rain submission/texture traffic. No pitch cache or audio change has been
+implemented. Resume from the selected build recipe and these rejected cases;
+a sampled instruction/function label is a hypothesis, not a speedup.
+
+## Publication and workflow boundary
+
+Code goes on a development branch; continuity keeps the newest dated entry at
+the top and preserves the entire cloud Work history below it. A draft integration
+PR makes the snapshot reviewable. Master remains the stable reference while
+whole-image/armed/audio and exact branch CI qualification are outstanding.
+Documentation synchronization is not a release, a merge qualification or a
+Road1.0 completion. Before every further physical iteration record the source/
+flags/empty binary identity, hypothesis, private evidence location, outcome,
+retained/restored version and next condition that would justify reopening it.
+Update continuity after each bounded result so future sessions need not replay
+this reconstruction.

@@ -36,9 +36,11 @@
 .globl native_diag_wait_stall_rsp, native_diag_wait_stall_frame
 .globl native_diag_ready_text, native_diag_active_text
 .globl native_diag_continuous_mode, native_diag_phase, native_diag_service
-.globl native_diag_notice_count, native_diag_ok_deadline
+.globl native_diag_notice_count, native_diag_ok_deadline, native_diag_notice_active
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
 .globl native_diag_sealed_wait_stall
+.globl native_diag_remote_arm, native_diag_usb_only, native_diag_capture_result
+.globl native_diag_snapshot, native_diag_snapshot_ready, native_diag_snapshot_sequence
 #endif
 .data
 .align 5
@@ -46,18 +48,28 @@ native_diag_state: .word 0:80
 .globl native_diag_guest_sram_exp
 native_diag_guest_sram_exp: .word 0
 // Continuous mode is admitted only by the independently validated menu handoff.
-// Phase: 0 ready, 1 recording, 2 sealed, 3 committing, 4 failed, 5 exhausted.
+// Phase: 0 ready, 1 recording, 2 sealed, 3 committing, 4 failed, 5 exhausted, 6 USB ready.
 native_diag_continuous_mode: .word 0
 native_diag_phase: .word 0
 native_diag_notice_count: .word 0
 native_diag_ok_deadline: .word 0
+native_diag_notice_active: .word 0
 native_diag_continuous_sealing: .word 0
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
+native_diag_usb_only: .word 0
+native_diag_capture_result: .word 0
+native_diag_snapshot_ready: .word 0
+native_diag_snapshot_sequence: .word 0
+native_diag_session_sequence: .word 0
 .align 3
 native_diag_continuous_irq_save: .dword 0:2
 // This frame-boundary service borrows all ordinary CPU registers temporarily.
 // The transport bridge separately switches to its own O64 stack.
 native_diag_service_save: .dword 0:35
+.section .bss
+.align 4
+native_diag_snapshot: .space 32768
+.data
 #endif
 .align 5
 native_diag_irq_save: .dword 0:12
@@ -81,6 +93,9 @@ native_diag_sram_text: .string "GUEST SRAM ABOVE 8KB"
 native_diag_normal_text: .string "USE NORMAL EMULATOR"
 native_diag_ready_text: .string "START N64: CAPTURE 20S"
 native_diag_active_text: .string "RECORDING 20S        "
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+native_diag_usb_ready_text: .string "CAPTURE READY USB"
+#endif
 .text
 .set noreorder
 .align 5
@@ -141,7 +156,13 @@ native_diag_continuous_init_phase:
     sw t0, native_diag_phase
     sw zero, native_diag_notice_count
     sw zero, native_diag_ok_deadline
+    sw zero, native_diag_notice_active
     sw zero, native_diag_continuous_sealing
+    sw zero, native_diag_usb_only
+    sw zero, native_diag_capture_result
+    sw zero, native_diag_snapshot_ready
+    sw zero, native_diag_snapshot_sequence
+    sw zero, native_diag_session_sequence
 #endif
     // Manual capture stays dormant until N64 Start. Timer sampling and wait
     // watchdogs are disabled while navigating to the target scene.
@@ -181,6 +202,51 @@ native_diag_unsupported_clear:
     b native_diag_done
     nop
 
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+// Runtime calls this at the retired UI boundary on its own O64 stack. Tail
+// entry preserves ra/sp and returns v0 without invoking C on Sodium's queue sp.
+native_diag_remote_arm:
+    la t0, native_diag_state
+    lw t1, 112(t0)
+    bnez t1, native_diag_remote_busy
+    nop
+    lw t0, native_diag_phase
+    beqz t0, native_diag_remote_mode
+    nop
+    sltiu t1, t0, 4
+    bnez t1, native_diag_remote_busy
+    nop
+native_diag_remote_mode:
+    lw t0, native_diag_usb_only
+    bnez t0, native_diag_remote_accept_usb
+    nop
+    lw t0, continuous_save_sink_ready
+    beqz t0, native_diag_remote_unready
+    nop
+    lw t0, native_diag_phase
+    beqz t0, native_diag_remote_accept
+    nop
+    addiu t0, t0, -6
+    bnez t0, native_diag_remote_unready
+    nop
+    b native_diag_remote_accept
+    nop
+native_diag_remote_accept_usb:
+    li t0, 1
+    sw t0, native_diag_continuous_mode
+native_diag_remote_accept:
+    li v0, 1
+    b native_diag_arm
+    nop
+native_diag_remote_busy:
+    move v0, zero
+    jr ra
+    nop
+native_diag_remote_unready:
+    li v0, -1
+    jr ra
+    nop
+#endif
 native_diag_arm:
     // Called at the completed-frame UI boundary. Only t0..t3/k0/k1 are borrowed;
     // a0 and the renderer's t4/t5/t6 survive. No guest state is reset.
@@ -194,8 +260,23 @@ native_diag_arm:
     beqz t0, native_diag_arm_legacy
     nop
     lw t0, native_diag_phase
-    bnez t0, native_diag_arm_restore
+    beqz t0, native_diag_arm_continuous_ready
     nop
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    addiu t1, t0, -6
+    beqz t1, native_diag_arm_continuous_ready
+    nop
+    lw t1, native_diag_usb_only
+    beqz t1, native_diag_arm_restore
+    nop
+    sltiu t1, t0, 4
+    bnez t1, native_diag_arm_restore
+    nop
+#else
+    b native_diag_arm_restore
+#endif
+    nop
+native_diag_arm_continuous_ready:
     // A new capture must not inherit old overflow bits or retained payload.
     // The guest's first 8 KiB remain untouched, including progress in-session.
     la t0, DHDR
@@ -231,6 +312,14 @@ native_diag_arm_clear:
     mtc0 t1, $11
     li t1, 1
     sw t1, 112(t0)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    la k0, native_diag_capture_result
+    sw zero, (k0)
+    la k0, native_diag_session_sequence
+    lw t2, (k0)
+    addiu t2, t2, 1
+    sw t2, (k0)
+#endif
     lw t2, native_diag_continuous_mode
     beqz t2, native_diag_arm_return
     nop
@@ -420,6 +509,70 @@ native_diag_sp_sample:
     addiu k0, k0, 1
     sw k0, (k1)
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
+#if SODIUM64_SIGNAL_PROFILE
+native_diag_rsp_signal_classify:
+    // Bank and HALT belong to the same single raw SP_STATUS observation.
+    // This reports resident-bank phase, including that bank's shared helpers
+    // and waits. It deliberately records no live PC or resident-wait counts.
+    la k1, native_diag_state
+    lw k0, 300(k1)
+    srl k0, k0, 11
+    andi k0, k0, 7
+    sll k0, k0, 12
+    sw k0, 264(k1)
+    srl k0, k0, 12
+    beqz k0, native_diag_rsp_signal_unknown
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_signal_main
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_signal_mode7
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_signal_phase
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_signal_fast
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_signal_math
+    nop
+    addiu k0, k0, -1
+    beqz k0, native_diag_rsp_signal_mode7
+    nop
+    la k1, native_diag_state + 296 // HCOMP setup, bank 7.
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_signal_unknown:
+    la k1, native_diag_state + 272
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_signal_main:
+    la k1, native_diag_state + 276
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_signal_mode7:
+    la k1, native_diag_state + 280
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_signal_phase:
+    la k1, native_diag_state + 284
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_signal_math:
+    la k1, native_diag_state + 288
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_signal_fast:
+    la k1, native_diag_state + 292
+    b native_diag_rsp_stage_add
+    nop
+native_diag_rsp_halted_sample:
+    la k1, native_diag_state + 268
+    b native_diag_rsp_stage_add
+    nop
+#else
     // A stable epoch excludes a concurrent overlay DMA. Slow (>1ms) reads
     // are discarded as unknown, preventing 12-bit epoch wrap ambiguity.
     la k1, native_diag_state
@@ -551,6 +704,7 @@ native_diag_rsp_resident_rdp_sample:
     sw k0, (k1)
 native_diag_rsp_rdp_sample:
     la k1, native_diag_state + 280
+#endif
 native_diag_rsp_stage_add:
     lw k0, (k1)
     addiu k0, k0, 1
@@ -900,7 +1054,7 @@ native_diag_trace_event:
     sh t2, 8(t4)
     lw t2, 56(t0)
     sw t2, 4(t4)
-    lw t2, 264(t0) // bookended PC / bank from this IRQ, not a second PC read
+    lw t2, 264(t0) // This IRQ's BAN4 PC/bank or SIG1 bank with low PC bits zero.
     sh t2, 10(t4)
     lw t2, 300(t0)
     sb t2, 12(t4)
@@ -1524,10 +1678,20 @@ native_diag_partial_modules:
     sw t0, 0x18C(s0)
     lw t0, 252(s1)
     sw t0, 0x190(s0)
+#if SODIUM64_SIGNAL_PROFILE
+native_diag_bank_protocol_header:
+    li t0, 0 // SIG1 has no live DMEM epoch bookend.
+    sw t0, 0x1D8(s0)
+    li t0, 0x53494731 // SIG1: atomic SP_STATUS SIG4..6 bank phase.
+#else
     li t0, 46875
     sw t0, 0x1D8(s0)
     li t0, 0x42414E34 // BAN4: bank bookending / epoch protocol
+#endif
     sw t0, 0x1DC(s0)
+#if SODIUM64_SIGNAL_PROFILE
+native_diag_bank_protocol_header_done:
+#endif
     lw t0, native_diag_continuous_mode
     beqz t0, native_diag_header_ready
     nop
@@ -1535,8 +1699,7 @@ native_diag_partial_modules:
     sw t0, 0x1E0(s0)
     lw t0, 76(s0)
     sw t0, 0x1E4(s0) // Recorder cutoff Count; includes the actual IRQ latency.
-    lw t0, native_diag_notice_count
-    addiu t0, t0, 1
+    lw t0, native_diag_session_sequence
     sw t0, 0x1EC(s0) // Session sequence of this attempted capture.
     li t0, 2
     sw t0, 0x1F0(s0) // Fault-terminal context unless this is a normal seal.
@@ -1659,13 +1822,30 @@ native_diag_sum_body:
     li t0, 1
     sw t0, 8(s0)
     sync
-    la a0, DBASE
+    jal native_diag_copy_snapshot
+    nop
+    lw t0, native_diag_usb_only
+    bnez t0, native_diag_terminal_usb_ready
+    nop
+    la a0, native_diag_snapshot
+    li t0, 0xA0000000
+    or a0, a0, t0
     jal continuous_save_capture_bridge
     li a1, 0x8000
+    li t0, -1
+    sw t0, native_diag_capture_result
     addiu t0, v0, -1
-    beqz t0, native_diag_saved
+    bnez t0, native_diag_save_failed
     nop
-    b native_diag_save_failed
+    li t0, 1
+    sw t0, native_diag_capture_result
+    b native_diag_saved
+    nop
+native_diag_terminal_usb_ready:
+    li t0, 2
+    sw t0, native_diag_capture_result
+    la s4, native_diag_usb_ready_text
+    b native_diag_screen
     nop
 #endif
 native_diag_legacy_pi_commit:
@@ -1848,6 +2028,41 @@ native_diag_continuous_seal:
     b native_diag_irq_restore
     nop
 
+// Preserve an immutable private 32 KiB export, including after SD failure.
+// Caller has interrupts excluded. Flush/invalidate the cached destination alias
+// before copying through KSEG1; later guest SRAM changes cannot alter this copy.
+native_diag_copy_snapshot:
+    sw zero, native_diag_snapshot_ready
+    la t0, native_diag_snapshot
+    li t1, 32768
+    addu t1, t0, t1
+native_diag_snapshot_invalidate:
+    cache 0x15, (t0)
+    addiu t0, t0, 16
+    bne t0, t1, native_diag_snapshot_invalidate
+    nop
+    la t0, DBASE
+    la t1, native_diag_snapshot
+    li t2, 0xA0000000
+    or t1, t1, t2
+    li t3, 32768
+    addu t3, t0, t3
+native_diag_snapshot_copy:
+    lw t2, (t0)
+    sw t2, (t1)
+    addiu t0, t0, 4
+    addiu t1, t1, 4
+    bne t0, t3, native_diag_snapshot_copy
+    nop
+    sync
+    la t0, DHDR
+    lw t1, 0x1EC(t0)
+    sw t1, native_diag_snapshot_sequence
+    li t1, 1
+    sw t1, native_diag_snapshot_ready
+    jr ra
+    nop
+
 // Called only at the CPU-owned UI boundary after the renderer's natural fence.
 // The completed-frame payload stays sealed throughout the bounded synchronous
 // write. Guest SRAM belongs to this later boundary, explicitly marked in v5.
@@ -1953,12 +2168,23 @@ native_diag_service_sum_body:
     li t0, 1
     sw t0, 8(s0)
     sync
-    la a0, DBASE
+    // Seal the entire guest/header/payload once, before any fallible SD work.
+    // Measurement cutoff and natural-boundary timestamp already exist above.
+    jal native_diag_copy_snapshot
+    nop
+    lw t0, native_diag_usb_only
+    bnez t0, native_diag_service_usb_ready
+    nop
+    la a0, native_diag_snapshot
+    li t0, 0xA0000000
+    or a0, a0, t0
     jal continuous_save_capture_bridge
     li a1, 0x8000
     addiu t0, v0, -1
     beqz t0, native_diag_service_saved
     nop
+    li t0, -1
+    sw t0, native_diag_capture_result
     li t0, 4
     bgez v0, native_diag_service_result
     nop
@@ -1966,6 +2192,8 @@ native_diag_service_sum_body:
     b native_diag_service_result
     nop
 native_diag_service_saved:
+    li t0, 1
+    sw t0, native_diag_capture_result
     lw t0, native_diag_notice_count
     addiu t0, t0, 1
     sw t0, native_diag_notice_count
@@ -1973,7 +2201,15 @@ native_diag_service_saved:
     li t1, DIAG_STALL // The OK notice lasts two real seconds, independent of FPS.
     addu t0, t0, t1
     sw t0, native_diag_ok_deadline
+    li t0, 1
+    sw t0, native_diag_notice_active
     move t0, zero
+    b native_diag_service_result
+    nop
+native_diag_service_usb_ready:
+    li t0, 2
+    sw t0, native_diag_capture_result
+    li t0, 6
 native_diag_service_result:
     sw t0, native_diag_phase
 native_diag_service_restore:

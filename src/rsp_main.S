@@ -20,6 +20,16 @@
 #include <rsp.inc>
 #include "defines.h"
 
+#ifndef SODIUM64_SPARSE_VRAM
+#define SODIUM64_SPARSE_VRAM 1
+#endif
+#if SODIUM64_ELIGIBILITY_TAGS && !SODIUM64_SPARSE_VRAM
+#error "ELIGIBILITY_TAGS requires the sparse VRAM resident helper hole"
+#endif
+#if SODIUM64_HCOMP_TLUT_SHADER && !SODIUM64_ELIGIBILITY_TAGS
+#error "HCOMP_TLUT_SHADER requires ELIGIBILITY_TAGS"
+#endif
+
 .data
 
 // Empty values that are defined as macros
@@ -148,8 +158,20 @@ hcomp_obj_depth_cmds:
 // RDP Z is compressed, not linear primitive-depth / 2 at larger depths.
 // Actual stored tags:0400,0C00,1400,1C00,2800,3800,5000. Index by >>10.
 hcomp_eligibility_table:
-    .byte 0,0x20,0,1,0,2,0,4,0,0,8,0,0,0,0,0
-    .byte 0,0,0,0,0x10,0,0,0,0,0,0,0,0,0,0,0
+    .byte 0,0x20,0,1 // EF8..EFB is later owned by OVERLAY_HCOMP_SETUP_SRC.
+#if SODIUM64_SIGNAL_PROFILE
+native_diag_signal_masks:
+    .hword 0x002A,0x002C,0x0032,0x0034,0x004A,0x004C,0x0052,0x0054
+#else
+    .byte 0,2,0,4,0,0,8,0,0,0,0,0,0,0,0,0
+#endif
+#if SODIUM64_ELIGIBILITY_TAGS
+hcomp_tag_enable_lut:
+    .byte 0x20,1,2,4,8,0,0x10 // Backdrop, BG1..4, OBJ low/high palette.
+    .byte 0,0,0,0,0
+#else
+    .byte 0x10,0,0,0,0,0,0,0,0,0,0,0 // Preserve F0C..F17 exactly.
+#endif
 // Keep PR #18 CGRAM scratch untouched, then place the proof-only RDP command
 // table at the audited retired DMEM tail. The table is immutable:
 //   +00 PipeSync before the proof-time OtherModes attribute change
@@ -206,15 +228,14 @@ main:
     li sp, 0 // Frame index
 
 draw_frame:
-    // Set initial values for copying VRAM
+#if !SODIUM64_SPARSE_VRAM
+    // Matched control: the original complete snapshot and dirty-table body.
     li a0, TILE_TABLE
     li a2, 0x3FF
     lw t4, VRAM_ADDRS + 4
     lw t3, VRAM_ADDRS
     li t1, 0xFC00
-
 vram_loop:
-    // Copy VRAM for the current frame using RSP DMA for speed
     jal dma_read
     add a1, t4, t1
     jal dma_write
@@ -222,13 +243,9 @@ vram_loop:
     bnez t1, vram_loop
     addi t1, t1, -0x400
     mtc0 zero, COP0_SEMAPHORE
-
-    // Load the VRAM dirty table for the current frame
     li a0, TILE_TABLE
     jal dma_read
     lw a1, DIRTY_PTR(sp)
-
-    // Combine new dirty bits with the previous table
     li t1, VRAM_TABLE
     addi t2, t1, 0x400
 table_loop:
@@ -239,6 +256,56 @@ table_loop:
     sqv $v00, 0, 0, t1
     bne t1, t2, table_loop
     addi t1, t1, 16
+#else
+    // Preserve every resident entry: the owned SETUP padding performs the
+    // sparse VRAM snapshot, combines dirty bits and releases the semaphore.
+    // Demand loading is two 1000-byte slot transfers per completed frame.
+    lw a1, OVERLAY_HCOMP_SETUP_SRC
+    j overlay_load_slot
+    li t9, 0x1628
+#endif
+
+#if SODIUM64_ELIGIBILITY_TAGS
+// Retired full-copy instructions leave this identical helper in both full
+// resident prefixes. RDP painter order resolves priority with Z_COMPARE off.
+.org 0x048
+hcomp_eligibility_depth_send:
+    lbu t0, HCOMP_SCREEN
+    beqz t0, hcomp_eligibility_depth_submit
+#if SODIUM64_HCOMP_TLUT_SHADER
+    lw t0, 4(a0)
+#else
+    nop
+    lw t0, 4(a0)
+#endif
+    srl t0, t0, 28
+    lbu t0, HCOMP_TAG_ENABLE_LUT(t0)
+    lbu a1, CGADSUB
+    and t0, t0, a1
+    sltu t0, zero, t0
+#if SODIUM64_HCOMP_TLUT_SHADER
+    lbu a1, HCOMP_TLUT_CLASS
+    andi a1, a1, 0x80
+    bnez a1, main // Bootstrap000 contains the admitted shader dispatcher.
+    lui a1, 0x0800
+    sll t0, t0, 28
+#else
+    sll t0, t0, 28
+    lui a1, 0x0800
+#endif
+    or t0, t0, a1
+    lui a1, 0x2E00
+    sw a1, SCRN_DATA
+    sw t0, SCRN_DATA + 4
+    li a0, SCRN_DATA
+    li a1, SCRN_DATA + 8
+hcomp_eligibility_depth_submit:
+    j rdp_send
+    nop
+#endif
+
+.org 0x09C
+vram_snapshot_return:
 
     // Begin on owned Main. The HCOMP phase bank admits and rebases every
     // compact band after the real section has been loaded, before drawing.
@@ -282,6 +349,18 @@ hcomp_cgram_return:
     andi t0, t0, 0x40
     beqz t0, oam_skip
 
+#if SODIUM64_TMEM_ATLAS
+    nop
+    lw a1, OVERLAY_OBJECT_CACHE_SRC
+    j overlay_load_slot
+    li t9, 0x13A8
+#if SODIUM64_TMEM_COORD_ATLAS
+#include "rsp_tmem_coord.inc"
+#else
+#include "rsp_tmem_atlas.inc"
+#endif
+.org 0x21C
+#else
     // Update OAM for the following sections
     li a0, OAM
     lw a1, OAM_PTR(sp)
@@ -392,6 +471,7 @@ finish_cache:
     // Move to the next priority until finished
     bnez t7, next_priority
     addi t7, t7, -0x1000
+#endif
 
 oam_skip:
     // Admit/rebase a <=8-line virtual band before any section RDP write.
@@ -478,9 +558,15 @@ rdp_fetch_wait:
     bnez t0, rdp_fetch_wait
     mfc0 t0, COP0_DP_CURRENT
     bne t0, a1, rdp_fetch_wait
+#ifdef SODIUM64_RDP_FETCH_SIGNAL
+    li t0, 0x200 // Clear SIG0 only after CURRENT==END and latch retirement.
+    jr ra
+    mtc0 t0, COP0_SP_STATUS
+#else
     nop
     jr ra
     nop
+#endif
 
 rdp_texture_retire:
     // Generic writes to stats/VRAM/presence/output are not texture updates.
@@ -819,8 +905,15 @@ check_cache:
 
     // Skip uploading if the last tile's number and palette were the same
     andi t0, t6, 0x1FFF
+#if SODIUM64_TMEM_ATLAS
+    // Confirm the RDRAM cache's palette/version before considering TMEM.
+    // v1 owns the atlas's last admitted character, after this cache check.
+    nop
+    nop
+#else
     beq t0, v1, skip_upload
     move v1, t0
+#endif
 
     // Skip decoding if the tile is already cached with the same palette
     srl t2, t6, 5
@@ -883,11 +976,19 @@ not_empty:
     li a2, 0x3F
 
 draw_tile:
+#if SODIUM64_TMEM_ATLAS
+    // Any decode changes the cached RDRAM snapshot, forcing a group reload.
+    li v1, 0xFFFF
+    b tmem_atlas_draw
+    nop
+    nop
+#else
     // Update texture address and run the RDP to draw a tile
     sw a1, RDP_TILE + 4
     li a0, RDP_TILE
     jal rdp_send
     li a1, RDP_TILE7
+#endif
 
 finish_tile:
     // Move to the next tile until the current inclusive span ends.
@@ -913,9 +1014,17 @@ finish_row:
     blt s1, k1, draw_row
 
     // Run the RDP to restore scissor bounds for other layers
+bg_restore_scissor:
+#if SODIUM64_TMEM_ATLAS && (!SODIUM64_TMEM_COORD_ATLAS || SODIUM64_TMEM_ATLAS_BITS == 3)
+    nop
+    jal tmem_atlas_restore
+    nop
+#else
     li a0, RDP_FILL + 8
     jal rdp_send
     li a1, RDP_FILL + 16
+#endif
+bg_restore_scissor_end:
 
     // Update the BG's tile cache status when finished
     li a0, TILE_TABLE
@@ -932,7 +1041,11 @@ skip_decode:
     sll t0, s2, 15
     add a1, a1, t0
     sll t0, s8, 6
+#if SODIUM64_TMEM_ATLAS
+    b tmem_atlas_draw
+#else
     b draw_tile
+#endif
     add a1, a1, t0
 
 skip_priority:
@@ -1413,11 +1526,23 @@ bg_window_depth_send:
 
 // Raw/direct bands disable Z; only the general compositor uses depth tags.
 hcomp_depth_send:
+#if SODIUM64_HCOMP_TLUT_SHADER
+    // Raw1/2 can submit ignored depth with Z disabled. Shader3 resolves its
+    // palette class in the helper; every general command remains unchanged.
+    j hcomp_eligibility_depth_send
+    nop
+    .space 12
+#else
     lw t0, HCOMP_BAND_RAW
     bnez t0, ret_jump
     nop
+#if SODIUM64_ELIGIBILITY_TAGS
+    j hcomp_eligibility_depth_send
+#else
     j rdp_send
+#endif
     nop
+#endif
 
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
 // Resident hole: leave every historical bank entry / DMA / window PC fixed.
@@ -1425,6 +1550,25 @@ hcomp_depth_send:
 // IMEM writes; completion advances the epoch so a PC read can be bookended.
 .org 0xC60
 native_diag_overlay_load:
+#if SODIUM64_SIGNAL_PROFILE
+    // One status write atomically marks the slot unavailable before DMA.
+    // Only SIG4..6 change; HALT, IRQ and the other signals are preserved.
+    lui t0, 0x002A
+    mtc0 t0, COP0_SP_STATUS
+    andi a0, a1, 7
+    sll a0, a0, 1
+    lhu t0, NATIVE_DIAG_SIGNAL_MASKS(a0)
+    sh t0, NATIVE_DIAG_RSP_BANK // Loader-private desired mask, not live CPU DMEM.
+    li a0, -8
+    and a1, a1, a0
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    lhu t0, NATIVE_DIAG_RSP_BANK
+    sll t0, t0, 16
+    jr t9
+    mtc0 t0, COP0_SP_STATUS // Publish only after synchronous DMA completion.
+#else
     lhu t0, NATIVE_DIAG_RSP_BANK
     andi t0, t0, 0xFFF0
     andi a0, a1, 7
@@ -1440,6 +1584,7 @@ native_diag_overlay_load:
     addi t0, t0, 8
     jr t9
     sh t0, NATIVE_DIAG_RSP_BANK // t0 is scratch; Main restores its saved layer.
+#endif
 native_diag_overlay_main_return:
     b draw_bg
     move t0, v0
@@ -1708,9 +1853,18 @@ rdp_send: // a0: start address, a1: end address
     // the shared resident prefix before a caller may mutate the next list.
     // dma_wait's JR uses 1F5C as its delay slot.
     nop
+#ifdef SODIUM64_RDP_FETCH_SIGNAL
+    // Optional scoped diagnostic marker. It is distinct from SIG4..6 bank
+    // ownership; the existing raw event status retains it without new reads.
+    li t0, 0x400 // Set SIG0, preserving HALT/IRQ and every other signal.
+    b rdp_emit_owned
+    mtc0 t0, COP0_SP_STATUS
+    .space 4
+#else
     b rdp_emit_owned
     nop
     .space 8
+#endif
 ret_jump:
     jr ra
     nop

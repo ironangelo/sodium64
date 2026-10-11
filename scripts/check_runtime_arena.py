@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Reject linked runtime sections overlapping the uncached renderer arena."""
 import argparse
-import re
 import struct
 from pathlib import Path
 
@@ -36,13 +35,16 @@ def main():
     ap.add_argument('elf', type=Path)
     ap.add_argument('--defines', type=Path, default=Path('src/defines.h'))
     ap.add_argument('--arena-start', type=lambda s: int(s, 0))
+    ap.add_argument('--diagnostic-trace', action='store_true')
+    ap.add_argument('--profile', action='store_true')
+    ap.add_argument('--cc', help='N64 GCC for diagnostic preprocessing')
     args = ap.parse_args()
     start = args.arena_start
     if start is None:
-        m = re.search(r'^#define HCOMP_CGRAM_BASE_QUEUE1 (0x[0-9A-Fa-f]+)$', args.defines.read_text(), re.M)
-        if not m:
-            raise ValueError('missing literal arena start')
-        start = int(m[1], 0) & 0x1fffffff
+        # Lazy import keeps allocated_sections usable by the extent checker
+        # without a module cycle, and resolves conditional/expression macros.
+        from check_event_arena import selected_macros
+        start = selected_macros(args.defines,args.diagnostic_trace,args.cc,args.profile).name('HCOMP_CGRAM_BASE_QUEUE1') & 0x1fffffff
     end = check(args.elf, start)
     print(f'RUNTIME_ARENA_DISJOINT PASS: allocated_end={end:#x}, arena_start={start:#x}, gap={start-end:#x}')
 

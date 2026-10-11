@@ -47,6 +47,12 @@ continuous_ok_text: .string "OK CAPTURE SAVED     "
 continuous_saving_text: .string "SAVING CAPTURE...    "
 continuous_failed_text: .string "SAVE FAILED          "
 continuous_full_text: .string "CAPTURE SLOTS FULL   "
+continuous_usb_text: .string "CAPTURE READY USB    "
+continuous_desc_text: .string "CAPTURE SD HANDOFF   "
+continuous_card_text: .string "CAPTURE SD INIT FAIL "
+continuous_slot_text: .string "CAPTURE SLOT FAILURE "
+continuous_io_text: .string "CAPTURE SD IO FAILED "
+continuous_verify_text: .string "CAPTURE VERIFY FAIL  "
 #endif
 
 .align 4
@@ -157,6 +163,20 @@ end_string:
 
 .align 5
 update_menu: // a0: framebuffer
+#ifdef SODIUM64_REMOTE
+    // The previous renderer has naturally halted and this buffer is CPU
+    // owned. Interrupt exclusion precedes use of k0/k1 by the O64 bridge.
+    mfc0 t0, $12
+    li t1, -2
+    and t1, t0, t1
+    mtc0 t1, $12
+    nop
+    nop
+    la k0, remote_saved_status
+    sw t0, (k0)
+    jal remote_frame_bridge
+    nop
+#endif
 #ifdef SODIUM64_COLOR_DIAG
     // This is a completed, unpublished CPU-owned buffer. The diagnostic uses
     // only registers already clobbered by this menu path; t4/t5/t6/a0 survive.
@@ -212,7 +232,10 @@ native_diag_menu_ready:
     nop
     lw t0, native_diag_phase
     la a0, continuous_failed_text
-    beq t0, 4, native_diag_menu_status
+    beq t0, 4, native_diag_menu_failure
+    nop
+    la a0, continuous_usb_text
+    beq t0, 6, native_diag_menu_status
     nop
     la a0, continuous_full_text
     beq t0, 5, native_diag_menu_status
@@ -225,7 +248,8 @@ native_diag_menu_ready:
     la a0, native_diag_active_text
     beq t0, 1, native_diag_menu_status
     nop
-    lw t0, native_diag_notice_count
+native_diag_menu_notice:
+    lw t0, native_diag_notice_active
     beqz t0, native_diag_menu_legacy_status
     nop
     mfc0 t0, $9
@@ -233,6 +257,30 @@ native_diag_menu_ready:
     subu t0, t1, t0
     la a0, continuous_ok_text
     bgtz t0, native_diag_menu_status
+    nop
+    // Latch expiry: a later signed Count wrap must not resurrect this notice.
+    // Deadline zero is valid; only the separate active word marks visibility.
+    sw zero, native_diag_notice_active
+    b native_diag_menu_legacy_status
+    nop
+native_diag_menu_failure:
+    lw t1, continuous_save_error_code
+    la a0, continuous_verify_text
+    beq t1, 12, native_diag_menu_status
+    nop
+    lw t1, continuous_save_error_stage
+    la a0, continuous_desc_text
+    beq t1, 1, native_diag_menu_status
+    nop
+    la a0, continuous_card_text
+    sltiu t0, t1, 6
+    bnez t0, native_diag_menu_status
+    nop
+    la a0, continuous_slot_text
+    beq t1, 7, native_diag_menu_status
+    nop
+    la a0, continuous_io_text
+    b native_diag_menu_status
     nop
 native_diag_menu_legacy_status:
 #endif

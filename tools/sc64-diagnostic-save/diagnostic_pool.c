@@ -6,6 +6,12 @@
 #include "diagnostic_save.h"
 #include "diagnostic_pool.h"
 
+static diagnostic_pool_report_t report = { .stage = "idle" };
+const diagnostic_pool_report_t *diagnostic_pool_report(void) { return &report; }
+void diagnostic_pool_note(const char *stage, uint32_t value, uint32_t limit) {
+    report.stage = stage; report.value = value; report.limit = limit;
+}
+
 static void put32(unsigned char *p, uint32_t value) {
     p[0] = value >> 24; p[1] = value >> 16; p[2] = value >> 8; p[3] = value;
 }
@@ -26,6 +32,7 @@ static unsigned reservation_id(const char *path) {
 bool diagnostic_pool_prepare(const char *normal, const char *tag, unsigned count,
         uint32_t rom_offset, uint64_t emulator_bytes,
         const diagnostic_pool_backend_t *backend, char **initial_path) {
+    report = (diagnostic_pool_report_t){ .stage = "argument" };
     if (!initial_path) return true;
     *initial_path = NULL;
     if (!count || count > S64C_MAX_SLOTS || rom_offset != S64C_CART_END ||
@@ -36,38 +43,56 @@ bool diagnostic_pool_prepare(const char *normal, const char *tag, unsigned count
     unsigned char *descriptor = calloc(1, bytes);
     char *paths[S64C_MAX_SLOTS] = {0};
     bool failed = true;
+    diagnostic_pool_note("allocation", (uint32_t)bytes, 0);
     if (!descriptor) return true;
+    diagnostic_pool_note("card_info", 0, 0);
     if (backend->card_info(backend->context, descriptor + S64C_OFF_SD_INFO)) goto done;
     unsigned any = 0, not_ff = 0;
     for (unsigned i = 0; i < S64C_SD_INFO_BYTES; ++i) {
         any |= descriptor[S64C_OFF_SD_INFO + i];
         not_ff |= descriptor[S64C_OFF_SD_INFO + i] ^ 0xff;
     }
+    diagnostic_pool_note("card_identity", any, not_ff);
     if (!any || !not_ff) goto done;
     /* Close/sync ALL file allocations before resolving any final FAT mapping. */
-    for (unsigned slot = 0; slot < count; ++slot)
-        if (diagnostic_save_reserve(normal, tag, &paths[slot]) || !paths[slot]) goto done;
+    unsigned next_id = 1;
+    for (unsigned slot = 0; slot < count; ++slot) {
+        report.slot = slot;
+        diagnostic_pool_note("reserve", 0, 0);
+        if (diagnostic_save_reserve_from(normal, tag, &next_id, &paths[slot]) || !paths[slot]) goto done;
+    }
     uint32_t first = 0, end = 0;
     for (unsigned slot = 0; slot < count; ++slot) {
         uint32_t sectors[S64C_SECTORS] = {0}, this_first = 0, this_end = 0;
         unsigned char *entry = descriptor + S64C_HEADER_BYTES + slot * S64C_SLOT_BYTES;
+        report.slot = slot; report.sector = 0;
+        diagnostic_pool_note("map", 0, 0);
         if (backend->file_sectors(backend->context, paths[slot], sectors, &this_first, &this_end)) goto done;
+        diagnostic_pool_note("map_bounds", this_first, this_end);
         if (!this_first || this_end <= this_first) goto done;
         if (!slot) { first = this_first; end = this_end; }
+        diagnostic_pool_note("map_region", this_first, this_end);
         if (this_first != first || this_end != end) goto done;
         unsigned id = reservation_id(paths[slot]);
+        diagnostic_pool_note("id", id, 0);
         if (!id) goto done;
         for (unsigned old = 0; old < slot; ++old)
             if (get32(descriptor + S64C_HEADER_BYTES + old * S64C_SLOT_BYTES) == id) goto done;
         put32(entry + S64C_SLOT_OFF_ID, id);
         for (unsigned i = 0; i < S64C_SECTORS; ++i) {
             uint32_t lba = sectors[i];
+            report.sector = i;
+            diagnostic_pool_note("lba_bounds", lba, end);
             if (lba < first || lba >= end) goto done;
+            diagnostic_pool_note("lba_duplicate", lba, 0);
             for (unsigned old_slot = 0; old_slot <= slot; ++old_slot) {
                 unsigned stop = old_slot == slot ? i : S64C_SECTORS;
                 const unsigned char *old = descriptor + S64C_HEADER_BYTES + old_slot * S64C_SLOT_BYTES + S64C_SLOT_OFF_LBA;
                 for (unsigned j = 0; j < stop; ++j)
-                    if (get32(old + j * 4) == lba) goto done;
+                    if (get32(old + j * 4) == lba) {
+                        report.limit = old_slot * S64C_SECTORS + j;
+                        goto done;
+                    }
             }
             put32(entry + S64C_SLOT_OFF_LBA + i * 4, lba);
         }
@@ -84,9 +109,11 @@ bool diagnostic_pool_prepare(const char *normal, const char *tag, unsigned count
     uint32_t sum = 0;
     for (size_t i = 0; i < bytes; i += 4) sum += get32(descriptor + i);
     put32(descriptor + S64C_OFF_CHECKSUM, 0u - sum);
+    diagnostic_pool_note("publish", (uint32_t)bytes, 0);
     if (backend->publish(backend->context, descriptor, bytes)) goto done;
     *initial_path = paths[0]; paths[0] = NULL;
     failed = false;
+    diagnostic_pool_note("ready", count, (uint32_t)bytes);
 done:
     for (unsigned slot = 0; slot < count; ++slot) free(paths[slot]);
     free(descriptor);

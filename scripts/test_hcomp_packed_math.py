@@ -30,6 +30,52 @@ def reference(x, y, subtract, half):
         result |= min(31, value // (2 if half else 1)) << shift
     return rgba(result)
 
+def vector_instruction(w, r, v, vco_lo, vco_hi, vcc):
+    """Shared linked-instruction semantics; no renderer/color policy model."""
+    rs, rt, rd, shift, fn = w>>21&31, w>>16&31, w>>11&31, w>>6&31, w&63
+    if rs == 4:
+        element = w>>7 & 15
+        assert not element & 1
+        v[rd][element//2] = r[rt] & 65535
+    elif rs == 2:
+        assert rd == 1
+        r[rt] = sum(int(c) << i for i, c in enumerate(vcc))
+    elif rs & 16:
+        element, vt, vs, vd = rs&15, rt, rd, shift
+        assert element == 0 or 8 <= element <= 15
+        a = v[vs][:]
+        b = v[vt][:] if element == 0 else [v[vt][element-8]]*8
+        if fn == 4: out = [(x*y)>>16 for x,y in zip(a,b)]
+        elif fn == 6: out = [(x*signed(y)) & 65535 for x,y in zip(a,b)]
+        elif fn in (0x10, 0x11):
+            raw = [signed(x)+(signed(y) if fn==0x10 else -signed(y)) +
+                   (int(c) if fn==0x10 else -int(c)) for x,y,c in zip(a,b,vco_lo)]
+            out = [max(-32768,min(32767,x)) & 65535 for x in raw]
+            vco_lo, vco_hi = [False]*8, [False]*8
+        elif fn == 0x14:
+            raw = [x+y for x,y in zip(a,b)]
+            out = [x & 65535 for x in raw]
+            vco_lo, vco_hi = [x>65535 for x in raw], [False]*8
+        elif fn == 0x15:
+            out = [(x-y)&65535 for x,y in zip(a,b)]
+            vco_lo, vco_hi = [x<y for x,y in zip(a,b)], [x!=y for x,y in zip(a,b)]
+        elif fn in (0x20, 0x21, 0x22, 0x23):
+            if fn == 0x20: cond = [signed(x)<signed(y) or (x==y and lo and hi) for x,y,lo,hi in zip(a,b,vco_lo,vco_hi)]
+            elif fn == 0x21: cond = [x==y and not hi for x,y,hi in zip(a,b,vco_hi)]
+            elif fn == 0x22: cond = [x!=y or hi for x,y,hi in zip(a,b,vco_hi)]
+            else: cond = [signed(x)>signed(y) or (x==y and not (lo and hi)) for x,y,lo,hi in zip(a,b,vco_lo,vco_hi)]
+            out = [x if c else y for x,y,c in zip(a,b,cond)]
+            vcc, vco_lo, vco_hi = cond, [False]*8, [False]*8
+        elif fn == 0x27: out = [x if c else y for x,y,c in zip(a,b,vcc)]
+        elif fn == 0x28: out = [x&y for x,y in zip(a,b)]
+        elif fn == 0x2a: out = [x|y for x,y in zip(a,b)]
+        elif fn == 0x2b: out = [(~(x|y))&65535 for x,y in zip(a,b)]
+        elif fn == 0x2c: out = [x^y for x,y in zip(a,b)]
+        else: raise AssertionError(('vector', hex(w), hex(fn)))
+        v[vd] = out
+    else: raise AssertionError(('COP2', hex(w)))
+    return vco_lo, vco_hi, vcc
+
 def execute(code, base, start, stop, regs, vectors, memory=None, max_steps=512):
     """Subset decoder for the actual linked RSP instructions and delay slots."""
     r, v = regs[:], [x[:] for x in vectors]
@@ -55,46 +101,8 @@ def execute(code, base, start, stop, regs, vectors, memory=None, max_steps=512):
         elif op in (4, 5):
             if (r[rs] == r[rt]) == (op == 4): target = pc+4+(si<<2)
         elif op == 36: r[rt] = memory[(r[rs]+si) & 0xfff]
-        elif op == 18 and rs == 4:
-            # MTC2 replaces two bytes starting at the instruction's element.
-            element = w>>7 & 15
-            assert not element & 1
-            v[rd][element//2] = r[rt] & 65535
-        elif op == 18 and rs == 2:
-            assert rd == 1
-            r[rt] = sum(int(c) << i for i, c in enumerate(vcc))
-        elif op == 18 and rs & 16:
-            element, vt, vs, vd = rs&15, rt, rd, shift
-            assert element == 0 or 8 <= element <= 15
-            a = v[vs][:]
-            b = v[vt][:] if element == 0 else [v[vt][element-8]]*8
-            if fn == 4: out = [(x*y)>>16 for x,y in zip(a,b)] # VMUDL unsigned high
-            elif fn == 6: out = [(x*signed(y)) & 65535 for x,y in zip(a,b)] # VMUDN low
-            elif fn in (0x10, 0x11):
-                raw = [signed(x)+(signed(y) if fn==0x10 else -signed(y)) +
-                       (int(c) if fn==0x10 else -int(c)) for x,y,c in zip(a,b,vco_lo)]
-                out = [max(-32768,min(32767,x)) & 65535 for x in raw]
-                vco_lo, vco_hi = [False]*8, [False]*8
-            elif fn == 0x14:
-                raw = [x+y for x,y in zip(a,b)]
-                out = [x & 65535 for x in raw]
-                vco_lo, vco_hi = [x>65535 for x in raw], [False]*8
-            elif fn == 0x15:
-                out = [(x-y)&65535 for x,y in zip(a,b)]
-                vco_lo, vco_hi = [x<y for x,y in zip(a,b)], [x!=y for x,y in zip(a,b)]
-            elif fn in (0x20, 0x21, 0x22, 0x23):
-                if fn == 0x20: cond = [signed(x)<signed(y) or (x==y and lo and hi) for x,y,lo,hi in zip(a,b,vco_lo,vco_hi)]
-                elif fn == 0x21: cond = [x==y and not hi for x,y,hi in zip(a,b,vco_hi)]
-                elif fn == 0x22: cond = [x!=y or hi for x,y,hi in zip(a,b,vco_hi)]
-                else: cond = [signed(x)>signed(y) or (x==y and not (lo and hi)) for x,y,lo,hi in zip(a,b,vco_lo,vco_hi)]
-                out = [x if c else y for x,y,c in zip(a,b,cond)]
-                vcc, vco_lo, vco_hi = cond, [False]*8, [False]*8
-            elif fn == 0x27: out = [x if c else y for x,y,c in zip(a,b,vcc)]
-            elif fn == 0x28: out = [x&y for x,y in zip(a,b)]
-            elif fn == 0x2a: out = [x|y for x,y in zip(a,b)]
-            elif fn == 0x2c: out = [x^y for x,y in zip(a,b)]
-            else: raise AssertionError(('vector', hex(pc), hex(w), hex(fn)))
-            v[vd] = out
+        elif op == 18:
+            vco_lo, vco_hi, vcc = vector_instruction(w,r,v,vco_lo,vco_hi,vcc)
         else:
             raise AssertionError(('unsupported instruction', hex(pc), hex(w)))
         assert pending is None or target is None, 'control transfer in delay slot'

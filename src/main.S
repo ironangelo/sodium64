@@ -64,6 +64,21 @@ exception_vector:
 main:
     // Disable interrupts and do the magic hardware init
     mtc0 zero, $12 // Status
+#ifdef SODIUM64_REMOTE
+    // The paired modern IPL3 leaves TV type in DMEM boot-info byte9.
+    // Preserve it before replacing DMEM with the renderer's RSP data.
+    // Legacy RDRAM 0x300 is not maintained by this IPL3 and cold boot clears it.
+    lui t0, 0xA400
+    lbu t1, 9(t0)
+    sltiu t2, t1, 3
+    bnez t2, remote_boot_tv_valid
+    nop
+    li t1, 1 // Safe NTSC fallback for an invalid boot-info value.
+remote_boot_tv_valid:
+    sw t1, remote_boot_tv_type
+.globl remote_boot_tv_captured
+remote_boot_tv_captured:
+#endif
     li t0, 8
     sw t0, 0xBFC007FC
 
@@ -175,6 +190,16 @@ pi_wait1:
 
     // Main stays at E90. Mode7 window entry owns E8C; its affine draw bank
     // uses audited EA4. The H-COMP bridge keeps E94 and all resident entries.
+#if SODIUM64_TMEM_ATLAS
+.globl tmem_atlas_cpu_bind, tmem_atlas_cpu_bind_end
+tmem_atlas_cpu_bind:
+    la t0, rsp_object_cache_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 1 // Object construction remains Main residency, not an instruction PC.
+#endif
+    sw t0, DMEM(OVERLAY_OBJECT_CACHE_SRC)
+tmem_atlas_cpu_bind_end:
+#endif
     la t0, rsp_mode7_window_text_start
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
     ori t0, t0, 6 // aligned source pointer carries the diagnostic bank ID
@@ -201,7 +226,48 @@ pi_wait1:
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
     ori t0, t0, 5 // aligned source pointer carries the diagnostic bank ID
 #endif
+#if SODIUM64_HCOMP_FIXED_WINDOW_MATH
+hcomp_fixed_window_cpu_bind:
+    // The inner fixed-window bank falls back to the original Math image.
+    la t1, rsp_hcomp_fixed_window_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_fixed_window_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5
+#endif
+hcomp_fixed_window_cpu_bind_end:
+#endif
+#if SODIUM64_HCOMP_RDP_FIXED_MATH
+hcomp_rdp_fixed_cpu_bind:
+    la t1, rsp_hcomp_rdp_fixed_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_rdp_fixed_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5
+#endif
+hcomp_rdp_fixed_cpu_bind_end:
+#endif
+#if SODIUM64_HCOMP_RDP_HALF_MATH
+hcomp_rdp_cpu_bind:
+    // The outer bank keeps the current Math fallback in owned RDRAM.
+    // No free DMEM word is borrowed; descriptor publication is uncached.
+    la t1, rsp_hcomp_rdp_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_rdp_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5
+#endif
+#endif
     sw t0, DMEM(OVERLAY_HCOMP_MATH_SRC)
+#if SODIUM64_HCOMP_RDP_HALF_MATH
+hcomp_rdp_cpu_bind_end:
+#endif
     la t0, rsp_hcomp_setup_text_start
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
     ori t0, t0, 7
@@ -212,9 +278,23 @@ pi_wait1:
     ori t0, t0, 4 // aligned source pointer carries the diagnostic bank ID
 #endif
     sw t0, DMEM(OVERLAY_HCOMP_FAST_SRC)
+#if SODIUM64_HCOMP_TLUT_SHADER
+    la t0, rsp_hcomp_tlut_text_start
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5 // Arithmetic residency also owns palette generation/binding.
+#endif
+    sw t0, DMEM(OVERLAY_HCOMP_TLUT_SRC)
+#endif
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+#if SODIUM64_SIGNAL_PROFILE
+native_diag_signal_main_initial:
+    lui t0, 0x002C // Initial Main bank is resident; atomically publish SIG4..6 = 1.
+    sw t0, 0xA4040010
+native_diag_signal_main_initial_done:
+#else
     li t0, 1 // the initial full Main upload is complete
     sh t0, DMEM(NATIVE_DIAG_RSP_BANK)
+#endif
 #endif
 #ifdef SODIUM64_COLOR_DIAG
     // Preserve the existing raw reference region below the composed band.
@@ -250,6 +330,11 @@ pi_wait1:
     nop
 #endif
     jal profile_init
+    nop
+#endif
+
+#ifdef SODIUM64_REMOTE
+    jal remote_init_bridge
     nop
 #endif
 
@@ -340,6 +425,13 @@ vi_interrupt:
     // Acknowledge the VI interrupt
     lui k0, 0xA440
     sw zero, 0x0010(k0) // VI_CURRENT
+
+#ifdef SODIUM64_REMOTE
+    la k0, remote_vi_count
+    lw k1, (k0)
+    addiu k1, k1, 1
+    sw k1, (k0)
+#endif
 
 #ifdef SODIUM64_NATIVE_DIAG
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
@@ -448,6 +540,15 @@ set_buffer:
     sw k0, 0x0004(k1) // VI_ORIGIN
     la k1, framebuffer
     sw k0, (k1)
+
+#ifdef SODIUM64_REMOTE
+    // A new completed buffer was really published to VI_ORIGIN, not just
+    // another retrace of the same image. Counter is never called FPS.
+    la k0, remote_presentations
+    lw k1, (k0)
+    addiu k1, k1, 1
+    sw k1, (k0)
+#endif
 
     // Decrement the frame counter and update input
     la k0, frame_count

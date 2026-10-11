@@ -12,6 +12,7 @@ import struct
 CPU_MODULES=('s_cpu','apu_static_or_jit','dsp','dma','ppu','rsp_wait','vi_wait','other')
 STAGES=('rsp_dma_wait','rsp_command_fetch_wait','rsp_texture_retire_wait')
 RSP_STAGES=('halted','unknown_or_bank_transition','dma_wait','rdp_wait','composition_phase_or_mode7_window','general_math','direct_composition','source_draw_or_resident_control')
+SIGNAL_STAGES=('halted','unknown_or_bank_transition','main_residency','mode7_draw_or_window_residency','hcomp_phase_residency','hcomp_math_residency','hcomp_fast_residency','hcomp_setup_residency')
 RSP_BANKS={0:'unknown',1:'main',2:'mode7_draw',3:'hcomp_phase',4:'hcomp_fast',5:'hcomp_math',6:'mode7_window',7:'hcomp_setup'}
 
 def parse_v4(blob,h,order,second_fields):
@@ -22,7 +23,15 @@ def parse_v4(blob,h,order,second_fields):
     if (h['sample_capacity'],h['event_capacity'],stride,event_bytes,second_bytes,marker,capacity,frame_bytes,period)!=(256,160,32,40,64,0x46524d34,1280,12,5859375):
         raise ValueError('unexpected v4 measurement geometry')
     bookend_ticks,bank_protocol=struct.unpack_from('>2I',blob,head+0x1d8)
-    if (bookend_ticks,bank_protocol)!=(46875,0x42414e34):raise ValueError('v4 RSP bank protocol invalid')
+    if (bookend_ticks,bank_protocol) not in ((46875,0x42414e34),(0,0x53494731)):
+        raise ValueError('v4 RSP bank protocol invalid')
+    signal_profile=bank_protocol==0x53494731
+    rsp_stage_names=SIGNAL_STAGES if signal_profile else RSP_STAGES
+    h.update(rsp_bank_protocol='SIG1' if signal_profile else 'BAN4',
+             rsp_bank_atomic_with_halt=signal_profile,
+             rsp_bank_phase_counts_include_resident_helpers_and_dma=signal_profile,
+             rsp_live_pc_available=not signal_profile,
+             rsp_resident_wait_counters_available=not signal_profile)
     if overflow&~31 or h['event_count']>160 or h['seconds_count']>20 or nframes>1280:
         raise ValueError('v4 count/overflow invalid')
     if guest_exp>3:raise ValueError('v4 overlaps guest SRAM')
@@ -97,21 +106,29 @@ def parse_v4(blob,h,order,second_fields):
         tick,sections,fc,pc,sp,flags,dp=struct.unpack_from('>2I2H2BH',blob,offset)
         controls=struct.unpack_from('>6BH',blob,offset+16)
         modules=dict(zip(CPU_MODULES,struct.unpack_from('>8B',blob,offset+24)))
-        rsp_stages=dict(zip(RSP_STAGES,struct.unpack_from('>8B',blob,offset+32)))
+        rsp_stages=dict(zip(rsp_stage_names,struct.unpack_from('>8B',blob,offset+32)))
         if not overflow&16 and sum(rsp_stages.values())!=sum(modules.values()):raise ValueError('v4 RSP/CPU observation totals disagree')
         bank=pc>>12;pc&=0xfff
         if bank not in RSP_BANKS or sp&1 and (pc or bank):raise ValueError('v4 RSP snapshot invalid')
+        if signal_profile and pc:raise ValueError('SIG1 must not contain a live RSP PC')
         irq+=sum(modules.values())
         if tick<=previous['elapsed_ticks'] or fc<previous['frames_completed'] or sections<previous['sections_created'] or tick>h['elapsed_ticks']:
             raise ValueError('v4 non-monotonic observation')
         row=dict(sequence=i+1,elapsed_ticks=tick,frames_completed=fc,sections_created=sections,
-            irq_sample_count=irq,sp_pc_live=pc,sp_status=sp,dp_status=dp,
-            sp_pc_observational=True,sp_pc_overlay_identity_known=False,
-            sp_pc_overlay_identity_candidate=bank!=0,
+            irq_sample_count=irq,sp_pc_live=None if signal_profile else pc,sp_status=sp,dp_status=dp,
+            sp_pc_recorded=not signal_profile,sp_pc_observational=not signal_profile,
+            sp_pc_overlay_identity_known=False,
+            sp_pc_overlay_identity_candidate=not signal_profile and bank!=0,
             rsp_bank_id=bank,rsp_bank=RSP_BANKS[bank],rsp_stage_samples=rsp_stages,
             rsp_stage_counts_are_sampled=True,rsp_bank_bookend_max_ticks=bookend_ticks,
             cpu_module_samples=modules,module_counts_saturated=bool(overflow&16),
-            sp_status_signals_4_to_7_omitted=True,
+            sp_status_signals_4_to_7_omitted=not signal_profile,
+            sp_status_signals_4_to_6_retained_as_bank=signal_profile and not bool(sp&1),
+            sp_status_signal_7_omitted=True,
+            rsp_bank_source='sp_status_sig4_to_6' if signal_profile else 'live_dmem_epoch_candidate',
+            rsp_bank_atomic_with_halt=signal_profile,
+            rsp_bank_running_phase_available=signal_profile and not bool(sp&1),
+            rsp_bank_phase_includes_resident_helpers_and_dma=signal_profile,
             ppu_live_sample=dict(bg_mode=flags&15,policy=(flags>>4)&3,screen=(flags>>6)&1,
                 stat_flags_force_blank=bool(flags&128),other_stat_flags_omitted=True,
                 cgwsel=controls[0],cgadsub=controls[1],ts=controls[2],tm=controls[3],
@@ -129,6 +146,7 @@ def parse_v4(blob,h,order,second_fields):
         counts=struct.unpack_from('>9H',blob,offset+12);seq=struct.unpack_from('>H',blob,offset+30)[0]
         modules=dict(zip(CPU_MODULES,struct.unpack_from('>8H',blob,offset+32)))
         vram,*stages=struct.unpack_from('>4H',blob,offset+48)
+        if signal_profile and any(stages):raise ValueError('SIG1 resident-wait counters are unavailable')
         observer,hook=struct.unpack_from('>2I',blob,offset+56)
         if seq!=i+1 or tick<=previous['elapsed_ticks'] or fc<previous['frames_completed'] or sections<previous['sections_created'] or tick>h['elapsed_ticks']:
             raise ValueError('v4 non-monotonic second')
@@ -141,28 +159,31 @@ def parse_v4(blob,h,order,second_fields):
             duration_seconds_count_domain=dt/hz,completed_frames_in_interval=fc-previous['frames_completed'],
             completed_fps_count_domain=(fc-previous['frames_completed'])*hz/dt,
             cpu_module_samples=modules,cpu_vram_wait_subset=vram,
-            rsp_resident_wait_samples=dict(zip(STAGES,stages)),
+            rsp_resident_wait_samples=None if signal_profile else dict(zip(STAGES,stages)),
+            rsp_resident_wait_counters_available=not signal_profile,
             observer_ticks=observer,observer_frame_hook_ticks=hook)
         seconds.append(row);previous=row
     partial=struct.unpack_from('>9I',blob,head+0x100)
     pm=dict(zip(CPU_MODULES,struct.unpack_from('>8I',blob,head+0x158)))
     pe=dict(zip(CPU_MODULES,struct.unpack_from('>8I',blob,head+0x198)))
     vram,*stages=struct.unpack_from('>4I',blob,head+0x178)
+    if signal_profile and any(stages):raise ValueError('SIG1 resident-wait counters are unavailable')
     if sum(partial[1:5])!=partial[0] or sum(pm.values())!=partial[0] or any(x>partial[0] for x in partial[5:]) or sum(stages)>partial[5]:
         raise ValueError('v4 partial CPU occupancy/module buckets disagree')
     if pm['rsp_wait']!=partial[1] or pm['vi_wait']!=partial[2] or pm['apu_static_or_jit']<partial[3] or vram>pm['ppu']:
         raise ValueError('v4 partial CPU classifications disagree')
     if sum(x['samples'] for x in seconds)+partial[0]!=h['sample_count']:
         raise ValueError('v4 whole-interval IRQ totals disagree')
-    pr=dict(zip(RSP_STAGES,struct.unpack_from('>8I',blob,head+0x1b8)))
+    pr=dict(zip(rsp_stage_names,struct.unpack_from('>8I',blob,head+0x1b8)))
     if not overflow&16 and sum(pr.values())!=sum(pe.values()):raise ValueError('v4 partial RSP/CPU observation totals disagree')
     h['partial_observation_rsp_stage_samples']=pr
-    h['rsp_stage_samples_total']={name:sum(e['rsp_stage_samples'][name] for e in events)+pr[name] for name in RSP_STAGES}
+    h['rsp_stage_samples_total']={name:sum(e['rsp_stage_samples'][name] for e in events)+pr[name] for name in rsp_stage_names}
     if not overflow&16 and irq+sum(pe.values())!=h['sample_count']:
         raise ValueError('v4 observation IRQ totals disagree')
     h['partial_window']=dict(zip(second_fields[5:14],partial))
     h['partial_window'].update(cpu_module_samples=pm,cpu_vram_wait_subset=vram,
-        rsp_resident_wait_samples=dict(zip(STAGES,stages)))
+        rsp_resident_wait_samples=None if signal_profile else dict(zip(STAGES,stages)),
+        rsp_resident_wait_counters_available=not signal_profile)
     h['partial_observation_cpu_module_samples']=pe
     h['cpu_vram_wait_subset_total']=sum(x['cpu_vram_wait_subset'] for x in seconds)+vram
     timeline=[];j=0
@@ -185,8 +206,10 @@ def parse_v4(blob,h,order,second_fields):
         shader_operation_counts_available=False,
         rsp_overlay_stage_attribution_available=False,
         rsp_overlay_pc_validated_by_epoch=False,
-        rsp_overlay_stage_candidates_retained=True,
-        rsp_bank_bookend_protocol_present=True,
+        rsp_overlay_stage_candidates_retained=not signal_profile,
+        rsp_bank_bookend_protocol_present=not signal_profile,
+        rsp_bank_signal_protocol_present=signal_profile,
+        rsp_bank_phase_attribution_available=signal_profile,
         live_dmem_access_hardware_validated=False,
         arithmetic_operands_or_exact_operation_counts_available=False,
         root_cause_is_not_automatically_confirmed=True)
@@ -204,6 +227,10 @@ def render_v4(result):
     lines.append('Remainder includes preparation/UI/interrupts; it is not measured active CPU time.')
     totals={name:sum(s['cpu_module_samples'][name] for s in result['seconds'])+h['partial_window']['cpu_module_samples'][name] for name in CPU_MODULES}
     lines.append('All-IRQ CPU modules: '+', '.join(f'{k}={v}' for k,v in totals.items()))
-    lines.append('All-IRQ RSP stage candidates (not hardware-validated): '+', '.join(f'{k}={v}' for k,v in h['rsp_stage_samples_total'].items()))
-    lines.append('v4 reads live DMEM for bank/PPU candidates, including sub-word reads. Epoch bookends do not validate that hardware access. Do not use bank/stage/PPU candidates as exact causal evidence; use CPU samples, completed-boundary timing and explicit RSP/VI waits.')
+    if h['rsp_bank_protocol']=='SIG1':
+        lines.append('All-IRQ RSP bank residency (atomic SP_STATUS SIG4..6 plus HALT): '+', '.join(f'{k}={v}' for k,v in h['rsp_stage_samples_total'].items()))
+        lines.append('SIG1 counts include resident helpers and DMA under their current bank. Live RSP PC and resident-wait counters are unavailable. PPU live DMEM fields remain unvalidated candidates; bank residency is not an instruction-level root cause.')
+    else:
+        lines.append('All-IRQ RSP stage candidates (not hardware-validated): '+', '.join(f'{k}={v}' for k,v in h['rsp_stage_samples_total'].items()))
+        lines.append('v4 reads live DMEM for bank/PPU candidates, including sub-word reads. Epoch bookends do not validate that hardware access. Do not use bank/stage/PPU candidates as exact causal evidence; use CPU samples, completed-boundary timing and explicit RSP/VI waits.')
     return lines

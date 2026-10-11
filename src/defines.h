@@ -19,6 +19,27 @@
 
 #include <regdef.h>
 
+// Opt-in hardware bank residency observer. Normal recorder builds retain BAN4.
+#ifndef SODIUM64_SIGNAL_PROFILE
+#define SODIUM64_SIGNAL_PROFILE 0
+#endif
+#ifndef SODIUM64_HCOMP_WIDE_MATH
+#define SODIUM64_HCOMP_WIDE_MATH 0
+#endif
+// Opt-in: publish Main math eligibility through two exact compressed Z tags.
+#ifndef SODIUM64_ELIGIBILITY_TAGS
+#define SODIUM64_ELIGIBILITY_TAGS 0
+#endif
+#ifndef SODIUM64_HCOMP_MASK_SCAN
+#define SODIUM64_HCOMP_MASK_SCAN 0
+#endif
+#ifndef SODIUM64_HCOMP_TLUT_SHADER
+#define SODIUM64_HCOMP_TLUT_SHADER 0
+#endif
+#ifndef SODIUM64_HCOMP_TLUT_FLAT_WINDOW
+#define SODIUM64_HCOMP_TLUT_FLAT_WINDOW 0
+#endif
+
 // Master cycle counts for CPU memory accesses
 #define RAM_CYCLE 8
 #define IO_CYCLE 6
@@ -136,20 +157,29 @@
 #define FRAMEBUFFER2 (FRAMEBUFFER3 - 0x20D00)
 #define FRAMEBUFFER1 (FRAMEBUFFER2 - 0x20D00)
 
-// Gate-C lossless CGRAM epoch stream. Q1/base/sideband start at C2000,
-// above the HW_PROFILE static data.
+// Gate-C lossless CGRAM epoch stream. Diagnostic snapshots and USB helpers
+// require a larger static arena. Keep both CPU and RSP on the same layout.
 // Keep this boundary checked against every linked ELF; the raw shadows consume the
 // audited guard below FRAMEBUFFER1.
 #define HCOMP_RAW_PALETTE_QUEUE1 (FRAMEBUFFER1 - 0x3300)
 #define HCOMP_RAW_PALETTE_QUEUE2 (HCOMP_RAW_PALETTE_QUEUE1 + 0x800)
-#define HCOMP_CGRAM_BASE_QUEUE1 0xA00C2000
-#define HCOMP_CGRAM_BASE_QUEUE2 0xA00C2200
-#define HCOMP_CGRAM_SIDEBAND_QUEUE1 0xA00C2400
-#define HCOMP_CGRAM_SIDEBAND_QUEUE2 0xA00C2900
-#define HCOMP_CGRAM_EVENT_QUEUE1 0xA00C2E00
+#if defined(SODIUM64_NATIVE_DIAG_TRACE) || defined(SODIUM64_PROFILE)
+#define HCOMP_CGRAM_ARENA 0xA00D2000
+#else
+#define HCOMP_CGRAM_ARENA 0xA00C2000
+#endif
+#define HCOMP_CGRAM_BASE_QUEUE1 HCOMP_CGRAM_ARENA
+#define HCOMP_CGRAM_BASE_QUEUE2 (HCOMP_CGRAM_ARENA + 0x200)
+#define HCOMP_CGRAM_SIDEBAND_QUEUE1 (HCOMP_CGRAM_ARENA + 0x400)
+#define HCOMP_CGRAM_SIDEBAND_QUEUE2 (HCOMP_CGRAM_ARENA + 0x900)
+#define HCOMP_CGRAM_EVENT_QUEUE1 (HCOMP_CGRAM_ARENA + 0xE00)
 #define HCOMP_CGRAM_EVENT_QUEUE2 0xA03E8000
 #define HCOMP_CGRAM_EVENT_CAPACITY 0x6000
 #define HCOMP_CGRAM_EVENT_BYTES (HCOMP_CGRAM_EVENT_CAPACITY * 4)
+
+#if HCOMP_CGRAM_EVENT_QUEUE1 + HCOMP_CGRAM_EVENT_BYTES > HCOMP_RAW_PALETTE_QUEUE1
+#error Q1 CGRAM events overlap raw palette shadows
+#endif
 
 // Three disjoint 240-row surfaces, with alignment padding and guard lines.
 // Their lifetime is one RSP-owned section; CPU writes only the row-color queues.
@@ -178,6 +208,12 @@
 
 // RSP addresses of data in DMEM; used to avoid setting the upper address
 #define TEXTURE 0x000
+#ifndef SODIUM64_TMEM_ATLAS
+#define SODIUM64_TMEM_ATLAS 0
+#endif
+#ifndef SODIUM64_TMEM_COORD_ATLAS
+#define SODIUM64_TMEM_COORD_ATLAS 0
+#endif
 #define TILE_TABLE (TEXTURE + 0x40)
 #define VRAM_TABLE (TILE_TABLE + 0x400)
 #define OAM (VRAM_TABLE + 0x400)
@@ -236,6 +272,7 @@
 #define RDP_TILE7 (RDP_TILE + 0x28)
 #define TILE_PARAMS (RDP_TILE7 + 0x78)
 #define LAYER_CHART (TILE_PARAMS + 0x20)
+#define OVERLAY_OBJECT_CACHE_SRC (LAYER_CHART + 7 * 16 + 8)
 #define OBJ_SIZES (LAYER_CHART + 0x90)
 #define FILL_JUMPS (OBJ_SIZES + 0x20)
 #define TILE_JUMPS (FILL_JUMPS + 0x10)
@@ -278,6 +315,7 @@
 #define HCOMP_EFFECTIVE_TS 0xEC9
 // Diagnostic-only 16-bit seqlock: epoch[15:4], loading[3], bank[2:0].
 #define NATIVE_DIAG_RSP_BANK 0xECA
+#define NATIVE_DIAG_SIGNAL_MASKS 0xEFC // Eight immutable halfwords; retired eligibility LUT tail.
 #define HCOMP_DIAG_COMPOSE_LIMIT 0xECC
 #define HCOMP_FIXED_COLOR 0xED0
 #define HCOMP_ROW_FIXED_SRC HCOMP_FIXED_COLOR
@@ -285,6 +323,12 @@
 // RDP image bases are 64-byte aligned even for scanline-sized sections.
 #define HCOMP_BAND_BASES 0xED4
 #define HCOMP_ELIGIBILITY_TABLE 0xEF8
+#define HCOMP_TAG_ENABLE_LUT 0xF0C // Seven class bits; does not overlap SIG1 masks.
+#define HCOMP_TLUT_CLASS 0xF13 // Active bit80, then base1/BG2/mixedOBJ3.
+#define OVERLAY_HCOMP_TLUT_SRC 0xF14
+#define HCOMP_TLUT_BASE HCOMP_WINNER_ARENA
+#define HCOMP_TLUT_BG (HCOMP_TLUT_BASE + 0x800)
+#define HCOMP_TLUT_OBJ (HCOMP_TLUT_BASE + 0x1000)
 // The former scalar lookup table is unused by the vector compositor.
 #define OVERLAY_HCOMP_SETUP_SRC HCOMP_ELIGIBILITY_TABLE
 #define HCOMP_OBJ_DEPTH_CMDS 0xEE0
@@ -300,6 +344,9 @@
 // still be in flight; the BG depth table therefore begins one command later.
 #define HCOMP_TEXTURE_FENCE 0xF20
 #define OVERLAY_HCOMP_FAST_SRC 0xF28
+// Independent first-copy state. F28 remains the fast-bank source pointer;
+// this last retired word is zero in the initial Main DMEM image.
+#define HCOMP_VRAM_SNAPSHOT_READY 0xF2C
 #define HCOMP_PROOF_RDP_CMDS 0xF30
 #define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x20)
 #define VEC_DATA 0xF70

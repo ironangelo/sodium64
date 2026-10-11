@@ -10,6 +10,11 @@
 #include "utils/fs.h"
 #include "diagnostic_pool.h"
 
+/* Linked libdragon55aac uses FatFs R0.16. Falling back to an installed R0.15
+ * header silently reads FATFS.fsize as n_fatent and rejects valid clusters. */
+_Static_assert(FF_DEFINED == 80386 && FFCONF_DEF == 80386, "pinned FatFs header ABI required");
+_Static_assert(offsetof(FATFS, n_fatent) == 24, "pinned FATFS cluster-bound offset required");
+
 #define SC64_SR 0x1fff0000u
 #define SC64_DATA0 0x1fff0004u
 #define SC64_DATA1 0x1fff0008u
@@ -56,16 +61,22 @@ static bool file_sectors(void *unused, const char *path, uint32_t sectors[S64C_S
                          uint32_t *first, uint32_t *end) {
     (void)unused;
     FIL input;
-    if (f_open(&input, strip_fs_prefix((char *)path), FA_READ) != FR_OK) return true;
+    FRESULT opened = f_open(&input, strip_fs_prefix((char *)path), FA_READ);
+    if (opened != FR_OK) { diagnostic_pool_note("map_open", opened, 0); return true; }
     fatfs_fix_file_size(&input);
     FATFS *fs = input.obj.fs;
     uint64_t first64 = fs->database;
     uint64_t end64 = first64 + (uint64_t)(fs->n_fatent - 2) * fs->csize;
     bool invalid = f_size(&input) != S64C_SAVE_BYTES || fs->n_fatent < 3 ||
         !fs->csize || !first64 || end64 <= first64 || end64 > UINT32_MAX;
-    if (f_close(&input) != FR_OK || invalid) return true;
+    uint32_t size = (uint32_t)f_size(&input);
+    FRESULT closed = f_close(&input);
+    if (closed != FR_OK) { diagnostic_pool_note("map_close", closed, 0); return true; }
+    if (invalid) { diagnostic_pool_note("map_geometry", size, fs->csize); return true; }
     *first = (uint32_t)first64; *end = (uint32_t)end64;
-    return fatfs_get_file_sectors((char *)path, sectors, ADDRESS_TYPE_MEM, S64C_SECTORS);
+    bool failed = fatfs_get_file_sectors((char *)path, sectors, ADDRESS_TYPE_MEM, S64C_SECTORS);
+    if (failed) diagnostic_pool_note("map_sectors", *first, *end);
+    return failed;
 }
 static bool publish(void *unused, const unsigned char *descriptor, size_t bytes) {
     (void)unused;
@@ -75,7 +86,10 @@ static bool publish(void *unused, const unsigned char *descriptor, size_t bytes)
     for (size_t i = 0; i < bytes; i += sizeof check) {
         size_t n = bytes - i < sizeof check ? bytes - i : sizeof check;
         pi_dma_read_data((void *)(S64C_CART_ADDRESS + i), check, n);
-        if (memcmp(check, descriptor + i, n)) return true;
+        if (memcmp(check, descriptor + i, n)) {
+            diagnostic_pool_note("publish_readback", (uint32_t)i, (uint32_t)n);
+            return true;
+        }
     }
     return false;
 }

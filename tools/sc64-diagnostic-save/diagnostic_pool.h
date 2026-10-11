@@ -13,6 +13,13 @@ typedef struct {
     bool (*file_sectors)(void *, const char *, uint32_t[S64C_SECTORS], uint32_t *, uint32_t *);
     bool (*publish)(void *, const unsigned char *, size_t);
 } diagnostic_pool_backend_t;
+/* Kept in RAM across loader failure so USB recovery reports the exact gate. */
+typedef struct {
+    const char *stage;
+    uint32_t slot, sector, value, limit;
+} diagnostic_pool_report_t;
+const diagnostic_pool_report_t *diagnostic_pool_report(void);
+void diagnostic_pool_note(const char *, uint32_t, uint32_t);
 bool diagnostic_pool_prepare(const char *, const char *, unsigned, uint32_t, uint64_t,
                              const diagnostic_pool_backend_t *, char **);
 /* Real N64FlashcartMenu adapters: false on success, no automatic writeback. */

@@ -2,13 +2,39 @@
 """Prove complete simultaneous RDRAM owners, including four-byte event slots."""
 import argparse
 import json
+import os
+import re
+import shutil
+import subprocess
 from pathlib import Path
 from check_runtime_arena import allocated_sections
-from test_gate_c_cgram_rsp_consumer_clean_contract import parse_macros
+from test_gate_c_cgram_rsp_consumer_clean_contract import MacroEval, parse_macros
 
 
-def layout(defines):
-    ev = parse_macros(Path(defines).resolve().parents[1])
+def selected_macros(defines, diagnostic_trace=False, cc=None, profile=False):
+    if not diagnostic_trace and not profile:
+        # Preserve the original normal-profile check and its dependency-free API.
+        return parse_macros(Path(defines).resolve().parents[1])
+    compiler = cc or os.environ.get('N64_CC') or shutil.which('mips64-elf-gcc')
+    if not compiler:
+        root = Path(os.environ.get('N64_INST', 'C:/n64-toolchain'))
+        compiler = str(root/'bin'/('mips64-elf-gcc.exe' if os.name=='nt' else 'mips64-elf-gcc'))
+    include = Path(compiler).resolve().parents[1]/'mips64-elf/include'
+    selected = []
+    if diagnostic_trace: selected.append('-DSODIUM64_NATIVE_DIAG_TRACE=1')
+    if profile: selected.append('-DSODIUM64_PROFILE=1')
+    result = subprocess.run([compiler, '-E', '-dM', '-x', 'assembler-with-cpp',
+                             *selected, '-I', str(include),
+                             str(Path(defines).resolve())],
+                            check=True, capture_output=True, text=True)
+    macros = dict(re.findall(r'^#define ([A-Za-z_][A-Za-z_0-9]*) (.+)$', result.stdout, re.M))
+    if diagnostic_trace: assert 'SODIUM64_NATIVE_DIAG_TRACE' in macros
+    if profile: assert 'SODIUM64_PROFILE' in macros
+    return MacroEval(macros)
+
+
+def layout(defines, diagnostic_trace=False, cc=None, profile=False):
+    ev = selected_macros(defines, diagnostic_trace, cc, profile)
     value = lambda name: ev.name(name) & 0x1fffffff
     owners = {}
     for queue in (1, 2):
@@ -42,7 +68,11 @@ def layout(defines):
     assert ev.name('ROM_CACHE_SLOTS') == 194
     assert value('ROM_CACHE_END') == value('HCOMP_WINNER_ARENA') == 0x384000
     assert owners['HCOMP_CGRAM_EVENT_QUEUE2'][1] == 0x400000
-    assert owners['HCOMP_CGRAM_EVENT_QUEUE1'][1] == 0xdae00
+    assert owners['HCOMP_CGRAM_EVENT_QUEUE1'][1] == value('HCOMP_CGRAM_BASE_QUEUE1') + 0x18e00
+    if not diagnostic_trace and not profile:
+        assert value('HCOMP_CGRAM_BASE_QUEUE1') == 0xc2000
+    else:
+        assert value('HCOMP_CGRAM_BASE_QUEUE1') == 0xd2000
     return owners
 
 
@@ -57,18 +87,22 @@ def prove_disjoint(owners):
     return intervals
 
 
-def check(defines, elf=None):
-    owners = layout(defines)
+def check(defines, elf=None, diagnostic_trace=False, cc=None, profile=False):
+    owners = layout(defines, diagnostic_trace, cc, profile)
     if elf:
-        for name, a, b in allocated_sections(elf):
+        sections=list(allocated_sections(elf))
+        for name, a, b in sections:
             owners['ELF:' + name] = (a, b)
         # Boot clearing itself is a write owner, sharing only the fixed lower
         # renderer region. It must never touch loaded runtime/JIT/ROM pages.
-        ev = parse_macros(Path(defines).resolve().parents[1])
-        lo = ev.name('HCOMP_CGRAM_BASE_QUEUE1') & 0x1fffffff
-        hi = ev.name('JIT_BUFFER') & 0x1fffffff
-        for name, a, b in allocated_sections(elf):
-            assert not (a < hi and b > lo), (name, 'boot clear overlap')
+        ev = selected_macros(defines, diagnostic_trace, cc, profile)
+        clear_ranges=[('clear_vram','HCOMP_CGRAM_BASE_QUEUE1','JIT_BUFFER'),
+                      ('clear_hcomp_surfaces','HCOMP_WINNER_ARENA','HCOMP_CGRAM_EVENT_QUEUE2')]
+        for clear, first, last in clear_ranges:
+            lo=ev.name(first)&0x1fffffff;hi=ev.name(last)&0x1fffffff
+            assert lo<hi, (clear,'invalid clear extent')
+            for name, a, b in sections:
+                assert not (a < hi and b > lo), (name, clear, 'boot clear overlap')
     intervals = prove_disjoint(owners)
     # The last DMA8 read at the declared record cap remains entirely in slot.
     for q in (1, 2):
@@ -82,9 +116,14 @@ if __name__ == '__main__':
     ap.add_argument('--defines', type=Path, default=Path('src/defines.h'))
     ap.add_argument('--elf', type=Path)
     ap.add_argument('--output', type=Path)
+    ap.add_argument('--diagnostic-trace', action='store_true',
+                    help='preprocess the actual trace CPU/RSP layout, including conditional arenas')
+    ap.add_argument('--cc', help='N64 GCC for diagnostic preprocessing')
+    ap.add_argument('--profile', action='store_true')
     args = ap.parse_args()
-    result = check(args.defines, args.elf)
+    result = check(args.defines, args.elf, args.diagnostic_trace, args.cc, args.profile)
     if args.output:
         args.output.write_text(json.dumps(result, indent=2) + '\n')
-    print('EVENT_ARENA_FULL_EXTENTS PASS', len(result), 'owners; cap=24576; ROM slots=194')
+    print('EVENT_ARENA_FULL_EXTENTS PASS', len(result), 'owners; cap=24576; ROM slots=194',
+          'profile=trace' if args.diagnostic_trace else ('profile=sampler' if args.profile else 'profile=normal'))
 

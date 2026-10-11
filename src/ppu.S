@@ -682,6 +682,23 @@ end_fill:
 
 .align 5
 rsp_frame:
+#ifdef SODIUM64_REMOTE
+    // Count an actual guest boundary before optional renderer skipping.
+    // Remote durations expire here, not at VI or rendered frame cadence.
+    lw t0, remote_guest_frames
+    addiu t0, t0, 1
+    sw t0, remote_guest_frames
+    lw t0, remote_button_frames
+    beqz t0, remote_guest_count_done
+    nop
+    addiu t0, t0, -1
+    sw t0, remote_button_frames
+    bnez t0, remote_guest_count_done
+    nop
+    sw zero, remote_buttons
+    sh zero, joyxlh
+remote_guest_count_done:
+#endif
     // Make a final frame section and get alternating queue indices
     lbu t5, queue_id // Next
     lhu a0, cur_line

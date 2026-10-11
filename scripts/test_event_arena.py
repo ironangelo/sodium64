@@ -52,6 +52,23 @@ class EventArenaTests(unittest.TestCase):
             self.assertEqual(len(mapped), len(set(x for x in slots if x is not None)))
         self.assertGreater(misses, 244*4)
 
+    def test_trace_preprocessor_selects_relocated_arena(self):
+        owners=layout(ROOT/'src/defines.h',diagnostic_trace=True)
+        prove_disjoint(owners)
+        self.assertEqual(owners['HCOMP_CGRAM_BASE_QUEUE1'][0],0xd2000)
+        self.assertEqual(owners['HCOMP_CGRAM_EVENT_QUEUE1'][1],0xeae00)
+        self.assertLessEqual(owners['HCOMP_CGRAM_EVENT_QUEUE1'][1],owners['HCOMP_RAW_PALETTE_QUEUE1'][0])
+
+    def test_profile_sampler_avoids_boot_clear(self):
+        owners=layout(ROOT/'src/defines.h',profile=True)
+        # Real profile candidate's linked extent exceeded the old C2000
+        # boundary. Retaining that boundary would erase sampler/runtime data.
+        owners['ELF:profile_runtime']=(0xe000,0xc2b10)
+        prove_disjoint(owners)
+        owners['HCOMP_CGRAM_BASE_QUEUE1']=(0xc2000,0xc2200)
+        with self.assertRaisesRegex(AssertionError,'overlaps'):
+            prove_disjoint(owners)
+
 
 if __name__ == '__main__':
     unittest.main()

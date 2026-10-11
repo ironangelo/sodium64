@@ -1,0 +1,92 @@
+# Native USB checkpoint build and qualification
+
+This is the retained development configuration as of 2026-10-11, not Road 1.0
+or a universally qualified release. Start from the code branch linked in
+`docs/CONTINUITY.md` on the `continuity` branch. The repository's principal
+branch is `master`; there is no `main` branch to rename.
+
+## Reproduce the selected emulator
+
+Use an installed N64 MIPS toolchain and fresh build directories. Do not reuse
+objects across feature combinations. Underscores in BUILD_DIR are intentional:
+the embedded RSP symbol names are derived from this path.
+
+```sh
+make -j4 BUILD_DIR=build_usb_tmem_coord8 PROJ_NAME=sodium64-tmem-coord8 \
+  NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+  WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+  FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+  SECTION_OBSERVER=1 TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1
+```
+
+Leave TLUT_FLAT_WINDOW, FETCH_SIGNAL and RDP_MATH_PROBE off. The selected
+coordinate atlas is different from the rejected atlas with per-hit tile changes.
+Visible Sub retains the original single-texture protocol. Most research flags
+default to zero; `make` alone is not the selected hardware configuration.
+SPARSE_VRAM is controlled by its source macro, enabled in the retained source.
+Preserve precision=20, frameskip=0, APU=21, audio=4 and unrestricted layers for
+the recorded comparisons. Do not silently reduce accuracy or disable audio.
+
+Installed empty-emulator reference: 131072 bytes, SHA256
+`a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2`,
+CRC32 `2d5daff8`; CPU ELF SHA256
+`463df084e71b9525bbbd183018fcc2283e53acfc7bb1a2d92e250ac0212e9efa`.
+These identify the archived native build, not a promise that another compiler
+or build timestamp produces identical packaging. The subsequent PROFILE-only
+arena correction does not alter this NATIVE_DIAG configuration.
+
+## Paired menu
+
+See `tools/sc64-diagnostic-save/usb-menu/README.md`. Preserve both pins:
+N64FlashcartMenu `e28c26e1aeae3c18851fc24118080e23e5a86a9f`,
+libdragon `55aac1355773169d87e45424b772faf0dfb9432a`.
+FatFs headers, linked library and every object using FIL/FATFS must agree.
+Use matching mkdfs, n64sym and asset converters; mixing SDK generations already
+caused a boot assertion. A source checkout/host PASS does not prove a complete
+paired-menu ROM was packaged correctly.
+
+Installed menu reference: 1736704 bytes, SHA256
+`803a716bb51ebef672c43a80671776fcae4a0330d5348aeeda8954666113a144`,
+CRC32 `fddd021a`. Firmware 2.20.2 was not changed.
+
+## Checks and evidence gates
+
+The source includes compiled MIPS/RSP guards for arithmetic, policy eligibility,
+DMA owners, delayed fences, palette restoration, cache invalidation and
+coordinates. Mutation tests reject missing fences/restores and stale groups.
+Use the CLI help of each guard for its ELF/baseline arguments; baseline bank
+images must come from the exact earlier feature combination, not any old build.
+
+Key entry points:
+- `scripts/check_remote_boot.py`, `test_remote_control.py`,
+  `test_remote_sections.py`, `test_continuous_save_sink.py`,
+  `test_native_diag_continuous.py`;
+- `test_rsp_sparse_vram.py`, `test_rsp_signal_profile.py`,
+  `test_rsp_math_dma.py`, `test_hcomp_eligibility_tags.py`,
+  `test_rsp_math_masks.py`, `test_hcomp_tlut_candidate.py`,
+  `test_rsp_math_fullrow.py`, `test_rsp_rdp_half.py`,
+  `test_rsp_fixed_window.py`, `test_rsp_rdp_fixed.py`,
+  `test_rsp_tmem_atlas.py`;
+- `check_runtime_arena.py`, `check_event_arena.py` (use `--profile`
+  for PROFILE layout), `check_rsp_branch_delay_slots.py`;
+- `tools/sc64-diagnostic-save/test_save.py`,
+  `tools/sc64-bench/test_bench.py` and the paired menu tests.
+
+Prior local validation is recorded in the historical ledger. This synchronization
+does not rerun every suite or qualify the new GitHub commit. Existing CI gates
+remain intact. Ordinary builds, PROFILE builds and armed/native builds each
+need their own checks; the selected flagged path is not covered by an unflagged
+CI build alone. Do not merge the whole runtime into master merely because a
+documentation or host-only check passed.
+
+A physical trial needs: verified installation/readback; exact acknowledged
+input/frame replay; quiet capture with no repeated USB queries/exports during
+the timing interval; valid complete S64D with checksums, settings and no trace
+overflow; like-for-like retired RGB comparison; and scene-specific timing.
+Keep incomplete captures and failed reservations distinct from completed data.
+All ROMs, SAVs, screenshots, replay logs and raw game-derived dumps stay private.
+
+Completed-boundary cadence measures retired renderer work over full intervals.
+It is not TV presentation FPS. Frame exports precede VI, cable, HDMI adapter
+and TV processing; sampled PC/bank residency is not exclusive function time.
+Full visual/audio output and sustained 60 for every scene remain unqualified.

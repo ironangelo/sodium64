@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include "../../tools/sc64-diagnostic-save/continuous_save_abi.h"
+#include "../../tools/sc64-diagnostic-save/recorder_runtime_abi.h"
 extern int continuous_save_init(void);
 extern int continuous_save_capture(const unsigned char *, unsigned);
 extern uint32_t continuous_save_last_id;
@@ -93,6 +94,7 @@ int main(void) {
     }
     unsigned before=writes;
     assert(continuous_save_capture(source,32768)==-1 && writes==before);cases++;
+    assert(!continuous_save_sink_ready && continuous_save_error_code==S64_SAVE_ERROR_EXHAUSTED);
     /* Soft restart loses cursor: prior data must still be skipped, never reset. */
     assert(continuous_save_init()==1);
     assert(continuous_save_capture(source,32768)==-1 && writes==before);
@@ -134,12 +136,22 @@ int main(void) {
     setup(3);meta[(72+264+8)/4]=meta[(72+8)/4];checksum_meta();
     assert(continuous_save_init()==-1 && !writes);cases++;
     setup(3);info_mismatch=1;assert(continuous_save_init()==-1 && !writes);cases++;
+    assert(continuous_save_error_stage==S64_SAVE_STAGE_CARD_INFO && continuous_save_error_code==S64_SAVE_ERROR_CARD_MISMATCH);
     setup(3);begin_fail=1;assert(continuous_save_init()==-1 && !writes);cases++;
     setup(3);meta[0]=0;assert(continuous_save_init()==0 && !writes);cases++;
+    assert(continuous_save_error_code==S64_SAVE_ERROR_DESCRIPTOR_MISSING);
     setup(3);assert(continuous_save_init()==1);info_mismatch=1;
     assert(continuous_save_capture(source,32768)==0 && !writes);cases++;
     setup(3);assert(continuous_save_init()==1);source[100]^=1;
     assert(continuous_save_capture(source,32768)==0 && !writes);cases++;
+    assert(continuous_save_error_stage==S64_SAVE_STAGE_SOURCE && continuous_save_error_code==S64_SAVE_ERROR_SOURCE);
+    setup(1);meta[7]^=1;assert(continuous_save_init()==-1);
+    assert(continuous_save_error_stage==S64_SAVE_STAGE_DESCRIPTOR && continuous_save_error_code==S64_SAVE_ERROR_DESCRIPTOR_CHECKSUM);cases++;
+    setup(1);assert(continuous_save_init()==1);calls=0;corrupt_at=51;
+    assert(continuous_save_capture(source,32768)==0);
+    assert(continuous_save_error_stage==S64_SAVE_STAGE_HEADER_BEGIN && continuous_save_error_code==S64_SAVE_ERROR_READBACK);cases++;
+    unsigned retained_stage=continuous_save_error_stage, retained_code=continuous_save_error_code;
+    assert(continuous_save_capture(source,32768)==0 && continuous_save_error_stage==retained_stage && continuous_save_error_code==retained_code);cases++;
     setup(16);assert(continuous_save_init()==1);
     printf("CONTINUOUS_SAVE_SINK PASS cases=%u operations=%u fragmented_maps=1 no_overwrite=1 explicit_readback=1 failure_lock=1\n",cases,operation_count);
 }

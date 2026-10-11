@@ -6,6 +6,7 @@ executes the linked recorder, including IRQ seal and safe-boundary service;
 it is not a hardware timing, cache, SD or complete renderer implementation.
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -17,7 +18,7 @@ RETURN = 0xDEAD0000
 HZ = 46875000
 LIMIT = 20 * HZ
 SAMPLE = 131071
-READY, RECORDING, SEALED, COMMITTING, ERROR, EXHAUSTED = range(6)
+READY, RECORDING, SEALED, COMMITTING, ERROR, EXHAUSTED, USB_READY = range(7)
 
 
 def signed(value, width=64):
@@ -187,19 +188,25 @@ def main():
     parser.add_argument('elf', type=Path)
     parser.add_argument('--json-output', type=Path)
     args = parser.parse_args()
+    elf_sha256=hashlib.sha256(args.elf.read_bytes()).hexdigest()
     base, symbols = load_elf(args.elf)
     required = ('native_diag_init', 'native_diag_arm', 'native_diag_interrupt',
                 'native_diag_frame_complete', 'native_diag_service',
                 'native_diag_continuous_mode', 'native_diag_phase',
                 'native_diag_notice_count', 'native_diag_ok_deadline',
+                'native_diag_notice_active', 'native_diag_menu_notice',
                 'native_diag_sealed_wait_stall',
                 'continuous_save_available', 'continuous_save_capture_bridge',
-                'continuous_save_capture')
+                'continuous_save_capture', 'native_diag_remote_arm',
+                'native_diag_usb_only', 'native_diag_snapshot',
+                'native_diag_snapshot_ready', 'native_diag_snapshot_sequence',
+                'native_diag_capture_result')
     assert all(name in symbols for name in required), 'continuous trace ELF required'
     state = symbols['native_diag_state'] & 0x1FFFFFFF
     sram = symbols['sram'] & 0x1FFFFFFF
     phase = symbols['native_diag_phase'] & 0x1FFFFFFF
     mode = symbols['native_diag_continuous_mode'] & 0x1FFFFFFF
+    snapshot_address = symbols['native_diag_snapshot'] & 0x1FFFFFFF
     guest = bytes((i * 43 + 7) & 255 for i in range(0x2000))
     commits = []
     cases = 0
@@ -214,6 +221,7 @@ def main():
         cpu.pattern()
         cpu.execute(symbols['native_diag_init'])
         assert cpu.cp[11] == 0xDEADBEEF, 'init armed timer'
+        assert cpu.read(symbols['native_diag_notice_active']) == 0
         assert cpu.blob(sram, 0x2000) == cpu.guest
         assert cpu.blob(sram + 0x2000, 0x6000) == bytes(0x6000)
         cpu.cp_writes.clear()
@@ -236,10 +244,11 @@ def main():
 
     def bridge(cpu, outcome=1, terminal=False):
         assert cpu.read(phase) == (SEALED if terminal else COMMITTING)
-        assert cpu.regs[4] & MASK32 == (symbols['sram'] | 0x20000000) & MASK32
+        address = cpu.regs[4] & 0x1FFFFFFF
+        assert address in (sram,snapshot_address)
         assert cpu.regs[5] == 32768
         assert cpu.cp[12] & 1 == 0, 'transport entered with interrupts enabled'
-        payload = cpu.blob(sram, 0x8000)
+        payload = cpu.blob(address, 0x8000)
         assert payload[:0x2000] == cpu.guest
         assert int.from_bytes(payload[0x2000:0x2004], 'big') == 0x53363444
         assert int.from_bytes(payload[0x2004:0x2008], 'big') == 5
@@ -312,6 +321,27 @@ def main():
         assert cpu.blob(sram, 0x8000) == frozen and cpu.read(phase) == SEALED
         return cutoff
 
+    remote_bridge_cases=0
+    if 'remote_frame_bridge' in symbols:
+        for queue in (0,4):
+            for status in (0x401,0x403,0x9401,0x9403):
+                cpu=CPU(base.copy());cpu.pattern(710)
+                cpu.regs[29]=queue;cpu.cp[12]=status&~1
+                cpu.write(symbols['remote_saved_status'],status)
+                cpu.write(symbols['remote_paused'],0)
+                cpu.write(symbols['remote_arm_pending'],0)
+                before=(cpu.regs.copy(),cpu.hi,cpu.lo,status)
+                old_epc=cpu.cp[14]
+                def remote_c(c):
+                    assert c.regs[29]!=queue and c.regs[29]&15==0
+                    for i in range(1,32): c.regs[i]=0xFEDCBA0000000000+i
+                    c.hi=0x1234;c.lo=0x5678;c.cp[14]=0x800DEAD0
+                cpu.hooks[symbols['remote_control_frame']]=remote_c
+                cpu.execute(symbols['remote_frame_bridge'])
+                preserve(cpu,before)
+                assert cpu.cp[14]==old_epc, 'runtime bridge changed outer exception EPC'
+                remote_bridge_cases+=1;cases+=1
+
     # Repeated capture stays within the same guest session; Count wrapping and
     # TLB-style EXL states are deliberately varied at arm and service boundaries.
     for initial_count in (0, 0x12345678, 0xFFFF0000):
@@ -337,6 +367,7 @@ def main():
                 preserve(cpu, before)
                 assert cpu.read(phase) == READY
                 assert cpu.read(symbols['native_diag_notice_count']) == ordinal + 1
+                assert cpu.read(symbols['native_diag_notice_active']) == 1
                 assert cpu.read(symbols['native_diag_ok_deadline']) == (cpu.cp[9] + 2 * HZ) & MASK32
                 assert cpu.blob(sram, 0x2000) == cpu.guest
                 assert cpu.read(sram + 0x2000 + 0x1E8) == service_count
@@ -344,6 +375,9 @@ def main():
                 assert cpu.read(sram + 0x2000 + 52) == LIMIT + 17
                 assert cpu.blob(sram + 0x2200, 0x5E00) == retained_body
                 committed = cpu.blob(sram, 0x8000)
+                assert cpu.blob(snapshot_address,0x8000)==committed
+                assert cpu.read(symbols['native_diag_snapshot_ready'])==1
+                assert cpu.read(symbols['native_diag_capture_result'])==1
                 before, _ = call(cpu, 'native_diag_service', ordinal * 10 + 9)
                 preserve(cpu, before)
                 assert cpu.blob(sram, 0x8000) == committed, 'READY service rewrote payload'
@@ -362,6 +396,11 @@ def main():
             before, _ = call(cpu, 'native_diag_service', 108)
             preserve(cpu, before)
             assert cpu.read(phase) == terminal_phase
+            assert cpu.read(symbols['native_diag_snapshot_ready'])==1
+            assert cpu.read(symbols['native_diag_capture_result'])==MASK32
+            immutable=cpu.blob(snapshot_address,0x8000)
+            cpu.write(sram,0xAABBCCDD)
+            assert cpu.blob(snapshot_address,0x8000)==immutable
             frozen, deadline = cpu.blob(sram, 0x8000), cpu.cp[11]
             before, _ = call(cpu, 'native_diag_service', 109)
             preserve(cpu, before)
@@ -408,6 +447,62 @@ def main():
         preserve(cpu, before)
         assert cpu.read(phase) == ERROR
         cases += 1
+
+    # Explicit USB-only capture works after failed/absent handoff and SD failure.
+    # It never calls the sink, never advertises OK SD, and can rearm in-session.
+    usb_cases=0
+    for availability in (-1,0,1):
+        cpu=fresh(0xFFFF0000,0x9401,availability=availability)
+        cpu.write(symbols['continuous_save_sink_ready'],0)
+        cpu.write(symbols['continuous_save_error_stage'],3)
+        cpu.write(symbols['continuous_save_error_code'],6)
+        cpu.write(symbols['continuous_save_data0'],0x1234001e)
+        cpu.execute(symbols['native_diag_remote_arm'])
+        assert cpu.regs[2]==sx32(-1)
+        cpu.write(symbols['native_diag_usb_only'],1)
+        for ordinal in range(2):
+            start=(0xFFFF0000+ordinal*(LIMIT+2*HZ))&MASK32
+            cpu.cp[9]=start
+            cpu.execute(symbols['native_diag_remote_arm'])
+            assert cpu.regs[2]==1 and cpu.read(phase)==RECORDING
+            cpu.execute(symbols['native_diag_remote_arm'])
+            assert cpu.regs[2]==0, 'remote arm admitted overlapping capture'
+            cutoff=seal(cpu,start,600+ordinal*10)
+            cpu.cp[9]=(cutoff+1700000)&MASK32
+            cpu.cp[12]&=~1
+            def forbidden_sink(_): raise AssertionError('USB-only capture touched SD sink')
+            cpu.hooks[symbols['continuous_save_capture']]=forbidden_sink
+            before,_=call(cpu,'native_diag_service',608+ordinal*10)
+            preserve(cpu,before)
+            assert cpu.read(phase)==USB_READY
+            assert cpu.read(symbols['native_diag_capture_result'])==2
+            assert cpu.read(symbols['native_diag_notice_count'])==0
+            assert cpu.read(symbols['continuous_save_error_stage'])==3
+            assert cpu.read(symbols['continuous_save_error_code'])==6
+            assert cpu.read(symbols['continuous_save_data0'])==0x1234001e
+            assert cpu.read(symbols['native_diag_ok_deadline'])==0
+            assert cpu.read(symbols['native_diag_snapshot_ready'])==1
+            assert cpu.read(symbols['native_diag_snapshot_sequence'])==ordinal+1
+            frozen=cpu.blob(snapshot_address,0x8000)
+            assert frozen==cpu.blob(sram,0x8000)
+            cpu.write(sram,0x11223344)
+            assert cpu.blob(snapshot_address,0x8000)==frozen
+            # Later guest writes are legitimate; subsequent snapshot owns them.
+            cpu.guest=cpu.blob(sram,0x2000)
+            usb_cases+=1;cases+=1
+
+    cpu=fresh(100,0x401)
+    cpu.hooks[symbols['continuous_save_capture']]=lambda c: bridge(c,0)
+    arm(cpu,100,680);cutoff=seal(cpu,100,682)
+    cpu.cp[9]=(cutoff+1700000)&MASK32;cpu.cp[12]&=~1
+    call(cpu,'native_diag_service',688)
+    assert cpu.read(phase)==ERROR and cpu.read(symbols['native_diag_snapshot_ready'])==1
+    cpu.write(symbols['native_diag_usb_only'],1)
+    cpu.cp[9]=(cutoff+2*HZ)&MASK32
+    cpu.execute(symbols['native_diag_remote_arm'])
+    assert cpu.regs[2]==1 and cpu.read(phase)==RECORDING
+    assert cpu.read(symbols['native_diag_snapshot_sequence'])==1
+    usb_cases+=1;cases+=1
 
     # A real renderer stall AFTER the normal seal cannot reach the natural
     # boundary service. Its explicit terminal path preserves the retained
@@ -509,14 +604,74 @@ def main():
     assert cpu.blob(sram, 0x2000) == cpu.guest
     cases += 1
 
-    proof = dict(passed=True, cases=cases, repeated_captures=36, failure_cases=8,
+    remote_guest_cases=0
+    if 'remote_guest_count_done' in symbols:
+        # Execute only the actual assembled pre-skip guest hook; renderer code
+        # is outside this scalar VM and no physical cadence is inferred.
+        cpu=CPU(base.copy());cpu.pattern(700)
+        cpu.write(symbols['remote_guest_frames'],10)
+        cpu.write(symbols['remote_button_frames'],3)
+        cpu.write(symbols['remote_buttons'],0x8040)
+        cpu.write(symbols['joyxlh'],0x8040,2)
+        for expected in (2,1,0):
+            before=(cpu.regs.copy(),cpu.hi,cpu.lo,cpu.cp[12])
+            cpu.execute(symbols['rsp_frame'],stop=symbols['remote_guest_count_done'])
+            preserve(cpu,before,(1,8))
+            assert cpu.read(symbols['remote_guest_frames'])==13-expected
+            assert cpu.read(symbols['remote_button_frames'])==expected
+            assert cpu.read(symbols['remote_buttons'])==(0x8040 if expected else 0)
+            assert cpu.read(symbols['joyxlh'],2)==(0x8040 if expected else 0)
+            remote_guest_cases+=1;cases+=1
+        cpu.write(symbols['joyxlh'],0x100,2)
+        cpu.execute(symbols['rsp_frame'],stop=symbols['remote_guest_count_done'])
+        assert cpu.read(symbols['joyxlh'],2)==0x100, 'expired hook cleared physical controller input'
+        remote_guest_cases+=1;cases+=1
+        cpu.write(symbols['remote_guest_frames'],MASK32)
+        cpu.execute(symbols['rsp_frame'],stop=symbols['remote_guest_count_done'])
+        assert cpu.read(symbols['remote_guest_frames'])==0
+        remote_guest_cases+=1;cases+=1
+
+    # Execute the assembled SD-success publisher and HUD selector. Expiry is
+    # permanent even after the signed half-range wraps; zero is a valid deadline.
+    hud_notice_cases=0
+    for saved_at in (0x12345678, 0xFFFFFF00, (-2*HZ)&MASK32):
+        cpu=fresh(saved_at,0x401)
+        cpu.write(symbols['native_diag_notice_count'],7)
+        cpu.execute(symbols['native_diag_service_saved'],stop=symbols['native_diag_service_result'])
+        deadline=(saved_at+2*HZ)&MASK32
+        assert cpu.read(symbols['native_diag_ok_deadline'])==deadline
+        assert cpu.read(symbols['native_diag_notice_active'])==1
+        choices=[]
+        cpu.hooks[symbols['native_diag_menu_status']]=lambda c: choices.append('ok')
+        cpu.hooks[symbols['native_diag_menu_legacy_status']]=lambda c: choices.append('ready')
+        for now,want in ((saved_at,'ok'), ((deadline-1)&MASK32,'ok'),
+                         (deadline,'ready'), ((deadline+1)&MASK32,'ready'),
+                         ((deadline+0x80000001)&MASK32,'ready'),
+                         ((deadline-1)&MASK32,'ready')):
+            cpu.cp[9]=now;cpu.pattern()
+            cpu.execute(symbols['native_diag_menu_notice'])
+            assert choices[-1]==want,(hex(saved_at),hex(now),choices[-1],want)
+            assert cpu.read(symbols['native_diag_notice_count'])==8,'HUD changed cumulative count'
+            assert cpu.read(symbols['native_diag_notice_active'])==int(want=='ok')
+        # Only a later verified SD save may reactivate the banner.
+        cpu.cp[9]=(deadline+17)&MASK32
+        cpu.execute(symbols['native_diag_service_saved'],stop=symbols['native_diag_service_result'])
+        cpu.pattern();cpu.execute(symbols['native_diag_menu_notice'])
+        assert choices[-1]=='ok' and cpu.read(symbols['native_diag_notice_count'])==9
+        hud_notice_cases+=1;cases+=1
+
+    proof = dict(passed=True, cases=cases, elf_sha256=elf_sha256,
+                 repeated_captures=36, failure_cases=8,
                  full_64bit_ordinary_service_gprs=True, hi_lo_and_status_exl_preserved=True,
                  irq_nonreserved_gprs_preserved=True, count_wrap=True,
                  irq_cutoff_then_natural_boundary_service=True,
                  no_early_seal_at_limit_minus_one=True,
                  sd_pause_excluded_from_retained_capture=True,
                  no_forced_rsp_halt_or_dp_freeze=True, full_payload_cleared_each_arm=True,
-                 guest_sram_preserved=True, save_failure_blocks_rearm=True,
+                 guest_sram_preserved=True, save_failure_blocks_sd_rearm=True,
+                 immutable_snapshot_after_sd_failure=True,
+                 explicit_usb_only_cases=usb_cases, usb_ready_distinct_from_sd_saved=True,
+                 usb_only_preserves_sd_diagnostic=True,
                  in_session_guest_progress_preserved=True, invalid_handoff_fails_closed=True,
                  legacy_v4_one_shot_terminal_preserved=True,
                  post_seal_terminal_faults=post_seal_faults,
@@ -524,6 +679,10 @@ def main():
                  compiled_irq_inside_frame_helper_races=frame_seal_races,
                  stale_compare_irq_does_not_mutate_sealed_window=True,
                  actual_o64_bridge_cases=bridge_cases, queue_slot_sp_restored=True,
+                 actual_assembled_pre_skip_guest_hook_cases=remote_guest_cases,
+                 actual_assembled_runtime_bridge_cases=remote_bridge_cases,
+                 compiled_hud_notice_expiry_cases=hud_notice_cases,
+                 expired_notice_never_reappears=True, zero_notice_deadline_valid=True,
                  c_transport_mocked=True,
                  sd_writeback_authority=False, native_fps_authority=False)
     if args.json_output:

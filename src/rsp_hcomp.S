@@ -123,8 +123,13 @@ hcomp_band_targets_ready:
 hcomp_dispatch_policy:
     lw t0, HCOMP_BAND_RAW
     beqz t0, hcomp_compact_band
+#if SODIUM64_HCOMP_TLUT_SHADER
+    li t1, 2
+    bne t0, t1, hcomp_raw_band // Raw1 or palette-shaded Main3.
+#else
     li t1, 1
     beq t0, t1, hcomp_raw_band
+#endif
     nop
     // Direct Sub/black-mask/Main composition writes the final target with Z
     // disabled. Aligned compact bases above remain unused in this policy.
@@ -151,7 +156,9 @@ hcomp_screen_masks_ready:
 hcomp_raw_band:
     li t0, 1
     sb t0, HCOMP_SCREEN
+#if !SODIUM64_HCOMP_TLUT_SHADER
     sw t0, HCOMP_BAND_RAW
+#endif
     lw t0, FRAMEBUFFER(sp)
     addi t0, t0, 280 * -16
     sw t0, RDP_FRAME + 4
@@ -166,7 +173,12 @@ hcomp_fill_target:
     // Direct Sub starts with fixed color, the exact absent-Sub operand.
     // The general and Main-only policies keep the ordinary Main backdrop.
     lw t0, HCOMP_BAND_RAW
+#if SODIUM64_HCOMP_TLUT_SHADER
+    xori t0, t0, 2
+    sltu t0, zero, t0 // Only direct-Sub2 uses SUB_COLOR as backdrop.
+#else
     sltiu t0, t0, 2
+#endif
     sll t0, t0, 1
     lhu s0, SUB_COLOR(t0)
     lb t4, STAT_FLAGS
@@ -175,7 +187,11 @@ hcomp_fill_target:
     move s0, zero
 hcomp_backdrop_color:
     li a0, HCOMP_PROOF_RDP_CMDS + 24
+#if SODIUM64_ELIGIBILITY_TAGS
+    jal 0xA4001C4C
+#else
     jal 0xA4001F5C
+#endif
     li a1, HCOMP_PROOF_BG_DEPTH_CMDS
     andi t0, s0, 0x3E
     sll t0, t0, 10
@@ -259,6 +275,16 @@ hcomp_math_start:
     j 0xA4001F7C
     li t9, 0x13B0
 hcomp_band_done:
+#if SODIUM64_HCOMP_TLUT_SHADER
+    // No subsequent general/raw epoch may inherit a transformed TLUT.
+    lbu t0, HCOMP_TLUT_CLASS
+    beqz t0, hcomp_band_palette_restored
+    nop
+    lw a1, OVERLAY_HCOMP_TLUT_SRC
+    j 0xA4001F7C
+    li t9, 0x13C0
+hcomp_band_palette_restored:
+#endif
     // Disable Z before the next epoch/target or final palette load.
     li a0, HCOMP_PROOF_RDP_CMDS
     jal 0xA4001F5C

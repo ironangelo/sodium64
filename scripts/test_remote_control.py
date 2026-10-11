@@ -6,10 +6,12 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cc',default=os.environ.get('CC','gcc'))
     parser.add_argument('--json-output',type=Path)
+    parser.add_argument('--audio-observer',action='store_true')
     args=parser.parse_args();root=Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix='s64-runtime-model-') as directory:
         executable=Path(directory)/('remote.exe' if os.name=='nt' else 'remote')
         cmd=[args.cc,'-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-DREMOTE_CONTROL_HOST']
+        if args.audio_observer:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1']
         if os.name!='nt':cmd+=['-fsanitize=address,undefined','-fno-omit-frame-pointer','-no-pie']
         cmd += [str(root/'src/remote_control.c'),str(root/'scripts/fixtures/remote_control_host.c'),'-o',str(executable)]
         subprocess.run(cmd,check=True)

@@ -39,9 +39,11 @@ jobs:
             flags=()
             if [ "$variant" = hw-profile ]; then flags=(HW_PROFILE=1); fi
             if [ "$variant" = color ]; then flags=(COLOR_DIAG=1); fi
+            arena_flags=()
+            if [ "$variant" != normal ]; then arena_flags=(--profile); fi
             libdragon make "${flags[@]}" -j"$(nproc)" 2>&1 | tee "$variant-build.log"
-            python3 scripts/check_runtime_arena.py build/sodium64.elf
-            python3 scripts/check_event_arena.py --elf build/sodium64.elf --output "$variant-arena.json"
+            python3 scripts/check_runtime_arena.py build/sodium64.elf "${arena_flags[@]}"
+            python3 scripts/check_event_arena.py --elf build/sodium64.elf "${arena_flags[@]}" --output "$variant-arena.json"
             python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_*.elf
             mkdir -p "qualified/$variant"
             cp -a build "qualified/$variant/"

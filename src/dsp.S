@@ -38,6 +38,18 @@
 dsp_buffer: .word 0:0x800
 dsp_regs: .byte 0:0x80
 
+#ifdef SODIUM64_AUDIO_OBSERVER
+.globl dsp_audio_blocks, dsp_audio_idle, dsp_audio_full
+.globl dsp_audio_gap_max, dsp_audio_last_count
+dsp_audio_blocks: .word 0
+dsp_audio_idle: .word 0
+dsp_audio_full: .word 0
+dsp_audio_gap_max: .word 0
+dsp_audio_last_count: .word 0
+.globl dsp_audio_dac_rate
+dsp_audio_dac_rate: .word DSP_AI_DAC_RATE
+#endif
+
 .align 4
 noise_sample: .hword 0x4000
 noise_step: .hword 0x8000
@@ -240,6 +252,43 @@ write_sample: // t4: left, t5: right
     la t1, dsp_buffer - 0x1000
     add t1, t1, a0 // Buffer address
     sw t1, 0x0000(t0) // AI_DRAM_ADDR
+#ifdef SODIUM64_AUDIO_OBSERVER
+.globl dsp_audio_observe_begin, dsp_audio_observe_end
+dsp_audio_observe_begin:
+    // Observe once per 1024 stereo frames, never alter AI submission policy.
+    // FULL/BUSY are libdragon audio.c bits31/30. These are observations,
+    // not counts of proven dropped samples. No sample or guest state changes.
+    // t1 is overwritten by AI_LENGTH below; explicit base avoids $at writes.
+    la t2, dsp_audio_blocks
+    lw t3, 0x000C(t0)
+    srl t4, t3, 31
+    lw t1, 8(t2)
+    addu t1, t1, t4
+    sw t1, 8(t2)
+    srl t4, t3, 30
+    andi t4, t4, 1
+    xori t4, t4, 1
+    lw t1, 4(t2)
+    addu t1, t1, t4
+    sw t1, 4(t2)
+    mfc0 t3, $9
+    lw t4, 0(t2)
+    beqz t4, dsp_audio_observe_gap_done
+    nop
+    lw t4, 16(t2)
+    subu t4, t3, t4
+    lw t1, 12(t2)
+    sltu t1, t1, t4
+    beqz t1, dsp_audio_observe_gap_done
+    nop
+    sw t4, 12(t2)
+dsp_audio_observe_gap_done:
+    sw t3, 16(t2)
+    lw t4, 0(t2)
+    addiu t4, t4, 1
+    sw t4, 0(t2)
+dsp_audio_observe_end:
+#endif
     li t1, 0x00001000 // Buffer length
     j apu_execute
     sw t1, 0x0004(t0) // AI_LENGTH

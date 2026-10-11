@@ -37,7 +37,7 @@ def main():
     ap.add_argument('--arena-start', type=lambda s: int(s, 0))
     ap.add_argument('--diagnostic-trace', action='store_true')
     ap.add_argument('--profile', action='store_true')
-    ap.add_argument('--cc', help='N64 GCC for diagnostic preprocessing')
+    ap.add_argument('--cc', help='N64 or host C preprocessor for conditional arena selection')
     args = ap.parse_args()
     start = args.arena_start
     if start is None:

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Negative owner controls and ROM-cache eviction across the new wrap boundary."""
 import unittest
+import shutil
+import tempfile
 from pathlib import Path
-from check_event_arena import layout, prove_disjoint
+from check_event_arena import layout, prove_disjoint, selected_macros
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -32,7 +34,10 @@ class EventArenaTests(unittest.TestCase):
             prove_disjoint(owners)
 
     def test_wrap_eviction_and_reload(self):
-        slots = [None]*244
+        macros=selected_macros(ROOT/'src/defines.h')
+        capacity=macros.name('ROM_CACHE_SLOTS')
+        cache_end=macros.name('ROM_CACHE_END')&0x1fffffff
+        slots = [None]*capacity
         mapped = {}
         pointer = 0
         misses = 0
@@ -46,11 +51,11 @@ class EventArenaTests(unittest.TestCase):
                 del mapped[old]
             slots[pointer] = page
             mapped[page] = pointer
-            self.assertLessEqual(0x200000 + pointer*8192 + 8192, 0x3e8000)
-            pointer = 0 if pointer == 243 else pointer+1
+            self.assertLessEqual(0x200000 + pointer*8192 + 8192, cache_end)
+            pointer = 0 if pointer == capacity-1 else pointer+1
             misses += 1
             self.assertEqual(len(mapped), len(set(x for x in slots if x is not None)))
-        self.assertGreater(misses, 244*4)
+        self.assertGreater(misses, capacity*4)
 
     def test_trace_preprocessor_selects_relocated_arena(self):
         owners=layout(ROOT/'src/defines.h',diagnostic_trace=True)
@@ -68,6 +73,24 @@ class EventArenaTests(unittest.TestCase):
         owners['HCOMP_CGRAM_BASE_QUEUE1']=(0xc2000,0xc2200)
         with self.assertRaisesRegex(AssertionError,'overlaps'):
             prove_disjoint(owners)
+
+    def test_host_preprocessor_preserves_all_conditional_owners(self):
+        compiler=shutil.which('gcc') or shutil.which('clang') or shutil.which('cc')
+        self.assertIsNotNone(compiler,'host CI requires a C preprocessor')
+        for selection in ({'diagnostic_trace':True},{'profile':True}):
+            expected=layout(ROOT/'src/defines.h',**selection)
+            actual=layout(ROOT/'src/defines.h',cc=compiler,**selection)
+            self.assertEqual(actual,expected)
+            prove_disjoint(actual)
+
+    def test_host_preprocessor_rejects_unknown_include(self):
+        compiler=shutil.which('gcc') or shutil.which('clang') or shutil.which('cc')
+        self.assertIsNotNone(compiler,'host CI requires a C preprocessor')
+        with tempfile.TemporaryDirectory() as temporary:
+            header=Path(temporary)/'defines.h'
+            header.write_text((ROOT/'src/defines.h').read_text()+'\n#include <unknown_arena_dependency.h>\n')
+            with self.assertRaisesRegex(ValueError,'permits only'):
+                layout(header,diagnostic_trace=True,cc=compiler)
 
 
 if __name__ == '__main__':

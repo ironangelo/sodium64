@@ -17,16 +17,30 @@ def selected_macros(defines, diagnostic_trace=False, cc=None, profile=False):
         return parse_macros(Path(defines).resolve().parents[1])
     compiler = cc or os.environ.get('N64_CC') or shutil.which('mips64-elf-gcc')
     if not compiler:
-        root = Path(os.environ.get('N64_INST', 'C:/n64-toolchain'))
-        compiler = str(root/'bin'/('mips64-elf-gcc.exe' if os.name=='nt' else 'mips64-elf-gcc'))
+        root = os.environ.get('N64_INST') or ('C:/n64-toolchain' if os.name=='nt' else None)
+        candidate = Path(root)/'bin'/('mips64-elf-gcc.exe' if os.name=='nt' else 'mips64-elf-gcc') if root else None
+        if candidate and candidate.is_file():compiler = str(candidate)
+    if not compiler:
+        # Host CI runs before libdragon installs an N64 SDK. These owners are
+        # integer preprocessor expressions, independent of MIPS aliases.
+        compiler = shutil.which('gcc') or shutil.which('clang') or shutil.which('cc')
+    if not compiler:raise ValueError('arena selection requires an available C preprocessor')
     include = Path(compiler).resolve().parents[1]/'mips64-elf/include'
     selected = []
     if diagnostic_trace: selected.append('-DSODIUM64_NATIVE_DIAG_TRACE=1')
     if profile: selected.append('-DSODIUM64_PROFILE=1')
-    result = subprocess.run([compiler, '-E', '-dM', '-x', 'assembler-with-cpp',
-                             *selected, '-I', str(include),
-                             str(Path(defines).resolve())],
-                            check=True, capture_output=True, text=True)
+    command=[compiler, '-E', '-dM', '-x', 'assembler-with-cpp', *selected]
+    source=None
+    if 'mips' in Path(compiler).name and (include/'regdef.h').is_file():
+        command+=['-I',str(include),str(Path(defines).resolve())]
+    else:
+        source=Path(defines).read_text()
+        includes=re.findall(r'^\s*#\s*include[^\n]*',source,re.M)
+        if [line.strip() for line in includes]!=['#include <regdef.h>']:
+            raise ValueError('host arena preprocessing permits only the MIPS regdef.h alias include')
+        source=re.sub(r'^\s*#\s*include\s+<regdef\.h>[^\n]*','',source,count=1,flags=re.M)
+        command+=['-']
+    result = subprocess.run(command,input=source,check=True,capture_output=True,text=True)
     macros = dict(re.findall(r'^#define ([A-Za-z_][A-Za-z_0-9]*) (.+)$', result.stdout, re.M))
     if diagnostic_trace: assert 'SODIUM64_NATIVE_DIAG_TRACE' in macros
     if profile: assert 'SODIUM64_PROFILE' in macros
@@ -118,7 +132,7 @@ if __name__ == '__main__':
     ap.add_argument('--output', type=Path)
     ap.add_argument('--diagnostic-trace', action='store_true',
                     help='preprocess the actual trace CPU/RSP layout, including conditional arenas')
-    ap.add_argument('--cc', help='N64 GCC for diagnostic preprocessing')
+    ap.add_argument('--cc', help='N64 or host C preprocessor for conditional arena selection')
     ap.add_argument('--profile', action='store_true')
     args = ap.parse_args()
     result = check(args.defines, args.elf, args.diagnostic_trace, args.cc, args.profile)

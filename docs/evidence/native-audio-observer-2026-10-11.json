@@ -1,0 +1,254 @@
+{
+  "date": "2026-10-11",
+  "source_parent": "c82e5d40e0d78a75b2693f724f49eec586436015",
+  "observer_only": true,
+  "audio_algorithm_changed": false,
+  "road_1_0_qualified": false,
+  "nominal_ai_rate_source": "linked initialization divider, not DAC_RATE register readback",
+  "flags": {
+    "NATIVE_DIAG": 1,
+    "NATIVE_DIAG_TRACE": 1,
+    "REMOTE": 1,
+    "SIGNAL_PROFILE": 1,
+    "WIDE_MATH": 1,
+    "ELIGIBILITY_TAGS": 1,
+    "MASK_SCAN": 1,
+    "TLUT_SHADER": 1,
+    "FULL_ROW_MATH": 1,
+    "RDP_HALF_MATH": 1,
+    "FIXED_WINDOW_MATH": 1,
+    "RDP_FIXED_MATH": 1,
+    "TMEM_ATLAS": 1,
+    "TMEM_ATLAS_BITS": 3,
+    "TMEM_COORD_ATLAS": 1,
+    "AUDIO_OBSERVER": 1,
+    "SECTION_OBSERVER": 0
+  },
+  "configuration": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layer": 0
+  },
+  "native_sd_scenes": {
+    "title": {
+      "capture_validated": true,
+      "completed_boundary_cadence": 56.329003972122635,
+      "cpu_rsp_wait_mean_ms": 1.6513559585921325,
+      "submissions": 587,
+      "ai_idle_before_submit": 359,
+      "ai_full_before_submit": 0,
+      "echo_requested_at_endpoint": true,
+      "nominal_ai_rate_from_register_read_discarded": true,
+      "observations_include_paused_endpoints_and_sd_commit": true,
+      "tv_fps_claim": false,
+      "dac_waveform_verified": false,
+      "first300_cadence": 53.645933679045726
+    },
+    "room": {
+      "capture_validated": true,
+      "completed_boundary_cadence": 59.49583272374639,
+      "cpu_rsp_wait_mean_ms": 0.002446638772663877,
+      "submissions": 623,
+      "ai_idle_before_submit": 179,
+      "ai_full_before_submit": 0,
+      "echo_requested_at_endpoint": true,
+      "nominal_ai_rate_from_register_read_discarded": true,
+      "observations_include_paused_endpoints_and_sd_commit": true,
+      "tv_fps_claim": false,
+      "dac_waveform_verified": false
+    },
+    "rain": {
+      "capture_validated": true,
+      "completed_boundary_cadence": 32.185453685504775,
+      "cpu_rsp_wait_mean_ms": 11.608379859213251,
+      "submissions": 336,
+      "ai_idle_before_submit": 336,
+      "ai_full_before_submit": 0,
+      "echo_requested_at_endpoint": true,
+      "nominal_ai_rate_from_register_read_discarded": true,
+      "observations_include_paused_endpoints_and_sd_commit": true,
+      "tv_fps_claim": false,
+      "dac_waveform_verified": false
+    }
+  },
+  "native_usb_room": {
+    "capture_validated": true,
+    "completed_boundary_cadence": 59.51570007129272,
+    "boundary_ms": {
+      "mean": 16.80228912374582,
+      "median": 16.932864000000002,
+      "p95": 17.349936,
+      "p99": 17.7728832,
+      "max": 19.729514666666667
+    },
+    "cpu_rsp_wait_mean_ms": 0.0024536365663322185,
+    "sd_writeback_excluded": true,
+    "generation": {
+      "duration_s": 21.614605056,
+      "generated_stereo_frames": 682296,
+      "generated_per_second": 31566.43381788748,
+      "nominal_ai_rate_ntsc": 31880.68893254748,
+      "production_fraction_of_ai": 0.9901427752918108,
+      "guest_frames": 1283,
+      "samples_per_guest_frame": 531.7973499610289,
+      "submissions": 666,
+      "ai_idle_observations": 168,
+      "ai_full_observations": 0,
+      "max_submit_gap_ms": 42.21659733333333,
+      "echo_requested": true,
+      "pitch_mod_requested": false,
+      "rate_source": "linked initial AI configuration; write-only DAC rate read not used",
+      "count_sampled_before_pcm_usb_export": true,
+      "endpoint_overhead_and_initial_paused_fifo_drain_remain": true,
+      "lost_sample_count_not_claimed": true,
+      "dac_waveform_verified": false
+    },
+    "tv_fps_claim": false,
+    "audio_fidelity_claim": false
+  },
+  "rejected_observation": "First observer read DAC_RATE as zero; its frequency/fraction is invalid and not used.",
+  "private_material_published": false,
+  "images": {
+    "retired_images_compared": 5,
+    "pixels_compared": 336000,
+    "different_pixels": 0,
+    "complete_game_fidelity_claim": false
+  },
+  "program_identity": {
+    "older_sd_observer": {
+      "bytes": 131072,
+      "crc32": "ebd725cd",
+      "sha256": "46ca22b54c594657fa8302fd6eb52d36201171c2b9218174aaec0468144db739"
+    },
+    "corrected_usb_observer": {
+      "bytes": 131072,
+      "crc32": "179e2c43",
+      "sha256": "673efa208739906a5d6ff98ece9192062d0d75ba84d162ac43256235120f4a8d"
+    },
+    "corrected_cpu_elf_sha256": "97cc6b3a7cf54c797c02bcbfd869b4d31a11adac81d3ff6ce9a08f0a965b996e",
+    "restored_selected_emulator": {
+      "bytes": 131072,
+      "crc32": "2d5daff8",
+      "sha256": "a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2"
+    },
+    "default_off_cpu_sections_identical": {
+      ".text": {
+        "bytes": 85136,
+        "identical": true,
+        "sha256": "bb9d0cf295da7c42909ac1e32183b8ed918452ed809bd9e4b783b03b188c01e8"
+      },
+      ".rodata": {
+        "bytes": 2632,
+        "identical": true,
+        "sha256": "1c0e1b429aaa262f19c05fb83d536b3f5c79a13870bf8b392a2750aa8d068547"
+      },
+      ".data": {
+        "bytes": 724936,
+        "identical": true,
+        "sha256": "76f8492b3ea2f8ec7d4c942230cddcf7dc27b64f86a50b34292824050ac524dc"
+      }
+    },
+    "rsp_sections_identical": 24
+  },
+  "guards": {
+    "host_unit_cases": 106,
+    "arena_unit_cases": 8,
+    "publication_unit_cases": 6,
+    "linked_observer": {
+      "passed": true,
+      "compiled_cases": 16,
+      "negative_mutations_rejected": 1,
+      "maximum_instructions": 28,
+      "only_owned_counter_writes": true,
+      "pcm_and_ai_registers_untouched": true,
+      "hardware_mocked": true,
+      "ai_rate_matches_compiled_initialization": true,
+      "programmed_dac_rate": 1526,
+      "physical_acceptance": false,
+      "elf_sha256": "97cc6b3a7cf54c797c02bcbfd869b4d31a11adac81d3ff6ce9a08f0a965b996e"
+    },
+    "linked_reboot": {
+      "passed": true,
+      "cases": 12,
+      "linked_instructions": true,
+      "receiver_bytes": 248,
+      "elf_sha256": "97cc6b3a7cf54c797c02bcbfd869b4d31a11adac81d3ff6ce9a08f0a965b996e",
+      "compiled_tv_capture_cases": 5,
+      "modern_ipl3_dmem_tv_source": true,
+      "legacy_low_ram_tv_ignored": true,
+      "invalid_tv_unsigned_byte_falls_back_ntsc": true,
+      "receiver_pc": "a4001020",
+      "ipl3_pc": "a4000040",
+      "external_code_references_after_jump": false,
+      "physical_acceptance": false
+    },
+    "linked_recorder": {
+      "passed": true,
+      "cases": 102,
+      "elf_sha256": "97cc6b3a7cf54c797c02bcbfd869b4d31a11adac81d3ff6ce9a08f0a965b996e",
+      "repeated_captures": 36,
+      "failure_cases": 8,
+      "full_64bit_ordinary_service_gprs": true,
+      "hi_lo_and_status_exl_preserved": true,
+      "irq_nonreserved_gprs_preserved": true,
+      "count_wrap": true,
+      "irq_cutoff_then_natural_boundary_service": true,
+      "no_early_seal_at_limit_minus_one": true,
+      "sd_pause_excluded_from_retained_capture": true,
+      "no_forced_rsp_halt_or_dp_freeze": true,
+      "full_payload_cleared_each_arm": true,
+      "guest_sram_preserved": true,
+      "save_failure_blocks_sd_rearm": true,
+      "immutable_snapshot_after_sd_failure": true,
+      "explicit_usb_only_cases": 7,
+      "usb_ready_distinct_from_sd_saved": true,
+      "usb_only_preserves_sd_diagnostic": true,
+      "in_session_guest_progress_preserved": true,
+      "invalid_handoff_fails_closed": true,
+      "legacy_v4_one_shot_terminal_preserved": true,
+      "post_seal_terminal_faults": 4,
+      "sealed_interval_preserved_on_later_fault": true,
+      "compiled_irq_inside_frame_helper_races": 2,
+      "stale_compare_irq_does_not_mutate_sealed_window": true,
+      "actual_o64_bridge_cases": 24,
+      "queue_slot_sp_restored": true,
+      "actual_assembled_pre_skip_guest_hook_cases": 5,
+      "actual_assembled_runtime_bridge_cases": 8,
+      "compiled_hud_notice_expiry_cases": 3,
+      "expired_notice_never_reappears": true,
+      "zero_notice_deadline_valid": true,
+      "c_transport_mocked": true,
+      "sd_writeback_authority": false,
+      "native_fps_authority": false
+    },
+    "compiled_window": {
+      "passed": true,
+      "compiled_cases": 1792,
+      "negative_mutations_rejected": 2,
+      "both_rsp_banks": true,
+      "pixel_truth_width": 256,
+      "preserved_registers_and_memory": true,
+      "physical_acceptance": false
+    },
+    "production_parser_cases": 171,
+    "production_parser_fuzz": 1000,
+    "default_parser_cases": 153,
+    "default_parser_fuzz": 1000,
+    "delayed_dpc_cases": {
+      "command": 288,
+      "texture": 24,
+      "palette": 24,
+      "independent_dma": 72
+    }
+  },
+  "restoration": {
+    "readback_verified": true,
+    "console_on": true,
+    "mode": "menu",
+    "recovery": 0,
+    "firmware_changed": false,
+    "menu_changed": false
+  }
+}

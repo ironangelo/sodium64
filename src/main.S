@@ -132,13 +132,20 @@ clear_hcomp_surfaces:
     sw t1, 0x0034(t0) // VI_Y_SCALE
 
     // Initialize the AI to output 16-bit samples at the DSP rate
+#ifdef SODIUM64_AUDIO_OBSERVER
+.globl dsp_audio_ai_init_begin, dsp_audio_ai_init_end
+dsp_audio_ai_init_begin:
+#endif
     lui t0, 0xA450 // AI register upper address
     li t1, 0x00000001 // DMA enable
     sw t1, 0x0008(t0) // AI_CONTROL
-    li t1, 48681812 / (60 * 262 * 341 * 4 / DSP_SAMPLE) + 1
+    li t1, DSP_AI_DAC_RATE
     sw t1, 0x0010(t0) // AI_DAC_RATE
     li t1, 0x0000000F // 16-bit - 1
     sw t1, 0x0014(t0) // AI_BIT_RATE
+#ifdef SODIUM64_AUDIO_OBSERVER
+dsp_audio_ai_init_end:
+#endif
 
     // Update the exception vectors
     lui t0, 0xA000

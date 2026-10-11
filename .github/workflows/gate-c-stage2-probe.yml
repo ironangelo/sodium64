@@ -42,7 +42,9 @@ jobs:
             else
               libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee "$variant-build.log"
             fi
-            python3 scripts/check_runtime_arena.py build/sodium64.elf
+            arena_flags=()
+            if [ "$variant" = hw-profile ]; then arena_flags=(--profile); fi
+            python3 scripts/check_runtime_arena.py build/sodium64.elf "${arena_flags[@]}"
             python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
             for name in main mode7 hcomp; do readelf -sW "build/src/rsp_$name.elf" > "rsp-$name.syms"; done
             python3 scripts/test_gate_c_stage1_exec.py --maps build/rsp_main.map build/rsp_mode7.map build/rsp_hcomp.map --symbols rsp-main.syms rsp-mode7.syms rsp-hcomp.syms

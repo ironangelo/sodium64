@@ -193,8 +193,8 @@ jobs:
           python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
           python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
           python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
-          python3 scripts/check_runtime_arena.py build/sodium64.elf
-          python3 scripts/check_event_arena.py --elf build/sodium64.elf
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf --diagnostic-trace
           python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
           python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
@@ -251,6 +251,11 @@ jobs:
           set -o pipefail
           libdragon init
           libdragon make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+
+      - name: Check the sampler runtime arena
+        run: |
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --profile
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf --profile
 
       - name: Check profiling RSP branch delay slots
         run: |
@@ -496,6 +501,52 @@ jobs:
             profile-emulator.log
             profile-snapshot.bin
             profile-report.txt
+
+  usb-audio-observer-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+      - name: Compile and exercise both production parsers
+        run: |
+          python3 scripts/test_remote_control.py
+          python3 scripts/test_remote_control.py --audio-observer --json-output audio-parser.json
+      - name: Compile the selected renderer with the optional audio observer
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon init
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+            WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+            FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 \
+            -j$(nproc) 2>&1 | tee audio-observer-build.log
+      - name: Execute linked observer, caller, transport and arena gates
+        run: |
+          python3 scripts/test_audio_observer.py build/sodium64.elf --json-output audio-hook.json
+          python3 scripts/check_remote_boot.py --elf build/sodium64.elf --json-output audio-boot.json
+          python3 scripts/test_native_diag_continuous.py build/sodium64.elf --json-output audio-recorder.json
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf --diagnostic-trace --output audio-arena.json
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_*.elf
+          python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_rsp_window_spans_compiled.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output audio-windows.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sodium64-usb-audio-observer
+          retention-days: 14
+          path: |
+            audio-*.json
+            audio-observer-build.log
+            build/sodium64.elf
+            build/*.map
+            build/src/rsp_*.elf
+            sodium64.z64
 
   update-release:
     if: github.ref == 'refs/heads/master'

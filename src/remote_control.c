@@ -413,10 +413,69 @@ static void sections(const char *id,uint32_t cursor,uint32_t retired_framebuffer
 }
 #endif
 #include "rdp_math_probe.h"
+#ifdef SODIUM64_AUDIO_OBSERVER
+extern unsigned char dsp_buffer[8192], dsp_regs[128];
+extern uint16_t dsp_pointer;
+extern unsigned char enabled;
+extern volatile uint32_t dsp_audio_blocks, dsp_audio_idle, dsp_audio_full;
+extern volatile uint32_t dsp_audio_gap_max, dsp_audio_last_count;
+extern const uint32_t dsp_audio_dac_rate;
+#ifdef REMOTE_CONTROL_HOST
+extern uint32_t remote_host_audio_register(unsigned offset);
+#endif
+static void audio_observation(const char *id,int reset,uint32_t framebuffer) {
+    if(!present||transport_error||menu_error){error(id,"audio_transport_unready");return;}
+    if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+    if(!remote_paused){error(id,"not_paused");return;}
+    if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
+    if(dsp_pointer>=8192||(dsp_pointer&3)){error(id,"audio_pointer");return;}
+    uint32_t observed_at=count(); /* Before the potentially slow USB export. */
+    if(reset) {
+        dsp_audio_blocks=dsp_audio_idle=dsp_audio_full=0;
+        dsp_audio_gap_max=dsp_audio_last_count=0;
+    } else {
+#ifdef REMOTE_CONTROL_HOST
+        const void *pcm=dsp_buffer;
+#else
+        const void *pcm=uncached(dsp_buffer);
+#endif
+        if(!send_packet(2,pcm,8192)){error(id,"usb_export_failed");return;}
+    }
+    prefix(id,1);append(reset?" audio_reset=1":" exported=audio bytes=8192 pcm=s16be_stereo ring=1");
+    field(" ring_head_bytes=",dsp_pointer);field(" enabled=",enabled);
+    field(" blocks=",dsp_audio_blocks);field(" idle_before_submit=",dsp_audio_idle);
+    field(" full_before_submit=",dsp_audio_full);field(" max_submit_gap_ticks=",dsp_audio_gap_max);
+    field(" last_submit_count32=",dsp_audio_last_count);field(" count32=",observed_at);
+    field(" render_frame_id=",remote_render_frames);
+    /* DAC rate/control/bitrate do not provide useful readback on hardware.
+     * Export the linked initialization value, not a fictitious frequency from
+     * a zero register read. Its equality to actual AI init is a compiled gate. */
+    field(" ai_programmed_dac_rate=",dsp_audio_dac_rate);
+    append(" ai_init_clock_hz=48681812 ai_programmed_control=1 ai_programmed_bit_rate=15");
+    for(unsigned offset=4;offset<=12;offset+=8) {
+#ifdef REMOTE_CONTROL_HOST
+        uint32_t value=remote_host_audio_register(offset);
+#else
+        uint32_t value=*(volatile uint32_t *)(uintptr_t)(0xa4500000u+offset);
+#endif
+        append(" ai");number(offset);append("=");number(value);
+    }
+    append(" dspregs=");
+    static const char digits[]="0123456789abcdef";
+    for(unsigned i=0;i<128;i++) {
+        char byte[3]={digits[dsp_regs[i]>>4],digits[dsp_regs[i]&15],0};append(byte);
+    }
+    append(" provenance=paused_dsp_ring_not_dac no_audio_fidelity_claim=1");
+    (void)finish();
+}
+#endif
 static void status(const char *id) {
     uint32_t now=count();if(now<count_last)count_wraps++;count_last=now;
     prefix(id,1);
     append(" mode=emu protocol=1 build=A14-usb-loop capabilities=pause,pause-at,step,resume,buttons,release,capture,frame,sav,profile,menu");
+#ifdef SODIUM64_AUDIO_OBSERVER
+    append(",audio,audio-reset");
+#endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER
     append(",sections");
 #endif
@@ -492,6 +551,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
     if(nt<3||!eq(tokens[0],"s64")||!hex(tokens[1],8,&unused)) {error(id,"invalid_request");return;}
     id=tokens[1];const char *verb=tokens[2];
+#ifdef SODIUM64_AUDIO_OBSERVER
+    if(eq(verb,"audio")||eq(verb,"audio-reset")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        audio_observation(id,eq(verb,"audio-reset"),retired_framebuffer);return;
+    }
+#endif
 #if defined(SODIUM64_RDP_MATH_PROBE) && !defined(REMOTE_CONTROL_HOST)
     if(eq(verb,"rdp-probe")) {
         uint32_t normalized;

@@ -51,6 +51,7 @@
 
 // Approximate master cycle count for DSP samples
 #define DSP_SAMPLE 672 // 21477000Hz / 32000Hz = 671.15625
+#define DSP_AI_DAC_RATE (48681812 / (60 * 262 * 341 * 4 / DSP_SAMPLE) + 1)
 
 // Maximum opcode bytes that can be compiled in an APU JIT block
 #define BLOCK_SIZE 16

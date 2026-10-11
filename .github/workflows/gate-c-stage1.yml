@@ -97,7 +97,7 @@ jobs:
           libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
           python3 scripts/check_rsp_branch_delay_slots.py \
             build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
-          python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --profile
           cp -a build qualified/hw-profile/
           cp sodium64.z64 qualified/hw-profile/
           for mode in visual mixed; do

@@ -13,6 +13,14 @@ uint32_t native_diag_phase,native_diag_usb_only,native_diag_snapshot_ready,nativ
 int32_t native_diag_capture_result;
 unsigned char native_diag_snapshot[32768];
 volatile uint16_t joyxlh[4];
+#ifdef SODIUM64_AUDIO_OBSERVER
+unsigned char dsp_buffer[8192],dsp_regs[128],enabled;
+uint16_t dsp_pointer;
+volatile uint32_t dsp_audio_blocks,dsp_audio_idle,dsp_audio_full;
+volatile uint32_t dsp_audio_gap_max,dsp_audio_last_count;
+const uint32_t dsp_audio_dac_rate=1526;
+uint32_t remote_host_audio_register(unsigned offset){if(offset!=4&&offset!=12)abort();return 0x40000000u+offset;}
+#endif
 static uint32_t clock_value;
 static unsigned cases, packets, types[3], sizes[3], menu_calls;
 static int fail_send;
@@ -31,6 +39,9 @@ int remote_host_send(unsigned type,const void *data,unsigned bytes){
     if(type==3){const unsigned char expected[16]={0,0,0,4,0,0,0,2,0,0,1,24,0,0,0,240};
         if(bytes!=16||memcmp(data,expected,16))abort();}
     if(type==2&&bytes==32768&&data!=native_diag_snapshot)abort();
+#ifdef SODIUM64_AUDIO_OBSERVER
+    if(type==2&&bytes==8192&&data!=dsp_buffer)abort();
+#endif
     return 1;
 }
 static void check(int ok){cases++;if(!ok){fprintf(stderr,"FAIL case %u response=%s\n",cases,response);exit(1);}}
@@ -202,6 +213,32 @@ int main(void){
     pause_at(4);
     expect("s64 12345678 menu","OK transition_ready=menu outcome=pending");check(menu_calls==1);
     check(!remote_pause_pending);
+#ifdef SODIUM64_AUDIO_OBSERVER
+    remote_render_frames=10;remote_paused=0;remote_arm_pending=0;native_diag_phase=0;
+    expect("s64 12345678 audio","ERR not_paused");check(packets==1);
+    remote_paused=1;native_diag_phase=1;
+    expect("s64 12345678 audio","ERR capture_busy");check(packets==1);
+    native_diag_phase=0;dsp_pointer=3;
+    expect("s64 12345678 audio","ERR audio_pointer");check(packets==1);
+    dsp_pointer=8192;expect("s64 12345678 audio","ERR audio_pointer");
+    dsp_pointer=4096;enabled=0x7f;dsp_audio_blocks=42;dsp_audio_idle=7;dsp_audio_full=2;
+    dsp_audio_gap_max=123;dsp_audio_last_count=456;
+    for(unsigned i=0;i<8192;i++)dsp_buffer[i]=(unsigned char)(i*17);
+    for(unsigned i=0;i<128;i++)dsp_regs[i]=(unsigned char)i;
+    unsigned char saved_audio[8192];memcpy(saved_audio,dsp_buffer,8192);
+    expect("s64 12345678 audio extra","ERR argument_count");
+    expect("s64 12345678 audio","OK exported=audio bytes=8192 pcm=s16be_stereo ring=1");
+    check(packets==2&&sizes[0]==8192&&types[0]==2&&types[1]==1);
+    check(strstr(response,"ring_head_bytes=4096 enabled=127 blocks=42 idle_before_submit=7 full_before_submit=2")!=NULL);
+    check(strstr(response,"dspregs=00010203040506070809")!=NULL);
+    check(strstr(response,"ai_programmed_dac_rate=1526 ai_init_clock_hz=48681812")!=NULL);
+    check(!memcmp(saved_audio,dsp_buffer,8192)&&dsp_audio_blocks==42);
+    fail_send=1;run("s64 12345678 audio");check(packets==0);fail_send=0;
+    expect("s64 12345678 audio-reset","OK audio_reset=1");
+    check(packets==1&&!dsp_audio_blocks&&!dsp_audio_idle&&!dsp_audio_full&&!dsp_audio_gap_max&&!dsp_audio_last_count);
+    check(dsp_pointer==4096&&enabled==0x7f&&!memcmp(saved_audio,dsp_buffer,8192));
+    remote_paused=0;
+#endif
     /* Random text and adversarial bounds exercise the same production parser.
      * Each case must remain within buffers and may never boot or arm. */
     remote_arm_pending=0;unsigned before=menu_calls;

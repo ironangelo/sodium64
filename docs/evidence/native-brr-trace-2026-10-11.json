@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "checkpoint": "R21",
+  "date": "2026-10-11",
+  "source_branch": "phase4/usb-hardware-loop",
+  "parent_commit": "bbe464476dafc24a23c7bc7edcf04f6758104ab4",
+  "scope": "Optional physical BRR input/output observer, not a sound algorithm change",
+  "flags": {
+    "BRR_OBSERVER": 1,
+    "AUDIO_OBSERVER": 1,
+    "DSP_PITCH_CACHE": 1,
+    "DSP_BRR_ACCURATE": 1,
+    "SECTION_OBSERVER": 0
+  },
+  "empty_candidate": {
+    "bytes": 131072,
+    "sha256": "f743c56c477c2c7ddfa743ac3f0d4d309bd4e912dfb928c5bf28bac22cb4f5cc",
+    "elf_sha256": "17da967fa1f92ff7beb22bc97c1ac1a215934c2a5ec0ec27e8b438aa249c3970"
+  },
+  "compiled": {
+    "hook_pairs": 48,
+    "maximum_hook_pair_instructions": 40,
+    "voice_cases": 57344,
+    "synthetic_blocks": 7168,
+    "maximum_decoder_instructions_with_trace": 232,
+    "arithmetic_mutations_rejected": 4,
+    "trace_owned_writes_and_other_registers_preserved": true,
+    "parser_cases": 186,
+    "fuzz_inputs": 1000,
+    "recorder_cases": 102,
+    "reboot_cases": 12,
+    "framebuffer_cases": 5,
+    "arena_owners": 41,
+    "disabled_cpu_sections_identical": true,
+    "identical_rsp_sections": 24
+  },
+  "physical": {
+    "installation_and_readback_verified": true,
+    "matching_acknowledged_input_recipe": true,
+    "retired_rgb_pixels": 67200,
+    "rgb_differences": 0,
+    "pcm_ring_bytes": 8192,
+    "pcm_differences": 0,
+    "dsp_state_equal": true,
+    "complete_brr_records": 32,
+    "decoded_half_samples": 128,
+    "reference_differences": 0,
+    "observed_voice_count": 7,
+    "observed_filters": [
+      2
+    ],
+    "observed_range_count": 3,
+    "reference": "Unmodified compiled Snes9x 1.63 SPC_DSP::decode_brr",
+    "restored_coordinate8_readback_verified": true,
+    "paired_menu_responsive": true
+  },
+  "reference": {
+    "url": "https://github.com/snes9xgit/snes9x/blob/1.63/apu/bapu/dsp/SPC_DSP.cpp",
+    "source_sha256": "67d3fb722458227cf27d9cfcc8eee054b36dcaa2fa6484c64d46618540aac155",
+    "external_reference_executed_privately": true
+  },
+  "preceding_exact_commit_ci": {
+    "head_sha": "bbe464476dafc24a23c7bc7edcf04f6758104ab4",
+    "build_and_validate": {
+      "run_id": 38171101054,
+      "conclusion": "success"
+    },
+    "ares_profile": {
+      "run_id": 38171103410,
+      "conclusion": "success"
+    },
+    "cgram_epoch": {
+      "run_id": 38171103476,
+      "conclusion": "success"
+    }
+  },
+  "limits": {
+    "trace_adds_work": true,
+    "timing_interval_measured": false,
+    "all_physical_filters_and_ranges_covered": false,
+    "whole_pcm_waveform_qualified": false,
+    "dac_output_qualified": false,
+    "presentation_60fps_qualified": false,
+    "road_1_0_complete": false
+  },
+  "publication": "Original source identities, original synthetic tests, numeric aggregates only; commercial payloads and their hashes stay private"
+}

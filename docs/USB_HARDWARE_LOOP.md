@@ -111,3 +111,11 @@ It fixes invalid ranges, signed filter rounding and sample saturation/storage.
 [Decoder and native proof](DSP_BRR_ACCURACY_2026-10-11.md) distinguish matching
 isolated arithmetic from unqualified full PCM/DAC fidelity. It defaults off;
 native image checks preserve rendering and timing still requires qualification.
+
+`BRR_OBSERVER=1` requires `AUDIO_OBSERVER=1` and defaults off. The pause-only
+`audio-brr` command exports the last 32 complete decoder input/output records
+for private reference checking. Each record is 16 bytes; the completion count
+wraps at 2^32. The hooks add 40 scalar instructions per decoded chunk. Use
+observer-free code for production timing comparisons. The
+[native chunk proof](NATIVE_BRR_TRACE_2026-10-11.md) records physical agreement
+without claiming complete SNES audio or DAC fidelity.

@@ -1,3 +1,69 @@
+# 2026-10-11 - Physical BRR decoder input/output verification (R21)
+
+Source phase4/usb-hardware-loop:
+da51d119cdde5694ae4ab63e35280cb70a19a9ec (parent bbe4644).
+Draft PR https://github.com/ironangelo/sodium64/pull/21.
+Master remains 7cc8facfe8643fb85888f301f79995575830521d; no merge/release.
+Same active speed, visual and audio fidelity goal. ALttP remains first.
+The complete preceding cloud Work and Codex continuity is preserved below.
+
+[Native BRR trace and limits](NATIVE_BRR_TRACE_2026-10-11.md).
+[Curated numeric evidence](evidence/native-brr-trace-2026-10-11.json).
+[Dated history](CODEX_HARDWARE_HISTORY_2026-10-11.md).
+[Current USB recipe](USB_HARDWARE_LOOP.md).
+
+## Hypothesis, implementation and evidence
+
+- BRR_OBSERVER=1 requires AUDIO_OBSERVER=1 and defaults off. It records
+  32 complete 16-byte BRR chunks, with raw inputs before range transformation
+  and outputs after all four stores. Pause-only audio-brr exports 512 bytes.
+  It does not change the decoder, ring PCM or AI submission policy.
+- 48 linked hook pairs cover eight voices, slots 0/31 and completion wrap.
+  Only owned trace bytes/counters and existing scratch registers change;
+  HI/LO/CP0 survive. Hook overhead is 40 scalar instructions per chunk.
+- 57,344 voice cases check arithmetic and trace fields; four mutations fail.
+  Production parser: 186 cases plus 1,000 fuzz inputs. Recorder: 102 cases.
+  Reboot/framebuffer: 12/5 cases; arena: 41 owners. Disabled CPU sections
+  match R20; all 24 RSP sections remain identical. Arena gap remains 0xA38.
+- Physical menu-mediated install/readback and input acknowledgements pass.
+  At the same retired room boundary, 67,200 RGB pixels match coordinate8
+  and 8,192 PCM bytes plus DSP state match R20, with zero differences.
+- 32 real N64 records contain 128 half-scaled samples, all matching the
+  unmodified compiled Snes9x 1.63 decode_brr method. Physical coverage is
+  seven voices, filter 2 and three ranges; synthetic checks cover the rest.
+  This verifies a bounded hardware decoder case, not full audio/DAC fidelity.
+- No timing window was measured with these extra hooks. Their overhead must
+  not be attributed to observer-free production code or a speed improvement.
+
+## Retained/restored state and next condition
+
+Empty measured candidate f743c56c477c2c7ddfa743ac3f0d4d309bd4e912dfb928c5bf28bac22cb4f5cc;
+ELF 17da967fa1f92ff7beb22bc97c1ac1a215934c2a5ec0ec27e8b438aa249c3970.
+The retained renderer/pitch/BRR recipe adds only BRR_OBSERVER=1 for this proof.
+Coordinate8 empty a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2
+was restored with verified readback. Console is on and paired menu responsive;
+menu and firmware 2.20.2 are unchanged. Empty candidate/ELF copies are archived
+privately. The optional observer is retained as development instrumentation.
+
+Remaining audio features include release, Gaussian interpolation, echo,
+master volumes, accurate mixing/envelopes and clock/AI scheduling. Rain's
+approximately 32 retired boundaries/s and low audio production remain open.
+No whole-audio, constant-60, matrix or Road 1.0 qualification follows.
+
+## CI and privacy
+
+Exact preceding bbe4644 passes all three workflows: Build and Validate
+38171101054, Ares Profile Validation 38171103410, CGRAM Epoch Replay
+38171103476. Fresh da51d11 CI must be checked independently. Its observer
+job now executes the optional parser, compiled hooks and traced BRR proof.
+
+Private 2026-10-11 bench holds brr-observer-physical.json, raw chunks,
+frames, PCM/registers, replay/transport logs, reference executable/source
+and empty archives. Only original source/tests and numeric aggregates publish.
+No commercial ROM/SAV/frame/PCM/register/chunk payload or derived hash uploads.
+
+---
+
 # 2026-10-11 - Faithful BRR arithmetic and unchanged native images (R20)
 
 Source phase4/usb-hardware-loop:

@@ -362,6 +362,16 @@ decode_samples:
     lbu s0, apu_ram + 2(t0)
     sll t3, t3, 8
     or s0, s0, t3
+#ifdef SODIUM64_DSP_BRR_ACCURATE
+    // Invalid ranges13-15 decode as0/-2048. Transform all four nybbles to
+    // 0/-8 once, then use range9 in the existing sample loop.
+    sltiu t3, t1, 13
+    bnez t3, brr_range_ready
+    nop
+    andi s0, s0, 0x8888
+    li t1, 9
+brr_range_ready:
+#endif
     li s1, 8
 
 next_sample:
@@ -382,9 +392,17 @@ filter_1:
     add t3, v1, t7
     lh t7, (t3)
     add t0, t0, t7
+#ifdef SODIUM64_DSP_BRR_ACCURATE
+    // Arithmetic floor of the negative term differs from subtracting floor.
+    subu t7, zero, t7
+    sra t7, t7, 4
+    b filter_end
+    add t0, t0, t7
+#else
     sra t7, t7, 4
     b filter_end
     sub t0, t0, t7
+#endif
 
 filter_2:
     // Apply the old sample, multiplied by 1.90625
@@ -396,8 +414,14 @@ filter_2:
     add t0, t0, t3
     sll t3, t7, 1
     add t3, t3, t7
+#ifdef SODIUM64_DSP_BRR_ACCURATE
+    subu t3, zero, t3
+    sra t3, t3, 5
+    add t0, t0, t3
+#else
     sra t3, t3, 5
     sub t0, t0, t3
+#endif
 
     // Apply the older sample, multiplied by -0.9375
     addi t7, s1, 4
@@ -421,8 +445,14 @@ filter_3:
     add t3, t3, t7
     sll t7, t7, 2
     add t3, t3, t7
+#ifdef SODIUM64_DSP_BRR_ACCURATE
+    subu t3, zero, t3
+    sra t3, t3, 6
+    add t0, t0, t3
+#else
     sra t3, t3, 6
     sub t0, t0, t3
+#endif
 
     // Apply the older sample, multiplied by -0.8125
     addi t7, s1, 4
@@ -436,6 +466,19 @@ filter_3:
     add t0, t0, t3
 
 filter_end:
+#ifdef SODIUM64_DSP_BRR_ACCURATE
+    // Reference BRR clamps the intermediate to signed16, doubles with
+    // signed16 wrap, then stores it. This mixer keeps half-scaled samples:
+    // that operation is exactly sign-extension of15 bits after the clamp.
+    sll t3, t0, 16
+    sra t3, t3, 16
+    beq t0, t3, brr_clamped
+    sra t7, t0, 31
+    xori t0, t7, 0x7FFF
+brr_clamped:
+    sll t0, t0, 17
+    sra t0, t0, 17
+#endif
     // Store the sample and loop until all 4 are done
     add t3, v1, s1
     bnez s1, next_sample

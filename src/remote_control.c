@@ -414,6 +414,9 @@ static void sections(const char *id,uint32_t cursor,uint32_t retired_framebuffer
 #endif
 #include "rdp_math_probe.h"
 #ifdef SODIUM64_AUDIO_OBSERVER
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+extern volatile uint32_t dsp_release_steps, dsp_release_last;
+#endif
 extern unsigned char dsp_buffer[8192], dsp_regs[128];
 extern uint16_t dsp_pointer;
 extern unsigned char enabled;
@@ -433,6 +436,9 @@ static void audio_observation(const char *id,int reset,uint32_t framebuffer) {
     if(reset) {
         dsp_audio_blocks=dsp_audio_idle=dsp_audio_full=0;
         dsp_audio_gap_max=dsp_audio_last_count=0;
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+        dsp_release_steps=dsp_release_last=0;
+#endif
     } else {
 #ifdef REMOTE_CONTROL_HOST
         const void *pcm=dsp_buffer;
@@ -447,6 +453,9 @@ static void audio_observation(const char *id,int reset,uint32_t framebuffer) {
     field(" full_before_submit=",dsp_audio_full);field(" max_submit_gap_ticks=",dsp_audio_gap_max);
     field(" last_submit_count32=",dsp_audio_last_count);field(" count32=",observed_at);
     field(" render_frame_id=",remote_render_frames);
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+    field(" release_steps=",dsp_release_steps);field(" release_last=",dsp_release_last);
+#endif
     /* DAC rate/control/bitrate do not provide useful readback on hardware.
      * Export the linked initialization value, not a fictitious frequency from
      * a zero register read. Its equality to actual AI init is a compiled gate. */

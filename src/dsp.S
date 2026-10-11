@@ -59,6 +59,12 @@ dsp_audio_gap_max: .word 0
 dsp_audio_last_count: .word 0
 .globl dsp_audio_dac_rate
 dsp_audio_dac_rate: .word DSP_AI_DAC_RATE
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+.globl dsp_release_steps, dsp_release_last
+dsp_release_steps: .word 0
+// Private last transition: voice8/before12/after12. No PCM payload here.
+dsp_release_last: .word 0
+#endif
 #endif
 
 #ifdef SODIUM64_BRR_OBSERVER
@@ -801,6 +807,48 @@ update_vols: // t6: voice
     jr ra
     nop
 
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+.globl release_mode
+.align 5
+release_mode: // t6: voice, t8: stride, gp: current DSP timer
+    // The reference release decreases by8 per generated sample, independent
+    // of ADSR/GAIN rates. Keep the voice audible until its envelope reaches0.
+    lhu t0, envelopes(t8)
+#ifdef SODIUM64_AUDIO_OBSERVER
+    move t1, t0
+#endif
+    addiu t0, t0, -8
+    bgtz t0, release_store
+    nop
+    li t0, 1
+    sll t0, t0, t6
+    xori t0, t0, 0xFF
+    and sp, sp, t0
+    sb sp, enabled
+    move t0, zero
+release_store:
+    sh t0, envelopes(t8)
+#ifdef SODIUM64_AUDIO_OBSERVER
+    sll t1, t1, 12
+    or t1, t1, t0
+    sll t2, t6, 24
+    or t1, t1, t2
+    sw t1, dsp_release_last
+    lw t1, dsp_release_steps
+    addiu t1, t1, 1
+    sw t1, dsp_release_steps
+#endif
+    // Match the next sample's decrement, including the0x7800 timer wrap.
+    addiu t0, gp, -1
+    bgez t0, release_timer_ready
+    nop
+    addiu t0, t0, 0x7800
+release_timer_ready:
+    sh t0, next_steps(t8)
+    j update_vols
+    nop
+#endif
+
 .align 5
 read_dspaddr: // v0: value
     // Read the DSP register address
@@ -867,6 +915,18 @@ write_vol: // t0: address
 
 .align 5
 write_adsr: // t0: address
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+    // A register write cannot exit an already latched release. KON below
+    // explicitly restarts the voice and selects attack/gain again.
+    andi t4, t0, 0xF0
+    lw t1, mode_funcs(t4)
+    la t2, release_mode
+    bne t1, t2, adsr_not_releasing
+    nop
+    jr ra
+    nop
+adsr_not_releasing:
+#endif
     // Switch a voice's envelope to gain if selected
     lbu t1, dsp_regs(t0) // VxADSR1
     andi t4, t0, 0xF0
@@ -941,6 +1001,32 @@ kon_end:
 
 .align 5
 write_koff: // a1: value
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+    // Latch release on the selected voices; preserve enabled/envelope now.
+    la t2, release_mode
+    lhu t3, dsp_timer
+    addiu t3, t3, -1
+    bgez t3, koff_timer_ready
+    nop
+    addiu t3, t3, 0x7800
+koff_timer_ready:
+    andi t7, a1, 0xFF
+    li t6, -1
+koff_next_voice:
+    addiu t6, t6, 1
+    srl t0, t7, t6
+    beqz t0, koff_return
+    andi t0, t0, 1
+    beqz t0, koff_next_voice
+    sll t1, t6, 4
+    sw t2, mode_funcs(t1)
+    sh t3, next_steps(t1)
+    b koff_next_voice
+    nop
+koff_return:
+    jr ra
+    nop
+#else
     // Set voices to disabled
     lbu t0, enabled
     xori t1, a1, 0xFF
@@ -948,6 +1034,7 @@ write_koff: // a1: value
     sb t0, enabled
     jr ra
     nop
+#endif
 
 
 #ifdef SODIUM64_NATIVE_DIAG_TRACE

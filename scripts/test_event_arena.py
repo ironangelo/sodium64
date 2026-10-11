@@ -74,10 +74,26 @@ class EventArenaTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError,'overlaps'):
             prove_disjoint(owners)
 
+    def test_brr_observer_arena_owns_growth_without_overlap(self):
+        owners=layout(ROOT/'src/defines.h',diagnostic_trace=True,brr_observer=True)
+        self.assertEqual(owners['HCOMP_CGRAM_BASE_QUEUE1'][0],0xd4000)
+        self.assertEqual(owners['HCOMP_CGRAM_EVENT_QUEUE1'][1],0xece00)
+        self.assertLessEqual(owners['HCOMP_CGRAM_EVENT_QUEUE1'][1],owners['HCOMP_RAW_PALETTE_QUEUE1'][0])
+        owners['ELF:synthetic_observer_growth']=(0xe000,0xd2100)
+        prove_disjoint(owners)
+        owners['HCOMP_CGRAM_BASE_QUEUE1']=(0xd2000,0xd2200)
+        with self.assertRaisesRegex(AssertionError,'overlaps'):
+            prove_disjoint(owners)
+
+    def test_brr_observer_cannot_select_normal_layout(self):
+        with self.assertRaisesRegex(ValueError,'requires --diagnostic-trace'):
+            layout(ROOT/'src/defines.h',brr_observer=True)
+
     def test_host_preprocessor_preserves_all_conditional_owners(self):
         compiler=shutil.which('gcc') or shutil.which('clang') or shutil.which('cc')
         self.assertIsNotNone(compiler,'host CI requires a C preprocessor')
-        for selection in ({'diagnostic_trace':True},{'profile':True}):
+        for selection in ({'diagnostic_trace':True},{'profile':True},
+                          {'diagnostic_trace':True,'brr_observer':True}):
             expected=layout(ROOT/'src/defines.h',**selection)
             actual=layout(ROOT/'src/defines.h',cc=compiler,**selection)
             self.assertEqual(actual,expected)

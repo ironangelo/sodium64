@@ -19,6 +19,9 @@ uint16_t dsp_pointer;
 volatile uint32_t dsp_audio_blocks,dsp_audio_idle,dsp_audio_full;
 volatile uint32_t dsp_audio_gap_max,dsp_audio_last_count;
 const uint32_t dsp_audio_dac_rate=1526;
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+volatile uint32_t dsp_release_steps,dsp_release_last;
+#endif
 uint32_t remote_host_audio_register(unsigned offset){if(offset!=4&&offset!=12)abort();return 0x40000000u+offset;}
 #endif
 #ifdef SODIUM64_BRR_OBSERVER
@@ -230,6 +233,9 @@ int main(void){
     dsp_pointer=8192;expect("s64 12345678 audio","ERR audio_pointer");
     dsp_pointer=4096;enabled=0x7f;dsp_audio_blocks=42;dsp_audio_idle=7;dsp_audio_full=2;
     dsp_audio_gap_max=123;dsp_audio_last_count=456;
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+    dsp_release_steps=7;dsp_release_last=0x01018010;
+#endif
     for(unsigned i=0;i<8192;i++)dsp_buffer[i]=(unsigned char)(i*17);
     for(unsigned i=0;i<128;i++)dsp_regs[i]=(unsigned char)i;
     unsigned char saved_audio[8192];memcpy(saved_audio,dsp_buffer,8192);
@@ -240,9 +246,15 @@ int main(void){
     check(strstr(response,"dspregs=00010203040506070809")!=NULL);
     check(strstr(response,"ai_programmed_dac_rate=1526 ai_init_clock_hz=48681812")!=NULL);
     check(!memcmp(saved_audio,dsp_buffer,8192)&&dsp_audio_blocks==42);
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+    check(dsp_release_steps==7&&dsp_release_last==0x01018010);
+#endif
     fail_send=1;run("s64 12345678 audio");check(packets==0);fail_send=0;
     expect("s64 12345678 audio-reset","OK audio_reset=1");
     check(packets==1&&!dsp_audio_blocks&&!dsp_audio_idle&&!dsp_audio_full&&!dsp_audio_gap_max&&!dsp_audio_last_count);
+#ifdef SODIUM64_DSP_KOFF_RELEASE
+    check(!dsp_release_steps&&!dsp_release_last);
+#endif
     check(dsp_pointer==4096&&enabled==0x7f&&!memcmp(saved_audio,dsp_buffer,8192));
     remote_paused=0;
 #endif

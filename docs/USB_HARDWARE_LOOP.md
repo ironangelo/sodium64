@@ -119,3 +119,18 @@ wraps at 2^32. The hooks add 40 scalar instructions per decoded chunk. Use
 observer-free code for production timing comparisons. The
 [native chunk proof](NATIVE_BRR_TRACE_2026-10-11.md) records physical agreement
 without claiming complete SNES audio or DAC fidelity.
+
+The current BRR_OBSERVER configuration relocates Q1's arena to 0xD4000 for
+additional static diagnostic storage; both CPU and RSP use that definition.
+Its strict runtime/event checks require `--diagnostic-trace --brr-observer`.
+Other diagnostic/PROFILE layouts remain at 0xD2000. R21's physical decoder
+proof used its earlier 0xD2000 layout; the later observer relocation has a
+separate qualification boundary.
+
+`DSP_KOFF_RELEASE=1` preserves note tails with an eight-unit envelope decrease
+per generated sample. It defaults off. The
+[release checkpoint](DSP_KOFF_RELEASE_2026-10-11.md) separates its arithmetic/
+caller proofs from open register-latching, complete mixing and DAC accuracy.
+With AUDIO_OBSERVER=1, private audio metadata also exports a release-step count
+and last transition; the additional 12 instructions per release step must be
+disclosed in timing comparisons.

@@ -276,6 +276,16 @@ differ from the preceding failure, so its cause remains unresolved. Exact1b
 Build/CGRAM pass; Ares cancelled is not PASS. Next: exact combined with quiet
 USB replay. Full audio/constant60 remain open.
 
+## R25 - Observer macro discarded and USB-state overlap
+
+[Actual binary fault](BRR_ARENA_BUILD_FIX_2026-10-11.md) records the second
+combined timeout despite quiet20s. Make resets the RSP flag after appending
+BRR_OBSERVER: compiled backups stillD2400, overlapping combined USB BSS.
+R24 no-KOFF comparison remains valid, but its unified-layout claim is corrected.
+The fresh fix changes exactly four loaded bytes; a new CPU/embedded-RSP/DMA
+regression rejects the old binary and three mutations. Corrected native trial
+awaits physical recovery; no restoration is claimed after this interruption.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

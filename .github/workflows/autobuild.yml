@@ -545,6 +545,7 @@ jobs:
           python3 scripts/test_native_diag_continuous.py build/sodium64.elf --json-output audio-recorder.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace --brr-observer
           python3 scripts/check_event_arena.py --elf build/sodium64.elf --diagnostic-trace --brr-observer --output audio-arena.json
+          python3 scripts/check_brr_observer_arena.py build/sodium64.elf --json-output audio-compiled-arena.json
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_*.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_rsp_window_spans_compiled.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output audio-windows.json

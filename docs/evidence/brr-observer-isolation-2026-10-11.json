@@ -67,5 +67,12 @@
     "ares": "cancelled"
   },
   "full_audio_or_60fps_acceptance": false,
-  "commercial_data_included": false
+  "commercial_data_included": false,
+  "R25_layout_correction": {
+    "CPU_arena": "0xD4000",
+    "actual_RSP_backup": "0xD2400",
+    "source_selected_owner_check_missed_compiled_writer": true,
+    "unified_layout_physically_qualified": false,
+    "native_image_pcm_decoder_comparisons_remain_valid": true
+  }
 }

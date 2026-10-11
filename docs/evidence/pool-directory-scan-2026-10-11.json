@@ -1,0 +1,40 @@
+{
+  "checkpoint": "R26",
+  "observed_old_native_launch_seconds": [
+    203.703,
+    209.703
+  ],
+  "entire_delay_attributed_to_probing": false,
+  "host_real_helper": {
+    "passed": true,
+    "pool_cases": 26,
+    "legacy_reservation_regressions": true,
+    "directory_scan_read_only": true,
+    "directory_scans_per_pool": 1,
+    "cursor_existing_captures": 96,
+    "cursor_exclusive_create_attempts": 16,
+    "scan_open_read_close_failures_rejected": true,
+    "post_scan_collision_preserved": true,
+    "hardware_mocked": true,
+    "native_launch_time_qualified": false,
+    "sanitizers": []
+  },
+  "previous_exclusive_create_attempts": 112,
+  "create_new_remains_authoritative": true,
+  "existing_files_not_modified": true,
+  "pinned_menu_build": {
+    "passed": true,
+    "bytes": 1736704,
+    "sha256": "1e5fd76febfe2405fbea0f855dad63514960502631af1a1cd081d1f907c2c6f5",
+    "DFS_reference_equal": true,
+    "DFS_sha256": "bc88c435ad71922015f625e960d983694881ce82a03064e56ea93401e0644d50",
+    "FatFs_revision": 80386,
+    "compiled_header_owners": 8,
+    "USB_host_checks": 52,
+    "asset_regressions": 16
+  },
+  "candidate_installed": false,
+  "native_launch_time_and_persistence": "pending menu recovery",
+  "commercial_data_included": false,
+  "full_goal_acceptance": false
+}

@@ -286,6 +286,17 @@ The fresh fix changes exactly four loaded bytes; a new CPU/embedded-RSP/DMA
 regression rejects the old binary and three mutations. Corrected native trial
 awaits physical recovery; no restoration is claimed after this interruption.
 
+## R26 - Remove repeated exclusive-open filename probing
+
+[Single directory scan](POOL_DIRECTORY_SCAN_2026-10-11.md) retains exclusive
+creation and all save/sector ownership rules. The real helper uses one scan
+and16 creates for96 old files, versus112 creates previously. Scan failures,
+name noise/case/exhaustion and a creation race pass;26 prior pool cases remain.
+Pinned menu build, FatFs ABI, unchanged DFS,52 USB host/16 asset checks pass.
+Native installation and timing remain pending menu recovery; no FPS effect
+is claimed. Previous measured launches203.703/209.703s are not fully attributed
+to probing without a physical timing comparison.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

@@ -1,3 +1,36 @@
+# 2026-10-11 - One read-only capture filename scan (R26)
+
+Source phase4/usb-hardware-loop: 7d8388661ae30f55e625e1462c98766a7328a8af.
+Master unchanged7cc8fac, PR21 draft. Same active full goal.
+
+Latest native launch latency203.703/209.703s; first reservation still probes
+fromID1. One directory scan now seeds max exact stem/tag/six-digit ID+1.
+The pool shares the cursor; FA_CREATE_NEW remains authoritative and protects
+after-scan races. Errors/exhaustion reject without altering old files.
+26 existing pool cases and new name/case/race/scan-failure checks pass.
+96 old captures +16 slots: one read-only scan/16 creates, versus112 before.
+The host CI job now includes this real helper with Linux ASan/UBSan.
+
+Pinned menu builds;8 FatFs header consumers agree with linked library, DFS
+assets remain identical;52 USB host and16 asset checks pass. Candidate
+1736704B SHA2561e5fd76febfe2405fbea0f855dad63514960502631af1a1cd081d1f907c2c6f5.
+Candidate is NOT installed. Native latency/persistence requires menu recovery.
+Do not claim the whole prior delay was filename probing or a gameplay FPS win.
+
+R25 corrected observer is ready with binary ownership guard; the console still
+does not answer emulator USB after the failed old combined trial. A fresh hello
+probe confirms the timeout. Physical Reset/power-cycle was requested. Restore
+coordinate8 first when menu responds, then qualify the four-byte RSP fix and
+paired menu upgrade via verified installation/readback and native replay.
+No successful restoration is claimed after this interruption.
+
+[Scanner and qualification](POOL_DIRECTORY_SCAN_2026-10-11.md).
+[Curated proof](evidence/pool-directory-scan-2026-10-11.json).
+Raw commercial files and transport remain private. Full60/visual/audio/game
+requirements remain unqualified. Prior continuity is byte-identical below.
+
+---
+
 # 2026-10-11 - Actual RSP arena/USB overlap and corrected build (R25)
 
 Source phase4/usb-hardware-loop: 9fb0b80b15bf1e9a5307c9dd691194a8b3d59ae8.

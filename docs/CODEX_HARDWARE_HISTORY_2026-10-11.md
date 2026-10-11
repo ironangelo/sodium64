@@ -267,6 +267,15 @@ mode; coordinate8 installation/readback matches its known empty-template hash
 and CRC. The interruption recorded at R22 is resolved. The combined observer
 still lacks physical qualification. Next, isolate relocated BRR with KOFF off.
 
+## R24 - Relocated observer without KOFF
+
+[Distinct native trial](BRR_OBSERVER_ISOLATION_2026-10-11.md) reaches the room
+and returns/restores coordinate8 without Reset.67200 RGB pixels,8192 PCM bytes
+and128 decoder half samples have zero differences. Both KOFF and USB polling
+differ from the preceding failure, so its cause remains unresolved. Exact1b
+Build/CGRAM pass; Ares cancelled is not PASS. Next: exact combined with quiet
+USB replay. Full audio/constant60 remain open.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

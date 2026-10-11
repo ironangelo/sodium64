@@ -1,3 +1,29 @@
+# 2026-10-11 - Relocated BRR observer without KOFF verified (R24)
+
+Source phase4/usb-hardware-loop: e365ad6692a60cef40a88574c6caec1f312e36b5.
+Executable code remains1b12398; PR21 draft, master unchanged7cc8fac.
+
+New0xD4000 BRR observer with KOFF=0 passes native install/readback and
+acknowledged replay to room1980.67200 RGB pixels and8192 PCM bytes match
+R20 exactly;128 half samples match independent compiled Snes9x1.63.
+Seven voices/filter2/ranges5-7 observed. Coordinate8 restored/readback
+verified and menu responsive without Reset. Linked57344 decoder cases,
+4 mutations,41 memory owners,12/5 boot/frame and DMA guards pass.
+
+This also leaves USB quiet20s after step780 instead of0.8s status polling.
+Two factors differ from the failed combined trial; root cause is unresolved.
+Next distinct trial: exact combined BRR/KOFF archive, same quiet interval,
+R22 release-only room comparison. No paused PCM implies DAC acceptance.
+Exact1b12398 Build38174698283/CGRAM38174701186 pass. Ares38174701176
+was cancelled by later branch activity: not PASS. Later commits need exactCI.
+
+[Native trial and limits](BRR_OBSERVER_ISOLATION_2026-10-11.md).
+[Curated evidence](evidence/brr-observer-isolation-2026-10-11.json).
+Raw commercial data and hashes stay private. Full goal remains active.
+The entire previous continuity is preserved byte for byte below.
+
+---
+
 # 2026-10-11 - Recovery after combined observer timeout (R23)
 
 Source phase4/usb-hardware-loop: e3aa44367cc8771ba01a67d8eed628198cfe8da5.

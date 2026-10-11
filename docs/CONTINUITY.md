@@ -1,3 +1,41 @@
+# 2026-10-11 - Native directory-scan menu and repeated SD capture (R28)
+
+Source phase4/usb-hardware-loop: cc95ffb278530f05f66bbe736deee556554ae5d9.
+Executable code7d83886; master unchanged7cc8fac, PR21 draft. Full goal active.
+
+New menu installed/readback verified while N64 on. Original SD menu retained
+via unique previous rename/listing, then fixture/USB return boots the new menu
+without Reset. Actual paired menu/recovery0 responds. Same ALttP launch31.922s
+versus prior203.703/209.703, one new sample: iteration-latency improvement,
+not gameplay FPS.600/1380/1980 input replay preserves67200 RGB pixels.
+
+Two20s USB-triggered SD captures in one game session return success1/phase0
+and sealed IDs1/2. Both v5 snapshots have valid signature/layout/payload
+checksum, full trace/zero overflow, with internal sector readback gate passed.
+Gameplay resumes and returns to the menu without Reset. No direct PC SD
+access while powered on. Physical Start/TV OK and independent menu-file
+download are not inferred from this route. Raw data and hashes stay private.
+
+A host preflight confused the older asset-reference file with the latest menu
+and correctly rejected its hash before writing. Actual prior SD object is the
+retained rollback copy, not a downloaded host copy. Host parser return-shape
+errors after first native save are repaired by decoding its existing private
+snapshot and resuming the same verified paused state. First capture was not
+repeated. Payload checksum is distinct from header signature/layout; no
+separate header checksum is invented. These failed attempts stay in history.
+
+INSTALLED menu1e5fd76febfe2405fbea0f855dad63514960502631af1a1cd081d1f907c2c6f5
+(1736704B). Coordinate8 remains selected/readback verified; firmware unchanged.
+Previous menu is retained under its private unique .previous name.
+
+[Native trial and limits](POOL_DIRECTORY_NATIVE_2026-10-11.md).
+[Curated proof](evidence/pool-directory-native-2026-10-11.json).
+Next audio work: full dry-mix arithmetic, signed master volume/saturation/mute
+while keeping other missing DSP functions and60fps qualification explicit.
+Prior continuity preserved byte for byte below.
+
+---
+
 # 2026-10-11 - Corrected RSP arena native cycle verified (R27)
 
 Source phase4/usb-hardware-loop: 2729289db2108368566ab2ec41ddaa5d71cad0cb.

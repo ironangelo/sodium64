@@ -61,6 +61,8 @@ def main():
             cpu.regs[28]=timer;cpu.regs[29]=255
             initial=cpu.regs.copy();cpu.memory_writes.clear();cpu.cp_writes.clear()
             observed='dsp_release_steps' in s
+            cache_unused='dsp_dry_skip_vol_cache' in s
+            cached_before=read('cached_vols',offset=offset)
             if observed:
                 if envelope==0:put('dsp_release_steps',0xffffffff)
                 before_steps=read('dsp_release_steps')
@@ -68,10 +70,14 @@ def main():
             expected=max(0,envelope-8)
             assert read('envelopes',2,offset)==expected
             assert read('next_steps',2,offset)==(timer-1)%0x7800
-            assert signed(read('cached_vols',2,offset),16)==-91*(expected>>4)
-            assert signed(read('cached_vols',2,offset+2),16)==75*(expected>>4)
+            if cache_unused:
+                assert read('cached_vols',offset=offset)==cached_before
+            else:
+                assert signed(read('cached_vols',2,offset),16)==-91*(expected>>4)
+                assert signed(read('cached_vols',2,offset+2),16)==75*(expected>>4)
             assert read('enabled',1)==(255&~(1<<voice) if not expected else 255)
-            owned=addresses('envelopes',offset,2)|addresses('next_steps',offset,2)|addresses('cached_vols',offset,4)
+            owned=addresses('envelopes',offset,2)|addresses('next_steps',offset,2)
+            if not cache_unused:owned|=addresses('cached_vols',offset,4)
             if not expected:owned|=addresses('enabled',0,1)
             if observed:
                 owned|=addresses('dsp_release_steps',0,4)|addresses('dsp_release_last',0,4)

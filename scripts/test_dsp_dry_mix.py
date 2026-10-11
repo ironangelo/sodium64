@@ -105,6 +105,9 @@ def main():
                 packed=(expected[0]&65535)<<16 | (expected[1]&65535)
                 assert cpu.read(symbols['dsp_buffer']+0x200)==packed
                 assert cpu.read(symbols['dsp_pointer'],2)==0x204
+                if 'dsp_dry_skip_vol_cache' in symbols:
+                    for number in range(8):
+                        assert cpu.read(symbols['cached_vols']+number*16)==0x6fff7eee
                 assert not cpu.cp_writes
                 maximum_sample=max(maximum_sample,cpu.steps-steps-1);complete_samples+=1
     # Negative mutations affect observable arithmetic or mute, not just labels.
@@ -122,8 +125,23 @@ def main():
         assert len(pcs)==1,(name,len(pcs));pc=pcs[0];old=cpu.read(pc);cpu.write(pc,transform(old))
         assert run()!=expected,'mutation escaped: '+name
         cpu.write(pc,old);rejected.append(name)
+    # The real register dispatcher must immediately feed the next dry sample,
+    # with no legacy cache update or other DSP write.
+    volume_writes=0
+    if 'dsp_dry_skip_vol_cache' in symbols:
+        for number in range(8):
+            for channel in (0,1):
+                for raw in range(256):
+                    address=number*16+channel
+                    put('dsp_addr',address,1);put('cached_vols',0x12345678,4,number*16)
+                    cpu.pattern();cpu.regs[5]=raw;cpu.memory_writes.clear()
+                    cpu.execute(symbols['write_dspdata'])
+                    assert cpu.memory_writes==[((symbols['dsp_regs']+address)&0x1fffffff,1,raw)]
+                    assert cpu.read(symbols['cached_vols']+number*16)==0x12345678
+                    volume_writes+=1
     proof={'passed':True,'voice_cases':voice_cases,'output_cases':output_cases,
            'actual_scheduler_samples':complete_samples,'negative_mutations_rejected':rejected,
+           'actual_uncached_volume_writes':volume_writes,
            'maximum_voice_instructions':maximum_voice,'maximum_output_instructions':maximum_output,
            'maximum_scheduler_sample_instructions':maximum_sample,
            'memory_and_unrelated_registers_preserved_by_arithmetic':True,

@@ -937,6 +937,14 @@ set_noise:
 
 .align 5
 update_vols: // t6: voice
+#ifdef SODIUM64_DSP_DRY_MIX
+.globl dsp_dry_skip_vol_cache
+dsp_dry_skip_vol_cache:
+    // The exact dry path reads the full envelope and signed register bytes.
+    // Its quantized legacy product cache has no consumer in this build.
+    jr ra
+    nop
+#else
     // Get a voice's envelope and channel volumes
     sll t1, t6, 4
     lhu t0, envelopes(t1)
@@ -953,6 +961,7 @@ update_vols: // t6: voice
     sh t3, cached_vols + 2(t1)
     jr ra
     nop
+#endif
 
 #ifdef SODIUM64_DSP_KOFF_RELEASE
 .globl release_mode

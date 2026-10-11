@@ -221,6 +221,18 @@ Single-window cadence differences remain below1%; no universal cost or speed
 claim follows. Coordinate8 is restored. Full mixing, echo, interpolation and
 other DSP work remain open. Preceding8453175 workflows all pass.
 
+## R21 - Physical BRR input/output proof
+
+[Native BRR trace](NATIVE_BRR_TRACE_2026-10-11.md) records an opt-in 32-record
+ring and pause-only export. The actual N64 produces 128 half-scaled samples
+matching the unmodified compiled primary reference, with zero differences.
+The room's 67,200 pixels and 8,192 PCM bytes remain unchanged by tracing.
+The sampled physical case covers seven voices, filter 2 and three ranges;
+57,344 synthetic voice cases cover the broader arithmetic space. Trace hooks
+add 40 instructions per chunk, so no observer-free speed claim follows.
+Coordinate8 is restored and the paired menu responds. Full mixing/DAC and
+constant-60 qualification remain open. R20's three exact-commit workflows pass.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

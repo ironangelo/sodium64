@@ -21,6 +21,10 @@ volatile uint32_t dsp_audio_gap_max,dsp_audio_last_count;
 const uint32_t dsp_audio_dac_rate=1526;
 uint32_t remote_host_audio_register(unsigned offset){if(offset!=4&&offset!=12)abort();return 0x40000000u+offset;}
 #endif
+#ifdef SODIUM64_BRR_OBSERVER
+volatile uint32_t dsp_brr_next,dsp_brr_count;
+unsigned char dsp_brr_records[512];
+#endif
 static uint32_t clock_value;
 static unsigned cases, packets, types[3], sizes[3], menu_calls;
 static int fail_send;
@@ -41,6 +45,9 @@ int remote_host_send(unsigned type,const void *data,unsigned bytes){
     if(type==2&&bytes==32768&&data!=native_diag_snapshot)abort();
 #ifdef SODIUM64_AUDIO_OBSERVER
     if(type==2&&bytes==8192&&data!=dsp_buffer)abort();
+#endif
+#ifdef SODIUM64_BRR_OBSERVER
+    if(type==2&&bytes==512&&data!=dsp_brr_records)abort();
 #endif
     return 1;
 }
@@ -237,6 +244,30 @@ int main(void){
     expect("s64 12345678 audio-reset","OK audio_reset=1");
     check(packets==1&&!dsp_audio_blocks&&!dsp_audio_idle&&!dsp_audio_full&&!dsp_audio_gap_max&&!dsp_audio_last_count);
     check(dsp_pointer==4096&&enabled==0x7f&&!memcmp(saved_audio,dsp_buffer,8192));
+    remote_paused=0;
+#endif
+#ifdef SODIUM64_BRR_OBSERVER
+    remote_render_frames=10;remote_paused=0;remote_arm_pending=0;native_diag_phase=0;
+    expect("s64 12345678 audio-brr","ERR not_paused");check(packets==1);
+    remote_paused=1;native_diag_phase=1;
+    expect("s64 12345678 audio-brr","ERR capture_busy");check(packets==1);
+    native_diag_phase=0;remote_arm_pending=1;
+    expect("s64 12345678 audio-brr","ERR capture_busy");remote_arm_pending=0;
+    remote_render_frames=0;expect("s64 12345678 audio-brr","ERR frame_unavailable");
+    remote_render_frames=10;
+    dsp_brr_next=32;expect("s64 12345678 audio-brr","ERR brr_index");
+    dsp_brr_next=31;dsp_brr_count=12345;
+    for(unsigned i=0;i<512;i++)dsp_brr_records[i]=(unsigned char)(i*19);
+    unsigned char saved_brr[512];memcpy(saved_brr,dsp_brr_records,512);
+    expect("s64 12345678 audio-brr extra","ERR argument_count");
+    expect("s64 12345678 audio-brr","OK exported=audio-brr bytes=512 stride=16 slots=32 endian=be");
+    check(packets==2&&types[0]==2&&sizes[0]==512);
+    check(strstr(response,"next=31 completed_mod32=12345 valid_records=32")!=NULL);
+    check(dsp_brr_next==31&&dsp_brr_count==12345&&!memcmp(saved_brr,dsp_brr_records,512));
+    dsp_brr_next=0;dsp_brr_count=0;
+    expect("s64 12345678 audio-brr","valid_records=0");
+    dsp_brr_count=1;expect("s64 12345678 audio-brr","valid_records=1");
+    fail_send=1;run("s64 12345678 audio-brr");check(packets==0);fail_send=0;
     remote_paused=0;
 #endif
     /* Random text and adversarial bounds exercise the same production parser.

@@ -61,6 +61,17 @@ dsp_audio_last_count: .word 0
 dsp_audio_dac_rate: .word DSP_AI_DAC_RATE
 #endif
 
+#ifdef SODIUM64_BRR_OBSERVER
+.globl dsp_brr_next, dsp_brr_count, dsp_brr_records
+.globl dsp_brr_trace_begin, dsp_brr_trace_input_done
+.globl dsp_brr_trace_end, dsp_brr_trace_output_done
+dsp_brr_next: .word 0
+dsp_brr_count: .word 0
+.align 4
+// 32 complete records: voice/header/nybbles, prior halves, output halves.
+dsp_brr_records: .word 0:128
+#endif
+
 .align 4
 noise_sample: .hword 0x4000
 noise_step: .hword 0x8000
@@ -362,6 +373,24 @@ decode_samples:
     lbu s0, apu_ram + 2(t0)
     sll t3, t3, 8
     or s0, s0, t3
+#ifdef SODIUM64_BRR_OBSERVER
+dsp_brr_trace_begin:
+    // Only existing decoder scratch; record raw input before range transform.
+    lw t7, dsp_brr_next
+    sll t7, t7, 4
+    la t3, dsp_brr_records
+    addu t7, t7, t3
+    lhu t0, cur_addrs(t8)
+    lbu t0, apu_ram(t0)
+    sll t3, t6, 8
+    or t0, t0, t3
+    sll t0, t0, 16
+    or t0, t0, s0
+    sw t0, 0(t7)
+    lw t0, 0(v1)
+    sw t0, 4(t7)
+dsp_brr_trace_input_done:
+#endif
 #ifdef SODIUM64_DSP_BRR_ACCURATE
     // Invalid ranges13-15 decode as0/-2048. Transform all four nybbles to
     // 0/-8 once, then use range9 in the existing sample loop.
@@ -483,6 +512,26 @@ brr_clamped:
     add t3, v1, s1
     bnez s1, next_sample
     sh t0, (t3)
+#ifdef SODIUM64_BRR_OBSERVER
+dsp_brr_trace_end:
+    // All four stores are complete; publish the ring only after both words.
+    lw t7, dsp_brr_next
+    sll t7, t7, 4
+    la t3, dsp_brr_records
+    addu t7, t7, t3
+    lw t0, 0(v1)
+    sw t0, 8(t7)
+    lw t0, 4(v1)
+    sw t0, 12(t7)
+    lw t7, dsp_brr_next
+    addiu t7, t7, 1
+    andi t7, t7, 31
+    sw t7, dsp_brr_next
+    lw t7, dsp_brr_count
+    addiu t7, t7, 1
+    sw t7, dsp_brr_count
+dsp_brr_trace_output_done:
+#endif
     j mix_sample
 
 end_voice:

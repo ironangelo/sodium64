@@ -469,12 +469,34 @@ static void audio_observation(const char *id,int reset,uint32_t framebuffer) {
     (void)finish();
 }
 #endif
+#ifdef SODIUM64_BRR_OBSERVER
+extern volatile uint32_t dsp_brr_next, dsp_brr_count;
+extern unsigned char dsp_brr_records[512];
+static void brr_observation(const char *id,uint32_t framebuffer) {
+    if(!present||transport_error||menu_error){error(id,"audio_transport_unready");return;}
+    if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+    if(!remote_paused){error(id,"not_paused");return;}
+    if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
+    uint32_t next=dsp_brr_next,completed=dsp_brr_count;
+    if(next>=32){error(id,"brr_index");return;}
+    if(!send_packet(2,dsp_brr_records,512)){error(id,"usb_export_failed");return;}
+    prefix(id,1);append(" exported=audio-brr bytes=512 stride=16 slots=32 endian=be");
+    field(" next=",next);field(" completed_mod32=",completed);
+    field(" valid_records=",completed<32?completed:32);
+    field(" render_frame_id=",remote_render_frames);
+    append(" provenance=native_brr_input_output_not_dac no_full_audio_fidelity_claim=1");
+    (void)finish();
+}
+#endif
 static void status(const char *id) {
     uint32_t now=count();if(now<count_last)count_wraps++;count_last=now;
     prefix(id,1);
     append(" mode=emu protocol=1 build=A14-usb-loop capabilities=pause,pause-at,step,resume,buttons,release,capture,frame,sav,profile,menu");
 #ifdef SODIUM64_AUDIO_OBSERVER
     append(",audio,audio-reset");
+#endif
+#ifdef SODIUM64_BRR_OBSERVER
+    append(",audio-brr");
 #endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER
     append(",sections");
@@ -551,6 +573,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
     if(nt<3||!eq(tokens[0],"s64")||!hex(tokens[1],8,&unused)) {error(id,"invalid_request");return;}
     id=tokens[1];const char *verb=tokens[2];
+#ifdef SODIUM64_BRR_OBSERVER
+    if(eq(verb,"audio-brr")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        brr_observation(id,retired_framebuffer);return;
+    }
+#endif
 #ifdef SODIUM64_AUDIO_OBSERVER
     if(eq(verb,"audio")||eq(verb,"audio-reset")) {
         if(nt!=3){error(id,"argument_count");return;}

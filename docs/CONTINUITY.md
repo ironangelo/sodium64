@@ -1,3 +1,36 @@
+# 2026-10-11 - Physical recovery blocker confirmed across three goal turns
+
+Source remains7d8388661ae30f55e625e1462c98766a7328a8af, clean.
+Master remains7cc8fac; PR21 draft/unmerged. The full goal is not achieved.
+
+The old combined emulator still drops application USB writes on a fresh hello.
+The same unresolved physical-menu recovery condition has persisted across
+three consecutive goal turns. Code fixes, exact build/regression CI and the
+next native comparison harness are prepared; the next required physical
+qualification cannot proceed without a responsive console menu. Physical
+Reset/power-cycle was requested, but successful recovery is not observed.
+Do not repeatedly launch the failed archive or treat that request as recovery.
+
+Build38179750510 and CGRAM38179753273 are SUCCESS at exact7d83886.
+Ares38179753196 remains in_progress; that is a live external workflow, not
+PASS, failure or permission to restart it. Inspect the same run on resumption.
+The prepared corrected observer and directory-scan menu remain uninstalled.
+No coordinate8 restoration after the last failure is claimed.
+
+Resume when the paired menu answers hello/status: restore coordinate8 with
+verified readback, execute the prepared corrected RSP-arena trial against the
+exact archived ELF/image and R22 room image/PCM/reference decoder, verify
+return and restoration. Then install the asset/ABI-checked scanner menu and
+qualify launch latency/capture persistence. Raw files and transport remain
+private. If a new native fault appears, preserve evidence before repeating.
+
+The goal will be marked blocked for this required external recovery. This
+status does not reduce the constant60/visual/audio requirements or requested
+game order; ALttP still leads and all full-output qualifications remain open.
+The complete preceding continuity is preserved byte for byte below.
+
+---
+
 # 2026-10-11 - Exact R26 build and regression CI verified
 
 Source phase4/usb-hardware-loop remains

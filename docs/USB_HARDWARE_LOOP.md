@@ -49,6 +49,15 @@ Installed menu reference: 1736704 bytes, SHA256
 `803a716bb51ebef672c43a80671776fcae4a0330d5348aeeda8954666113a144`,
 CRC32 `fddd021a`. Firmware 2.20.2 was not changed.
 
+## Optional native audio production observer
+
+The AUDIO_OBSERVER=1 configuration and physical outcomes are documented in
+[the dated audio checkpoint](AUDIO_OBSERVER_2026-10-11.md). Keep SECTION_OBSERVER=0
+for that measurement. It is not a sound algorithm correction. `audio` and
+`audio-reset` require a retired pause; PCM/register exports remain private.
+The final hardware session restored coordinate8 with verified readback and
+a responsive menu.
+
 ## Checks and evidence gates
 
 The source includes compiled MIPS/RSP guards for arithmetic, policy eligibility,

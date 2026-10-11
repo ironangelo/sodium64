@@ -189,6 +189,16 @@ story/rain submission/texture traffic. No pitch cache or audio change has been
 implemented. Resume from the selected build recipe and these rejected cases;
 a sampled instruction/function label is a hypothesis, not a speedup.
 
+## R18 - Audio observation and CI selection repair
+
+The next bounded checkpoint is recorded in
+[the native audio observations](AUDIO_OBSERVER_2026-10-11.md): three valid SD
+captures, a subsequent USB-only room capture, AI queue observations, invalid
+DAC-rate read discarded, absent sound features identified, current observer
+guards and source-oracle/arena portability repairs. This does not implement
+an audio algorithm change. Coordinate8 was restored; the menu responded.
+The expanded qualification queue includes visual and audio fidelity.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

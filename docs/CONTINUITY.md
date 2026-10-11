@@ -1,3 +1,93 @@
+# 2026-10-11 - Native audio evidence and CI selection repair (R18)
+
+Source phase4/usb-hardware-loop:
+d4cc32f0773cfa2764eea1143409785c9ec47476 (parent c82e5d4).
+Draft integration PR: https://github.com/ironangelo/sodium64/pull/21.
+Master remains7cc8facfe8643fb85888f301f79995575830521d; no merge/release.
+This continues the same project and A14/cloud ancestry with physical N64
+verification; it is not a replacement repository or a completed Road1.0.
+
+The user expanded the active goal to sustained speed, visual fidelity AND
+audio fidelity. Qualification order: ALttP, DKC1, Super Metroid, SMAS+SMW,
+Super Mario RPG, Super Mario Kart, Mortal Kombat1, Yoshi's Island, Star Fox,
+Doom, then additional stress games. Current work stays on ALttP first.
+
+[Audio observations and full limitations](AUDIO_OBSERVER_2026-10-11.md).
+[Aggregate original-program/numeric evidence](evidence/native-audio-observer-2026-10-11.json).
+[Retained native recipe](USB_HARDWARE_LOOP.md).
+[Reconstructed prior stages](CODEX_HARDWARE_HISTORY_2026-10-11.md).
+
+## Evidence and failed hypotheses
+
+- COM3/menu responds. Optional AUDIO_OBSERVER observes each1024-stereo-frame
+  block without changing PCM, envelopes, BRR or AI submission policy.
+  Retired-pause-only audio/audio-reset export the8192-byte ring and reset only
+  five counters; this is not DAC/final analog sound.
+- Three quiet20s SD captures validate S64D/checksum/fulltrace/nooverflow and
+  precision20/skip0/APU21/audio4/layers0. AI idle before submission:
+  title359/587,room179/623,rain336/336; FULL0. Paused endpoints/SD commit remain
+  in those observations; do not turn them into exact lost-sample counts.
+- First AI_DAC_RATE read returned0; derived frequency/fraction was invalid.
+  Current metadata exports the unchanged linked initialization divider1526,
+  independently checked against actual compiled AI stores. No raw readback
+  frequency claim. First absolute-load branch-delay warning was repaired
+  before installation, not suppressed.
+- Subsequent USB-only room capture excludes SD commit: valid immutable snapshot
+  phase6/result2. Endpoint duration21.614605s,682296 stereo frames,
+  31566.434/s versus nominal31880.689/s (99.014%). Idle168/666,FULL0,
+  max submission gap42.217ms. Initial paused drain/endpoint overhead remain.
+  The near1.89s maxima in the SD workflow are not ordinary-gameplay timing.
+- Five retired-image comparisons336000 pixels,0 differences. No full-game
+  image/audio acceptance. Echo/master volume requested; source omits their
+  mix, Gaussian interpolation, faithful KOFF release and final saturation.
+  Pitch modulation absent but not requested at sampled endpoints.
+- Measurement SECTION_OBSERVER0 differs from historical1: title first300
+  53.645934,room59.495833,rain32.185454 boundaries/s; USB-only room59.515700.
+  No presented-FPS/audio-speedup claim from differing observer configurations.
+
+## Source, tests and installed state
+
+Corrected measured observer empty emulator673efa208739906a5d6ff98ece9192062d0d75ba84d162ac43256235120f4a8d,
+131072B; CPU ELF97cc6b3a7cf54c797c02bcbfd869b4d31a11adac81d3ff6ce9a08f0a965b996e.
+The earlier SD observer is separately identified in the dated document;
+do not symbolize its capture with the newer ELF.
+
+All12 RSP text/data sections pairs match coordinate8. AUDIO_OBSERVER defaults0;
+with original flags CPU text/rodata/data also match coordinate8 byte-for-byte.
+Linked observer16 cases+mutation,28 executed instructions/block; parser171+1000
+(default153+1000); recorder/caller102; reboot12+5;106 host unit tests.
+Native endD15C8< D2000,41 owners; fresh unflagged PROFILE endC15E0,40 owners.
+
+After each experiment, coordinate8 was restored through the menu with readback:
+a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2,
+131072B,CRC2d5daff8. Console on,normal menu responding,recovery0.
+Menu/firmware unchanged. All ROM/SAV/PCM/register/image/replay material is private.
+
+## CI and next bounded condition
+
+All three c82e5d4 workflows ended failed. Native trace used the normal arena
+selector; host profiling attempted a Windows SDK path on Linux; CGRAM's source
+oracle expected obsolete publication/order/consumer/peephole strings.
+
+Repaired conditional macro selection with real host/N64 preprocessing; host
+strips only the exact MIPS alias include and rejects other includes. Actual
+trace/PROFILE/HW_PROFILE/color selectors and linked sampler extent checks.
+CGRAM binding/order negatives6 cases; current29-core/3-marker/fence semantics;
+strict4096-byte/fixed-entry binary proof;1792 compiled window truth cases with
+two mutations; delayed DPC288+24+24+72. A dedicated CI job qualifies the
+selected renderer plus optional observer. Fresh exact-head CI is pending,
+not inferred from local checks or the earlier checkpoint.
+
+Next investigate exact DSP work reduction to create headroom for sound
+corrections. Pitch conversion caching remains a proposal; require full-range
+equivalence, clock/register invalidation, native PCM/image/configuration and
+quiet timing before retaining it. Room DSP/APU sampled residency is high;
+rain retains RSP waits. Residencies are not exclusive instruction costs.
+No sound algorithm/pitch cache is implemented by this checkpoint.
+
+---
+
+
 # 2026-10-11 - Codex hardware-loop reconstruction and selected coordinate8 checkpoint
 
 The user requested synchronizing code and the existing continuity format before

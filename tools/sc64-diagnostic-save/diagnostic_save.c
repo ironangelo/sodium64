@@ -17,8 +17,76 @@ static const char *fat_path(const char *path) {
     return prefix ? prefix + 1 : path;
 }
 
+static bool valid_target(const char *normal_path, const char *tag) {
+    if (!normal_path || !tag) return false;
+    size_t tag_len = strlen(tag), len = strlen(normal_path);
+    if (!tag_len || tag_len > 24 || len < 4 || len > 1024 || strcmp(normal_path + len - 4, ".sav")) return false;
+    for (size_t i = 0; i < tag_len; i++) {
+        char c = tag[i];
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') || c == '_' || c == '-')) return false;
+    }
+    const char *base = strrchr(normal_path, '/');
+    base = base ? base + 1 : normal_path;
+    /* FAT long-name components cannot exceed 255 UTF-16 units. Byte count is
+     * conservative for UTF-8, and rejects instead of silently truncating names. */
+    return strlen(base) - 4 + tag_len + 17 <= 255;
+}
+
+static unsigned char ascii_lower(unsigned char c) {
+    return c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c;
+}
+
+bool diagnostic_save_seed_cursor(const char *normal_path, const char *tag, unsigned *next_id) {
+    if (!next_id || !valid_target(normal_path, tag)) return true;
+    const char *normal = fat_path(normal_path), *slash = strrchr(normal, '/');
+    const char *base = slash ? slash + 1 : normal;
+    size_t prefix_len = strlen(base) - 4 + strlen(tag) + 7;
+    char prefix[256];
+    snprintf(prefix, sizeof prefix, "%.*s-diag-%s-", (int)(strlen(base) - 4), base, tag);
+    size_t dir_len = slash ? (size_t)(slash - normal) : 1;
+    if (slash == normal) dir_len = 1; /* Root path retains its slash. */
+    char *directory = malloc(dir_len + 1);
+    if (!directory) return true;
+    memcpy(directory, slash ? normal : ".", dir_len);
+    directory[dir_len] = 0;
+    DIR dir;
+    FRESULT result = f_opendir(&dir, directory);
+    free(directory);
+    if (result != FR_OK) return true;
+    unsigned highest = 0;
+    FILINFO info;
+    for (;;) {
+        result = f_readdir(&dir, &info);
+        if (result != FR_OK || !info.fname[0]) break;
+        if ((info.fattrib & AM_DIR) || strlen(info.fname) != prefix_len + 10) continue;
+        size_t i = 0;
+        while (i < prefix_len && ascii_lower((unsigned char)info.fname[i]) ==
+                ascii_lower((unsigned char)prefix[i])) ++i;
+        if (i != prefix_len) continue;
+        unsigned id = 0;
+        for (unsigned digit = 0; digit < 6; ++digit, ++i) {
+            unsigned char c = (unsigned char)info.fname[i];
+            if (c < '0' || c > '9') break;
+            id = id * 10 + c - '0';
+        }
+        if (i != prefix_len + 6 || info.fname[i] != '.' ||
+                ascii_lower((unsigned char)info.fname[i+1]) != 's' ||
+                ascii_lower((unsigned char)info.fname[i+2]) != 'a' ||
+                ascii_lower((unsigned char)info.fname[i+3]) != 'v') continue;
+        if (id > highest) highest = id;
+    }
+    FRESULT closed = f_closedir(&dir);
+    if (result != FR_OK || closed != FR_OK || highest == MAX_IDENT) return true;
+    *next_id = highest + 1;
+    return false;
+}
+
 bool diagnostic_save_reserve(const char *normal_path, const char *tag, char **output_path) {
-    unsigned next_id = 1;
+    if (!output_path) return true;
+    *output_path = NULL;
+    unsigned next_id;
+    if (diagnostic_save_seed_cursor(normal_path, tag, &next_id)) return true;
     return diagnostic_save_reserve_from(normal_path, tag, &next_id, output_path);
 }
 
@@ -26,19 +94,8 @@ bool diagnostic_save_reserve_from(const char *normal_path, const char *tag,
                                  unsigned *next_id, char **output_path) {
     if (!output_path) return true;
     *output_path = NULL;
-    if (!normal_path || !tag || !next_id || !*next_id || *next_id > MAX_IDENT) return true;
+    if (!next_id || !*next_id || *next_id > MAX_IDENT || !valid_target(normal_path, tag)) return true;
     size_t tag_len = strlen(tag), len = strlen(normal_path);
-    if (!tag_len || tag_len > 24 || len < 4 || len > 1024 || strcmp(normal_path + len - 4, ".sav")) return true;
-    for (size_t i = 0; i < tag_len; i++) {
-        char c = tag[i];
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-              (c >= '0' && c <= '9') || c == '_' || c == '-')) return true;
-    }
-    const char *base = strrchr(normal_path, '/');
-    base = base ? base + 1 : normal_path;
-    /* FAT long-name components cannot exceed 255 UTF-16 units. Byte count is
-     * conservative for UTF-8, and rejects instead of silently truncating names. */
-    if (strlen(base) - 4 + tag_len + 17 > 255) return true;
     char *target = malloc(len + tag_len + 32);
     unsigned char *data = malloc(SAVE_BYTES);
     if (!target || !data) { free(target); free(data); return true; }

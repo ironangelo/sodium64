@@ -18,11 +18,17 @@ with tempfile.TemporaryDirectory(prefix='s64-save-test-') as d:
     result.check_returncode()
     match=re.search(r'SC64_CONTINUOUS_POOL PASS (\d+) cases:',result.stdout)
     assert match and int(match[1])>0 and 'SC64_DIAGNOSTIC_SAVE PASS' in result.stdout
+    assert 'SC64_CURSOR PASS one read-only scan, 96 existing captures + 16 slots = 16 exclusive-create attempts' in result.stdout
     proof=dict(passed=True,pool_cases=int(match[1]),legacy_reservation_regressions=True,
+        directory_scan_read_only=True,directory_scans_per_pool=1,
+        cursor_existing_captures=96,cursor_exclusive_create_attempts=16,
+        scan_open_read_close_failures_rejected=True,post_scan_collision_preserved=True,
+        hardware_mocked=True,native_launch_time_qualified=False,
         sanitizers=['address','undefined'] if sanitize else [],
         descriptor_header_bytes=72,slot_bytes=264,maximum_slots=16,maximum_descriptor_bytes=4296,
         source_sha256={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in
-            ('diagnostic_save.c','diagnostic_pool.c','continuous_save_abi.h','host/test_save.c')})
+            ('diagnostic_save.c','diagnostic_save.h','diagnostic_pool.c',
+             'continuous_save_abi.h','host/fatfs/ff.h','host/test_save.c')})
     if a.json_output:
         a.json_output.parent.mkdir(parents=True,exist_ok=True)
         a.json_output.write_text(json.dumps(proof,indent=2)+'\n',encoding='utf-8')

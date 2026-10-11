@@ -14,7 +14,12 @@ The remainder of the new 32 KiB capture file is cleared. Missing ordinary saves
 start with erased guest SRAM. Short/unreadable existing saves and allocation or
 flush failures reject the launch. Every output uses FATFS `FA_CREATE_NEW`;
 existing captures are never truncated. IDs are found from existing filenames,
-without an RTC or mutable index. Failed/uncaptured reservations can leave files:
+without an RTC or mutable index. One read-only directory scan selects an ID
+above the largest matching six-digit stem/tag filename; a pool shares that
+cursor. Every creation still uses FA_CREATE_NEW, so a collision after the scan
+is skipped without modifying that entry. Scan open/read/close errors and a
+matching 999999 ID reject launch. ASCII filename case is ignored; non-ASCII
+case differences still have the exclusive-create fallback. Failed/uncaptured reservations can leave files:
 only a completed, checksum-valid S64D capture is diagnostic evidence.
 
 The legacy single-capture mode uses the **paired empty v4 diagnostic emulator** and SNES games

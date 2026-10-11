@@ -55,7 +55,9 @@ bool diagnostic_pool_prepare(const char *normal, const char *tag, unsigned count
     diagnostic_pool_note("card_identity", any, not_ff);
     if (!any || !not_ff) goto done;
     /* Close/sync ALL file allocations before resolving any final FAT mapping. */
-    unsigned next_id = 1;
+    unsigned next_id;
+    diagnostic_pool_note("scan_ids", 0, 0);
+    if (diagnostic_save_seed_cursor(normal, tag, &next_id)) goto done;
     for (unsigned slot = 0; slot < count; ++slot) {
         report.slot = slot;
         diagnostic_pool_note("reserve", 0, 0);

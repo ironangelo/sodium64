@@ -305,6 +305,18 @@ matching the primary compiled method. USB return and coordinate8 restoration
 readback pass without Reset. The preceding blocker is cleared. Exact7d83886
 Build/CGRAM/Ares all succeed. No speed, full DAC or60fps matrix claim follows.
 
+## R28 - New menu boot, faster launch and repeated SD capture
+
+[Native menu proof](POOL_DIRECTORY_NATIVE_2026-10-11.md) verifies install/
+readback, retained original SD menu and warm boot without Reset. One same-ROM
+launch31.922s versus203.703/209.703;67200 retired RGB pixels unchanged. Two
+USB-triggered v5 SD captures have distinct sealed IDs, valid payload checksums,
+full traces/zero overflow, with resume and menu return. A host parser API
+misread after the first saved capture was repaired from the existing snapshot
+and paused session, without recapturing it. Prior host-backup hash assumption
+was rejected before writes. Physical Start/TV OK and menu-download verification
+are not inferred. New menu retained; coordinate8 selected; firmware unchanged.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

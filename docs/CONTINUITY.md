@@ -1,3 +1,85 @@
+# 2026-10-11 - KOFF note tails, observer CI memory and interrupted combined trial (R22)
+
+Source phase4/usb-hardware-loop:
+1b12398077ad804874af42fcdc6be34be2793794 (parent da51d11).
+Draft PR https://github.com/ironangelo/sodium64/pull/21.
+Master remains 7cc8facfe8643fb85888f301f79995575830521d; no merge/release.
+Same active constant-60, visual and audio goal; ALttP remains first.
+Complete preceding cloud Work and Codex continuity is preserved below.
+
+[Release correction, checks and interruption](DSP_KOFF_RELEASE_2026-10-11.md).
+[Curated numeric evidence](evidence/koff-release-2026-10-11.json).
+[Native history](CODEX_HARDWARE_HISTORY_2026-10-11.md).
+[Current USB recipe](USB_HARDWARE_LOOP.md).
+
+## Correction and completed native evidence
+
+- DSP_KOFF_RELEASE=1 is opt-in/default0. KOFF keeps selected voices enabled
+  while their envelopes decrease by eight per generated sample to zero.
+  ADSR writes do not leave release; existing KON reset can restart the voice.
+  KON delay/register-latching and all other missing DSP functions remain open.
+- 256 masks, 16,384 envelope/voice cases, 2,064 real sample-scheduler calls,
+  32 protected ADSR writes, 16 KON reset/dispatch cases, ten real APU callers
+  and 128 invalid writes pass. Two arithmetic/timer mutations are rejected.
+  KON checks stop before unchanged legacy rate scheduling, outside this VM's
+  DIV support; no KON timing qualification follows.
+- Production/observed release maxima are 48/60 instructions. AUDIO_OBSERVER
+  adds only two private transition/count words and 12 instructions per release
+  step. Production parser cases 173/188 plus 1,000 fuzz each pass. AI observer
+  16, recorder 102 and reboot/framebuffer 12/5 cases pass.
+- Release-only physical install/readback and matching acknowledged replay
+  preserve 268,800 RGB pixels across four checkpoints. Three rings retain
+  heads/enabled masks/DSP registers, with 785/261/0 changed PCM bytes.
+  All six native release endpoints match the reference decrease/clamp.
+- Three quiet USB-only captures have full checksummed traces, no overflow
+  and unchanged precision20/skip0/APU21/audio4/layers0. Title first300 cadence
+  54.319590 versus R20 54.857498; room 59.846049 versus 59.795169; rain
+  32.461939 versus 32.294840. All deltas below1% in single windows: no speed
+  win/zero-cost claim. Audio production 94.80%/99.57%/53.92%; rain363/363 idle.
+- Coordinate8 was restored/readback verified and menu responded after this
+  completed three-scene trial. Empty release candidate
+  fc9a19850e88af5877ff419a2ec7de065554a8e8e0dc84bf96499c14ae0e0417,
+  ELF e27b6f778476261450010e93a6dbdec0c65607e734086a604b91e5772ef989f1.
+
+## CI and additional observer memory
+
+R21 da51d11 passes Ares38172193035 and CGRAM38172193166. Build38172187968
+fails the optional observer link with static-memory/CGRAM overlap; other
+build/PROFILE/native/smoke jobs pass. The new BRR_OBSERVER configuration
+shares Q1 arena0xD4000 across CPU/RSP and a matching strict linker assertion.
+Other layouts remain at0xD2000/0xC2000. Capacity24576/ROM slots194 stay intact.
+Combined local allocated-end0xD25C8, gap0x1A38; all41 owners disjoint.
+Ten arena regressions include the old-boundary negative, and compiled DMA/
+window guards pass. Fresh1b12398 CI must be verified independently.
+Initial multi-instruction delay-slot store was rejected and repaired before
+installation; the unsupported legacy DIV test is explicitly scoped above.
+
+## Current physical interruption and next action
+
+A subsequent combined BRR trace/relocated-arena candidate installed/readback
+verified and reached pause600. USB failed during step1380, with last acknowledged
+guest790 and no prior reported transport/menu fault. Both status and return/
+restoration writes report Debug data write dropped due to timeout. Firmware
+info still responds via COM3; cause is unresolved. This does not qualify the
+new observer layout or invalidate the completed release-only trial.
+
+LAST INSTALLED experimental empty template:
+b28f6a602a1ee9632478c04c73196658fb9d497cba467369e3add3f3774cd6c1,
+ELF c2e1df941ac3ff38b8a243b149996db6f62a153d3e49a4bfad7298a1b7821a30.
+Restoration after this second trial is NOT verified. The user was asked for
+physical Reset/power cycle to reach the menu. On recovery: query mode, restore
+known coordinate8 with verified readback, then isolate combined tracing from
+arena relocation before repeating. Do not claim a memory root cause from
+one timeout, or use compiled PASS as physical acceptance.
+
+All raw commercial material, transport/replay records, PCM/frames/transition
+words and original captures stay private. Empty code archives and private
+reports are in the2026-10-11 bench. Only original source/tests and curated
+numeric aggregates publish. Full waveform/DAC, constant60, the game matrix
+and Road1.0 remain unqualified. The goal remains active awaiting recovery.
+
+---
+
 # 2026-10-11 - Physical BRR decoder input/output verification (R21)
 
 Source phase4/usb-hardware-loop:

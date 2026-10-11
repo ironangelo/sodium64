@@ -1,0 +1,169 @@
+{
+  "schema": "sodium64-koff-release-aggregate-v1",
+  "date": "2026-10-11",
+  "checkpoint": "R22",
+  "candidate_empty_emulator_sha256": "fc9a19850e88af5877ff419a2ec7de065554a8e8e0dc84bf96499c14ae0e0417",
+  "candidate_elf_sha256": "e27b6f778476261450010e93a6dbdec0c65607e734086a604b91e5772ef989f1",
+  "candidate_bytes": 131072,
+  "flags_added_to_r20": [
+    "DSP_KOFF_RELEASE=1"
+  ],
+  "physical_brr_observer_enabled": false,
+  "physical_audio_observer_enabled": true,
+  "additional_release_diagnostic_instructions_per_step": 12,
+  "linked_proof": {
+    "koff_masks": 256,
+    "release_voice_cases": 16384,
+    "actual_dsp_sample_calls": 2064,
+    "protected_adsr_writes": 32,
+    "actual_kon_restarts": 16,
+    "actual_apu_port_callers": 10,
+    "invalid_addresses": 128,
+    "negative_mutations_rejected": [
+      "release_decrement",
+      "release_timer_wrap"
+    ],
+    "maximum_release_handler_instructions": 60
+  },
+  "production_release_handler_maximum_instructions": 48,
+  "settings": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layers": 0
+  },
+  "pixels": {
+    "checkpoints": 4,
+    "compared": 268800,
+    "differences": 0
+  },
+  "pcm": {
+    "rings": 3,
+    "bytes_compared": 24576,
+    "different_bytes": 1046,
+    "byte_difference_is_not_audio_quality_score": true
+  },
+  "scenes": {
+    "title": {
+      "completed_boundary_cadence": 57.00486989815747,
+      "previous_r20_boundary_cadence": 56.87044017075161,
+      "checksum_and_structure": "PASS",
+      "whole_interval_trace": true,
+      "trace_overflow": 0,
+      "settings_match": true,
+      "pcm_ring_bytes_compared": 8192,
+      "pcm_different_bytes": 785,
+      "same_ring_head_and_registers": true,
+      "same_enabled_voices": true,
+      "native_release_endpoint_checks": 2,
+      "all_endpoint_transitions_match_reference": true,
+      "audio": {
+        "generated_per_second": 30223.1781217279,
+        "production_fraction_of_ai": 0.9480089400098439,
+        "submissions": 638,
+        "ai_idle_observations": 349,
+        "ai_full_observations": 0,
+        "max_submit_gap_ms": 53.21911466666667
+      },
+      "title_first300_cadence": 54.3195895572027,
+      "previous_r20_title_first300_cadence": 54.85749793081419
+    },
+    "room": {
+      "completed_boundary_cadence": 59.846049225182774,
+      "previous_r20_boundary_cadence": 59.795168617821574,
+      "checksum_and_structure": "PASS",
+      "whole_interval_trace": true,
+      "trace_overflow": 0,
+      "settings_match": true,
+      "pcm_ring_bytes_compared": 8192,
+      "pcm_different_bytes": 261,
+      "same_ring_head_and_registers": true,
+      "same_enabled_voices": true,
+      "native_release_endpoint_checks": 2,
+      "all_endpoint_transitions_match_reference": true,
+      "audio": {
+        "generated_per_second": 31742.379780366173,
+        "production_fraction_of_ai": 0.9956616636336204,
+        "submissions": 670,
+        "ai_idle_observations": 49,
+        "ai_full_observations": 0,
+        "max_submit_gap_ms": 41.14933333333333
+      }
+    },
+    "rain": {
+      "completed_boundary_cadence": 32.461938825891835,
+      "previous_r20_boundary_cadence": 32.29484043850022,
+      "checksum_and_structure": "PASS",
+      "whole_interval_trace": true,
+      "trace_overflow": 0,
+      "settings_match": true,
+      "pcm_ring_bytes_compared": 8192,
+      "pcm_different_bytes": 0,
+      "same_ring_head_and_registers": true,
+      "same_enabled_voices": true,
+      "native_release_endpoint_checks": 2,
+      "all_endpoint_transitions_match_reference": true,
+      "audio": {
+        "generated_per_second": 17190.49440663211,
+        "production_fraction_of_ai": 0.5392133916241086,
+        "submissions": 363,
+        "ai_idle_observations": 363,
+        "ai_full_observations": 0,
+        "max_submit_gap_ms": 73.033728
+      }
+    }
+  },
+  "compiled_memory": {
+    "release_without_brr_trace_arena": "0xD2000",
+    "release_allocated_end": "0xD15C8",
+    "brr_trace_arena": "0xD4000",
+    "combined_allocated_end": "0xD25C8",
+    "combined_gap": "0x1A38",
+    "arena_regressions": 10,
+    "complete_owners": 41,
+    "event_capacity": 24576,
+    "rom_slots": 194,
+    "disabled_release_cpu_sections_identical_to_r20": true,
+    "release_rsp_sections_identical": 24
+  },
+  "preceding_r21_ci": {
+    "head": "da51d119cdde5694ae4ab63e35280cb70a19a9ec",
+    "build_and_validate": "failure",
+    "failed_job": "usb-audio-observer-build",
+    "failure": "static memory overlaps CGRAM arena",
+    "build_run_id": 38172187968,
+    "ares_run_id": 38172193035,
+    "ares": "success",
+    "cgram_run_id": 38172193166,
+    "cgram": "success"
+  },
+  "restoration": {
+    "coordinate8_readback_verified": true,
+    "paired_menu_responsive": true
+  },
+  "limits": [
+    "one_quiet_window_per_scene",
+    "retired_boundary_cadence_not_tv_fps",
+    "paused_pcm_not_dac_waveform",
+    "KON_delay_and_every_other_sample_latching_not_qualified",
+    "all_other_missing_DSP_features_open",
+    "observer_free_production_timing_not_measured",
+    "full_audio_and_60fps_matrix_not_qualified"
+  ],
+  "commercial_game_material_included": false,
+  "subsequent_combined_trace_trial": {
+    "candidate_empty_sha256": "b28f6a602a1ee9632478c04c73196658fb9d497cba467369e3add3f3774cd6c1",
+    "candidate_elf_sha256": "c2e1df941ac3ff38b8a243b149996db6f62a153d3e49a4bfad7298a1b7821a30",
+    "installed_readback_verified": true,
+    "pause600_acknowledged": true,
+    "target": 1380,
+    "last_acknowledged_guest_frame": 790,
+    "usb_error": "Debug data write dropped due to timeout",
+    "restoration_verified": false,
+    "firmware_info_responsive": true,
+    "physical_acceptance": false,
+    "root_cause": "unresolved",
+    "manual_menu_recovery_required": true
+  }
+}

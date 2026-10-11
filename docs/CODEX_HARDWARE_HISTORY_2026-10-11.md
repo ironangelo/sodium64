@@ -233,6 +233,33 @@ add 40 instructions per chunk, so no observer-free speed claim follows.
 Coordinate8 is restored and the paired menu responds. Full mixing/DAC and
 constant-60 qualification remain open. R20's three exact-commit workflows pass.
 
+## R22 - KOFF note tails and additional observer memory
+
+[Release correction and limits](DSP_KOFF_RELEASE_2026-10-11.md) records the
+opt-in eight-unit per-sample release, preserving selected voices until silence.
+16,384 envelope/voice cases, actual sample/APU callers, protected ADSR writes,
+KON reset/dispatch and two mutations pass. Four native checkpoints preserve
+268,800 pixels; 785/261/0 PCM bytes change across title/room/rain. All six native
+release endpoints match the decrease/clamp. Single-window cadence differences
+remain below one percent and rain still produces about 54% of nominal AI.
+Coordinate8 was restored after this trial. Full audio and constant-60 remain open.
+
+R21's optional observer CI fails its strict static-memory assertion, while the
+other build jobs and both independent workflows pass. BRR_OBSERVER now shares
+a 0xD4000 Q1 arena between CPU/RSP and a matching strict linker check. Other
+layouts remain unchanged; 10 arena regressions and all 41 owners pass. The
+relocated observer's hardware qualification is separate from R21's earlier
+0xD2000-layout result. Failed assembler delay-slot expansion and unsupported
+legacy DIV in an expanded test are recorded with the repaired scope.
+
+The subsequent combined/relocated trace trial reaches pause600, then loses
+emulator USB during step1380; last acknowledged progress790. Status and
+restoration writes time out while firmware info still responds. Cause remains
+unresolved. The combined experimental template is last installed; coordinate8
+restoration after this second trial is pending physical Reset/power-cycle
+recovery. This failed trial does not invalidate the completed release-only
+three-scene evidence, and it does not qualify the relocated observer.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

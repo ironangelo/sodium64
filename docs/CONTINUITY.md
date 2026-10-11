@@ -1,3 +1,84 @@
+# 2026-10-11 - Faithful BRR arithmetic and unchanged native images (R20)
+
+Source phase4/usb-hardware-loop:
+bbe464476dafc24a23c7bc7edcf04f6758104ab4 (parent8453175).
+Draft PR https://github.com/ironangelo/sodium64/pull/21.
+Master remains7cc8facfe8643fb85888f301f79995575830521d; no merge/release.
+Same active speed/visual/audio goal; ALttP remains first in the qualification
+queue. All preceding cloud/Codex entries below remain intact.
+
+[BRR correction, proof and limitations](DSP_BRR_ACCURACY_2026-10-11.md).
+[Whitelisted numeric evidence](evidence/brr-accuracy-2026-10-11.json).
+[Full dated native history](CODEX_HARDWARE_HISTORY_2026-10-11.md).
+[Current USB recipe](USB_HARDWARE_LOOP.md).
+
+## Correction, independent proof and native evidence
+
+- DSP_BRR_ACCURATE1 is opt-in/default0. It fixes invalid ranges13-15,
+  negative filter rounding and saturating15-bit half-sample storage.
+  It changes BRR output; it does not implement the remaining DSP features.
+- Independent public oracle matches7168 outputs of the unmodified compiled
+  Snes9x1.63 decode_brr method. Primary fetched source matches the local
+  reference after newline normalization. The public test does not fetch or
+  run the external reference, and its JSON distinguishes that boundary.
+-57344 linked cases span eight voices/all ranges/filters/extreme histories
+  and synthetic nibbles. Four negative mutations are rejected. Legacy decoder
+  differs in5660 blocks, exposing the specific defect. Only8 voice sample
+  bytes/current address change; unrelated GPRs,HI/LO/CP0 survive.
+- Combined candidate retains the exhaustive pitch-cache proof,16 AI observer
+  cases,12 reboot/5 framebuffer cases,102 recorder cases and41-owner arena.
+  Disabled CPU sections match R19; all24 RSP sections are identical.
+  Runtime allocated-endD15C8,arenaD2000,gapA38.
+- Four native image checkpoints:268800 pixels,0 differences. Same guest input
+  acknowledgements, settings precision20/skip0/APU21/audio4/layers0.
+  Three rings have same heads/enabled voices/DSP registers, but15579 of24576
+  bytes differ. This confirms new-path output, not whole-waveform quality.
+- Three quiet USB-only20s snapshots: checksums/whole trace/nooverflow/settings
+  PASS,phase6/result2. Title first300 cadence54.857498 versus R19's55.009215,
+  room59.795169 versus59.854494,rain32.294840 versus32.233815.
+  All differences below1% from one window: no win/zero-cost claim.
+- Quiet PCM production94.44%,99.45%,53.62% of nominal AI. Rain361/361 submits
+  observe idle,FULL0. The slow-guest undersupply remains independent of the
+  corrected decoder arithmetic. Paused endpoints are not DAC acceptance.
+
+## Failure, retained/restored state and next condition
+
+The host C++ reference initially failed to load MinGW DLLs because its bin
+directory was missing from PATH. Launch was repaired before cross-checking;
+that failed invocation contributes no decoder evidence. Source arithmetic,
+not hardware state, caused the original5660 block discrepancies.
+
+Empty measured candidate635603528349c19c2cc05855d04cd6ba9f5351ee5eec88c63ea8f0a59ba4f69d,
+ELFb7aa5e1d140c33e0cb828f5d8604b761d01053334f1a954994e690b02c4a2d4b.
+Flags exactly R19's retained renderer/audio/pitch recipe plus
+DSP_BRR_ACCURATE1. Empty ELF/template copies are archived privately.
+Coordinate8 emptya58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2
+restored/readback verified. Console is on, paired menu responsive; menu and
+firmware2.20.2 unchanged. BRR correction stays optional development code.
+
+Next bounded evidence: opt-in input/output trace of complete BRR chunks, then
+compare actual N64 output against the independent compiled reference.
+Proposal saved privately as NEXT_NATIVE_BRR_PROOF.md; not implemented yet.
+Timing comparisons must use observer-free code or explicitly disclose trace
+overhead. Then continue missing audio/mixing functions and rain renderer work.
+No full audio/constant60/game-matrix/Road1.0 qualification follows.
+
+## CI and privacy
+
+Preceding8453175 passes all three workflows:
+Build and Validate38169210203,Ares Profile Validation38169213868,
+CGRAM Epoch Replay38169213848. The observer CI now builds the faithful BRR
+candidate and executes its linked proof against the separately built legacy
+reference. Freshbbe4644 CI must be verified at that exact SHA.
+
+Private2026-10-11 bench holds brr-physical.json, input/transport logs, images,
+rings/decoded captures, linked guards, reference source/probe and archives.
+No commercial ROM/SAV/PCM/image/register dump or derived hash is published.
+Source, original synthetic tests and curated numeric aggregates only.
+
+---
+
+
 # 2026-10-11 - Exact DSP pitch cache, physical preservation and BRR discrepancy (R19)
 
 Source phase4/usb-hardware-loop:

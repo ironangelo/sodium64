@@ -210,6 +210,17 @@ synthetic BRR audit against the pinned reference identifies signed-rounding,
 invalid-range and saturation discrepancies for the next fidelity change.
 The preceding d4cc32f source checkpoint passes all three GitHub workflows.
 
+## R20 - BRR integer fidelity correction
+
+[BRR proof and physical observations](DSP_BRR_ACCURACY_2026-10-11.md) records
+the corrected invalid ranges, signed filter rounding and saturating15-bit
+sample storage.57344 linked voice cases and four independent mutations pass;
+the public arithmetic oracle also matches the unmodified compiled primary
+method. Four native images remain identical, while PCM changes as expected.
+Single-window cadence differences remain below1%; no universal cost or speed
+claim follows. Coordinate8 is restored. Full mixing, echo, interpolation and
+other DSP work remain open. Preceding8453175 workflows all pass.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

@@ -105,3 +105,9 @@ on both VxPITCH byte writes, retaining the current PCM exactly in the tested
 scenes. It defaults off and has additional cost for frequent pitch writes.
 [Linked proof and native evidence](DSP_PITCH_CACHE_2026-10-11.md) record its
 bounded improvements and remaining audio/renderer work.
+
+`DSP_BRR_ACCURATE=1` independently enables the integer BRR fidelity candidate.
+It fixes invalid ranges, signed filter rounding and sample saturation/storage.
+[Decoder and native proof](DSP_BRR_ACCURACY_2026-10-11.md) distinguish matching
+isolated arithmetic from unqualified full PCM/DAC fidelity. It defaults off;
+native image checks preserve rendering and timing still requires qualification.

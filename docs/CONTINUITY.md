@@ -1,3 +1,33 @@
+# 2026-10-11 - Actual RSP arena/USB overlap and corrected build (R25)
+
+Source phase4/usb-hardware-loop: 9fb0b80b15bf1e9a5307c9dd691194a8b3d59ae8.
+PR21 draft; master unchanged7cc8fac. Full previous continuity preserved below.
+
+Exact combined archive repeats USB/return failure with20s quiet after step780.
+Firmware info responds. Manual Reset/power-cycle recovery requested; not yet
+verified. Last installed remains b28f6a602a1ee9632478c04c73196658fb9d497cba467369e3add3f3774cd6c1.
+
+Concrete binary defect: Make appends BRR_OBSERVER then resets RSP flags. CPU
+arenaD4000, actual Math/fixed-window backupD2400..D2800 overlaps combined
+static endD25C8 and USB request_bufferD2490. R24 no-KOFF static endD15C8
+spares that writer: its RGB/PCM/chunk PASS remains, but unified layout is NOT
+qualified. The41-owner source-selected check missed the compiled RSP writer.
+
+Initialize flags first; fresh corrected build usesD4400 at all four DMA calls.
+Only four allocated bytes change24->44; CPU and all other loaded bytes match.
+New binary guard validates6 CPU words,2 embedded bank images,4 DMA sites,
+actual section nonoverlap, rejects failed binary and3 negative mutations.
+Runtime/end bounds, release16384/two mutations, RDP/DMA and1792 windows pass.
+Corrected native install/comparison awaits responsive menu. No cause acceptance
+is inferred solely from a compiled fix; precise frozen PC remains unobserved.
+
+[Fault, repair and limits](BRR_ARENA_BUILD_FIX_2026-10-11.md).
+[Curated evidence](evidence/brr-arena-build-fix-2026-10-11.json).
+Commercial captures/PCM/registers/chunks and transport logs remain private.
+Full audio/constant60/game-matrix goal stays active.
+
+---
+
 # 2026-10-11 - Relocated BRR observer without KOFF verified (R24)
 
 Source phase4/usb-hardware-loop: e365ad6692a60cef40a88574c6caec1f312e36b5.

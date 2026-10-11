@@ -46,3 +46,12 @@ Master remains unchanged; PR21 stays draft/unmerged.
 code identities and numeric counts. All commercial images, PCM, register and
 chunk contents/hashes, ROM paths and transport/replay logs stay private. Full
 visual/audio output, all requested games and constant60 remain unqualified.
+
+## R25 correction to the layout qualification
+
+Actual binary inspection now finds CPU arena0xD4000 but both RSP backups still
+at0xD2400, because Make discarded the observer macro. R24 static end0xD15C8
+is below that old backup, so its successful native comparisons are valid but
+do not qualify a unified layout. The earlier41-owner check was source-selected
+and missed this compiled writer. [R25](BRR_ARENA_BUILD_FIX_2026-10-11.md) adds
+an actual binary regression and the corrected build; physical trial is pending.

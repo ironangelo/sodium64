@@ -330,6 +330,16 @@ eight-voice sample, not just block cost. Its initial strict link failure is
 repaired by shared checked D4000 CPU/RSP owners; default855212 bytes unchanged.
 Full DSP/DAC/60fps and observer-free production timing remain open.
 
+## R30 - Dry cost measured and obsolete cache removed
+
+[CPU work/cost](DSP_DRY_CACHE_2026-10-11.md) records R29 title/room declines
+of10.06/9.43 percent and essentially unchanged rain. Dry-only cache elimination
+reduces release60 ->39 instructions, preserves paired2048 actual sample/APU
+operations,201600 native pixels and16384 PCM bytes. Title50.035870/room
+55.306802 recover about2 percent but remain below prior performance/60.
+Coordinate8 restored; scanner menu retained. Rain was not retested for this
+targeted change and is still required. Exact4f3cadb workflows all succeed.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

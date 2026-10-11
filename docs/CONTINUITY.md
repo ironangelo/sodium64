@@ -1,3 +1,37 @@
+# 2026-10-11 - Dry cost and equivalent cache elimination (R30)
+
+Source phase4/usb-hardware-loop: c77634ae0e25dde409e3da946364223f7442b1d3.
+Master unchanged7cc8fac, PR21 draft. Full60/visual/audio goal active.
+
+R29 production with sample observers0 costs title10.061 percent/room9.430
+percent versus release-only; rain delta-0.743 percent. Four268800 RGB pixels
+unchanged/full valid traces/settings. This fails combined fidelity-and60,
+despite correct arithmetic. No permanent performance trade accepted.
+
+DSP_DRY_MIX1 now skips its unused quantized cache updater. Release observed
+max60 ->39 instructions; active modes/rates/envelopes/guest cycles untouched.
+4096 actual volume writes; paired2048 real sample/APU operations preserve PCM
+and active state. Updated ownership checks still prove unused cache unchanged.
+16384 voice/32768 output/seven mutations and release16384/two mutations pass.
+
+Actual paired title/room:201600 pixels,16384 PCM bytes, zero differences;
+acknowledged replay/full/checksummed/no-overflow/settings checks pass.
+Title48.854496 ->50.035870 (+2.418 percent); room54.202852 ->55.306802
+(+2.037 percent). Single windows recover part of cost, not60 or previous
+room performance. Rain not retested for this CPU diagnostic; still required.
+Reboot12/5 and41 owners/endD15C8<D2000 pass. Native USB return/coordinate8
+restoration readback/menu status pass; scanner menu remains installed.
+
+Exact preceding4f3cadb Build38184026520/CGRAM38184029950/Ares38184029931
+all succeed. Fresh checkpoint CI must be checked independently.
+[Cost, correction and limits](DSP_DRY_CACHE_2026-10-11.md).
+[Curated proof](evidence/dry-cache-2026-10-11.json).
+Next: DSP addressing/scheduling overhead while preserving PCM and all
+remaining sound functions/full game order. Raw game data/hashes stay private.
+Complete preceding history preserved byte for byte below.
+
+---
+
 # 2026-10-11 - R29 production dry-mix cost measured; cache optimization in progress
 
 Executable reference/source4f3cadb22839fa3dd7f4a5cca0ef14fb89193211.

@@ -260,6 +260,13 @@ restoration after this second trial is pending physical Reset/power-cycle
 recovery. This failed trial does not invalidate the completed release-only
 three-scene evidence, and it does not qualify the relocated observer.
 
+## R23 - Recovery after the combined observer timeout
+
+Physical Reset returned the paired menu. COM3 hello and status confirm menu
+mode; coordinate8 installation/readback matches its known empty-template hash
+and CRC. The interruption recorded at R22 is resolved. The combined observer
+still lacks physical qualification. Next, isolate relocated BRR with KOFF off.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

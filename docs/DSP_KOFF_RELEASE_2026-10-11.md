@@ -118,3 +118,16 @@ ELF c2e1df941ac3ff38b8a243b149996db6f62a153d3e49a4bfad7298a1b7821a30.
 Recovery to the menu and restoration of coordinate8 require a responsive
 emulator or a physical Reset/power cycle. The user was asked for that action;
 successful restoration after this second trial must not be claimed yet.
+
+## R23 - Manual recovery verified
+
+The user returned the console to its menu with a physical Reset. COM3 hello
+reports the paired menu. Coordinate8 was installed and read back: 131072 bytes,
+CRC32 2d5daff8, empty-template SHA256
+a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2.
+A subsequent status confirms menu mode with recovery=0. This closes the
+restoration interruption; it does not qualify the failed combined candidate.
+The next isolation keeps the relocated BRR observer and disables KOFF release.
+
+R22 exact-commit workflows are still pending at this recovery checkpoint;
+CGRAM38174701186 has completed successfully. No inherited CI PASS is used.

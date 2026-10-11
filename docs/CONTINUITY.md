@@ -1,3 +1,30 @@
+# 2026-10-11 - Recovery after combined observer timeout (R23)
+
+Source phase4/usb-hardware-loop: e3aa44367cc8771ba01a67d8eed628198cfe8da5.
+Draft PR https://github.com/ironangelo/sodium64/pull/21.
+Master remains 7cc8facfe8643fb85888f301f79995575830521d; no merge/release.
+
+Physical Reset returned the paired menu. COM3 hello confirms menu mode;
+coordinate8 install/readback matches 131072 bytes, CRC32 2d5daff8 and
+empty-template SHA256 a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2.
+Subsequent status confirms menu mode, recovery=0. Restoration is now verified.
+This closes the previous interruption, without qualifying the failed combined
+BRR/KOFF/relocated-arena candidate. Its cause remains unresolved.
+
+Next isolation: BRR_OBSERVER=1 with the new0xD4000 arena, KOFF release=0.
+Linked decoder, boot and arena guards precede the distinct physical trial.
+Its acknowledged replay and private image/PCM/chunk comparison will determine
+whether this configuration remains responsive; no cause is presumed.
+
+R22 exact1b12398 CI was pending at recovery; CGRAM38174701186 is successful.
+All raw game data and transport logs remain private. Full audio/60fps goal
+remains active. The entire preceding continuity is preserved byte for byte.
+
+[Release and recovery evidence](DSP_KOFF_RELEASE_2026-10-11.md).
+[Curated evidence](evidence/koff-release-2026-10-11.json).
+
+---
+
 # 2026-10-11 - KOFF note tails, observer CI memory and interrupted combined trial (R22)
 
 Source phase4/usb-hardware-loop:

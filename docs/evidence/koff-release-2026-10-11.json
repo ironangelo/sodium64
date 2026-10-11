@@ -165,5 +165,14 @@
     "physical_acceptance": false,
     "root_cause": "unresolved",
     "manual_menu_recovery_required": true
+  },
+  "manual_recovery_followup": {
+    "user_reset_reached_menu": true,
+    "coordinate8_readback_verified": true,
+    "paired_menu_responsive": true,
+    "empty_template_sha256": "a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2",
+    "crc32": "2d5daff8",
+    "bytes": 131072,
+    "failed_variant_acceptance": false
   }
 }

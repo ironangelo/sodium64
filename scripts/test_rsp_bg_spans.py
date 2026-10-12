@@ -66,7 +66,8 @@ def decode(build, baseline, fault=None):
                                             for plane in range(bits)))==0 else value+pal
                            for y in range(8) for x in range(8))
             if not stale:assert bytes(d[:64]) == expected,(bits,palette,pattern,relocated,'decoded pixel mismatch')
-            assert vm.r[8]==12 and vm.r[25]==index and vm.r[31]==EXIT
+            assert vm.r[8]==12 and vm.r[31]==EXIT,'decoder return/empty offset changed'
+            assert vm.r[25]==index,'decoder function index was not restored'
             assert vm.r[3]==EXIT,'decoder loop v1 owner changed'
             for register in range(32):
                 if register not in (0,3,4,5,6,8,9,12,15,25,31):
@@ -168,12 +169,13 @@ def main():
     result=dict(decoder_cases=decode(args.build,args.baseline),span_checks=spans(args.build),
                 initializer_queues=initializer(args.build,args.baseline),
                 passed=True,native_speed_claim=False)
-    for fault in ('boundary','palette','vertex'):
+    for fault,message in (('boundary','wrong window/map run'),('palette','wrong window/map run'),
+                           ('vertex','wrong span lower-right')):
         try:spans(args.build,fault)
-        except AssertionError:pass
+        except AssertionError as error:assert message in str(error),str(error)
         else:raise AssertionError('accepted span '+fault+' mutation')
     try:decode(args.build,args.baseline,'callback')
-    except AssertionError:pass
+    except AssertionError as error:assert 'decoder function index was not restored' in str(error),str(error)
     else:raise AssertionError('accepted decoder callback mutation')
     result['negative_guards']=4
     print(json.dumps(result))

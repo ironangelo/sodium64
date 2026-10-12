@@ -1,0 +1,63 @@
+{
+  "status": "MEASURED",
+  "runtime_source": "1c665b2c797209e1ba0031713f43554c8f9fa0fc",
+  "FETCH_SIGNAL": 1,
+  "cadence": 32.288409477006375,
+  "mean_CPU_RSP_wait_ms": 11.24456173374613,
+  "relative_to_fresh_control_percent": -0.001728232952069586,
+  "sampled_marker_residency": {
+    "hcomp_math": {
+      "running_events": 43,
+      "sender_marked_events": 32
+    },
+    "main": {
+      "running_events": 112,
+      "sender_marked_events": 84
+    },
+    "unknown": {
+      "running_events": 2,
+      "sender_marked_events": 0
+    }
+  },
+  "atomic_bank_samples": {
+    "halted": 79,
+    "unknown_or_bank_transition": 16,
+    "main_residency": 4869,
+    "mode7_draw_or_window_residency": 0,
+    "hcomp_phase_residency": 24,
+    "hcomp_math_residency": 2077,
+    "hcomp_fast_residency": 2,
+    "hcomp_setup_residency": 43
+  },
+  "pixel_checks": [
+    {
+      "scene": "initial600",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "title900",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "room1980",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "rain12944",
+      "pixels": 67200,
+      "differences": 0
+    }
+  ],
+  "paused_PCM": {
+    "bytes": 8192,
+    "differences": 0,
+    "registers_heads_enabled_match": true
+  },
+  "checksum_settings_trace_pass": true,
+  "coordinate8_restoration_readback_pass": true,
+  "interpretation": "Most observed Main/Math residency marks sender/submission/fetch retirement; not independent GPU cost, TV FPS or complete audio fidelity",
+  "next": "merge identical regular-BG tiles with exact 8-texel wrap, fixed source/order/window guards"
+}

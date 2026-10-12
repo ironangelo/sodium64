@@ -1,3 +1,27 @@
+# 2026-10-12 - R40 adaptive resident-island repair preflight
+
+Experimental source3972f16e0e091e58228be122c136f0db4aaa010a, branch experiment/adaptive-bg-spans-r40. IMPLEMENTED,
+not MEASURED/VALIDATED. Original184B AD0..B88 decoder island byte-identical;
+no-visible-Sub keeps old decoder/jump table/tile2; visible-Sub keeps R38 spans/
+worker. Tagged immutable source pointer occupies unused Mode7 padding4B.
+Switch only outside executing island and only when semantic mode changes;
+restore Phase and paired jump words. No game policy/heap/new surfaces/ROM loss.
+Local30 modes/masks/delayedDMA code/table/binding/boundaries pass, existing576
++448+2/four mutations, boot12/TV5/branch delays/arenaD1688<D2000 pass. Geometry
+bounds retained with safe delay-slot filling. Original branch linker relocation
+fixed before hardware. GCC16 diagnostic-arena issue separately stays open.
+
+RESUME HERE: root sole COM3; no worker at checkpoint, console menu/coordinate8.
+Private adaptive-r40-story-native.py/plan/archive hold exact safe artifact.
+Run story1852 first against fresh control56.149815/s and R39decoder53.641175;
+three physical pixels/PCM/checksum. Only if recovered, run acknowledged rain
+route against prior32.2889675 control/R38 36.956089. Restore via menu/readback.
+Do not repeat full CI yet or change memory layout during that discriminant.
+[Design/preflight](ADAPTIVE_SPANS_R40.md). Earlier branches/master preserved,
+commercial data/hashes private; full goal open. Prior continuity byte-identical.
+
+---
+
 # 2026-10-12 - R39 decoder-only control reproduces story regression
 
 Experimental source15f9e818babde0af97d80dd7cef776e3ade0826c, code unchangedR38. Native DECODE_BANK1/BG_SPANS0

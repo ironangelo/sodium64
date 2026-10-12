@@ -14,10 +14,16 @@ def main():
     parser.add_argument('elf', type=Path)
     parser.add_argument('--reference-elf', type=Path, required=True)
     parser.add_argument('--json-output', type=Path)
+    parser.add_argument('--timer-fast',action='store_true',
+                        help='Compare identical voice-base builds, changing only timer scheduling')
     args = parser.parse_args()
     models = [(CPU(m), s) for m, s in
               (load_elf(args.reference_elf), load_elf(args.elf))]
-    assert 'dsp_voice_base' not in models[0][1]
+    if args.timer_fast:
+        assert 'dsp_voice_base' in models[0][1] and 'dsp_timer_fast' not in models[0][1]
+        assert 'dsp_timer_fast' in models[1][1]
+    else:
+        assert 'dsp_voice_base' not in models[0][1]
     assert 'dsp_voice_base' in models[1][1]
     modes = ('attack_mode', 'decay_mode', 'sustain_mode', 'gain_mode', 'release_mode')
     optimized, symbols = models[1]
@@ -155,7 +161,8 @@ def main():
             cpu.write(pc,old)
         assert rejected, 'escaped mutation: '+label
         mutations.append(label)
-    proof = {'passed':True, 'paired_actual_scheduler_samples':samples,
+    proof = {'passed':True, 'optimization':'timer-fast' if args.timer_fast else 'voice-base',
+             'paired_actual_scheduler_samples':samples,
              'enabled_masks':256, 'envelope_rate_calls':True, 'noise_steps':True,
              'all_BRR_filters_and_ranges':True, 'block_loop_end_flags':4,
              'both_AI_half_submissions':True, 'PCM_active_state_equal':True,

@@ -961,8 +961,34 @@ update_step: // a0: rate, t6: voice
 calc_step:
     // Calculate the timer value of the next step
     add t0, t0, t2
+#ifdef SODIUM64_DSP_TIMER_FAST
+.globl dsp_timer_fast, dsp_timer_power2, dsp_timer_small_remainder, dsp_timer_divide
+dsp_timer_fast:
+    // All32 linked periods are nonzero. Base/offset sums are nonnegative.
+    // a0's rate-table offset is dead after the table load; keep both stereo
+    // accumulators and every other caller register untouched.
+    addiu t3, t1, -1
+    and a0, t1, t3
+    beqz a0, dsp_timer_power2
+    nop
+    sltu a0, t0, t1
+    bnez a0, dsp_timer_remainder_ready
+dsp_timer_small_remainder:
+    move t3, t0
+dsp_timer_divide:
+    // Raw unsigned DIV avoids the assembler's zero/signed-overflow macro.
+    // The linked table and legal DSP timer range prove those guards redundant.
+    divu zero, t0, t1
+    mfhi t3
+    b dsp_timer_remainder_ready
+    nop
+dsp_timer_power2:
+    and t3, t0, t3
+dsp_timer_remainder_ready:
+#else
     div t0, t1
     mfhi t3
+#endif
     sub t2, t2, t3
     bgez t2, set_step
     nop

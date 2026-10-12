@@ -1,3 +1,21 @@
+# 2026-10-12 - R41 SDL lab failure isolated and pinned
+
+Source 794b553053cd97070ec393abb60d9ed1e15a2429, fix/ares-headless-sdl-r41; workflow/docs only versus d10b79f.
+Ares38300934335 failed SDL KMSDRM compile at114983870325 before Sodium64
+execution. Upstream d399b610 exact member-access fix verified; helper now
+pins that SDL commit instead of mutable main. No core/driver/assertion/matrix
+change. Original failure remains failed; Build38300923921/CGRAM38300930969 PASS.
+
+RESUME HERE: dispatch only ares-profile.yml on this fix branch, record ID,
+qualify unchanged Sodium64 code; avoid broad CI reruns. R42 native CI8 repeat
+30338 completed, menu restored: tags/opacity now correct for CLAMP/WRAP but
+CI RGB124 differences remain; no renderer adoption, raw result private.
+Root sole COM3, no worker. Return to coverage branch for directed fixture
+RGB diagnosis before architecture changes. [Lab fix](ARES_SDL_R41.md). Full
+goal open, previous history byte-identical.
+
+---
+
 # 2026-10-12 - R42 first fixture result and CI8 correction
 
 Source 22f18603f4c785fe17f325ed2eb6199029a64df1, coverage-tags-r42. First physical probe28af46a completed;

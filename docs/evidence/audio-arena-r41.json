@@ -1,0 +1,24 @@
+{
+  "status": "MEASURED",
+  "runtime_source": "e6c7e2ca5aaa51a4b6c7dbe16df2a466c351dca8",
+  "configuration": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layer": 0
+  },
+  "diagnostic_arena": "D4000",
+  "story_completed_boundaries_per_second": 55.86837460630161,
+  "prior_D2000": 55.868405549435025,
+  "mean_cpu_rsp_wait_ms": 3.079111988084599,
+  "RGB_checkpoints": 3,
+  "RGB_pixels": 201600,
+  "RGB_differences": 0,
+  "paused_PCM_bytes": 8192,
+  "PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "full_checksum_settings": "PASS",
+  "restoration_readback": true,
+  "full_visual_audio_cadence_qualification": false
+}

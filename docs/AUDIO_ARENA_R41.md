@@ -1,6 +1,6 @@
 # R41 - Consistent AUDIO-only diagnostic storage
 
-IMPLEMENTED/local integrity passed, physical regression pending. GCC16.2 CI
+MEASURED/local and physical regression passed; full CI pending. GCC16.2 CI
 failed the matched corrected AUDIO1/BRR0/MIX0 reference at the D2000 link bound,
 while native GCC14.2 fit D15C8. This is a diagnostic/compiler storage mismatch,
 not a measured speed improvement. Normal profile and existing extended layouts
@@ -28,3 +28,13 @@ Build/CGRAM/Ares workflows. Never substitute green CI for native performance
 or paused PCM for complete synchronized audio. Prior D2000 artifacts/results
 remain archived. No merge, game policy, new surfaces or ROM capacity reduction.
 Commercial data/captures/replays/hashes stay local.
+
+## Native regression
+
+At runtime e6c7e2ca5aaa51a4b6c7dbe16df2a466c351dca8, actual N64 story:55.868375 completions/s
+versus prior55.868406; wait3.079112ms. Three physical checkpoints201600 pixels
+and8192 paused PCM bytes are identical, including heads/registers/enabled.
+Full checksum/settings pass, coordinate8/menu restored/readback. Relocation
+preserves this physical route; it is no additional performance win.
+Full exact CI is next; no VALIDATED/integration claim yet.
+[Curated result](evidence/audio-arena-r41.json).

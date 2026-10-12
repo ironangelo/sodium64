@@ -1,3 +1,26 @@
+# 2026-10-12 - R37 existing sender marker preflight, native pending
+
+Source retained phase4/usb-hardware-loop7b0041943294006c22e0309056895ddba2041e8e, runtime1c665b2c797209e1ba0031713f43554c8f9fa0fc plus existing
+FETCH_SIGNAL1. No R36 cache code on active branch. No new profiler or full CI.
+Local144 sender cases/one negative mutation, boot12/TV5, arena D15C8/D2000,
+delay-slot/fixed-ABI/status-bit checks pass. SIG0 marks submission/polling to
+DMEM fetch retirement; SIG1 remains atomic bank residency. Neither is exact
+GPU/CPU instruction cost. Compare one short quiet rain capture to fresh R36
+control32.2889675/s, wait11.245405ms; four physical pixels/PCM control retained.
+
+RESUME HERE: root sole COM3 owner. Private fetch-r37-native.py and
+fetch-r37-preflight.json/archive hold exact ELF/settings/question/recovery.
+High marked Main residency directs toward command/consumer costs; low toward
+production/cache/other resident work. Measure marker overhead; preserve limits.
+Console last restored/readback coordinate8 in responsive menu. Worker not
+started at checkpoint; start script, then publish result before next batch.
+Do not build mixed CI/RGBA multitexturing with TLUT on: primary libdragon
+validator forbids that combination. [Experiment](RAIN_FETCH_R37.md).
+Commercial payloads/hashes private; master stable/PR21 draft; goal active.
+Prior continuity byte-identical below.
+
+---
+
 # 2026-10-12 - R36 measured on N64; individual residency rejected
 
 Experiment branch experiment/tmem-resident-r36 finala2f12b11089a189754fcfca403ccff58a8435fae; executable73619d858baa913f84e69ca46f2e6d5bcdd8ddcb.

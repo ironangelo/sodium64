@@ -1,3 +1,24 @@
+# 2026-10-12 - R41 native equivalence; exact CI starting
+
+Qualification source d10b79f79a519d7ca72261fbacfe4b19881dac41; runtime e6c7e2ca5aaa51a4b6c7dbe16df2a466c351dca8. Branch
+experiment/adaptive-bg-spans-r40. MEASURED/native story55.868375 versus prior
+D2000 55.868406, wait3.079112ms; three checkpoints201600 pixels/8192 paused
+PCM/heads/regs/enabled identical. Full checksums/settings and coordinate8/
+menu restore/readback PASS. This layout repair adds no speed claim. Native
+session76649 completed, no live worker, responsive menu.
+
+RESUME HERE: source push starts Build; dispatch CGRAM/Ares on exact SHA/ref
+and record run IDs before waiting. No repeated source push during CI. Root
+sole COM3. Prior R40 rain14.298672percent retained physically; residual story
+0.50percent difference and 60/audio/corpus gates stay open. Use existing raw
+CPU sample PCs with exact matching ELF to choose next material hypothesis,
+no new profiler needed. Expanded physical representative controls can proceed
+independently; do not promote with failures. [Proof](AUDIO_ARENA_R41.md),
+[numbers](evidence/audio-arena-r41.json). Master/retained unchanged, game data
+and hashes private, all earlier continuity byte-identical.
+
+---
+
 # 2026-10-12 - R41 consistent AUDIO arena preflight
 
 Source e6c7e2ca5aaa51a4b6c7dbe16df2a466c351dca8, experiment/adaptive-bg-spans-r40. IMPLEMENTED/local pass;

@@ -354,7 +354,9 @@ hcomp_cgram_return:
     lw a1, OVERLAY_OBJECT_CACHE_SRC
     j overlay_load_slot
     li t9, 0x13A8
-#if SODIUM64_TMEM_COORD_ATLAS
+#if SODIUM64_TMEM_RESIDENT_CACHE
+#include "rsp_tmem_resident.inc"
+#elif SODIUM64_TMEM_COORD_ATLAS
 #include "rsp_tmem_coord.inc"
 #else
 #include "rsp_tmem_atlas.inc"

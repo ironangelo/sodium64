@@ -129,6 +129,18 @@ jobs:
           PY
 
           ccache --zero-stats
+          # The pinned ares helper clones mutable SDL main. Pin SDL too:
+          # d399b610 fixes the KMSDRM crtc member compile failure seen in
+          # run38300934335 before any Sodium64 workload could execute.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('.github/scripts/build_sdl.sh')
+          source = p.read_text()
+          old = 'git clone https://github.com/libsdl-org/SDL.git'
+          assert source.count(old) == 1
+          pinned = 'git clone --no-checkout https://github.com/libsdl-org/SDL.git\ngit -C SDL checkout d399b610ecc68632ae44c0e4874715ca549693aa'
+          p.write_text(source.replace(old, pinned, 1))
+          PY
           .github/scripts/build_sdl.sh
           cmake --preset ubuntu-ci -DARES_CORES=n64
           cmake --build build --parallel "$(nproc)"

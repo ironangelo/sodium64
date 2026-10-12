@@ -1,3 +1,28 @@
+# 2026-10-11 - R32 VR4300 dry-master spacing corrected
+
+Source phase4/usb-hardware-loop: 0675f15a89966e0057a68ebbaa63ee1552a319a4.
+NEC page479 spacing requirement: actual old MFLO/SRA/MULT has one intervening
+instruction. Gate rejects it; move existing left casts for three intervening
+instructions without added work. Whole-pipeline multiply stalls preclude the
+proposed latency-overlap assumption. No user audio fault attributed to hazard.
+Six linked writers and bad mutation; dynamic delay-slot guard/arithmetic/2048
+paired samples/all64 BRR pairs/nine fields pass. All855212 disabled loaded
+bytes identical,110 host tests pass. Observed D4000 actual4 DMA/3 mutations,
+41 owners, boot12/5 and84 hooks pass. Native room1980:67200 pixels/8192 PCM
+bytes unchanged; two actual primary stereo values/PCM word match. Quiet
+20.100692s full checksum/settings trace retains1121 records. USB return and
+coordinate8 restoration/readback/menu pass; scanner/firmware retained. Diagnostic
+observer run is not production speed, DAC waveform or all-scene acceptance.
+Prior exact de3d147 Build38187082086/CGRAM38187084256/Ares38187084224 pass.
+Earlier36883ee Ares cancelled; fresh corrected CI pending independently.
+[Hardware contract and limits](DSP_HILO_2026-10-11.md).
+[Curated evidence](evidence/dsp-hilo-2026-10-11.json).
+Next: full DSP history/priming/Gaussian/echo/timing and rain RSP constraints.
+Master preserved, PR21 draft; full game goal active. Commercial material stays
+private. Entire prior continuity preserved byte for byte below.
+
+---
+
 # 2026-10-11 - R31 native complete; next VR4300 contract identified
 
 Source phase4/usb-hardware-loop: de3d147800036db49e7d1000fb98e0816271fd46; executable36883ee.

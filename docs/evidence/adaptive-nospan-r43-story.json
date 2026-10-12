@@ -1,0 +1,22 @@
+{
+  "status": "MEASURED",
+  "runtime_source": "4382ae80bdef0474827ce74f7ecf84c02e80edc4",
+  "story_completed_boundaries_per_second": 56.044680462975975,
+  "control": 56.149815074272475,
+  "R40": 55.868405549435025,
+  "matched_first1000": {
+    "control": 56.23070805378894,
+    "R43": 56.13356421346717
+  },
+  "mean_cpu_rsp_wait_ms": 2.954269090909091,
+  "RGB_checkpoints": 3,
+  "RGB_pixels": 201600,
+  "RGB_differences": 0,
+  "paused_PCM_bytes": 8192,
+  "PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "full_checksum_settings": "PASS",
+  "menu_restoration_readback": true,
+  "full_native60_visual_audio_or_integrability_claim": false,
+  "remaining": "small residual against control (~0.19percent), rain and full new-runtime CI pending"
+}

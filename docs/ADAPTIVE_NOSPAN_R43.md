@@ -1,6 +1,6 @@
 # R43 - No-Sub overlay without per-tile span dispatch
 
-IMPLEMENTED/local preflight, native pending. R40 recovered decoder residency
+MEASURED/native story; rain and new-runtime full CI pending. R40 recovered decoder residency
 but story remains0.50percent slower than corrected control. Its no-Sub tiles
 still call the span gate. Make an immutable1000-byte Main overlay variant
 with that single call word changed to NOP, selected only on existing semantic
@@ -37,3 +37,11 @@ failed upstream SDL compilation. Workflow-only794b553 pinned the exact SDL
 fix; Ares38304110691 SUCCESS, unchanged Sodium64 code. Do not relabel original
 failure or claim R43 inherits qualification of its changed runtime.
 Master/retained untouched; all private game data and hashes stay local.
+
+Native4382ae8 story:56.044680 completions/s, versus R40 55.868406 and control
+56.149815. Matched1000:56.133564 versus56.230708. Wait2.954269ms. Partial
+regression recovery; residual about0.19percent remains, do not silently call
+non-regression proven. Three images201600 pixels/8192 paused PCM/heads/regs/
+enabled identical, full checksum/settings and menu restoration pass.
+Next rain verifies material benefit retained; no marginal-tuning campaign
+or repeated full CI before that question. [Numbers](evidence/adaptive-nospan-r43-story.json).

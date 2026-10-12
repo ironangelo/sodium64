@@ -1,3 +1,20 @@
+# 2026-10-12 - R43 physical story partial recovery
+
+Source c742c2fa14fb5b0d970665b0d8ddc0419a50ef16, runtime4382ae8, adaptive-nospan-r43. MEASURED: story
+56.044680 versus R40 55.868406/control56.149815; matched1000 56.133564 versus
+56.230708, small ~0.19percent residual. Wait2.954269ms. Three frames201600
+pixels/8192 PCM/heads/regs/enabled identical, full checksum/settings, menu
+restore/readback PASS. No complete non-regression/60/audio/compatibility claim.
+Session71007 completed, root only COM3/no worker.
+RESUME HERE: run nospan43-rain-native.py with frozen artifact and acknowledged
+12944 route; four frames/PCM/checksum against known reference/R40. Retain
+material benefit or reject/repair; avoid further marginal-tuning campaign.
+R42 coverage feasibility separately measured, large renderer metadata path
+is not implemented. Full R43 CI after native result, parent results scoped.
+[Evidence](ADAPTIVE_NOSPAN_R43.md). Full goal open; prior history unchanged.
+
+---
+
 # 2026-10-12 - R43 no-Sub dispatch repair preflight
 
 Source 4382ae80bdef0474827ce74f7ecf84c02e80edc4, experiment/adaptive-nospan-r43. IMPLEMENTED, not measured.

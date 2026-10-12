@@ -1,3 +1,17 @@
+# 2026-10-12 - R42 final production-palette fixture control
+
+Source ea6158bf268d9300e0cad41c9238d5b084185694, coverage-tags-r42. Separate TLUT tile6/fencesc4ae2e6
+did not repair CI RGB124/staleF800; not a confirmed lease defect. Session23439
+finished/restored. Try exact production four-copy palette/LoadBlock path,
+within existing retired scratch; boot12/TV5 and D35C8<D4000 pass.
+RESUME HERE: run coverage42e-native.py/plan/archive, final fixture control.
+If RGB still fails, stop this sequence, keep unqualified and choose another
+material path. Root sole COM3, menu/no worker. Ares SDL retry38304110691 has
+compiled and now executes its unchanged matrix; no final result yet.
+No performance/renderer acceptance; earlier history byte-identical below.
+
+---
+
 # 2026-10-12 - R42 palette RGB ownership discriminant
 
 Source c4ae2e6e4bab3f3e5719caaa72a181ff6545ae10; coverage-tags-r42. TF1 RGB control49b9a5d did not improve

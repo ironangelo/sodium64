@@ -363,6 +363,14 @@ hcomp_cgram_return:
 #else
 #include "rsp_tmem_atlas.inc"
 #endif
+#if SODIUM64_ADAPTIVE_SPANS
+bg_span_gate:
+    lbu t0, HCOMP_EFFECTIVE_TS
+    beqz t0, ret_jump
+    nop
+    j bg_span_merge
+    nop
+#endif
 .org 0x21C
 #else
     // Update OAM for the following sections
@@ -910,7 +918,11 @@ check_cache:
     // Skip uploading if the last tile's number and palette were the same
 #if SODIUM64_BG_SPANS
     nop // Empty-tile branch delay slot must remain a scalar instruction.
+#if SODIUM64_ADAPTIVE_SPANS
+    jal bg_span_gate
+#else
     jal bg_span_merge
+#endif
     nop
 #else
     andi t0, t6, 0x1FFF

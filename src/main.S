@@ -207,6 +207,16 @@ tmem_atlas_cpu_bind:
     sw t0, DMEM(OVERLAY_OBJECT_CACHE_SRC)
 tmem_atlas_cpu_bind_end:
 #endif
+#if SODIUM64_ADAPTIVE_SPANS
+.globl adaptive_decoder_cpu_bind, adaptive_decoder_cpu_bind_end
+adaptive_decoder_cpu_bind:
+    // Main initially contains the new island. Low bit is its semantic mode;
+    // the immutable original source is aligned and stripped before its DMA.
+    la t0, rsp_decoder_original_text_start
+    ori t0, t0, 1
+    sw t0, DMEM(OVERLAY_DECODER_ORIGINAL_SRC)
+adaptive_decoder_cpu_bind_end:
+#endif
     la t0, rsp_mode7_window_text_start
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
     ori t0, t0, 6 // aligned source pointer carries the diagnostic bank ID

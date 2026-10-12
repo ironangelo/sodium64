@@ -147,6 +147,42 @@ hcomp_vector_constants:
     j 0xA4001F7C
     li t9, 0x13B0
 hcomp_setup_copy:
+#if SODIUM64_ADAPTIVE_SPANS
+    lbu t2, HCOMP_EFFECTIVE_TS
+    sltu t2, zero, t2
+    sub t4, zero, t2
+    andi t4, t4, 0x52C // Original and worker decoders have identical spacing.
+    lui t0, 0xA400
+    ori t1, t0, 0x1B3C
+    sub t1, t1, t4
+    sw t1, SHARED_JUMPS
+    ori t1, t0, 0x1B20
+    sub t1, t1, t4
+    sw t1, SHARED_JUMPS + 4
+    ori t1, t0, 0x1AE8
+    sub t1, t1, t4
+    sw t1, SHARED_JUMPS + 8
+    lw t3, OVERLAY_DECODER_ORIGINAL_SRC
+    andi t0, t3, 1
+    xor t3, t3, t0
+    beqz t2, hcomp_context_dma
+    move a1, t3
+    lw a1, OVERLAY_MAIN_SRC
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    addi a1, a1, 0x727 // Strip known Main bank tag1, then reach AD0.
+#else
+    addi a1, a1, 0x728
+#endif
+hcomp_context_dma:
+    li a0, 0x1AD0
+    jal 0xA4001F40
+    li a2, 183 // AD0..B88 includes immutable boundary delay-slot words.
+    or t3, t3, t2
+    sw t3, OVERLAY_DECODER_ORIGINAL_SRC
+    lw a1, OVERLAY_HCOMP_SRC
+    j 0xA4001F7C
+    li t9, RSP_CONTEXT_PHASE_RETURN
+#else
     lw t6, HCOMP_BAND_BASES + 4
     addi t6, t6, -24
     lw t7, HCOMP_BAND_BASES + 8
@@ -181,6 +217,7 @@ hcomp_copy_chunk:
     lw a1, OVERLAY_HCOMP_SRC
     j 0xA4001F7C
     li t9, 0x1770
+#endif
 
 .org (0x628 - 0x3A8)
 hcomp_vram_snapshot:

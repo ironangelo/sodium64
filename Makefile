@@ -59,6 +59,12 @@ TMEM_ATLAS_BITS ?= 5
 TMEM_COORD_ATLAS ?= 0
 DECODE_BANK ?= 0
 BG_SPANS ?= 0
+ADAPTIVE_SPANS ?= 0
+ifeq ($(ADAPTIVE_SPANS),1)
+ifneq ($(BG_SPANS),1)
+$(error ADAPTIVE_SPANS requires BG_SPANS=1)
+endif
+endif
 ifeq ($(DECODE_BANK),1)
 ifneq ($(TMEM_ATLAS),1)
 $(error DECODE_BANK requires TMEM_ATLAS=1)
@@ -175,6 +181,9 @@ PROFILE := 1
 endif
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
+ifneq ($(ADAPTIVE_SPANS),1)
+SFILES := $(filter-out src/rsp_decoder_original.S,$(SFILES))
+endif
 ifneq ($(TMEM_ATLAS),1)
 SFILES := $(filter-out src/rsp_object_cache.S,$(SFILES))
 endif
@@ -287,6 +296,10 @@ endif
 ifeq ($(BG_SPANS),1)
 N64_RSPASFLAGS += -DSODIUM64_BG_SPANS=1
 endif
+ifeq ($(ADAPTIVE_SPANS),1)
+N64_ASFLAGS += -DSODIUM64_ADAPTIVE_SPANS=1
+N64_RSPASFLAGS += -DSODIUM64_ADAPTIVE_SPANS=1
+endif
 ifeq ($(FETCH_SIGNAL),1)
 N64_RSPASFLAGS += -DSODIUM64_RDP_FETCH_SIGNAL=1
 endif
@@ -395,7 +408,7 @@ $(BUILD_DIR)/%.o: %.S
 		DATASECTION="$(basename $@).data"; \
 		BINARY="$(basename $@).elf"; \
 		RSPLINK=rsp.ld; \
-		case "$$FILENAME" in rsp_object_cache|rsp_hcomp|rsp_hcomp_math|rsp_hcomp_fast|rsp_hcomp_setup|rsp_hcomp_tlut|rsp_hcomp_rdp|rsp_hcomp_fixed_window|rsp_hcomp_rdp_fixed|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
+		case "$$FILENAME" in rsp_decoder_original) RSPLINK=src/rsp_decoder_original.ld;; rsp_object_cache|rsp_hcomp|rsp_hcomp_math|rsp_hcomp_fast|rsp_hcomp_setup|rsp_hcomp_tlut|rsp_hcomp_rdp|rsp_hcomp_fixed_window|rsp_hcomp_rdp_fixed|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
 		echo "    [RSP] $<"; \
 		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-T$$RSPLINK -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
 		mv "$@" $$BINARY; \

@@ -43,6 +43,19 @@ hcomp_band_begin:
     nop
     nop
 hcomp_band_start:
+#if SODIUM64_ADAPTIVE_SPANS
+    // Swap the nonexecuting common island only when the semantic class
+    // changes. No-Sub keeps the old resident decoder and coordinate8 path.
+    lbu t0, HCOMP_EFFECTIVE_TS
+    sltu t0, zero, t0
+    lw t1, OVERLAY_DECODER_ORIGINAL_SRC
+    andi t1, t1, 1
+    beq t0, t1, hcomp_context_ready
+    lw a1, OVERLAY_HCOMP_SETUP_SRC
+    j 0xA4001F7C
+    li t9, RSP_CONTEXT_SWITCH_ENTRY
+hcomp_context_ready:
+#endif
     lw t0, HCOMP_SECTION_END
     slt t1, k0, t0
     // The taken transition must retain the real epoch end in k1. An ADDI
@@ -72,7 +85,6 @@ hcomp_band_bounds_ready:
     // is 0/8; the published viewport must stay inside its 240-row framebuffer.
     sltiu t1, t0, 8
     bnez t1, hcomp_bad_geometry
-    nop
     sltiu t1, t2, 249
     beqz t1, hcomp_bad_geometry
     nop

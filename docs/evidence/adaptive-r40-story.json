@@ -1,0 +1,33 @@
+{
+  "status": "MEASURED",
+  "source": "3972f16e0e091e58228be122c136f0db4aaa010a",
+  "scene": "ALttP story, deterministic boundary1852 then quiet20s",
+  "configuration": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layer": 0
+  },
+  "completed_boundaries_per_second": {
+    "corrected_control": 56.149815074272475,
+    "decoder_only_R39": 53.64117522768458,
+    "R40": 55.868405549435025
+  },
+  "matched_first1000_per_second": {
+    "control": 56.23070805378894,
+    "R40": 55.9516964176568
+  },
+  "mean_cpu_rsp_wait_ms": 3.0806850878760796,
+  "native_RGB_checkpoints": 3,
+  "RGB_pixels_compared": 201600,
+  "RGB_differences": 0,
+  "paused_PCM_bytes": 8192,
+  "PCM_differences": 0,
+  "audio_registers_heads_enabled_match": true,
+  "full_capture_checksum": true,
+  "menu_recovery_and_restoration_readback": true,
+  "full_visual_audio_or_native_cadence_qualification": false,
+  "rain": "pending",
+  "CI": "R40 pending; R38 b0f99c4 Ares/CGRAM pass; new audio reference link fails GCC16 D2000"
+}

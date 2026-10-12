@@ -1,3 +1,26 @@
+# 2026-10-12 - R40 native story recovery; rain discriminant next
+
+Source 5f84473c7265fb742a1c9132e23db56096d6d954, runtime 3972f16e0e091e58228be122c136f0db4aaa010a, branch experiment/adaptive-bg-spans-r40.
+MEASURED/story55.868406 vs corrected56.149815 vs decoder-only53.641175.
+Matched first1000 55.951696 vs56.230708 (~0.50percent residual loss). Three
+checkpoints201600 pixels/8192 PCM/heads/regs/enabled identical; full checksum/
+settings pass. Quiet hardware result, not TV/DAC/full fidelity acceptance.
+R38 Ares38292207583 now SUCCESS at b0f99c4, GCC16 D2000 link issue still open.
+
+RESUME HERE: root sole COM3; console menu/coordinate8 verified, no native
+worker at checkpoint. Run private adaptive-r40-rain-native.py with exact
+archived artifact; same acknowledged12944 route against32.2889675 reference
+and R38 36.956089. Check four images/PCM/checksum; finally menu restoration.
+If material gain preserved, qualify mode changes/regressions and repair CI
+arena safely before full validation. Do not promote until full gates pass.
+Private plan inherited stale R39 BG_SPANS0 and R38 run/session/script fields;
+corrected to DECODE1/BG_SPANS1/ADAPTIVE1 and explicit measurement erratum,
+without altering measured code. Master/retained/earlier experiments unchanged.
+[Result](ADAPTIVE_SPANS_R40.md), [curated numbers](evidence/adaptive-r40-story.json).
+Full goal open; private game data/hashes stay local; prior history unchanged.
+
+---
+
 # 2026-10-12 - R40 adaptive resident-island repair preflight
 
 Experimental source3972f16e0e091e58228be122c136f0db4aaa010a, branch experiment/adaptive-bg-spans-r40. IMPLEMENTED,

@@ -38,7 +38,10 @@ were corrected, with stale differential coverage retained. Initial full-clean
 snapshot fixture was unsuitable; the new initializer is tested directly after
 the byte-identical snapshot/semaphore prefix. Production audits also corrected
 the tile4 S mirror bit, restored the original decoder loop's v1 effect, and
-kept row opcode arithmetic unchanged before hardware use. No native claim yet.
+kept row opcode arithmetic unchanged before hardware use. The branch-delay
+gate caught the new helper call in the preceding empty-tile branch's delay
+slot; moving it into the following former NOP preserves all addresses. This
+was corrected before loading any R38 image on hardware. No native claim yet.
 
 Next: one short actual N64 rain12944 comparison to the exact fresh corrected
 R36 control32.2889675 boundaries/s, skip0/APU21/audio4. Compare four physical

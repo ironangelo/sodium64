@@ -909,8 +909,8 @@ check_cache:
 
     // Skip uploading if the last tile's number and palette were the same
 #if SODIUM64_BG_SPANS
+    nop // Empty-tile branch delay slot must remain a scalar instruction.
     jal bg_span_merge
-    nop
     nop
 #else
     andi t0, t6, 0x1FFF

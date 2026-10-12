@@ -103,7 +103,12 @@ static int rdp_probe_coverage(const char *id,uint32_t fbp) {
     rdp_probe_dirty=1;
     for(unsigned x=0;x<32;x++) {
         unsigned value=x>1?((x<<11)|((31-x)<<6)|(((x*7)&31)<<1)|1):(x==1);
-        texture[x]=palette[x]=value;indices[x]=(uint8_t)x;
+        texture[x]=value;indices[x]=(uint8_t)x;
+    }
+    /* Match the production palette's four bank copies and LoadBlock path. */
+    for(unsigned x=0;x<256;x++) {
+        unsigned value=x<32?texture[x]:0;
+        for(unsigned bank=0;bank<4;bank++)palette[x*4+bank]=(uint16_t)value;
     }
     for(unsigned dest=0;dest<4;dest++)for(unsigned ci=0;ci<2;ci++)
     for(unsigned old=0;old<2;old++)for(unsigned permitted=0;permitted<2;permitted++) {
@@ -122,10 +127,10 @@ static int rdp_probe_coverage(const char *id,uint32_t fbp) {
         cmd[n++]=0x3c00000000000000ull|(combine&0x00ffffffffffffffull);
         cmd[n++]=0x2800000000000000ull;
         if(ci) {
-            cmd[n++]=0x3d10001f00384080ull;
-            cmd[n++]=0x3510010006000000ull; /* Separate immutable palette tile6. */
+            cmd[n++]=0x3d10000000384080ull;
+            cmd[n++]=0x3510810006000000ull; /* Production palette shape, tile6. */
             cmd[n++]=0x2600000000000000ull;
-            cmd[n++]=0x300000000607c000ull; /* Load32 TLUT entries. */
+            cmd[n++]=0x3300000006400000ull;
             cmd[n++]=0x2600000000000000ull;
             cmd[n++]=0x2800000000000000ull;
             cmd[n++]=0x2700000000000000ull;

@@ -56,3 +56,11 @@ CLAMP/WRAP tags/transparent still0. Next discriminant isolates palette loading:
 use distinct immutable tile6 for TLUT plus explicit LoadSync/TileSync before
 texture tile7. This tests a suspected descriptor/source ownership fixture
 hazard. No stale-color result is accepted. Prior three receipts retained.
+
+Separate tile/explicit palette retirementc4ae2e6 leaves the same RGB124/stale
+F800 mismatch; ownership explanation is not confirmed. Final fixture control
+uses the exact production four-copy2048-byte palette and LoadBlock descriptor
+shape, instead of its unfamiliar LoadTLUT path. Expanded input/rounded read
+end remains before command scratch. This is a bounded feasibility test, no
+new profiling infrastructure or performance claim. If RGB still fails, stop
+this fixture sequence and retain the mechanism as unqualified.

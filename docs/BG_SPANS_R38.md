@@ -1,6 +1,6 @@
 # R38 - Identical regular-BG spans, 2026-10-12
 
-Status: MEASURED, promising candidate; expanded native/regression/CI pending.
+Status: MEASURED, rain gain but story regression; NOT VALIDATED/integrable.
 R37 observed75percent of sampled Main residency inside command submission/
 fetch-retirement polling. R36 individual texture residency was marginal. This
 experiment reduces actual rectangles/submissions for consecutive identical
@@ -60,3 +60,26 @@ may discriminate relocation costs if an expanded scene degrades; avoid a
 redundant rain control when exact code/settings already qualify it. Private
 spans-r38 artifacts/run preserve exact identities.
 Commercial input/output data and their hashes stay private.
+
+Expanded actual N64 control/candidate: title51.799010 ->51.911459 (first300),
+room57.662086 ->57.666074 (full trace), story56.149815 ->53.985990 (full trace).
+Story equal first1000 intervals56.230708 ->54.076946 confirms the loss is not
+just a different20-second endpoint. Seven native checkpoints470400 RGB pixels,
+zero differences; three8192-byte PCM rings/heads/registers/enabled match.
+Each capture has complete checksums/settings; menu/coordinate8 restoration
+passes. Native cold launches and later story/room transitions ran; startup
+frame-time distributions were not recorded. Rain gain cannot hide story loss.
+
+Exact b0f99c4 CI: CGRAM38292204698 SUCCESS; Build38292136146 has ordinary,
+trace/profile/audio and emulator jobs SUCCESS, but the new corrected-reference
+job114954489338 fails the static-memory/CGRAM-arena link assertion before
+testing spans. CI GCC16.2 versus native14.2: the matched AUDIO1/BRR0/MIX0
+reference no longer fits D2000 there. Keep all assertions; no failed/synthetic
+acceptance. Ares38292207583 still pending at this checkpoint. Full CI is not
+green. This compiler/configuration issue is independent of coalescing.
+
+Next discriminant: native story1852 with DECODE_BANK1/BG_SPANS0, same D2000
+corrected flags and exact reference. Separate cold decoder-load cost from
+the repeated span probe before choosing a generic admission/relocation repair.
+Avoid changing the diagnostic arena during that physical A/B. The memory
+configuration must also be repaired/proven before any eventual promotion.

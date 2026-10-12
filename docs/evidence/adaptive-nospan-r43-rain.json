@@ -1,0 +1,19 @@
+{
+  "status": "MEASURED",
+  "runtime_source": "4382ae80bdef0474827ce74f7ecf84c02e80edc4",
+  "completed_boundaries_per_second": 36.80401217960998,
+  "corrected_control": 32.28896750558269,
+  "R40": 36.905860944606516,
+  "gain_percent": 13.98324264548454,
+  "mean_cpu_rsp_wait_ms": 6.976365069199457,
+  "RGB_checkpoints": 4,
+  "RGB_pixels": 268800,
+  "RGB_differences": 0,
+  "paused_PCM_bytes": 8192,
+  "PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "full_capture_checksum_settings": "PASS",
+  "restoration_readback": true,
+  "native60_full_fidelity_or_integrability_claim": false,
+  "remaining": "small story/rain residual versus references; new-runtime CI not run; goal open"
+}

@@ -1,3 +1,26 @@
+# 2026-10-12 - R43 rain retained; material Sub metadata experiment next
+
+Source f31a23e61551b1074b964afd164fb0b9c6d70606, runtime4382ae8, adaptive-nospan-r43. MEASURED rain
+36.804012/control32.288968 (+13.983243percent), R40 36.905861; wait6.976365ms.
+Four frames268800 pixels/8192 PCM/heads/regs/enabled identical, full checksum/
+settings and menu restoration pass. Story56.044680/control56.149815; small
+residual deficits remain, no VALIDATED/integration. Native1554 completed,
+root sole COM3/no worker, console responsive menu/coordinate8 restored.
+
+RESUME HERE: no further marginal tuning campaign. Prepare separate R44 Sub
+presence-in-color experiment from this preserved branch: retain Main Z, stop
+Sub Z writes, derive presence from RGB5551 coverage, remove one Math input
+DMA. Mode7 retains original Z path until edge coverage proven. R42 numeric
+rectangles1024 cases already prove CLAMP RGB/tag/transparency0 with production
+palette. Need compiled general/HALF/fixed consumers and source leases, absent
+Sub/opaque black/windows/add/sub/HALF correctness before early N64 rain.
+Avoid a second emulator/new profiler. Current R43 runtime not full-CI qualified;
+parent d10b79f Build/CGRAM and equivalent workflow-only794b553 Ares pass.
+[Evidence](ADAPTIVE_NOSPAN_R43.md). Goal open, master/retained unchanged,
+commercial payloads/hashes private; previous history byte-identical below.
+
+---
+
 # 2026-10-12 - R43 physical story partial recovery
 
 Source c742c2fa14fb5b0d970665b0d8ddc0419a50ef16, runtime4382ae8, adaptive-nospan-r43. MEASURED: story

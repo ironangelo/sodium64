@@ -45,3 +45,18 @@ non-regression proven. Three images201600 pixels/8192 paused PCM/heads/regs/
 enabled identical, full checksum/settings and menu restoration pass.
 Next rain verifies material benefit retained; no marginal-tuning campaign
 or repeated full CI before that question. [Numbers](evidence/adaptive-nospan-r43-story.json).
+
+Rain4382ae8:36.804012 completions/s versus corrected32.288968, +13.983243
+percent; R40 36.905861. Wait6.976365ms. Four checkpoints268800 pixels/8192
+PCM/heads/regs/enabled identical; complete checksums/settings and menu/
+coordinate8 restoration pass. Preserves most material gain, while small
+story/rain deficits remain explicit. No VALIDATED/integration claim, no
+exhaustive CI or marginal-tuning campaign for this interim variant.
+
+Next larger experiment: Sub presence alone via its color surface's binary
+coverage bit; keep Main winner Z unchanged. This removes one Sub Z write and
+one Math input stream, using measured R42 rectangle feasibility. Mode7 keeps
+old path until triangle-edge coverage is qualified. Preserve RDP HALF/fixed
+fallback semantics; prove source/command ownership, absent Sub/opaque black,
+add/sub/HALF, windows and delayed DMA before short actual N64 rain A/B.
+[Rain numbers](evidence/adaptive-nospan-r43-rain.json).

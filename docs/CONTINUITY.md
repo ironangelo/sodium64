@@ -1,3 +1,25 @@
+# 2026-10-12 - R42 physical coverage-tag feasibility preflight
+
+Source 28af46a6fa1c2617a3a7f2a10e7a249a2703bf69, experiment/coverage-tags-r42. IMPLEMENTED/probe only;
+not MEASURED. Hypothesis: carry one semantic bit in RGB5551 coverage without
+RGB/opacity changes, reducing auxiliary Z writes/Math input transfers.
+Reuse existing paused rdp-probe8, numeric RGBA16/CI8-TLUT, alpha63/255, oldbit
+0/1, four destinations,1024 cases incl transparent and opaque black. No game
+policy/new profiler. Default production omits probe; dirty execution forbids
+resume until menu. Boot12/TV5,41 owner extents and compiled CPU/RSP DMA gates
+pass; D35C8<D4000. All previous R40/R41 artifacts immutable.
+
+R41 exact d10b79f: Build38300923921/CGRAM38300930969 SUCCESS; Ares38300934335
+FAILURE, cause not yet read. No overall PASS/integration.
+RESUME HERE: root sole COM3, console menu/no worker. Run coverage42 plan/archive
+via fixture launch600; numeric mode8 receipt, resume rejection, finally menu
+restore/readback. Reject failed mechanism early, no broad CI. Inspect failed
+Ares job separately before any qualification. [Design](COVERAGE_TAGS_R42.md).
+Full goal open; master/retained unchanged, private game data/hashes local;
+prior continuity byte-identical below.
+
+---
+
 # 2026-10-12 - R41 exact full CI identities
 
 Source d10b79f79a519d7ca72261fbacfe4b19881dac41, adaptive branch.

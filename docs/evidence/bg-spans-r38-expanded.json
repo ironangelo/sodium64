@@ -1,0 +1,86 @@
+{
+  "status": "MEASURED / REGRESSION OPEN",
+  "integrable": false,
+  "runtime_source": "4c3764a",
+  "CI_source": "b0f99c4c5283477073734b20390903b042c958ce",
+  "cadences": {
+    "title": {
+      "reference": 51.799010101670746,
+      "spans-r38": 51.91145853169279
+    },
+    "story": {
+      "reference": 56.149815074272475,
+      "spans-r38": 53.98599029412346
+    },
+    "room": {
+      "reference": 57.66208554932725,
+      "spans-r38": 57.66607433225006
+    }
+  },
+  "pixels": [
+    {
+      "scene": "initial600",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "title900",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "story1852",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "story3600",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "story4800",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "room1980",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "room3600",
+      "pixels": 67200,
+      "differences": 0
+    }
+  ],
+  "PCM_rings": {
+    "title": {
+      "bytes": 8192,
+      "differences": 0,
+      "heads_registers_enabled_match": true
+    },
+    "story": {
+      "bytes": 8192,
+      "differences": 0,
+      "heads_registers_enabled_match": true
+    },
+    "room": {
+      "bytes": 8192,
+      "differences": 0,
+      "heads_registers_enabled_match": true
+    }
+  },
+  "story_matched_first1000": {
+    "reference": 56.23070805378894,
+    "candidate": 54.076946043263405
+  },
+  "complete_checksums_settings": true,
+  "coordinate8_restoration_pass": true,
+  "CI": {
+    "CGRAM38292204698": "success",
+    "Build38292136146": "failed new corrected reference static arena assert;other tested jobs pass",
+    "Ares38292207583": "pending"
+  },
+  "next": "decode-only native story to isolate relocation cost, then repair generic path and prove CI arena"
+}

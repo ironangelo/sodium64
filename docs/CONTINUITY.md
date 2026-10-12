@@ -1,3 +1,31 @@
+# 2026-10-12 - R38 expanded native result: story regression open
+
+Experimental sourcee72db4defeeea3b42691b301b2630cd6fc8cb8b9, runtime4c3764a. MEASURED, NOT VALIDATED/integrable.
+Title51.799010->51.911459/room57.662086->57.666074 preserved, story56.149815->
+53.985990 regresses; matched first1000 intervals56.230708->54.076946 confirms.
+Seven physical checkpoints470400 pixels/three8192 PCM rings/heads/registers/
+enabled match; checksums/settings complete. Cold launches/later transitions
+run, but startup frame-time distribution not recorded. Rain14.454percent gain
+must not hide story loss. Native worker93001 completed/coordinate8/menu restored.
+
+Exact b0f99c4 CGRAM38292204698 PASS. Build38292136146 fails only new BG job's
+corrected reference link assertion114954489338: CI GCC16.2 static exceeds
+D2000; native GCC14.2 D15C8 fits. Ordinary/trace/profile/audio/emulator jobs
+PASS. Ares38292207583 pending. Keep bounds, no full CI green claim. Source
+push here is documentary/skipCI; prior exact results remain scoped to b0.
+
+RESUME HERE: root sole COM3; console responsive menu/no live worker. Next
+controlled native story1852 DECODE_BANK1/BG_SPANS0 against exact corrected
+control, private decoder-r39 artifacts/script. This isolates relocation from
+span-probe overhead; preserve D2000 flags in that comparison. Only afterward
+choose generic admission/storage repair. CI diagnostic arena/compiler mismatch
+also needs a guarded solution; do not weaken assertions. Previous measured
+R38 archived. [Expanded result](BG_SPANS_R38.md), [curated matrix](evidence/bg-spans-r38-expanded.json).
+Master/retained phase4 unchanged; data/hashes private; full goal open.
+Prior continuity byte-identical below.
+
+---
+
 # 2026-10-12 - Expanded R38 qualification running, exact CI identities
 
 Exact source b0f99c4c5283477073734b20390903b042c958ce:

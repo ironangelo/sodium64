@@ -1,6 +1,6 @@
 # R40 - Semantic resident-code island, 2026-10-12
 
-IMPLEMENTED/local preflight; native pending. R39 demonstrates decoder overlay
+MEASURED/story only; rain and full qualification pending. R39 demonstrates decoder overlay
 traffic causes story regression. Keep the byte-identical original decoder on
 no-visible-Sub bands; retain R38 span/worker code on visible-Sub bands. This
 uses the existing effective-Sub semantic predicate, no game identity.
@@ -30,3 +30,22 @@ before full CI. The independent GCC16 AUDIO1/BRR0/MIX0 D2000 static-memory
 failure stays open; no bound weakening or memory-layout change in this A/B.
 Master/retained branches and earlier experiments remain preserved. All game
 data, captures, replay/transport and hashes remain private.
+
+## Native story result
+
+MEASURED at source3972f16. Actual N64/COM3 story1852 quiet20s gives
+55.868406 completed boundaries/s, versus corrected control56.149815 and
+decoder-only R39 53.641175. Matched first1000 intervals:56.230708 versus
+55.951696 (about0.50percent slower). The repair recovers most relocation loss;
+residual overhead stays explicit and this is not final native60 qualification.
+Three physical checkpoints201600 RGB pixels and8192 paused PCM bytes differ
+by zero; heads/registers/enabled match. Checksums/settings pass; menu and
+coordinate8 restored/readback. Rain remains the next discriminant.
+
+The private inherited plan mistakenly retained R39 BG_SPANS0, R38 run/session
+IDs and script names. Corrected plan now identifies ADAPTIVE1/DECODE1/BG_SPANS1
+and this exact source; immutable old measurement records retain an explicit
+erratum. The built code contains and exercised the adaptive gate; no build
+was changed after measurement. R38 Ares38292207583 finished SUCCESS on b0f99c4;
+that does not qualify R40 or resolve the separate GCC16 D2000 reference link.
+[Curated numerical result](evidence/adaptive-r40-story.json).

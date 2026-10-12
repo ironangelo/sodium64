@@ -2,6 +2,19 @@
 
 Sodium64 should not depend on frequent manual testing on a real Nintendo 64. Validation is layered so most failures are caught before hardware is involved.
 
+## Automated hardware iteration - 2026-10-12
+
+The [active goal](ACTIVE_GOAL.md) updates experiment cadence now that COM3
+supports autonomous bounded tests. Native performance hypotheses get a local
+build and indispensable integrity/ABI/known-regression checks, then short
+hardware A/B before broad laboratory/CI validation. Hardware rejection normally
+ends the candidate's validation campaign. Semantic repairs retain relevant
+differential proofs before hardware. Expand representative image/audio/
+stability checks after promising results; full relevant CI is still required
+before VALIDATED/integrable status. Reuse valid exact-SHA results. Documentary/
+unmeasured checkpoints may skip CI with explicit limits. L0-L4 guarantees
+remain; the manual milestone cadence below is historical for this loop.
+
 ## Levels
 
 ### L0 — source and deterministic host checks
@@ -23,6 +36,36 @@ Use a small representative ROM corpus to validate compatibility, image/audio beh
 ### L4 — real Nintendo 64 hardware gate
 
 Real hardware is the authority for hardware-specific behavior and final performance. Hardware testing should happen at milestones, with one build designed to answer several concrete questions at once.
+
+## SPC700 translated-code regression scope
+
+The integrated SPC700 cycle/address proof is a **directed regression suite**, not an exhaustive formal proof of the processor.
+
+Current validated edge artifact contains **119 directed execution cases plus two persistent SLEEP/STOP halt groups**. It checks, where applicable:
+
+- compile-time/static cycle debit;
+- generated runtime conditional/access debit;
+- total `s3` debit against the pinned SPC700 reference;
+- source/tag span metadata;
+- register, flag, stack, memory and PC postconditions;
+- branch taken/not-taken timing;
+- SLEEP/STOP entry and repeated scheduler ticks;
+- the guest-cycle block contract at the exact **20 + DIV = 32 SPC-cycle** edge;
+- an equivalent 32-cycle edge containing real guest reads;
+- cached replay without unnecessary recompilation;
+- recompilation after a covered entry-tag mutation.
+
+Passing this suite means the audited timing/semantic families and cycle-budget boundaries still match their expected behavior. It does **not** establish:
+
+- exhaustive coverage of all 256 opcodes across all input states/compositions;
+- correctness of every observable dummy bus read or I/O side effect;
+- safety of every possible intra-block self-modifying-code pattern;
+- long-run audio synchronization or PCM equivalence;
+- broad game compatibility.
+
+Known accuracy boundaries remain explicit work for Gate C rather than being hidden behind a green timing suite.
+
+The workflow is retained as executable regression infrastructure and should run on `master` when relevant APU/JIT sources or the proof itself change. Do not expand it into a general-purpose second emulator; add cases when they protect a demonstrated architectural contract or a real regression.
 
 ## Merge policy
 
@@ -50,3 +93,5 @@ Prefer milestone tests after several validated PRs rather than repeated build-fe
 3. what observable result is expected;
 4. what metrics or screenshots are useful;
 5. what technical decision the result will unlock.
+
+For SRAM-capture milestones, preserve the exact runtime SHA, wrapped-ROM hash, workload hash, settings, warmup/measured-window contract, sample count, matching ELF/map and returned save hash. A video or subjective smoothness report is useful observational context but does not replace the captured hardware counters.

@@ -1,3 +1,45 @@
+# 2026-10-12 - New goal: material native progress before expanded CI
+
+Source phase4/usb-hardware-loop: 1c665b2c797209e1ba0031713f43554c8f9fa0fc; runtime still238170a/retainedR33.
+New active goal preserves full native60/50Hz + visual + complete audio scope,
+skip0/fullSPC/DSP/audio, N64-alone first and all ten games incl all five SMAS.
+Hypothesis -> controlled change -> quick indispensable local integrity ->
+short COM3 A/B -> decide -> expand fidelity -> full CI for promising promotion.
+No marginal campaigns, repeated rejected paths, speculative audio-first work
+or new profiling project. Historical homebrew GateB remains scoped, not new
+commercial acceptance. Canonical [active goal](ACTIVE_GOAL.md), Roadmap,
+Profiling and Validation now reflect this cadence without weakening gates.
+
+RESUME HERE: R31 rain32.2849 boundaries/s (~30.974ms) vs16.7ms budget;
+explicit CPU/RSP wait11.255ms, sampled DSP19.45percent (nonadditive). Prioritize
+renderer/source-resolution/transfer-synchronization work that can materially
+close this deficit. Reuse current hardware bench/acknowledged12944 rain route
+and retained graphics/audio controls. Current stage/bank samples are candidates
+unless publication is qualified; do not assume an internal culprit from them.
+R32 HILO/R33GAIN owner corrections stay retained. R34 complete C++ DSP is
+MEASURED/REJECTED directreplacement, kept as primary behavior oracle; fractions
+1.0656/1.4415/1.5116 do not establish every implementation's hardware ceiling.
+
+R35 pending code was preserved on experiment/dsp-timer-r35-unmeasured,
+677c9d2140dd5177181f40516a1d4f832a6abda2, then removed from the active branch by
+clean branch switch, not destructive reset. IMPLEMENTED/local9216 callbacks,
+983040 legal pairs/2048 scheduler cases pass; NOT MEASURED/NOT VALIDATED.
+DIV9216->5346 but scalar274587->289059; no native benefit proven. SUPERSEDED
+as immediate priority. Archive prevents repetition/loss; no full CI for this
+unmeasured marginal checkpoint. [Archived rationale](DSP_TIMER_R35_DEFERRED.md).
+
+Fresh COM3 state confirms menu/protocol1/paired-A14-usb-loop-fatfs16 responds.
+Firmware/menu/saves/config unchanged; no live native worker. Coordinate8 last
+restoration/readback passed in R34. For the next short physical control use
+R33-corrected dry/voice-base feature set, record exact ELF/build settings, and
+distinguish its older R31 measurement from newly verified baseline performance.
+Raw R35 control binaries exist privately but are not a measured renderer win.
+Master7cc8fac/PR21 draft preserved. Original historicalRESUME entries below are
+superseded where this newest checkpoint contradicts their immediate ordering.
+Commercial payloads/hashes private. Entire preceding continuity byte-identical.
+
+---
+
 # 2026-10-12 - R34 native complete DSP cost measured; direct replacement rejected
 
 Source phase4/usb-hardware-loop: 238170abf956da705806f979f9cc256fbc565ac0; executable4715b80.

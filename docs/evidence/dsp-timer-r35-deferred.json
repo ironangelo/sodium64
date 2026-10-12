@@ -1,0 +1,86 @@
+{
+  "state": "IMPLEMENTED",
+  "physical_state": "UNMEASURED",
+  "priority_state": "SUPERSEDED",
+  "reason": "New goal prioritizes material native deficits; no measured benefit yet for this microoptimization",
+  "host": {
+    "passed": true,
+    "independent_all_legal_timer_rate_pairs": 983040,
+    "actual_paired_handler_cases": 9216,
+    "all32_linked_rate_offset_words": true,
+    "voice_and_noise_owners": 9,
+    "only_selected_next_deadline_bytes_written": true,
+    "unrelated_GPR64_stereo_accumulators_CP0_preserved": true,
+    "HI_LO_are_handler_scratch_and_not_claimed_identical": true,
+    "instructions_total_reference_optimized": [
+      274587,
+      289059
+    ],
+    "maximum_handler_instructions": [
+      32,
+      35
+    ],
+    "actual_divide_executions_reference_optimized": [
+      9216,
+      5346
+    ],
+    "negative_mutations_rejected": [
+      "dsp_timer_power2",
+      "dsp_timer_small_remainder",
+      "dsp_timer_divide"
+    ],
+    "native_speed_or_complete_audio_claim": false,
+    "commercial_data": false,
+    "reference_ELF_sha256": "fb1c24bbdebca16f41092ded9f8d3424cffccd51cd4409ec1acfe5b922afda6e",
+    "optimized_ELF_sha256": "bb636bea3a2763b17d6656f9db82f89605153296a947dfbe7a25865b2dfe0c6b"
+  },
+  "scheduler": {
+    "passed": true,
+    "optimization": "timer-fast",
+    "paired_actual_scheduler_samples": 2048,
+    "enabled_masks": 256,
+    "envelope_rate_calls": true,
+    "noise_steps": true,
+    "all_BRR_filters_and_ranges": true,
+    "block_loop_end_flags": 4,
+    "both_AI_half_submissions": true,
+    "PCM_active_state_equal": true,
+    "unused_cache_preserved": true,
+    "guest_cycle_debit": 672,
+    "actual_decoded_range_filter_pairs": 64,
+    "linked_field_offsets_checked": 9,
+    "negative_mutations_rejected": [
+      "dsp_voice_base",
+      "dsp_voice_envelope_index",
+      "dsp_voice_restore_base"
+    ],
+    "instructions_total_reference_optimized": [
+      2095557,
+      2101813
+    ],
+    "maximum_sample_instructions_reference_optimized": [
+      2259,
+      2275
+    ],
+    "timing_or_native_fidelity_claim": false,
+    "commercial_data": false,
+    "reference_elf_sha256": "fb1c24bbdebca16f41092ded9f8d3424cffccd51cd4409ec1acfe5b922afda6e",
+    "optimized_elf_sha256": "bb636bea3a2763b17d6656f9db82f89605153296a947dfbe7a25865b2dfe0c6b"
+  },
+  "hilo": {
+    "passed": true,
+    "linked_DSP_product_writers": 6,
+    "straight_line_predecessors_checked": 2,
+    "violations": 0,
+    "unsafe_master_mutation_rejected": true,
+    "same_functional_arithmetic_does_not_prove_hardware_spacing": true,
+    "dynamic_delay_slot_guard_enabled_in_dry_and_paired_tests": true,
+    "interrupts_or_DAC_waveform_verified": false,
+    "commercial_data": false,
+    "elf_sha256": "bb636bea3a2763b17d6656f9db82f89605153296a947dfbe7a25865b2dfe0c6b",
+    "primary_manual": "NEC U10504EJ7V0UM00 p479; entire-pipeline multiply stall p76"
+  },
+  "baseline_code_head": "238170abf956da705806f979f9cc256fbc565ac0",
+  "not_integrated_or_validated": true,
+  "commercial_data": false
+}

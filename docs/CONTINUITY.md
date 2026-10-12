@@ -1,3 +1,19 @@
+# 2026-10-12 - R41 exact full CI identities
+
+Source d10b79f79a519d7ca72261fbacfe4b19881dac41, adaptive branch.
+Build38300923921, CGRAM38300930969, Ares38300934335 in progress.
+CGRAM/Ares dispatch204; credentials stayed process-local, no persisted secret.
+No full PASS claim. Private audio41-plan.json retains IDs/artifacts.
+
+RESUME HERE: console menu/coordinate8 restored, no COM3 worker. No source
+push on adaptive branch during exact CI. Existing CPU raw rings hold only223
+retained PCs per capture; use full7100 IRQ module counts for high-level budget
+and sampled PCs only as directed clues, no fine-grained exclusive-cost claim.
+Continue next technical question independently; full goal still open.
+Previous history byte-identical below.
+
+---
+
 # 2026-10-12 - R41 native equivalence; exact CI starting
 
 Qualification source d10b79f79a519d7ca72261fbacfe4b19881dac41; runtime e6c7e2ca5aaa51a4b6c7dbe16df2a466c351dca8. Branch

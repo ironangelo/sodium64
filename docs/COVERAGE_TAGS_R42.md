@@ -64,3 +64,24 @@ shape, instead of its unfamiliar LoadTLUT path. Expanded input/rounded read
 end remains before command scratch. This is a bounded feasibility test, no
 new profiling infrastructure or performance claim. If RGB still fails, stop
 this fixture sequence and retain the mechanism as unqualified.
+
+## Physical feasibility result
+
+MEASURED at ea6158b, actual N64:1024 original numeric pixels; CLAMP/WRAP each
+RGB0/tag0/transparent0 differences with RGBA16 and production CI8 palette path.
+ZAP/SAVE each tag124 fail (RGB/transparency unchanged): REJECTED. Dirty resume
+rejected; menu/coordinate8 restored/readback. No commercial inputs in probe.
+
+Production-expanded four-bank palette/LoadBlock fixed the stale RGB fixture.
+The separate LoadTLUT path's root cause is not fully established; it must not
+be generalized into an unsupported-hardware claim. CLAMP binary coverage is
+now a viable original-numeric rectangle mechanism, not an implemented renderer
+or a measured speedup. Mode7 edge coverage, all source/command ownership,
+real image/audio regressions and actual material benefit still require proof.
+
+Before that larger architecture experiment, eliminate R40's residual0.50percent
+story regression: original resident decoder still paid a span-gate call per
+No-Sub tile. An immutable Main overlay variant with that call disabled can
+restore the old path without adding another hot-loop check. Select on the
+existing semantic mode transition only; preserve Sub coalescing.
+[Curated result](evidence/coverage-tags-r42.json).

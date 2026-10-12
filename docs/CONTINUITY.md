@@ -1,3 +1,24 @@
+# 2026-10-12 - R42 coverage feasibility measured; regression repair next
+
+Source 9c32bdd1cdb96a13e453191f203fcebd2ef88a9d; executableea6158b, coverage-tags-r42. Native1024 numeric
+pixel cases: CLAMP/WRAP RGB/tag/transparent0 differences for RGBA16/production
+CI8 palette. ZAP/SAVE tag124 each REJECTED. Mode7 edges/renderer leases/game
+fidelity/performance unqualified. Stale RGB fixed by production expanded
+palette/LoadBlock; unfamiliar LoadTLUT fixture root cause remains uncertain,
+not an unsupported-hardware claim. Session37728 completed, resume rejected,
+menu/coordinate8 restored/readback. No game-derived public payload.
+
+RESUME HERE: root sole COM3/no worker. First repair R40 residual0.50percent
+story: immutable1000B Main variant with per-tile span call patched to NOP,
+select via existing semantic transition, preserve Sub spans. Boot copy/cache
+coherence/exclusive padded buffer and paired source pointers must be proved,
+then early native story/rain. Create separate R43 from R41 fixed-SDL branch.
+Ares38304110691 now runs matrix at794b553, unchanged d10b79f core; no final
+result yet. [R42 evidence](COVERAGE_TAGS_R42.md). Full goal open; master and
+retained unchanged; previous history byte-identical below.
+
+---
+
 # 2026-10-12 - R42 final production-palette fixture control
 
 Source ea6158bf268d9300e0cad41c9238d5b084185694, coverage-tags-r42. Separate TLUT tile6/fencesc4ae2e6

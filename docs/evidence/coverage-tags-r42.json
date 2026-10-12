@@ -1,0 +1,31 @@
+{
+  "status": "MEASURED",
+  "source": "ea6158bf268d9300e0cad41c9238d5b084185694",
+  "physical_N64": true,
+  "original_numeric_pixel_cases": 1024,
+  "formats": [
+    "RGBA16",
+    "CI8 with production expanded palette LoadBlock"
+  ],
+  "CLAMP": {
+    "RGB": 0,
+    "tag": 0,
+    "transparent": 0
+  },
+  "WRAP": {
+    "RGB": 0,
+    "tag": 0,
+    "transparent": 0
+  },
+  "ZAP_or_SAVE": "REJECTED: 124 tag differences each",
+  "resume_rejected": true,
+  "menu_restoration_readback": true,
+  "renderer_or_game_speed_or_full_fidelity_claim": false,
+  "unqualified": [
+    "Mode7 triangle edge coverage",
+    "real renderer source leases",
+    "all-game synchronization",
+    "native performance gain"
+  ],
+  "fixture_history": "CI4 descriptor fixed; alternate RGB fetch and isolated LoadTLUT fences did not fix stale color; production loader passes; LoadTLUT fixture root cause not fully established"
+}

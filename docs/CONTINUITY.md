@@ -1,3 +1,26 @@
+# 2026-10-12 - R40 preserves material native rain gain
+
+Source 6646ff8786d68b4dea4292b5075b2513dc11e946; runtime3972f16, branch experiment/adaptive-bg-spans-r40.
+MEASURED/rain32.288968 ->36.905861 (+14.298672percent); R38 36.956089. Wait
+11.245405 ->7.349809ms. Four checkpoints268800 pixels/8192 PCM bytes/heads/
+regs/enabled identical; full checksum/settings pass. Story recovered to
+55.868406, matched1000 retains0.50percent loss; no final acceptance. Seven
+checkpoints470400 pixels/two PCM rings in total; no TV/DAC/full-game claim.
+Adaptive30 cases pass; three exact negative faults rejected. Native session
+75794 completed, console responsive menu/coordinate8 restored/readback.
+
+RESUME HERE: next technical batch is consistent AUDIO-only diagnostic arena
+repair for GCC16. Keep bounds, CPU/RSP macros, six queue words, embedded two
+banks/four backup DMA sites in sync; prove full extents. Prior D2000 artifacts
+remain immutable. Do a short matched physical regression of new layout, then
+full exact CI to qualify valuable candidate. Do not promote with residual
+regression/CI failures. No new profiler or redundant native rain A/B. Root
+sole COM3, no live worker. Master/retained/earlier experiments unchanged.
+[Result](ADAPTIVE_SPANS_R40.md), [numbers](evidence/adaptive-r40-rain.json).
+Full goal open; commercial data/hashes private; all prior history unchanged.
+
+---
+
 # 2026-10-12 - R40 native story recovery; rain discriminant next
 
 Source 5f84473c7265fb742a1c9132e23db56096d6d954, runtime 3972f16e0e091e58228be122c136f0db4aaa010a, branch experiment/adaptive-bg-spans-r40.

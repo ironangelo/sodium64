@@ -1,3 +1,32 @@
+# 2026-10-11 - R33 GAIN right accumulator physically verified and corrected
+
+Source phase4/usb-hardware-loop: 5b0cb2f3905940fb0b00040688d32b271258cc48.
+Original gain_time replaced t4/right accumulator with voice_index*16. Actual
+linked two-voice PCM(2919,968) instead of expected(2919,2919). Old full-scheduler
+1792/2048 stereo mismatches; corrected0. Earlier isolated arithmetic and paired
+versions sharing the callback bug missed it. Dry1 uses t1/t2 scratch without
+extra instructions; default855212 loaded bytes identical.2048 actual APU
+ADSR-to-GAIN writes preserve debit21/tags/port/mode/envelope; corrected index
+reference2048/all64 BRR/nine fields/three mutations pass.
+
+New optional pause-only synthetic audio-gain-probe: actual old N64 handler
+16/16 accumulator failures, corrected0/16. Each trial restores all selected
+fields/readbacks and preserves8192 PCM bytes/67200 pixels/guest600 boundary.
+Across variants natural checkpoint image/PCM match. Both USB return and
+coordinate8 restoration/readback/menu pass; scanner/firmware retained.
+This is physical register-owner evidence, not full waveform, symptoms-cause or
+speed acceptance.2048 wrapper/4 invalid inputs,209 parser+1000 fuzz, boot12/5,
+41 owners/D25C8<D4000/four DMA/three mutations and previous arithmetic/release
+gates pass. Wrong archive directory failed before COM3/SD; then corrected.
+[Failure, evidence and limits](DSP_GAIN_2026-10-11.md).
+[Curated proof](evidence/dsp-gain-2026-10-11.json).
+Exact prior0675f15 Build38188071257/CGRAM38188074356/Ares38188074391 pass.
+Fresh CI pending independently. Master preserved, PR21 draft, full game goal
+active. Full DSP history/priming/Gaussian/echo/timing and rain constraints remain.
+All commercial artifacts/hashes private; preceding continuity byte-identical.
+
+---
+
 # 2026-10-11 - R32 VR4300 dry-master spacing corrected
 
 Source phase4/usb-hardware-loop: 0675f15a89966e0057a68ebbaa63ee1552a319a4.

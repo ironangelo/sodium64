@@ -362,6 +362,17 @@ values match compiled primary arithmetic. Quiet full capture/USB return and
 coordinate8 restoration pass. No speed/DAC/all-scene qualification inferred.
 Exact de3d147 three workflows pass; full DSP and constant60 remain open.
 
+## R33 - GAIN right-accumulator defect verified on the N64
+
+[Owner defect and correction](DSP_GAIN_2026-10-11.md): gain_time overwrote t4,
+discarding earlier right voices. Independent linked scheduler1792/2048 failures
+become0, with2048 real APU writes. Controlled native handler16/16 failures
+become0/16; fields/image/PCM restored, boundary unchanged, return/restoration pass.
+Probe is optional/pause-only/synthetic; no full waveform/speed inference. Prior
+paired/arithmetic tests missed the shared callback defect. Corrected reference,
+2048 wrapper cases/4 invalid inputs/209 parser cases+fuzz and default bytes pass.
+Exact0675f15 three workflows pass; full60/DSP game matrix remains open.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

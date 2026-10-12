@@ -213,6 +213,13 @@
 
 // RSP addresses of data in DMEM; used to avoid setting the upper address
 #define TEXTURE 0x000
+// Decoder worker starts at object-cache overlay offset200. These fixed
+// entries are checked against the linked worker before native use.
+#define RSP_BANK_DECODE_START 0x15A8
+#define RSP_BANK_DECODE256 0x15BC
+#define RSP_BANK_DECODE16 0x15F4
+#define RSP_BANK_DECODE4 0x1610
+#define RSP_BANK_DECODE_RETURN 0x1AE8
 #ifndef SODIUM64_TMEM_ATLAS
 #define SODIUM64_TMEM_ATLAS 0
 #endif

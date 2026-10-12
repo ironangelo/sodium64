@@ -131,7 +131,11 @@ obj_sizes:
 
 fill_jumps: .word fill_backdrop, fill_win, fill_notwin, fill_main // Backdrop fill functions
 tile_jumps: .word decode_tile4, decode_tile16, decode_tile256 // Tile decoding functions
+#if SODIUM64_DECODE_BANK
+shared_jumps: .word RSP_BANK_DECODE4, RSP_BANK_DECODE16, RSP_BANK_DECODE256
+#else
 shared_jumps: .word shared_decode4, shared_decode16, shared_decode256 // Shared decoding functions
+#endif
 cache_rets: .word get_offsets, start_objects // Return addresses after clearing cache
 cache_ptrs: .word TILE_CACHE_BG, TILE_CACHE_OBJ, TILE_STATS_BG, TILE_STATS_OBJ, OBJECT_CACHE // RDRAM cache pointers
 scrn_ofsv: .hword 0x0000, 0x0000, 0x0800, 0x1000 // Vertical screen address offsets
@@ -1261,6 +1265,21 @@ shared_mirror: // t6: parameter
 
 
 shared_decode: // t4: decode jump
+#if SODIUM64_DECODE_BANK
+    mtc2 ra, $v19, 2
+    mtc2 t9, $v19, 0
+    lw a1, OVERLAY_OBJECT_CACHE_SRC
+    j overlay_load_slot
+    li t9, RSP_BANK_DECODE_START
+shared_decode_return:
+    mfc2 t9, $v19, 0
+    mfc2 ra, $v19, 2
+    move v1, ra
+    li t0, 0xC
+    jr ra
+    nop
+.org 0xB84
+#else
     // Set initial values for decoding a tile
     li t7, 0x40 // Texture offset
     li t1, CHAR_DATA + 0xE // Character offset
@@ -1321,6 +1340,7 @@ shared_decode4:
     jr t4
 
 
+#endif
 calc_color_window_segments:
 hcomp_obj_mirror:
     // Palette groups 0..3 are opaque OBJ with math forbidden; 4..7 eligible.

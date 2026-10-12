@@ -247,6 +247,22 @@ hcomp_vram_group_done:
     sw t0, HCOMP_VRAM_SNAPSHOT_READY
     // The R4300 may write guest VRAM only after every selected copy retired.
     mtc0 zero, COP0_SEMAPHORE
+#if SODIUM64_BG_SPANS
+    // No cache/map lifetime is live yet. Initialize the dedicated wrapping
+    // render tile once per frame, without an extra overlay round trip.
+bg_span_initialize:
+    li t0, 0x35480200
+    sw t0, TEXTURE
+    li t0, 0x04058030 // Tile4: T mask6/mirror; S mask3 without mirror.
+    sw t0, TEXTURE + 4
+    lui t0, 0x3200
+    sw t0, TEXTURE + 8
+    li t0, 0x0401F01F
+    sw t0, TEXTURE + 12
+    li a0, TEXTURE
+    jal 0xA4001F5C
+    li a1, TEXTURE + 16
+#endif
     lw a1, OVERLAY_MAIN_SRC
     j 0xA4001F7C
     li t9, 0x109C

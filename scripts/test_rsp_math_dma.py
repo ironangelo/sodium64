@@ -140,16 +140,26 @@ class MathVM(RspVM):
             elif op in (50,58):
                 element, operation, offset = w>>7&15, w>>11&31, w&127
                 offset = offset if offset < 64 else offset-128
-                assert operation in (3,4), ('unsupported vector memory operation',operation)
-                size = 8 if operation == 3 else 16
+                assert operation in (3,4,6), ('unsupported vector memory operation',operation)
+                size = 16 if operation == 4 else 8
                 address = (self.r[rs]+offset*size)&0xfff
-                assert address%size == 0 and (element in (0,8) if size==8 else element==0)
-                self.check_dmem(address,size,op==58)
-                lane = element//2
-                if op == 50:
-                    self.v[rt][lane:lane+size//2] = struct.unpack_from('>'+str(size//2)+'H',self.dmem,address)
+                if operation == 6:
+                    # Decoder LPV/SPV e0: eight consecutive packed bytes into
+                    # the upper byte of each lane; no untested element modes.
+                    assert element == 0
+                    addresses=[(address&~7)+((address&7)+i&15) for i in range(8)]
+                    for p in addresses:self.check_dmem(p,1,op==58)
+                    if op == 50:self.v[rt]=[self.dmem[p]<<8 for p in addresses]
+                    else:
+                        for i,p in enumerate(addresses):self.dmem[p]=self.v[rt][i]>>8
                 else:
-                    struct.pack_into('>'+str(size//2)+'H',self.dmem,address,*self.v[rt][lane:lane+size//2])
+                    assert address%size == 0 and (element in (0,8) if size==8 else element==0)
+                    self.check_dmem(address,size,op==58)
+                    lane = element//2
+                    if op == 50:
+                        self.v[rt][lane:lane+size//2] = struct.unpack_from('>'+str(size//2)+'H',self.dmem,address)
+                    else:
+                        struct.pack_into('>'+str(size//2)+'H',self.dmem,address,*self.v[rt][lane:lane+size//2])
             elif op == 18:
                 if rs == 0:
                     element = w>>7&15

@@ -131,7 +131,11 @@ obj_sizes:
 
 fill_jumps: .word fill_backdrop, fill_win, fill_notwin, fill_main // Backdrop fill functions
 tile_jumps: .word decode_tile4, decode_tile16, decode_tile256 // Tile decoding functions
+#if SODIUM64_DECODE_BANK
+shared_jumps: .word RSP_BANK_DECODE4, RSP_BANK_DECODE16, RSP_BANK_DECODE256
+#else
 shared_jumps: .word shared_decode4, shared_decode16, shared_decode256 // Shared decoding functions
+#endif
 cache_rets: .word get_offsets, start_objects // Return addresses after clearing cache
 cache_ptrs: .word TILE_CACHE_BG, TILE_CACHE_OBJ, TILE_STATS_BG, TILE_STATS_OBJ, OBJECT_CACHE // RDRAM cache pointers
 scrn_ofsv: .hword 0x0000, 0x0000, 0x0800, 0x1000 // Vertical screen address offsets
@@ -904,6 +908,11 @@ check_cache:
     beq t1, 0xFF, finish_tile
 
     // Skip uploading if the last tile's number and palette were the same
+#if SODIUM64_BG_SPANS
+    jal bg_span_merge
+    nop
+    nop
+#else
     andi t0, t6, 0x1FFF
 #if SODIUM64_TMEM_ATLAS
     // Confirm the RDRAM cache's palette/version before considering TMEM.
@@ -913,6 +922,7 @@ check_cache:
 #else
     beq t0, v1, skip_upload
     move v1, t0
+#endif
 #endif
 
     // Skip decoding if the tile is already cached with the same palette
@@ -1391,6 +1401,24 @@ shared_mirror: // t6: parameter
 
 
 shared_decode: // t4: decode jump
+#if SODIUM64_DECODE_BANK
+    mtc2 ra, $v19, 2
+    mtc2 t9, $v19, 0
+    lw a1, OVERLAY_OBJECT_CACHE_SRC
+    j overlay_load_slot
+    li t9, RSP_BANK_DECODE_START
+shared_decode_return:
+    mfc2 t9, $v19, 0
+    mfc2 ra, $v19, 2
+    move v1, ra // Original decoder loop's JR delay slot establishes this.
+    li t0, 0xC // Both original callers establish this empty-check offset.
+    jr ra
+    nop
+#if SODIUM64_BG_SPANS
+#include "rsp_bg_spans.inc"
+#endif
+.org 0xB84
+#else
     // Set initial values for decoding a tile
     li t7, 0x40 // Texture offset
     li t1, CHAR_DATA + 0xE // Character offset
@@ -1451,6 +1479,7 @@ shared_decode4:
     jr t4
 
 
+#endif
 calc_color_window_segments:
 hcomp_obj_mirror:
     // Palette groups 0..3 are opaque OBJ with math forbidden; 4..7 eligible.

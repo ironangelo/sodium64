@@ -90,6 +90,77 @@ static int rdp_probe_fixed(const char *id,uint32_t fbp) {
     field(" first_add_full=",first[2]);field(" first_sub_full=",first[3]);(void)finish();return 1;
 }
 
+/* Original numeric pixels only: can coverage carry one semantic bit without
+ * changing RGB or transparency? Never resume guest rendering after this test.
+ * RGBA16 and CI8/TLUT are tested against both preexisting low-bit values. */
+static int rdp_probe_coverage(const char *id,uint32_t fbp) {
+    volatile uint16_t *pixels=(volatile uint16_t *)(uintptr_t)(fbp|0xa0000000u);
+    volatile uint16_t *texture=(volatile uint16_t *)0xa0384000u;
+    volatile uint8_t *indices=(volatile uint8_t *)0xa0384040u;
+    volatile uint16_t *palette=(volatile uint16_t *)0xa0384080u;
+    const uint64_t combine=RDPQ_COMBINER1((0,0,0,TEX0),(TEX0,0,PRIM,0));
+    unsigned rgb[4]={0},tags[4]={0},transparent[4]={0},first[4]={0},submissions=0;
+    rdp_probe_dirty=1;
+    for(unsigned x=0;x<32;x++) {
+        unsigned value=x>1?((x<<11)|((31-x)<<6)|(((x*7)&31)<<1)|1):(x==1);
+        texture[x]=palette[x]=value;indices[x]=(uint8_t)x;
+    }
+    for(unsigned dest=0;dest<4;dest++)for(unsigned ci=0;ci<2;ci++)
+    for(unsigned old=0;old<2;old++)for(unsigned permitted=0;permitted<2;permitted++) {
+        unsigned x=12,y=16+submissions,alpha=permitted?255:63,n=0;
+        unsigned sentinel=0x7be0u|old;
+        for(unsigned a=0;a<32;a++)pixels[y*280+x+a]=(uint16_t)sentinel;
+        volatile uint64_t *cmd=(volatile uint64_t *)(uintptr_t)
+            (0xa0385000u+(submissions++&1)*256);
+        cmd[n++]=0x2700000000000000ull;
+        cmd[n++]=0x2f00000000001001ull|SOM_TF0_RGB|SOM_RGBDITHER_NONE|
+            SOM_ALPHADITHER_NONE|((uint64_t)dest<<8)|(ci?SOM_TLUT_RGBA16:0);
+        cmd[n++]=0x3f10011700000000ull|fbp;
+        cmd[n++]=0x2d000000004603c0ull;
+        cmd[n++]=0x3900000000000001ull; /* Threshold1 discards only zero alpha. */
+        cmd[n++]=0x3a000000ffffff00ull|alpha;
+        cmd[n++]=0x3c00000000000000ull|(combine&0x00ffffffffffffffull);
+        cmd[n++]=0x2800000000000000ull;
+        if(ci) {
+            cmd[n++]=0x3d10001f00384080ull;
+            cmd[n++]=0x3510010007000000ull;
+            cmd[n++]=0x2600000000000000ull;
+            cmd[n++]=0x300000000707c000ull; /* Load32 TLUT entries. */
+            cmd[n++]=0x2700000000000000ull;
+        }
+        cmd[n++]=ci?0x3d48001f00384040ull:0x3d10001f00384000ull;
+        cmd[n++]=ci?0x3540080007000050ull:0x3510100007000050ull;
+        cmd[n++]=0x2600000000000000ull;
+        cmd[n++]=0x340000000707c000ull;
+        cmd[n++]=0x2700000000000000ull;
+        cmd[n++]=ci?0x3540080000000050ull:0x3510100000000050ull;
+        cmd[n++]=0x320000000007c000ull;
+        cmd[n++]=0x2400000000000000ull|((uint64_t)((x+32)*4)<<44)|
+            ((uint64_t)((y+1)*4)<<32)|((x*4)<<12)|(y*4);
+        cmd[n++]=0x0000000004000400ull;
+        cmd[n++]=0x2900000000000000ull;
+        if(n>29||!rdp_probe_submit(cmd,n)){error(id,"coverage_probe_timeout_requires_menu");return 0;}
+        for(unsigned a=0;a<32;a++) {
+            unsigned actual=pixels[y*280+x+a];
+            if(!a) {if(actual!=sentinel)transparent[dest]++;continue;}
+            if((actual&0xfffeu)!=(texture[a]&0xfffeu))rgb[dest]++;
+            if((actual&1u)!=permitted) {if(!tags[dest])first[dest]=(ci<<24)|(old<<20)|(permitted<<16)|actual;tags[dest]++;}
+        }
+    }
+    prefix(id,1);append(" rdp_probe=1 native=1 resume_requires_menu=1 coverage_tags=1 formats=2 pixel_cases=1024 z_disabled=1 antialias_disabled=1 memory_read_disabled=1");
+    for(unsigned dest=0;dest<4;dest++) {
+        append(dest==0?" clamp":dest==1?" wrap":dest==2?" zap":" save");
+        field("_rgb_differences=",rgb[dest]);
+        append(dest==0?" clamp":dest==1?" wrap":dest==2?" zap":" save");
+        field("_tag_differences=",tags[dest]);
+        append(dest==0?" clamp":dest==1?" wrap":dest==2?" zap":" save");
+        field("_transparent_differences=",transparent[dest]);
+        append(dest==0?" clamp":dest==1?" wrap":dest==2?" zap":" save");
+        field("_first_tag=",first[dest]);
+    }
+    (void)finish();return 1;
+}
+
 static void rdp_probe(const char *id,unsigned normalized,uint32_t framebuffer) {
     if(!remote_paused||remote_pause_pending||busy_capture()||remote_arm_pending) {
         error(id,"rdp_probe_requires_idle_pause");return;
@@ -108,6 +179,7 @@ static void rdp_probe(const char *id,unsigned normalized,uint32_t framebuffer) {
         error(id,"rdp_probe_dp_busy");return;
     }
     if(normalized==7){(void)rdp_probe_fixed(id,fbp);return;}
+    if(normalized==8){(void)rdp_probe_coverage(id,fbp);return;}
 #ifdef SODIUM64_RDP_FIXED_ONLY_PROBE
     error(id,"rdp_probe_requires_fixed_mode7");
 #else

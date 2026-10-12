@@ -721,7 +721,7 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
 #if defined(SODIUM64_RDP_MATH_PROBE) && !defined(REMOTE_CONTROL_HOST)
     if(eq(verb,"rdp-probe")) {
         uint32_t normalized;
-        if(nt!=4||!decimal(tokens[3],&normalized,7)){error(id,"rdp_probe_format");return;}
+        if(nt!=4||!decimal(tokens[3],&normalized,8)){error(id,"rdp_probe_format");return;}
         rdp_probe(id,normalized,retired_framebuffer);return;
     }
     if(rdp_probe_dirty&&!eq(verb,"hello")&&!eq(verb,"status")&&!eq(verb,"profile")&&

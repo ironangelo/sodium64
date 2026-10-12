@@ -1,3 +1,25 @@
+# 2026-10-12 - R44 Sub coverage prototype blocked by fixed code space
+
+Source 575544006dd681bb4d100838700c2cd55790f323, experiment/sub-alpha-r44. WIP/IMPLEMENTED only, not safe
+artifact, not measured/validated. Target Sub Z write + one Math input DMA,
+retaining Main winner Z and Mode7 old path; R42 numeric proof measured, R43
+actual rain36.804 (+13.983percent). Local fast-bank .org backwards after mode
+selector6 instructions; other new consumers still need capacity/semantics
+checks. No R44 hardware load or weakened guard. Defaults0.
+
+RESUME HERE: root sole COM3, no worker, console responsive menu/coordinate8
+restored. Reorganize selector into owned code space, keep fixed ABI and bounds.
+Prove mode/alpha packet state incl raw/Mode7, a2 lifetime through backdrop
+helper, absent/opaque-black/window/add/sub/HALF general and RDP consumers,
+delayed DMA/source leases, then early physical rain. Do not install failed
+build. Existing .org limits authoritative; don't start broader CI yet.
+[WIP detail](SUB_ALPHA_R44.md). ParentR43 preservedf31a23e/runtime4382ae8;
+parentR41 Build/CGRAM pass and workflow-only pinned-SDL Ares pass. Full60/audio/
+corpus goal open, master/retained unchanged, private data/hashes local;
+previous history byte-identical below.
+
+---
+
 # 2026-10-12 - R43 rain retained; material Sub metadata experiment next
 
 Source f31a23e61551b1074b964afd164fb0b9c6d70606, runtime4382ae8, adaptive-nospan-r43. MEASURED rain

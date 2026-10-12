@@ -1,3 +1,22 @@
+# 2026-10-12 - Expanded R38 qualification running, exact CI identities
+
+Exact source b0f99c4c5283477073734b20390903b042c958ce:
+Build38292136146 running; CGRAM38292204698 completed SUCCESS;
+Ares38292207583 running. Dispatch succeeded204 using existing cached GitHub
+authentication; credentials remained only in process memory, never persisted.
+No repeated CI/checkpoint source push while these runs qualify this exact SHA.
+
+RESUME HERE: root sole COM3 owner, live native process/session93001 runs
+spans-r38-expanded-native.py. Reference installed/readback; fresh title/story/
+room controls then R38, with snapshots/PCM/quiet20s; finally coordinate8/menu
+restore/readback. Private expanded-plan.json/expanded-physical.json hold phase
+and identities. Do not open a second COM3 session while this worker lives.
+Read its progress, continue useful work; wait for exact run results before any
+VALIDATED/integration claim. R38 rain14.454percent already checkpointed; full
+60/visual/audio/corpus goal remains open. Prior continuity byte-identical.
+
+---
+
 # 2026-10-12 - R38 expanded native/CI qualification batch prepared
 
 Experimental sourceb0f99c4c5283477073734b20390903b042c958ce, runtime unchanged4c3764a. Native14.454percent rain

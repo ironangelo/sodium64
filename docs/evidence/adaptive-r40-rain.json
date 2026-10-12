@@ -1,0 +1,32 @@
+{
+  "status": "MEASURED",
+  "runtime_source": "3972f16e0e091e58228be122c136f0db4aaa010a",
+  "scene": "ALttP acknowledged rain12944 route then quiet20s",
+  "configuration": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layer": 0
+  },
+  "completed_boundaries_per_second": {
+    "corrected_control": 32.28896750558269,
+    "R38": 36.95608942497242,
+    "R40": 36.905860944606516
+  },
+  "gain_percent": 14.298671638309823,
+  "mean_cpu_rsp_wait_ms": {
+    "control": 11.245405424148608,
+    "R40": 7.349809392873252
+  },
+  "RGB_checkpoints": 4,
+  "RGB_pixels_compared": 268800,
+  "RGB_differences": 0,
+  "paused_PCM_bytes": 8192,
+  "PCM_differences": 0,
+  "audio_registers_heads_enabled_match": true,
+  "checksum_and_configuration": "PASS",
+  "menu_recovery_and_restoration_readback": true,
+  "full_native60_visual_audio_qualification": false,
+  "remaining": "CI/compiler arena repair, expanded representative routes, ~27.10ms versus16.7ms budget"
+}

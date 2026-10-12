@@ -1,6 +1,6 @@
 # R40 - Semantic resident-code island, 2026-10-12
 
-MEASURED/story only; rain and full qualification pending. R39 demonstrates decoder overlay
+MEASURED/story and rain; full qualification pending. R39 demonstrates decoder overlay
 traffic causes story regression. Keep the byte-identical original decoder on
 no-visible-Sub bands; retain R38 span/worker code on visible-Sub bands. This
 uses the existing effective-Sub semantic predicate, no game identity.
@@ -49,3 +49,26 @@ erratum. The built code contains and exercised the adaptive gate; no build
 was changed after measurement. R38 Ares38292207583 finished SUCCESS on b0f99c4;
 that does not qualify R40 or resolve the separate GCC16 D2000 reference link.
 [Curated numerical result](evidence/adaptive-r40-story.json).
+
+## Native rain result and next qualification
+
+Actual N64 at the same archived runtime3972f16:36.905861 completed boundaries/s
+versus corrected32.288968, +14.298672percent. R38 was36.956089. CPU/RSP wait
+7.349809ms versus11.245405. Four physical checkpoints268800 RGB pixels and
+8192 paused PCM bytes differ by zero; heads/registers/enabled match. Full
+checksum/settings and menu/coordinate8 restoration pass. About27.10ms per
+completion still exceeds native16.7ms; full visual/audio/compatibility remains
+open. Story residual0.50percent loss remains visible rather than dismissed.
+
+Local adaptive guard now rejects three precise defects: emitted DMA length,
+decoder jump spacing, executing-island overwrite. All30 legal mode/mask/
+delayed-DMA cases still pass. This test-only change does not alter the measured
+executable. No redundant native control or full CI rerun before this result.
+
+Next qualification batch: fix the independent AUDIO-only diagnostic arena
+selection consistently in CPU/RSP/linker/owner guards, including embedded
+backup DMA addresses; preserve bounds and normal layout. Then check matched
+artifacts, perform a short physical configuration regression, and run exact
+full relevant CI before any promotion. Separate this layout from prior native
+A/B; no performance attribution to that repair. No merge yet.
+[Curated rain result](evidence/adaptive-r40-rain.json).

@@ -1,3 +1,26 @@
+# 2026-10-11 - DSP voice-base R31 preflight; physical trial running
+
+Source phase4/usb-hardware-loop: 36883ee5047363ef4f523f47501a8b3c0f10bdd1.
+DSP_VOICE_BASE default0/dry1 required. Reuses existing16-byte fields and DSP
+scratch a0; preserves envelope index ABI and restores base after calls.
+2048 actual paired samples: PCM/active state/672-cycle debit unchanged;
+256 masks, all64 BRR range/filter pairs, actual envelope rates/noise/AI halves,
+nine linked offsets and three mutations pass.2215794 ->2095550 instructions
+is host work count, not native speed. Dry full-sample maximum641 ->545;
+pitch cached load3 ->1. Existing dry, pitch and57344 BRR proofs pass.
+All855212 disabled allocated bytes match coordinate8; boot12/5 and41 owners
+pass, endD15C8<D2000. Setup/assembler/reference/metadata corrections are
+recorded, not hidden. CI adds an identical index-based observer reference.
+Actual title/room/rain trial is running; no physical performance conclusion
+yet. Root owns COM3. Coordinate8 restoration is required after trial.
+Exact prior1c23f23 Build38185802390 six jobs/CGRAM38185805755 pass;
+Ares38185805806 still pending. Master preserved, PR21 draft, full goal active.
+[Implementation and limits](DSP_VOICE_BASE_2026-10-11.md).
+[Synthetic proof](evidence/voice-base-2026-10-11.json).
+Commercial material/hashes remain private. Entire previous history preserved.
+
+---
+
 # 2026-10-11 - R30 exact CI failure and import repair
 
 Source phase4/usb-hardware-loop: 1c23f23591f56d9684b7a88adf5a7d9159ff9afb.

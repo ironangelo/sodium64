@@ -1,3 +1,17 @@
+# 2026-10-12 - R42 palette RGB ownership discriminant
+
+Source c4ae2e6e4bab3f3e5719caaa72a181ff6545ae10; coverage-tags-r42. TF1 RGB control49b9a5d did not improve
+CI124 RGB mismatches. First opaque black returnedF800 (stale fixture red),
+CLAMP/WRAP tag/transparent0. Native10749 completed/restored. Suspected shared
+palette/texture tile7 ownership; isolate TLUT tile6 and LoadSync/TileSync.
+Preflight boot12/TV5 and D35C8<D4000 pass; no renderer/throughput acceptance.
+RESUME HERE: run coverage42d-native.py/plan/archive, then decide from RGB/tag/
+transparent counts. Root sole COM3, menu/no worker. Ares-only fixed SDL retry
+38304110691 at794b553 is in progress (unchanged d10b79f core); don't rerun
+Build/CGRAM. All captures/source preserved, prior history byte-identical.
+
+---
+
 # 2026-10-12 - R42 tags correct, palette RGB unresolved
 
 Source 49b9a5d5af45c2338cea424c426fe29ee9589ab5, coverage-tags-r42. Physical22f1860: CLAMP/WRAP tag0 and

@@ -1,6 +1,6 @@
 # R38 - Identical regular-BG spans, 2026-10-12
 
-Status: IMPLEMENTED, quick local preflight passed; native measurement pending.
+Status: MEASURED, promising candidate; expanded native/regression/CI pending.
 R37 observed75percent of sampled Main residency inside command submission/
 fetch-retirement polling. R36 individual texture residency was marginal. This
 experiment reduces actual rectangles/submissions for consecutive identical
@@ -43,10 +43,20 @@ gate caught the new helper call in the preceding empty-tile branch's delay
 slot; moving it into the following former NOP preserves all addresses. This
 was corrected before loading any R38 image on hardware. No native claim yet.
 
-Next: one short actual N64 rain12944 comparison to the exact fresh corrected
-R36 control32.2889675 boundaries/s, skip0/APU21/audio4. Compare four physical
-frames and paused PCM, capture quiet20s/full checksum, then restore coordinate8
-through the menu with readback. Reject without exhaustive CI if no material
-benefit. Full relevant regression/CI and cold/other-scene controls required
-before any promotion. Private spans-r38 artifacts/run preserve exact identities.
+Actual N64 executable4c3764a: rain32.2889675 ->36.9560894 completed boundaries/s
+(+14.454231percent), mean explicit CPU/RSP wait11.245405 ->7.529420ms. Same
+acknowledged12944 route, skip0/APU21/audio4; quiet20s/full checksum/trace/settings.
+Four physical checkpoints268800 RGB pixels and8192 paused PCM bytes, zero
+differences; registers/heads/enabled equal. Actual ROM selection/launch, USB
+menu return/coordinate8 restoration/readback pass. Atomic Main bank samples
+4415/Math2394; transition139 includes added decoder loads, not exclusive cost.
+
+This is a material gain but only36.96 completions/s (~27.06ms per completion)
+versus the native16.7ms budget. No TV FPS, full waveform or whole-game claim.
+Next: fresh equivalent ALttP title/story/room performance controls and expanded
+pixel/PCM/cold/regression checks; full relevant CI before any promotion.
+Keep candidate isolated until those pass. An unmeasured decoder-only control
+may discriminate relocation costs if an expanded scene degrades; avoid a
+redundant rain control when exact code/settings already qualify it. Private
+spans-r38 artifacts/run preserve exact identities.
 Commercial input/output data and their hashes stay private.

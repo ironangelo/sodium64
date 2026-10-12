@@ -1,3 +1,28 @@
+# 2026-10-12 - R38 material native rain gain, expanded qualification next
+
+Source experiment/bg-spans-r388690b08989f36be98e10abb87f5d991a1bfe449f; executable4c3764a. MEASURED/promising,
+not VALIDATED/integrable. Rain32.2889675 ->36.9560894 completed boundaries/s
+(+14.454231percent), explicit CPU/RSP wait11.245405 ->7.529420ms. Exact fresh
+corrected control, same acknowledged12944 inputs/settings precision20/skip0/
+APU21/audio4, quiet20s/full checksum/trace. Four native checkpoints268800 RGB
+pixels/8192 paused PCM bytes zero differences; registers/heads/enabled equal.
+Main atomic samples4415/Math2394/transition139; residency not exclusive costs.
+Coalescing plus bounded decoder relocation earns physical cost on this route.
+Still27.06ms per completion vs16.7ms: no60/TV/DAC/full compatibility claim.
+
+RESUME HERE: run completed. N64 returned to menu; coordinate8 restored/readback,
+no live worker/firmware/save/config changes. Expand this candidate now: fresh
+same-code title/story/room controls + matching R38 routes, cold/transitions/
+pixels/PCM; full relevant CI before promotion. Do not repeat the equivalent
+rain control. If another scene degrades, a decoder-only control can isolate
+relocation overhead; none built/measured yet. Test mutations now check exact
+failure reasons. Defaults0; retained phase4de30c75/master7cc8fac unchanged.
+Private spans-r38-physical.json/preflight/archive hold exact artifacts and
+recovery. [Result](BG_SPANS_R38.md), [curated evidence](evidence/bg-spans-r38.json).
+Commercial payloads/hashes private. Goal active; prior continuity byte-identical.
+
+---
+
 # 2026-10-12 - R38 BG spans and decoder relocation preflight
 
 Experimental source experiment/bg-spans-r384c3764a0c590396ced03b4ec8a3dfd8681666eef. IMPLEMENTED/local passed;

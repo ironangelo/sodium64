@@ -45,6 +45,14 @@ skip_native: .byte 0
 skip_emulate: .byte 0
 frame_count: .byte 0
 
+#if SODIUM64_ADAPTIVE_NOSPAN
+.section .bss
+.balign 16
+.globl adaptive_main_nospan_text
+adaptive_main_nospan_text: .space 1008 // Exclusive complete 16-byte cache lines.
+.data
+#endif
+
 .section .boot
 .set noreorder
 
@@ -210,6 +218,38 @@ tmem_atlas_cpu_bind_end:
 #if SODIUM64_ADAPTIVE_SPANS
 .globl adaptive_decoder_cpu_bind, adaptive_decoder_cpu_bind_end
 adaptive_decoder_cpu_bind:
+#if SODIUM64_ADAPTIVE_NOSPAN
+    // Copy the immutable Main overlay once. Keep the original bank untouched;
+    // the no-Sub variant changes only its span-call word to a scalar NOP.
+    la t0, rsp_main_text_start + 0x3A8
+    la t1, adaptive_main_nospan_text
+    addiu t2, t0, 1000
+adaptive_main_copy:
+    lw t3, (t0)
+    sw t3, (t1)
+    addiu t0, t0, 4
+    bne t0, t2, adaptive_main_copy
+    addiu t1, t1, 4
+    la t0, adaptive_main_nospan_text
+    sw zero, (RSP_BG_SPAN_CALL_PC - 0x13A8)(t0)
+    addiu t1, t0, 1008
+adaptive_main_flush:
+    cache 0x15, (t0) // Hit writeback/invalidate D: source is visible to RSP DMA.
+    addiu t0, t0, 16
+    bne t0, t1, adaptive_main_flush
+    nop
+    sync
+    la t0, adaptive_main_nospan_text
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 1
+#endif
+    sw t0, DMEM(OVERLAY_MAIN_MODE_SOURCES)
+    la t0, rsp_main_text_start + 0x3A8
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 1
+#endif
+    sw t0, DMEM(OVERLAY_MAIN_MODE_SOURCES + 4)
+#endif
     // Main initially contains the new island. Low bit is its semantic mode;
     // the immutable original source is aligned and stripped before its DMA.
     la t0, rsp_decoder_original_text_start

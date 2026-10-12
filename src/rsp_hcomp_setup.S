@@ -156,15 +156,33 @@ hcomp_setup_copy:
     ori t1, t0, 0x1B3C
     sub t1, t1, t4
     sw t1, SHARED_JUMPS
+#if SODIUM64_ADAPTIVE_NOSPAN
+    addi t1, t1, -0x1C
+    sw t1, SHARED_JUMPS + 4
+    addi t1, t1, -0x38
+#else
     ori t1, t0, 0x1B20
     sub t1, t1, t4
     sw t1, SHARED_JUMPS + 4
     ori t1, t0, 0x1AE8
     sub t1, t1, t4
+#endif
     sw t1, SHARED_JUMPS + 8
     lw t3, OVERLAY_DECODER_ORIGINAL_SRC
     andi t0, t3, 1
     xor t3, t3, t0
+#if SODIUM64_ADAPTIVE_NOSPAN
+    sll t0, t2, 2
+    lw a1, OVERLAY_MAIN_MODE_SOURCES(t0)
+    sw a1, OVERLAY_MAIN_SRC
+    bnez t2, hcomp_context_dma
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    addi a1, a1, 0x727
+#else
+    addi a1, a1, 0x728
+#endif
+    move a1, t3
+#else
     beqz t2, hcomp_context_dma
     move a1, t3
     lw a1, OVERLAY_MAIN_SRC
@@ -172,6 +190,7 @@ hcomp_setup_copy:
     addi a1, a1, 0x727 // Strip known Main bank tag1, then reach AD0.
 #else
     addi a1, a1, 0x728
+#endif
 #endif
 hcomp_context_dma:
     li a0, 0x1AD0

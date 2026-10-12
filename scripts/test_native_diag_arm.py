@@ -19,7 +19,7 @@ def load_elf(path):
             memory.update((s[3]+j&0x1fffffff,v) for j,v in enumerate(raw))
     return memory,dict((n,v&0xffffffff) for v,n in elf_symbols(path))
 
-def execute(memory,pc,regs,cp,stop=0xdead0000):
+def execute(memory,pc,regs,cp,stop=0xdead0000,cache_trace=None):
     writes=[];pending=None
     def read(a,n):return int.from_bytes(bytes(memory.get((a+i)&0x1fffffff,0) for i in range(n)),'big')
     def write(a,v,n):
@@ -36,6 +36,8 @@ def execute(memory,pc,regs,cp,stop=0xdead0000):
             elif fn in (34,35):regs[rd]=regs[rs]-regs[rt]
             elif fn==36:regs[rd]=regs[rs]&regs[rt]
             elif fn==37:regs[rd]=regs[rs]|regs[rt]
+            elif fn==15:
+                if cache_trace is not None:cache_trace.append(('sync',pc))
             else:raise AssertionError((hex(pc),hex(w)))
         elif op in (4,5):
             if (regs[rs]==regs[rt])==(op==4):target=pc+4+(si<<2)
@@ -53,7 +55,9 @@ def execute(memory,pc,regs,cp,stop=0xdead0000):
             a=(regs[rs]+si)&0xffffffff;n=4 if op in (35,43) else 1
             if op in (35,36):regs[rt]=read(a,n)
             else:write(a,regs[rt],n)
-        elif op==47:pass # Cache maintenance has no alias effects in this VM
+        elif op==47:
+            # Record exact operands/order; this VM does not model cache aliases.
+            if cache_trace is not None:cache_trace.append(('cache',rt,(regs[rs]+si)&0xffffffff))
         else:raise AssertionError((hex(pc),hex(w)))
         assert pending is None or target is None,'control transfer in delay slot'
         regs[:]=[v&0xffffffff for v in regs];regs[0]=0

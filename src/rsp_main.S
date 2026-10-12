@@ -918,6 +918,8 @@ check_cache:
     // Skip uploading if the last tile's number and palette were the same
 #if SODIUM64_BG_SPANS
     nop // Empty-tile branch delay slot must remain a scalar instruction.
+.globl bg_span_call
+bg_span_call:
 #if SODIUM64_ADAPTIVE_SPANS
     jal bg_span_gate
 #else

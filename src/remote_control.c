@@ -521,6 +521,28 @@ static void mix_observation(const char *id,uint32_t framebuffer) {
     (void)finish();
 }
 #endif
+#ifdef SODIUM64_DSP_GAIN_PROBE
+extern uint32_t remote_dsp_gain_probe(uint32_t voice,uint32_t gain,uint32_t result[2]);
+static void gain_probe(const char *id,uint32_t framebuffer) {
+    if(!present||transport_error||menu_error){error(id,"audio_transport_unready");return;}
+    if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+    if(!remote_paused){error(id,"not_paused");return;}
+    if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
+    unsigned failures=0,cases=0;
+    for(unsigned voice=0;voice<8;voice++)for(unsigned family=0;family<2;family++) {
+        uint32_t result[2];
+        if(!remote_dsp_gain_probe(voice,family?0xff:0x40,result)) {
+            error(id,"gain_probe_restore_failed");return;
+        }
+        cases++;
+        failures+=(result[0]!=0x1357||result[1]!=0x2468);
+    }
+    prefix(id,1);append(" gain_probe=1");field(" cases=",cases);
+    field(" accumulator_failures=",failures);append(" restored=1");
+    field(" render_frame_id=",remote_render_frames);
+    append(" provenance=synthetic_handler_not_audio_waveform");(void)finish();
+}
+#endif
 static void status(const char *id) {
     uint32_t now=count();if(now<count_last)count_wraps++;count_last=now;
     prefix(id,1);
@@ -533,6 +555,9 @@ static void status(const char *id) {
 #endif
 #ifdef SODIUM64_MIX_OBSERVER
     append(",audio-mix");
+#endif
+#ifdef SODIUM64_DSP_GAIN_PROBE
+    append(",audio-gain-probe");
 #endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER
     append(",sections");
@@ -609,6 +634,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
     if(nt<3||!eq(tokens[0],"s64")||!hex(tokens[1],8,&unused)) {error(id,"invalid_request");return;}
     id=tokens[1];const char *verb=tokens[2];
+#ifdef SODIUM64_DSP_GAIN_PROBE
+    if(eq(verb,"audio-gain-probe")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        gain_probe(id,retired_framebuffer);return;
+    }
+#endif
 #ifdef SODIUM64_BRR_OBSERVER
     if(eq(verb,"audio-brr")) {
         if(nt!=3){error(id,"argument_count");return;}

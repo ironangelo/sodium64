@@ -911,10 +911,21 @@ bent_inc:
 .align 5
 gain_time: // t6: voice
     // Check whether direct or custom gain is selected
+#ifdef SODIUM64_DSP_DRY_MIX
+.globl dsp_gain_preserve_accumulators
+dsp_gain_preserve_accumulators:
+    // t4/t5 hold the current stereo accumulators when called by dsp_sample.
+    // Use existing handler scratch rather than erasing earlier right voices.
+    sll t1, t6, 4
+    lbu t0, dsp_regs + 0x7(t1) // VxGAIN
+    andi t2, t0, 0x80
+    beqz t2, direct_gain
+#else
     sll t4, t6, 4
     lbu t0, dsp_regs + 0x7(t4) // VxGAIN
     andi t1, t0, 0x80
     beqz t1, direct_gain
+#endif
 
     // Schedule the next step using the custom gain rate
     andi a0, t0, 0x1F
@@ -924,9 +935,15 @@ gain_time: // t6: voice
 direct_gain:
     // Set a fixed volume for direct gain
     sll t0, t0, 4
+#ifdef SODIUM64_DSP_DRY_MIX
+    sh t0, envelopes(t1)
+    li t0, 0xFFFF
+    sh t0, next_steps(t1)
+#else
     sh t0, envelopes(t4)
     li t0, 0xFFFF
     sh t0, next_steps(t4)
+#endif
     j update_vols
     nop
 
@@ -1226,4 +1243,73 @@ koff_return:
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
 .globl native_diag_dsp_end
 native_diag_dsp_end:
+#endif
+
+#ifdef SODIUM64_DSP_GAIN_PROBE
+// Pause-only synthetic register-owner probe. It never generates/submits audio.
+// C uses the ordinary ABI; the enclosing remote bridge protects guest GPR/HI/LO.
+.globl remote_dsp_gain_probe
+remote_dsp_gain_probe: // a0:voice, a1:synthetic GAIN, a2:left/right result pointer
+    sltiu t0, a0, 8
+    beqz t0, dsp_gain_probe_invalid
+    nop
+    sltiu t0, a1, 256
+    beqz t0, dsp_gain_probe_invalid
+    nop
+    daddiu sp, sp, -64
+    sd ra, 0(sp)
+    sd s0, 8(sp)
+    sd s1, 16(sp)
+    move s0, a2
+    sll s1, a0, 4
+    lbu t0, dsp_regs + 7(s1)
+    sw t0, 24(sp)
+    lw t0, cached_vols(s1)
+    sw t0, 28(sp)
+    lhu t0, envelopes(s1)
+    sw t0, 32(sp)
+    lhu t0, next_steps(s1)
+    sw t0, 36(sp)
+    sb a1, dsp_regs + 7(s1)
+    li t4, 0x2468
+    li t5, 0x1357
+    move t6, a0
+    jal gain_time
+    nop
+    sw t5, 0(s0)
+    sw t4, 4(s0)
+    // Restore every field the existing handler can write before returning.
+    lw t0, 24(sp)
+    sb t0, dsp_regs + 7(s1)
+    lw t0, 28(sp)
+    sw t0, cached_vols(s1)
+    lw t0, 32(sp)
+    sh t0, envelopes(s1)
+    lw t0, 36(sp)
+    sh t0, next_steps(s1)
+    // Independent readback makes a failed restoration an explicit failure.
+    lw t1, 24(sp)
+    lbu t0, dsp_regs + 7(s1)
+    xor t9, t0, t1
+    lw t1, 28(sp)
+    lw t0, cached_vols(s1)
+    xor t0, t0, t1
+    or t9, t9, t0
+    lw t1, 32(sp)
+    lhu t0, envelopes(s1)
+    xor t0, t0, t1
+    or t9, t9, t0
+    lw t1, 36(sp)
+    lhu t0, next_steps(s1)
+    xor t0, t0, t1
+    or t9, t9, t0
+    sltiu v0, t9, 1
+    ld ra, 0(sp)
+    ld s0, 8(sp)
+    ld s1, 16(sp)
+    jr ra
+    daddiu sp, sp, 64
+dsp_gain_probe_invalid:
+    jr ra
+    move v0, zero
 #endif

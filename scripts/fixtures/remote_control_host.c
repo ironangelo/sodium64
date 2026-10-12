@@ -38,6 +38,15 @@ static int fail_send;
 static int frame_ready=1;
 static int expect_paused_ack;
 static unsigned paused_ack_checks;
+#ifdef SODIUM64_DSP_GAIN_PROBE
+static unsigned gain_calls;
+static int gain_clobber,gain_restore_failure;
+uint32_t remote_dsp_gain_probe(uint32_t voice,uint32_t gain,uint32_t result[2]) {
+    if(voice>=8||(gain!=0x40&&gain!=0xff))abort();
+    gain_calls++;result[0]=0x1357;result[1]=gain_clobber?voice*16:0x2468;
+    return !gain_restore_failure;
+}
+#endif
 static char response[2048];
 uint32_t remote_host_count(void){return clock_value;}
 int remote_host_menu(void){menu_calls++;return 0;}
@@ -317,6 +326,25 @@ int main(void){
     fail_send=1;run("s64 12345678 audio-mix");check(packets==0);fail_send=0;
     expect("s64 12345678 audio-reset","OK audio_reset=1");check(!dsp_mix_ready&&!dsp_mix_count);
     check(!memcmp(saved_mix,dsp_mix_records,80));remote_paused=0;
+#endif
+#ifdef SODIUM64_DSP_GAIN_PROBE
+    remote_render_frames=10;remote_paused=0;native_diag_phase=0;remote_arm_pending=0;
+    expect("s64 12345678 audio-gain-probe","ERR not_paused");check(!gain_calls);
+    remote_paused=1;native_diag_phase=1;
+    expect("s64 12345678 audio-gain-probe","ERR capture_busy");check(!gain_calls);
+    native_diag_phase=0;remote_arm_pending=1;
+    expect("s64 12345678 audio-gain-probe","ERR capture_busy");check(!gain_calls);
+    remote_arm_pending=0;remote_render_frames=0;
+    expect("s64 12345678 audio-gain-probe","ERR frame_unavailable");check(!gain_calls);
+    remote_render_frames=10;
+    expect("s64 12345678 audio-gain-probe extra","ERR argument_count");check(!gain_calls);
+    expect("s64 12345678 audio-gain-probe","gain_probe=1 cases=16 accumulator_failures=0 restored=1");check(gain_calls==16);
+    gain_clobber=1;
+    expect("s64 12345678 audio-gain-probe","cases=16 accumulator_failures=16 restored=1");check(gain_calls==32);
+    gain_restore_failure=1;
+    expect("s64 12345678 audio-gain-probe","ERR gain_probe_restore_failed");check(gain_calls==33&&remote_paused);
+    gain_restore_failure=0;gain_clobber=0;
+    remote_paused=0;
 #endif
     /* Random text and adversarial bounds exercise the same production parser.
      * Each case must remain within buffers and may never boot or arm. */

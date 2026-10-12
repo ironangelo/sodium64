@@ -340,6 +340,17 @@ operations,201600 native pixels and16384 PCM bytes. Title50.035870/room
 Coordinate8 restored; scanner menu retained. Rain was not retested for this
 targeted change and is still required. Exact4f3cadb workflows all succeed.
 
+## R31 - DSP voice-base physical comparison
+
+[Linked and native proof](DSP_VOICE_BASE_2026-10-11.md):2048 paired real samples,
+all64 BRR pairs/three mutations/nine fields; disabled855212 bytes unchanged.
+Four268800 pixels/three24576 PCM bytes identical. Title51.863320/room57.666181
+recover3.65/4.27 percent; rain32.284901 (+0.199 percent vs R29) does not establish
+a gain. Rain remains RSP-wait constrained in the sample; full60/audio open.
+Coordinate8 restored/readback/menu, scanner retained. NEC primary scheduling
+review identifies dry-master MFLO/SRA/MULT spacing; correction is next, not
+qualified by the scalar VM or current PCM checkpoints.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

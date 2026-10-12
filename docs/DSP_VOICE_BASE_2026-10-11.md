@@ -44,3 +44,38 @@ CGRAM38185805755 succeeds; Ares38185805806 remains pending at this record.
 Master is unchanged, PR21 draft. Full60/visual/audio game matrix is open.
 Commercial inputs/outputs/hashes and transport remain private; public proof
 contains original synthetic counters and code identities only.
+
+## R31 completed physical comparison
+
+Four268800 RGB pixels and three24576-byte PCM rings remain identical at the
+same acknowledged checkpoints. Native release/head/register/enabled checks and
+all full/checksummed/no-overflow/settings-matched traces pass. One quiet window
+per scene: title first30050.035870 ->51.863320 (+3.652 percent); room55.306802
+->57.666181 (+4.265 percent); rain32.220722 ->32.284901 (+0.199 percent).
+Rain uses R29 dry as reference; the later R30 trial omitted rain. These are
+retired-boundary cadence, not TV FPS. Rain's tiny delta is not an established
+speed gain. Native audio fractions92.92/96.03/53.58 percent of nominal AI
+include endpoint overhead. No constant60/full DSP/output qualification follows.
+
+Room sampled DSP occupancy39.71 percent/mean RSP wait0.001707ms versus rain
+DSP19.45 percent/RSP-wait36.65 percent/mean11.255151ms. Sampling does not
+provide exclusive function timing, but DSP addressing alone does not remove
+the observed rain wait. Title first300 is separate from the whole20s mixture.
+
+Empty candidate SHA25682b3999f383669cc0a156a723d1e247ad441db40e6829aa4d1945bed6a26a92e;
+ELFe490994538ec8e4e7a89156e1867c283d4768e6a2d3ead7d03cbb679c0bc1280.
+USB returns and coordinate8 restoration/readback/menu status pass without Reset.
+The scanner menu remains installed; firmware is unchanged. Source36883ee CI
+is pending independently; prior1c23f23 Build/CGRAM pass, Ares pending.
+
+Primary NEC manual U10504EJ7V0UM00 pages76/479 says integer multiply stalls
+the whole pipeline and requires two intervening instructions after MFHI/MFLO
+before a new multiply. Therefore moving unrelated arithmetic into a multiply
+interval is not a justified stall-hiding optimization. The current dry master
+sequence MFLO/SRA/MULT has only one intervening instruction: newly identified
+unsupported scheduling, despite arithmetic/native checkpoint matches. Next,
+move existing left signed16 casts before the right multiplication, add an
+actual linked hazard gate and retest. This is an unresolved hardware contract,
+not an observed cause of the user's audio symptoms. It does not affect the
+restored dry-disabled coordinate8 build.
+[NEC primary manual](https://datasheets.chipdb.org/NEC/Vr-Series/Vr43xx/U10504EJ7V0UMJ1.pdf).

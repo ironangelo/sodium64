@@ -1,3 +1,27 @@
+# 2026-10-11 - R31 native complete; next VR4300 contract identified
+
+Source phase4/usb-hardware-loop: de3d147800036db49e7d1000fb98e0816271fd46; executable36883ee.
+Same checkpoints:268800 RGB pixels/24576 PCM bytes identical, full valid traces.
+Title first30050.035870 ->51.863320 (+3.652 percent), room55.306802 ->57.666181
+(+4.265 percent), rain32.220722 ->32.284901 (+0.199 percent vs R29). Single
+windows/retired cadence, not TV FPS; rain gain not established. Audio fractions
+92.92/96.03/53.58 percent. Room sampled DSP39.71 percent, rain RSP-wait36.65
+percent/mean11.255ms; not exclusive function timing. Full60/video/audio remains
+open. USB return/coordinate8 restoration/readback/menu pass; scanner retained.
+
+NEC primary manual pages76/479 rejects overlapping multiply-stall assumptions
+and requires two intervening instructions after MFHI/MFLO. New dry master
+MFLO/SRA/MULT violates spacing; next reorder existing casts and gate linked
+execution. Current PCM equality is not proof of that hardware contract, nor
+evidence that it caused user audio symptoms. Restored dry-disabled build unaffected.
+[R31 results and source](DSP_VOICE_BASE_2026-10-11.md).
+[Curated evidence](evidence/voice-base-2026-10-11.json).
+Prior1c23f23 Build/CGRAM pass/Ares pending; fresh executable CI independent.
+Master preserved, PR21 draft; all commercial material/hashes stay private.
+Entire preceding history follows byte for byte.
+
+---
+
 # 2026-10-11 - DSP voice-base R31 preflight; physical trial running
 
 Source phase4/usb-hardware-loop: 36883ee5047363ef4f523f47501a8b3c0f10bdd1.

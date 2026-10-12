@@ -1,6 +1,6 @@
 {
   "checkpoint": "R31",
-  "stage": "host preflight; native trial in progress",
+  "stage": "native completed; full goal unqualified",
   "paired_execution": {
     "passed": true,
     "paired_actual_scheduler_samples": 2048,
@@ -120,7 +120,91 @@
   "owners": 41,
   "allocated_end": "D15C8",
   "arena_start": "D2000",
-  "native_trial_complete": false,
+  "native_trial_complete": true,
   "full_goal_qualified": false,
-  "commercial_data": false
+  "commercial_data": false,
+  "native_metrics": {
+    "title": {
+      "before_completed_boundaries_per_second": 50.035869803297246,
+      "after_completed_boundaries_per_second": 51.86331952757891,
+      "delta_percent": 3.652279317749052,
+      "quiet_window_seconds": 20.021478037333335,
+      "full_trace_checksum_and_settings": true,
+      "sampled_CPU_percent": {
+        "s_cpu": 13.122362869198312,
+        "apu_static_or_jit": 26.62447257383966,
+        "dsp": 22.0112517580872,
+        "dma": 4.880450070323488,
+        "ppu": 11.20956399437412,
+        "rsp_wait": 9.90154711673699,
+        "vi_wait": 10.084388185654008,
+        "other": 2.1659634317862166
+      },
+      "mean_CPU_RSP_wait_ms": 1.738023763652641,
+      "audio_fraction_of_nominal_AI": 0.9292077732600953,
+      "PCM_bytes_compared": 8192,
+      "PCM_differences": 0,
+      "scope": "title first300 intervals",
+      "not_TV_FPS_or_DAC_waveform": true
+    },
+    "room": {
+      "before_completed_boundaries_per_second": 55.30680185957161,
+      "after_completed_boundaries_per_second": 57.66618120355257,
+      "delta_percent": 4.265984046540261,
+      "quiet_window_seconds": 20.108453845333333,
+      "full_trace_checksum_and_settings": true,
+      "sampled_CPU_percent": {
+        "s_cpu": 5.772187281621244,
+        "apu_static_or_jit": 24.206848357791753,
+        "dsp": 39.706498951781974,
+        "dma": 9.12648497554158,
+        "ppu": 18.392732354996507,
+        "rsp_wait": 0.0,
+        "vi_wait": 0.5310971348707197,
+        "other": 2.2641509433962264
+      },
+      "mean_CPU_RSP_wait_ms": 0.0017073661202185793,
+      "audio_fraction_of_nominal_AI": 0.9602907245514429,
+      "PCM_bytes_compared": 8192,
+      "PCM_differences": 0,
+      "scope": "full quiet trace",
+      "not_TV_FPS_or_DAC_waveform": true
+    },
+    "rain": {
+      "before_completed_boundaries_per_second": 32.22072182498886,
+      "after_completed_boundaries_per_second": 32.28490137613392,
+      "delta_percent": 0.19918719230953563,
+      "quiet_window_seconds": 20.015062570666668,
+      "full_trace_checksum_and_settings": true,
+      "sampled_CPU_percent": {
+        "s_cpu": 7.988748241912799,
+        "apu_static_or_jit": 17.327707454289733,
+        "dsp": 19.451476793248943,
+        "dma": 6.765119549929676,
+        "ppu": 10.604781997187061,
+        "rsp_wait": 36.65260196905766,
+        "vi_wait": 0.014064697609001406,
+        "other": 1.1954992967651195
+      },
+      "mean_CPU_RSP_wait_ms": 11.2551506625387,
+      "audio_fraction_of_nominal_AI": 0.5357842536914305,
+      "PCM_bytes_compared": 8192,
+      "PCM_differences": 0,
+      "scope": "full quiet trace",
+      "not_TV_FPS_or_DAC_waveform": true
+    }
+  },
+  "RGB": {
+    "checkpoints": 4,
+    "pixels": 268800,
+    "differences": 0
+  },
+  "PCM": {
+    "rings": 3,
+    "bytes": 24576,
+    "differences": 0
+  },
+  "coordinate8_restored_readback_menu": true,
+  "scanner_menu_retained": true,
+  "next_hardware_contract": "dry master MFLO/SRA/MULT violates NEC two-instruction spacing"
 }

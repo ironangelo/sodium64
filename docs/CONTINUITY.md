@@ -1,3 +1,23 @@
+# 2026-10-12 - R38 expanded native/CI qualification batch prepared
+
+Experimental sourceb0f99c4c5283477073734b20390903b042c958ce, runtime unchanged4c3764a. Native14.454percent rain
+benefit justifies full relevant CI now. Autobuild adds a matched corrected
+reference and flag1 decoder/span/epoch/lease/window/boot/recorder/arena job;
+existing default/audio/profile/emulator gates retained. Source push starts
+Build and Validate; CGRAM/Ares dispatch planned on this exact branch/SHA.
+No CI PASS/integration claim until exact runs complete.
+
+RESUME HERE: private spans-r38-expanded-plan.json records artifacts/question;
+spans-r38-expanded-native.py will run fresh corrected title900/story1852/
+room1980 controls and identical R38 routes, quiet20s each, pixels/PCM and later
+story frames. Root only COM3. Record exact CI run IDs before waiting. Console
+last coordinate8 restored/menu; no worker at checkpoint. No redundant rain
+control. Reject/repair any regression; full goal still open beyond this batch.
+Defaults/retained phase4/master unchanged. Commercial data/hashes private;
+previous continuity byte-identical below.
+
+---
+
 # 2026-10-12 - R38 material native rain gain, expanded qualification next
 
 Source experiment/bg-spans-r388690b08989f36be98e10abb87f5d991a1bfe449f; executable4c3764a. MEASURED/promising,

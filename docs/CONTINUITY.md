@@ -1,3 +1,20 @@
+# 2026-10-12 - R42 first fixture result and CI8 correction
+
+Source 22f18603f4c785fe17f325ed2eb6199029a64df1, coverage-tags-r42. First physical probe28af46a completed;
+CLAMP/WRAP RGB124/tag14/transparent0 differences. RGBA16 half intact; CI
+descriptors accidentally CI4(size0), now corrected to CI8(size1). First result
+inconclusive for intended formats, artifacts retained. Native session48566
+ended; resume rejected, menu/coordinate8 restored/readback. No speed claim.
+Ares38300934335 fails SDL KMSDRM struct-pointer compile before execution:
+LAB LIMITATION, not Sodium64 or a passing runtime gate.
+
+RESUME HERE: root sole COM3, no worker. Run coverage42b-native.py/plan/archive
+repeat, then record pass/reject before broader design. Fix the independent
+headless SDL dependency without weakening emulation checks; exact R41 Build/
+CGRAM passed. Full goal open, prior history byte-identical below.
+
+---
+
 # 2026-10-12 - R42 physical coverage-tag feasibility preflight
 
 Source 28af46a6fa1c2617a3a7f2a10e7a249a2703bf69, experiment/coverage-tags-r42. IMPLEMENTED/probe only;

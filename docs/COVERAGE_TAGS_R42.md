@@ -33,3 +33,11 @@ otherwise reject this mechanism before broad CI.
 Parallel R41 exact d10b79f Build38300923921/CGRAM38300930969 passed; Ares38300934335
 failed, cause under inspection. No overall full-CI/integrability claim.
 Master and retained renderer branches unchanged. Game data/hashes stay private.
+
+First native probe28af46a completed safely: CLAMP/WRAP each RGB124/tag14/
+transparent0 differences; ZAP/SAVE additionally cannot carry the tag. RGBA16
+was the intact half; CI8 descriptor mistakenly encoded CI4 (size0). Fix the
+two actual LoadTile/render descriptors to CI8(size1) before repeating. This
+is an invalid fixture discriminant, not a renderer rejection. All first
+receipts/artifacts retained; no game/throughput claim. Ares failure is SDL
+KMSDRM source type error before Sodium64 execution, separate lab dependency.

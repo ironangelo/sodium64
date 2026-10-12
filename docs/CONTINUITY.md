@@ -1,3 +1,18 @@
+# 2026-10-12 - R42 tags correct, palette RGB unresolved
+
+Source 49b9a5d5af45c2338cea424c426fe29ee9589ab5, coverage-tags-r42. Physical22f1860: CLAMP/WRAP tag0 and
+transparent0 differences, RGB124 remain in CI half; ZAP/SAVE tag124 fail.
+Mechanism has partial support, not full acceptance. Session30338 completed/
+resume rejection/menu restore pass. No renderer or FPS claim.
+RESUME HERE: run private coverage42c-native.py/plan/archive; RGB both texture
+fetch cycles enabled, first mismatched RGB reported if still wrong. Compare
+all1024 original pixel cases, refuse any RGB/opacity loss. Root only COM3,
+console menu/no worker. Independent Ares pinned-SDL retry dispatched204 on
+fix/ares-headless-sdl-r41 at794b553; record run ID, unchanged d10b79f core.
+Prior history byte-identical below.
+
+---
+
 # 2026-10-12 - R41 SDL lab failure isolated and pinned
 
 Source 794b553053cd97070ec393abb60d9ed1e15a2429, fix/ares-headless-sdl-r41; workflow/docs only versus d10b79f.

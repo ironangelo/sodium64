@@ -167,6 +167,19 @@ Goal: turn architectural success into an emulator that is pleasant and dependabl
 
 ## Current immediate batch
 
+### 2026-10-12 priority update
+
+The [active goal](ACTIVE_GOAL.md) supersedes the old immediate ordering below.
+Historical homebrew Gate-B results remain scoped controls. ALttP/DKC and the
+expanded commercial corpus have demonstrated native deficits. Rain32.28
+boundaries/s and11.255ms explicit CPU/RSP wait justify material renderer work
+before more marginal audio optimization. R34's complete C++ DSP remains an
+oracle; R35 timer work is archived, unmeasured and deferred. Use short physical
+A/B after required quick integrity checks; expand fidelity/CI for candidates
+with useful native potential. Cadence, visual and audio gates remain cumulative.
+
+### Historical immediate batch
+
 **M3 / Gate C fidelity isolation.**
 
 Gate B is closed on real N64: Gothicvania, SRS and Nova2 all sustain **60/60 × 5** at Road-valid settings. Treat those workloads as regression controls, not as invitations for more FPS optimization.

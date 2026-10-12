@@ -2,6 +2,19 @@
 
 Sodium64 should not depend on frequent manual testing on a real Nintendo 64. Validation is layered so most failures are caught before hardware is involved.
 
+## Automated hardware iteration - 2026-10-12
+
+The [active goal](ACTIVE_GOAL.md) updates experiment cadence now that COM3
+supports autonomous bounded tests. Native performance hypotheses get a local
+build and indispensable integrity/ABI/known-regression checks, then short
+hardware A/B before broad laboratory/CI validation. Hardware rejection normally
+ends the candidate's validation campaign. Semantic repairs retain relevant
+differential proofs before hardware. Expand representative image/audio/
+stability checks after promising results; full relevant CI is still required
+before VALIDATED/integrable status. Reuse valid exact-SHA results. Documentary/
+unmeasured checkpoints may skip CI with explicit limits. L0-L4 guarantees
+remain; the manual milestone cadence below is historical for this loop.
+
 ## Levels
 
 ### L0 — source and deterministic host checks

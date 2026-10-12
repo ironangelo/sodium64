@@ -522,6 +522,8 @@ jobs:
           python3 scripts/test_remote_control.py --mix-observer --koff-release --json-output audio-mix-parser.json
           python3 scripts/test_remote_control.py --mix-observer --brr-observer --koff-release --json-output audio-all-parser.json
           python3 scripts/test_remote_control.py --gain-probe --koff-release --json-output audio-gain-parser.json
+          python3 scripts/test_remote_control.py --full-dsp-probe --koff-release --json-output audio-full-parser.json
+          python3 scripts/test_full_dsp_probe.py --json-output audio-full-host.json
       - name: Compile audio reference and faithful-BRR trace candidate
         shell: bash
         run: |
@@ -567,6 +569,21 @@ jobs:
           python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_*.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
           python3 scripts/test_rsp_window_spans_compiled.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output audio-windows.json
+      - name: Build and check the isolated complete DSP probe
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+            WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+            FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 \
+            DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 DSP_VOICE_BASE=1 FULL_DSP_PROBE=1 \
+            BUILD_DIR=build_full_dsp_probe PROJ_NAME=sodium64-full-dsp-probe \
+            -j$(nproc) 2>&1 | tee audio-full-build.log
+          python3 scripts/check_runtime_arena.py build_full_dsp_probe/sodium64-full-dsp-probe.elf --diagnostic-trace --full-dsp-probe
+          python3 scripts/check_event_arena.py --elf build_full_dsp_probe/sodium64-full-dsp-probe.elf --diagnostic-trace --full-dsp-probe --output audio-full-arena.json
+          python3 scripts/check_brr_observer_arena.py build_full_dsp_probe/sodium64-full-dsp-probe.elf --json-output audio-full-dma.json
+          python3 scripts/check_full_dsp_core.py build_full_dsp_probe/sodium64-full-dsp-probe.elf --json-output audio-full-linked.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

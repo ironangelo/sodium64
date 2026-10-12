@@ -1,0 +1,4 @@
+# Preserve vendored reference bytes, including upstream whitespace.
+third_party/snes_spc/*.cpp -text whitespace=-trailing-space,-space-before-tab
+third_party/snes_spc/*.h -text whitespace=-trailing-space,-space-before-tab
+third_party/snes_spc/COPYING.LESSER -text whitespace=-trailing-space,-space-before-tab

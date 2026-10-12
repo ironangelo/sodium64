@@ -543,6 +543,50 @@ static void gain_probe(const char *id,uint32_t framebuffer) {
     append(" provenance=synthetic_handler_not_audio_waveform");(void)finish();
 }
 #endif
+#ifdef SODIUM64_FULL_DSP_PROBE
+#include "full_dsp_probe.h"
+static unsigned full_dsp_probe_needs_menu;
+#ifdef REMOTE_CONTROL_HOST
+extern uint32_t remote_host_full_dsp_probe(full_dsp_probe_result result[FULL_DSP_PROBE_CASES]);
+#else
+extern unsigned char apu_ram[65536];
+static int full_probe_transfer(unsigned char *scratch,uint32_t offset,int write) {
+    return pi_transfer(scratch,USB_CART+offset,512,write);
+}
+#endif
+static void full_probe(const char *id,uint32_t framebuffer) {
+    if(!present||transport_error||menu_error){error(id,"audio_transport_unready");return;}
+    if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+    if(!remote_paused){error(id,"not_paused");return;}
+    if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
+    full_dsp_probe_result result[FULL_DSP_PROBE_CASES];
+    uint32_t state;
+#ifdef REMOTE_CONTROL_HOST
+    state=remote_host_full_dsp_probe(result);
+#else
+    /* Match the existing USB TX mapping contract. No SD engine is used.
+     * Root exclusively owns COM3; reply transmission begins after restore. */
+    uint32_t config[2];
+    if(!wait_usb('U')||!command('C',1,1,config)){error(id,"full_dsp_backup_failed");return;}
+    state=full_dsp_probe_execute(apu_ram,uncached(transfer_buffer),full_probe_transfer,count,result);
+    if(!command('C',1,config[1],0))full_dsp_probe_needs_menu=1;
+#endif
+    if(state==2)full_dsp_probe_needs_menu=1;
+    if(state!=1||full_dsp_probe_needs_menu) {
+        error(id,state==0?"full_dsp_backup_failed":"full_dsp_restore_failed");return;
+    }
+    prefix(id,1);append(" full_dsp_probe=1 cases=3 restored=1");
+    field(" count_hz=",REMOTE_COUNT_HZ);field(" render_frame_id=",remote_render_frames);
+    for(unsigned scenario=0;scenario<FULL_DSP_PROBE_CASES;scenario++) {
+        field(" case",scenario);field("_frames=",result[scenario].frames);
+        field(" case",scenario);field("_ticks=",result[scenario].ticks);
+        field(" case",scenario);field("_max_block_ticks=",result[scenario].max_block_ticks);
+        field(" case",scenario);field("_checksum=",result[scenario].checksum);
+        field(" case",scenario);field("_nonzero=",result[scenario].nonzero_samples);
+    }
+    append(" provenance=synthetic_complete_reference_not_gameplay_or_dac");(void)finish();
+}
+#endif
 static void status(const char *id) {
     uint32_t now=count();if(now<count_last)count_wraps++;count_last=now;
     prefix(id,1);
@@ -559,12 +603,18 @@ static void status(const char *id) {
 #ifdef SODIUM64_DSP_GAIN_PROBE
     append(",audio-gain-probe");
 #endif
+#ifdef SODIUM64_FULL_DSP_PROBE
+    append(",audio-full-dsp-probe");
+#endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER
     append(",sections");
 #endif
 #if defined(SODIUM64_RDP_MATH_PROBE) && !defined(REMOTE_CONTROL_HOST)
     append(",rdp-probe");
     field(" rdp_probe_dirty=",rdp_probe_dirty);
+#endif
+#ifdef SODIUM64_FULL_DSP_PROBE
+    field(" full_dsp_probe_needs_menu=",full_dsp_probe_needs_menu);
 #endif
     field(" paused=",remote_paused);field(" count32=",now);
     field(" count_wraps_observed=",count_wraps);field(" count_hz=",REMOTE_COUNT_HZ);
@@ -634,6 +684,16 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
     if(nt<3||!eq(tokens[0],"s64")||!hex(tokens[1],8,&unused)) {error(id,"invalid_request");return;}
     id=tokens[1];const char *verb=tokens[2];
+#ifdef SODIUM64_FULL_DSP_PROBE
+    if(full_dsp_probe_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
+       !eq(verb,"frame")&&!eq(verb,"profile")&&!eq(verb,"menu")) {
+        error(id,"full_dsp_needs_menu");return;
+    }
+    if(eq(verb,"audio-full-dsp-probe")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        full_probe(id,retired_framebuffer);return;
+    }
+#endif
 #ifdef SODIUM64_DSP_GAIN_PROBE
     if(eq(verb,"audio-gain-probe")) {
         if(nt!=3){error(id,"argument_count");return;}

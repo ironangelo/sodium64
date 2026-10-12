@@ -22,6 +22,13 @@ DSP_KOFF_RELEASE ?= 0
 DSP_DRY_MIX ?= 0
 DSP_VOICE_BASE ?= 0
 DSP_GAIN_PROBE ?= 0
+FULL_DSP_PROBE ?= 0
+ifeq ($(FULL_DSP_PROBE),1)
+ifneq ($(REMOTE)$(AUDIO_OBSERVER),11)
+$(error FULL_DSP_PROBE requires REMOTE=1 AUDIO_OBSERVER=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_FULL_DSP_PROBE=1
+endif
 ifeq ($(DSP_GAIN_PROBE),1)
 ifneq ($(REMOTE)$(DSP_DRY_MIX)$(MIX_OBSERVER),111)
 $(error DSP_GAIN_PROBE requires REMOTE=1 DSP_DRY_MIX=1 MIX_OBSERVER=1)
@@ -174,6 +181,9 @@ endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 HFILES += $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.inc))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
+ifeq ($(FULL_DSP_PROBE),1)
+OFILES += $(BUILD_DIR)/src/full_dsp_probe.o $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o
+endif
 ifeq ($(NATIVE_DIAG_TRACE),1)
 OFILES += $(BUILD_DIR)/src/continuous_save_c.o
 endif
@@ -218,6 +228,10 @@ N64_MKSPRITE = $(N64_BINDIR)/mksprite
 N64_ASFLAGS = -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
 N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
 N64_ASFLAGS += $(N64_ASFLAGS_REMOTE)
+ifeq ($(FULL_DSP_PROBE),1)
+N64_ASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
+N64_RSPASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
+endif
 ifeq ($(AUDIO_OBSERVER),1)
 N64_ASFLAGS += -DSODIUM64_AUDIO_OBSERVER=1
 endif
@@ -302,7 +316,9 @@ ifeq ($(SIGNAL_PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_SIGNAL_PROFILE=1
 N64_RSPASFLAGS += -DSODIUM64_SIGNAL_PROFILE=1
 endif
-ifneq ($(filter 1,$(BRR_OBSERVER) $(MIX_OBSERVER)),)
+ifeq ($(FULL_DSP_PROBE),1)
+N64_LDFLAGS += -Tsrc/full_dsp_probe_memory.ld
+else ifneq ($(filter 1,$(BRR_OBSERVER) $(MIX_OBSERVER)),)
 N64_LDFLAGS += -Tsrc/brr_observer_memory.ld
 else
 N64_LDFLAGS += -Tsrc/diagnostic_memory.ld
@@ -396,6 +412,14 @@ $(BUILD_DIR)/src/continuous_save_c.o: src/continuous_save.c tools/sc64-diagnosti
 $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h src/defines.h tools/sc64-diagnostic-save/recorder_runtime_abi.h
 	@mkdir -p $(dir $@)
 	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_CFLAGS_REMOTE) -o $@ $<
+
+$(BUILD_DIR)/src/full_dsp_probe.o: src/full_dsp_probe.cpp src/full_dsp_probe.h $(wildcard third_party/snes_spc/*.h)
+	@mkdir -p $(dir $@)
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror -o $@ $<
+
+$(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o: third_party/snes_spc/SPC_DSP.cpp $(wildcard third_party/snes_spc/*.h)
+	@mkdir -p $(dir $@)
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wno-implicit-fallthrough -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

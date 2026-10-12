@@ -11,8 +11,8 @@ from check_runtime_arena import allocated_sections
 from test_gate_c_cgram_rsp_consumer_clean_contract import MacroEval, parse_macros
 
 
-def selected_macros(defines, diagnostic_trace=False, cc=None, profile=False, brr_observer=False, mix_observer=False):
-    if (brr_observer or mix_observer) and not diagnostic_trace:
+def selected_macros(defines, diagnostic_trace=False, cc=None, profile=False, brr_observer=False, mix_observer=False, full_dsp_probe=False):
+    if (brr_observer or mix_observer or full_dsp_probe) and not diagnostic_trace:
         raise ValueError('extended observer arena requires --diagnostic-trace')
     if not diagnostic_trace and not profile:
         # Preserve the original normal-profile check and its dependency-free API.
@@ -33,6 +33,7 @@ def selected_macros(defines, diagnostic_trace=False, cc=None, profile=False, brr
     if profile: selected.append('-DSODIUM64_PROFILE=1')
     if brr_observer: selected.append('-DSODIUM64_BRR_OBSERVER=1')
     if mix_observer: selected.append('-DSODIUM64_MIX_OBSERVER=1')
+    if full_dsp_probe: selected.append('-DSODIUM64_FULL_DSP_PROBE=1')
     command=[compiler, '-E', '-dM', '-x', 'assembler-with-cpp', *selected]
     source=None
     if 'mips' in Path(compiler).name and (include/'regdef.h').is_file():
@@ -51,8 +52,8 @@ def selected_macros(defines, diagnostic_trace=False, cc=None, profile=False, brr
     return MacroEval(macros)
 
 
-def layout(defines, diagnostic_trace=False, cc=None, profile=False, brr_observer=False, mix_observer=False):
-    ev = selected_macros(defines, diagnostic_trace, cc, profile, brr_observer, mix_observer)
+def layout(defines, diagnostic_trace=False, cc=None, profile=False, brr_observer=False, mix_observer=False, full_dsp_probe=False):
+    ev = selected_macros(defines, diagnostic_trace, cc, profile, brr_observer, mix_observer, full_dsp_probe)
     value = lambda name: ev.name(name) & 0x1fffffff
     owners = {}
     for queue in (1, 2):
@@ -87,7 +88,10 @@ def layout(defines, diagnostic_trace=False, cc=None, profile=False, brr_observer
     assert value('ROM_CACHE_END') == value('HCOMP_WINNER_ARENA') == 0x384000
     assert owners['HCOMP_CGRAM_EVENT_QUEUE2'][1] == 0x400000
     assert owners['HCOMP_CGRAM_EVENT_QUEUE1'][1] == value('HCOMP_CGRAM_BASE_QUEUE1') + 0x18e00
-    if brr_observer or mix_observer:
+    if full_dsp_probe:
+        assert value('HCOMP_CGRAM_BASE_QUEUE1') == 0xd6000
+        assert value('HCOMP_RAW_PALETTE_QUEUE1')-owners['HCOMP_CGRAM_EVENT_QUEUE1'][1] == 0x200
+    elif brr_observer or mix_observer:
         assert value('HCOMP_CGRAM_BASE_QUEUE1') == 0xd4000
     elif not diagnostic_trace and not profile:
         assert value('HCOMP_CGRAM_BASE_QUEUE1') == 0xc2000
@@ -107,15 +111,15 @@ def prove_disjoint(owners):
     return intervals
 
 
-def check(defines, elf=None, diagnostic_trace=False, cc=None, profile=False, brr_observer=False, mix_observer=False):
-    owners = layout(defines, diagnostic_trace, cc, profile, brr_observer, mix_observer)
+def check(defines, elf=None, diagnostic_trace=False, cc=None, profile=False, brr_observer=False, mix_observer=False, full_dsp_probe=False):
+    owners = layout(defines, diagnostic_trace, cc, profile, brr_observer, mix_observer, full_dsp_probe)
     if elf:
         sections=list(allocated_sections(elf))
         for name, a, b in sections:
             owners['ELF:' + name] = (a, b)
         # Boot clearing itself is a write owner, sharing only the fixed lower
         # renderer region. It must never touch loaded runtime/JIT/ROM pages.
-        ev = selected_macros(defines, diagnostic_trace, cc, profile, brr_observer, mix_observer)
+        ev = selected_macros(defines, diagnostic_trace, cc, profile, brr_observer, mix_observer, full_dsp_probe)
         clear_ranges=[('clear_vram','HCOMP_CGRAM_BASE_QUEUE1','JIT_BUFFER'),
                       ('clear_hcomp_surfaces','HCOMP_WINNER_ARENA','HCOMP_CGRAM_EVENT_QUEUE2')]
         for clear, first, last in clear_ranges:
@@ -142,8 +146,9 @@ if __name__ == '__main__':
     ap.add_argument('--profile', action='store_true')
     ap.add_argument('--brr-observer', action='store_true')
     ap.add_argument('--mix-observer', action='store_true')
+    ap.add_argument('--full-dsp-probe', action='store_true')
     args = ap.parse_args()
-    result = check(args.defines, args.elf, args.diagnostic_trace, args.cc, args.profile, args.brr_observer, args.mix_observer)
+    result = check(args.defines, args.elf, args.diagnostic_trace, args.cc, args.profile, args.brr_observer, args.mix_observer, args.full_dsp_probe)
     if args.output:
         args.output.write_text(json.dumps(result, indent=2) + '\n')
     print('EVENT_ARENA_FULL_EXTENTS PASS', len(result), 'owners; cap=24576; ROM slots=194',

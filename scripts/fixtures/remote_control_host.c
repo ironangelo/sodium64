@@ -48,6 +48,17 @@ uint32_t remote_dsp_gain_probe(uint32_t voice,uint32_t gain,uint32_t result[2]) 
 }
 #endif
 static char response[2048];
+#ifdef SODIUM64_FULL_DSP_PROBE
+#include "../../src/full_dsp_probe.h"
+static unsigned full_probe_calls;
+static uint32_t full_probe_status=1;
+uint32_t remote_host_full_dsp_probe(full_dsp_probe_result result[FULL_DSP_PROBE_CASES]) {
+    full_probe_calls++;
+    for(unsigned i=0;i<FULL_DSP_PROBE_CASES;i++)
+        result[i]=(full_dsp_probe_result){2048,1234+i,321+i,4321+i,1000+i};
+    return full_probe_status;
+}
+#endif
 uint32_t remote_host_count(void){return clock_value;}
 int remote_host_menu(void){menu_calls++;return 0;}
 int remote_host_frame_ready(void){return frame_ready;}
@@ -345,6 +356,31 @@ int main(void){
     expect("s64 12345678 audio-gain-probe","ERR gain_probe_restore_failed");check(gain_calls==33&&remote_paused);
     gain_restore_failure=0;gain_clobber=0;
     remote_paused=0;
+#endif
+#ifdef SODIUM64_FULL_DSP_PROBE
+    remote_render_frames=10;remote_paused=0;native_diag_phase=0;remote_arm_pending=0;
+    expect("s64 12345678 audio-full-dsp-probe","ERR not_paused");check(!full_probe_calls);
+    remote_paused=1;native_diag_phase=1;
+    expect("s64 12345678 audio-full-dsp-probe","ERR capture_busy");check(!full_probe_calls);
+    native_diag_phase=0;remote_arm_pending=1;
+    expect("s64 12345678 audio-full-dsp-probe","ERR capture_busy");check(!full_probe_calls);
+    remote_arm_pending=0;remote_render_frames=0;
+    expect("s64 12345678 audio-full-dsp-probe","ERR frame_unavailable");check(!full_probe_calls);
+    remote_render_frames=10;
+    expect("s64 12345678 audio-full-dsp-probe extra","ERR argument_count");check(!full_probe_calls);
+    expect("s64 12345678 audio-full-dsp-probe","full_dsp_probe=1 cases=3 restored=1");check(full_probe_calls==1);
+    check(strstr(response,"case2_frames=2048 case2_ticks=1236")!=NULL);
+    full_probe_status=0;
+    expect("s64 12345678 audio-full-dsp-probe","ERR full_dsp_backup_failed");check(full_probe_calls==2&&remote_paused);
+    full_probe_status=2;
+    expect("s64 12345678 audio-full-dsp-probe","ERR full_dsp_restore_failed");check(full_probe_calls==3&&remote_paused);
+    expect("s64 12345678 resume","ERR full_dsp_needs_menu");check(remote_paused);
+    expect("s64 12345678 step 1","ERR full_dsp_needs_menu");check(remote_paused);
+    expect("s64 12345678 capture","ERR full_dsp_needs_menu");check(!remote_arm_pending);
+    expect("s64 12345678 audio-full-dsp-probe","ERR full_dsp_needs_menu");check(full_probe_calls==3);
+    expect("s64 12345678 status","full_dsp_probe_needs_menu=1");
+    unsigned menus_before=menu_calls;
+    expect("s64 12345678 menu","OK transition_ready=menu outcome=pending");check(menu_calls==menus_before+1);
 #endif
     /* Random text and adversarial bounds exercise the same production parser.
      * Each case must remain within buffers and may never boot or arm. */

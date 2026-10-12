@@ -72,12 +72,173 @@
     "complete_waveform_timing_or_gameplay_claim": false,
     "commercial_data": false
   },
-  "native_status": "NOT_YET_RUN",
+  "native_status": "PASS",
   "R33_exact_CI": {
     "head": "5b0cb2f3905940fb0b00040688d32b271258cc48",
     "Build": 38190497219,
     "CGRAM": 38190500533,
     "Ares": 38190500532,
     "all_conclusions": "success"
+  },
+  "native": {
+    "trials": [
+      {
+        "repeat": 0,
+        "scenarios": [
+          {
+            "case": 0,
+            "frames": 2048,
+            "ticks": 3199164,
+            "max_block_ticks": 61421,
+            "core_milliseconds": 68.248832,
+            "core_fraction_at_32000_frames_per_second": 1.066388,
+            "host_PCM_checksum_match": true
+          },
+          {
+            "case": 1,
+            "frames": 2048,
+            "ticks": 4324360,
+            "max_block_ticks": 68251,
+            "core_milliseconds": 92.25301333333333,
+            "core_fraction_at_32000_frames_per_second": 1.4414533333333333,
+            "host_PCM_checksum_match": true
+          },
+          {
+            "case": 2,
+            "frames": 2048,
+            "ticks": 4534706,
+            "max_block_ticks": 71657,
+            "core_milliseconds": 96.74039466666666,
+            "core_fraction_at_32000_frames_per_second": 1.5115686666666666,
+            "host_PCM_checksum_match": true
+          }
+        ]
+      },
+      {
+        "repeat": 1,
+        "scenarios": [
+          {
+            "case": 0,
+            "frames": 2048,
+            "ticks": 3196501,
+            "max_block_ticks": 61327,
+            "core_milliseconds": 68.19202133333333,
+            "core_fraction_at_32000_frames_per_second": 1.0655003333333333,
+            "host_PCM_checksum_match": true
+          },
+          {
+            "case": 1,
+            "frames": 2048,
+            "ticks": 4324822,
+            "max_block_ticks": 68458,
+            "core_milliseconds": 92.26286933333333,
+            "core_fraction_at_32000_frames_per_second": 1.4416073333333332,
+            "host_PCM_checksum_match": true
+          },
+          {
+            "case": 2,
+            "frames": 2048,
+            "ticks": 4534619,
+            "max_block_ticks": 71626,
+            "core_milliseconds": 96.73853866666667,
+            "core_fraction_at_32000_frames_per_second": 1.5115396666666667,
+            "host_PCM_checksum_match": true
+          }
+        ]
+      },
+      {
+        "repeat": 2,
+        "scenarios": [
+          {
+            "case": 0,
+            "frames": 2048,
+            "ticks": 3196718,
+            "max_block_ticks": 61508,
+            "core_milliseconds": 68.19665066666667,
+            "core_fraction_at_32000_frames_per_second": 1.0655726666666667,
+            "host_PCM_checksum_match": true
+          },
+          {
+            "case": 1,
+            "frames": 2048,
+            "ticks": 4324451,
+            "max_block_ticks": 68258,
+            "core_milliseconds": 92.25495466666666,
+            "core_fraction_at_32000_frames_per_second": 1.4414836666666666,
+            "host_PCM_checksum_match": true
+          },
+          {
+            "case": 2,
+            "frames": 2048,
+            "ticks": 4534782,
+            "max_block_ticks": 71821,
+            "core_milliseconds": 96.742016,
+            "core_fraction_at_32000_frames_per_second": 1.511594,
+            "host_PCM_checksum_match": true
+          }
+        ]
+      }
+    ],
+    "summary": [
+      {
+        "case": 0,
+        "frames_each": 2048,
+        "repeats": 3,
+        "core_fraction_at_32000_median": 1.0655726666666667,
+        "core_fraction_at_32000_min": 1.0655003333333333,
+        "core_fraction_at_32000_max": 1.066388,
+        "core_milliseconds_median": 68.19665066666667
+      },
+      {
+        "case": 1,
+        "frames_each": 2048,
+        "repeats": 3,
+        "core_fraction_at_32000_median": 1.4414836666666666,
+        "core_fraction_at_32000_min": 1.4414533333333333,
+        "core_fraction_at_32000_max": 1.4416073333333332,
+        "core_milliseconds_median": 92.25495466666666
+      },
+      {
+        "case": 2,
+        "frames_each": 2048,
+        "repeats": 3,
+        "core_fraction_at_32000_median": 1.5115686666666666,
+        "core_fraction_at_32000_min": 1.5115396666666667,
+        "core_fraction_at_32000_max": 1.511594,
+        "core_milliseconds_median": 96.74039466666666
+      }
+    ],
+    "checksums_matching_host": 9,
+    "original_synthetic_PCM_frames": 18432,
+    "restoration": {
+      "APU_RAM_backup_readback_restore_bytes_each_trial": 65536,
+      "trials": 3,
+      "PCM_ring_bytes_unchanged": 8192,
+      "RGB_pixels_unchanged": 67200,
+      "DSP_registers_and_heads_unchanged": true,
+      "guest_render_boundary_unchanged": true
+    },
+    "guest_resumed_frames": 60,
+    "guest_after": 660,
+    "USB_return_restoration_and_menu": true,
+    "nominal_Count_clock_hz": 46875000,
+    "runtime_still_original_ASM_DSP": true,
+    "complete_reference_direct_gameplay_replacement_rejected": true,
+    "measurement_not_gameplay_FPS_DAC_output_or_full_game_matrix": true
+  },
+  "exact_executable_head": "4715b8055c2e5a1201acd22959368d57852cafce",
+  "exact_CI_at_publication": {
+    "CGRAM": {
+      "id": 38199991297,
+      "conclusion": "success"
+    },
+    "Build": {
+      "id": 38199987952,
+      "status": "in_progress"
+    },
+    "Ares": {
+      "id": 38199991280,
+      "status": "in_progress"
+    }
   }
 }

@@ -1,3 +1,26 @@
+# 2026-10-12 - R34 native complete DSP cost measured; direct replacement rejected
+
+Source phase4/usb-hardware-loop: 238170abf956da705806f979f9cc256fbc565ac0; executable4715b80.
+Actual N64 pausedALttP600, three trials/three original synthetic workloads:
+18432 stereo frames,9/9 primary PCM checksums/nonzero counts match. Each64KiB
+APU RAM backup/readback/restoration;8192 PCM/67200 pixels/DSP128/head/enabled
+and guest600 unchanged. Actual game resumes60 to660; USB menu return and
+coordinate8 restoration/readback/menu pass without Reset. No SD/AI submission.
+Core fractions at32000/s median1.065573/
+1.441484/1.511569; all exceed1 before guest/renderer/AI costs.
+This compiled complete C++ core is rejected as direct gameplay replacement,
+retained as independent behavior oracle. Not TV FPS/DAC/full-game acceptance,
+not a bound on every optimized assembly/vector implementation. Real DSP
+work reduction with exact behavior and rain renderer constraints remain next.
+Exact4715b80 CGRAM38199991297 PASS; Build38199987952/Ares38199991280 running
+at publication. All R33 exact CI PASS. Fresh head CI independent.
+[Native proof and implementation decision](FULL_DSP_PROBE_2026-10-12.md).
+[Curated evidence](evidence/full-dsp-probe-2026-10-12.json).
+Master preserved, PR21 draft, full matrix goal active. Commercial artifacts
+and hashes remain private. Entire previous continuity byte-identical below.
+
+---
+
 # 2026-10-12 - R34 complete DSP cost probe preflight
 
 Source phase4/usb-hardware-loop: 4715b8055c2e5a1201acd22959368d57852cafce.

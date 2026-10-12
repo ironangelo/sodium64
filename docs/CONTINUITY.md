@@ -1,3 +1,31 @@
+# 2026-10-12 - R37 rain sender residency measured; reduce primitives next
+
+Source retained phase4/usb-hardware-loopde30c75782843ef7c113177fa272f9cdd0310d5a; runtime1c665b2 with existing
+FETCH_SIGNAL1. MEASURED: rain32.2884095 completed boundaries/s vs fresh
+control32.2889675 (-0.00173percent); wait11.244562ms, quiet20.015s full-checksum
+capture, skip0/APU21/audio4. Four checkpoints268800 RGB pixels/8192 paused PCM
+bytes, zero differences, register/head/enabled match. Raw running events:
+Main84/112, Math32/43 SIG0-marked (entry/submission/fetch-retirement polling).
+Atomic IRQ samples Main4869/Math2077. No exclusive GPU/instruction/TV/DAC claim.
+Most observed Main/Math residency spends time in the sender; R36 individual
+cache residency was marginal, so prioritize fewer RDP primitives/submissions.
+
+RESUME HERE: native worker completed; menu return/coordinate8 reinstall and
+readback pass. Console responsive menu. Next hypothesis: merge consecutive
+identical8x8 regular-BG map entries within one exact scissor/priority/palette/
+section epoch. An explicit S mask3/no-mirror render descriptor is necessary;
+retained mask5/mirror cannot be stretched. Preserve both flip gradients and
+atlas T coordinates, texture/cache/source retirement and public ABI. RSP IMEM
+is full; assess a bounded decoder overlay relocation to free resident helper
+space rather than adding per-draw overlay loads. Prove emitted decoder/span
+semantics locally before a short rain A/B; no full CI before material benefit.
+Private fetch-r37-physical.json/manifest/archive hold exact reproducible data.
+[Result](RAIN_FETCH_R37.md), [curated evidence](evidence/rain-fetch-r37.json).
+Master/earlier branches preserved; commercial payloads/hashes private; goal
+active. Entire prior continuity byte-identical below.
+
+---
+
 # 2026-10-12 - R37 existing sender marker preflight, native pending
 
 Source retained phase4/usb-hardware-loop7b0041943294006c22e0309056895ddba2041e8e, runtime1c665b2c797209e1ba0031713f43554c8f9fa0fc plus existing

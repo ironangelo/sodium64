@@ -255,6 +255,7 @@ N64_RSPASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
 endif
 ifeq ($(AUDIO_OBSERVER),1)
 N64_ASFLAGS += -DSODIUM64_AUDIO_OBSERVER=1
+N64_RSPASFLAGS += -DSODIUM64_AUDIO_OBSERVER=1
 endif
 ifeq ($(DSP_PITCH_CACHE),1)
 N64_ASFLAGS += -DSODIUM64_DSP_PITCH_CACHE=1
@@ -349,7 +350,7 @@ N64_RSPASFLAGS += -DSODIUM64_SIGNAL_PROFILE=1
 endif
 ifeq ($(FULL_DSP_PROBE),1)
 N64_LDFLAGS += -Tsrc/full_dsp_probe_memory.ld
-else ifneq ($(filter 1,$(BRR_OBSERVER) $(MIX_OBSERVER)),)
+else ifneq ($(filter 1,$(AUDIO_OBSERVER) $(BRR_OBSERVER) $(MIX_OBSERVER)),)
 N64_LDFLAGS += -Tsrc/brr_observer_memory.ld
 else
 N64_LDFLAGS += -Tsrc/diagnostic_memory.ld

@@ -16,14 +16,15 @@ def require(condition, message):
 
 def inspect(path, cpu_overrides=None, bank_overrides=None):
     symbols, original = elf(path)
-    require('dsp_brr_records' in symbols or 'dsp_mix_records' in symbols or 'full_dsp_probe_execute' in symbols, 'expected linked extended observer')
+    require('dsp_audio_blocks' in symbols or 'dsp_brr_records' in symbols or 'dsp_mix_records' in symbols or 'full_dsp_probe_execute' in symbols, 'expected linked extended observer')
     cpu_overrides = cpu_overrides or {}
     word = lambda address: cpu_overrides.get(address, original(address))
     defines = Path(__file__).resolve().parents[1] / 'src/defines.h'
     macros = selected_macros(defines, diagnostic_trace=True,
                              brr_observer='dsp_brr_records' in symbols,
                              mix_observer='dsp_mix_records' in symbols,
-                             full_dsp_probe='full_dsp_probe_execute' in symbols)
+                             full_dsp_probe='full_dsp_probe_execute' in symbols,
+                             audio_observer='dsp_audio_blocks' in symbols)
     tables = [('hcomp_cgram_base_queues', 'BASE'),
               ('hcomp_cgram_sideband_queues', 'SIDEBAND'),
               ('hcomp_cgram_event_queues', 'EVENT')]

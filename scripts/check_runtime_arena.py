@@ -40,6 +40,7 @@ def main():
     ap.add_argument('--brr-observer', action='store_true')
     ap.add_argument('--mix-observer', action='store_true')
     ap.add_argument('--full-dsp-probe', action='store_true')
+    ap.add_argument('--audio-observer', action='store_true')
     ap.add_argument('--cc', help='N64 or host C preprocessor for conditional arena selection')
     args = ap.parse_args()
     start = args.arena_start
@@ -47,7 +48,7 @@ def main():
         # Lazy import keeps allocated_sections usable by the extent checker
         # without a module cycle, and resolves conditional/expression macros.
         from check_event_arena import selected_macros
-        start = selected_macros(args.defines,args.diagnostic_trace,args.cc,args.profile,args.brr_observer,args.mix_observer,args.full_dsp_probe).name('HCOMP_CGRAM_BASE_QUEUE1') & 0x1fffffff
+        start = selected_macros(args.defines,args.diagnostic_trace,args.cc,args.profile,args.brr_observer,args.mix_observer,args.full_dsp_probe,args.audio_observer).name('HCOMP_CGRAM_BASE_QUEUE1') & 0x1fffffff
     end = check(args.elf, start)
     print(f'RUNTIME_ARENA_DISJOINT PASS: allocated_end={end:#x}, arena_start={start:#x}, gap={start-end:#x}')
 

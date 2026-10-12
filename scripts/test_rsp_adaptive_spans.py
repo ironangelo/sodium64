@@ -37,7 +37,8 @@ class AdaptiveVM(ShaderVM):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('build',type=Path)
-    p.add_argument('--baseline',type=Path,required=True);args=p.parse_args()
+    p.add_argument('--baseline',type=Path,required=True)
+    p.add_argument('--elf',type=Path);args=p.parse_args()
     a=parse_macros(ROOT).name
     _,original=read_text(args.build/'src/rsp_decoder_original.elf')
     _,old=read_text(args.baseline/'src/rsp_main.elf')
@@ -48,7 +49,7 @@ def main():
     ps=symbols(args.build/'src/rsp_hcomp.elf');ss=symbols(args.build/'src/rsp_hcomp_setup.elf')
     assert ps['hcomp_context_ready']+0x1000==a('RSP_CONTEXT_PHASE_RETURN')
     assert ss['hcomp_setup_copy']+0x1000==a('RSP_CONTEXT_SWITCH_ENTRY')
-    image,cs=load_elf(args.build/'sodium64-adaptive-r40.elf');before=image.copy()
+    image,cs=load_elf(args.elf or args.build/'sodium64-adaptive-r40.elf');before=image.copy()
     cpu_execute(image,cs['adaptive_decoder_cpu_bind'],[0]*32,{},cs['adaptive_decoder_cpu_bind_end'])
     field=(0xa4000000+a('OVERLAY_DECODER_ORIGINAL_SRC'))&0x1fffffff
     actual=int.from_bytes(bytes(image[field+i] for i in range(4)),'big')

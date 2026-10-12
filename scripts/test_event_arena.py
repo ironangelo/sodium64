@@ -89,6 +89,20 @@ class EventArenaTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'requires --diagnostic-trace'):
             layout(ROOT/'src/defines.h',brr_observer=True)
 
+    def test_audio_only_observer_owns_compiler_growth(self):
+        owners=layout(ROOT/'src/defines.h',diagnostic_trace=True,audio_observer=True)
+        self.assertEqual(owners,layout(ROOT/'src/defines.h',diagnostic_trace=True,brr_observer=True))
+        self.assertEqual(owners['HCOMP_CGRAM_EVENT_QUEUE1'][1],0xece00)
+        owners['ELF:audio_runtime_growth']=(0xe000,0xd3000)
+        prove_disjoint(owners)
+        owners['HCOMP_CGRAM_BASE_QUEUE1']=(0xd2000,0xd2200)
+        with self.assertRaisesRegex(AssertionError,'overlaps'):
+            prove_disjoint(owners)
+
+    def test_audio_observer_requires_trace_selection(self):
+        with self.assertRaisesRegex(ValueError,'requires --diagnostic-trace'):
+            layout(ROOT/'src/defines.h',audio_observer=True)
+
     def test_mix_observer_selects_the_same_extended_owner(self):
         actual=layout(ROOT/'src/defines.h',diagnostic_trace=True,mix_observer=True)
         expected=layout(ROOT/'src/defines.h',diagnostic_trace=True,brr_observer=True)

@@ -618,17 +618,28 @@ jobs:
           common="NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 DSP_VOICE_BASE=1"
           libdragon make $common BUILD_DIR=build_bg_reference PROJ_NAME=sodium64-bg-reference -j$(nproc)
           libdragon make $common DECODE_BANK=1 BG_SPANS=1 BUILD_DIR=build_bg_spans PROJ_NAME=sodium64-bg-spans -j$(nproc)
+          libdragon make $common DECODE_BANK=1 BG_SPANS=1 ADAPTIVE_SPANS=1 BUILD_DIR=build_bg_adaptive PROJ_NAME=sodium64-bg-adaptive -j$(nproc)
       - name: Check emitted decoder, spans, epochs, ownership and transport
         run: |
           python3 scripts/test_rsp_bg_spans.py build_bg_spans --baseline build_bg_reference
+          python3 scripts/test_rsp_bg_spans.py build_bg_adaptive --baseline build_bg_reference
+          python3 scripts/test_rsp_adaptive_spans.py build_bg_adaptive --baseline build_bg_reference --elf build_bg_adaptive/sodium64-bg-adaptive.elf
           python3 scripts/check_rsp_branch_delay_slots.py build_bg_spans/src/rsp_*.elf
           python3 scripts/test_rsp_rdp_dmem_lifetime.py build_bg_spans/src/rsp_main.elf build_bg_spans/src/rsp_mode7.elf
           python3 scripts/test_rdp_loadsync_contract.py
           python3 scripts/test_rsp_window_spans_compiled.py build_bg_spans/src/rsp_main.elf build_bg_spans/src/rsp_mode7.elf
           python3 scripts/check_remote_boot.py --elf build_bg_spans/sodium64-bg-spans.elf
           python3 scripts/test_native_diag_continuous.py build_bg_spans/sodium64-bg-spans.elf
-          python3 scripts/check_runtime_arena.py build_bg_spans/sodium64-bg-spans.elf --diagnostic-trace
-          python3 scripts/check_event_arena.py --elf build_bg_spans/sodium64-bg-spans.elf --diagnostic-trace
+          for variant in reference spans adaptive; do
+            python3 scripts/check_runtime_arena.py build_bg_$variant/sodium64-bg-$variant.elf --diagnostic-trace --audio-observer
+            python3 scripts/check_event_arena.py --elf build_bg_$variant/sodium64-bg-$variant.elf --diagnostic-trace --audio-observer
+            python3 scripts/check_brr_observer_arena.py build_bg_$variant/sodium64-bg-$variant.elf
+          done
+          python3 scripts/check_rsp_branch_delay_slots.py build_bg_adaptive/src/rsp_*.elf
+          python3 scripts/test_rsp_rdp_dmem_lifetime.py build_bg_adaptive/src/rsp_main.elf build_bg_adaptive/src/rsp_mode7.elf
+          python3 scripts/test_rsp_window_spans_compiled.py build_bg_adaptive/src/rsp_main.elf build_bg_adaptive/src/rsp_mode7.elf
+          python3 scripts/check_remote_boot.py --elf build_bg_adaptive/sodium64-bg-adaptive.elf
+          python3 scripts/test_native_diag_continuous.py build_bg_adaptive/sodium64-bg-adaptive.elf
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -638,7 +649,10 @@ jobs:
             build_bg_reference/sodium64-bg-reference.elf
             build_bg_spans/sodium64-bg-spans.elf
             build_bg_spans/src/rsp_*.elf
+            build_bg_adaptive/sodium64-bg-adaptive.elf
+            build_bg_adaptive/src/rsp_*.elf
             sodium64-bg-spans.z64
+            sodium64-bg-adaptive.z64
 
   update-release:
     if: github.ref == 'refs/heads/master'

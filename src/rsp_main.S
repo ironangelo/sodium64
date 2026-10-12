@@ -46,7 +46,11 @@ framebuffer: .word FRAMEBUFFER1, FRAMEBUFFER2
 rdp_init:
     // RDP commands that only need to run once
     .dword 0x2F0088FF00040001 // Set Other Modes
+#if SODIUM64_SUB_ALPHA
+    .dword 0x39000000FFFFFF01 // Binary texture alpha and tagged backdrop63.
+#else
     .dword 0x39000000FFFFFFFF // Set Blend Color
+#endif
     .dword 0x3510810000000000 // Set Tile (palette)
     .dword 0x3550000001054150 // Set Tile (block)
     .dword 0x3548020002054150 // Set Tile (regular)
@@ -116,9 +120,26 @@ layer_chart:
     // Offset-per-tile, hi-res, and EXTBG are unimplemented
     .byte 0x07, 0x06, 0x80, 0x47, 0x46, 0x81, 0x05, 0x04, 0x82, 0x45, 0x44, 0x83, 0, 0, 0, 0 // Mode 0
     .byte 0x06, 0x80, 0x46, 0x81, 0x09, 0x08, 0x82, 0x49, 0x48, 0x83, 0x00, 0x00, 0, 0, 0, 0 // Mode 1 (BG3 normal)
-    .byte 0x09, 0x80, 0x08, 0x81, 0x49, 0x82, 0x48, 0x83, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0 // Mode 2
-    .byte 0x09, 0x80, 0x0C, 0x81, 0x49, 0x82, 0x4C, 0x83, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0 // Mode 3
-    .byte 0x05, 0x80, 0x0C, 0x81, 0x45, 0x82, 0x4C, 0x83, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0 // Mode 4
+    .byte 0x09, 0x80, 0x08, 0x81, 0x49, 0x82, 0x48, 0x83, 0, 0, 0, 0 // Mode 2
+#if SODIUM64_SUB_ALPHA
+    .hword 0x0025,0x1001
+#else
+    .word 0
+#endif
+    .byte 0x09, 0x80, 0x0C, 0x81, 0x49, 0x82, 0x4C, 0x83, 0, 0, 0, 0 // Mode 3
+#if SODIUM64_SUB_ALPHA
+    .hword 0x1001
+    .byte 63,0
+#else
+    .word 0
+#endif
+    .byte 0x05, 0x80, 0x0C, 0x81, 0x45, 0x82, 0x4C, 0x83, 0, 0, 0, 0 // Mode 4
+#if SODIUM64_SUB_ALPHA
+    .hword 0x0025
+    .byte 255,0
+#else
+    .word 0
+#endif
     .byte 0x05, 0x80, 0x08, 0x81, 0x45, 0x82, 0x48, 0x83, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0 // Mode 5
     .byte 0x80, 0x08, 0x81, 0x82, 0x48, 0x83, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0 // Mode 6
     .byte 0x80, 0x40, 0x81, 0x82, 0x83, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0 // Mode 7
@@ -363,7 +384,16 @@ hcomp_cgram_return:
 #else
 #include "rsp_tmem_atlas.inc"
 #endif
-#if SODIUM64_ADAPTIVE_SPANS
+#if SODIUM64_SUB_ALPHA
+hcomp_sub_alpha_mode_send:
+    lbu t0, HCOMP_SCREEN
+    sll t0, t0, 4
+    lbu a2, HCOMP_SUB_ALPHA_DESC + 2(t0)
+    lhu t0, HCOMP_SUB_ALPHA_DESC(t0)
+    sh t0, HCOMP_PROOF_RDP_CMDS + 14
+    j rdp_send
+    nop
+#elif SODIUM64_ADAPTIVE_SPANS
 bg_span_gate:
     lbu t0, HCOMP_EFFECTIVE_TS
     beqz t0, ret_jump
@@ -920,7 +950,9 @@ check_cache:
     nop // Empty-tile branch delay slot must remain a scalar instruction.
 .globl bg_span_call
 bg_span_call:
-#if SODIUM64_ADAPTIVE_SPANS
+#if SODIUM64_SUB_ALPHA
+    jal bg_span_merge
+#elif SODIUM64_ADAPTIVE_SPANS
     jal bg_span_gate
 #else
     jal bg_span_merge

@@ -73,6 +73,15 @@ hcomp_entry:
     // rewritten; presence, VRAM table, OAM and palette history remain intact.
     lw s2, HCOMP_BAND_BASES + 4
     lw s3, HCOMP_BAND_BASES + 8
+#if SODIUM64_SUB_ALPHA
+    lbu s8, HCOMP_SUB_ALPHA_DESC
+    beqz s8, hcomp_rdp_alpha_source_ready
+    nop
+    lw s3, HCOMP_BAND_BASES
+hcomp_rdp_alpha_source_ready:
+    li t0, 0x0800
+    mtc2 t0, $v04, 0
+#endif
     lw s5, HCOMP_BAND_ROWS
 hcomp_rdp_mask_row:
     li a0, TILE_TABLE + 512
@@ -86,6 +95,14 @@ hcomp_rdp_mask_row:
     li t2, TILE_TABLE + 1024
 hcomp_rdp_presence_scan:
     lqv $v01, 0, 0, t1
+#if SODIUM64_SUB_ALPHA
+    beqz s8, hcomp_rdp_presence_tags_ready
+    nop
+    vand $v01, $v01, $v15, 8
+    vmudn $v01, $v01, $v04, 8
+    vaddc $v01, $v01, $v16, 9
+hcomp_rdp_presence_tags_ready:
+#endif
     veq $v02, $v01, $v16, 9
     cfc2 t0, $1
     andi t0, t0, 0xFF
@@ -105,6 +122,14 @@ hcomp_rdp_mask_needed:
 hcomp_rdp_mask_vector:
     lqv $v00, 0, 0, t1
     lqv $v01, 0, 512, t1
+#if SODIUM64_SUB_ALPHA
+    beqz s8, hcomp_rdp_mask_tags_ready
+    nop
+    vand $v01, $v01, $v15, 8
+    vmudn $v01, $v01, $v04, 8
+    vaddc $v01, $v01, $v16, 9
+hcomp_rdp_mask_tags_ready:
+#endif
     vand $v00, $v00, $v01, 0
     sqv $v00, 0, 0, t1
     addi t1, t1, 16

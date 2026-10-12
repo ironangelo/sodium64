@@ -49,6 +49,13 @@ hcomp_math_sources:
     lw s2, HCOMP_BAND_BASES + 4
     lw s3, HCOMP_BAND_BASES + 8
     lw s7, HCOMP_BAND_ROWS
+#if SODIUM64_SUB_ALPHA
+    lbu s8, HCOMP_SUB_ALPHA_DESC
+    lbu t0, HCOMP_EFFECTIVE_TS
+    sltu t0, zero, t0
+    sub t0, zero, t0
+    and s8, s8, t0
+#endif
 #if SODIUM64_HCOMP_WIDE_MATH
     // Uniform COLOR masks leave TILE_TABLE available after setup. Four
     // 256-byte streams fit exactly in 040..43F; VRAM_TABLE/OAM stay owned.
@@ -200,6 +207,10 @@ hcomp_batch:
     jal 0xA4001F40
 #if SODIUM64_HCOMP_WIDE_MATH
     move a2, t9
+#if SODIUM64_SUB_ALPHA
+    bnez s8, hcomp_optional_sub_done
+    nop
+#endif
     move a0, t4
 #else
     li a2, 63
@@ -257,6 +268,14 @@ hcomp_vector_narrow:
 hcomp_uniform_math_mask:
     vor $v05, $v21, $v31, 0
 hcomp_math_mask_ready:
+#if SODIUM64_SUB_ALPHA
+    beqz s8, hcomp_alpha_inputs_ready
+    nop
+    vand $v03, $v01, $v15, 8
+    vmudn $v03, $v03, $v16, 10
+    vaddc $v03, $v03, $v16, 9
+hcomp_alpha_inputs_ready:
+#endif
     vand $v00, $v00, $v04, 0
     // Zero eligibility while retiring any incoming vector carry bits.
     vge $v07, $v31, $v31, 0

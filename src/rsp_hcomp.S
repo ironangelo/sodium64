@@ -151,7 +151,11 @@ hcomp_dispatch_policy:
     sw t0, RDP_FRAME + 4
 hcomp_compact_band:
     li a0, HCOMP_PROOF_RDP_CMDS
+#if SODIUM64_SUB_ALPHA
+    jal RSP_SUB_ALPHA_MODE_SEND
+#else
     jal 0xA4001F5C
+#endif
     li a1, HCOMP_PROOF_BG_DEPTH_CMDS
 hcomp_screen_masks:
     lbu s7, HCOMP_EFFECTIVE_TS
@@ -180,7 +184,11 @@ hcomp_raw_band:
     lbu s7, TM
 hcomp_fill_target:
     li a0, RDP_FRAME
+#if SODIUM64_SUB_ALPHA
+    jal RSP_SUB_ALPHA_MODE_SEND
+#else
     jal 0xA4001F5C
+#endif
     li a1, RDP_FRAME + 8
     // Direct Sub starts with fixed color, the exact absent-Sub operand.
     // The general and Main-only policies keep the ordinary Main backdrop.
@@ -213,7 +221,11 @@ hcomp_backdrop_color:
     andi t1, s0, 0xF800
     sll t1, t1, 16
     or t0, t0, t1
+#if SODIUM64_SUB_ALPHA
+    or t0, t0, a2
+#else
     ori t0, t0, 0xFF
+#endif
     sw t0, RDP_FILL + 20
     lw t0, FILLREC_MASK
     lw t1, RDP_FILL + 36
@@ -266,11 +278,19 @@ hcomp_copy_ts_done:
     li t1, HCOMP_PRESENCE_ORIGIN - HCOMP_WINNER_ORIGIN
     sub t0, t0, t1
     sw t0, HCOMP_PROOF_RDP_CMDS + 20
+#if SODIUM64_SUB_ALPHA
+    li t0, 1
+    sb t0, HCOMP_SCREEN
+    li a0, HCOMP_PROOF_RDP_CMDS + 8
+    jal RSP_SUB_ALPHA_MODE_SEND
+    addi a1, a0, 16
+#else
     li a0, HCOMP_PROOF_RDP_CMDS + 16
     jal 0xA4001F5C
     addi a1, a0, 8
     li t0, 1
     sb t0, HCOMP_SCREEN
+#endif
     lbu s7, TM // Also set Main enables when the Sub pass was skipped entirely.
     lw t0, FRAMEBUFFER(sp)
     addi t0, t0, 280 * -16

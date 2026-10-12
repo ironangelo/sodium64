@@ -30,6 +30,14 @@ hcomp_fast_admit:
     move t0, zero
 hcomp_fast_operand_ready:
     sb t0, HCOMP_EFFECTIVE_TS
+#if SODIUM64_SUB_ALPHA
+    lbu t0, BG_MODE
+    andi t0, t0, 7
+    sltiu t0, t0, 7
+    sll t0, t0, 1
+    lhu t0, HCOMP_SUB_ALPHA_MODES(t0)
+    sh t0, HCOMP_SUB_ALPHA_DESC
+#endif
     sw zero, HCOMP_BAND_RAW
     sw zero, HCOMP_OBJ_ADAPTIVE
     sw k1, HCOMP_FAST_END

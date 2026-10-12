@@ -1,3 +1,30 @@
+# 2026-10-12 - R36 measured on N64; individual residency rejected
+
+Experiment branch experiment/tmem-resident-r36 finala2f12b11089a189754fcfca403ccff58a8435fae; executable73619d858baa913f84e69ca46f2e6d5bcdd8ddcb.
+MEASURED/REJECTED: corrected production control rain32.2889675/s ->R36
+32.4165279/s (+0.395059percent), mean explicit CPU/RSP wait11.245405 ->
+11.134105ms. Full-checksum/trace/settings quiet20s each, same acknowledged
+rain12944 route. Four checkpoints268800 RGB pixels/8192 paused PCM bytes,
+zero differences; registers/heads/enabled equal. No full TV/DAC/game claim.
+Main atomic bank samples4892->4864, Math2064->2082 (residency, not exclusive
+cost). Four individual texture slots did not close a material budget gap;
+no exhaustive CI/adjacent cache campaign justified. Keep rejected branch;
+phase4/master retain coordinate8 and R32/R33 audio corrections. Final Make
+restriction admits bits3 only (safe load-descriptor restore); no runtime change.
+
+RESUME HERE: physical worker completed; USB menu return/coordinate8 reinstall
+and readback passed. Console in responsive menu; root sole COM3 owner. Next
+short discriminant: unchanged retained production plus existing FETCH_SIGNAL,
+same rain route and pixel/PCM control. Raw SIG0 marks sender entry/submission/
+fetch-retirement polling, not primitive execution. Use existing host guard;
+no new profiling framework. Fresh control from this batch is reusable with
+exact code/settings. Private resident-r36-physical.json/preflight/archive
+holds full artifacts. [Measured result](TMEM_RESIDENT_R36.md) and
+[curated evidence](evidence/tmem-resident-r36.json). Goal active. Prior
+continuity byte-identical; commercial data and hashes remain private.
+
+---
+
 # 2026-10-12 - R36 individual residency preflight, native experiment pending
 
 Source experiment/tmem-resident-r36: 73619d858baa913f84e69ca46f2e6d5bcdd8ddcb; master/retained phase4 unchanged.

@@ -1,7 +1,7 @@
 # R36 - Individual texture residency, 2026-10-12
 
-Status: IMPLEMENTED, quick local preflight passed; native A/B pending. No
-performance/fidelity acceptance or integration. Default flag0 preserves the
+Status: MEASURED / REJECTED as a material performance improvement. No
+full fidelity acceptance or integration. Default flag0 preserves the
 retained coordinate8 path and all earlier audio corrections.
 
 Rain has a material renderer deficit: prior R31 measured32.2849 completed
@@ -29,8 +29,21 @@ preserved. Existing asynchronous ownership288 command/24 texture/24 palette/
 72 independent-DMA cases pass, LoadSync contract/branch-delay/runtime arena
 checks pass (allocatedD15C8 < D2000). No cycle claim follows from these models.
 
-Next: fresh R33-corrected production control versus this candidate on actual
-N64, same acknowledged ALttP rain12944 route, skip0/APU21/audio4. One quiet
-20-second checksum-validated capture each, paired pixels and paused PCM ring;
-early rejection if no material cadence benefit. Expand only if promising.
+Native measurement: fresh R33-corrected production control versus executable
+73619d8 on actual N64, same acknowledged ALttP rain12944 route, precision20 /
+skip0/APU21/audio4. One quiet20-second full-checksum capture per version:
+32.2889675 ->32.4165279 completed boundaries/s (+0.395059percent), mean explicit
+CPU/RSP wait11.245405 ->11.134105ms. Four physical checkpoints268800 RGB pixels,
+zero differences;8192 paused PCM bytes plus registers/heads/enabled identical.
+Both launch the actual selected ROM. Menu return, coordinate8 reinstall and
+readback pass; firmware/saves/config preserved. This is no material gain and
+does not justify an exhaustive CI or adjacent cache-size campaign. Neither
+cadence nor a paused PCM ring establishes TV/DAC/full-game fidelity.
+
+The final build restriction requires atlas bits3 so every admitted setting
+executes tile1 restoration. That restriction does not change either measured
+runtime. The rejected experiment stays isolated; retained phase4/master do
+not include it. The next discriminant uses the existing FETCH_SIGNAL marker
+on the unchanged retained renderer to separate sender/fetch residency from
+other Main work. It marks submission and polling, not exclusive GPU execution.
 Commercial frames/PCM/SAV/replay/transport and their hashes stay private.

@@ -1,0 +1,76 @@
+{
+  "status": [
+    "MEASURED",
+    "REJECTED"
+  ],
+  "measured_source": "73619d858baa913f84e69ca46f2e6d5bcdd8ddcb",
+  "hardware": "actual N64 / SC64 / COM3",
+  "scope": "same acknowledged ALttP rain12944, quiet20s captures; completed boundaries, not presentation FPS",
+  "settings": {
+    "precision": 20,
+    "frameskip": 0,
+    "APU": 21,
+    "audio": 4
+  },
+  "reference": {
+    "completed_boundaries_per_second": 32.28896750558269,
+    "mean_CPU_RSP_wait_ms": 11.245405424148608,
+    "atomic_bank_samples": {
+      "halted": 82,
+      "unknown_or_bank_transition": 12,
+      "main_residency": 4892,
+      "mode7_draw_or_window_residency": 0,
+      "hcomp_phase_residency": 17,
+      "hcomp_math_residency": 2064,
+      "hcomp_fast_residency": 1,
+      "hcomp_setup_residency": 42
+    },
+    "full_checksum_validated": true
+  },
+  "candidate": {
+    "completed_boundaries_per_second": 32.41652786496401,
+    "mean_CPU_RSP_wait_ms": 11.134105251028807,
+    "atomic_bank_samples": {
+      "halted": 104,
+      "unknown_or_bank_transition": 13,
+      "main_residency": 4864,
+      "mode7_draw_or_window_residency": 0,
+      "hcomp_phase_residency": 10,
+      "hcomp_math_residency": 2082,
+      "hcomp_fast_residency": 1,
+      "hcomp_setup_residency": 36
+    },
+    "full_checksum_validated": true
+  },
+  "delta_percent": 0.3950586507892151,
+  "pixel_checks": [
+    {
+      "scene": "initial600",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "title900",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "room1980",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "rain12944",
+      "pixels": 67200,
+      "differences": 0
+    }
+  ],
+  "paused_PCM": {
+    "bytes": 8192,
+    "differences": 0,
+    "registers_heads_enabled_match": true
+  },
+  "retained_restoration": true,
+  "full_CI": "not run; no material physical benefit",
+  "next": "existing FETCH_SIGNAL on retained source, no new profiling framework"
+}

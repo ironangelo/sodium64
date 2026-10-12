@@ -535,8 +535,16 @@ jobs:
           libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
             WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
             FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
-            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 BRR_OBSERVER=1 DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 MIX_OBSERVER=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 BRR_OBSERVER=1 DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 MIX_OBSERVER=1 DSP_VOICE_BASE=1 \
             -j$(nproc) 2>&1 | tee audio-observer-build.log
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+            WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+            FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 \
+            DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 BRR_OBSERVER=1 \
+            DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 MIX_OBSERVER=1 \
+            BUILD_DIR=build_audio_voice_reference PROJ_NAME=sodium64-voice-reference \
+            -j$(nproc) 2>&1 | tee audio-voice-reference-build.log
       - name: Execute linked observer, caller, transport and arena gates
         run: |
           python3 scripts/test_audio_observer.py build/sodium64.elf --json-output audio-hook.json
@@ -546,6 +554,7 @@ jobs:
           python3 scripts/test_dsp_koff_release.py build/sodium64.elf --legacy-elf build_audio_reference/sodium64-audio-reference.elf --json-output audio-release.json
           python3 scripts/test_dsp_dry_mix.py build/sodium64.elf --json-output audio-dry-mix.json
           python3 scripts/test_mix_observer.py build/sodium64.elf --json-output audio-mix-hook.json
+          python3 scripts/test_dsp_voice_base.py build/sodium64.elf --reference-elf build_audio_voice_reference/sodium64-voice-reference.elf --json-output audio-voice-base.json
           python3 scripts/check_remote_boot.py --elf build/sodium64.elf --json-output audio-boot.json
           python3 scripts/test_native_diag_continuous.py build/sodium64.elf --json-output audio-recorder.json
           python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace --brr-observer --mix-observer
@@ -563,6 +572,8 @@ jobs:
             audio-*.json
             audio-observer-build.log
             audio-reference-build.log
+            audio-voice-reference-build.log
+            build_audio_voice_reference/sodium64-voice-reference.elf
             build_audio_reference/sodium64-audio-reference.elf
             build/sodium64.elf
             build/*.map

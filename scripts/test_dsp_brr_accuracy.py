@@ -46,7 +46,7 @@ def run(cpu,s,case,voice=0):
     buffer=s['cur_samples']+8*voice
     for offset,value in ((0,p1),(2,p2),(4,0),(6,0)):cpu.write(buffer+offset,value,2)
     cpu.pattern();cpu.regs[8]=0x200;cpu.regs[10]=0
-    cpu.regs[14]=voice;cpu.regs[24]=16*voice
+    cpu.regs[14]=voice;cpu.regs[24]=16*voice+(s['mode_funcs'] if 'dsp_voice_base' in s else 0)
     initial=cpu.regs.copy();hi,lo=cpu.hi,cpu.lo
     observed='dsp_brr_records' in s
     if observed:

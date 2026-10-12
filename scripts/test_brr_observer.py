@@ -17,7 +17,7 @@ def main():
                 cpu.write(s['cur_addrs']+16*voice,0x203,2)
                 cpu.write(s['apu_ram']+0x203,0xfb,1)
                 cpu.write(s['cur_samples']+8*voice,0x1234fedc)
-                cpu.pattern();cpu.regs[14]=voice;cpu.regs[24]=16*voice
+                cpu.pattern();cpu.regs[14]=voice;cpu.regs[24]=16*voice+(s['mode_funcs'] if 'dsp_voice_base' in s else 0)
                 cpu.regs[3]=(s['cur_samples']+8*voice)&0xffffffff
                 cpu.regs[16]=0x9abc
                 initial=cpu.regs.copy();hi,lo=cpu.hi,cpu.lo

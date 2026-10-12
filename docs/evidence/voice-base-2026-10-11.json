@@ -1,0 +1,126 @@
+{
+  "checkpoint": "R31",
+  "stage": "host preflight; native trial in progress",
+  "paired_execution": {
+    "passed": true,
+    "paired_actual_scheduler_samples": 2048,
+    "enabled_masks": 256,
+    "envelope_rate_calls": true,
+    "noise_steps": true,
+    "all_BRR_filters_and_ranges": true,
+    "block_loop_end_flags": 4,
+    "both_AI_half_submissions": true,
+    "PCM_active_state_equal": true,
+    "unused_cache_preserved": true,
+    "guest_cycle_debit": 672,
+    "actual_decoded_range_filter_pairs": 64,
+    "linked_field_offsets_checked": 9,
+    "negative_mutations_rejected": [
+      "dsp_voice_base",
+      "dsp_voice_envelope_index",
+      "dsp_voice_restore_base"
+    ],
+    "instructions_total_reference_optimized": [
+      2215794,
+      2095550
+    ],
+    "maximum_sample_instructions_reference_optimized": [
+      2377,
+      2259
+    ],
+    "timing_or_native_fidelity_claim": false,
+    "commercial_data": false,
+    "reference_elf_sha256": "4184c37dfdc7f35e7520da815be440bf45272e93297537c7f9c3ae0db1260295",
+    "optimized_elf_sha256": "e490994538ec8e4e7a89156e1867c283d4768e6a2d3ead7d03cbb679c0bc1280"
+  },
+  "dry_arithmetic": {
+    "passed": true,
+    "voice_cases": 16384,
+    "output_cases": 32768,
+    "actual_scheduler_samples": 128,
+    "negative_mutations_rejected": [
+      "envelope_scale",
+      "even_envelope_output",
+      "signed_channel_volume",
+      "voice_saturation",
+      "signed_master_volume",
+      "master_scale",
+      "mute"
+    ],
+    "actual_uncached_volume_writes": 4096,
+    "maximum_voice_instructions": 30,
+    "maximum_output_instructions": 21,
+    "maximum_scheduler_sample_instructions": 545,
+    "memory_and_unrelated_registers_preserved_by_arithmetic": true,
+    "reference": "Snes9x1.63 envelope/voice_output and zero-echo master contribution",
+    "compiled_primary_method_executed_here": false,
+    "full_DSP_or_DAC_fidelity_claim": false,
+    "commercial_data": false,
+    "elf_sha256": "e490994538ec8e4e7a89156e1867c283d4768e6a2d3ead7d03cbb679c0bc1280"
+  },
+  "pitch": {
+    "passed": true,
+    "compiled_write_cases": 131072,
+    "compiled_load_cases": 524288,
+    "uncached_reference_cases": 65536,
+    "compiled_apu_caller_cases": 16,
+    "invalid_write_cases": 128,
+    "regular_write_cases": 80,
+    "interleaved_cases": 2048,
+    "negative_mutations_rejected": 1,
+    "sample_pitch_load_instructions": 1,
+    "previous_pitch_load_instructions": 7,
+    "maximum_pitch_write_instructions": 26,
+    "only_owned_writes": true,
+    "previous_pitch_write_instructions": 15,
+    "unrelated_registers_preserved": true,
+    "raw_readback_preserved": true,
+    "cache_independent_of_sample_clock": true,
+    "commercial_data": false,
+    "physical_acceptance": false,
+    "elf_sha256": "e490994538ec8e4e7a89156e1867c283d4768e6a2d3ead7d03cbb679c0bc1280",
+    "reference_elf_sha256": "97cc6b3a7cf54c797c02bcbfd869b4d31a11adac81d3ff6ce9a08f0a965b996e"
+  },
+  "BRR": {
+    "passed": true,
+    "compiled_voice_cases": 57344,
+    "synthetic_blocks": 7168,
+    "legacy_different_blocks_by_filter": [
+      321,
+      1730,
+      1778,
+      1831
+    ],
+    "negative_mutations_rejected": [
+      "signed_filter_floor",
+      "invalid_range_mask",
+      "saturation",
+      "signed_15bit_storage"
+    ],
+    "maximum_decoder_instructions": 190,
+    "only_voice_samples_and_current_address_written": true,
+    "only_voice_state_and_optional_trace_owned_bytes_written": true,
+    "unrelated_gprs_hi_lo_cp0_preserved": true,
+    "range_filter_rounding_and_storage_match_reference": true,
+    "oracle_reference": "Snes9x1.63 SPC_DSP decode_brr",
+    "external_cpp_reference_executed_here": false,
+    "native_trace_fields_checked": false,
+    "physical_audio_fidelity_claim": false,
+    "commercial_data": false,
+    "elf_sha256": "e490994538ec8e4e7a89156e1867c283d4768e6a2d3ead7d03cbb679c0bc1280",
+    "legacy_elf_sha256": "97cc6b3a7cf54c797c02bcbfd869b4d31a11adac81d3ff6ce9a08f0a965b996e"
+  },
+  "disabled_bytes": {
+    "passed": true,
+    "all_allocated_bytes_identical": 855212,
+    "new_flag_default": 0
+  },
+  "boot_cases": 12,
+  "framebuffer_cases": 5,
+  "owners": 41,
+  "allocated_end": "D15C8",
+  "arena_start": "D2000",
+  "native_trial_complete": false,
+  "full_goal_qualified": false,
+  "commercial_data": false
+}

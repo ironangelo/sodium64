@@ -19,6 +19,15 @@
 
 #include "defines.h"
 
+#ifdef SODIUM64_DSP_VOICE_BASE
+// Sampling uses a pointer to the existing16-byte voice structure. Envelope
+// handlers retain their original index ABI, and a0 is restored after calls.
+// All fields below are in this same data section; no new storage is needed.
+#define VOICE_FIELD(symbol) %lo(symbol - mode_funcs)(t8)
+#else
+#define VOICE_FIELD(symbol) symbol(t8)
+#endif
+
 .globl dsp_sample
 .globl read_dspaddr
 .globl read_dspdata
@@ -191,6 +200,11 @@ not_zero:
     nop
 
 skip_noise:
+#ifdef SODIUM64_DSP_VOICE_BASE
+.globl dsp_voice_base
+dsp_voice_base:
+    la a0, mode_funcs
+#endif
     // Set initial values for generating a sample
     li t6, -1 // Voice count
     li t5, 0 // Left sample
@@ -227,21 +241,35 @@ next_voice:
 
     // Handle an envelope step if the timer matches
     sll t8, t6, 4
-    lhu t0, next_steps(t8)
+#ifdef SODIUM64_DSP_VOICE_BASE
+    addu t8, t8, a0
+#endif
+    lhu t0, VOICE_FIELD(next_steps)
     bne t0, gp, get_pitch
     nop
-    lw t0, mode_funcs(t8)
+    lw t0, VOICE_FIELD(mode_funcs)
+#ifdef SODIUM64_DSP_VOICE_BASE
+.globl dsp_voice_envelope_index
+dsp_voice_envelope_index:
+    sll t8, t6, 4
+#endif
     jalr t0
     nop
+#ifdef SODIUM64_DSP_VOICE_BASE
+.globl dsp_voice_restore_base
+dsp_voice_restore_base:
+    la a0, mode_funcs
+    addu t8, t8, a0
+#endif
 
 get_pitch:
     // Get the pitch scaler for the current voice
 #ifdef SODIUM64_DSP_PITCH_CACHE
 dsp_pitch_load_begin:
-    lhu t0, dsp_pitches(t8)
+    lhu t0, VOICE_FIELD(dsp_pitches)
 dsp_pitch_load_end:
 #else
-    lhu t0, dsp_regs + 0x2(t8) // VxPITCH(L/H)
+    lhu t0, VOICE_FIELD(dsp_regs + 0x2) // VxPITCH(L/H)
     sll t1, t0, 8
     srl t0, t0, 8
     or t0, t0, t1
@@ -249,9 +277,9 @@ dsp_pitch_load_end:
 #endif
 
     // Increase the voice's position counter by the scaler
-    lhu t9, counters(t8)
+    lhu t9, VOICE_FIELD(counters)
     addu t2, t9, t0
-    sh t2, counters(t8)
+    sh t2, VOICE_FIELD(counters)
 
     // Decode a new 4-sample BRR chunk if the counter overflows
     xor t9, t9, t2
@@ -287,11 +315,11 @@ dsp_dry_voice_begin:
     // BRR samples are half-scaled; noise keeps its unsigned15-bit LFSR.
     // Doubling with signed16 wrap recovers the full selected signal in both.
     sll t0, t0, 17
-    lhu t1, envelopes(t8)
+    lhu t1, VOICE_FIELD(envelopes)
     sra t0, t0, 16
     mult t0, t1
-    lb t2, dsp_regs + 0x0(t8)
-    lb t3, dsp_regs + 0x1(t8)
+    lb t2, VOICE_FIELD(dsp_regs + 0x0)
+    lb t3, VOICE_FIELD(dsp_regs + 0x1)
 #ifdef SODIUM64_MIX_OBSERVER
 .globl dsp_mix_input_begin, dsp_mix_input_end
 dsp_mix_input_begin:
@@ -475,9 +503,9 @@ dsp_audio_observe_end:
     sw t1, 0x0004(t0) // AI_LENGTH
 
 .align 5
-decode_chunk: // t2: counter, t6: voice, t8: offset
+decode_chunk: // t2: counter, t6: voice, t8: index or voice pointer
     // Stay in the same BRR block until the counter overflows
-    lhu t0, cur_addrs(t8)
+    lhu t0, VOICE_FIELD(cur_addrs)
     srl t3, t2, 16
     beqz t3, decode_samples
     nop
@@ -493,7 +521,7 @@ decode_chunk: // t2: counter, t6: voice, t8: offset
 
     // Get the address of the voice's sample table entry
     lbu t0, dsp_regs + 0x5D // DIR
-    lbu t3, dsp_regs + 0x4(t8) // VxSRCN
+    lbu t3, VOICE_FIELD(dsp_regs + 0x4) // VxSRCN
     sll t0, t0, 8
     sll t3, t3, 2
     add t0, t0, t3
@@ -512,7 +540,7 @@ decode_samples:
     add v1, v1, t3
 
     // Configure things based on the BRR block header
-    sh t0, cur_addrs(t8)
+    sh t0, VOICE_FIELD(cur_addrs)
     lbu t9, apu_ram(t0) // Header
     srl t1, t9, 4 // Shift
     andi t9, t9, 0xC // Filter
@@ -533,7 +561,7 @@ dsp_brr_trace_begin:
     sll t7, t7, 4
     la t3, dsp_brr_records
     addu t7, t7, t3
-    lhu t0, cur_addrs(t8)
+    lhu t0, VOICE_FIELD(cur_addrs)
     lbu t0, apu_ram(t0)
     sll t3, t6, 8
     or t0, t0, t3

@@ -119,6 +119,16 @@ class CPU:
                     product = (signed(r[rs], 32) * signed(r[rt], 32) if fn == 24
                                else (r[rs] & MASK32) * (r[rt] & MASK32)) & MASK64
                     self.lo, self.hi = sx32(product), sx32(product >> 32)
+                elif fn in (26, 27):
+                    # DSP timer scheduling uses ordinary32-bit division. Reject
+                    # exceptional operands rather than inventing their behavior.
+                    numerator = signed(r[rs],32) if fn == 26 else r[rs] & MASK32
+                    denominator = signed(r[rt],32) if fn == 26 else r[rt] & MASK32
+                    assert denominator and not (numerator == -2147483648 and denominator == -1)
+                    quotient = abs(numerator) // abs(denominator)
+                    if (numerator < 0) != (denominator < 0): quotient = -quotient
+                    self.lo = sx32(quotient)
+                    self.hi = sx32(numerator - quotient * denominator)
                 elif fn in (32, 33): r[rd] = sx32(r[rs] + r[rt])
                 elif fn in (34, 35): r[rd] = sx32(r[rs] - r[rt])
                 elif fn == 36: r[rd] = r[rs] & r[rt]

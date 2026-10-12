@@ -42,7 +42,7 @@ def main():
         put('dsp_regs',left,1,16*number);put('dsp_regs',right,1,16*number+1)
         put('dsp_pointer',0,2)
         cpu.pattern();cpu.regs[8]=half&0xffffffffffffffff
-        cpu.regs[24]=16*number;cpu.regs[14]=number
+        cpu.regs[24]=16*number+(symbols['mode_funcs'] if 'dsp_voice_base' in symbols else 0);cpu.regs[14]=number
         cpu.regs[13]=accum[0]&0xffffffffffffffff;cpu.regs[12]=accum[1]&0xffffffffffffffff
         before=cpu.regs.copy();cpu.memory_writes.clear();cpu.cp_writes.clear();steps=cpu.steps
         cpu.execute(symbols['dsp_dry_voice_begin'],stop=symbols['dsp_dry_voice_end'])

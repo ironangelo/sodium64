@@ -84,12 +84,12 @@ def main():
         for raw in range(65536):
             expected=raw&0x3fff
             put(memory,s['dsp_pitches']+16*voice,expected,2)
-            r=registers();r[24]=16*voice;initial=r.copy();memory.writes.clear()
+            r=registers();r[24]=16*voice+(s['mode_funcs'] if 'dsp_voice_base' in s else 0);initial=r.copy();memory.writes.clear()
             steps=execute(memory,s['dsp_pitch_load_begin'],r,{},
                           stop=s['dsp_pitch_load_end'])
             assert r[8]==expected and not memory.writes
             assert all(r[i]==initial[i] for i in range(32) if i!=8)
-            assert steps==3
+            assert steps==(1 if 'dsp_voice_base' in s else 3)
             load_cases+=1
     # Invalid register addresses preserve raw registers and cache without a
     # write handler; read mirror behavior is unaffected.
@@ -163,7 +163,7 @@ def main():
                uncached_reference_cases=reference_cases,compiled_apu_caller_cases=caller_cases,
                invalid_write_cases=invalid_cases,regular_write_cases=regular_cases,
                interleaved_cases=interleaved,negative_mutations_rejected=1,
-               sample_pitch_load_instructions=3,previous_pitch_load_instructions=7,
+               sample_pitch_load_instructions=1 if 'dsp_voice_base' in s else 3,previous_pitch_load_instructions=7,
                maximum_pitch_write_instructions=maximum,only_owned_writes=True,
                previous_pitch_write_instructions=previous_write_steps,
                unrelated_registers_preserved=True,raw_readback_preserved=True,

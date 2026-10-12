@@ -1,3 +1,34 @@
+# 2026-10-12 - R38 BG spans and decoder relocation preflight
+
+Experimental source experiment/bg-spans-r384c3764a0c590396ced03b4ec8a3dfd8681666eef. IMPLEMENTED/local passed;
+not MEASURED/VALIDATED. Combine identical8x8 map entries within exact scissor/
+priority/palette/epoch;16x16 stays individual. Tile4 S mask3/noMirror, T mask6,
+original flips/atlas coordinates. Row opcode construction byte-identical; only
+final upper-word tile selector changes. RSP decoder moved intact into object
+bank's unused tail; Main restored/t9/RA/v1/emptyoffset12 preserved. Extra cold
+cache DMA must earn its cost. Default flags0/retained source/master unchanged.
+
+Local576 emitted decoder cases (288 independent outputs +288 stale carry
+comparisons),448 spans/13180 horizontal numeric pixels/1433 removed rectangles,
+two initializer queues/four mutations. Initializer follows byte-identical
+snapshot/semaphore prefix; all four RSP bank branch-delay gates PASS, existing
+source/command leases/LoadSync/boot12/TV5/arenaD15C8<D2000 PASS. CPU instructions
+byte-identical to corrected control. Fixture endian/VCO and source tile-mask/
+caller-v1/opcode issues fixed before hardware. First preflight9d3f25e had helper
+call in an empty-tile delay slot; guard caught it, corrected by moving it into
+the following NOP with frozen PCs. Never installed unsafe R38 on hardware.
+
+RESUME HERE: root alone owns COM3. Private spans-r38-native.py/preflight/archive
+has exact artifact/question and finally menu/coordinate8 restoration/readback.
+Run one short actual rain12944 A/B to fresh R36 control32.2889675/s (same flags
+except two architectural options). Four frames and paused PCM matched guards,
+quiet20s/checksum/settings. Reject without full CI if no material gain; expand
+cold/other scenes/full CI only if promising. Console last restored in menu.
+[Preflight](BG_SPANS_R38.md). Commercial payloads/hashes private; goal active.
+Prior continuity byte-identical below.
+
+---
+
 # 2026-10-12 - R37 rain sender residency measured; reduce primitives next
 
 Source retained phase4/usb-hardware-loopde30c75782843ef7c113177fa272f9cdd0310d5a; runtime1c665b2 with existing

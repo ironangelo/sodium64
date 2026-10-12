@@ -1,3 +1,27 @@
+# 2026-10-12 - R43 no-Sub dispatch repair preflight
+
+Source 4382ae80bdef0474827ce74f7ecf84c02e80edc4, experiment/adaptive-nospan-r43. IMPLEMENTED, not measured.
+Immutable1000B Main variant patches only bg_span_call163C to NOP, selected
+through semantic transition/source pair; Sub unchanged. Exclusive1008B/cache
+aligned boot copy,63 hit-writeback/invalidate lines/SYNC before RSP source
+publication; unreachable Mode6 padding preserves terminator. Existing576+448
++2/four guards,30 modes including Main reload/four unsafe faults,boot12/TV5/
+branch delays/41 owners/actual CPU/RSP backup sites pass; D1A88<D4000.
+Wrong guessed callPC1638 caught/corrected before loading; missing DMEM fixture
+seed corrected. No cache-alias simulation claim; physical test indispensable.
+
+R41 code d10b79f: Build38300923921/CGRAM38300930969 SUCCESS; original Ares
+failed SDL; workflow-only794b553 retry38304110691 SUCCESS with pinned fix,
+unchanged core. R43 is new runtime, not inherited full qualification.
+RESUME HERE: root sole COM3, console menu/coordinate8, no worker. Run private
+nospan43-story-native.py/plan/archive; expected recover56.149815 reference
+from R40 55.868406, three native frames/PCM/checksum then restore. Only if
+recovered run rain12944 against known14.298672percent. Full CI after value/
+regression proof. [Design](ADAPTIVE_NOSPAN_R43.md). Full goal open, private
+game data/hashes local, master/retained preserved, prior history unchanged.
+
+---
+
 # 2026-10-12 - R42 coverage feasibility measured; regression repair next
 
 Source 9c32bdd1cdb96a13e453191f203fcebd2ef88a9d; executableea6158b, coverage-tags-r42. Native1024 numeric

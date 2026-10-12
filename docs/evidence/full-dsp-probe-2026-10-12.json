@@ -1,0 +1,83 @@
+{
+  "flag_disabled_loaded_bytes_identical": 855212,
+  "checks": {
+    "runtime": "PASS",
+    "owners": "PASS",
+    "CPU_RSP_DMA": "PASS",
+    "core_hilo": "PASS",
+    "boot": "PASS",
+    "frame": "PASS",
+    "RSP_delay": "PASS"
+  },
+  "static_end": "0xd4be8",
+  "arena": "0xd6000",
+  "gap": "0x1418",
+  "ELF_sha256": "26a9264eed2cae89bccabca83d6cac39bf0d6af629bc5ce2176bbc413dca9ecd",
+  "empty_ROM_sha256": "2ebc4bb72220432bad775f1e089dad564244e9b1104fdd294c3d720bff07e89f",
+  "empty_ROM_bytes": 147456,
+  "unmodified_pinned_vendor_files": 6,
+  "host": {
+    "passed": true,
+    "synthetic_scenarios": [
+      {
+        "case": 0,
+        "frames": 2048,
+        "checksum": 10420156,
+        "nonzero": 4056
+      },
+      {
+        "case": 1,
+        "frames": 2048,
+        "checksum": 4185267178,
+        "nonzero": 4080
+      },
+      {
+        "case": 2,
+        "frames": 2048,
+        "checksum": 422544410,
+        "nonzero": 4096
+      }
+    ],
+    "unmodified_complete_core": true,
+    "memory_restoration_bytes": 65536,
+    "backup_readback_blocks": 128,
+    "restore_blocks": 128,
+    "backup_fault_positions": 16,
+    "restore_fault_positions": 2,
+    "backup_corruption_rejected": true,
+    "invalid_inputs": 5,
+    "native_performance_or_game_audio_claim": false,
+    "commercial_data": false
+  },
+  "parser": {
+    "passed": true,
+    "cases": 201,
+    "fuzz": 1000,
+    "production_parser": true,
+    "hardware_mocked": true,
+    "physical_acceptance": false,
+    "source_sha256": {
+      "src/remote_control.c": "eacbfbce9016d44dbf4d9db3830716b7ace41f318eb39ef67efa2f28e168c239",
+      "src/remote_control.S": "775c7fbcd48c78d19e679b26e075956f5c65278fd12fff6b00a6aecb16dd8751",
+      "src/remote_control.h": "dad6aed624a3fa61b5fbbe95756da47cd7ec6f46da9b1063be73c6ec4c5d6b3a",
+      "scripts/fixtures/remote_control_host.c": "2998977308c919b51b40de102a9fa76bbc48e8ac345173007f40f576adf55b16"
+    }
+  },
+  "linked_core": {
+    "passed": true,
+    "linked_reference_functions": 9,
+    "straight_line_product_writer_sites": 36,
+    "spacing_checked": true,
+    "ELF_sha256": "26a9264eed2cae89bccabca83d6cac39bf0d6af629bc5ce2176bbc413dca9ecd",
+    "complete_waveform_timing_or_gameplay_claim": false,
+    "commercial_data": false
+  },
+  "native_status": "NOT_YET_RUN",
+  "R33_exact_CI": {
+    "head": "5b0cb2f3905940fb0b00040688d32b271258cc48",
+    "Build": 38190497219,
+    "CGRAM": 38190500533,
+    "Ares": 38190500532,
+    "all_conclusions": "success"
+  }
+}

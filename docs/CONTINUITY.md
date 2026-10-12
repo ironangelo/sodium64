@@ -1,3 +1,27 @@
+# 2026-10-12 - R34 complete DSP cost probe preflight
+
+Source phase4/usb-hardware-loop: 4715b8055c2e5a1201acd22959368d57852cafce.
+Unmodified pinned snes_spc0.9 complete clocked DSP, optionalFULL_DSP_PROBE=1.
+Pause-only synthetic3*2048 stereo-frame probe backs up/readbacks/restores64KiB
+APU RAM through volatile cart USB scratch; no SD/AI/guest advancement. Restore
+fault denies resume/capture/further probes, retains menu escape. Host6144,
+16 backup faults/corruption/two restore faults/five invalid inputs; parser201
++1000 fuzz pass. Nine core functions/36 HILO writers; boot12/TV5/frame5 pass.
+CPU/RSP D6000, staticD4BE8 gap1418;41 owners/194ROM/24576event slots preserved,
+event/rawgap200. Six queue words/two embedded banks/four actualD6400 DMA agree;
+three stale/disagreement mutations fail. Flag0 all855212 bytes equal coordinate8.
+Compile/header, menu-ACK fixture and address-mask mistakes corrected before
+hardware use. Native cost/checksums/restoration still pending; no speed/audio
+acceptance. Old four-sample KON/cursor hypothesis remains unqualified; choose
+full implementation from measured cost rather than committing a partial phase
+repair. R33 exact Build38190497219/CGRAM38190500533/Ares38190500532 all PASS.
+[Probe contract and limits](FULL_DSP_PROBE_2026-10-12.md).
+[Curated preflight](evidence/full-dsp-probe-2026-10-12.json).
+Master preserved, PR21 draft, full matrix goal active. Commercial payloads and
+hashes private. Entire preceding continuity preserved byte for byte below.
+
+---
+
 # 2026-10-11 - R33 GAIN right accumulator physically verified and corrected
 
 Source phase4/usb-hardware-loop: 5b0cb2f3905940fb0b00040688d32b271258cc48.

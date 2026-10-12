@@ -49,3 +49,10 @@ texture-conversion path for both fetch cycles and records first RGB mismatch
 so a failed fixture can be diagnosed without accepting color loss. All probe
 results/artifacts preserved, resume rejection/restoration pass. No renderer
 change or native performance claim.
+
+RGB-fetch control49b9a5d: TF1_RGB adds no benefit; same RGB124 mismatches.
+First CI opaque black returnsF800, compatible with retained fixture palette.
+CLAMP/WRAP tags/transparent still0. Next discriminant isolates palette loading:
+use distinct immutable tile6 for TLUT plus explicit LoadSync/TileSync before
+texture tile7. This tests a suspected descriptor/source ownership fixture
+hazard. No stale-color result is accepted. Prior three receipts retained.

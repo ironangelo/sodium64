@@ -123,9 +123,11 @@ static int rdp_probe_coverage(const char *id,uint32_t fbp) {
         cmd[n++]=0x2800000000000000ull;
         if(ci) {
             cmd[n++]=0x3d10001f00384080ull;
-            cmd[n++]=0x3510010007000000ull;
+            cmd[n++]=0x3510010006000000ull; /* Separate immutable palette tile6. */
             cmd[n++]=0x2600000000000000ull;
-            cmd[n++]=0x300000000707c000ull; /* Load32 TLUT entries. */
+            cmd[n++]=0x300000000607c000ull; /* Load32 TLUT entries. */
+            cmd[n++]=0x2600000000000000ull;
+            cmd[n++]=0x2800000000000000ull;
             cmd[n++]=0x2700000000000000ull;
         }
         cmd[n++]=ci?0x3d48001f00384040ull:0x3d10001f00384000ull;

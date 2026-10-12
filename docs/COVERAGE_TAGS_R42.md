@@ -41,3 +41,11 @@ two actual LoadTile/render descriptors to CI8(size1) before repeating. This
 is an invalid fixture discriminant, not a renderer rejection. All first
 receipts/artifacts retained; no game/throughput claim. Ares failure is SDL
 KMSDRM source type error before Sodium64 execution, separate lab dependency.
+
+CI8-corrected22f1860 native probe: CLAMP/WRAP tag0/transparent0 differences,
+RGB124 differences remain; ZAP/SAVE tag124 fail. Presence encoding itself
+is now correct, but RGB must pass too. Next controlled test enables the RGB
+texture-conversion path for both fetch cycles and records first RGB mismatch
+so a failed fixture can be diagnosed without accepting color loss. All probe
+results/artifacts preserved, resume rejection/restoration pass. No renderer
+change or native performance claim.

@@ -99,7 +99,7 @@ static int rdp_probe_coverage(const char *id,uint32_t fbp) {
     volatile uint8_t *indices=(volatile uint8_t *)0xa0384040u;
     volatile uint16_t *palette=(volatile uint16_t *)0xa0384080u;
     const uint64_t combine=RDPQ_COMBINER1((0,0,0,TEX0),(TEX0,0,PRIM,0));
-    unsigned rgb[4]={0},tags[4]={0},transparent[4]={0},first[4]={0},submissions=0;
+    unsigned rgb[4]={0},tags[4]={0},transparent[4]={0},first[4]={0},first_rgb[4]={0},submissions=0;
     rdp_probe_dirty=1;
     for(unsigned x=0;x<32;x++) {
         unsigned value=x>1?((x<<11)|((31-x)<<6)|(((x*7)&31)<<1)|1):(x==1);
@@ -113,7 +113,7 @@ static int rdp_probe_coverage(const char *id,uint32_t fbp) {
         volatile uint64_t *cmd=(volatile uint64_t *)(uintptr_t)
             (0xa0385000u+(submissions++&1)*256);
         cmd[n++]=0x2700000000000000ull;
-        cmd[n++]=0x2f00000000001001ull|SOM_TF0_RGB|SOM_RGBDITHER_NONE|
+        cmd[n++]=0x2f00000000001001ull|SOM_TF0_RGB|SOM_TF1_RGB|SOM_RGBDITHER_NONE|
             SOM_ALPHADITHER_NONE|((uint64_t)dest<<8)|(ci?SOM_TLUT_RGBA16:0);
         cmd[n++]=0x3f10011700000000ull|fbp;
         cmd[n++]=0x2d000000004603c0ull;
@@ -143,7 +143,10 @@ static int rdp_probe_coverage(const char *id,uint32_t fbp) {
         for(unsigned a=0;a<32;a++) {
             unsigned actual=pixels[y*280+x+a];
             if(!a) {if(actual!=sentinel)transparent[dest]++;continue;}
-            if((actual&0xfffeu)!=(texture[a]&0xfffeu))rgb[dest]++;
+            if((actual&0xfffeu)!=(texture[a]&0xfffeu)) {
+                if(!rgb[dest])first_rgb[dest]=(a<<16)|actual;
+                rgb[dest]++;
+            }
             if((actual&1u)!=permitted) {if(!tags[dest])first[dest]=(ci<<24)|(old<<20)|(permitted<<16)|actual;tags[dest]++;}
         }
     }
@@ -157,6 +160,8 @@ static int rdp_probe_coverage(const char *id,uint32_t fbp) {
         field("_transparent_differences=",transparent[dest]);
         append(dest==0?" clamp":dest==1?" wrap":dest==2?" zap":" save");
         field("_first_tag=",first[dest]);
+        append(dest==0?" clamp":dest==1?" wrap":dest==2?" zap":" save");
+        field("_first_rgb=",first_rgb[dest]);
     }
     (void)finish();return 1;
 }

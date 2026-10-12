@@ -1,3 +1,25 @@
+# 2026-10-12 - R41 consistent AUDIO arena preflight
+
+Source e6c7e2ca5aaa51a4b6c7dbe16df2a466c351dca8, experiment/adaptive-bg-spans-r40. IMPLEMENTED/local pass;
+not MEASURED/VALIDATED. AUDIO-only trace CPU/RSP/linker now consistently D4000
+instead of GCC16-overflowed D2000. Preserve exact prior native artifacts.
+Actual six CPU words/two embedded banks/four1024B backup DMA addresses and
+three mismatch mutations pass.14 arena tests,576 decoder/448 spans/30 island
+cases and negative guards/1792 windows/boot12/TV5/lifetime/41 extents pass.
+Initial PATH fixture failure retained privately; corrected14/14. Bound/cap/
+194ROM slots preserved, normal profile unchanged; no performance claim.
+
+RESUME HERE: root sole COM3, console menu/no worker. Run private audio41-story-
+native.py/plan/archive next; three story frames/PCM/checksum/quiet20s and menu
+restore/readback. Compare prior corrected56.149815 and R40 55.868406, do not
+attribute storage relocation to coalescing. Only after physical regression
+passes dispatch full exact-source Build/CGRAM/Ares. Adaptive CI job added,
+keep old gates. Record runs before waiting, no new source push during CI.
+No merge yet; [design](AUDIO_ARENA_R41.md). Full goal/cadence/audio fidelity
+open; game data/hashes private; earlier history byte-identical below.
+
+---
+
 # 2026-10-12 - R40 preserves material native rain gain
 
 Source 6646ff8786d68b4dea4292b5075b2513dc11e946; runtime3972f16, branch experiment/adaptive-bg-spans-r40.

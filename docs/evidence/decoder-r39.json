@@ -1,0 +1,35 @@
+{
+  "status": "MEASURED / causal discriminant",
+  "source": "e72db4d",
+  "DECODE_BANK": 1,
+  "BG_SPANS": 0,
+  "story_reference_cadence": 56.149815074272475,
+  "decoder_only_cadence": 53.64117522768458,
+  "decoder_only_RSP_wait_ms": 3.8582794885164495,
+  "coalescing_plus_decoder_cadence": 53.98599029412346,
+  "pixels": [
+    {
+      "scene": "story1852",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "story3600",
+      "pixels": 67200,
+      "differences": 0
+    },
+    {
+      "scene": "story4800",
+      "pixels": 67200,
+      "differences": 0
+    }
+  ],
+  "paused_PCM": {
+    "bytes": 8192,
+    "differences": 0,
+    "heads_registers_enabled_match": true
+  },
+  "full_checksums_settings": true,
+  "coordinate8_restoration_pass": true,
+  "decision": "Decoder relocation reproduces story loss. Keep original decoder resident for semantic no-visible-Sub class; coalescer+worker only on visible-Sub class. No game identities, no integration."
+}

@@ -1,3 +1,25 @@
+# 2026-10-12 - R39 decoder-only control reproduces story regression
+
+Experimental source15f9e818babde0af97d80dd7cef776e3ade0826c, code unchangedR38. Native DECODE_BANK1/BG_SPANS0
+story53.641175/s/wait3.858279ms versus corrected56.149815/s; with spansR38
+53.985990/s. MEASURED: relocation costs dominate that regression. Three
+checkpoints201600 pixels/8192 PCM bytes/heads/regs/enabled identical, quiet20s
+checksum/settings; menu/coordinate8 restored. Decoder576 equivalence passed.
+Native process3357 completed; no live COM3 worker. Not VALIDATED/integrable.
+
+RESUME HERE: R40 repair must keep original resident decoder on no-visible-Sub
+bands and span/worker island on visible-Sub bands, with original jump tables
+matching each code island. Generic semantic class, no game policy. Small184B
+aligned IMEM regionAD0..B88 includes unchanged boundary delay words; switch
+only outside executing bank and only when class changes. Original immutable
+code image+source/mode pointer, preserve R38/R39 artifacts. Prove both modes,
+queued DMA/entry operands/ownership before short native story/rain A/B. No
+memory-layout change during the comparison. Separate CI GCC16 D2000 overflow
+must be safely fixed later; full goal open. [Discriminant](DECODER_R39.md).
+Prior continuity byte-identical, commercial data/hashes private.
+
+---
+
 # 2026-10-12 - R38 expanded native result: story regression open
 
 Experimental sourcee72db4defeeea3b42691b301b2630cd6fc8cb8b9, runtime4c3764a. MEASURED, NOT VALIDATED/integrable.

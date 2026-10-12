@@ -1,3 +1,27 @@
+# 2026-10-12 - R36 individual residency preflight, native experiment pending
+
+Source experiment/tmem-resident-r36: 73619d858baa913f84e69ca46f2e6d5bcdd8ddcb; master/retained phase4 unchanged.
+IMPLEMENTED four direct-mapped CI8 textures,64-byte individual loads, no
+neighbor overfetch. Generic regular BG only; cache/version admission and
+fresh-decode/full source fences retained. v19 tags reset each BG/decode;
+original mask5, palette and order; restore tile1 before other paths. Flag0
+retains coordinate8. Local772 draws/49408 numeric pixels/36 refreshes/four
+mirrors/three negative mutations;10 other banks/data/fixed PCs unchanged,
+asynchronous ownership/LoadSync/branch delays/arena/boot pass. Entire CPU
+text/data identical except embedded Main; control byte-identical to retained
+R33 runtime. Not MEASURED, not VALIDATED. No full CI before physical decision.
+
+RESUME HERE: root alone owns COM3; planned fresh corrected control then R36
+rain12944 replay, quiet20s validated capture each, paired image and PCM ring.
+Private run resident-r36-native.py/resident-r36-physical.json records exact
+ELFs/settings/current phase; bounded native failure means safe menu escape
+and coordinate8 install/readback. Stop expanding if no material speed gain.
+N64 last verified in menu; transport healthy. [Hypothesis/preflight](TMEM_RESIDENT_R36.md).
+Commercial frames/PCM/SAV/replay/transport and hashes private. Prior history
+byte-identical below; continuous goal open.
+
+---
+
 # 2026-10-12 - New goal: material native progress before expanded CI
 
 Source phase4/usb-hardware-loop: 1c665b2c797209e1ba0031713f43554c8f9fa0fc; runtime still238170a/retainedR33.

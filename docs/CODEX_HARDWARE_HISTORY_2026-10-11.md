@@ -351,6 +351,17 @@ Coordinate8 restored/readback/menu, scanner retained. NEC primary scheduling
 review identifies dry-master MFLO/SRA/MULT spacing; correction is next, not
 qualified by the scalar VM or current PCM checkpoints.
 
+## R32 - Dry-master hardware instruction contract
+
+[NEC-derived fix and gates](DSP_HILO_2026-10-11.md) reject the old actual
+MFLO/SRA/MULT ordering despite functional equivalence. Existing signed16
+casts move earlier; no extra instructions/state/guest-clock change. Six writers,
+dynamic delay-slot checks, arithmetic/paired tests and disabled855212 bytes pass.
+Observed native room:67200 pixels/8192 PCM bytes identical to R31; both stereo
+values match compiled primary arithmetic. Quiet full capture/USB return and
+coordinate8 restoration pass. No speed/DAC/all-scene qualification inferred.
+Exact de3d147 three workflows pass; full DSP and constant60 remain open.
+
 ## Publication and workflow boundary
 
 Code goes on a development branch; continuity keeps the newest dated entry at

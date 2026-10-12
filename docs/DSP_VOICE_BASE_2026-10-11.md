@@ -47,7 +47,7 @@ contains original synthetic counters and code identities only.
 
 ## R31 completed physical comparison
 
-Four268800 RGB pixels and three24576-byte PCM rings remain identical at the
+Four checkpoints,268800 RGB pixels total and three8192-byte PCM rings remain identical at the
 same acknowledged checkpoints. Native release/head/register/enabled checks and
 all full/checksummed/no-overflow/settings-matched traces pass. One quiet window
 per scene: title first30050.035870 ->51.863320 (+3.652 percent); room55.306802

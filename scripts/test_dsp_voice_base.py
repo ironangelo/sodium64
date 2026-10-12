@@ -21,6 +21,7 @@ def main():
     assert 'dsp_voice_base' in models[1][1]
     modes = ('attack_mode', 'decay_mode', 'sustain_mode', 'gain_mode', 'release_mode')
     optimized, symbols = models[1]
+    optimized.enforce_hilo_spacing=True
     fields = ('mode_funcs','next_steps','dsp_pitches','counters','envelopes','cur_addrs','dsp_regs')
     offsets = {symbols[name]-symbols['mode_funcs'] for name in fields}
     offsets.update(symbols['dsp_regs']+extra-symbols['mode_funcs'] for extra in (1,4))

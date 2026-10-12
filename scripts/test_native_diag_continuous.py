@@ -46,6 +46,7 @@ class CPU:
         self.before_instruction = {}
         self.allow_rcp_writes = False
         self.steps = 0
+        self.enforce_hilo_spacing = False
 
     def read(self, address, size=4):
         address &= 0x1FFFFFFF
@@ -79,6 +80,7 @@ class CPU:
     def execute(self, entry, stop=RETURN, max_steps=200000):
         pc = entry & MASK32
         pending = None
+        recent_instructions = []
         for step in range(max_steps):
             self.steps += 1
             if pc == stop:
@@ -94,6 +96,12 @@ class CPU:
                 assert pending is None, 'instruction injection in delay slot'
                 self.before_instruction.pop(pc)(self)
             word = self.read(pc)
+            if self.enforce_hilo_spacing:
+                writes_product = word>>26 == 0 and 24 <= word&63 <= 31
+                if writes_product:
+                    assert not any(w>>26 == 0 and w&63 in (16,18)
+                                   for _,w in recent_instructions), ('VR4300 HI/LO spacing',hex(pc),recent_instructions)
+                recent_instructions = (recent_instructions+[(pc,word)])[-2:]
             op, rs, rt, rd = word >> 26, word >> 21 & 31, word >> 16 & 31, word >> 11 & 31
             imm, shamt, fn = word & 65535, word >> 6 & 31, word & 63
             offset = signed(imm, 16)

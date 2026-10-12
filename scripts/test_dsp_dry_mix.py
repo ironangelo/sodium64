@@ -34,6 +34,7 @@ def main():
     parser.add_argument('--json-output',type=Path)
     args=parser.parse_args()
     memory,symbols=load_elf(args.elf);cpu=CPU(memory)
+    cpu.enforce_hilo_spacing=True
     assert 'dsp_dry_voice_begin' in symbols and 'dsp_dry_output_begin' in symbols
     def put(name,value,size=4,offset=0):cpu.write(symbols[name]+offset,value,size)
     def result():return (signed(cpu.regs[13],32),signed(cpu.regs[12],32))

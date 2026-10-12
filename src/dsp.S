@@ -403,12 +403,14 @@ dsp_dry_output_begin:
     lbu t2, dsp_regs + 0x6C
     mflo t5
     sra t5, t5, 7
+    // NEC requires two intervening instructions from MFLO to the next MULT.
+    // Move the existing left signed16 cast here; arithmetic/cost is unchanged.
+    sll t5, t5, 16
+    sra t5, t5, 16
     mult t4, t1
     mflo t4
     sra t4, t4, 7
     // Reference dry contributions cast to signed16 before adding echo.
-    sll t5, t5, 16
-    sra t5, t5, 16
     sll t4, t4, 16
     sra t4, t4, 16
     andi t2, t2, 0x40

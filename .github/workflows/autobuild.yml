@@ -553,6 +553,7 @@ jobs:
           python3 scripts/test_brr_observer.py build/sodium64.elf --json-output audio-brr-hook.json
           python3 scripts/test_dsp_koff_release.py build/sodium64.elf --legacy-elf build_audio_reference/sodium64-audio-reference.elf --json-output audio-release.json
           python3 scripts/test_dsp_dry_mix.py build/sodium64.elf --json-output audio-dry-mix.json
+          python3 scripts/check_dsp_hilo_spacing.py build/sodium64.elf --json-output audio-hilo-spacing.json
           python3 scripts/test_mix_observer.py build/sodium64.elf --json-output audio-mix-hook.json
           python3 scripts/test_dsp_voice_base.py build/sodium64.elf --reference-elf build_audio_voice_reference/sodium64-voice-reference.elf --json-output audio-voice-base.json
           python3 scripts/check_remote_boot.py --elf build/sodium64.elf --json-output audio-boot.json

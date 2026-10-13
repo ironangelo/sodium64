@@ -1,3 +1,21 @@
+# 2026-10-13 - R45 scalar ALttP controls exact; capture boundary metadata next
+
+Frozen d96796a rain4images/8192PCM exact, story3images/8192PCM exact; full
+checksum/settings/coordinate8/menu/readback PASS. Rain40.491967 vsR4440.540954
+(-0.120833percent), story55.942863 vs56.089884 (-0.262117percent). Small residuals
+open. Worker50752 terminal/noCOM3 worker. Default-off CPU text/data exactR44.
+
+RESUME HERE: existing capture ACK lacks absolute guest/render arm boundary;
+S64D ordinals are relative. Old DKC first240 are same paused-route/relative
+intervals, not identical absolute IDs;108.728percent measured under that scope.
+Add bounded accepted-boundary metadata to existing ACK, test parked ownership,
+freeze on/off controls and DKC comparison aligned by absolute IDs, thenMode7/
+relevantCI. No running profiler/new state format. All old archives/receipts
+retained; default0/master/R44/R43 preserved. Save states/full60/audio/corpus
+open. [R45](BACKDROP_ROWS_R45.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 direct scalar story exact; rain discriminator next
 
 Frozen d96796a story3images201600pixels/8192pausedPCM exact and full checksum/

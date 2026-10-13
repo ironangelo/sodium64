@@ -1,0 +1,19 @@
+{
+  "status": "MEASURED continuation reference; reconstruction comparison pending",
+  "runtime_source": "313642af247ff15ffdf34031c185bb1234825173",
+  "physical_console": true,
+  "old_route_image_PCM_controls": 14,
+  "differences": 0,
+  "new_checkpoints": [
+    4500,
+    4501,
+    4560,
+    5100
+  ],
+  "images_captured": 13,
+  "paused_PCM_buffers": 7,
+  "reference_only": true,
+  "menu_coordinate8_restore_readback": true,
+  "serializer": false,
+  "restore": false
+}

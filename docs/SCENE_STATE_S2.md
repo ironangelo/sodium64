@@ -71,3 +71,14 @@ restore, cross-build compatibility, native cadence or full DSP/DAC fidelity is
 qualified. Next expand to Mode7 and later scene states, then close the CPU/
 guest memory/mapper/input/renderer/JIT/host-clock ownership rules. Replay
 remains the control. First guard failure and artifacts remain preserved.
+
+## Mode7 continuation reference captured
+
+Frozen313642a flag0 completed the previously sampled F-Zero race route with
+all ten old images/four paused PCM controls and exact input ACKs matching.
+New ordinary checkpoints4500/4501/4560/5100 are captured; thirteen images and
+seven paused PCM buffers total. Worker52638 terminal, coordinate8/menu/readback
+passed. This is reference capture only; no reconstruction ran on this worker.
+[Mode7 reference](evidence/scene-state-s2-mode7-reference.json).
+Next S2runtime296aa4a follows the same route, parks/rebinds at4500, then compares
+every image/PCM/head/register/enabled checkpoint. No timing capture is run.

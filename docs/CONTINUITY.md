@@ -1,3 +1,37 @@
+# 2026-10-13 - R47 limited native gain reproduced; preserved isolated
+
+RESUME HERE: confirmation worker13174 terminal exit0 and coordinate8/menu/
+install/readback restored. No native controller live. Source849412ee911c27850a22af45866a4439e99e380b,
+experiment/dsp-brr-group-r47, DSP_BRR_GROUP default0, requires accurate1.
+First A/B+3.016215% title/+3.944171% room, all201600 image pixels/24576 paused
+implemented PCM bytes and state/input ACK controls exact. Reverse1->0 confirms
+title49.217445->50.720143 (+3.053181%);
+room55.362358->57.649398 (+4.131038%). Captures/checksum/settings/
+exact guest windows pass; first exact-source image/PCM gate reused. Retired
+boundary rates only; no presentation FPS/full fidelity/native60 claim.
+[Report](DSP_BRR_GROUP_R47.md). Numeric evidence/dsp-brr-group-r47-native.json.
+
+The single predeclared intermediate confirmation is complete. Keep the limited
+gain isolated; no further R47 fine-tuning or unchanged full CI. Representative
+rain/DKC and changed-DSP qualification remain open before promotion. R44/R45
+stay experimental, master7cc8fac unchanged. State prototype remains bounded
+same-build/same-boot; no expansion now. All earlier candidates preserved.
+
+Next bounded question: determine whether the clocked complete DSP core's
+compiler must reload state around external APURAM/output accesses because of
+alias assumptions. Probe memory owns disjoint core/RAM/output ranges. Inspect
+a compile-only non-alias variant first; if emitted work is unchanged, reject
+without another native run. Significant code-generation change requires exact
+host phase/output/RAM differential and strict native ABI/arena/boot checks before
+the existing bounded synthetic cost probe. This is not another unchanged C++
+drop-in trial or a gameplay replacement. Preserve the pinned behavior oracle.
+The room DSP residency40.38% and rejected full-core68.197/92.255/96.740ms for
+2048 frames motivate a larger complete-DSP reduction, not tiny mixer patches.
+Full DSP/DAC/SNES oracle/native60/corpus/integration remain OPEN.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R47 single native confirmation running
 
 RESUME HERE: yielded native exec session13174 is live; flag1 install/readback

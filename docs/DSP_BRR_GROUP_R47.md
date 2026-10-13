@@ -1,6 +1,6 @@
 # R47 - Four-sample BRR register recurrence
 
-MEASURED; intermediate native gain awaits one confirmation. `DSP_BRR_GROUP=1` defaults off
+MEASURED; limited native gain reproduced and retained isolated. `DSP_BRR_GROUP=1` defaults off
 and requires `DSP_BRR_ACCURATE=1`. No change is integrated into master.
 
 The complete native room profile contains 2889 DSP residency samples out of
@@ -80,3 +80,22 @@ image/PCM gate; do not repeat broad unchanged suites. Full capture and admission
 checks and final restoration remain mandatory. No further fine-tuning loop is
 authorized by this intermediate result alone. Wider scenes/changed-DSP CI and
 master promotion remain pending, as do full DSP/DAC/native60/corpus goals.
+
+
+## Single reversed-order confirmation
+
+Worker13174 terminal exit0, same frozen849412e artifacts in order1->0.
+Title920..1219:49.217445
+->50.720143/s (+3.053181%).
+Room2000..2599:55.362358
+->57.649398/s (+4.131038%).
+Capture integrity/configuration/exact guest windows and coordinate8/menu/
+install/readback restoration pass. The first exact-source image/PCM gate is
+reused; this confirmation adds timing evidence only, not new fidelity coverage.
+
+Both trials reproduce a limited2..5% benefit. Retain R47 isolated/default0
+without another fine-tuning campaign or unchanged broad CI. It is not a major
+solution to the full DSP/native60 requirement. Changed-DSP CI, representative
+rain/DKC/wider corpus, complete sound and promotion remain open. The ongoing
+goal now needs a larger DSP work/scheduling reduction backed by actual code
+and native evidence; the direct unmodified clocked C++ drop-in remains rejected.

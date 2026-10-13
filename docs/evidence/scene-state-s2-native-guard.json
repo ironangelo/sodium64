@@ -1,0 +1,18 @@
+{
+  "status": "LAB LIMITATION: conservative PC guard rejects native delay-slot stop",
+  "runtime_source": "7a5712453a00fa16eef150659bca5211ea11c9be",
+  "physical_console": true,
+  "guest_render_boundary": 600,
+  "normal600_pixels": 67200,
+  "normal600_pixel_differences": 0,
+  "paused_PCM_bytes": 8192,
+  "PCM_differences": 0,
+  "canonical_pause": true,
+  "SP_PC": 968,
+  "SP_status": 6145,
+  "RSP_probe_executed": false,
+  "SP_memory_mutated": false,
+  "continuation_result": "INCONCLUSIVE",
+  "menu_coordinate8_restore_readback": true,
+  "next": "Recognize the exact HALT/jump/delay-slot sequence and normalize restart to resident draw-frame entry."
+}

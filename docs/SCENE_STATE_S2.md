@@ -30,3 +30,18 @@ Failing continuation rejects reconstruction before serializer work. A passing
 title scene requires additional scenes/modes and owner closure before use.
 Full native cadence, complete audio, corpus and production integration remain
 open. Private images, PCM, ROM, state bytes and hashes remain local.
+
+## First native gate: conservative stop guard
+
+Runtime7a5712453a00fa16eef150659bca5211ea11c9be captured ordinary600 with
+67200 pixels/8192 PCM bytes exact, then canonical park600 succeeded. Native
+SP_PC=0x3C8/SP_STATUS=0x1801 identifies the delay-slot stop after the existing
+H-COMP HALT and resident draw-frame jump. The probe expected the jump at PC;
+its guard rejected before SP backup/mutation. Continuation is INCONCLUSIVE,
+not a reconstruction failure. Menu/coordinate8 restore/readback passed.
+[Guard evidence](evidence/scene-state-s2-native-guard.json).
+
+Next recognize the exact HALT/jump/delay-slot sequence and restart directly at
+the resident draw-frame entry after reconstruction. Merely copying a stopped
+PC does not capture a pending branch. Re-run the linked transaction guards
+and native1/60/600 continuation before accepting this canonicalization.

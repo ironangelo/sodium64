@@ -33,3 +33,18 @@ parks and verifies counters remain600. Compare normal601/660/1200 after exact
 step controls, full image/PCM/head/register/enabled, then menu/coordinate8
 restore/readback. Private payloads and their hashes remain local. Failures
 block serializer work until the continuation is understood; no broad CI yet.
+
+## Native continuation result
+
+MEASURED runtime `4ebdccd05e574e8cf1734ef20d8c8b05d59daaef`.
+Post-submit canonical park at guest/render600 completed natural SP/DP/AI
+retirement without advancing either counter. Normal600/601/660/1200 matched
+the immutable replay control:268800 pixels and32768 paused PCM bytes exact,
+including ring heads, DSP registers and enabled state. Menu/coordinate8
+installation and readback passed. No worker remains live.
+[Native evidence](evidence/scene-state-s1-native.json).
+
+This qualifies continuation of the parked machine only. Serialization,
+transactional restore, owner closure and cross-build rebinding remain open.
+Keep the existing replay as control. Full60/audio/corpus acceptance remains
+open; no broad CI or production integration is implied by this result.

@@ -1,5 +1,20 @@
 # R44 - Sub presence in coverage, work in progress
 
+## 2026-10-12 - qualification and publication mutation repair
+
+Workflow head98b7d6b, unchanged7a83d49 runtime source: Build38337117404 SUCCESS,
+including explicit R43/R44 compiled consumers, full-row, HALF, owner/window/
+lifetime and boot gates. CGRAM38337119623 and Ares38337121666 FAILED on the
+same host publication negative; Ares did not execute Sodium64. The old mutant
+replaced the first Main-source load, which R43 added for its no-span copy,
+instead of the later Main renderer publication. The actual source-binding
+proof already chooses the nearest load before the store and remains intact.
+The negative now requires a unique complete publication load/offset pair and
+asserts it changed. All6 positive/missing/late/wrong-source controls pass.
+No runtime, oracle predicate, ABI, counter or matrix was weakened. Retry only
+CGRAM/Ares at the test-only repair head, retaining the exact successful Build.
+Original failures remain failed; overall qualification still pending.
+
 ## 2026-10-12 - native no-Sub story control
 
 Same frozen7a83d49 runtime:56.089884 completions/s versus R43 56.044680 and

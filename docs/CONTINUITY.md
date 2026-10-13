@@ -1,3 +1,27 @@
+# 2026-10-12 - R44 Build passes; targeted publication-fixture retries live
+
+Frozen native runtime7a83d49: rain40.540954/story56.089884, seven frames/PCM/
+checksum/settings and menu/coordinate8 restore pass. Build38337117404 SUCCESS
+at workflow98b7d6b, including explicit R43/R44 variants and actual consumers.
+CGRAM38337119623/Ares38337121666 FAILED on an inert wrong-source negative:
+R43 added an earlier Main load for its immutable copy. Actual publication
+binding proof stayed intact; the mutant now targets its unique load/offset
+pair and must change it. Six controls PASS, no runtime/guard weakening.
+
+RESUME HERE: test/docs-only head02392af6675b4124ea2c792fb27bcbf5a3129864. CGRAM38337797903 and
+Ares38337800049 queued/live now; inspect these same run handles, do not repeat
+successful Build or relabel original failures. Runtime source7a83d49 is
+unchanged. Record final scope/CI receipts before any promotion; DKC/Mode7
+native controls remain useful. User proposed save states for faster routes:
+evaluate at this completed native batch, verify full state/renderer/audio/
+timing restoration before making them measurement authority. Extra controls
+are welcome when they answer a concrete gate; keep current goal/priority.
+Root sole COM3/menu/no worker. Master and R43 preserved. Full60/audio/corpus
+open; private game data/hashes local. [Detail](SUB_ALPHA_R44.md). Earlier
+history remains byte-identical below.
+
+---
+
 # 2026-10-12 - R44 rain value and story control preserved; qualification next
 
 Native runtime7a83d4982f20f7dd2fd44ab506d66a5a084f6db1: rain40.540954 (+10.153626percent vs R43);

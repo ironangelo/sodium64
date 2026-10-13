@@ -1,3 +1,23 @@
+# 2026-10-13 - R45 exact dense Main run producer locally qualified; native next
+
+Runtime c623d918e157bfb0d5a78581e990aaeae19b1eb6; immutable privateDate13 backdrop45-runs-plan/archive.
+Pre-HDMA sample phase retained; changed-color runs/final handoff materialize
+the exact dense array with aligned64-bit writes, both queues and all barriers.
+488sampler/102range/40frame/160epoch/2binding/40packet/240dispatch cases PASS;
+ten actual faults reject. All28 RSP extents exact313642a, default-off CPU text/
+data exactmetadataR44. D2E88<D4000/43owners/boot12TV5/backup bindings pass.
+
+RESUME HERE: privateDate13/backdrop45-runs-story-native.py, same declared1000
+endpoints1862..2861 against subalpha44-anchor-story-physical.json flag0, image/
+pausedPCM gate before quiet20s, finallycoordinate8/menu/readback. RootsoleCOM3/
+no worker before dispatch. Compare old dense55.910416 vsreference56.162905/s.
+If repaired value then DKC gain/Mode7 representative before changedCPU CI;
+unchanged RSP authority reused. Old archives/default0/master preserved.
+States/full60/audio/corpus open, no serializer. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 same-source aligned story loss observed; generic producer repair next
 
 Source313642a flag0/1 same ACKguest/render1853, exact declared1000 endpoints

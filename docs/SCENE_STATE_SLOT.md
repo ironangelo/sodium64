@@ -79,3 +79,11 @@ Stopped before restored1200. Six normal images403200 pixels and six implemented
 PCM rings49152 bytes match the frozen control, but complete continuation gate
 is not passed. Locate the dynamic difference; do not silently drop it from the
 gate. Private64KiB region fingerprints subdivide that existing owner only.
+
+Runtime96e4a9b worker28199 repeats the same continuation result; only regions1,
+2 and6 differ. They overlap Q1 events/raw shadows/consumed-section guard and
+framebuffer1, plus framebuffer3. JIT/ROM cache and later composition surfaces
+are unchanged by these region checks. The source of the exact bytes is still
+unknown. Worker terminal, coordinate8/menu/readback restored. The pause-only
+state-region ordinal0..50 exports a whitelisted64KiB slice (last40960 bytes)
+privately for diagnosis; it accepts no arbitrary address or state import.

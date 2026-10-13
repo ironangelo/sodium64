@@ -541,6 +541,13 @@ int main(void){
     expect("s64 12345678 state-load","OK state_loaded=1");
     check(remote_guest_frames==20&&remote_render_frames==20&&remote_buttons==0x8000&&remote_button_frames==7&&remote_paused);
     expect("s64 12345678 state-fingerprint","OK machine_fingerprint=1");
+    expect("s64 12345678 state-region 51","ERR invalid_scene_region");
+    expect("s64 12345678 state-region -1","ERR invalid_scene_region");
+    expect("s64 12345678 state-region 0","exported=private_scene_region region=0 bytes=65536");
+    check(types[0]==2&&sizes[0]==65536);
+    expect("s64 12345678 state-region 50","region=50 bytes=40960");
+    remote_scene_canonical=0;
+    expect("s64 12345678 state-region 1","ERR not_canonical");remote_scene_canonical=1;
     scene_context_result=2;
     expect("s64 12345678 state-rsp-roundtrip","ERR scene_context_restore_failed");
     expect("s64 12345678 state-save","ERR scene_rsp_context_needs_menu");

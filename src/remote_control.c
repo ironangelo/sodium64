@@ -891,7 +891,7 @@ static void status(const char *id) {
     append(",state-park,state-check");
 #endif
 #ifdef SODIUM64_SCENE_SLOT
-    append(",state-save,state-load,state-fingerprint");
+    append(",state-save,state-load,state-fingerprint,state-region");
 #endif
 #ifdef SODIUM64_SCENE_RSP_REBIND
     append(",state-rsp-rebind");
@@ -1019,6 +1019,24 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     if(scene_slot_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
        !eq(verb,"profile")&&!eq(verb,"state-check")&&!eq(verb,"menu")) {
         error(id,"scene_slot_needs_menu");return;
+    }
+    if(eq(verb,"state-region")) {
+        uint32_t region;
+        if(nt!=4||!decimal(tokens[3],&region,50)){error(id,"invalid_scene_region");return;}
+        if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+        if(!remote_paused){error(id,"not_paused");return;}
+        if(!remote_scene_canonical||remote_scene_error){error(id,"not_canonical");return;}
+        unsigned bytes=0xa0400000u-HCOMP_CGRAM_ARENA-(region<<16);if(bytes>65536)bytes=65536;
+#ifdef REMOTE_CONTROL_HOST
+        static const unsigned char synthetic_region[65536];
+        const void *source=synthetic_region;
+#else
+        const void *source=(const void *)(uintptr_t)(HCOMP_CGRAM_ARENA+(region<<16));
+#endif
+        if(!send_packet(2,source,bytes)){error(id,"scene_region_export_failed");return;}
+        prefix(id,1);append(" exported=private_scene_region");field(" region=",region);
+        field(" bytes=",bytes);field(" render_frame_id=",remote_render_frames);
+        append(" scope=canonical_whitelisted_renderer_region");(void)finish();return;
     }
     if(eq(verb,"state-save")||eq(verb,"state-load")||eq(verb,"state-fingerprint")) {
         if(nt!=3){error(id,"argument_count");return;}

@@ -78,3 +78,36 @@ or a native prediction: overlap, bus effects and changed scheduling can alter
 both terms. Reaching60 requires continued material CPU/APU/PPU/DMA and renderer
 work with sound/visual fidelity preserved. Save states support those decisions;
 they do not satisfy the active60Hz/50Hz/audio/corpus acceptance conditions.
+
+## Source owner pass after the R45 material checkpoint
+
+The current bridge is called from `menu.S:update_menu` after natural RSP HALT.
+In `ppu.S:draw_frame`, this precedes the handed frame's DMEM descriptors,
+event cursor, VRAM semaphore publication and next renderer submit. Therefore
+the ordinary paused framebuffer boundary still owns a queued, not-yet-submitted
+frame's historical sections, CGRAM events and OAM copies. Current final PPU
+registers alone cannot reconstruct that history. Either preserve those complete
+owners with explicit format semantics, or prove a canonical drain/continuation
+boundary before making them derived state. No new drain is implemented here.
+
+`cpu.S:cpu_init/cpu_execute` identifies s7 as the guest PC, s4 as guest status,
+s5/s3/a3 as PPU/APU/DSP relative cycle budgets and s8 as direct-page offset.
+The accumulator/X/Y/stack/data-bank fields are in CPU data. s6 is an immutable
+host opcode-table pointer, not guest state; the saved gp/return/EPC and PPU
+continuation must also be classified. This reinforces the explicit ownership
+requirement rather than accepting a whole MIPS context as a portable state.
+
+`apu.S` separates RAM and registers/PC/ports/timer deadlines/control/halt from
+the JIT lookup/tag/code owners in `apu_emitter.S`. `dsp.S` separates registers,
+noise/timer/ring position, voice counters/envelopes/BRR addresses/history from
+host handler pointers and cached pitch/volume fields. Restore needs current
+bindings and derived cache reconstruction with complete implemented synthesis
+history retained. Configuration such as sample setting4 must be bound to the
+state; existing paused PCM agreement still does not qualify complete DSP/audio.
+
+Decision remains positive for a bounded prototype after the active renderer
+regression gates. The first question is exact next1/60/600 guest progress,
+memory/image/PCM equivalence and safe failure, followed by cross-build ownership
+and comparable warmup. A same-build screenshot shortcut would not replace the
+required A/B replay. Full replay remains the control; no serializer/restore,
+new product UI or copied private state is qualified by this owner pass.

@@ -1,3 +1,21 @@
+# 2026-10-13 - Native Mode7 candidate running; save-state owner pass preserved
+
+Sole COM3 worker33441 r45-mode7-fzero running from immutable source313642a
+metadata flag1 plan/archive, exact reference r44-mode7-fzero. Ten images/four
+PCM/input ACK gates then quiet20s; predeclared paired endpoint IDs4510..4629.
+Finallycoordinate8/menu/readback; do not open another serial session meanwhile.
+All source313642a Build/CGRAM/Ares CI SUCCESS; default0/master preserved.
+
+RESUME HERE: poll worker33441/report, compare declared120 endpoints and Mode7
+sample provenance. Repair generic helper admission if overhead is material;
+otherwise close broader gate and resolve ALttP residual alignment before
+promotion. Save-state source owner pass now documents queued frame history
+at current paused bridge and CPU/SPC/DSP pointer/derived owners; positive bounded
+prototype after active renderer gates, no serializer or restore yet. Full60/
+audio/corpus open. [R45](BACKDROP_ROWS_R45.md), [states](SAVE_STATE_FEASIBILITY_2026-10-12.md).
+Earlier history untouched below.
+
+---
 # 2026-10-13 - Mode7 race baseline captured; R45 exact120 endpoint comparison next
 
 Flag0 source313642a r44-mode7-fzero captures tenPNG/fourPCM, all inputACKs,

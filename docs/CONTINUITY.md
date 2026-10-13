@@ -1,3 +1,18 @@
+# 2026-10-13 - R46 native A/B running; sole COM3 controller
+
+Verified live exec session89070 and Python PID26924; immutable archived
+native_apu_ram_r46.py. Source14cab2b4d506be1f50e415b0822ffa1a0991c6c7.
+Flag0 install/readback passed; first title launch is in progress.
+RESUME HERE poll89070 and the private apu-ram-r46-native report/process.
+Do not open competing COM3 or restart after an observation timeout.
+Same-source flags0/1, full image/PCM controls, title920..1219/room2000..2599,
+quiet captures and final coordinate8/menu/install/readback as detailed below.
+Native outcome still pending. All source/artifacts and helper are frozen.
+After terminal completion checkpoint the exact outcome before the next batch.
+State-tool gates remain independent; full native60/DSP/DAC/corpus open.
+
+---
+
 # 2026-10-13 - R46 inline SPC700 RAM reads implemented; native A/B next
 
 Progress: main-performance code batch 14cab2b4d506be1f50e415b0822ffa1a0991c6c7, pushed on

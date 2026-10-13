@@ -1,3 +1,26 @@
+# 2026-10-13 - R52 native complete-DSP BRR outcome preserved
+
+RESUME HERE: worker89966 terminal exit0, all controls/recovery passed; no
+native controller live. Runtime9f00e9bf3861a0dddd65e752245fa5f23fad7c88, experiment/full-dsp-brr-r52.
+REJECTED; material native performance gate failed. Native medians/three repeats:
+case0 56.128064->61.476181ms (-9.528419% time saving)
+case1 92.424981->107.983595ms (-16.833775% time saving)
+case2 95.529451->138.018496ms (-44.477431% time saving)
+All18 hostPCM checksums/nonzero/36864 synthetic frames match. Everytrial64KiB
+RAMbackup/readback/restore; both live67200pixels/8192PCM/head/regs/enabled/
+boundary unchanged, gueststep600->660 pass, coordinate8/menu/install/readback
+verified. [Report](FULL_DSP_BRR_R52.md); full numeric receipt. Predeclared8%
+both-active material gate and3%both rejection/2%regression guards kept intact.
+2048frames need64ms standalone before guestCPU/APU/rendering; no game60 claim.
+
+Next: No BRR micro-tuning or broad CI for this failed material gate. Preserve code/proofs isolated; inspect the remaining full-core scheduling cost for a larger generic reduction.
+No R50counter/R51sampler in these artifacts; fresh same-source scratch1/0vs1,
+R49signal1. Keep every earlier candidate/proof, R44/R45 unmerged, master and
+bounded state prototype unchanged. Full DSP/DAC/SNES/game fidelity/native60/
+corpus/integration remain OPEN. Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R52 complete-DSP BRR native A/B running
 
 RESUME HERE: yielded native exec89966 live, flag0 menu/install/readback passed.

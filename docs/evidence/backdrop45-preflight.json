@@ -1,0 +1,42 @@
+{
+  "source": "9e1194f9156d3e5c3f0a4d85c833a91cd298cd13",
+  "status": "IMPLEMENTED/local preflight",
+  "local_guards": {
+    "row_bounds": 488,
+    "epoch_barriers": 160,
+    "cpu_source_bindings": 2,
+    "rsp_cases": 40,
+    "colored_rows": 2304,
+    "pixels": 589824,
+    "negative_mutations_rejected": [
+      "short_restore",
+      "pending_latch",
+      "wrong_queue",
+      "main_alpha"
+    ],
+    "passed": true,
+    "native_fidelity_or_performance": false
+  },
+  "inherited_runtime": {
+    "passed": true,
+    "inherited_rsp_banks_byte_exact": 12,
+    "off_rsp_banks_byte_exact": 13,
+    "off_cpu_text_data_byte_exact": true,
+    "new_rsp_bank_bytes": 1000,
+    "new_owners": 2,
+    "full_typed_event_stream_preserved": true,
+    "physical_acceptance": false
+  },
+  "linked_static_end": "D1E88",
+  "arena_start": "D4000",
+  "simultaneous_owners": 43,
+  "boot_cases": 12,
+  "tv_capture_cases": 5,
+  "rsp_banks": 14,
+  "control_transfer_in_delay_slot": 0,
+  "inherited_cpu_queue_words": 6,
+  "inherited_backup_dma_sites": 4,
+  "inherited_backup_mutations_rejected": 3,
+  "flag_default": 0,
+  "native_value_or_fidelity_qualified": false
+}

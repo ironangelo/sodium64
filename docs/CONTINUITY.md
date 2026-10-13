@@ -1,3 +1,29 @@
+# 2026-10-13 - R45 local preflight complete; frozen DKC native test next
+
+experiment/backdrop-rows-r45 runtime9e1194f9156d3e5c3f0a4d85c833a91cd298cd13, IMPLEMENTED only.
+BACKDROP_ROWS1/SUB_ALPHA1, default0. Complete Main row colors and all typed
+CGRAM0 events retained; generic Mode0/1/fixed/unclipped/no-backdrop-math merge,
+other palette/brightness/OAM/geometry barriers preserved. Phase helper exact
+row primitives and TILE_TABLE backup/restore; no VRAM/OAM/ABI guard weakening.
+488 row bounds/160 epochs/2 CPU bindings/40 retired packets/589824 pixels/four
+real mutations PASS.14 fixed slots/delays,12boot+5TV,43 owners,staticD1E88<D4000
+and inherited6words/4D4400 sites+3mutants PASS.12 banks exactR44; flag0 all13
+banks and CPU text/data byte-exact. DSLL added to directed host fixture for
+the compiled64-bit exclusion, checked via actual field mutations. No full CI.
+
+RESUME HERE: private immutable backdrop45-plan/archive; native r45-dkc-route
+with exact R44 route/reports,10 image/four PCM gates before quiet20s. Compare
+predeclared first240 intervals separately from full wall-time trace, which
+may advance farther if faster. Root soleCOM3/no worker before dispatch;
+finallycoordinate8/menu restore/readback. If mismatched recover/characterize;
+if material value broaden ALttP/Mode7 before relevant CI/promotion. Initial
+scalar fallback adds helper loading overhead, so do not assume non-regression.
+R44 retained94b640d/native7a83d49, R43/master preserved. Save states bounded
+follow-up pending/no serializer. Full60/audio/corpus open. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - DKC section diagnosis complete; R45 bounded backdrop rows hypothesis
 
 R44 observer reproduces10 frames672000 pixels/four PCM32768 bytes exact.

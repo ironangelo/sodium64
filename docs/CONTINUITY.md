@@ -1,3 +1,26 @@
+# 2026-10-13 - R48 compile-only alias idea rejected; R49 signal work next
+
+RESUME HERE: R48 REJECTED without native trial. The run() non-alias qualifier
+produces all18 executable sections byte-exact, total9536/run3440 bytes. No
+tracked runtime/oracle changed and no COM3/CI was used. Private codegen source,
+objects and exact command logs frozen. [Report](DSP_ALIAS_R48.md).
+R47 source849412e/doc2baf1d7 stays isolated/default0 with its reproduced3..4%
+native benefit; master/R44/R45/state prototype preserved. Recovery/menu is
+verified and no native controller is live.
+
+Next R49 bounded complete-DSP hypothesis: omit pure Gaussian interpolation
+only when latched NON substitutes noise or env0 makes its result exactly zero.
+All other clocked voice/BRR/KON/PMON/envelope/echo/FIR state must still run in
+the original phase order. Keep the pinned oracle and default path untouched;
+use isolated opt-in probe variant, arbitrary-phase/full RAM/register/PCM/state
+differential before a bounded native synthetic cost comparison. Seek material
+complete-core value, retain the worst eight-voice/echo64ms budget gates. No
+gameplay replacement, universal claim or further R47 fine tuning follows.
+Full native60/DSP/DAC/SNES oracle/corpus/integration remain open.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R47 limited native gain reproduced; preserved isolated
 
 RESUME HERE: confirmation worker13174 terminal exit0 and coordinate8/menu/

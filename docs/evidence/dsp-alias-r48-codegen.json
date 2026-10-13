@@ -1,0 +1,21 @@
+{
+  "status": "REJECTED without native trial",
+  "declaration_only_compile_discriminator": true,
+  "executable_sections": 18,
+  "changed_executable_sections": 0,
+  "total_text_bytes": [
+    9536,
+    9536
+  ],
+  "run_text_bytes": [
+    3440,
+    3440
+  ],
+  "emitted_executable_bytes_exact": true,
+  "compiler": "installed mips64-elf-g++ -O2, same flags as the complete-DSP probe",
+  "tracked_runtime_changed": false,
+  "native_trial": false,
+  "broader_CI": false,
+  "untouched_reference_source": "third_party/snes_spc/SPC_DSP.cpp at 2baf1d7",
+  "timing_or_fidelity_claim": false
+}

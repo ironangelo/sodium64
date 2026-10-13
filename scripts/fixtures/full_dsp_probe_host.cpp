@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+#include "../../third_party/snes_spc/SPC_DSP.h"
+extern "C" { unsigned char native_diag_snapshot[32768] __attribute__((aligned(16))); }
+#endif
 
 static unsigned char ram[65536],original[65536],cart[65536],scratch[512];
 static unsigned transfers,fail_at,corrupt_at;
@@ -22,12 +26,18 @@ static void initialize() {
     for(unsigned i=0;i<65536;i++)ram[i]=(unsigned char)(i*57+(i>>8)*3+19);
     memcpy(original,ram,65536);memset(cart,0xcc,65536);
     transfers=fail_at=corrupt_at=0;ticks=0;
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    memset(native_diag_snapshot,0x5a,sizeof(native_diag_snapshot));
+#endif
 }
 int main() {
     full_dsp_probe_result result[FULL_DSP_PROBE_CASES];
     initialize();
     check(full_dsp_probe_execute(ram,scratch,transfer,clock_read,result)==1);
     check(transfers==384&&!memcmp(original,ram,65536)&&!memcmp(cart,original,65536));
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    for(unsigned i=sizeof(SPC_DSP);i<sizeof(native_diag_snapshot);i++)check(native_diag_snapshot[i]==0x5a);
+#endif
     for(unsigned i=0;i<FULL_DSP_PROBE_CASES;i++) {
         check(result[i].frames==2048&&result[i].ticks==6400&&result[i].max_block_ticks==100);
         check(result[i].nonzero_samples>1000);

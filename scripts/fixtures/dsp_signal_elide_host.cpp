@@ -85,6 +85,63 @@ static void initialize(unsigned voices){
     memset(pcm0,0xcc,sizeof(pcm0));memset(pcm1,0xcc,sizeof(pcm1));
     ref.set_output(pcm0,32);opt.set_output(pcm1,32);
 }
+#ifdef SODIUM64_TEST_FULL_BRR_GROUP
+static unsigned brr_cases;
+static int floor_div(int n,int d){return n>=0?n/d:-((-n+d-1)/d);}
+static void brr_oracle(unsigned packed,unsigned shift,unsigned filter,int p1,int p2,int out[4]){
+    for(unsigned i=0;i<4;i++){
+        int n=(int)((packed>>(12-i*4))&15);if(n>=8)n-=16;
+        int s=shift<=12?floor_div(n*(1<<shift),2):(n<0?-2048:0);
+        int half2=floor_div(p2,2);
+        if(filter==1)s+=floor_div(p1,2)+floor_div(-p1,32);
+        if(filter==2)s+=p1-half2+floor_div(half2,16)+floor_div(-3*p1,64);
+        if(filter==3)s+=p1-half2+floor_div(-13*p1,128)+floor_div(3*half2,16);
+        if(s<-32768)s=-32768;if(s>32767)s=32767;
+        int stored=(s*2)&65535;if(stored>=32768)stored-=65536;
+        out[i]=stored;p2=p1;p1=stored;
+    }
+}
+static void brr_directed(){
+    initialize(255);
+    static const unsigned packed_values[]={0x0000,0x7777,0x8888,0xffff,0x17a8,0xf2b3};
+    static const int history[][2]={{0,0},{2,-2},{-2,2},{32766,-32768},{-32768,32766},
+                                  {1,-1},{-1,1},{32767,-32767},{-32767,32767}};
+    uint32_t saved_rng=rng;
+    for(unsigned voice=0;voice<8;voice++)for(unsigned shift=0;shift<16;shift++)
+    for(unsigned filter=0;filter<4;filter++)for(unsigned pos=0;pos<12;pos+=4)
+    for(unsigned h=0;h<9;h++)for(unsigned input=0;input<6;input++){
+        Reference_DSP::voice_t &a=ref.m.voices[voice];Optimized_DSP::voice_t &b=opt.m.voices[voice];
+        for(unsigned i=0;i<12;i++){
+            int sample=(int16_t)random_word();
+            a.buf[i]=a.buf[i+12]=b.buf[i]=b.buf[i+12]=sample;
+        }
+        unsigned prior1=(pos+11)%12,prior2=(pos+10)%12;
+        a.buf[prior1]=a.buf[prior1+12]=b.buf[prior1]=b.buf[prior1+12]=history[h][0];
+        a.buf[prior2]=a.buf[prior2+12]=b.buf[prior2]=b.buf[prior2+12]=history[h][1];
+        a.buf_pos=b.buf_pos=pos;a.interp_pos=b.interp_pos=0x4000|(random_word()&0x3fff);
+        a.brr_addr=b.brr_addr=h&1?0xfffa:0x3000;
+        a.brr_offset=b.brr_offset=1+2*(input&3);
+        unsigned packed=packed_values[input],header=(shift<<4)|(filter<<2)|(input&3);
+        ref.m.t_brr_header=opt.m.t_brr_header=(int)header;
+        ref.m.t_brr_byte=opt.m.t_brr_byte=(int)(packed>>8);
+        // Earlier V3b input is cached; current RAM bytes intentionally differ.
+        ram0[a.brr_addr]=ram1[a.brr_addr]=(unsigned char)(header^255);
+        ram0[(a.brr_addr+a.brr_offset)&65535]=ram1[(a.brr_addr+a.brr_offset)&65535]=(unsigned char)((packed>>8)^255);
+        ram0[(a.brr_addr+a.brr_offset+1)&65535]=ram1[(a.brr_addr+a.brr_offset+1)&65535]=(unsigned char)packed;
+        ref.m.t_brr_next_addr=opt.m.t_brr_next_addr=0x3a00;
+        ref.m.t_pitch=opt.m.t_pitch=(int)(random_word()&0x7fff);
+        ref.m.t_output=opt.m.t_output=(int16_t)random_word();
+        ref.m.t_eon=opt.m.t_eon=255;
+        ref.m.t_main_out[0]=opt.m.t_main_out[0]=(int16_t)random_word();
+        ref.m.t_echo_out[0]=opt.m.t_echo_out[0]=(int16_t)random_word();
+        int expected[4];brr_oracle(packed,shift,filter,history[h][0],history[h][1],expected);
+        ref.voice_V4(&a);opt.voice_V4(&b);compare();
+        for(unsigned i=0;i<4;i++)check(a.buf[pos+i]==expected[i]&&a.buf[pos+i+12]==expected[i],"independent BRR arithmetic");
+        brr_cases++;
+    }
+    rng=saved_rng;
+}
+#endif
 int main(){
     initialize(255);
     for(unsigned voice=0;voice<8;voice++)for(unsigned e=0;e<3;e++)
@@ -108,6 +165,9 @@ int main(){
         ref.m.regs[0x6c]=opt.m.regs[0x6c]=fraction&8?0x80:0;
         ref.voice_V3c(&a);opt.voice_V3c(&b);compare();directed++;
     }
+#ifdef SODIUM64_TEST_FULL_BRR_GROUP
+    brr_directed();
+#endif
     const unsigned masks[]={0,1,0x55,0xff};
     for(unsigned scenario=0;scenario<4;scenario++){
         initialize(masks[scenario]);
@@ -130,4 +190,7 @@ int main(){
         }
     }
     printf("DSP_SIGNAL_ELIDE PASS directed=%u slices=%u frames=%u state_checks=%u\n",directed,slices,frames,checks);
+#ifdef SODIUM64_TEST_FULL_BRR_GROUP
+    printf("FULL_BRR_GROUP PASS cases=%u\n",brr_cases);
+#endif
 }

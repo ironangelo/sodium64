@@ -6,7 +6,15 @@
 #include "../third_party/snes_spc/SPC_DSP.h"
 #include <string.h>
 
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+#include <new>
+extern "C" unsigned char native_diag_snapshot[32768];
+typedef char scratch_core_fits_snapshot[(sizeof(SPC_DSP)<=32768)?1:-1];
+static SPC_DSP *scratch_reference_dsp;
+#define reference_dsp (*scratch_reference_dsp)
+#else
 static SPC_DSP reference_dsp;
+#endif
 
 static void workload(unsigned char *ram, unsigned scenario) {
     memset(ram,0,65536);
@@ -87,8 +95,16 @@ uint32_t full_dsp_probe_execute(unsigned char *ram,unsigned char *scratch,
         if(!transfer(scratch,offset,1)||!transfer(scratch,offset,0))return 0;
         for(unsigned byte=0;byte<512;byte++)if(scratch[byte]!=ram[offset+byte])return 0;
     }
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    // Both A/B variants lease only unpublished, unsealed snapshot storage.
+    // The remote admission gate denies capture/snapshot owners before backup.
+    scratch_reference_dsp=::new ((void *)native_diag_snapshot) SPC_DSP();
+#endif
     for(unsigned scenario=0;scenario<FULL_DSP_PROBE_CASES;scenario++)
         run(ram,scenario,clock,&result[scenario]);
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    scratch_reference_dsp->~SPC_DSP();scratch_reference_dsp=0;
+#endif
     for(unsigned offset=0;offset<65536;offset+=512) {
         if(!transfer(scratch,offset,0))return 2;
         volatile unsigned char *restored=ram+offset;

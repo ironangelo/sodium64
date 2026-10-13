@@ -284,6 +284,37 @@ inline void SPC_DSP::run_envelope( voice_t* const v )
 
 
 //// BRR Decoding
+#ifdef SODIUM64_DSP_FULL_BRR_GROUP
+template<int filter>
+static inline void full_brr_group(int *pos,unsigned packed,int shift)
+{
+	typedef SPC_DSP::int16_t int16_t; // CLAMP16 uses the core's signed16 alias.
+	// Only the initial two full-scale history values are read. p2 follows
+	// the reference's half-scale convention; every mirrored store remains.
+	int p1=pos[SPC_DSP::brr_buf_size-1];
+	int p2=pos[SPC_DSP::brr_buf_size-2]>>1;
+	for(int i=0;i<4;i++,packed<<=4)
+	{
+		int s=((SPC_DSP::int16_t)packed>>12)*(1<<shift);
+		s>>=1;
+		if(filter==1)
+		{
+			s+=(p1>>1)+((-p1)>>5);
+		}
+		if(filter>=2)
+		{
+			s+=p1-p2;
+			if(filter==2)s+=(p2>>4)+((p1*-3)>>6);
+			else s+=((p1*-13)>>7)+((p2*3)>>4);
+		}
+		CLAMP16(s);
+		s=(SPC_DSP::int16_t)(s*2);
+		pos[i+SPC_DSP::brr_buf_size]=pos[i]=s;
+		p2=p1>>1;
+		p1=s;
+	}
+}
+#endif
 
 inline void SPC_DSP::decode_brr( voice_t* v )
 {
@@ -294,6 +325,19 @@ inline void SPC_DSP::decode_brr( voice_t* v )
 	
 	// Write to next four samples in circular buffer
 	int* pos = &v->buf [v->buf_pos];
+	#ifdef SODIUM64_DSP_FULL_BRR_GROUP
+	if((v->buf_pos+=4)>=brr_buf_size)v->buf_pos=0;
+	int shift=header>>4;
+	if(shift>=13){nybbles&=0x8888;shift=9;}
+	// Select once for the existing four-sample read/clock phase.
+	switch((header>>2)&3)
+	{
+		case 0:full_brr_group<0>(pos,nybbles,shift);break;
+		case 1:full_brr_group<1>(pos,nybbles,shift);break;
+		case 2:full_brr_group<2>(pos,nybbles,shift);break;
+		case 3:full_brr_group<3>(pos,nybbles,shift);break;
+	}
+	#else
 	int* end;
 	if ( (v->buf_pos += 4) >= brr_buf_size )
 		v->buf_pos = 0;
@@ -340,6 +384,7 @@ inline void SPC_DSP::decode_brr( voice_t* v )
 		s = (int16_t) (s * 2);
 		pos [brr_buf_size] = pos [0] = s; // second copy simplifies wrap-around
 	}
+	#endif
 }
 
 

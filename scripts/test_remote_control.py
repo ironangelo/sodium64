@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--mix-observer',action='store_true')
     parser.add_argument('--gain-probe',action='store_true')
     parser.add_argument('--full-dsp-probe',action='store_true')
+    parser.add_argument('--full-dsp-snapshot-core',action='store_true')
     parser.add_argument('--scene-state',action='store_true')
     parser.add_argument('--scene-rsp-rebind',action='store_true')
     parser.add_argument('--scene-rsp-context',action='store_true')
@@ -26,6 +27,7 @@ def main():
         if args.mix_observer:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_MIX_OBSERVER=1']
         if args.gain_probe:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_MIX_OBSERVER=1','-DSODIUM64_DSP_GAIN_PROBE=1']
         if args.full_dsp_probe:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_FULL_DSP_PROBE=1']
+        if args.full_dsp_snapshot_core:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_FULL_DSP_PROBE=1','-DSODIUM64_FULL_DSP_SNAPSHOT_CORE=1']
         if args.scene_state or args.scene_rsp_rebind or args.scene_rsp_context or args.scene_slot:
             (Path(directory)/'regdef.h').write_text('/* Host C ABI fixture; no MIPS register macros. */\n')
             cmd+=['-DSODIUM64_SCENE_STATE=1','-DSODIUM64_NATIVE_DIAG_TRACE=1','-I',directory]
@@ -43,6 +45,7 @@ def main():
         match=re.search(r'PASS cases=(\d+) fuzz=(\d+)',result.stdout);assert match
         proof=dict(passed=True,cases=int(match[1]),fuzz=int(match[2]),production_parser=True,
                    hardware_mocked=True,physical_acceptance=False,
+                   full_dsp_snapshot_core=args.full_dsp_snapshot_core,
                    source_sha256={n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in
                                   ('src/remote_control.c','src/remote_control.S','src/remote_control.h',
                                    'scripts/fixtures/remote_control_host.c')})

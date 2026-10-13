@@ -860,6 +860,9 @@ static void full_probe(const char *id,uint32_t framebuffer) {
     if(!remote_paused){error(id,"not_paused");return;}
     if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
     full_dsp_probe_result result[FULL_DSP_PROBE_CASES];
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    if(native_diag_snapshot_ready||native_diag_phase){error(id,"capture_snapshot_owned");return;}
+#endif
     uint32_t state;
 #ifdef REMOTE_CONTROL_HOST
     state=remote_host_full_dsp_probe(result);

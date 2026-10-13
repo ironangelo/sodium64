@@ -1,3 +1,16 @@
+# 2026-10-13 - Native slot binding rejected before SP; metadata probe next
+
+Runtime999db32 worker50104 terminal. NormalALttP600 image67200px/PCM8192B
+head/registers exact; state-fingerprint rejected104 ROMbinding beforeSP writes.
+No fullsave/load attempted; coordinate8/menu/readback restored. No liveCOM3.
+Metadata-only sourcefaa4b7b2625622e75aaaba50951756dcfc72fa9a pushed, privatearchive frozen. Worker
+work/native_scene_slot_metadata.py readsstate-check mapper fields afterpause,
+no state/SPoperation, finallycoordinate8/menu/readback. Inspectitsreport/
+process before newCOM3. FullrestoreRDP/TMEM/CPU/progress gate remainsopen.
+Earlierhistory untouched below.
+
+---
+
 # 2026-10-13 - Private full-machine slot implemented; native gate next
 
 Code 999db32badfd4027e6cad7dfe5bb2466f43c3c95, experiment/scene-state-s1, pushed; master unchanged.

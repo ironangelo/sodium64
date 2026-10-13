@@ -1,3 +1,24 @@
+# 2026-10-13 - S1 canonical scene park implemented; native continuation test next
+
+Active experiment/scene-state-s1 runtime4ebdccd05e574e8cf1734ef20d8c8b05d59daaef, immutable scene-s1-plan/archive.
+SCENE_STATE1/BACKDROP_ROWS0, normal submit then naturalSP/SPDMA/DP/AI retirement
+parks without guest/render counter increment. Full O64 context/queue preserved.
+Parser218/fuzz1000, linked16/two faults, continuous102/boot12TV5/43owners PASS.
+26 RSP extents exactmetadataR44; option0 CPU text/data exact. D2A98<D4000.
+No serializer/import/restore, no full60/fidelity qualification.
+
+RESUME HERE: native baselineR44 vs S1 exactpause600, normal image/PCM600 then
+S1 state-park/state-check counters remain600. Raw canonicalframe hasdifferent
+UI provenance; compare normal601/660/1200 after exactsteps (next1/60/600),
+PCM/heads/regs/enabled and menu/coordinate8/readback. RootsoleCOM3/no worker
+before dispatch. Use immutable plans, private outputs. Failures block next
+serializer phase until continuation understood; no broadCI now. R45 DKC
+gain/CI and unresolved small costs preserved on separate branch; failed run
+producer retained separately. Full60/audio/corpus/state format open.
+[S1](SCENE_STATE_S1.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - Main row run repair rejected natively; original dense R45 restored
 
 Runtimec623d91 run producer matches3PNG/8192PCM/heads/regs/enabled/checksum/

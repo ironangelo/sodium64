@@ -1,0 +1,113 @@
+{
+  "status": "MEASURED scoped complete-core profile",
+  "runtime_source": "a7f852601ee71fdeee91e30b767495e62a8af628",
+  "physical_console": true,
+  "original_synthetic_stereo_frames": 36864,
+  "all18_scenario_checksums_and_nonzero_counts_match_host": true,
+  "core_executable_sections_exact_to_R49": 18,
+  "profile_SIGNAL_PROFILE": 0,
+  "Count_interval_ticks": 65521,
+  "ring_capacity_per_case": 128,
+  "trials": 6,
+  "total_samples_retained": 1080,
+  "profiles": [
+    {
+      "case": 0,
+      "total_samples": 246,
+      "retained_samples": 246,
+      "any_ring_wrap": false,
+      "outside_functions": 0,
+      "function_samples": {
+        "SPC_DSP::set_output(short*, int)": 0,
+        "SPC_DSP::voice_V8_V5_V2(SPC_DSP::voice_t*)": 47,
+        "SPC_DSP::voice_V9_V6_V3(SPC_DSP::voice_t*)": 15,
+        "SPC_DSP::run(int)": 85,
+        "SPC_DSP::init(void*)": 0,
+        "SPC_DSP::load(unsigned char const*)": 0,
+        "SPC_DSP::voice_V4(SPC_DSP::voice_t*)": 57,
+        "SPC_DSP::voice_V3c(SPC_DSP::voice_t*)": 37,
+        "full_dsp_probe_execute": 5
+      },
+      "sample_fraction_by_function": {
+        "SPC_DSP::set_output(short*, int)": 0.0,
+        "SPC_DSP::voice_V8_V5_V2(SPC_DSP::voice_t*)": 0.1910569105691057,
+        "SPC_DSP::voice_V9_V6_V3(SPC_DSP::voice_t*)": 0.06097560975609756,
+        "SPC_DSP::run(int)": 0.34552845528455284,
+        "SPC_DSP::init(void*)": 0.0,
+        "SPC_DSP::load(unsigned char const*)": 0.0,
+        "SPC_DSP::voice_V4(SPC_DSP::voice_t*)": 0.23170731707317074,
+        "SPC_DSP::voice_V3c(SPC_DSP::voice_t*)": 0.15040650406504066,
+        "full_dsp_probe_execute": 0.02032520325203252
+      }
+    },
+    {
+      "case": 1,
+      "total_samples": 402,
+      "retained_samples": 402,
+      "any_ring_wrap": false,
+      "outside_functions": 0,
+      "function_samples": {
+        "SPC_DSP::set_output(short*, int)": 0,
+        "SPC_DSP::voice_V8_V5_V2(SPC_DSP::voice_t*)": 32,
+        "SPC_DSP::voice_V9_V6_V3(SPC_DSP::voice_t*)": 26,
+        "SPC_DSP::run(int)": 84,
+        "SPC_DSP::init(void*)": 0,
+        "SPC_DSP::load(unsigned char const*)": 0,
+        "SPC_DSP::voice_V4(SPC_DSP::voice_t*)": 143,
+        "SPC_DSP::voice_V3c(SPC_DSP::voice_t*)": 111,
+        "full_dsp_probe_execute": 6
+      },
+      "sample_fraction_by_function": {
+        "SPC_DSP::set_output(short*, int)": 0.0,
+        "SPC_DSP::voice_V8_V5_V2(SPC_DSP::voice_t*)": 0.07960199004975124,
+        "SPC_DSP::voice_V9_V6_V3(SPC_DSP::voice_t*)": 0.06467661691542288,
+        "SPC_DSP::run(int)": 0.208955223880597,
+        "SPC_DSP::init(void*)": 0.0,
+        "SPC_DSP::load(unsigned char const*)": 0.0,
+        "SPC_DSP::voice_V4(SPC_DSP::voice_t*)": 0.35572139303482586,
+        "SPC_DSP::voice_V3c(SPC_DSP::voice_t*)": 0.27611940298507465,
+        "full_dsp_probe_execute": 0.014925373134328358
+      }
+    },
+    {
+      "case": 2,
+      "total_samples": 432,
+      "retained_samples": 432,
+      "any_ring_wrap": false,
+      "outside_functions": 0,
+      "function_samples": {
+        "SPC_DSP::set_output(short*, int)": 0,
+        "SPC_DSP::voice_V8_V5_V2(SPC_DSP::voice_t*)": 43,
+        "SPC_DSP::voice_V9_V6_V3(SPC_DSP::voice_t*)": 21,
+        "SPC_DSP::run(int)": 104,
+        "SPC_DSP::init(void*)": 0,
+        "SPC_DSP::load(unsigned char const*)": 0,
+        "SPC_DSP::voice_V4(SPC_DSP::voice_t*)": 154,
+        "SPC_DSP::voice_V3c(SPC_DSP::voice_t*)": 108,
+        "full_dsp_probe_execute": 2
+      },
+      "sample_fraction_by_function": {
+        "SPC_DSP::set_output(short*, int)": 0.0,
+        "SPC_DSP::voice_V8_V5_V2(SPC_DSP::voice_t*)": 0.09953703703703703,
+        "SPC_DSP::voice_V9_V6_V3(SPC_DSP::voice_t*)": 0.04861111111111111,
+        "SPC_DSP::run(int)": 0.24074074074074073,
+        "SPC_DSP::init(void*)": 0.0,
+        "SPC_DSP::load(unsigned char const*)": 0.0,
+        "SPC_DSP::voice_V4(SPC_DSP::voice_t*)": 0.35648148148148145,
+        "SPC_DSP::voice_V3c(SPC_DSP::voice_t*)": 0.25,
+        "full_dsp_probe_execute": 0.004629629629629629
+      }
+    }
+  ],
+  "per_trial_APURAM_backup_readback_restore_bytes": 65536,
+  "unchanged_live_image_pixels": 67200,
+  "unchanged_live_PCM_bytes": 8192,
+  "heads_registers_enabled_and_boundary_unchanged": true,
+  "guest_step600_to660": true,
+  "coordinate8_menu_install_readback_restored": true,
+  "instrumented_timing_not_replacement_for_R49_cost_authority": true,
+  "statistical_residency_not_exclusive_instruction_cost": true,
+  "alternate_core_storage_and_masked_host_IRQs_limit_scope": true,
+  "gameplay_native60_DAC_SNES_corpus_and_integration_not_claimed": true,
+  "master_integration": false
+}

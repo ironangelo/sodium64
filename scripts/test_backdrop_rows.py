@@ -18,93 +18,10 @@ EXIT = 0xdead0000
 STOP = 0xf7c
 
 
-def cpu_run_rows(image, s, fault=None):
-    if fault:
-        image=image.copy()
-        def word(pc):
-            return int.from_bytes(bytes(image[(pc&0x1fffffff)+i] for i in range(4)),'big')
-        if fault=='run_wrong_phase':
-            pc=s['hcomp_main_run_load_color'];address=s['main_color']
-            assert word(pc)>>26==15 and word(pc+4)>>26==37
-            cpu_put(image,pc,0x3c010000|((address+0x8000)>>16&65535))
-            cpu_put(image,pc+4,0x94280000|(address&65535))
-        elif fault=='run_bulk_stride':
-            matches=[pc for pc in range(s['hcomp_main_flush_run'],s['hcomp_main_run_invalid'],4) if word(pc)==0x256b0008]
-            assert len(matches)==1;cpu_put(image,matches[0],0x256b0004)
-        elif fault=='run_missing_handoff':
-            matches=[pc for pc in range(s['hcomp_main_finish_rows'],s['hcomp_main_finish_rows_end'],4) if word(pc)>>26==3]
-            assert len(matches)==1;cpu_put(image,matches[0],0)
-        else:raise ValueError(fault)
-    bounds = flushes = frames = 0
-    rng = random.Random(4501)
-    for parity, queue in ((0,0xa03e7400),(4,0xa03e7600)):
-        lo=(queue-64)&0x1fffffff
-        def seed():
-            m=image.copy(); before=bytes([0xa5])*640
-            m.update((lo+i,b) for i,b in enumerate(before))
-            cpu_put(m,s['hcomp_row_main_ptr'],queue)
-            return m,before
-        for line in (0,*range(1,242),255,65535):
-            m,before=seed(); valid=1<=line<=240; offset=2*(line-1) if valid else 0
-            cpu_put(m,s['cur_line'],line,2);cpu_put(m,s['main_color'],0xb6ef,2)
-            cpu_put(m,s['sub_color'],0x2aaa,2)
-            cpu_put(m,s['hcomp_row_fixed_ptr'],0xa03e7000+parity*128)
-            cpu_put(m,s['hcomp_main_run_color'],0x1234,2)
-            cpu_put(m,s['hcomp_main_run_start'],offset,2);cpu_put(m,s['hcomp_main_run_end'],offset,2)
-            cpu_execute(m,s['hcomp_record_row_input'],[0]*32,{},stop=s['hcomp_row_fixed_recorded'])
-            assert bytes(m[lo+i] for i in range(640))==before,('deferred sample bounds',line)
-            color=int.from_bytes(bytes(m[(s['hcomp_main_run_color']&0x1fffffff)+i] for i in range(2)),'big')
-            assert color==(0xb6ef if valid else 0x1234),('sample phase/range',line)
-            bounds+=1
-        for first in (0,1,2,3,7,113,239,240):
-            for last in sorted({first,*[min(240,first+n) for n in (1,3,4,7,31)],240}):
-                m,before=seed();color=rng.randrange(65536)
-                cpu_put(m,s['hcomp_main_run_color'],color,2)
-                cpu_put(m,s['hcomp_main_run_start'],2*first,2);cpu_put(m,s['hcomp_main_run_end'],2*last,2)
-                regs=[sx(0x11110000+i) for i in range(32)];regs[0]=0;regs[31]=EXIT;original=regs.copy()
-                cpu_execute(m,s['hcomp_main_flush_run'],regs,{},stop=EXIT)
-                expected=bytearray(before)
-                expected[64+2*first:64+2*last]=color.to_bytes(2,'big')*(last-first)
-                assert bytes(m[lo+i] for i in range(640))==expected,('run extent/alignment',first,last)
-                assert all(regs[i]==original[i] for i in range(32) if i not in (1,8,9,10,11)), 'run borrowed guest/continuation GPR'
-                flushes+=1
-        for first,last in ((0,481),(1,2),(2,3),(4,2),(65535,480),(0,65535)):
-            m,before=seed();cpu_put(m,s['hcomp_main_run_start'],first,2);cpu_put(m,s['hcomp_main_run_end'],last,2)
-            cpu_execute(m,s['hcomp_main_flush_run'],[0]*32,{},stop=s['hcomp_main_run_invalid'])
-            assert bytes(m[lo+i] for i in range(640))==before,'bad range changed an owner'
-            flushes+=1
-        for height in (1,7,224,240):
-            for pattern in ('black','constant','gradient','runs','random'):
-                m,before=seed();base=rng.randrange(65536);expected=[]
-                cpu_put(m,s['main_color'],base,2)
-                regs=[0]*32;regs[8]=parity
-                cpu_execute(m,s['hcomp_main_begin_rows'],regs,{},stop=s['hcomp_main_begin_rows_end'])
-                cpu_put(m,s['hcomp_row_fixed_ptr'],0xa03e7000+parity*128)
-                for row in range(height):
-                    # This is the original lineN pre-HDMA source. Later writes
-                    # affect the next sample, never the row already observed.
-                    value=0 if pattern=='black' else base if pattern=='constant' else (row*911)&65535 if pattern=='gradient' else (row//7*127)&65535 if pattern=='runs' else rng.randrange(65536)
-                    cpu_put(m,s['cur_line'],row+1,2);cpu_put(m,s['main_color'],value,2)
-                    cpu_execute(m,s['hcomp_record_row_input'],[0]*32,{},stop=s['hcomp_row_fixed_recorded'])
-                    expected.append(value)
-                    cpu_put(m,s['main_color'],value^0xa55a,2) # following-row HDMA/CPU change
-                regs=[sx(0x22220000+i) for i in range(32)];regs[0]=0;regs[4]=height+1;regs[31]=EXIT;original=regs.copy()
-                cpu_execute(m,s['hcomp_main_finish_rows'],regs,{},stop=s['hcomp_main_finish_rows_end'])
-                want=bytearray(before);want[64:64+2*height]=b''.join(v.to_bytes(2,'big') for v in expected)
-                assert bytes(m[lo+i] for i in range(640))==want,('original pre-HDMA dense rows',parity,height,pattern)
-                assert all(regs[i]==original[i] for i in range(32) if i not in (1,8,9,10,11,31)), 'handoff continuation/queue GPR'
-                frames+=1
-    return bounds,flushes,frames
-
-
 def cpu_cases(build):
     image, s = load_elf(build/'sodium64-backdrop45.elf')
     rows = epochs = bindings = 0
-    if 'hcomp_main_flush_run' in s:
-        rows,flushes,frame_cases=cpu_run_rows(image,s)
-    else:
-        flushes=frame_cases=0
-    for parity, queue in (() if 'hcomp_main_flush_run' in s else ((0,0xa03e7400),(4,0xa03e7600))):
+    for parity, queue in ((0,0xa03e7400),(4,0xa03e7600)):
         for line in (0,*range(1,242),255,65535):
             m = image.copy()
             before = bytes([0xa5])*640
@@ -184,8 +101,7 @@ def cpu_cases(build):
         assert word(s['rsp_hcomp_backdrop_data_start']) == (s['rsp_hcomp_text_start']|3|initial)&0xffffffff
         assert word(s['rsp_hcomp_data_start']) == s['rsp_hcomp_backdrop_text_start']|3
         bindings += 1
-    return dict(row_bounds=rows,run_bounds_and_fail_closed=flushes,pre_HDMA_frame_sequences=frame_cases,
-                epoch_barriers=epochs,cpu_source_bindings=bindings)
+    return dict(row_bounds=rows,epoch_barriers=epochs,cpu_source_bindings=bindings)
 
 
 class RowVM(PacketVM):
@@ -363,12 +279,6 @@ def main():
     cases += [dict(cad=0xe2),dict(mode=7),dict(screen=0),dict(flags=128),dict(limit=8)]
     outcomes=[rsp_case(args.build,**c) for c in cases]
     rejected=[]
-    cpu_image,cpu_symbols=load_elf(args.build/'sodium64-backdrop45.elf')
-    if 'hcomp_main_flush_run' in cpu_symbols:
-        for fault in ('run_wrong_phase','run_bulk_stride','run_missing_handoff'):
-            try:cpu_run_rows(cpu_image,cpu_symbols,fault)
-            except AssertionError:rejected.append(fault)
-            else:raise AssertionError('escaped producer negative: '+fault)
     for fault in ('short_restore','pending_latch','wrong_queue','main_alpha','skip_scissor_restore'):
         try: rsp_case(args.build,fault=fault)
         except AssertionError: rejected.append(fault)

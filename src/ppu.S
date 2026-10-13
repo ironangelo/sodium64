@@ -194,9 +194,6 @@ hcomp_row_fixed_queues: .word HCOMP_ROW_FIXED_QUEUE1, HCOMP_ROW_FIXED_QUEUE2
 #if SODIUM64_BACKDROP_ROWS
 hcomp_row_main_ptr: .word HCOMP_ROW_MAIN_QUEUE1
 hcomp_row_main_queues: .word HCOMP_ROW_MAIN_QUEUE1, HCOMP_ROW_MAIN_QUEUE2
-hcomp_main_run_color: .hword 0
-hcomp_main_run_start: .hword 0 // byte offset of the unmaterialized run
-hcomp_main_run_end: .hword 0
 hcomp_main_rows_candidate: .byte 0
 .align 1
 #endif
@@ -264,16 +261,9 @@ hcomp_record_row_input:
     sh t0, 0(t2)
 #if SODIUM64_BACKDROP_ROWS
     lhu t0, main_color
-    lhu t2, hcomp_main_run_color
-    beq t0, t2, hcomp_row_fixed_recorded
-    nop
-    // Preserve the original pre-HDMA sample, but materialize only completed
-    // equal-color runs. The current row belongs to the new color.
-    sh t1, hcomp_main_run_end
-    jal hcomp_main_flush_run
-    nop
-    lhu t0, main_color
-    sh t0, hcomp_main_run_color
+    lw t2, hcomp_row_main_ptr
+    add t2, t2, t1
+    sh t0, 0(t2)
 #endif
 hcomp_row_fixed_recorded:
 
@@ -683,14 +673,8 @@ hcomp_cgram_begin_frame:
     lw t1, hcomp_row_fixed_queues(t0)
     sw t1, hcomp_row_fixed_ptr
 #if SODIUM64_BACKDROP_ROWS
-hcomp_main_begin_rows:
     lw t1, hcomp_row_main_queues(t0)
     sw t1, hcomp_row_main_ptr
-    lhu t1, main_color
-    sh t1, hcomp_main_run_color
-    sh zero, hcomp_main_run_start
-    sh zero, hcomp_main_run_end
-hcomp_main_begin_rows_end:
 #endif
     sh zero, hcomp_last_section_count
     lw t1, hcomp_cgram_base_queues(t0)
@@ -800,70 +784,6 @@ end_fill:
     jr ra
     nop
 
-#if SODIUM64_BACKDROP_ROWS
-.align 5
-hcomp_main_flush_run:
-    // Only t0..t3 and assembler AT are borrowed. Queue parity, guest registers, a0 and the
-    // rsp_frame continuation in t4/t5 must survive the final handoff flush.
-    lhu t2, hcomp_main_run_start
-    lhu t1, hcomp_main_run_end
-    sltiu t0, t1, 481
-    beqz t0, hcomp_main_run_invalid
-    sltu t0, t1, t2
-    bnez t0, hcomp_main_run_invalid
-    or t0, t1, t2
-    andi t0, t0, 1
-    bnez t0, hcomp_main_run_invalid
-    nop
-hcomp_main_run_load_color:
-    lhu t0, hcomp_main_run_color
-    lw t3, hcomp_row_main_ptr
-    addu t3, t3, t2
-hcomp_main_run_align:
-    lhu t1, hcomp_main_run_end
-    beq t2, t1, hcomp_main_run_done
-    andi t1, t2, 7
-    beqz t1, hcomp_main_run_bulk
-    nop
-    sh t0, 0(t3)
-    addiu t3, t3, 2
-    b hcomp_main_run_align
-    addiu t2, t2, 2
-hcomp_main_run_bulk:
-    // Pack four identical RGB5551 samples; stores are aligned and bounded.
-    dsll t1, t0, 16
-    or t0, t0, t1
-    dsll t1, t0, 16
-    dsll t1, t1, 16
-    or t0, t0, t1
-hcomp_main_run_bulk_loop:
-    lhu t1, hcomp_main_run_end
-    subu t1, t1, t2
-    sltiu t1, t1, 8
-    bnez t1, hcomp_main_run_tail
-    nop
-    sd t0, 0(t3)
-    addiu t3, t3, 8
-    b hcomp_main_run_bulk_loop
-    addiu t2, t2, 8
-hcomp_main_run_tail:
-    lhu t1, hcomp_main_run_end
-    beq t2, t1, hcomp_main_run_done
-    nop
-    sh t0, 0(t3)
-    addiu t3, t3, 2
-    b hcomp_main_run_tail
-    addiu t2, t2, 2
-hcomp_main_run_done:
-    sh t2, hcomp_main_run_start
-    jr ra
-    nop
-hcomp_main_run_invalid:
-    break // Fail closed before a bad range can overwrite another owner.
-    b hcomp_main_run_invalid
-    nop
-#endif
-
 .align 5
 rsp_frame:
 #ifdef SODIUM64_REMOTE
@@ -887,23 +807,6 @@ remote_guest_count_done:
     lbu t5, queue_id // Next
     lhu a0, cur_line
     move t4, ra
-#if SODIUM64_BACKDROP_ROWS
-hcomp_main_finish_rows:
-    // The handed frame ends at cur_line-1, exactly as make_section below.
-    // Invalid renderer geometry remains subject to its existing guard; no
-    // row input outside the 240-row allocation is ever materialized.
-    addiu t0, a0, -1
-    sltiu t1, t0, 241
-    bnez t1, hcomp_main_finish_bound
-    nop
-    li t0, 240
-hcomp_main_finish_bound:
-    sll t0, t0, 1
-    sh t0, hcomp_main_run_end
-    jal hcomp_main_flush_run
-    nop
-hcomp_main_finish_rows_end:
-#endif
     jal make_section
     xori t6, t5, 4 // Current
 

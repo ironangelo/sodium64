@@ -7,13 +7,14 @@ queue parity and the established vector constants live into the next frame.
 
 `state-rsp-rebind` requires a canonical parked frame, inactive recorder and
 healthy transport. It rejects another RSP stop, single-step, BREAK IRQ or a
-PC whose next instruction is not the normal resident draw-frame jump.
+PC outside the exact normal H-COMP HALT/jump/delay-slot sequence.
 It backs up and reads back all8192 SP memory bytes in exclusive volatile USB
 TX cart scratch, then rechecks the complete backup before any SP mutation.
 A320-byte diagnostic program clears all scalar/vector registers, flags and
 ACC, reloads the nine established vector constants and queue parity, then
 BREAKs without DMA, RDP, AI or guest work. CPU restores and reads back all
-IMEM/DMEM plus halted PC/status. No SD or ordinary save is accessed.
+IMEM/DMEM and status, then normalizes the pending jump to resident
+draw-frame entry3C. No queued/emulated work is omitted by that jump. No SD or ordinary save is accessed.
 
 An incomplete hardware recovery locks gameplay, steps, capture and further
 probes; status/state-check/menu remain available. Successful probe remains
@@ -45,3 +46,13 @@ Next recognize the exact HALT/jump/delay-slot sequence and restart directly at
 the resident draw-frame entry after reconstruction. Merely copying a stopped
 PC does not capture a pending branch. Re-run the linked transaction guards
 and native1/60/600 continuation before accepting this canonicalization.
+
+## Native pipeline admission repair
+
+The repaired transaction admits only PC3C4/3C8 with the exact linked HALT,
+jump and NOP words at3C0/3C4/3C8. Restart3C explicitly consumes the pending
+resident-entry jump. Production transaction190 cases pass, including both
+stop locations, three corrupted sequence words and invalid pipeline stops.
+Actual linked RSP32 cases/four mutations plus HALT/entry ownership pass.
+No renderer bank or ordinary frame work changes. The first native rejection
+and its immutable artifact remain preserved. Native retry is still pending.

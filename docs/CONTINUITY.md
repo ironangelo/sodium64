@@ -1,3 +1,23 @@
+# 2026-10-13 - S2 native pipeline repair frozen; reconstruction retry next
+
+IMPLEMENTED runtime 296aa4a3cbfef69d2b13ede9bae15c78030594e0, experiment/scene-state-s1.
+scene-s2-pipeline-plan/archive frozen. ExactHALT/jump/NOP admitsPC3C4/3C8;
+post-rebind restart3C explicitly consumes resident-entry pending jump. Native
+originalguard rejection preserved; no SP mutation occurred in that attempt.
+Productiontransaction190 cases, actualRSP32/fourmutations and linkedHALT/entry
+ownership PASS, staticend0xd3bd8<D4000/fullcapacity unchanged. RSPbodyunchanged.
+No serializer/import/restore. No liveCOM3 worker before dispatch.
+
+RESUME HERE: work/native_scene_s2_pipeline.py --candidate --name
+scene-s2-pipeline-title --control privateDate13/scene-s1-reference/report.json.
+Normal600, canonicalpark, explicitrebind, next1/60/600 normalframes+PCM/
+heads/regs/enabled. Finallycoordinate8/menu/readback. RootsoleCOM3. Failure
+rejectscontextreconstruction; pass needs additionalscenes/modes/ownerclosure.
+S1parkpassed; full60/nativecadence/fullaudio/corpus/masterintegration open.
+[S2](SCENE_STATE_S2.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - S2 native safe guard rejection; delay-slot restart repair next
 
 LAB LIMITATION runtime7a5712453a00fa16eef150659bca5211ea11c9be.

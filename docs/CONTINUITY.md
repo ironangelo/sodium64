@@ -1,3 +1,34 @@
+# 2026-10-13 - R54 native cache effects measured; retained cost improvement rejected
+
+RESUME HERE: worker94780 terminal exit0/recovery verified, no controller live.
+Runtime9a0092d50d6f1d2e1ad064432be6fbcb6f49e326, experiment/full-dsp-cache-r54. One-image
+mode0/1/2/4/7 round-robin3x, median one/eight/allfeatures core costs:
+mode0: 56.311339/95.361280/102.341824ms
+mode1: 56.788459/95.884117/102.876629ms
+mode2: 56.294080/94.767637/101.086720ms
+mode4: 56.233813/93.369451/96.448427ms
+mode7: 56.694976/93.379136/96.533632ms
+Gaussian placement causes a small cost repair within this image; core-only
+worsens, PCM-only limited, combined slower than Gaussian-only. Best active
+still above physicalR49 92.391893/95.496213ms and everyactive>64ms. Both-active
+8%/historical improvement gates fail. MEASURED causality for this image;
+REJECTED retained optimization, default0, no placement sweep/broadCI/promotion.
+No actual miss counts or universal R52 cause proved. [Report](FULL_DSP_CACHE_R54.md).
+All45 hostPCM checksums/nonzero/92160frames match; eachtrial64KiB RAMrestore.
+Live67200pixels/8192PCM/headsregsboundary unchanged, gueststep660 and recovery
+coordinate8/menu/install/readback pass. Numeric receipt published; private
+images/PCM/state/replies stay local. Cacheindices match exactleasedowners.
+
+Next: larger complete-DSP execution architecture, not another branch/layout
+tweak. Standalone active cases still need~31..33% less work before CPU/APU/
+rendering. Use preserved R49 authority/R51 residency to bound a CPU/RSP DSP
+design's clock/write ordering, DMA/handshake and renderer contention. No second
+emulator/per-game hack or artificial workload replacement. R44/R45/master/
+state prototype preserved; fullDSP/DAC/SNES/native60/corpus/integration OPEN.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R54 single-image native cache discriminator running
 
 RESUME HERE: yielded native exec94780 is LIVE; single-image menu/install/

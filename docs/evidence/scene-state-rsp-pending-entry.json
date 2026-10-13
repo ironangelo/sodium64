@@ -1,0 +1,20 @@
+{
+  "status": "MEASURED native early-store failure; IMPLEMENTED pending-entry hypothesis",
+  "failed_runtime_source": "cdc601d76c64b3c90623d18db4be50dac52068af",
+  "physical_failure_stage": 4,
+  "mismatch_word": 8,
+  "normal600_image_PCM_exact": true,
+  "canonical600": true,
+  "menu_coordinate8_restore_readback": true,
+  "hypothesis": "A retained target3C skips early stores after CPU PC0 write.",
+  "common_NOP_entry_bytes": 60,
+  "body_entry": 60,
+  "actual_binary_roundtrips": 637,
+  "ACC_MID_values": 65536,
+  "production_transaction_cases": 176,
+  "original_failure_reproduced_with_pending_3C": true,
+  "static_end": 867752,
+  "arena_start": 868352,
+  "native_repair_acceptance": false,
+  "full_machine_restore": false
+}

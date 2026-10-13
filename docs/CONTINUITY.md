@@ -1,3 +1,24 @@
+# 2026-10-13 - Native context early store failed; shared target3C repair frozen
+
+Nativecdc601d worker76955 terminal/coordinate8/menu/readback PASS. Normal600
+image/PCM exact+canonical600. Contextfailsstage4/mismatchword8 (t0=2 early
+store), beforecontextbackup/ACCrestore. Pendingentry3C model reproducesexact
+failureofunprefixedartifact. HYPOTHESIS retainedtarget3C afterCPU_PC0write.
+New runtime1b85b64b05ee47a4d5819749dfd3f953c01d55f5, scene-context-entry-plan/archive frozen:
+60NOPbytes/sharedbody3C handlesordinary/pendingentry.637actualroundtrips,
+65536MID/ninefaults/176productiontransaction incloldfailrepro PASS, end0xd3da8<D4000.
+No nativefix acceptance yet; no liveCOM3 beforedispatch.
+
+RESUME HERE: work/native_scene_context_entry.py --candidate --name
+scene-context-entry-title --control privateDate13/scene-s1-reference/report.json.
+Same normal600/canonical/full700context roundtrip/8KiBSPreadback, then
+601/660/1200 image/PCM ifpass. Inspectfailurestage/index ifnot. Finally
+coordinate8/menu/readback. RootsoleCOM3. Aftertitlepass runMode7 sameexisting
+reference4500/4501/4560/5100. No full machine slot until context works natively.
+Full60/audio/corpus/crossbuild/master remainopen. Earlierhistorybelow.
+
+---
+
 # 2026-10-13 - Native full context failed; stage diagnostic frozen
 
 Native74c66f2 title600 image/PCM exact, canonicalpark succeeds, context

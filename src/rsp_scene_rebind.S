@@ -12,6 +12,7 @@ scene_rsp_rebind:
     .irp reg,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
     or $\reg,zero,zero
     .endr
+#if !SODIUM64_SCENE_RSP_GPR_ONLY
     .irp vec,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
     .word 0x4a00002c | (\vec << 16) | (\vec << 11) | (\vec << 6)
     .endr
@@ -28,6 +29,7 @@ scene_rsp_rebind:
     lqv $v29,0,-0x30,zero
     lqv $v30,0,-0x20,zero
     lqv $v31,0,-0x10,zero
+#endif
     lw sp,0(zero)
     break
     b scene_rsp_rebind

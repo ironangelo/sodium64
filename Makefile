@@ -12,6 +12,12 @@ NATIVE_DIAG_TRACE ?= 0
 REMOTE ?= 0
 SCENE_STATE ?= 0
 SCENE_RSP_REBIND ?= 0
+SCENE_RSP_GPR_ONLY ?= 0
+ifeq ($(SCENE_RSP_GPR_ONLY),1)
+ifneq ($(SCENE_RSP_REBIND),1)
+$(error SCENE_RSP_GPR_ONLY requires SCENE_RSP_REBIND=1)
+endif
+endif
 ifeq ($(SCENE_RSP_REBIND),1)
 ifneq ($(SCENE_STATE),1)
 $(error SCENE_RSP_REBIND requires SCENE_STATE=1)
@@ -289,6 +295,9 @@ N64_MKSPRITE = $(N64_BINDIR)/mksprite
 
 N64_ASFLAGS = -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
 N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
+ifeq ($(SCENE_RSP_GPR_ONLY),1)
+N64_RSPASFLAGS += -DSODIUM64_SCENE_RSP_GPR_ONLY=1
+endif
 N64_ASFLAGS += $(N64_ASFLAGS_REMOTE)
 ifeq ($(SCENE_STATE),1)
 N64_ASFLAGS += -DSODIUM64_SCENE_STATE=1

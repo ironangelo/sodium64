@@ -1,0 +1,18 @@
+{
+  "status": "IMPLEMENTED GPR-only context isolation hypothesis",
+  "SCENE_RSP_GPR_ONLY": 1,
+  "actual_binary_cases": 32,
+  "instructions_until_BREAK": 33,
+  "mutations_rejected": 2,
+  "canonical_bridge_cases": 16,
+  "vector_flags_ACC_preserved": true,
+  "existing_RSP_extents_exact": 26,
+  "arena_end": 867128,
+  "arena_start": 868352,
+  "owners": 43,
+  "capacity": 24576,
+  "ROM_cache_slots": 194,
+  "native_acceptance": false,
+  "serializer": false,
+  "restore": false
+}

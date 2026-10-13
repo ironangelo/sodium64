@@ -10,12 +10,13 @@ from check_rsp_branch_delay_slots import read_text
 from test_hcomp_sub_presence import section
 from native_diag_report import elf_symbols
 
-def execute(code,data,queue,seed):
+def execute(code,data,queue,seed,gpr_only=False):
     rng=random.Random(seed)
     r=[0]+[rng.getrandbits(32) for _ in range(31)]
     v=[[rng.randrange(65536) for _ in range(8)] for _ in range(32)]
     acc=[rng.randrange(1,1<<48) for _ in range(8)]
     flags=[0xffff,0xffff,0xff]
+    original_vectors=[x.copy() for x in v];original_acc=acc.copy();original_flags=flags.copy()
     d=bytearray(data);struct.pack_into('>I',d,0,queue);before=bytes(d)
     for pc in range(0,len(code),4):
         w=struct.unpack_from('>I',code,pc)[0]
@@ -23,9 +24,12 @@ def execute(code,data,queue,seed):
         if op==0 and fn==37:r[rd]=r[rs]|r[rt]
         elif op==0 and fn==13:
             assert r==[0]*29+[queue,0,0],'scalar continuation context'
-            constants=[list(struct.unpack_from('>8H',d,0xf70+16*i)) for i in range(9)]
-            assert v==[[0]*8 for _ in range(23)]+constants,'vector continuation constants'
-            assert flags==[0,0,0] and acc==[0]*8,'flag/accumulator residue'
+            if gpr_only:
+                assert v==original_vectors and flags==original_flags and acc==original_acc,'vector/flag/ACC unexpectedly touched'
+            else:
+                constants=[list(struct.unpack_from('>8H',d,0xf70+16*i)) for i in range(9)]
+                assert v==[[0]*8 for _ in range(23)]+constants,'vector continuation constants'
+                assert flags==[0,0,0] and acc==[0]*8,'flag/accumulator residue'
             assert bytes(d)==before,'program mutated DMEM'
             return pc//4+1
         elif op==18 and rs==6:
@@ -53,6 +57,7 @@ def execute(code,data,queue,seed):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('build',type=Path);ap.add_argument('--output',type=Path)
+    ap.add_argument('--gpr-only',action='store_true')
     a=ap.parse_args();_,code=read_text(a.build/'src/rsp_scene_rebind.elf')
     assert len(code)<4096 and len(code)%4==0
     base,halt=read_text(a.build/'src/rsp_hcomp.elf')
@@ -61,19 +66,23 @@ def main():
     assert main_symbols['draw_frame']&4095==0x3c,'normal restart entry moved'
     data=section(a.build/'src/rsp_main.elf','.data');cases=0;steps=set()
     for queue in (0,4):
-        for seed in range(16):steps.add(execute(code,data,queue,seed));cases+=1
+        for seed in range(16):steps.add(execute(code,data,queue,seed,a.gpr_only));cases+=1
     mutations=[]
     words=list(struct.unpack('>'+str(len(code)//4)+'I',code))
-    for name,index in [('missing_queue',next(i for i,w in enumerate(words) if w>>26==35)),
-                       ('missing_constant',next(i for i,w in enumerate(words) if w>>26==50)),
-                       ('missing_flags',next(i for i,w in enumerate(words) if w>>26==18 and w>>21&31==6)),
-                       ('missing_accumulator',next(i for i,w in enumerate(words) if w>>26==18 and w&63==4))]:
+    faults=[('missing_queue',next(i for i,w in enumerate(words) if w>>26==35))]
+    if a.gpr_only:faults+=[('missing_gpr',4)]
+    else:faults+=[('missing_constant',next(i for i,w in enumerate(words) if w>>26==50)),
+                 ('missing_flags',next(i for i,w in enumerate(words) if w>>26==18 and w>>21&31==6)),
+                 ('missing_accumulator',next(i for i,w in enumerate(words) if w>>26==18 and w&63==4))]
+    for name,index in faults:
         changed=words.copy();changed[index]=0x00000825 # OR at,zero,zero; accepted harmless substitute
-        try:execute(struct.pack('>'+str(len(changed))+'I',*changed),data,4,9)
+        try:execute(struct.pack('>'+str(len(changed))+'I',*changed),data,4,9,a.gpr_only)
         except AssertionError:mutations.append(name)
         else:raise AssertionError('escaped mutation '+name)
     result=dict(passed=True,actual_binary_cases=cases,executed_instructions=list(steps),
-                mutations_rejected=mutations,GPR_vector_flags_ACC_reconstructed=True,
+                mutations_rejected=mutations,GPR_reconstructed=True,
+                vector_flags_ACC_preserved=a.gpr_only,
+                vector_flags_ACC_reconstructed=not a.gpr_only,
                 DMEM_unchanged=True,no_DMA_DP_AI_or_guest_work=True,
                 hardware_mocked=True,renderer_liveness_proved=False,native_acceptance=False)
     if a.output:a.output.write_text(json.dumps(result,indent=2)+'\n')

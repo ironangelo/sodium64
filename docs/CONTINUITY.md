@@ -1,3 +1,24 @@
+# 2026-10-13 - Full RSP context Mode7 native worker88822 running
+
+Full context shared-entry runtime1b85b64b05ee47a4d5819749dfd3f953c01d55f5
+passes ALttP title700byte poison/restore/recapture +8192SPmem/hash/status;
+normal600/601/660/1200 exact268800px/32768PCM, all restored. CodeHEAD1b267e3
+is documentation checkpoint. Current soleCOM3 worker88822 runs
+work/native_scene_context_entry_mode7.py --candidate --name scene-context-entry-mode7
+--control privateDate13/scene-s2-mode7-reference/report.json. Frozen entryplan/
+archive. Exact race route, normal4500/canonical/fullroundtrip then4501/4560/
+5100 image/PCM/heads/regs/enabled/ACK; finallycoordinate8/menu/readback.
+
+RESUME HERE: poll88822/report/process, never open competing COM3. After
+terminal verify restoration and record outcome before next code batch. Ifpass
+proceed fullCPU/TLB/guestmem/JIT/mapper/input/hostclock ownership and explicit
+private samebuild state slot; preserve Code/ROM/config/layout/CRC/bounds before
+restore mutation, fresh recorder/clocks, next1/60/600 and samewarmup. Full
+machine state/file/crossbuild/native60/fidelity/audio/corpus/master remainopen.
+Goal stays active/unlimited. Earlier history untouched below.
+
+---
+
 # 2026-10-13 - Full RSP context title native pass; Mode7 next
 
 MEASURED native1b85b64 worker40307 terminal/coordinate8/menu/readback PASS.

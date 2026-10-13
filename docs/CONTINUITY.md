@@ -1,3 +1,19 @@
+# 2026-10-13 - R50 complete-DSP counter native A/B running
+
+RESUME HERE: yielded native exec39257 is live; flag0 installed/readback passed.
+Runtime248f9c1723660da16ed61483446dba445e56ada2, preflightca45538,
+frozen private dsp-counter-r50-plan/archive/native_dsp_counter_r50.py.
+Poll39257 and dsp-counter-r50-native/report.json; root aloneCOM3. Do not open
+competing transport or restart a live worker after observation timeout.
+Same-source flag0/1, R49 signal1 in both, three original2048-frame scenarios
+three times each, host checksums/full64KiB RAM restore/live image/PCM/state/
+step660 and finallycoordinate8/menu/install/readback as detailed below.
+Native cost result still pending; terminal checkpoint before next batch.
+No synthetic AI/gameplay replacement; full60/DSP/DAC/corpus/integration open.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R50 complete-DSP counter divisions removed; native next
 
 RESUME HERE: runtime248f9c1723660da16ed61483446dba445e56ada2, experiment/dsp-counter-r50,

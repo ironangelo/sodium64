@@ -1,3 +1,21 @@
+# 2026-10-13 - R51 native scoped complete-DSP profile running
+
+RESUME HERE: yielded native exec3060 is live; flag1 install/readback passed.
+Runtimea7f852601ee71fdeee91e30b767495e62a8af628, preflight2e05a19,
+immutable private dsp-profile-r51-archive/native_dsp_profile_r51.py and plan.
+Poll3060 and dsp-profile-r51-native/report.json; root soleCOM3. Do not restart
+a live worker after observation timeout or open competing transport.
+Six original three-case2048-frame probes at paused600, three128-slot PC rings
+per probe, host checksums/RAM restore/live image/PCM/state/step660 and final
+coordinate8/menu/install/readback as detailed below. Exact ELF classifier
+includes8 clocked-core functions and the separately named probe wrapper;
+outside counts remain explicit. Instrumented times are not FPS authority.
+Native profile still pending; terminal checkpoint before another batch.
+Full native60/DSP/DAC/SNES/corpus/integration remain open.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R51 scoped complete-DSP PC sampler implemented; native next
 
 RESUME HERE: runtimea7f852601ee71fdeee91e30b767495e62a8af628, experiment/full-dsp-profile-r51,

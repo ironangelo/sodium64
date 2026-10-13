@@ -1,3 +1,20 @@
+# 2026-10-13 - R45 direct scalar story exact; rain discriminator next
+
+Frozen d96796a story3images201600pixels/8192pausedPCM exact and full checksum/
+settings/coordinate8/menu/readback PASS; worker70919 terminal, no COM3 worker.
+Story55.942863 vs old55.874278 and R4456.089884/s (-0.262117percent).
+Small residual loss is unresolved, no permanent regression/noise conclusion.
+Default-off CPU text/data exact R44;12/14 RSP texts unchanged vs1fcc940.
+
+RESUME HERE: private backdrop45-scalar-rain-native.py against R44rain40.540954,
+immutable scalar plan/archive; fourimages/pausedPCM before quiet20s, finally
+coordinate8/menu/readback. Root soleCOM3. DKC recheck and Mode7/broaderCI before
+promotion. Scissor archive/results intact. Default0/master untouched, no merge.
+Save states prototype/full60/audio/corpus remain open. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 direct scalar bypass locally qualified; native story next
 
 Runtime d96796a9b8ca16c00ba061f9b9ac9b3eded95ed0; private immutable backdrop45-scalar-plan/archive.

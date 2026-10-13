@@ -1,3 +1,23 @@
+# 2026-10-13 - DKC R43 stage control measured; exact R44 replay next
+
+R43 runtime4382ae80:10 images and fixed route from boot to Jungle Hijinxs4320.
+Start8@1800,A8@2400/2700/3300/3600,Right120@4200; then quiet20s noinputs.
+276 complete intervals13.778162/s, explicitRSPwait53.264726ms. CPUwait73.319357
+percent; Main residency62.865129/Math26.275332, not exclusive instruction costs.
+Full checksum/settings/trace and menu-coordinate8 readback restoration PASS.
+Native worker54071 terminal. Scene1800 label corrected to DK/Cranky intro from
+actual inspection. Additional first240-interval match frozen before R44.
+
+RESUME HERE: dispatch r44-dkc-route using frozen7a83d49 and private R43 report
+as exact acknowledged-input replay. Root soleCOM3; no worker at checkpoint.
+Require10 images/four paused8192 PCM comparisons before rate interpretation;
+finallyrestorecoordinate8/menu. Freeze artifacts, no rebuild/source edits/CI.
+DKC deficit is strongly renderer-associated; states bounded trial remains useful,
+Mode7 native gate separate/open. Full60/audio/corpus open. [Detail](NATIVE_BREADTH_R44.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R44 DKC native breadth preflight recorded before run
 
 Frozen R43 runtime4382ae80/R44 runtime7a83d49, no source changes/rebuild.

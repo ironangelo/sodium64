@@ -1,0 +1,120 @@
+{
+  "status": "MEASURED control; R44 comparison pending",
+  "physical_console": true,
+  "runtime_source": "4382ae80bdef0474827ce74f7ecf84c02e80edc4",
+  "title": "DKC1 Rev1",
+  "route": {
+    "checkpoint_frames": [
+      600,
+      1200,
+      1800,
+      2100,
+      2400,
+      2700,
+      3300,
+      3600,
+      4200,
+      4320
+    ],
+    "initial_start": {
+      "at_guest_frame": 1800,
+      "duration_frames": 8
+    },
+    "selection_A_frames": [
+      2400,
+      2700,
+      3300,
+      3600
+    ],
+    "right": {
+      "at_guest_frame": 4200,
+      "duration_frames": 120
+    },
+    "capture_start_frame": 4320,
+    "subsequent_inputs": "none"
+  },
+  "configuration": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layer": 0
+  },
+  "metrics": {
+    "completed_boundaries_per_second": 13.77816245756539,
+    "mean_CPU_RSP_wait_ms": 53.26472618357488,
+    "intervals": 276,
+    "full_checksum_validated": true
+  },
+  "fixed_first240": {
+    "intervals": 240,
+    "completed_boundaries_per_second": 13.761044470565611,
+    "mean_CPU_RSP_wait_ms": 53.312533422222224
+  },
+  "cpu_module_percent": {
+    "s_cpu": 5.925925925925926,
+    "apu_static_or_jit": 8.413696715583509,
+    "dsp": 6.345213137665968,
+    "dma": 1.3556953179594688,
+    "ppu": 3.997204751921733,
+    "rsp_wait": 73.319357092942,
+    "vi_wait": 0.0,
+    "other": 0.6429070580013976
+  },
+  "rsp_bank_residency_ranking": [
+    {
+      "bank": "main_residency",
+      "samples": 4498,
+      "percent_all_irq": 62.86512928022362,
+      "percent_running_irq": 63.280810354530104
+    },
+    {
+      "bank": "hcomp_math_residency",
+      "samples": 1880,
+      "percent_all_irq": 26.275331935709293,
+      "percent_running_irq": 26.449071468767585
+    },
+    {
+      "bank": "unknown_or_bank_transition",
+      "samples": 481,
+      "percent_all_irq": 6.722571628232005,
+      "percent_running_irq": 6.76702307259426
+    },
+    {
+      "bank": "hcomp_phase_residency",
+      "samples": 234,
+      "percent_all_irq": 3.270440251572327,
+      "percent_running_irq": 3.29206527855937
+    },
+    {
+      "bank": "halted",
+      "samples": 47,
+      "percent_all_irq": 0.6568832983927324,
+      "percent_running_irq": null
+    },
+    {
+      "bank": "hcomp_fast_residency",
+      "samples": 12,
+      "percent_all_irq": 0.16771488469601678,
+      "percent_running_irq": 0.16882386043894204
+    },
+    {
+      "bank": "hcomp_setup_residency",
+      "samples": 3,
+      "percent_all_irq": 0.041928721174004195,
+      "percent_running_irq": 0.04220596510973551
+    },
+    {
+      "bank": "mode7_draw_or_window_residency",
+      "samples": 0,
+      "percent_all_irq": 0.0,
+      "percent_running_irq": 0.0
+    }
+  ],
+  "full_checksum_validated": true,
+  "trace_overflow_flags": 0,
+  "restoration_verified": true,
+  "menu_and_coordinate8_install_readback_verified": true,
+  "presentation_FPS_full_fidelity_or_full_title_qualified": false,
+  "comparison_scope": "full quiet trace and predeclared first240 intervals from same fixed scene; native goal open"
+}

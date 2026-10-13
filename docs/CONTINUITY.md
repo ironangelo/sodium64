@@ -1,3 +1,20 @@
+# 2026-10-13 - R47 single native confirmation running
+
+RESUME HERE: yielded native exec session13174 is live; flag1 install/readback
+passed. Immutable private dsp-brr-r47-archive/native_dsp_brr_r47_confirm.py,
+source849412ee911c27850a22af45866a4439e99e380b; code/doc checkpointbaa63ed.
+Poll13174 and private dsp-brr-r47-confirm/report.json. Sole root COM3; do not
+restart a live process or open competing transport on observation timeout.
+This is the one predeclared intermediate-gain confirmation, order1->0, same
+frozen artifacts, exact title920..1219/room2000..2599 windows. Reuse first
+exact-source image/PCM gate. All capture checks/guest checkpoints and finally
+coordinate8/menu/install/readback remain required. First gain+3.016%/+3.944%
+is MEASURED, not full acceptance or master promotion. Terminal checkpoint
+required before next technical batch. Full DSP/DAC/native60/corpus still open.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R47 native intermediate gain measured; one confirmation next
 
 RESUME HERE: worker36280 terminal exit0; no native controller remains live.

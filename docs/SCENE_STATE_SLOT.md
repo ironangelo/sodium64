@@ -1,6 +1,7 @@
 # Private scene slot prototype
 
-IMPLEMENTED, native machine continuation pending. SCENE_SLOT1 requires the
+MEASURED ALttP title advanced-machine continuation passes; Mode7 pending.
+SCENE_SLOT1 requires the
 canonical scene hook, full RSP context, trace recorder and audio observer.
 Default0. It exposes state-save, state-load and state-fingerprint only through
 the private bench. One volatile slot is restricted to the same build and boot;
@@ -106,3 +107,17 @@ exclude only their FPS glyph box rows23..30 x20..43 (up to3 decimal digits);
 this exclusion must not be applied to current-control fidelity comparisons.
 state-cpu-context exports only the canonical272-byte O64 owner privately for
 field-level diagnosis. No arbitrary memory or state import is exposed.
+
+Runtime35e1d3a worker9963 terminal PASS/restored: save600, advance1200, load600
+then next1/60/600. All27 raw guest/renderer/context owner fingerprints and51
+dynamic region fingerprints match at restored601/660/1200, with all272 O64
+bytes unchanged (no field normalization was necessary). Full destination/SP/
+TLB readback and loaded600 fingerprints pass. Current-control/restored images
+match all201600 pixels across three checkpoints. Seven PCM rings57344 bytes
+and heads/registers/enabled match the frozen control. Old-image comparison is
+469056 pixels outside only the documented FPS glyph box. Coordinate8/menu/
+install/readback restored; no live COM3. This is the first complete native
+machine advance/restore control, restricted to the title route and build/boot.
+Mode7 and active gameplay remain necessary; no cadence/full DSP/DAC/SNES
+oracle/corpus/integration acceptance follows. The prior raw deltas were host
+FPS rendering noise; retain their evidence, not a broad checksum exemption.

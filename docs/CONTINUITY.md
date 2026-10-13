@@ -1,3 +1,28 @@
+# 2026-10-12 - R44 fixed-space repair locally qualified; physical rain next
+
+Source 7a83d4982f20f7dd2fd44ab506d66a5a084f6db1, experiment/sub-alpha-r44. IMPLEMENTED/local preflight, not
+MEASURED/VALIDATED. Fast/Setup/Math use owned tail helpers; fixed ABI/.org and
+full-row batches retained. SUB_ALPHA0:13 RSP text/data banks byte-exact R43.
+Math70912 pixels plus3 Mode7 Z controls; HALF248832 pixels/36 cases; selector16/
+Setup80/retired commands288/Main transitions48; fixed19 and fixed-RDP28 cases
+with restoration negatives pass. Decoder576/spans448/init2/guards4, adaptive30/
+unsafe4,boot12/TV5,41 owners,branch delays/actual backup gates pass. D1A88<D4000.
+Fixture producer/complete fallback chain/actual D4400 backup now checked; the
+retired presence-DMA negative was replaced by an actual live OAM overwrite.
+No R44 hardware load yet, no native value or Mode7-edge acceptance claim.
+
+RESUME HERE: root sole COM3, no worker; live status confirmed responsive menu
+protocol1/recovery0. Frozen private subalpha44-plan.json/archive and
+subalpha44-rain-native.py in private/usb-bench/2026-10-11. Run acknowledged
+12944 route: four frames/8192 PCM/head/register/enabled against preserved
+control/R43, then quiet20s checksum/settings/waits. Finally restore coordinate8
+and menu/readback. Reject/repair early image/PCM mismatch; broad CI only after
+material native value, then expand story/other fidelity controls. R43f31a23e
+and master7cc8fac preserved; full60/audio/corpus goal open. Private data stays
+local. [Repair and limits](SUB_ALPHA_R44.md). Previous history unchanged below.
+
+---
+
 # 2026-10-12 - R44 Sub coverage prototype blocked by fixed code space
 
 Source 575544006dd681bb4d100838700c2cd55790f323, experiment/sub-alpha-r44. WIP/IMPLEMENTED only, not safe

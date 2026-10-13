@@ -82,3 +82,20 @@ passed. This is reference capture only; no reconstruction ran on this worker.
 [Mode7 reference](evidence/scene-state-s2-mode7-reference.json).
 Next S2runtime296aa4a follows the same route, parks/rebinds at4500, then compares
 every image/PCM/head/register/enabled checkpoint. No timing capture is run.
+
+## Mode7 candidate: reconstruction rejected
+
+REJECTED runtime296aa4a3cbfef69d2b13ede9bae15c78030594e0. All14 ordinary
+route controls match; canonical park/rebind4500 and SP memory readback pass.
+Normal4501 image67200 pixels and8192 PCM bytes/head/register/enabled are exact.
+At normal4560 (next60),2596 of67200 pixels differ. Stop immediately: no PCM4560,
+5100 comparison or broad CI. Worker27620 terminal; menu/coordinate8 restore/
+readback PASS. [Rejection evidence](evidence/scene-state-s2-mode7-rejected.json).
+
+Thus this reset of GPR/vector/flags/ACC plus parity/initial constants is not
+sufficient for a full state. Successful SP memory readback and one identical
+frame do not close renderer ownership. The lost live context has not been
+isolated. Preserve this opt-in probe and both failed/successful archives for
+diagnosis, but never use it in state restore or gameplay. S1 natural park
+continuation remains valid; subsequent work must preserve complete live RSP
+state or prove a different reconstruction. Full save states remain open.

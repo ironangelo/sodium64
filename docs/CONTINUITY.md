@@ -1,3 +1,30 @@
+# 2026-10-13 - S2 Mode7 reconstruction REJECTED; S3 envelope validation only
+
+Native runtime296aa4a worker27620 terminal/menu/coordinate8/readback PASS.
+SameMode7 route14 controls exact, canonicalpark/rebind4500 SPmemreadback PASS;
+normal4501 image/8192PCM/heads/regs/enabled exact. Normal4560 differs2596px of
+67200. Reject GPR/vector/flags/ACC reset+initial constants reconstruction.
+No PCM4560/5100 comparison or broadCI. No liveCOM3 worker. S1naturalpark still
+valid; S2title pass insufficient, lost live RSP context notisolated yet.
+
+S3 scene_state_format.c/.h +test_scene_state_format.py implement only private
+S64S/version1 envelope integrity, fixed BE header/owner whitelist/bindings/
+fullCRC/bounds and output-on-success. Corrected1209 productionC/oracle cases
+PASS +nativeO64 compile. First ctypes harness receipt INVALID_HARNESS, ignored
+callbackerrors fixed and now fail; private correctedproof retained. S3 not
+linked into gameplay, no serializer/slot/import/machine restore yet.
+
+RESUME HERE: preserve complete live RSP context or isolate a proved alternate
+reconstruction before fullstate. Do not wire rejected state-rsp-rebind into
+restore. Close CPU/guestmem/mapper/JIT/input/hostclock owner rules in
+SCENE_STATE_OWNERS.md, then private samebuild slot/prevalidation/transaction/
+readback and next1/60/600. Consider bounded GPR-only/vector-only probes if
+they resolve which live context must survive; no repeat of discarded fullreset.
+Crossbuild/full60/audio/corpus/master integration remain open. RootsoleCOM3.
+[S2](SCENE_STATE_S2.md), [S3](SCENE_STATE_S3.md). Earlier history below.
+
+---
+
 # 2026-10-13 - S2 Mode7 candidate running; sole COM3 worker27620
 
 Frozen native runtime296aa4a3cbfef69d2b13ede9bae15c78030594e0, scene-s2-pipeline-plan/archive.

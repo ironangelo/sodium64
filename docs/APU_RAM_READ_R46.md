@@ -1,6 +1,6 @@
 # R46 - Inline proven SPC700 RAM reads
 
-IMPLEMENTED; native discrimination pending. `APU_RAM_READ=1` defaults off.
+REJECTED as a material native performance step; controls measured. `APU_RAM_READ=1` defaults off.
 The latest complete rain CPU profile has 1525 APU samples out of 7110 (21.45%),
 in addition to 1719 DSP samples. These are residency counts, not exclusive
 timings. The JIT currently calls a general reader even for constant addresses
@@ -52,3 +52,32 @@ interpreted separately. Any image/implemented-PCM difference stops the trial.
 Complete DSP/DAC fidelity, native60, wider corpus and master integration remain
 open regardless of this read optimization. Direct C++ full-DSP replacement and
 the Main-row run producer remain rejected; this does not repeat either trial.
+
+
+## Native discriminator completed
+
+Source 14cab2b4d506be1f50e415b0822ffa1a0991c6c7, same-source flags0/1; worker89070 terminal.
+Title absolute920..1219: 49.225042
+to 49.794076 completed boundaries/s
+(+1.155984%). Room absolute2000..2599: 55.439497
+to 55.916924 (+0.861169%).
+Both are below the predeclared2% rejection threshold. These are Count-based
+retired guest intervals, not presentation FPS or full-speed acceptance. There
+was nearly no explicit RSP wait in either selected control interval.
+
+Three current-control/candidate images match all201600 pixels; three paused
+implemented PCM rings match24576 bytes plus heads/registers/enabled. Input1380
+ACKs, full capture checksum/settings/retention and accepted absolute boundaries
+match. Coordinate8/menu/install/readback restoration is verified. The bench
+uses SCENE_SLOT1 with its quiet host counter; no cross-build state is reused.
+[Numeric receipt](evidence/apu-ram-read-r46-native.json).
+
+The large local instruction reduction did not yield a material native gain
+on these two CPU-bound routes. Keep the code isolated and default0, without
+promotion, broader rain/DKC trials or full CI for this rejected discriminator.
+This does not establish zero cost or universal equivalence; it rules out
+pursuing this limited constant-read direction as the next large performance
+step. No phase2 indexed/read/write extension is justified by this result alone.
+Revisit actual DSP/SPC work and renderer architecture, retaining the full-DSP
+oracle's standalone cost evidence and the rejected producer evidence. Native60,
+complete sound/visual fidelity and the required corpus remain open.

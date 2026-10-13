@@ -1,3 +1,51 @@
+# 2026-10-13 - R46 native result rejected; main DSP work next
+
+RESUME HERE: R46 is terminal MEASURED and REJECTED as a material performance
+step. Worker89070 exited0; all three image/PCM controls and both full captures
+per variant pass. Coordinate8/menu/install/readback restored, no native COM3
+controller remains live. The previous running-worker header is superseded.
+Source14cab2b4d506be1f50e415b0822ffa1a0991c6c7; documentary checkpoint
+c7071f4f03a6d6a3700d41c7eb9b95f927281537 pushed on experiment/apu-ram-read-r46.
+Isolated checkout sodium64-apu-ram-r46, APU_RAM_READ defaults0. Master and
+scene-state/backdrop candidates unchanged; keep R46 evidence/code isolated.
+
+Same-source flags0/1, absolute title920..1219:49.225042->49.794076 retired
+boundaries/s (+1.155984%); room2000..2599:55.439497->55.916924 (+0.861169%).
+Both fail the predeclared2% material threshold. Current image controls201600
+pixels and paused implemented PCM24576 bytes/head/registers/enabled exact;
+input1380 ACKs and capture checksums/settings/full extents pass. No cross-build
+state transfer. This is the quiet SCENE_SLOT1 bench, not presentation FPS or
+production/full fidelity acceptance. Do not expand this failed direction into
+indexed/writes or broadCI merely because local instructions fell23->12/19->8.
+[Report](APU_RAM_READ_R46.md); numeric evidence/apu-ram-read-r46-native.json.
+
+New authoritative baseline room profile, complete20s:7155 CPU samples;
+DSP2889 (40.38%), APU1589 (22.21%), PPU1354, DMA621, S-CPU534, VIwait31,
+other137, RSPwait0. The retained224-PC tail is separate: BRR filter2,
+filter_end and decode_samples are prominent. It is not a complete function
+profile or proof of exclusive cost. Title's full20s profile mixes later
+scenes; do not attribute its sample shares to only the fixed300 interval.
+
+Next bounded architecture question: decode the existing four-sample BRR
+chunk as a register recurrence, retaining its exact RAM read phase, filter
+arithmetic/clamp/sign15 wrap, history and four stores in6/4/2/0 order. Current
+filters repeatedly calculate ring indices and reload the two history values,
+with scalar loop dispatch per sample. The linked clobber contract already
+permits s0/s1/t7/t9: use them without borrowing stereo accumulators, pitch
+counter, voice pointer or HI/LO. This is HYPOTHESIS only; no R47 code yet.
+Make a new isolated branch from the preserved baseline with R46 flag0, compare
+all four filters/ranges/voices to the existing independent BRR oracle and
+baseline, enforce memory/ABI/observer ownership, then native discrimination
+before broad CI. Keep four-sample scheduling; no whole-BRR-block batching or
+skipped audio work. Reject if it has no material value, preserve evidence.
+
+Full DSP/DAC/SNES oracle/native60/visual/audio corpus and integration remain
+OPEN. The full C++ DSP drop-in and Main-row run producer stay rejected; no
+unchanged suites are repeated. Previous state-tool title/Mode7 gates remain
+independent. Full earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R46 native A/B running; sole COM3 controller
 
 Verified live exec session89070 and Python PID26924; immutable archived

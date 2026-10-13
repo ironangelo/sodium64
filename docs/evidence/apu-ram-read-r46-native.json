@@ -1,0 +1,59 @@
+{
+  "status": "REJECTED as a material native performance step",
+  "runtime_source": "14cab2b4d506be1f50e415b0822ffa1a0991c6c7",
+  "same_source_flags": [
+    0,
+    1
+  ],
+  "bench_SCENE_SLOT": 1,
+  "state_transfer_between_builds": false,
+  "fixed_absolute_intervals": {
+    "title": {
+      "baseline": {
+        "first": 920,
+        "last": 1219,
+        "intervals": 300,
+        "completed_boundaries_per_second": 49.225041895630056,
+        "mean_CPU_RSP_wait_ms": 0.00247104,
+        "mean_CPU_VI_wait_ms": 0.0027977955555555556
+      },
+      "candidate": {
+        "first": 920,
+        "last": 1219,
+        "intervals": 300,
+        "completed_boundaries_per_second": 49.79407560445626,
+        "mean_CPU_RSP_wait_ms": 0.0024746666666666667,
+        "mean_CPU_VI_wait_ms": 0.002658062222222222
+      },
+      "change_percent": 1.1559842042038415
+    },
+    "room": {
+      "baseline": {
+        "first": 2000,
+        "last": 2599,
+        "intervals": 600,
+        "completed_boundaries_per_second": 55.439496842835474,
+        "mean_CPU_RSP_wait_ms": 0.0024678755555555556,
+        "mean_CPU_VI_wait_ms": 0.04168839111111111
+      },
+      "candidate": {
+        "first": 2000,
+        "last": 2599,
+        "intervals": 600,
+        "completed_boundaries_per_second": 55.91692435372382,
+        "mean_CPU_RSP_wait_ms": 0.002510151111111111,
+        "mean_CPU_VI_wait_ms": 0.06622780444444444
+      },
+      "change_percent": 0.8611685496385357
+    }
+  },
+  "control_current_full_image_pixels": 201600,
+  "image_differences": 0,
+  "paused_implemented_PCM_bytes": 24576,
+  "PCM_differences": 0,
+  "heads_registers_enabled_and_input_ACK_match": true,
+  "capture_checksum_settings_full_retention_and_restoration_pass": true,
+  "coordinate8_menu_install_readback_restored": true,
+  "wider_semantic_CI_corpus_and_full_DSP_DAC_fidelity_not_claimed": true,
+  "master_integration": false
+}

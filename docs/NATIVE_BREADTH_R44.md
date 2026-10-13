@@ -28,3 +28,23 @@ Neither matched sampled images nor completed-boundary cadence prove sustained
 presentation60Hz, complete audio fidelity or whole-title compatibility.
 Save-state feasibility remains a bounded hypothesis in
 [SAVE_STATE_FEASIBILITY_2026-10-12.md](SAVE_STATE_FEASIBILITY_2026-10-12.md).
+
+## R43 first-stage control measured
+
+Ten retired snapshots now define the route through logos/Cranky/DK intro,
+copyright/file/one-player/world/regional map and Jungle Hijinxs. Frame1800 is
+the DK/Cranky intro, not a title. Start8 at1800; A8 at2400/2700/3300/3600;
+Right120 at4200 gives the pre-capture frame4320. The quiet20s segment then has
+no injected inputs. Full trace276 intervals:13.778162 completions/s, explicit
+wait53.264726ms; CPU samples73.319357percent at RSP wait. Main residency62.865129
+and Math26.275332percent are bank residency, not exclusive instruction costs.
+No Mode7 samples. The resulting guest segment is bounded first-stage activity,
+not whole-title or fixed sustained presentation FPS.
+
+All checksum/trace/settings controls and menu/coordinate8 readback restoration
+pass. Freeze the first240-interval comparison before R44 as an additional
+matched guest-progress control; full quiet window remains reported. Replay the
+same route in R44 and require all ten images/four paused PCM buffers exact.
+[Curated control receipt](evidence/r44-dkc-breadth-control.json). Private paths,
+hashes and payloads remain local. This deficit prioritizes renderer architecture
+for DKC over marginal CPU tuning; R44 effect is not measured yet.

@@ -165,3 +165,22 @@ controls, then relevant candidate/default CI. The added helper loads on scalar
 policies remain a possible regression; repair any permanent loss before
 promotion. Full original replay remains available; state serializer still
 pending. Master/R44/R43 untouched and BACKDROP_ROWS remains default0.
+
+## ALttP story control and CI cadence correction
+
+Same frozen1fcc940:3 images201600 pixels and8192 pausedPCM/heads/registers/
+enabled match, full checksum/settings and coordinate8/menu/readback PASS.
+Worker24170 terminal. Cadence55.874278 vsR4456.089884/s
+(-0.384394percent), wait2.844090ms. Preserve this small loss as unresolved;
+do not claim complete non-regression from matching images. Rain control next
+using immutable scissor artifact and existing historical golden replay.
+[Story receipt](evidence/backdrop45-alttp-story.json).
+
+Build workflow was automatically triggered on every experimental/doc push.
+Earlier statements of no CI dispatch describe manual dispatch only; automatic
+default runs are not R45 opt-in qualification. Push now excludes experiment/**
+and documentation-only changes, with full master PR/workflow_dispatch gates
+retained. CGRAM/Ares already use master/PR/manual and remain unchanged.
+Build now explicitly compiles/tests BACKDROP_ROWS1 plus its177 paused observer
+guards, fixed slot/arena/backups/boot and inherited/default variants. Dispatch
+relevant CI once the native regression decision is resolved; no gate weakened.

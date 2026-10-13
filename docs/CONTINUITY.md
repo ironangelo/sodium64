@@ -1,3 +1,24 @@
+# 2026-10-13 - R45 ALttP story exact image/PCM; small cadence loss open; rain next
+
+Frozen1fcc940 nativeDkc matched24013.754889->28.710314/s (+108.728065percent),
+full quiet78739.197267/s separately;10frames/fourPCM exact. Story3frames201600
+pixels/8192pausedPCM/heads/registers/enabled andchecksum/settings/restoration
+PASS, nativeworker24170 terminal. Story55.874278 vsR4456.089884 (-0.384394percent)
+is unresolvedsmallloss, do notclaimnon-regression. Root soleCOM3/no worker/menu.
+
+RESUME HERE: private backdrop45-scissor-rain-native.py nowprepared (Date13),
+frozen scissorplan/archive; run exact600/900/1980/12944 and PCM/quiet20s against
+R44rain40.540954, finallycoordinate8/menu/readback. Then resolve scalar/row
+overhead if needed, Mode7/native broader and relevantCI beforepromotion.
+Buildauto pushes previously ran on every experiment/docs commit; prior no-CI
+claims mean no manualdispatch, not automaticdefault qualification. Newtrigger
+excludesexperiment/**/doconly while fullmasterPR/manualgates retained; R45opt-in
+build/tests added, not dispatched yet. CGRAM/Ares master/PR/manual unchanged.
+Full60/audio/corpus/state serializer open. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 repaired DKC material gain measured; ALttP/Mode7/CI next
 
 Frozenruntime1fcc940 passes10 frames672000 pixels/four pausedPCM32768 bytes,

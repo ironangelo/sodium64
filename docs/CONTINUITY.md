@@ -1,3 +1,38 @@
+# 2026-10-13 - R46 inline SPC700 RAM reads implemented; native A/B next
+
+Progress: main-performance code batch 14cab2b4d506be1f50e415b0822ffa1a0991c6c7, pushed on
+experiment/apu-ram-read-r46. Isolated checkout sodium64-apu-ram-r46; the state
+prototype and all earlier renderer candidates remain preserved. Master unchanged.
+APU_RAM_READ1 defaults0, admits constant direct00..EF and absolute ordinary RAM,
+keeps I/O/ROM/indexed/indirect/write paths. Same per-access cycle debit and A0
+for RMW; worst-case budget still32 SPC cycles, full-rate clock21/audio4/skip0.
+
+Local PASS:512 direct,68 absolute,20 production blocks,two subsequent timer
+positions; wrong-byte/missing-debit mutations reject. Actual instructions
+direct23->12/absolute19->8, not a hardware timing claim. Off872964 allocated
+bytes exact native1990fb0; all15 RSP banks on/off exact. StaticD58D8<D6000,
+43 owners,24576 events,194 ROM slots, reboot12/TV5. No unrelated suites or
+broad CI rerun before native value. [Details](APU_RAM_READ_R46.md).
+
+RESUME HERE: frozen private apu-ram-r46-plan/archive holds both ELF/empty ROM
+variants and immutable native_apu_ram_r46.py. Run that archived helper once
+after confirming no live native process; root alone owns COM3. It compares
+all pixels/paused implemented PCM at600/900/1980, same acknowledged input1380,
+then quiet20s title and room captures for each variant. Predeclared absolute
+title920..1219 (300), room2000..2599 (600), same source/config except flag.
+Capture ACK/checksum/settings/full extents mandatory; no cross-build state
+transfer. On every terminal path restore coordinate8/menu/install/readback.
+Report phase/process first if interrupted; do not restart a live worker.
+
+At least5% gain on uncapped work is promising; below2% in both rejects this
+direction as material, middle needs one confirmation, capped baseline is
+separate. Stop any image/PCM delta. Expand rain/DKC/changed-CPU CI only after
+native value. No native result yet; full DSP/DAC/SNES oracle/native60/corpus
+and integration remain OPEN. Earlier source14/doc state gates are independent.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - Native scene slot title and Mode7 gates pass; resume performance
 
 RESUME HERE: bounded state-tool work is MEASURED, complete for its title/Mode7

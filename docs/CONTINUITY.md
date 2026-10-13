@@ -1,3 +1,20 @@
+# 2026-10-13 - R53 complete-DSP scheduling native A/B running
+
+RESUME HERE: yielded native exec53531 live, flag0 menu/install/readback passed.
+Runtime98c212dcc4b92f03063f0ba5567eb5698c041021, preflightcontinuityff79d56,
+frozen private dsp-schedule-r53-archive/native_full_dsp_brr_r52.py and plan.
+WorkerSHA28a845b1771cf41533b74efea6eba05d485357d424b1e3ee1aadf7d87ccc5668.
+Poll53531 and dsp-schedule-r53-native/report.json; root soleCOM3. Never restart
+after observation timeout or open a competing transport. Same-source chunks0/1,
+signal1/scratch1 both, no counter/sampler; original three2048frame cases three
+times at ALttPpaused600, hostchecksums/nonzero/64KiB backup-readback-restore,
+full live image/PCM/state and gueststep660, finallycoordinate8/menu/install/
+readback. All native outcomes still pending. Terminal checkpoint before any
+next technical batch. Full native60/DSP/DAC/SNES/corpus/integration remain open.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R53 whole-sample complete-DSP scheduler implemented; native next
 
 RESUME HERE: runtime98c212dcc4b92f03063f0ba5567eb5698c041021, experiment/full-dsp-schedule-r53,

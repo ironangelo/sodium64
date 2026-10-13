@@ -1,3 +1,19 @@
+# 2026-10-13 - R49 complete-DSP native cost A/B running
+
+RESUME HERE: yielded native exec12826 is live, flag0 installed/readback passed.
+Runtime68667b74e5d472a01cd38e9f926c155a4695f391, doc/preflight6cbe62c,
+immutable private dsp-signal-r49-archive/native_dsp_signal_r49.py and plan.
+Poll12826 and dsp-signal-r49-native/report.json; root sole COM3. Do not restart
+on observation timeout or open competing transport. Same-source flag0/1,
+three original2048-frame scenarios repeated3x, host checksums/full64KiB RAM
+restore/live image/PCM/state/step660 controls and finallycoordinate8/menu/
+install/readback as detailed below. No synthetic AI/gameplay replacement.
+Native cost outcome pending. Terminal checkpoint before next technical batch.
+Full DSP/DAC/native60/corpus/integration remain open; R44/R45 unmerged.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R49 complete-DSP signal work implemented; native cost A/B next
 
 RESUME HERE: runtime68667b74e5d472a01cd38e9f926c155a4695f391, docs3755a2382e3542e9c76224b4988c2024dd785990,

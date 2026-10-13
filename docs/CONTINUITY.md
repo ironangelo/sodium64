@@ -1,3 +1,25 @@
+# 2026-10-13 - S2 Mode7 continuation reference running
+
+S2 title native296aa4a park/rebind next1/60/600 exact268800px/32768pausedPCM,
+all restored; recorded at0a24c41/F2e1d50. Mode7 reference soleCOM3 worker52638
+now runs work/native_scene_s2_mode7.py --name scene-s2-mode7-reference.
+Immutable original313642a flag0 artifact from qualified race route. Exact
+title/car/class/cup/start selections, B8000 held600 guestframes3900..4500.
+All old route image/PCM/ACK controls compared before new normal checkpoints
+4500/4501/4560/5100 (next1/60/600). No quiet capture/performance measurement.
+Reference only; finally coordinate8/menu/install/readback for every worker.
+
+RESUME HERE: poll worker52638/report; never open competing COM3. After terminal
+successful reference+restoration, run same worker --candidate --name
+scene-s2-mode7-candidate --control privateDate13/scene-s2-mode7-reference/report.json.
+Frozen296aa4a scene-s2-pipeline-plan/archive, canonical park4500/rebind and
+same next frames/images/PCM/heads/regs/enabled. Failure rejects this context
+reconstruction; pass still needs owner closure/complete transaction and later
+scenes. Full save states/crossbuild/full60/audio/corpus/master remain open.
+[S2](SCENE_STATE_S2.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - S2 native RSP reconstruction title continuation passed; Mode7 next
 
 MEASURED runtime 296aa4a3cbfef69d2b13ede9bae15c78030594e0, experiment/scene-state-s1.

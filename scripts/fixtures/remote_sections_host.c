@@ -14,6 +14,9 @@ unsigned char native_diag_snapshot[32768];
 volatile uint16_t joyxlh[4];
 static unsigned char queued[2][0x5000];
 static uint16_t row_color[2][240];
+#if SODIUM64_BACKDROP_ROWS
+static uint16_t main_color_rows[2][240];
+#endif
 static uint32_t owner_end[2],owner_rows[2],owner_fb[2];
 static uint32_t model_slot,model_sp,model_dma_busy,model_dma_full,model_dp;
 static uint32_t fail_address;
@@ -52,6 +55,14 @@ int remote_host_section_read(uint32_t address,unsigned bytes,uint32_t *value){
             if(slot!=model_slot)producer_reads++;
             *value=row_color[q][(address-fixed)/2];return 1;
         }
+#if SODIUM64_BACKDROP_ROWS
+        uint32_t main=q?HCOMP_ROW_MAIN_QUEUE2:HCOMP_ROW_MAIN_QUEUE1;
+        if(address>=main&&address<main+sizeof(main_color_rows[q])){
+            if(bytes!=2||address%2)abort();
+            if(slot!=model_slot)producer_reads++;
+            *value=main_color_rows[q][(address-main)/2];return 1;
+        }
+#endif
     }
     fprintf(stderr,"unexpected read %08x/%u\n",address,bytes);abort();
 }
@@ -61,6 +72,9 @@ static uint32_t memory_sum(void){
     for(unsigned q=0;q<2;q++){
         for(unsigned i=0;i<sizeof(queued[q]);i++)sum=sum*31+queued[q][i];
         for(unsigned i=0;i<240;i++)sum=sum*31+row_color[q][i];
+#if SODIUM64_BACKDROP_ROWS
+        for(unsigned i=0;i<240;i++)sum=sum*31+main_color_rows[q][i];
+#endif
     }
     return sum;
 }
@@ -82,6 +96,9 @@ static void setup(unsigned count){
         memset(queued[q],q?0xb2:0xa1,sizeof(queued[q]));
         for(unsigned i=0;i<count;i++)queued[q][i*64+63]=(unsigned char)((i+1)*224/count);
         for(unsigned i=0;i<240;i++)row_color[q][i]=q?0x3456:0x1234;
+#if SODIUM64_BACKDROP_ROWS
+        for(unsigned i=0;i<240;i++)main_color_rows[q][i]=(uint16_t)((q+1)*0x1000+i);
+#endif
     }
 }
 int main(void){
@@ -137,5 +154,22 @@ int main(void){
     setup(3);model_slot=0;owner_fb[0]=0xa0113000;
     expect("s64 12345678 sections 0","guest_boundary_id=901 slot=0");check(strstr(response," s0=a1a1a1")!=NULL);
     expect("s64 12345678 status","capabilities=pause,pause-at,step,resume,buttons,release,capture,frame,sav,profile,menu,sections");
+#if SODIUM64_BACKDROP_ROWS
+    setup(3);
+    expect("s64 12345678 backdrop-rows 80","slot=4 cursor=80 returned=16 next_cursor=96 frame_end=224");
+    check(strstr(response,"values=20502051205220532054")!=NULL);
+    expect("s64 12345678 backdrop-rows 220","returned=4 next_cursor=224");
+    expect("s64 12345678 backdrop-rows 224","ERR backdrop_rows_cursor");
+    expect("s64 12345678 backdrop-rows 240","ERR backdrop_rows_cursor");
+    expect("s64 12345678 backdrop-rows -1","ERR backdrop_rows_cursor");
+    remote_paused=0;expect("s64 12345678 backdrop-rows 0","ERR not_paused");remote_paused=1;
+    native_diag_phase=1;expect("s64 12345678 backdrop-rows 0","ERR capture_busy");native_diag_phase=0;
+    model_sp=0;expect("s64 12345678 backdrop-rows 0","ERR sections_rsp_busy");model_sp=1;
+    model_dp=0x100;expect("s64 12345678 backdrop-rows 0","ERR sections_dp_busy");model_dp=0;
+    fail_address=HCOMP_ROW_MAIN_QUEUE2+160;
+    expect("s64 12345678 backdrop-rows 80","ERR sections_read_failed");fail_address=0;
+    model_slot=0;owner_fb[0]=0xa0113000;
+    expect("s64 12345678 backdrop-rows 80","slot=0 cursor=80");check(strstr(response,"values=10501051")!=NULL);
+#endif
     printf("PASS sections_cases=%u read_only=1 modeled_hardware=1\n",cases);return 0;
 }

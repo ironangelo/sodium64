@@ -14,6 +14,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--cc', default=os.environ.get('CC', 'gcc'))
     ap.add_argument('--json-output', type=Path)
+    ap.add_argument('--backdrop-rows', action='store_true')
     args = ap.parse_args()
     root = Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix='s64-sections-model-') as directory:
@@ -26,6 +27,8 @@ def main():
                '-DREMOTE_CONTROL_HOST', '-DSODIUM64_REMOTE_SECTION_OBSERVER=1',
                '-DSODIUM64_NATIVE_DIAG=1', '-DSODIUM64_NATIVE_DIAG_TRACE=1',
                '-I', str(temp)]
+        if args.backdrop_rows:
+            cmd += ['-DSODIUM64_BACKDROP_ROWS=1']
         if os.name != 'nt':
             cmd += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-no-pie']
         cmd += [str(root / 'scripts/fixtures/remote_sections_host.c'), '-o', str(exe)]

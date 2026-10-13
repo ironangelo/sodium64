@@ -336,6 +336,10 @@ static void section_hex_byte(unsigned value) {
 static void sections(const char *id,uint32_t cursor,uint32_t retired_framebuffer) {
     uint32_t slot,sp_status,dma_busy,dma_full,dp_status,end,frame_end,framebuffer;
     uint32_t base,fixed,count_sections,previous=0,returned;
+#if SODIUM64_BACKDROP_ROWS
+    int row_mode=(cursor&0x80000000u)!=0;
+    cursor&=0x7fffffffu;
+#endif
     if(!present||transport_error||menu_error){error(id,"sections_transport_unready");return;}
     if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
     if(!remote_paused){error(id,"not_paused");return;}
@@ -364,6 +368,11 @@ static void sections(const char *id,uint32_t cursor,uint32_t retired_framebuffer
     if(framebuffer!=retired_framebuffer){error(id,"sections_framebuffer");return;}
     if(!frame_end||frame_end>240){error(id,"sections_geometry");return;}
     count_sections=(end-base)/SECTION_SIZE;
+#if SODIUM64_BACKDROP_ROWS
+    if(row_mode) {
+        if(cursor>=frame_end){error(id,"backdrop_rows_cursor");return;}
+    } else
+#endif
     if(cursor>count_sections){error(id,"sections_cursor");return;}
     /* Verify all historical bounds before returning a page, so the final
      * consumed section certifies the exact frame end rather than stale RAM. */
@@ -374,6 +383,23 @@ static void sections(const char *id,uint32_t cursor,uint32_t retired_framebuffer
         previous=bound;
     }
     if(previous!=frame_end){error(id,"sections_geometry");return;}
+#if SODIUM64_BACKDROP_ROWS
+    if(row_mode) {
+        uint32_t row_base=slot?HCOMP_ROW_MAIN_QUEUE2:HCOMP_ROW_MAIN_QUEUE1;
+        returned=frame_end-cursor;if(returned>16)returned=16;
+        prefix(id,1);append(" backdrop_rows=1");
+        field(" render_frame_id=",remote_render_frames);field(" guest_boundary_id=",remote_guest_frames);
+        field(" slot=",slot);field(" cursor=",cursor);field(" returned=",returned);
+        field(" next_cursor=",cursor+returned);field(" frame_end=",frame_end);
+        append(" provenance=halted_retired_main_rows values=");
+        for(uint32_t y=cursor;y<cursor+returned;y++) {
+            uint32_t value;
+            if(!section_read(row_base+y*2,2,&value)){error(id,"sections_read_failed");return;}
+            section_hex_byte(value>>8);section_hex_byte(value);
+        }
+        (void)finish();return;
+    }
+#endif
     returned=count_sections-cursor;if(returned>6)returned=6;
     prefix(id,1);append(" sections=1");
     field(" render_frame_id=",remote_render_frames);
@@ -730,6 +756,13 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
 #endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER
+    #if SODIUM64_BACKDROP_ROWS
+    if(eq(verb,"backdrop-rows")) {
+        uint32_t cursor;
+        if(nt!=4||!decimal(tokens[3],&cursor,239)){error(id,"backdrop_rows_cursor");return;}
+        sections(id,cursor|0x80000000u,retired_framebuffer);return;
+    }
+    #endif
     if(eq(verb,"sections")) {
         uint32_t cursor;
         if(nt!=4||!decimal(tokens[3],&cursor,0x5000u/SECTION_SIZE)){error(id,"sections_cursor");return;}

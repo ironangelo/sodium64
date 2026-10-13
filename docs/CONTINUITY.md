@@ -1,3 +1,26 @@
+# 2026-10-13 - S2 RSP rebind probe frozen; native continuation next
+
+IMPLEMENTED experiment/scene-state-s1 runtime 7a5712453a00fa16eef150659bca5211ea11c9be, scene-s2-plan/archive.
+Canonical state-rsp-rebind backs up/reads back all8KiB SP memory to volatile
+USB TX scratch, rechecks full backup, resets GPR/vector/flags/ACC, reloads
+queue parity/constants, then restores SP memory/PC/status/readback. No guest,
+DMA/RDP/AI/SD/save work. Failed recovery menu-only; no serializer/restore.
+Parser254/fuzz1000, transaction185/failures, linkedRSP32/fourfaults,
+canonicalbridge16/continuous102 and43owners/fullcapacity PASS. Existing26RSP
+extents exactS1; optionoff CPU exact. Staticend0xd3bd8<D4000, arena unchanged.
+
+RESUME HERE: work/native_scene_s2.py --candidate --name scene-s2-title
+--control privateDate13/scene-s1-reference/report.json. Same replay normal600,
+canonical park600 then state-rsp-rebind, exactstep normal601/660/1200 image/
+PCM/heads/regs/enabled against frozencontrol. Finally coordinate8/menu/readback.
+Root soleCOM3/no worker before dispatch. Failed continuation rejects rebind;
+pass requires scene/mode expansion before adopting reconstruction. S1 native
+park alone passed; fullstateowners/ROM/layout/checksum/transaction restore,
+crossbuild and full60/fidelity/audio/corpus remain open. Master untouched.
+[S2](SCENE_STATE_S2.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - S1 native canonical continuation passed; state owners next
 
 MEASURED runtime 4ebdccd05e574e8cf1734ef20d8c8b05d59daaef, experiment/scene-state-s1.

@@ -242,3 +242,25 @@ After the source change, default-off CPU .text/.data are still byte-exact to
 frozen R44. Twelve of fourteen opt-in RSP text banks match the earlier scissor
 artifact; only Main/phase changed. Current1000/4096 slots and fixed public
 context/return entries remain guarded. No measured DKC recheck or Mode7 yet.
+
+## Direct scalar rain control; capture alignment limitation
+
+Frozen d96796a rain: four images268800 pixels and8192 pausedPCM/heads/registers/
+enabled exact, full checksum/settings and coordinate8/menu/readback PASS;
+worker50752 terminal. Cadence40.491967 vsR4440.540954/s
+(-0.120833percent), previous scissor40.472334/s. [Rain receipt](evidence/backdrop45-scalar-rain.json).
+The small residual remains open; no permanent loss or noise conclusion.
+
+Existing captures resume from an exact paused scene, then issue capture while
+running. The ACK does not record the absolute guest/render boundary at arming;
+S64D frame ordinals are relative to arming. Previous DKC first240 comparisons
+are predeclared relative intervals after the same scene/replay, not proof of
+identical absolute guest IDs. The large108.728percent result remains measured
+on that route, with this narrower alignment scope. Full20s traces also advance
+different guest extents. Preserve all original receipts and interpretations.
+
+A bounded improvement to the existing capture ACK can expose its accepted
+guest/render boundary at the same parked bridge before arming. Host comparison
+can then align relative S64D ordinals to absolute frame IDs. No new running
+profiler, state export or extended suite is needed. Add/test that metadata,
+freeze new on/off controls, then DKC/Mode7 representative native and relevantCI.

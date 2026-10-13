@@ -829,6 +829,11 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         native_diag_usb_only=usb;
         prefix(id,1);append(usb?" capture_ready=1 sink=usb":" capture_ready=1 sink=sd");
         append(" duration_seconds=20 outcome=pending");
+        /* The bridge keeps this retired boundary parked until the ACK succeeds
+         * and remote_arm_pending is consumed, before any next guest work. */
+        field(" accepted_guest_frame_id=",remote_guest_frames);
+        field(" accepted_render_frame_id=",remote_render_frames);
+        append(" arm_boundary=parked_retired_bridge");
         if(finish()){cancel_pause_target();remote_arm_pending=1;}
         return;
     }

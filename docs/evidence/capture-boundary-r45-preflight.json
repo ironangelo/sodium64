@@ -1,0 +1,20 @@
+{
+  "status": "IMPLEMENTED accepted capture boundary metadata; paired native pending",
+  "production_parser_cases": 182,
+  "fuzz": 1000,
+  "compiled_continuous_cases": 102,
+  "source_unchanged_RSP_text_data_extents": [
+    28,
+    26
+  ],
+  "runtime_static_ends": [
+    863880,
+    858760
+  ],
+  "event_arena_start": 868352,
+  "linked_boot_cases": 12,
+  "linked_TV_cases": 5,
+  "running_frame_hook_added": false,
+  "machine_state_serializer": false,
+  "full_fidelity_or_native_performance": false
+}

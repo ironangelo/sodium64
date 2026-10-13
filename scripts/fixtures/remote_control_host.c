@@ -125,6 +125,17 @@ int main(void){
     expect("s64 12345678 capture usb","OK capture_ready=1 sink=usb");
     check(native_diag_usb_only==1&&remote_arm_pending==1);
     check(continuous_save_error_stage==3&&continuous_save_data0==0x123);
+    for(unsigned i=0;i<3;i++) {
+        uint32_t guest=i==2?UINT32_MAX:i*70,render=i==2?UINT32_MAX-1:i*35;
+        remote_guest_frames=guest;remote_render_frames=render;remote_arm_pending=0;
+        char expected[160];
+        snprintf(expected,sizeof(expected),"accepted_guest_frame_id=%u accepted_render_frame_id=%u arm_boundary=parked_retired_bridge",
+                 (unsigned)guest,(unsigned)render);
+        expect("s64 12345678 capture usb",expected);
+        check(remote_guest_frames==guest&&remote_render_frames==render&&remote_arm_pending==1);
+        check(packets==1&&!remote_paused&&continuous_save_error_stage==3&&continuous_save_data0==0x123);
+    }
+    remote_guest_frames=remote_render_frames=0;
     remote_arm_pending=0;fail_send=1;run("s64 12345678 capture usb");check(!remote_arm_pending);fail_send=0;
     native_diag_phase=0;continuous_save_sink_ready=1;
     expect("s64 12345678 capture sd","OK capture_ready=1 sink=sd");check(!native_diag_usb_only&&remote_arm_pending);

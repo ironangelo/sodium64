@@ -153,3 +153,18 @@ gates with --diagnostic-trace --mix-observer and the actual embedded DMA guard.
 [Current proof/limits](DSP_DRY_MIX_2026-10-11.md) disclose per-sample hook cost.
 Production timing must disable MIX_OBSERVER and BRR_OBSERVER. Coordinate8
 is restored after the bounded diagnostic, not an accepted full-audio release.
+# Capture boundary metadata for paired native traces
+
+The capture ACK includes `accepted_guest_frame_id`, `accepted_render_frame_id`
+and `arm_boundary=parked_retired_bridge`. The bridge keeps that boundary parked
+through the successful ACK and recorder arming, before the next guest work.
+The reply remains `outcome=pending`; only a sealed, checksummed capture proves
+completion. Failed ACK does not arm. Existing pause/busy/sink guards remain.
+
+S64D `completed_boundary_ordinal` is relative to that arming boundary. With
+frameskip0 and equal guest/render progress, its absolute completed guest ID is
+the ACK guest ID plus that ordinal (uint32 wrap). Compare shared absolute IDs,
+retaining the initial partial interval exclusion and each record's full timing.
+Earlier ACKs without these fields support only route-relative alignment.
+This adds no running-frame profiler or machine-state serialization.
+

@@ -121,3 +121,18 @@ machine advance/restore control, restricted to the title route and build/boot.
 Mode7 and active gameplay remain necessary; no cadence/full DSP/DAC/SNES
 oracle/corpus/integration acceptance follows. The prior raw deltas were host
 FPS rendering noise; retain their evidence, not a broad checksum exemption.
+
+Mode7 runtime35e1d3a worker41679 terminal/restored: exact route4500 and control
+4501/4560/5100 image/PCM pass. Load5100->4500 full readback/fingerprints pass;
+restored4501 full image/PCM and every dynamic/guest owner pass. Only O64 CRC
+differs; private272-byte comparison identifies exactly EPC at256..259, with
+all GPR64/HI/LO and other bytes equal. Original canonical Status401 has EXL/ERL
+clear: EPC records a completed host VI interrupt and is not used by the live
+guest return. It varies with host interrupt timing. Stop before next60/600,
+preserve the failure and restore baseline; this is not a guest-state mismatch.
+
+The fingerprint now normalizes only inactive EPC's4 bytes when EXL/ERL are
+clear. Full272-byte serialization and destination readback remain unchanged;
+active exception states remain rejected. Every other O64 byte, all RSP/SP/TLB,
+guest input and the entire dynamic arena remain compared. No GPR, HI/LO or
+memory mask is added. Repeat the Mode7 continuation under this exact scope.

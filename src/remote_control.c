@@ -463,6 +463,13 @@ static uint32_t slot_execute(int load) {
                 for(uint32_t done=0;done<slot_owners[owner].bytes;) {
                     unsigned n=slot_owners[owner].bytes-done;if(n>512)n=512;
                     if(!slot_owner_io(owner,done,n,slot_work.piece,0)){result=0;goto done;}
+                    /* Ordinary canonical continuation has EXL/ERL clear.
+                     * Its saved EPC is a completed host IRQ's return PC, not
+                     * a live guest continuation. Keep all272 serialized bytes
+                     * and destination readback exact; normalize only these4
+                     * inactive bytes in the comparison fingerprint. */
+                    if(owner==22&&done==0&&n==272&&!(remote_saved_status&6u))
+                        for(unsigned i=256;i<260;i++)slot_work.piece[i]=0;
                     crc=scene_state_crc32_update(crc,slot_work.piece,n);
                     if(owner==21)region_crc=scene_state_crc32_update(region_crc,slot_work.piece,n);
                     done+=n;
@@ -1080,6 +1087,7 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         if(fingerprint&&state==1)for(unsigned i=0;i<51;i++) {
             append(" r");number(i);append("=");number(slot_regions[i]);
         }
+        if(fingerprint&&state==1)append(" cpu_fingerprint_scope=all_O64_except_inactive_EPC serializer_CPU_bytes=272");
         field(" slot_bytes=",scene_slot_bytes);field(" slot_stage=",scene_slot_stage);
         field(" rsp_stage=",scene_rsp_context_stage);
         field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);

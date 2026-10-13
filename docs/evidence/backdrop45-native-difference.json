@@ -1,0 +1,20 @@
+{
+  "status": "MEASURED native difference; performance NOT_RUN; repair pending",
+  "source": "9e1194f9156d3e5c3f0a4d85c833a91cd298cd13",
+  "physical_console": true,
+  "unchanged_images": 8,
+  "unchanged_pixels": 537600,
+  "first_mismatch_frame": 4200,
+  "compared_pixels_in_failed_frame": 67200,
+  "differing_pixels": 27,
+  "mismatch_rows": 1,
+  "paused_PCM_buffers_compared": 1,
+  "paused_PCM_bytes_unchanged": 8192,
+  "heads_registers_enabled_match": true,
+  "performance_capture": "NOT_RUN",
+  "full_CI": "NOT_DISPATCHED",
+  "menu_coordinate8_restoration_readback": true,
+  "native_worker_terminal": true,
+  "baseline_error_or_new_regression_not_yet_resolved": true,
+  "next_question": "Compare effective retired-section Main colors with captured Main row phase at the differing row"
+}

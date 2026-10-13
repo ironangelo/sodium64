@@ -1,3 +1,23 @@
+# 2026-10-13 - R45 first native image discrepancy; no performance capture
+
+Runtime9e1194f retained,8 initial frames537600 pixels/one paused8192 PCM exact.
+Stage4200 has27/67200 differing pixels, all one horizontal row. Route stopped
+before stage PCM/4320/quietcapture; do not claim speed or full non-regression.
+Worker88106 terminal; coordinate8/menu restoration/readback PASS; root sole
+COM3/no worker. All private photos/coordinates/colors stay local. R44 and
+all prior controls preserved. No full CI for a candidate failing this gate.
+
+RESUME HERE: isolate effective retired-section Main color versus new row input
+phase/epoch at the mismatched row, using actual producer/owned state. Local
+589824 packet pixels did not prove full PPU section timing. Do not relabel the
+baseline as wrong without an independent semantic/reference proof. Repair or
+reject then repeat exact native image/PCM gates. Existing paused section
+observer is available; avoid a new running profiler. Renderer/state full goal
+still active; save states useful bounded follow-up/no serializer. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 local preflight complete; frozen DKC native test next
 
 experiment/backdrop-rows-r45 runtime9e1194f9156d3e5c3f0a4d85c833a91cd298cd13, IMPLEMENTED only.

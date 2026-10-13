@@ -1,0 +1,24 @@
+{
+  "status": "MEASURED GPR-only Mode7 continuation passes",
+  "runtime_source": "0d2c9fb7f0f1efb09e8007684e8aea61df5d6b84",
+  "physical_console": true,
+  "parked_rebound_guest_render": 4500,
+  "normal_checkpoints": [
+    4500,
+    4501,
+    4560,
+    5100
+  ],
+  "images_compared": 13,
+  "pixels": 873600,
+  "pixel_differences": 0,
+  "paused_PCM_buffers": 7,
+  "paused_PCM_bytes": 57344,
+  "PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "inputs_exact": true,
+  "menu_coordinate8_restore_readback": true,
+  "conclusion": "Preserving vector/flags/ACC group removes the full-reset Mode7 mismatch in this control.",
+  "universal_GPR_liveness": false,
+  "machine_state_restore": false
+}

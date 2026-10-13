@@ -1,3 +1,29 @@
+# 2026-10-13 - GPR-only Mode7 passes; exact RSP context programs assembled
+
+MEASURED native0d2c9fb worker77698 terminal/coordinate8/menu/readback PASS.
+SameMode7 race4500 park/GPRreset preserves vectors/flags/ACC, next1/60/600
+normal4501/4560/5100 exact. ThirteenPNG873600px/sevenPCM57344bytes plusheads/
+regs/enabled/ACK exact. Fullreset296aa4a rejected2596px at4560; preserving
+the group removes this mismatch. No universal dead-GPR or machine-state claim.
+No liveCOM3. S1park/title evidence retained; S3format1209/O64 integrity only.
+
+New SCENE_RSP_CONTEXT1 assembles capture/restore programs (324bytes each),
+700bytes GPR32/vector32/ACC48x8/flags3. Actual381 roundtrips/65536 MID values/
+ninefaults PASS, noDIVopcode in13 currentrendererbanks. Capturepreservesall;
+restoreDMEMreadonly. NoCentrypointyet; unusedblobsGC'd, CPUtext/dataexactS1.
+See SCENE_STATE_RSP_CONTEXT.md and pinnedares9408cb43 semantics link.
+
+RESUME HERE: wire bounded native fullRSP context roundtrip with fullSPmemory/
+pipeline backup/readback, explicitregisterpoison/restore, recapture700bytes
+exact, originalSPmemoryrestore/restart3C and next1/60/600 image/PCM (title then
+Mode7). Neveruse rejectedfullreset asrestore. Preserve exclusiveUSBscratch,
+recorder, ordinarysaves/SD; failedcommitmenu-only. Then fullCPU/guestmem/JIT/
+mapper/input/hostclock ownerclosure and privatesamebuild slot/prevalidation/
+transaction/readback; persistent/crossbuild later. Full60/audio/corpus/master
+remainopen; no broadCI yet. Earlier history untouched below.
+
+---
+
 # 2026-10-13 - GPR-only RSP isolation frozen; Mode7 native next
 
 IMPLEMENTED runtime 0d2c9fb7f0f1efb09e8007684e8aea61df5d6b84, experiment/scene-state-s1.

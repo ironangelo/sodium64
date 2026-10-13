@@ -1,3 +1,21 @@
+# 2026-10-13 - R45 direct scalar bypass locally qualified; native story next
+
+Runtime d96796a9b8ca16c00ba061f9b9ac9b3eded95ed0; private immutable backdrop45-scalar-plan/archive.
+CGWSEL-excluded fills bypass extra helper/descriptor; retain current screen
+mask/alpha/geometry and blank fixed1778 return. Linked240 dispatch cases/two
+new faults, inherited488rows/160epochs/40packet589824pixels/five faults PASS.
+1000/4096 slots/14delay/43owners/D1E88<D4000/boot12TV5/backup bindings PASS.
+No native result for this repair yet. Previous1fcc940 scissor archive unchanged.
+
+RESUME HERE: execute private backdrop45-scalar-story-native.py, then rain.
+Compare frozen R44, image/PCM before quiet20s, finallycoordinate8/menu/readback.
+Root soleCOM3/no worker before dispatch. Retained DKC row gain must recheck,
+Mode7/broader and relevantCI still open. Default0/master/R44/R43 preserved;
+state serializer and full60/audio/corpus unresolved. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 ALttP rain exact; direct scalar fallback hypothesis next
 
 Runtime1fcc940 rain4images268800pixels/8192pausedPCM exact, checksum/settings/

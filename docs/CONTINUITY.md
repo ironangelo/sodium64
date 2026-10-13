@@ -1,3 +1,24 @@
+# 2026-10-13 - R44 DKC native breadth preflight recorded before run
+
+Frozen R43 runtime4382ae80/R44 runtime7a83d49, no source changes/rebuild.
+Prior R44 Build/CGRAM/Ares SUCCESS and ALttP native benefit preserved. DKC1
+Rev1 chosen to match historical revision; A11/A13 are not equivalent baselines.
+Root sole COM3, no worker before dispatch. Exact frame/input route control
+private r43-dkc-route, then r44-dkc-route replay image/paused PCM/quiet20s,
+full checksum/settings and menu/coordinate8 restoration. Ordinary save
+writeback disabled by native diagnostic/menu reboot path. Initial control
+600/1200/1800 plusStart8 at1800->2100 determines first-stage route.
+
+RESUME HERE: the recorded new native control may be live; inspect its private
+report/process before any COM3 session, never parallel serial owners. No polling
+inside quiet capture. An image/PCM mismatch blocks promotion until understood.
+Mode7 still needs actual native coverage; DKC alone is not it. Bounded save-state
+trial remains positive after compatibility controls; no serializer yet.
+Full goal/60/audio/corpus open, master/R43/R44 preserved. [Batch](NATIVE_BREADTH_R44.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-12 - R44 relevant qualification complete; native breadth/state trial next
 
 Runtime7a83d49; documentary head recorded on experiment/sub-alpha-r44. Rain

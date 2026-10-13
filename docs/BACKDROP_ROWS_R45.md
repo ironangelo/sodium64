@@ -324,3 +324,20 @@ private replay/image/PCM controls, then resolve ALttP small residuals using
 aligned intervals as needed. Current CI results are recorded separately;
 no rerun of unchanged qualified banks is needed. State feasibility remains
 positive and bounded after these material renderer gates, no serializer yet.
+
+## Current CI and native Mode7 control underway
+
+Source313642a Build38354690610 SUCCESS including the explicit BACKDROP_ROWS1
+renderer/transport/arena/observer cases and normal/native/profile smoke gates.
+CGRAM38354693122 SUCCESS; Ares38354695628 still in progress. Preserve that
+pending state until completion. [CI receipt](evidence/backdrop45-ci.json).
+
+Read-only menu inventory confirms an ordinary unchipped NTSC F-Zero revision
+for the representative Mode7 control. Private r44-mode7-fzero flag0 worker52933
+uses frozen subalpha44-anchor plan; initial600/1200/1800, exact Start1800,
+pause2100 then bounded menu/gameplay route commands. Root owns COM3 alone.
+Question: does flag1 retain actual Mode7 frames/pausedPCM and comparable native
+work under its original fallback? Capture a representative sample proving
+Mode7 residency, then replay flag1 against exact paused-frame/control inputs.
+Finallycoordinate8/menu/readback for each run. A matching title alone cannot
+qualify Mode7 gameplay or full sound. All game payloads/inventory remain private.

@@ -1,3 +1,54 @@
+# 2026-10-13 - Dynamic delta identified as FPS glyphs; quiet full gate next
+
+Runtimee9f6a81 worker96383 terminal/restored. Exactprivatebyte comparison:
+96bytes/48blackwhitepixels onlyFB1/FB3 rows23..30 x28..43, equalFPSglyph
+box (native_diag_init enablescounter4, menu draw_value at23*560+44*2).
+Canonical660 full67200 RGBpixels exact. No event/palette/JIT deltainexported
+regions. RawO64owner23 alsodiffers thisrun; fields stillunclassified.
+Coordinate8/menu/install/readback verified. No liveCOM3 before nextworker.
+
+Code35e1d3a051edc3b07fff0e2d29b92055e05fde90 pushed: SCENE_SLOT only FPS
+glyphdrawing off, observercounters stillrun; defaultnative/gameplay unchanged.
+state-cpu-context exportscanonical272Bwhitelistedowner privately. Parser242/
+1000fuzz, initcounter0/audio4/APU21, full43owners/24576events/194ROMslots pass.
+Frozenprivate scene-slot-quiet plan/archive. RESUME HERE run
+work/native_scene_slot.py --name scene-slot-quiet-title --plan scene-slot-quiet-plan.json
+--quiet-counter. Compareoldfrozenimage outsideonlyFPSbox23..30 x20..43;
+CURRENTcontrol/restoredimage comparisons stillfull67200. Rawdynamic3.3MiB
+fingerprint stillunmasked. OnO64diff inspectprivate CPU_changed_fields (keep
+originalserializer/readback). Stopmismatch andfinallycoordinate8 restore.
+Full60/fullDSPaudio/fidelity/corpus/master open; fullrestore gate notyetPASS.
+Earlierhistory preserved below.
+
+---
+
+# 2026-10-13 - Private full-machine slot implemented; native gate next
+
+Code 35e1d3a051edc3b07fff0e2d29b92055e05fde90, experiment/scene-state-s1, pushed; master unchanged.
+SCENE_SLOT1 default0, samebuild/sameboot volatile slot29owners3887607B.
+Static21/559691B +D6000..400000 dynamicarena, O64continuation/Status,
+indexed32TLB/currentCP0, remoteinput, SP8192+full700context. Fullbody/header
+CRC/bindings beforeload; destination/SP/TLB readback, freshhostmeasurement
+clocks. Noimport/persistence/crossbuild. InitialplainROMtypes0..2/8KiBSRAM;
+rejectEXL/ERL/FPU/64bitaddress/Wired/frameskip. Failureaftermutationmenuonly.
+Local269RSPstoreload/1908envelopefaults/64TLBcache/16bridge/234parser+1000fuzz
+PASS. All43ownerextents/full24576events/194ROMslots. SlotonlyOs keepsmemory
+belowD6000. OffCPUtext/data/allocatedextents exactnativefullRSPbaseline.
+
+ROMmetadata repair reuses aligned mapper headerword; no directcartLBU. Prior
+999db32 failedbinding104 beforeSP; faa4b7b metadata probe terminal/restored.
+Linkedmapper64 cases pass. Measured stage0 rejection is notfullrestorefailure.
+RESUME HERE: native private worker work/native_scene_slot.py --name scene-slot-quiet-title --plan scene-slot-quiet-plan.json.
+Frozenprivate scene-slot-quiet-plan/archive. No worker started at this checkpoint;
+inspect process/session/report before newCOM3. Savecanonical600, control601/
+660/1200, load600 after1200, restored1/60/600 normalimage/PCM and liveowner
+fingerprints. PendingnativeRDP/TMEM/pipeline/CPUcontinuation; stopmismatch,
+preserveevidence and finallyverifiedcoordinate8/menu/readback. ThenMode7.
+This prototype is not accepted save states, full60/fullDSP/audio/fidelity/corpus
+or master integration. Earlierhistory untouched below.
+
+---
+
 # 2026-10-13 - Dynamic difference narrowed; private bytes/canonical image next
 
 Runtime96e4a9b worker28199 terminal/restored repeatsfull600load/601exact;

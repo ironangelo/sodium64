@@ -1,3 +1,36 @@
+# 2026-10-13 - R49 material one-voice complete-DSP saving; active cost still blocks
+
+RESUME HERE: worker12826 terminal exit0; all native controls/recovery passed,
+no COM3 controller live. Runtime68667b74e5d472a01cd38e9f926c155a4695f391, experiment/dsp-signal-elide-r49.
+Native medians (three repeats each): one voice67.864939
+->56.130603ms (+17.290719% time saving);
+eight highpitch92.099776->92.391893ms
+(-0.317175% saving); allfeatures96.535083
+->95.496213ms (+1.076157% saving).
+2048 frames require64ms. One voice87.704% budget, active144.362%/149.213% still
+exceed it before CPU/APU/rendering. Retain isolated/default0 as limited complete
+core work reduction, not gameplay replacement or native60 acceptance. Worst
+active small cost increase is explicit and within predeclared2% guard.
+[Report](DSP_SIGNAL_ELIDE_R49.md); numeric native receipt. No synthetic AI output.
+
+All18 scenario PCM checksums/36864 original synthetic frames match host.
+Every trial64KiB RAM backup/readback/restore. Both variants'full67200pixels/
+8192livePCM/head/register/enabled/boundary unchanged; gueststep600->660 pass.
+Coordinate8/menu/install/readback verified. R47 limited3..4% gain remains
+isolated/default0; R48 compile-only alias remedy rejected; R44/R45 unmerged and
+master7cc8fac unchanged. State prototype remains bounded, no expansion now.
+
+Next: active-voice complete DSP arithmetic/scheduling is the open cost gate.
+Use existing decoded linked core and source to select one larger reduction with
+a concrete cost question; don't repeat unchanged drop-in or tune the env guard.
+Keep the pinned oracle. Relevant changed-core CI qualification remains pending
+before promotion; unchanged renderer gates are reusable. Prefer native cost
+discrimination after indispensable phase/RAM/PCM/ABI/arena proofs. N64-alone
+ceiling, full DSP/DAC/SNES/game fidelity/native60/corpus/integration stay OPEN.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R49 complete-DSP native cost A/B running
 
 RESUME HERE: yielded native exec12826 is live, flag0 installed/readback passed.

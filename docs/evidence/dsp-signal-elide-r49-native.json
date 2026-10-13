@@ -1,0 +1,51 @@
+{
+  "status": "MEASURED; retained as limited complete-core cost reduction",
+  "runtime_source": "68667b74e5d472a01cd38e9f926c155a4695f391",
+  "same_source_flags": [
+    0,
+    1
+  ],
+  "physical_console": true,
+  "trials_per_variant": 3,
+  "original_synthetic_stereo_frames_with_host_checksums": 36864,
+  "core_costs": [
+    {
+      "case": 0,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 67.86493866666666,
+      "candidate_median_ms": 56.13060266666667,
+      "time_saving_percent": 17.290719229314742,
+      "candidate_budget_fraction": 0.8770406666666667
+    },
+    {
+      "case": 1,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 92.099776,
+      "candidate_median_ms": 92.39189333333333,
+      "time_saving_percent": -0.31717485755158314,
+      "candidate_budget_fraction": 1.4436233333333333
+    },
+    {
+      "case": 2,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 96.53508266666667,
+      "candidate_median_ms": 95.49621333333333,
+      "time_saving_percent": 1.0761572939451791,
+      "candidate_budget_fraction": 1.4921283333333333
+    }
+  ],
+  "each_trial_APURAM_backup_readback_restore_bytes": 65536,
+  "per_variant_unchanged_live_image_pixels": 67200,
+  "per_variant_unchanged_live_PCM_bytes": 8192,
+  "live_heads_registers_enabled_guest_boundary_unchanged": true,
+  "guest_step600_to660_passes_both_variants": true,
+  "coordinate8_menu_install_readback_restored": true,
+  "synthetic_PCM_submitted_to_AI": false,
+  "budget_excludes_guest_CPU_APU_rendering_USB_setup_and_checksums": true,
+  "gameplay_replacement_rejected_due_active_eight_voice_budgets": true,
+  "DAC_SNES_game_fidelity_native60_corpus_and_integration_not_claimed": true,
+  "master_integration": false
+}

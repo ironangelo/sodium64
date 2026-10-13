@@ -1,6 +1,6 @@
 # R49 - Discarded interpolation work in the complete DSP probe
 
-IMPLEMENTED; native cost pending. `DSP_SIGNAL_ELIDE=1` defaults0 and requires
+MEASURED; limited complete-core cost reduction retained, gameplay replacement blocked. `DSP_SIGNAL_ELIDE=1` defaults0 and requires
 FULL_DSP_PROBE1. It changes only the diagnostic clocked complete core. There is
 no gameplay replacement or master integration; the current mixer stays intact.
 
@@ -56,3 +56,31 @@ guest CPU/APU/rendering or demonstrate gameplay60. In particular, all-active
 eight-voice cases need not benefit from this redundancy rule and can still block
 a replacement. This does not repeat the unmodified drop-in or qualify DAC/SNES
 fidelity, native60, wider corpus or integration.
+
+
+## Native same-source cost result
+
+Worker12826 terminal exit0, runtime68667b74e5d472a01cd38e9f926c155a4695f391, three repeats per flag.
+All18 scenario results/36864 original synthetic stereo frames match host
+checksums/nonzero counts. Each trial restores/readbacks64KiB APURAM. Both
+variants preserve all67200 live image pixels/8192 live PCM bytes/head/registers/
+enabled/boundary and step600->660. Coordinate8/menu/install/readback restored.
+
+| Original synthetic workload | Baseline ms | Candidate ms | Time saving | Candidate fraction of64ms |
+| --- | ---: | ---: | ---: | ---: |
+| One voice | 67.864939 | 56.130603 | +17.290719% | 87.704% |
+| Eight high-pitch voices | 92.099776 | 92.391893 | -0.317175% | 144.362% |
+| Eight with echo/FIR/PMON/noise | 96.535083 | 95.496213 | +1.076157% | 149.213% |
+
+The one-voice reduction exceeds the predeclared15% criterion; active cases
+remain within the2% regression guard. Retain this isolated/default0 improvement.
+Eight high-pitch has a small observed cost increase, kept explicit; echo/FIR
+has only limited saving. Both still exceed the64ms standalone budget before
+guest CPU/APU/rendering. A gameplay replacement is therefore still rejected.
+The one-voice result is not a gameplay/native60 or DAC/SNES fidelity acceptance.
+[Numeric receipt](evidence/dsp-signal-elide-r49-native.json).
+
+Next address full active-voice cost instead of fine-tuning this guard. Relevant
+changed-core qualification remains open; unchanged renderer suites should be
+reused. The pinned original oracle and all earlier rejected/measured branches
+remain preserved. No scalar budget result proves a general N64 ceiling.

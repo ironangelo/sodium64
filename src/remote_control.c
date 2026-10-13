@@ -1184,6 +1184,8 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         append(" provenance=post_submit_natural_rsp_dp_ai_retirement serializer=0 restore=0");
 #if defined(SODIUM64_SCENE_SLOT) && !defined(REMOTE_CONTROL_HOST)
         field(" slot_saved_status=",remote_saved_status);
+        field(" slot_rom_cart=",scene_rom_cart);field(" slot_rom_bytes=",scene_rom_bytes);
+        field(" slot_rom_type=",scene_rom_type);field(" slot_sram_exp=",native_diag_guest_sram_exp);
 #endif
 #if (defined(SODIUM64_SCENE_RSP_REBIND) || defined(SODIUM64_SCENE_RSP_CONTEXT)) && !defined(REMOTE_CONTROL_HOST)
         if(remote_scene_canonical) {

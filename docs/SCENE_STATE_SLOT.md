@@ -55,3 +55,9 @@ PCM/heads/registers, input ACKs and live owner fingerprints. Stop on mismatch,
 preserve evidence and restore coordinate8. Then use Mode7 and active gameplay.
 Persistent RDP/TMEM assumptions still need these native continuation gates.
 No performance/full audio/fidelity/corpus/integration claim follows from a slot.
+
+First native runtime999db32 worker50104 is terminal: normal ALttP600 image
+67200 pixels and implemented PCM8192 bytes/head/registers matched the frozen
+control. Fingerprint rejected at ROM binding stage104 before any SP operation.
+No machine save/load was attempted. Coordinate8/menu/readback restored. Keep
+this failure distinct from local passes; inspect exact mapper metadata next.

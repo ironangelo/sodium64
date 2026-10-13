@@ -1,3 +1,20 @@
+# 2026-10-13 - Same-source ALttP flag0 control exact; flag1 comparison next
+
+Source313642a flag0 metadata baseline passes threeimages201600pixels and8192
+pausedPCM/heads/registers/enabled, checksum/settings and coordinate8/menu/
+readback. Worker31791 terminal/noCOM3 worker. Storyfull56.097809/s, wait2.938141ms.
+ACKguest/render1853, absolute endpoints1855..2978, declared1862..2861 present.
+
+RESUME HERE: privateDate13/backdrop45-anchor-story-native.py with immutable
+flag1 metadata plan/archive. Same scene1852, threehistorical images/pausedPCM
+then quiet20s, align predeclared1000 endpointIDs1862..2861 against newflag0
+subalpha44-anchor-story-physical.json. Finallycoordinate8/menu/readback;
+rootsoleCOM3. No code change or duplicateCI. Small losses still open/default0
+until this discriminating same-source alignment comparison. CI/DKC/Mode7
+results and states owner pass remain as below; no serializer/full60 closure.
+Earlier history untouched below.
+
+---
 # 2026-10-13 - Same-source ALttP exact1000 endpoint control predeclared
 
 R45 source313642a: DKC exact240 +108.689096percent, Mode7 exact120 -0.135081

@@ -1,5 +1,18 @@
 # R44 - Sub presence in coverage, work in progress
 
+## 2026-10-12 - native rain result
+
+MEASURED source7a83d49, actual N64:40.540954 completions/s versus R43
+36.804012 (+10.153626percent), corrected control32.288968 (+25.556674percent).
+Mean CPU/RSP wait4.879743ms versus6.976365ms. Four frames268800 pixels and8192
+paused PCM/head/register/enabled match; complete checksum/settings and menu/
+coordinate8 restoration/readback PASS. Frameskip0/APU21/audio4/precision20.
+This proves material value in this route, not presentation FPS, complete
+audio fidelity, Mode7 edges, full-game compatibility or60Hz. General native
+interval remains24.667ms, about8ms above16.7ms. Full relevant CI still pending.
+Next: frozen-artifact story1852/3600/4800 control before wider fidelity/CI.
+[Curated measurement](evidence/sub-alpha-r44-rain.json). Raw data stays private.
+
 ## 2026-10-12 - fixed-space repair and local qualification
 
 IMPLEMENTED, not MEASURED/VALIDATED. Fast selector now occupies its owned

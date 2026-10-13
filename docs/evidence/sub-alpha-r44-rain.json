@@ -1,0 +1,32 @@
+{
+  "status": "MEASURED/not VALIDATED or integrated",
+  "source": "7a83d4982f20f7dd2fd44ab506d66a5a084f6db1",
+  "experiment": "Sub coverage presence with Main winner Z and Mode7 old Z",
+  "route": "ALttP rain12944",
+  "completed_boundaries_per_second": 40.540953733336465,
+  "R43_completed_boundaries_per_second": 36.80401217960998,
+  "improvement_vs_R43_percent": 10.153625467488613,
+  "improvement_vs_corrected_reference_percent": 25.556674199405816,
+  "mean_CPU_RSP_wait_ms": 4.879743238095238,
+  "R43_mean_CPU_RSP_wait_ms": 6.976365069199457,
+  "configuration": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layer": 0
+  },
+  "frames_compared": 4,
+  "pixels_compared": 268800,
+  "pixel_differences": 0,
+  "paused_PCM": {
+    "bytes": 8192,
+    "differences": 0,
+    "registers_heads_enabled_match": true
+  },
+  "checksum_and_settings_validated": true,
+  "menu_coordinate8_restore_and_readback": true,
+  "full_CI": false,
+  "presentation_FPS_or_full_audio_or_game_fidelity_proved": false,
+  "next": "story control, then expand native fidelity/CI on demonstrated candidate"
+}

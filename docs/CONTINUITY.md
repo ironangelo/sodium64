@@ -1,3 +1,23 @@
+# 2026-10-13 - S2 Mode7 candidate running; sole COM3 worker27620
+
+Frozen native runtime296aa4a3cbfef69d2b13ede9bae15c78030594e0, scene-s2-pipeline-plan/archive.
+Sole COM3 worker27620 work/native_scene_s2_mode7.py --candidate --name
+scene-s2-mode7-candidate --control privateDate13/scene-s2-mode7-reference/report.json.
+Reference52638 terminal/menu/coordinate8/readback PASS, old14 controls exact;
+new next1/60/600 reference4500/4501/4560/5100 captured. Candidate currently
+following same route, then canonicalpark4500/rebind and fullimage/PCM/head/
+register/enabled comparisons. Finallycoordinate8/menu/install/readback.
+
+RESUME HERE: poll27620/report/process; do not open another COM3 session until
+terminal restoration verified. Native pass advances to explicit private
+same-build state slot/restore ownership per SCENE_STATE_OWNERS.md. Failures
+reject or repair context before serialization. CodeHEAD1064060 documentation
+checkpoint (runtime296aa4a); continuity and owner map published. S1 park and
+S2 ALttP title next1/60/600 exact; serializer/import/full restore/crossbuild/
+full60/audio/corpus/master integration remain open. Earlier history below.
+
+---
+
 # 2026-10-13 - S2 Mode7 reference captured; reconstruction candidate next
 
 Reference313642a flag0 worker52638 terminal/coordinate8/menu/readback PASS.

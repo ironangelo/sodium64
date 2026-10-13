@@ -1,5 +1,5 @@
 {
-  "status": "MEASURED; intermediate gain requires one confirmation",
+  "status": "MEASURED; limited gain reproduced, retained isolated",
   "runtime_source": "849412ee911c27850a22af45866a4439e99e380b",
   "same_source_flags": [
     0,
@@ -55,5 +55,54 @@
   "capture_checksum_settings_full_retention_and_restoration_pass": true,
   "coordinate8_menu_install_readback_restored": true,
   "full_DSP_DAC_native60_corpus_and_integration_not_claimed": true,
-  "master_integration": false
+  "master_integration": false,
+  "single_reverse_order_confirmation": {
+    "variant_order": [
+      1,
+      0
+    ],
+    "fixed_absolute_intervals": {
+      "title": {
+        "baseline": {
+          "first": 920,
+          "last": 1219,
+          "intervals": 300,
+          "completed_boundaries_per_second": 49.21744507327005,
+          "mean_CPU_RSP_wait_ms": 0.0024974933333333335,
+          "mean_CPU_VI_wait_ms": 0.0027510755555555555
+        },
+        "candidate": {
+          "first": 920,
+          "last": 1219,
+          "intervals": 300,
+          "completed_boundaries_per_second": 50.72014271019704,
+          "mean_CPU_RSP_wait_ms": 0.0024647111111111113,
+          "mean_CPU_VI_wait_ms": 0.005449884444444444
+        },
+        "change_percent": 3.0531809091063566
+      },
+      "room": {
+        "baseline": {
+          "first": 2000,
+          "last": 2599,
+          "intervals": 600,
+          "completed_boundaries_per_second": 55.36235793150381,
+          "mean_CPU_RSP_wait_ms": 0.002457848888888889,
+          "mean_CPU_VI_wait_ms": 0.06556938666666667
+        },
+        "candidate": {
+          "first": 2000,
+          "last": 2599,
+          "intervals": 600,
+          "completed_boundaries_per_second": 57.64939797415239,
+          "mean_CPU_RSP_wait_ms": 0.002484657777777778,
+          "mean_CPU_VI_wait_ms": 0.06331008
+        },
+        "change_percent": 4.13103799783634
+      }
+    },
+    "exact_source_image_PCM_gate_reused": true,
+    "capture_integrity_configuration_and_restore_pass": true
+  },
+  "further_R47_fine_tuning_or_unchanged_broad_CI": false
 }

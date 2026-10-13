@@ -21,10 +21,11 @@ def main():
             if data[4]==1:name,start,length,info,_,_=struct.unpack_from(endian+'IIIBBH',data,offset)
             else:name,info,_,_,start,length=struct.unpack_from(endian+'IBBHQQ',data,offset)
             label=names_blob[name:].split(b'\0',1)[0].decode()
-            if info&15==2 and ('SPC_DSP' in label or label=='full_dsp_probe_execute'):
+            if info&15==2 and ('SPC_DSP' in label or 'full_dsp_probe' in label or 'colored_owner' in label):
                 functions.append((start,length,label))
     names={name for _,_,name in functions}
-    assert {'full_dsp_probe_execute','_ZN7SPC_DSP3runEi','_ZN7SPC_DSP9voice_V3cEPNS_7voice_tE',
+    assert {'full_dsp_probe_execute','full_dsp_probe_execute_mode'} & names
+    assert {'_ZN7SPC_DSP3runEi','_ZN7SPC_DSP9voice_V3cEPNS_7voice_tE',
             '_ZN7SPC_DSP8voice_V4EPNS_7voice_tE','_ZN7SPC_DSP4initEPv',
             '_ZN7SPC_DSP10set_outputEPsi','_ZN7SPC_DSP4loadEPKh'}<=names
     def word(pc):return sum(memory[(pc+i)&0x1fffffff]<<(24-8*i) for i in range(4))

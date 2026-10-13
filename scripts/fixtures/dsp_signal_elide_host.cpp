@@ -24,6 +24,12 @@ static unsigned char ram0[65536],ram1[65536];
 static short pcm0[32],pcm1[32];
 static unsigned checks,directed,slices,frames;
 static uint32_t rng=0x49d5a7;
+#ifdef SODIUM64_TEST_CACHE_PROBE
+extern "C" const short *full_dsp_probe_gauss_lease(short *owner);
+extern "C" const short *full_dsp_probe_gauss_current();
+static short gaussian_copy[512];
+static const short *original_gauss;
+#endif
 static uint32_t random_word(){rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return rng;}
 static void check(bool ok,const char *what){if(!ok){fprintf(stderr,"mismatch %s check=%u\n",what,checks);abort();}}
 
@@ -86,6 +92,10 @@ static void initialize(unsigned voices){
     ref.set_output(pcm0,32);opt.set_output(pcm1,32);
 }
 int main(){
+#ifdef SODIUM64_TEST_CACHE_PROBE
+    original_gauss=full_dsp_probe_gauss_current();
+    full_dsp_probe_gauss_lease(gaussian_copy);
+#endif
     initialize(255);
     for(unsigned voice=0;voice<8;voice++)for(unsigned e=0;e<3;e++)
     for(unsigned non=0;non<2;non++)for(unsigned fraction=0;fraction<256;fraction++){
@@ -112,6 +122,13 @@ int main(){
     for(unsigned scenario=0;scenario<4;scenario++){
         initialize(masks[scenario]);
         for(unsigned step=0;step<2048;step++){
+#ifdef SODIUM64_TEST_CACHE_PROBE
+            if(step%23==0){
+                full_dsp_probe_gauss_lease(0);
+                check(full_dsp_probe_gauss_current()==original_gauss,"Gauss lease reset");
+                if(step&1)full_dsp_probe_gauss_lease(gaussian_copy);
+            }
+#endif
             unsigned clocks=step<32?1:1+random_word()%96;
             if(step%7==0){
                 unsigned addr=random_word()&127,value=random_word()&255;

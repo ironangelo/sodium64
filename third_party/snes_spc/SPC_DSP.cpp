@@ -126,12 +126,30 @@ static short const gauss [512] =
 1299,1300,1300,1301,1302,1302,1303,1303,1303,1304,1304,1304,1304,1304,1305,1305,
 };
 
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+static short const *selected_gauss=gauss;
+extern "C" short const *full_dsp_probe_gauss_lease(short *owner)
+{
+	if(owner)for(unsigned i=0;i<512;i++)owner[i]=gauss[i];
+	selected_gauss=owner?owner:gauss;
+	return selected_gauss;
+}
+extern "C" short const *full_dsp_probe_gauss_current()
+{
+	return selected_gauss;
+}
+#endif
 inline int SPC_DSP::interpolate( voice_t const* v )
 {
 	// Make pointers into gaussian based on fractional position between samples
 	int offset = v->interp_pos >> 4 & 0xFF;
-	short const* fwd = gauss + 255 - offset;
-	short const* rev = gauss       + offset; // mirror left half of gaussian
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+	short const *table=selected_gauss;
+#else
+	short const *table=gauss;
+#endif
+	short const* fwd = table + 255 - offset;
+	short const* rev = table       + offset; // mirror left half of gaussian
 	
 	int const* in = &v->buf [(v->interp_pos >> 12) + v->buf_pos];
 	int out;

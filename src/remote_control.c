@@ -848,27 +848,44 @@ static void gain_probe(const char *id,uint32_t framebuffer) {
 static unsigned full_dsp_probe_needs_menu;
 #ifdef REMOTE_CONTROL_HOST
 extern uint32_t remote_host_full_dsp_probe(full_dsp_probe_result result[FULL_DSP_PROBE_CASES]);
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+extern uint32_t remote_host_full_dsp_probe_mode(full_dsp_probe_result result[FULL_DSP_PROBE_CASES],uint32_t mode);
+#endif
 #else
 extern unsigned char apu_ram[65536];
 static int full_probe_transfer(unsigned char *scratch,uint32_t offset,int write) {
     return pi_transfer(scratch,USB_CART+offset,512,write);
 }
 #endif
-static void full_probe(const char *id,uint32_t framebuffer) {
+static void full_probe(const char *id,uint32_t framebuffer,uint32_t mode) {
+#ifndef SODIUM64_DSP_FULL_CACHE_PROBE
+    (void)mode;
+#endif
     if(!present||transport_error||menu_error){error(id,"audio_transport_unready");return;}
     if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
     if(!remote_paused){error(id,"not_paused");return;}
     if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
     full_dsp_probe_result result[FULL_DSP_PROBE_CASES];
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    if(native_diag_snapshot_ready||native_diag_phase){error(id,"capture_snapshot_owned");return;}
+#endif
     uint32_t state;
 #ifdef REMOTE_CONTROL_HOST
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    state=remote_host_full_dsp_probe_mode(result,mode);
+#else
     state=remote_host_full_dsp_probe(result);
+#endif
 #else
     /* Match the existing USB TX mapping contract. No SD engine is used.
      * Root exclusively owns COM3; reply transmission begins after restore. */
     uint32_t config[2];
     if(!wait_usb('U')||!command('C',1,1,config)){error(id,"full_dsp_backup_failed");return;}
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    state=full_dsp_probe_execute_mode(apu_ram,uncached(transfer_buffer),full_probe_transfer,count,result,mode);
+#else
     state=full_dsp_probe_execute(apu_ram,uncached(transfer_buffer),full_probe_transfer,count,result);
+#endif
     if(!command('C',1,config[1],0))full_dsp_probe_needs_menu=1;
 #endif
     if(state==2)full_dsp_probe_needs_menu=1;
@@ -876,6 +893,9 @@ static void full_probe(const char *id,uint32_t framebuffer) {
         error(id,state==0?"full_dsp_backup_failed":"full_dsp_restore_failed");return;
     }
     prefix(id,1);append(" full_dsp_probe=1 cases=3 restored=1");
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    field(" cache_mode=",mode);
+#endif
     field(" count_hz=",REMOTE_COUNT_HZ);field(" render_frame_id=",remote_render_frames);
     for(unsigned scenario=0;scenario<FULL_DSP_PROBE_CASES;scenario++) {
         field(" case",scenario);field("_frames=",result[scenario].frames);
@@ -883,6 +903,14 @@ static void full_probe(const char *id,uint32_t framebuffer) {
         field(" case",scenario);field("_max_block_ticks=",result[scenario].max_block_ticks);
         field(" case",scenario);field("_checksum=",result[scenario].checksum);
         field(" case",scenario);field("_nonzero=",result[scenario].nonzero_samples);
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+        field(" case",scenario);field("_core_cache_index=",result[scenario].core_cache_index);
+        field(" case",scenario);field("_output_cache_index=",result[scenario].output_cache_index);
+        field(" case",scenario);field("_core_scratch_offset=",result[scenario].core_scratch_offset);
+        field(" case",scenario);field("_output_scratch_offset=",result[scenario].output_scratch_offset);
+        field(" case",scenario);field("_gauss_cache_index=",result[scenario].gauss_cache_index);
+        field(" case",scenario);field("_gauss_scratch_offset=",result[scenario].gauss_scratch_offset);
+#endif
     }
     append(" provenance=synthetic_complete_reference_not_gameplay_or_dac");(void)finish();
 }
@@ -1170,8 +1198,15 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
     if(eq(verb,"audio-full-dsp-probe")) {
         if(nt!=3){error(id,"argument_count");return;}
-        full_probe(id,retired_framebuffer);return;
+        full_probe(id,retired_framebuffer,0);return;
     }
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    if(eq(verb,"audio-full-dsp-cache-core")||eq(verb,"audio-full-dsp-cache-pcm")||eq(verb,"audio-full-dsp-cache-both")||eq(verb,"audio-full-dsp-cache-gauss")||eq(verb,"audio-full-dsp-cache-all")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        uint32_t mode=eq(verb,"audio-full-dsp-cache-core")?1:eq(verb,"audio-full-dsp-cache-pcm")?2:eq(verb,"audio-full-dsp-cache-both")?3:eq(verb,"audio-full-dsp-cache-gauss")?4:7;
+        full_probe(id,retired_framebuffer,mode);return;
+    }
+#endif
 #endif
 #ifdef SODIUM64_DSP_GAIN_PROBE
     if(eq(verb,"audio-gain-probe")) {

@@ -91,9 +91,25 @@ static uint32_t full_probe_status=1;
 uint32_t remote_host_full_dsp_probe(full_dsp_probe_result result[FULL_DSP_PROBE_CASES]) {
     full_probe_calls++;
     for(unsigned i=0;i<FULL_DSP_PROBE_CASES;i++)
-        result[i]=(full_dsp_probe_result){2048,1234+i,321+i,4321+i,1000+i};
+        result[i]=(full_dsp_probe_result){.frames=2048,.ticks=1234+i,.max_block_ticks=321+i,.checksum=4321+i,.nonzero_samples=1000+i};
     return full_probe_status;
 }
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+static unsigned full_probe_last_mode;
+uint32_t remote_host_full_dsp_probe_mode(full_dsp_probe_result result[FULL_DSP_PROBE_CASES],uint32_t mode) {
+    full_probe_last_mode=mode;
+    uint32_t status=remote_host_full_dsp_probe(result);
+    for(unsigned i=0;i<FULL_DSP_PROBE_CASES;i++) {
+        result[i].core_cache_index=mode&1?0x1000:0xdb0;
+        result[i].output_cache_index=mode&2?0x1c00:0x1a80;
+        result[i].core_scratch_offset=mode&1?0x3000:0;
+        result[i].output_scratch_offset=mode&2?0x3c00:0xffffffff;
+        result[i].gauss_cache_index=mode&4?0x1800:0x510;
+        result[i].gauss_scratch_offset=mode&4?0x3800:0xffffffff;
+    }
+    return status;
+}
+#endif
 #endif
 uint32_t remote_host_count(void){return clock_value;}
 int remote_host_menu(void){menu_calls++;return 0;}
@@ -406,6 +422,9 @@ int main(void){
 #endif
 #ifdef SODIUM64_FULL_DSP_PROBE
     remote_render_frames=10;remote_paused=0;native_diag_phase=0;remote_arm_pending=0;
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    native_diag_snapshot_ready=0;
+#endif
     expect("s64 12345678 audio-full-dsp-probe","ERR not_paused");check(!full_probe_calls);
     remote_paused=1;native_diag_phase=1;
     expect("s64 12345678 audio-full-dsp-probe","ERR capture_busy");check(!full_probe_calls);
@@ -415,8 +434,41 @@ int main(void){
     expect("s64 12345678 audio-full-dsp-probe","ERR frame_unavailable");check(!full_probe_calls);
     remote_render_frames=10;
     expect("s64 12345678 audio-full-dsp-probe extra","ERR argument_count");check(!full_probe_calls);
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    unsigned char snapshot_before[32768];memcpy(snapshot_before,native_diag_snapshot,sizeof(snapshot_before));
+    native_diag_snapshot_ready=1;
+    expect("s64 12345678 audio-full-dsp-probe","ERR capture_snapshot_owned");check(!full_probe_calls);
+    native_diag_snapshot_ready=0;
+    static const uint32_t occupied_phases[]={6,7,0xffffffff};
+    for(unsigned i=0;i<3;i++){
+        native_diag_phase=occupied_phases[i];
+        expect("s64 12345678 audio-full-dsp-probe","ERR capture_snapshot_owned");check(!full_probe_calls);
+        check(!memcmp(snapshot_before,native_diag_snapshot,sizeof(snapshot_before)));
+    }
+    native_diag_phase=0;
+#endif
     expect("s64 12345678 audio-full-dsp-probe","full_dsp_probe=1 cases=3 restored=1");check(full_probe_calls==1);
     check(strstr(response,"case2_frames=2048 case2_ticks=1236")!=NULL);
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    check(full_probe_last_mode==0&&strstr(response,"cache_mode=0"));
+    static const char *cache_verbs[]={"s64 12345678 audio-full-dsp-cache-core","s64 12345678 audio-full-dsp-cache-pcm","s64 12345678 audio-full-dsp-cache-both"};
+    for(unsigned i=0;i<3;i++) {
+        remote_paused=0;expect(cache_verbs[i],"ERR not_paused");remote_paused=1;
+        native_diag_snapshot_ready=1;expect(cache_verbs[i],"ERR capture_snapshot_owned");native_diag_snapshot_ready=0;
+        unsigned before=full_probe_calls;
+        expect(cache_verbs[i],"full_dsp_probe=1 cases=3 restored=1");
+        check(full_probe_calls==before+1&&full_probe_last_mode==i+1);
+        check(strstr(response,i+1==2?"case0_core_cache_index=3504":"case0_core_cache_index=4096")!=NULL);
+    }
+    expect("s64 12345678 audio-full-dsp-cache-both extra","ERR argument_count");
+    expect("s64 12345678 audio-full-dsp-cache-gauss","cache_mode=4");
+    check(full_probe_last_mode==4&&strstr(response,"case0_gauss_cache_index=6144")!=NULL);
+    expect("s64 12345678 audio-full-dsp-cache-all","cache_mode=7");
+    check(full_probe_last_mode==7&&strstr(response,"case0_gauss_scratch_offset=14336")!=NULL);
+    expect("s64 12345678 audio-full-dsp-cache-all extra","ERR argument_count");
+    // Restore the original call-count baseline for its unchanged failure gates.
+    full_probe_calls=1;
+#endif
     full_probe_status=0;
     expect("s64 12345678 audio-full-dsp-probe","ERR full_dsp_backup_failed");check(full_probe_calls==2&&remote_paused);
     full_probe_status=2;

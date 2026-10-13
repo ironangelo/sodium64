@@ -6,7 +6,24 @@
 #include "../third_party/snes_spc/SPC_DSP.h"
 #include <string.h>
 
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+#include <new>
+extern "C" unsigned char native_diag_snapshot[32768];
+typedef char scratch_core_fits_snapshot[(sizeof(SPC_DSP)<=32768)?1:-1];
+static SPC_DSP *scratch_reference_dsp;
+#define reference_dsp (*scratch_reference_dsp)
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+typedef char colored_lease_fits[(8191+8192+0x1c00+128<=32768&&sizeof(SPC_DSP)<=0x800)?1:-1];
+static unsigned char *colored_owner(unsigned color) {
+    uintptr_t base=(uintptr_t)native_diag_snapshot;
+    // The extra8KiB keeps both colored spans beyond the ordinary core lease.
+    uintptr_t boundary=(base+8191)&~(uintptr_t)8191;
+    return (unsigned char *)(boundary+8192+color);
+}
+#endif
+#else
 static SPC_DSP reference_dsp;
+#endif
 
 static void workload(unsigned char *ram, unsigned scenario) {
     memset(ram,0,65536);
@@ -52,13 +69,24 @@ static void workload(unsigned char *ram, unsigned scenario) {
 }
 
 static void run(unsigned char *ram,unsigned scenario,full_dsp_probe_clock clock,
-                full_dsp_probe_result *result) {
+                full_dsp_probe_result *result,unsigned mode,const short *gaussian) {
     workload(ram,scenario);
     *result=full_dsp_probe_result();
     result->checksum=2166136261u;
     //32 stereo frames per block. Re-arm the output to avoid upstream's small
     // overflow buffer. Clock reads exclude setup/checksumming and USB copies.
-    short output[64];
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    short ordinary_output[64];
+    short *output=mode&2?(short *)colored_owner(0x1c00):ordinary_output;
+    result->core_cache_index=(uintptr_t)&reference_dsp&8191;
+    result->output_cache_index=(uintptr_t)output&8191;
+    result->core_scratch_offset=(unsigned char *)&reference_dsp-native_diag_snapshot;
+    result->output_scratch_offset=mode&2?(unsigned char *)output-native_diag_snapshot:0xffffffffu;
+    result->gauss_cache_index=(uintptr_t)gaussian&8191;
+    result->gauss_scratch_offset=mode&4?(const unsigned char *)gaussian-native_diag_snapshot:0xffffffffu;
+#else
+    (void)mode;(void)gaussian;short output[64];
+#endif
     for(unsigned block=0;block<FULL_DSP_PROBE_FRAMES/32;block++) {
         reference_dsp.set_output(output,64);
         uint32_t before=clock();
@@ -76,10 +104,10 @@ static void run(unsigned char *ram,unsigned scenario,full_dsp_probe_clock clock,
     }
 }
 
-uint32_t full_dsp_probe_execute(unsigned char *ram,unsigned char *scratch,
+static uint32_t execute(unsigned char *ram,unsigned char *scratch,
     full_dsp_probe_transfer transfer,full_dsp_probe_clock clock,
-    full_dsp_probe_result result[FULL_DSP_PROBE_CASES]) {
-    if(!ram||!scratch||!transfer||!clock||!result)return 0;
+    full_dsp_probe_result result[FULL_DSP_PROBE_CASES],unsigned mode) {
+    if(!ram||!scratch||!transfer||!clock||!result||mode>7)return 0;
     // Back up and read back every block before touching guest RAM. Scratch
     // must be uncached for the native PI DMA implementation.
     for(unsigned offset=0;offset<65536;offset+=512) {
@@ -87,8 +115,27 @@ uint32_t full_dsp_probe_execute(unsigned char *ram,unsigned char *scratch,
         if(!transfer(scratch,offset,1)||!transfer(scratch,offset,0))return 0;
         for(unsigned byte=0;byte<512;byte++)if(scratch[byte]!=ram[offset+byte])return 0;
     }
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    // Both A/B variants lease only unpublished, unsealed snapshot storage.
+    // The remote admission gate denies capture/snapshot owners before backup.
+    void *owner=native_diag_snapshot;
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    if(mode&1)owner=colored_owner(0x1000);
+#endif
+    scratch_reference_dsp=::new (owner) SPC_DSP();
+#endif
+    const short *gaussian=0;
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    gaussian=full_dsp_probe_gauss_lease(mode&4?(short *)colored_owner(0x1800):0);
+#endif
     for(unsigned scenario=0;scenario<FULL_DSP_PROBE_CASES;scenario++)
-        run(ram,scenario,clock,&result[scenario]);
+        run(ram,scenario,clock,&result[scenario],mode,gaussian);
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+    full_dsp_probe_gauss_lease(0);
+#endif
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    scratch_reference_dsp->~SPC_DSP();scratch_reference_dsp=0;
+#endif
     for(unsigned offset=0;offset<65536;offset+=512) {
         if(!transfer(scratch,offset,0))return 2;
         volatile unsigned char *restored=ram+offset;
@@ -97,3 +144,16 @@ uint32_t full_dsp_probe_execute(unsigned char *ram,unsigned char *scratch,
     }
     return 1;
 }
+
+uint32_t full_dsp_probe_execute(unsigned char *ram,unsigned char *scratch,
+    full_dsp_probe_transfer transfer,full_dsp_probe_clock clock,
+    full_dsp_probe_result result[FULL_DSP_PROBE_CASES]) {
+    return execute(ram,scratch,transfer,clock,result,0);
+}
+#ifdef SODIUM64_DSP_FULL_CACHE_PROBE
+uint32_t full_dsp_probe_execute_mode(unsigned char *ram,unsigned char *scratch,
+    full_dsp_probe_transfer transfer,full_dsp_probe_clock clock,
+    full_dsp_probe_result result[FULL_DSP_PROBE_CASES],uint32_t mode) {
+    return execute(ram,scratch,transfer,clock,result,mode);
+}
+#endif

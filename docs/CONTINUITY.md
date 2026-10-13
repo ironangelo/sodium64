@@ -1,3 +1,40 @@
+# 2026-10-13 - R50 complete-DSP counter divisions removed; native next
+
+RESUME HERE: runtime248f9c1723660da16ed61483446dba445e56ada2, experiment/dsp-counter-r50,
+isolated sodium64-dsp-counter-r50, defaultDSP_COUNTER_FAST0/FULL_DSP_PROBE1.
+R49 signal1 is enabled in both A/B variants; baseline allocated871404bytes and
+all18 core executable sections are exact to the physical R49 signal1 artifact.
+Both private read_counter consumers only test zero: use exact modular inverse/
+rotation for all32 rates and full unsigned32 input, period1 immediate0. No
+counter tick/offset/voice/phase/noise/envelope is skipped. CompiledDIVsites2->0.
+Actual changed functions are run_envelope/V3c/run (not the initial inventory
+guess of standalone read_counter); ten linked functions/36HI/LO sites pass.
+
+LocalPASS1114496 counter cases (all983040 valid phase/rate positions,384
+full-width boundaries,131072 random patterns); limit/rotation faults reject.
+12288V3c/8192 clock slices/11601 stereo frames/20480 full state checks preserve
+all64KiBRAM/128regs/PCM; two inherited faults also reject. Original6144-frame
+transaction/checksums/full backup/restore/faults pass. Initial384B table failed
+link after text+rodata page crossing, never installed;80B group metadata fits
+without arena changes. StaticD50A8<D6000/gapF58,43owners/full24576events/194slots.
+All13 RSP banks exact; boot12/TV5 and CPU6/two banks/fourD6400 DMA/three faults.
+[Report](DSP_COUNTER_R50.md). Private plan/archive/worker frozen. No broadCI.
+
+Next confirm no competing controller then run archived native_dsp_counter_r50.py
+once, root aloneCOM3. Same-source flags0/1, three original2048-frame workloads
+three times each, Count only core32-frame calls; host checksums and64KiBRAM
+backup/readback/restore/live image/PCM/state/step660/finalcoordinate8 menu
+install/readback mandatory. No syntheticAI or directSD. Record live handle;
+poll it, never restart on observation timeout. Native result still pending.
+Predeclared>=8% active core saving promising; below3% in both active cases
+rejects material direction; anyPCM mismatch or>2% cost regression blocks
+promotion. Intermediate is explicit, no endless small-patch campaign.
+Worst64ms/guest CPU/APU/rendering/DAC/SNES/native60/corpus/integration open.
+R47/R49 preserved isolated, R48 rejected, R44/R45/master/state unchanged.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R49 material one-voice complete-DSP saving; active cost still blocks
 
 RESUME HERE: worker12826 terminal exit0; all native controls/recovery passed,

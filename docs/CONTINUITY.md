@@ -1,3 +1,29 @@
+# 2026-10-13 - Full RSP native title/Mode7 gate passes; linked owners ready
+
+MEASURED runtime1b85b64 Mode7 worker88822 terminal/menu/coordinate8/readback PASS.
+Full700B context poison/restore/recapture and8192SPmemory/hash/status pass18.
+Race4500 ->normal4501/4560/5100 (next1/60/600), thirteenPNG873600px/sevenPCM57344B
+exact plusheads/regs/enabled/ACK. ALttP title600/601/660/1200 alsoexact. No liveCOM3.
+This is RSP-only same-boundary transaction, not full advanced-machine restore.
+
+New SCENE_STATE1 zero-byte staticowner labels21/559691B; verifier checks sizes/
+overlap/exclusions. WholeCPUtext/data/allocatedextents exactfrozen1b85b64, no
+runtimechange. Ends sectionequates avoidGNUautoalignment drift. Staticonly.
+
+RESUME HERE: explicit private samebuild slot. Add/preserve O64continuation/
+CP0/TLB, dynamic renderer/JIT/ROM-cache arenas, measured SPmem/registercontext,
+remote guest-input controls; canonical presentation/hostclock rules. First8KiB
+guest SRAM only; rejectlarger untilcovered. Bind ROM/code/layout/configuration,
+whitelist/bounds/fullCRC beforemutation; transactionalrestore/readback after
+advancing guest; compare restored1/60/600 images/PCM/semantic event/memory.
+No whole.data/RDRAM/stack copy. Persistent/crossbuild later. Current arenaD4000
+has~600B free; if private slot code needs allocation, use explicit disjoint
+layout with full24576event/194ROM capacities and allowner checks, never weaken
+gates. Full60/completeaudio/fidelity/corpus/master remainopen; no broadCI yet.
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - Full RSP context Mode7 native worker88822 running
 
 Full context shared-entry runtime1b85b64b05ee47a4d5819749dfd3f953c01d55f5

@@ -113,3 +113,19 @@ Mode7 full context still needs the same physical gate; GPR-only Mode7's previous
 pass does not substitute for it. This is complete architectural RSP roundtrip
 within a paused transaction, not restoration of an advanced guest machine or
 a portable/persistent save file. Full-state owners remain open.
+
+## Full RSP Mode7 physical roundtrip continuation passed
+
+MEASURED runtime1b85b64b05ee47a4d5819749dfd3f953c01d55f5. Race4500
+canonical full700-byte poison/restore/recapture +8192 SP memory/hash/status
+passes stage18. Thirteen images873600 pixels and seven paused PCM buffers
+57344 bytes exact, including normal4501/4560/5100 after next1/60/600 guest
+frames, heads/registers/enabled and all input ACKs. Worker88822 terminal;
+coordinate8/menu/install/readback PASS.
+[Native Mode7 proof](evidence/scene-state-rsp-context-native-mode7.json).
+
+This completes the current title/Mode7 architectural RSP transaction gate.
+Full CPU/guest-memory state after advancing remains unimplemented; persistent
+files, cross-build use, native60/full DSP/DAC/corpus remain open. No broad CI
+or master integration is implied. Next explicit owner ranges and same-build
+slot must preserve the measured context, not reset it.

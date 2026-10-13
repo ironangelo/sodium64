@@ -5,6 +5,13 @@ on:
     branches:
       - '**'
       - '!continuity'
+      - '!experiment/**'
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 concurrency:
@@ -621,6 +628,7 @@ jobs:
           libdragon make $common DECODE_BANK=1 BG_SPANS=1 ADAPTIVE_SPANS=1 BUILD_DIR=build_bg_adaptive PROJ_NAME=sodium64-bg-adaptive -j$(nproc)
           libdragon make $common DECODE_BANK=1 BG_SPANS=1 ADAPTIVE_SPANS=1 ADAPTIVE_NOSPAN=1 BUILD_DIR=build_bg_nospan PROJ_NAME=sodium64-bg-nospan -j$(nproc)
           libdragon make $common DECODE_BANK=1 BG_SPANS=1 ADAPTIVE_SPANS=1 ADAPTIVE_NOSPAN=1 SUB_ALPHA=1 BUILD_DIR=build_bg_sub_alpha PROJ_NAME=sodium64-subalpha44 -j$(nproc)
+          libdragon make $common DECODE_BANK=1 BG_SPANS=1 ADAPTIVE_SPANS=1 ADAPTIVE_NOSPAN=1 SUB_ALPHA=1 BACKDROP_ROWS=1 BUILD_DIR=build_bg_backdrop_rows PROJ_NAME=sodium64-backdrop45 -j$(nproc)
       - name: Check emitted decoder, spans, epochs, ownership and transport
         run: |
           python3 scripts/test_rsp_bg_spans.py build_bg_spans --baseline build_bg_reference
@@ -657,6 +665,13 @@ jobs:
           python3 scripts/check_runtime_arena.py build_bg_sub_alpha/sodium64-subalpha44.elf --diagnostic-trace --audio-observer
           python3 scripts/check_event_arena.py --elf build_bg_sub_alpha/sodium64-subalpha44.elf --diagnostic-trace --audio-observer
           python3 scripts/check_brr_observer_arena.py build_bg_sub_alpha/sodium64-subalpha44.elf
+          python3 scripts/test_backdrop_rows.py build_bg_backdrop_rows --output backdrop-rows.json
+          python3 scripts/check_rsp_branch_delay_slots.py build_bg_backdrop_rows/src/rsp_*.elf
+          python3 scripts/check_runtime_arena.py build_bg_backdrop_rows/sodium64-backdrop45.elf --diagnostic-trace --audio-observer
+          python3 scripts/check_event_arena.py --elf build_bg_backdrop_rows/sodium64-backdrop45.elf --diagnostic-trace --audio-observer
+          python3 scripts/check_brr_observer_arena.py build_bg_backdrop_rows/sodium64-backdrop45.elf
+          python3 scripts/check_remote_boot.py --elf build_bg_backdrop_rows/sodium64-backdrop45.elf
+          python3 scripts/test_remote_sections.py --backdrop-rows --json-output backdrop-row-observer.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -676,6 +691,10 @@ jobs:
             build_bg_sub_alpha/src/rsp_*.elf
             sodium64-subalpha44.z64
             sub-alpha-*.json
+            build_bg_backdrop_rows/sodium64-backdrop45.elf
+            build_bg_backdrop_rows/src/rsp_*.elf
+            sodium64-backdrop45.z64
+            backdrop-*.json
 
   update-release:
     if: github.ref == 'refs/heads/master'

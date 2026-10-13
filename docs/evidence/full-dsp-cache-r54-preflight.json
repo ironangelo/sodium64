@@ -1,0 +1,193 @@
+{
+  "passed": true,
+  "status": "IMPLEMENTED; native cache causality pending",
+  "default_off_core_executable_sections_exact_R49_signal1": 18,
+  "changed_existing_core_executable_sections": [
+    ".text._ZN7SPC_DSP9voice_V3cEPNS_7voice_tE"
+  ],
+  "added_lookup_lease_functions": [
+    ".text.full_dsp_probe_gauss_current",
+    ".text.full_dsp_probe_gauss_lease"
+  ],
+  "RSP_banks_exact_on_off": 13,
+  "full_event_capacity": 24576,
+  "ROM_slots": 194,
+  "concurrent_owners": 43,
+  "variants": {
+    "0": {
+      "static_end": "0xd4a88",
+      "arena_start": "0xd6000",
+      "gap": "0x1578",
+      "addresses": {
+        "apu_ram": "0x80019400",
+        "native_diag_snapshot": "0x800cadb0",
+        "remote_bridge_stack": "0x800d2ee0",
+        "remote_bridge_stack_end": "0x800d3ee0",
+        "_ZL5gauss": "0x80017f80"
+      },
+      "ELF_sha256": "a6149b4852460e600caccca454577ef41c1cac32b54d14cf3b657cbc1434a5a7",
+      "core_lease_bytes": null,
+      "hilo": {
+        "passed": true,
+        "linked_reference_functions": 9,
+        "straight_line_product_writer_sites": 36,
+        "spacing_checked": true,
+        "ELF_sha256": "a6149b4852460e600caccca454577ef41c1cac32b54d14cf3b657cbc1434a5a7",
+        "complete_waveform_timing_or_gameplay_claim": false,
+        "commercial_data": false
+      },
+      "boot": {
+        "passed": true,
+        "cases": 12,
+        "linked_instructions": true,
+        "receiver_bytes": 248,
+        "elf_sha256": "a6149b4852460e600caccca454577ef41c1cac32b54d14cf3b657cbc1434a5a7",
+        "compiled_tv_capture_cases": 5,
+        "modern_ipl3_dmem_tv_source": true,
+        "legacy_low_ram_tv_ignored": true,
+        "invalid_tv_unsigned_byte_falls_back_ntsc": true,
+        "receiver_pc": "a4001020",
+        "ipl3_pc": "a4000040",
+        "external_code_references_after_jump": false,
+        "physical_acceptance": false
+      }
+    },
+    "1": {
+      "static_end": "0xd5a88",
+      "arena_start": "0xd6000",
+      "gap": "0x578",
+      "addresses": {
+        "apu_ram": "0x8001a400",
+        "native_diag_snapshot": "0x800cbdb0",
+        "remote_bridge_stack": "0x800d3ee0",
+        "remote_bridge_stack_end": "0x800d4ee0",
+        "_ZL5gauss": "0x80018850"
+      },
+      "ELF_sha256": "5d879196e94d3ea098957f0419d10b968777884153b16f2429bbdae66c9d42ab",
+      "core_lease_bytes": 1564,
+      "hilo": {
+        "passed": true,
+        "linked_reference_functions": 11,
+        "straight_line_product_writer_sites": 36,
+        "spacing_checked": true,
+        "ELF_sha256": "5d879196e94d3ea098957f0419d10b968777884153b16f2429bbdae66c9d42ab",
+        "complete_waveform_timing_or_gameplay_claim": false,
+        "commercial_data": false
+      },
+      "boot": {
+        "passed": true,
+        "cases": 12,
+        "linked_instructions": true,
+        "receiver_bytes": 248,
+        "elf_sha256": "5d879196e94d3ea098957f0419d10b968777884153b16f2429bbdae66c9d42ab",
+        "compiled_tv_capture_cases": 5,
+        "modern_ipl3_dmem_tv_source": true,
+        "legacy_low_ram_tv_ignored": true,
+        "invalid_tv_unsigned_byte_falls_back_ntsc": true,
+        "receiver_pc": "a4001020",
+        "ipl3_pc": "a4000040",
+        "external_code_references_after_jump": false,
+        "physical_acceptance": false
+      }
+    }
+  },
+  "local-lut": {
+    "passed": true,
+    "directed_V3c_cases": 12288,
+    "clock_slices": 8192,
+    "output_stereo_frames": 11601,
+    "all_state_checks": 20480,
+    "negative_mutations_rejected": [
+      "env_one_boundary",
+      "noise_substitution",
+      "lookup_copy",
+      "lease_reset"
+    ],
+    "all_core_state_after_host_pointer_normalization": true,
+    "full_APURAM_bytes": 65536,
+    "all_DSP_registers": 128,
+    "PCM_full_extent_equal": true,
+    "arbitrary_clock_phases_and_internal_output_buffer": true,
+    "PMON_KON_KOFF_envelope_noise_BRR_echo_and_reset_exercised": true,
+    "pinned_core_is_flag0_reference": true,
+    "native_timing_or_gameplay_claim": false,
+    "cache_probe": true,
+    "commercial_data": false
+  },
+  "transaction-lut": {
+    "passed": true,
+    "synthetic_scenarios": [
+      {
+        "case": 0,
+        "frames": 2048,
+        "checksum": 10420156,
+        "nonzero": 4056
+      },
+      {
+        "case": 1,
+        "frames": 2048,
+        "checksum": 4185267178,
+        "nonzero": 4080
+      },
+      {
+        "case": 2,
+        "frames": 2048,
+        "checksum": 422544410,
+        "nonzero": 4096
+      }
+    ],
+    "unmodified_complete_core": false,
+    "signal_elide": true,
+    "cache_probe": true,
+    "cache_modes_checked": 8,
+    "core_color": 4096,
+    "PCM_color": 7168,
+    "Gaussian_color": 6144,
+    "Gaussian_lease_reset_and_all512_coefficients_exact": true,
+    "distinct_core_PCM_leases_and_all_other_snapshot_bytes_unchanged": true,
+    "snapshot_core": true,
+    "memory_restoration_bytes": 65536,
+    "backup_readback_blocks": 128,
+    "restore_blocks": 128,
+    "backup_fault_positions": 16,
+    "restore_fault_positions": 2,
+    "backup_corruption_rejected": true,
+    "invalid_inputs": 5,
+    "native_performance_or_game_audio_claim": false,
+    "commercial_data": false
+  },
+  "parser-lut": {
+    "passed": true,
+    "cases": 241,
+    "fuzz": 1000,
+    "production_parser": true,
+    "hardware_mocked": true,
+    "physical_acceptance": false,
+    "full_dsp_snapshot_core": false,
+    "dsp_cache_probe": true,
+    "source_sha256": {
+      "src/remote_control.c": "cb2755be71bfa4cece6d63c02627133da506302bac9520d5f8fe2a31082bd06a",
+      "src/remote_control.S": "abfdd01a6af2643dda491ae3814a995450e366a55e5b6b44f645cab9e47c780b",
+      "src/remote_control.h": "f86c6e6d3d53d984b262b995a594bbb99f232997850c4270072dd0bcec262856",
+      "scripts/fixtures/remote_control_host.c": "826d991ee98c69e8712b73bbb87a45ed89cc2cc9a3d9d283c4b9686a872f0055"
+    }
+  },
+  "native_plan": {
+    "single_frozen_image": true,
+    "measured_modes": [
+      0,
+      1,
+      2,
+      4,
+      7
+    ],
+    "selected_cache_indices": {
+      "core": 4096,
+      "Gaussian": 6144,
+      "PCM": 7168
+    },
+    "arithmetic_and_original_workloads_unchanged": true,
+    "no_sampler_or_IRQ_mask_change": true,
+    "no_game60_DAC_SNES_or_corpus_claim": true
+  }
+}

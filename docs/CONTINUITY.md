@@ -1,3 +1,35 @@
+# 2026-10-13 - R54 cache placement implemented; single-image native discriminator next
+
+RESUME HERE: runtime9a0092d50d6f1d2e1ad064432be6fbcb6f49e326, experiment/full-dsp-cache-r54,
+isolated sodium64-dsp-cache-r54. Defaultcache0; snapshot1/R49signal1, no R50/
+R51/R52/R53. Same scalar phases/arithmetic/original workloads. Mode bits1/2/4
+color core1000/PCM1c00/Gaussian1800, three disjoint existing32768B snapshot
+leases; no IRQ/MMU/arena change. Deny all capture owners, reset Gaussian pointer
+before every RAM restore path. Default18 coresections exactR49; flag1 onlyV3c
+lookup pointer plus lease helpers. Original compiler already kept BRR history
+registers; static Gaussian/state/RAM cache-index overlaps are hypotheses, not
+measured misses. [Report](FULL_DSP_CACHE_R54.md); full numeric preflight.
+Eight modes/49152hostframes/24checksums/RAMrestore/faults/canary/LUT pointer+
+all512coefficients exact. Differential12288V3c/8192slices/11601frames/20480
+state checks/allRAM128regsPCM/internaloutputs pass; four faults reject. Parser
+241+1000fuzz passes. Boot12/TV5/actualmodeentry-HI-LO/CPU6/two banks/fourD6400/
+3faults,13RSPbanks,43owners/full24576events194slots pass. D4A88/D5A88<D6000.
+
+Next frozen private dsp-cache-r54-archive/native_dsp_cache_r54.py once, root
+soleCOM3/no existingcontroller. One image, ALttP600,0/1/2/4/7 round-robin3x,
+15 original3-case probes/92160frames, actual cacheindices/owned offsets/PCM
+checksums/nonzero/RAMrestore and unchanged live67200pixels8192PCM/headsregs/
+boundary, step660, finallycoordinate8/menu/install/readback. Record livehandle
+before interruption and poll same, never restart on observation timeout.
+>=8%both-active saving material; also beat historicalR49 costs92.392/95.496ms
+by8% to retain cost value. Repairing a bad new baseline is only causal evidence.
+Below3%both rejects; no endless placement sweep. All64ms standalone budgets
+exclude guestCPU/APU/rendering and real-output integration. FullDSP/DAC/SNES/
+nativegame60/corpus/integration OPEN; earlierR44/R45/master/state preserved.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R53 routing correction; R54 cache question next
 
 RESUME HERE: R53 terminal53531/recovery verified. Exact preserved branch is

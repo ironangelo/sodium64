@@ -5,6 +5,10 @@
  */
 #include "remote_control.h"
 #include "../tools/sc64-diagnostic-save/recorder_runtime_abi.h"
+#ifdef SODIUM64_SCENE_RSP_CONTEXT
+#include "scene_rsp_context.h"
+static unsigned scene_rsp_context_needs_menu;
+#endif
 #ifdef SODIUM64_SCENE_RSP_REBIND
 #include "scene_rsp_probe.h"
 static unsigned scene_rsp_needs_menu;
@@ -276,11 +280,20 @@ static unsigned receive(void) {
 }
 #endif
 
-#ifdef SODIUM64_SCENE_RSP_REBIND
+#if defined(SODIUM64_SCENE_RSP_REBIND) || defined(SODIUM64_SCENE_RSP_CONTEXT)
 #ifdef REMOTE_CONTROL_HOST
+#ifdef SODIUM64_SCENE_RSP_REBIND
 extern uint32_t remote_host_scene_rsp_rebind(void);
+#endif
+#ifdef SODIUM64_SCENE_RSP_CONTEXT
+extern uint32_t remote_host_scene_rsp_context(void);
+#endif
 #else
 extern const uint32_t rsp_scene_rebind_text_start[],rsp_scene_rebind_text_end[];
+#ifdef SODIUM64_SCENE_RSP_CONTEXT
+extern const uint32_t rsp_scene_capture_text_start[],rsp_scene_capture_text_end[];
+extern const uint32_t rsp_scene_restore_text_start[],rsp_scene_restore_text_end[];
+#endif
 static uint32_t scene_rsp_read_word(uint32_t address) {
     return *(volatile uint32_t *)(uintptr_t)address;
 }
@@ -679,6 +692,9 @@ static void status(const char *id) {
 #ifdef SODIUM64_SCENE_RSP_REBIND
     append(",state-rsp-rebind");
 #endif
+#ifdef SODIUM64_SCENE_RSP_CONTEXT
+    append(",state-rsp-roundtrip");
+#endif
 #ifdef SODIUM64_BRR_OBSERVER
     append(",audio-brr");
 #endif
@@ -734,6 +750,9 @@ static void status(const char *id) {
 #ifdef SODIUM64_SCENE_RSP_REBIND
     field(" scene_rsp_needs_menu=",scene_rsp_needs_menu);
 #endif
+#ifdef SODIUM64_SCENE_RSP_CONTEXT
+    field(" scene_rsp_context_needs_menu=",scene_rsp_context_needs_menu);
+#endif
     (void)finish();
 }
 
@@ -776,6 +795,39 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
     if(nt<3||!eq(tokens[0],"s64")||!hex(tokens[1],8,&unused)) {error(id,"invalid_request");return;}
     id=tokens[1];const char *verb=tokens[2];
+#ifdef SODIUM64_SCENE_RSP_CONTEXT
+    if(scene_rsp_context_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
+       !eq(verb,"profile")&&!eq(verb,"state-check")&&!eq(verb,"menu")) {
+        error(id,"scene_rsp_context_needs_menu");return;
+    }
+    if(eq(verb,"state-rsp-roundtrip")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+        if(!remote_paused){error(id,"not_paused");return;}
+        if(!remote_scene_canonical||remote_scene_error){error(id,"not_canonical");return;}
+        if(!present||transport_error||menu_error){error(id,"scene_transport_unready");return;}
+        uint32_t state;
+#ifdef REMOTE_CONTROL_HOST
+        state=remote_host_scene_rsp_context();
+#else
+        uint32_t config[2];
+        if(!wait_usb('U')||!command('C',1,1,config)){error(id,"scene_context_backup_failed");return;}
+        state=scene_rsp_context_roundtrip((uint32_t *)uncached(transfer_buffer),
+            rsp_scene_capture_text_start,(unsigned)(rsp_scene_capture_text_end-rsp_scene_capture_text_start),
+            rsp_scene_restore_text_start,(unsigned)(rsp_scene_restore_text_end-rsp_scene_restore_text_start),
+            scene_rsp_read_word,scene_rsp_write_word,scene_rsp_transfer_block,scene_rsp_wait_halted);
+        if(!command('C',1,config[1],0))scene_rsp_context_needs_menu=1;
+#endif
+        if(state==2)scene_rsp_context_needs_menu=1;
+        if(state!=1||scene_rsp_context_needs_menu) {
+            error(id,state==0?"scene_context_backup_failed":"scene_context_restore_failed");return;
+        }
+        prefix(id,1);append(" rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
+        field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
+        append(" provenance=canonical_full_RSP_register_roundtrip serializer=0 machine_restore=0");
+        (void)finish();return;
+    }
+#endif
 #ifdef SODIUM64_SCENE_RSP_REBIND
     if(scene_rsp_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
        !eq(verb,"profile")&&!eq(verb,"state-check")&&!eq(verb,"menu")) {
@@ -879,7 +931,7 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" scene_error=",remote_scene_error);field(" scene_pending=",remote_scene_pending);
         field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
         append(" provenance=post_submit_natural_rsp_dp_ai_retirement serializer=0 restore=0");
-#if defined(SODIUM64_SCENE_RSP_REBIND) && !defined(REMOTE_CONTROL_HOST)
+#if (defined(SODIUM64_SCENE_RSP_REBIND) || defined(SODIUM64_SCENE_RSP_CONTEXT)) && !defined(REMOTE_CONTROL_HOST)
         if(remote_scene_canonical) {
             field(" scene_rsp_halt_pc=",scene_rsp_read_word(0xa4080000));
             field(" scene_rsp_halt_status=",scene_rsp_read_word(0xa4040010));

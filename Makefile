@@ -16,6 +16,7 @@ ifeq ($(SCENE_RSP_CONTEXT),1)
 ifneq ($(SCENE_STATE),1)
 $(error SCENE_RSP_CONTEXT requires SCENE_STATE=1)
 endif
+N64_CFLAGS_REMOTE += -DSODIUM64_SCENE_RSP_CONTEXT=1
 endif
 SCENE_RSP_REBIND ?= 0
 SCENE_RSP_GPR_ONLY ?= 0
@@ -255,6 +256,9 @@ endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 HFILES += $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.inc))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
+ifeq ($(SCENE_RSP_CONTEXT),1)
+OFILES += $(BUILD_DIR)/src/scene_rsp_context.o
+endif
 ifeq ($(SCENE_RSP_REBIND),1)
 OFILES += $(BUILD_DIR)/src/scene_rsp_probe.o
 endif
@@ -515,7 +519,7 @@ $(BUILD_DIR)/src/continuous_save_c.o: src/continuous_save.c tools/sc64-diagnosti
 	@mkdir -p $(dir $@)
 	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
 
-$(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h src/defines.h src/scene_rsp_probe.h tools/sc64-diagnostic-save/recorder_runtime_abi.h
+$(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h src/defines.h src/scene_rsp_probe.h src/scene_rsp_context.h tools/sc64-diagnostic-save/recorder_runtime_abi.h
 	@mkdir -p $(dir $@)
 	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_CFLAGS_REMOTE) -o $@ $<
 
@@ -524,6 +528,10 @@ $(BUILD_DIR)/src/full_dsp_probe.o: src/full_dsp_probe.cpp src/full_dsp_probe.h $
 	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror -o $@ $<
 
 $(BUILD_DIR)/src/scene_rsp_probe.o: src/scene_rsp_probe.c src/scene_rsp_probe.h
+	@mkdir -p $(dir $@)
+	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
+
+$(BUILD_DIR)/src/scene_rsp_context.o: src/scene_rsp_context.c src/scene_rsp_context.h src/scene_rsp_probe.h
 	@mkdir -p $(dir $@)
 	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
 

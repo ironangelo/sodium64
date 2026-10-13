@@ -1,0 +1,23 @@
+{
+  "status": "IMPLEMENTED native context transaction; physical test pending",
+  "production_parser_cases": 254,
+  "fuzz": 1000,
+  "production_C_actual_RSP_transaction_cases": 175,
+  "transfer_fault_positions": 92,
+  "read_corruptions": 74,
+  "wait_fault_positions": 5,
+  "canonical_bridge_cases": 16,
+  "actual_RSP_roundtrips": 381,
+  "ACC_MID_values": 65536,
+  "pipeline_early_store_sentinels": true,
+  "context_bytes": 700,
+  "SP_memory_bytes": 8192,
+  "original_26_RSP_extents_exact": true,
+  "static_end": 867640,
+  "arena_start": 868352,
+  "owners": 43,
+  "event_capacity": 24576,
+  "ROM_cache_slots": 194,
+  "native_acceptance": false,
+  "full_serializer_or_machine_restore": false
+}

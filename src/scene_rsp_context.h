@@ -19,4 +19,14 @@
 #define SCENE_RSP_ONE 0x2D0
 #define SCENE_RSP_NEG_HALF 0x2E0
 #define SCENE_RSP_WORK_END 0x2F0
+#ifndef __ASSEMBLER__
+#include "scene_rsp_probe.h"
+/* 0 untouched/rejected; 1 exact context/memory readback; 2 unsafe/incomplete
+ * hardware recovery, caller must permit menu recovery only. */
+uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
+    const uint32_t *capture,unsigned capture_words,
+    const uint32_t *restore,unsigned restore_words,
+    scene_rsp_read read,scene_rsp_write write,scene_rsp_transfer transfer,
+    scene_rsp_wait wait);
+#endif
 #endif

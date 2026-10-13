@@ -1,0 +1,30 @@
+{
+  "status": "IMPLEMENTED assembled architectural RSP context only",
+  "context_bytes": 700,
+  "actual_binary_roundtrips": 381,
+  "ACC_MID_values": 65536,
+  "instructions_to_BREAK": [
+    79,
+    79
+  ],
+  "mutations_rejected": [
+    "missing_GPR_capture",
+    "missing_vector_capture",
+    "missing_ACC_capture",
+    "missing_capture_t0_restore",
+    "missing_ACC_mid_add",
+    "missing_ACC_high_add",
+    "missing_vector_restore",
+    "missing_flag_restore",
+    "missing_GPR_restore"
+  ],
+  "capture_preserves_architectural_context": true,
+  "restore_DMEM_readonly": true,
+  "current_banks_without_DIV_instructions": 13,
+  "no_C_entry_point_yet": true,
+  "unreachable_blobs_discarded_by_linker": true,
+  "current_CPU_text_data_identical_S1": true,
+  "CPU_hardware_transaction_tested": false,
+  "native_acceptance": false,
+  "complete_serializer_or_machine_restore": false
+}

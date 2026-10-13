@@ -117,3 +117,17 @@ from the same exact race4500? Compare the existing reference and all route
 image/PCM/ACK controls, finally coordinate8/menu/readback. A pass would isolate
 necessary context to the preserved group in this control, not prove full state
 restore or universal dead scalar registers. No new performance capture/CI.
+
+## GPR-only Mode7 native continuation passed
+
+MEASURED runtime0d2c9fb7f0f1efb09e8007684e8aea61df5d6b84. Same race4500
+park/probe, then normal4501/4560/5100:all20 image/PCM controls pass, thirteen
+images873600 pixels and seven PCM buffers57344 bytes exact, heads/registers/
+enabled and input ACKs. Worker77698 terminal; coordinate8/menu/readback PASS.
+[Native isolation](evidence/scene-state-s2-gpr-native.json).
+
+Compared with rejected fullreset, preserving vector/flags/ACC removes the
+Mode7 mismatch under this same control. Which individual member is necessary
+is not isolated; preserve the entire group. This does not prove all scalar
+registers dead universally, nor a complete machine restore. Full live context
+capture/restore is the next gate, with no renderer work omitted.

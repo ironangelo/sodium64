@@ -11,6 +11,12 @@ NATIVE_DIAG ?= 0
 NATIVE_DIAG_TRACE ?= 0
 REMOTE ?= 0
 SCENE_STATE ?= 0
+SCENE_RSP_CONTEXT ?= 0
+ifeq ($(SCENE_RSP_CONTEXT),1)
+ifneq ($(SCENE_STATE),1)
+$(error SCENE_RSP_CONTEXT requires SCENE_STATE=1)
+endif
+endif
 SCENE_RSP_REBIND ?= 0
 SCENE_RSP_GPR_ONLY ?= 0
 ifeq ($(SCENE_RSP_GPR_ONLY),1)
@@ -219,6 +225,9 @@ PROFILE := 1
 endif
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
+ifneq ($(SCENE_RSP_CONTEXT),1)
+SFILES := $(filter-out src/rsp_scene_capture.S src/rsp_scene_restore.S,$(SFILES))
+endif
 ifneq ($(SCENE_RSP_REBIND),1)
 SFILES := $(filter-out src/rsp_scene_rebind.S,$(SFILES))
 endif

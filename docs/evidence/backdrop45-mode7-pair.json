@@ -1,0 +1,58 @@
+{
+  "status": "MEASURED exact Mode7 image/PCM; small cadence residual open",
+  "source": "313642af247ff15ffdf34031c185bb1234825173",
+  "predeclared_absolute_guest_endpoints": {
+    "first": 4510,
+    "last": 4629,
+    "count": 120
+  },
+  "reference": {
+    "completed_boundaries_per_second": 8.292779723929781,
+    "mean_CPU_RSP_wait_ms": 88.72823946666666,
+    "mean_interval_ms": 120.58682773333334
+  },
+  "candidate": {
+    "completed_boundaries_per_second": 8.281577717673269,
+    "mean_CPU_RSP_wait_ms": 88.06557137777777,
+    "mean_interval_ms": 120.74993848888889
+  },
+  "change_percent": -0.13508143987217558,
+  "full_quiet_metrics": [
+    {
+      "completed_boundaries_per_second": 8.290764910333767,
+      "mean_CPU_RSP_wait_ms": 89.05392,
+      "intervals": 166,
+      "full_checksum_validated": true
+    },
+    {
+      "completed_boundaries_per_second": 8.279444140512812,
+      "mean_CPU_RSP_wait_ms": 88.3909595502008,
+      "intervals": 166,
+      "full_checksum_validated": true
+    }
+  ],
+  "Mode7_draw_window_residency": [
+    {
+      "bank": "mode7_draw_or_window_residency",
+      "samples": 3858,
+      "percent_all_irq": 53.920335429769395,
+      "percent_running_irq": 54.10180900294489
+    },
+    {
+      "bank": "mode7_draw_or_window_residency",
+      "samples": 3850,
+      "percent_all_irq": 53.808525506638716,
+      "percent_running_irq": 54.03508771929825
+    }
+  ],
+  "images": 10,
+  "pixels": 672000,
+  "pixel_differences": 0,
+  "paused_PCM_buffers": 4,
+  "paused_PCM_bytes": 32768,
+  "paused_PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "input_acknowledgements_match": true,
+  "checksum_settings_and_coordinate8_menu_restoration_readback": true,
+  "complete_non_regression_fidelity_or_60Hz": false
+}

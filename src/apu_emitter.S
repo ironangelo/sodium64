@@ -25,6 +25,9 @@
 
 .globl jit_read8
 .globl jit_charge_cycles
+#ifdef SODIUM64_APU_RAM_READ
+.globl jit_emit_ram_read
+#endif
 .globl jit_emit_runtime_cycles
 .globl compile_block
 .globl finish_opcode
@@ -562,6 +565,43 @@ emit_j: // t0: target
     lui t1, 0x0800
     j emit_op
     or t0, t0, t1
+
+#ifdef SODIUM64_APU_RAM_READ
+.align 5
+jit_emit_ram_read: // Runtime A0: proven ordinary RAM address; return via caller.
+    // Only constant direct operands belowF0 and absolute addresses outside
+    // F0..FF/FFC0..FFFF are admitted by the address emitters. Their map byte
+    // is always zero. Keep the real bus-cycle debit here, before later I/O,
+    // rather than moving it into the block-wide static debit.
+    move t8, ra
+    lw t0, jit_block_cycles
+    addiu t0, t0, 1
+    sw t0, jit_block_cycles
+
+    // Runtime V0 = apu_ram[A0], with a signed low16 relocation. A0 remains
+    // the exact guest address for following read/modify/write handlers.
+    la t4, apu_ram
+    andi t0, t4, 0x8000
+    sll t0, t0, 1
+    addu t4, t4, t0
+    li t0, LUI(V0, 0)
+    srl t1, t4, 16
+    jal emit_op
+    or t0, t0, t1
+    EMIT_OP ADD(V0, V0, A0)
+    li t0, LBU(V0, V0, 0)
+    andi t1, t4, 0xFFFF
+    jal emit_op
+    or t0, t0, t1
+
+    li t3, LBU(T0, 0, 0)
+    la t4, apu_clock
+    jal full_address
+    nop
+    li t0, SUB(S3, S3, T0)
+    j emit_op
+    move ra, t8
+#endif
 
 .align 5
 emit_jal: // t0: target

@@ -89,6 +89,13 @@ dir_cycles_done:
     EMIT_OP ANDI(A0, A0, 0x100)
     beqz t8, dir_skip
     nop
+#ifdef SODIUM64_APU_RAM_READ
+    // Both direct pages are plain RAM for operands00..EF. F0..FF retain
+    // the general reader because the dynamic P flag can select I/O page0.
+    sltiu t0, v0, 0xF0
+    bnez t0, dir_ram_read
+    nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
@@ -97,6 +104,15 @@ dir_skip:
     or t0, t0, v0
     j emit_op
     move ra, gp
+
+#ifdef SODIUM64_APU_RAM_READ
+dir_ram_read:
+    li t0, ORI(A0, A0, 0)
+    jal emit_op
+    or t0, t0, v0
+    j jit_emit_ram_read
+    move ra, gp
+#endif
 
 .align 5
 apu_drxa: // aa+X
@@ -293,6 +309,21 @@ apu_absr: // aaaa
     or t7, t7, t0
 
     // Emit code to load a value from an absolute address
+#ifdef SODIUM64_APU_RAM_READ
+    li t1, 0xFFC0
+    sltu t0, t7, t1
+    beqz t0, abs_general_read
+    andi t0, t7, 0xFFF0
+    li t1, 0xF0
+    beq t0, t1, abs_general_read
+    nop
+    li t0, ORI(A0, ZERO, 0)
+    jal emit_op
+    or t0, t0, t7
+    j jit_emit_ram_read
+    move ra, gp
+abs_general_read:
+#endif
     la t0, apu_read8
     jal emit_jal
     nop

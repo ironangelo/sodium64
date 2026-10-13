@@ -1,3 +1,21 @@
+# 2026-10-13 - S2 native safe guard rejection; delay-slot restart repair next
+
+LAB LIMITATION runtime7a5712453a00fa16eef150659bca5211ea11c9be.
+Native scene-s2-title worker44477 terminal/coordinate8/menu/readback PASS.
+Normal600 matches67200 pixels/8192PCM; canonical600 counters unchanged.
+SP_PC=3C8/status1801 points to the jump delay slot following normal H-COMP
+HALT. Guard expected the jump at PC and rejected before SP memory mutation.
+Reconstruction never ran; next1/60/600 gate INCONCLUSIVE. No live COM3 worker.
+
+RESUME HERE: repair exact HALT/jump/delay-slot admission and normalize restart
+to resident draw-frame entry3C, accounting for the pending branch. Check
+actual binary/production transaction guards, freeze new artifact, retry same
+native image/PCM continuum. No serializer/restore or full60 qualification.
+S1 park evidence remains valid; master/renderer branches untouched.
+[S2](SCENE_STATE_S2.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - S2 RSP rebind probe frozen; native continuation next
 
 IMPLEMENTED experiment/scene-state-s1 runtime 7a5712453a00fa16eef150659bca5211ea11c9be, scene-s2-plan/archive.

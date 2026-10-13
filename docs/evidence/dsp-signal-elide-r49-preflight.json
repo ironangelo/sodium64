@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "flag0_core_executable_sections_exact_to_pinned_source": 18,
+  "changed_core_executable_sections": [
+    ".text._ZN7SPC_DSP9voice_V3cEPNS_7voice_tE",
+    ".text._ZN7SPC_DSP3runEi"
+  ],
+  "RSP_banks_byte_exact_on_off": 13,
+  "static_end": "0xd50a8",
+  "arena_start": "0xd6000",
+  "gap": "0xf58",
+  "full_event_capacity": 24576,
+  "ROM_slots": 194,
+  "concurrent_owners": 43,
+  "byte_sizes_text_data_bss": [
+    96624,
+    729716,
+    45064
+  ],
+  "native_timing_or_gameplay_claim": false,
+  "runtime_source": "68667b74e5d472a01cd38e9f926c155a4695f391",
+  "status": "IMPLEMENTED; native pending",
+  "host_directed_V3c_cases": 12288,
+  "host_clock_slices": 8192,
+  "host_stereo_frames": 11601,
+  "host_all_state_comparisons": 20480,
+  "host_original_transaction_stereo_frames": 6144,
+  "host_negative_mutations_rejected": [
+    "env_one_boundary",
+    "noise_substitution"
+  ]
+}

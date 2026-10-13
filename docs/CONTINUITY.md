@@ -1,3 +1,18 @@
+# 2026-10-13 - R47 native A/B running; sole COM3 controller
+
+RESUME HERE: yielded native exec session36280 is live. Frozen source
+849412ee911c27850a22af45866a4439e99e380b, private dsp-brr-r47-plan/archive,
+immutable native_dsp_brr_r47.py. Flag0 menu/install/readback passed; first
+title replay is in progress. Poll36280 and private dsp-brr-r47-native/report.json.
+Do not open competing COM3 or restart on an observation timeout. Native result
+pending. Same-source flag0/1, title920..1219 and room2000..2599, full image/PCM
+controls, quiet captures and final coordinate8/menu/install/readback as below.
+After terminal completion persist exact outcome before another technical batch.
+Master/state/R44/R45 unchanged. Native60/full DSP/DAC/corpus/integration open.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R47 BRR register recurrence implemented; native A/B next
 
 RESUME HERE: code batch 849412ee911c27850a22af45866a4439e99e380b pushed on

@@ -48,3 +48,30 @@ same route in R44 and require all ten images/four paused PCM buffers exact.
 [Curated control receipt](evidence/r44-dkc-breadth-control.json). Private paths,
 hashes and payloads remain local. This deficit prioritizes renderer architecture
 for DKC over marginal CPU tuning; R44 effect is not measured yet.
+
+## R44 DKC comparison complete; section diagnostic next
+
+R44 reproduces all10 images672000 pixels and four paused PCM buffers32768 bytes
+with0 differences; heads/registers/enabled and exact input acknowledgements
+match. Full checksum/settings/trace and menu-coordinate8 readback restoration
+pass. Quiet trace276 intervals:13.771777 vs13.778162/s
+(-0.046346percent), explicitwait53.298928ms. This is no material
+DKC speed gain, while retaining the measured ALttP benefit. The predeclared
+first240 intervals are also reported separately, without hiding the full trace.
+[Comparison receipt](evidence/r44-dkc-breadth-comparison.json). No full-title,
+presentation60Hz, Mode7 or complete audio qualification follows.
+
+The trace exposes about97 sections/complete frame. Next reuse existing paused
+SECTION_OBSERVER, not a new running profiler. Its isolated R44 flag build keeps
+all13 RSP text/data banks byte-identical. Linked static endD2A88 remains below
+D4000; all41 owners and6 CPU words/2 banks/4 backup sitesD4400 plus3 mutations
+pass. The existing observer's142 read-only/owner/busy guards pass (first host
+compiler invocation lacked MinGW DLL path; environment repair only). Reuse
+qualified identical renderer tests. Native diagnostic route must preserve the
+same10 images/four PCM buffers, export owned retired sections at4320, skip the
+performance capture and finally restore coordinate8/menu. Read-only public
+source bindings/counts are publishable; raw64-byte section records stay private.
+Frozen artifact/plan `subalpha44-sections-plan` and private native run
+`r44-dkc-sections` are recorded before dispatch. This answers whether geometry,
+palette/window or another real epoch blocks larger reusable rendering work.
+Save-state trial remains bounded and useful, pending this material decision.

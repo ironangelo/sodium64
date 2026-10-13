@@ -1,3 +1,32 @@
+# 2026-10-12 - R44 relevant qualification complete; native breadth/state trial next
+
+Runtime7a83d49; documentary head recorded on experiment/sub-alpha-r44. Rain
+40.540954 vsR43 36.804012 (+10.153626percent); story56.089884 vs56.044680,
+small0.106734percent residual vs56.149815 reference. Seven frames470400 pixels/
+two8192 paused PCM comparisons/checksum/settings/menu-coordinate8 restore pass.
+Build38337117404 SUCCESS at98b7d6b explicitly includes R43/R44 banked consumers.
+Test-only02392af: CGRAM38337797903 SUCCESS; Ares38337800049 SUCCESS. Both live
+retries now terminal. Original CGRAM38337119623/Ares38337121666 stay failed;
+their inert wrong-source fixture was repaired without runtime/guard changes.
+No duplicate full Build for the host-only repair. Source/Makefile unchanged
+since7a83d49, defaultSUB_ALPHA0, master7cc8fac and R43 preserved. Status
+MEASURED/relevant regression CI complete; no full60/audio/corpus/integration.
+
+RESUME HERE: root sole COM3, no worker, menu confirmed responsive after read-only
+corpus inventory. Private r44-dkc-inventory.json locates DKC1 Rev1/Rev2 under
+A1 USA directory. Use frozen R43/R44 artifacts for native image/PCM/quiet
+comparisons, then always menu/coordinate8 restore. Broader Mode7/fidelity gates
+stay open. User proposed save states and welcomes useful controls: assessment
+is positive for a bounded diagnostic trial; replay600->12944 costs~259s and
+launch45.95s. Existing snapshot is only an image; paused bridge context is not
+a full portable state. Prove all state owners, continuation/quiescence,
+cache/JIT/source rebind and replay-versus-restore frames/PCM/events before
+letting states replace setup. [Assessment](SAVE_STATE_FEASIBILITY_2026-10-12.md)
+and [R44 receipts](SUB_ALPHA_R44.md). Full goal and corpus order unchanged;
+all raw commercial state/hashes remain private. Prior history untouched below.
+
+---
+
 # 2026-10-12 - R44 Build passes; targeted publication-fixture retries live
 
 Frozen native runtime7a83d49: rain40.540954/story56.089884, seven frames/PCM/

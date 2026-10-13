@@ -1,5 +1,28 @@
 # R44 - Sub presence in coverage, work in progress
 
+## 2026-10-12 - relevant CI complete, broader native scope open
+
+Build38337117404 SUCCESS at98b7d6b includes normal/PROFILE and explicit R43/R44
+renderer builds/consumers/transport/owner/window/lifetime checks. Test-only
+repair02392af: CGRAM38337797903 SUCCESS and Ares38337800049 SUCCESS. Runtime
+source/flags remain frozen7a83d49; repair/docs do not change src or Makefile.
+Original98b7d6b CGRAM/Ares failures remain failed, superseded by these precise
+retries. No duplicate full Build was run for that fixture-only change.
+
+R44 is retained as a MEASURED candidate with these relevant regression/CI
+gates complete. This is not full-game/Mode7/corpus/60Hz/complete audio or
+integration acceptance. ALttP rain remains40.541 completions/s; story still
+has a small residual against the corrected non-span reference. Master and
+previous measured branches stay untouched, and SUB_ALPHA still defaults0.
+
+Next: broaden DKC/Mode7 controls; investigate the bounded
+[scene-state feasibility](SAVE_STATE_FEASIBILITY_2026-10-12.md) approved for
+evaluation by the user. Repeated rain setup costs~259 seconds plus46-second
+launch. Require exact replay-versus-restore state/image/PCM/event equivalence
+and compatible runtime bindings before using a state as measurement authority.
+Keep all raw commercial state and captures private. Continue material runtime
+work toward native cadence and full visual/sonic fidelity; this is no closure.
+
 ## 2026-10-12 - qualification and publication mutation repair
 
 Workflow head98b7d6b, unchanged7a83d49 runtime source: Build38337117404 SUCCESS,

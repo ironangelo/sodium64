@@ -6,7 +6,15 @@
 #include "../third_party/snes_spc/SPC_DSP.h"
 #include <string.h>
 
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+#include <new>
+extern "C" unsigned char native_diag_snapshot[32768];
+typedef char profile_core_fits_snapshot[(sizeof(SPC_DSP)<=32768)?1:-1];
+static SPC_DSP *profile_reference_dsp;
+#define reference_dsp (*profile_reference_dsp)
+#else
 static SPC_DSP reference_dsp;
+#endif
 
 static void workload(unsigned char *ram, unsigned scenario) {
     memset(ram,0,65536);
@@ -51,11 +59,22 @@ static void workload(unsigned char *ram, unsigned scenario) {
     reference_dsp.write(SPC_DSP::r_kon,scenario?0xff:1);
 }
 
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+static bool run(unsigned char *ram,unsigned scenario,full_dsp_probe_clock clock,
+                unsigned char *scratch,full_dsp_probe_transfer transfer,
+#else
 static void run(unsigned char *ram,unsigned scenario,full_dsp_probe_clock clock,
+#endif
                 full_dsp_probe_result *result) {
     workload(ram,scenario);
     *result=full_dsp_probe_result();
     result->checksum=2166136261u;
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    // The PI buffer is idle between backup and restore. Clear it so unused
+    // PC slots cannot retain guest RAM bytes from the previous backup block.
+    for(unsigned i=0;i<512;i++)scratch[i]=0;
+    if(!full_dsp_profile_begin((uint32_t *)scratch))return false;
+#endif
     //32 stereo frames per block. Re-arm the output to avoid upstream's small
     // overflow buffer. Clock reads exclude setup/checksumming and USB copies.
     short output[64];
@@ -74,6 +93,10 @@ static void run(unsigned char *ram,unsigned scenario,full_dsp_probe_clock clock,
         }
         result->frames+=32;
     }
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    result->pc_samples=full_dsp_profile_end(&result->pc_next);
+    return transfer(scratch,FULL_DSP_PC_CART_OFFSET+scenario*512,1)!=0;
+#endif
 }
 
 uint32_t full_dsp_probe_execute(unsigned char *ram,unsigned char *scratch,
@@ -87,13 +110,28 @@ uint32_t full_dsp_probe_execute(unsigned char *ram,unsigned char *scratch,
         if(!transfer(scratch,offset,1)||!transfer(scratch,offset,0))return 0;
         for(unsigned byte=0;byte<512;byte++)if(scratch[byte]!=ram[offset+byte])return 0;
     }
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    // The remote admission gate leases this existing unsealed snapshot storage.
+    // No live capture or published immutable snapshot may coexist with the lease.
+    profile_reference_dsp=::new ((void *)native_diag_snapshot) SPC_DSP();
+    bool profile_ok=true;
+    for(unsigned scenario=0;scenario<FULL_DSP_PROBE_CASES;scenario++) {
+        if(!run(ram,scenario,clock,scratch,transfer,&result[scenario])) {profile_ok=false;break;}
+    }
+    profile_reference_dsp->~SPC_DSP();profile_reference_dsp=0;
+#else
     for(unsigned scenario=0;scenario<FULL_DSP_PROBE_CASES;scenario++)
         run(ram,scenario,clock,&result[scenario]);
+#endif
     for(unsigned offset=0;offset<65536;offset+=512) {
         if(!transfer(scratch,offset,0))return 2;
         volatile unsigned char *restored=ram+offset;
         for(unsigned byte=0;byte<512;byte++)restored[byte]=scratch[byte];
         for(unsigned byte=0;byte<512;byte++)if(restored[byte]!=scratch[byte])return 2;
     }
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    return profile_ok?1:3;
+#else
     return 1;
+#endif
 }

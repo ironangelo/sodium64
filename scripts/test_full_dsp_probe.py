@@ -7,6 +7,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--cxx',default=os.environ.get('CXX','g++'))
     p.add_argument('--signal-elide',action='store_true')
+    p.add_argument('--pc-profile',action='store_true')
     p.add_argument('--json-output',type=Path)
     a=p.parse_args();root=Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix='s64-full-dsp-') as tmp:
@@ -15,6 +16,7 @@ def main():
              str(root/'src/full_dsp_probe.cpp'),str(root/'third_party/snes_spc/SPC_DSP.cpp'),
              str(root/'scripts/fixtures/full_dsp_probe_host.cpp'),'-o',str(exe)]
         if a.signal_elide:cmd.insert(1,'-DSODIUM64_DSP_SIGNAL_ELIDE=1')
+        if a.pc_profile:cmd.insert(1,'-DSODIUM64_FULL_DSP_PC_PROFILE=1')
         subprocess.run(cmd,check=True)
         result=subprocess.run([str(exe)],check=True,capture_output=True,text=True)
     print(result.stdout,end='')
@@ -25,6 +27,7 @@ def main():
     assert [x['nonzero'] for x in scenarios]==[4056,4080,4096]
     proof=dict(passed=True,synthetic_scenarios=scenarios,unmodified_complete_core=not a.signal_elide,
                signal_elide=a.signal_elide,
+               pc_profile=a.pc_profile,
                memory_restoration_bytes=65536,backup_readback_blocks=128,
                restore_blocks=128,backup_fault_positions=16,restore_fault_positions=2,
                backup_corruption_rejected=True,invalid_inputs=5,

@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--mix-observer',action='store_true')
     parser.add_argument('--gain-probe',action='store_true')
     parser.add_argument('--full-dsp-probe',action='store_true')
+    parser.add_argument('--full-dsp-pc-profile',action='store_true')
     parser.add_argument('--scene-state',action='store_true')
     parser.add_argument('--scene-rsp-rebind',action='store_true')
     parser.add_argument('--scene-rsp-context',action='store_true')
@@ -26,6 +27,7 @@ def main():
         if args.mix_observer:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_MIX_OBSERVER=1']
         if args.gain_probe:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_MIX_OBSERVER=1','-DSODIUM64_DSP_GAIN_PROBE=1']
         if args.full_dsp_probe:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_FULL_DSP_PROBE=1']
+        if args.full_dsp_pc_profile:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_FULL_DSP_PROBE=1','-DSODIUM64_FULL_DSP_PC_PROFILE=1']
         if args.scene_state or args.scene_rsp_rebind or args.scene_rsp_context or args.scene_slot:
             (Path(directory)/'regdef.h').write_text('/* Host C ABI fixture; no MIPS register macros. */\n')
             cmd+=['-DSODIUM64_SCENE_STATE=1','-DSODIUM64_NATIVE_DIAG_TRACE=1','-I',directory]

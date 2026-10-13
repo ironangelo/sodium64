@@ -346,6 +346,11 @@ native_diag_arm_restore:
 // The slower observation path explicitly saves all additional registers it touches.
 .align 5
 native_diag_interrupt:
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    lw k0, full_dsp_profile_active
+    bnez k0, full_dsp_profile_interrupt
+    nop
+#endif
 #ifdef SODIUM64_NATIVE_DIAG_TRACE
     // A stale enabled Compare must never append to a sealed window, even if
     // a caller restored a Status value captured before the cutoff IRQ.

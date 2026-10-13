@@ -8,13 +8,22 @@ extern "C" {
 enum { FULL_DSP_PROBE_CASES=3, FULL_DSP_PROBE_FRAMES=2048 };
 typedef struct {
     uint32_t frames, ticks, max_block_ticks, checksum, nonzero_samples;
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    uint32_t pc_samples, pc_next;
+#endif
 } full_dsp_probe_result;
 /* The callback exclusively owns a 64 KiB temporary cart buffer. A write
  * copies scratch to cart; a read copies cart to scratch. Never SD access. */
 typedef int (*full_dsp_probe_transfer)(unsigned char *scratch, uint32_t offset, int write);
 typedef uint32_t (*full_dsp_probe_clock)(void);
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+enum { FULL_DSP_PC_CAPACITY=128, FULL_DSP_PC_CART_OFFSET=65536 };
+uint32_t full_dsp_profile_begin(uint32_t *ring);
+uint32_t full_dsp_profile_end(uint32_t *next);
+#endif
 /* Return1: RAM restored/readback;0: backup failed before RAM changed;
- * 2: restore failed after RAM changed. Caller must deny gameplay on2. */
+ * 2: restore failed after RAM changed. Caller must deny gameplay on2.
+ * Optional PC profile:3 means profile admission/I/O failed, RAM restored. */
 uint32_t full_dsp_probe_execute(unsigned char *ram, unsigned char *scratch,
     full_dsp_probe_transfer transfer, full_dsp_probe_clock clock,
     full_dsp_probe_result result[FULL_DSP_PROBE_CASES]);

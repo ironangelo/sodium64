@@ -846,6 +846,42 @@ static void gain_probe(const char *id,uint32_t framebuffer) {
 #ifdef SODIUM64_FULL_DSP_PROBE
 #include "full_dsp_probe.h"
 static unsigned full_dsp_probe_needs_menu;
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+static unsigned full_pc_ready,full_pc_frame,full_pc_samples[3],full_pc_next[3];
+#ifdef REMOTE_CONTROL_HOST
+extern void remote_host_full_dsp_profile(unsigned char *data,unsigned bytes);
+#endif
+static void full_pc_export(const char *id,uint32_t framebuffer) {
+    if(!present||transport_error||menu_error){error(id,"audio_transport_unready");return;}
+    if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+    if(!remote_paused){error(id,"not_paused");return;}
+    if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
+    if(!full_pc_ready||full_pc_frame!=remote_render_frames){error(id,"full_dsp_profile_unavailable");return;}
+#ifdef REMOTE_CONTROL_HOST
+    remote_host_full_dsp_profile((unsigned char *)reply,1536);
+#else
+    uint32_t config[2];
+    if(!wait_usb('U')||!command('C',1,1,config)){error(id,"full_dsp_profile_read_failed");return;}
+    for(unsigned i=0;i<3;i++) {
+        if(!pi_transfer(uncached(transfer_buffer),USB_CART+65536+i*512,512,0)) {
+            (void)command('C',1,config[1],0);error(id,"full_dsp_profile_read_failed");return;
+        }
+        volatile unsigned char *data=uncached(transfer_buffer);
+        for(unsigned n=0;n<512;n++)reply[i*512+n]=(char)data[n];
+    }
+    if(!command('C',1,config[1],0)){error(id,"full_dsp_profile_read_failed");return;}
+#endif
+    // send_packet copies the source before prefix resets this shared reply.
+    if(!send_packet(2,reply,1536)){error(id,"usb_export_failed");return;}
+    prefix(id,1);append(" exported=full-dsp-profile bytes=1536 cases=3 capacity=128 endian=be");
+    field(" interval_count_ticks=",65521);field(" render_frame_id=",full_pc_frame);
+    for(unsigned i=0;i<3;i++) {
+        field(" case",i);field("_samples=",full_pc_samples[i]);
+        field(" case",i);field("_next=",full_pc_next[i]);
+    }
+    append(" provenance=synthetic_complete_reference_pc_not_fps");(void)finish();
+}
+#endif
 #ifdef REMOTE_CONTROL_HOST
 extern uint32_t remote_host_full_dsp_probe(full_dsp_probe_result result[FULL_DSP_PROBE_CASES]);
 #else
@@ -859,6 +895,10 @@ static void full_probe(const char *id,uint32_t framebuffer) {
     if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
     if(!remote_paused){error(id,"not_paused");return;}
     if(!framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    if(native_diag_snapshot_ready||native_diag_phase){error(id,"capture_snapshot_owned");return;}
+    full_pc_ready=0;
+#endif
     full_dsp_probe_result result[FULL_DSP_PROBE_CASES];
     uint32_t state;
 #ifdef REMOTE_CONTROL_HOST
@@ -873,6 +913,9 @@ static void full_probe(const char *id,uint32_t framebuffer) {
 #endif
     if(state==2)full_dsp_probe_needs_menu=1;
     if(state!=1||full_dsp_probe_needs_menu) {
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+        if(state==3){error(id,"full_dsp_profile_failed_ram_restored");return;}
+#endif
         error(id,state==0?"full_dsp_backup_failed":"full_dsp_restore_failed");return;
     }
     prefix(id,1);append(" full_dsp_probe=1 cases=3 restored=1");
@@ -884,6 +927,12 @@ static void full_probe(const char *id,uint32_t framebuffer) {
         field(" case",scenario);field("_checksum=",result[scenario].checksum);
         field(" case",scenario);field("_nonzero=",result[scenario].nonzero_samples);
     }
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    for(unsigned i=0;i<3;i++) {
+        full_pc_samples[i]=result[i].pc_samples;full_pc_next[i]=result[i].pc_next;
+    }
+    full_pc_frame=remote_render_frames;full_pc_ready=1;
+#endif
     append(" provenance=synthetic_complete_reference_not_gameplay_or_dac");(void)finish();
 }
 #endif
@@ -917,6 +966,9 @@ static void status(const char *id) {
 #endif
 #ifdef SODIUM64_FULL_DSP_PROBE
     append(",audio-full-dsp-probe");
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    append(",audio-full-dsp-profile");
+#endif
 #endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER
     append(",sections");
@@ -1172,6 +1224,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         if(nt!=3){error(id,"argument_count");return;}
         full_probe(id,retired_framebuffer);return;
     }
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+    if(eq(verb,"audio-full-dsp-profile")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        full_pc_export(id,retired_framebuffer);return;
+    }
+#endif
 #endif
 #ifdef SODIUM64_DSP_GAIN_PROBE
     if(eq(verb,"audio-gain-probe")) {

@@ -414,3 +414,108 @@ hw_profile_done:
 
 #endif // SODIUM64_PROFILE
 
+#ifdef SODIUM64_FULL_DSP_PC_PROFILE
+// Scoped reuse of the PROFILE sampler. The caller owns a512-byte transfer
+// scratch ring; no new ring, SRAM reservation or ordinary timer owner is used.
+.globl full_dsp_profile_begin, full_dsp_profile_end, full_dsp_profile_active
+.globl full_dsp_profile_interrupt, full_dsp_profile_irq_return
+.data
+.align 4
+full_dsp_profile_active: .word 0
+full_dsp_profile_base: .word 0
+full_dsp_profile_write: .word 0
+full_dsp_profile_samples: .word 0
+full_dsp_profile_status: .word 0
+full_dsp_profile_compare: .word 0
+.text
+.set noreorder
+full_dsp_profile_begin: // a0: trusted aligned512-byte ring; v0: admitted
+    beqz a0, full_dsp_profile_denied
+    andi t0, a0, 15
+    bnez t0, full_dsp_profile_denied
+    nop
+    lw t0, full_dsp_profile_active
+    bnez t0, full_dsp_profile_denied
+    nop
+    mfc0 t0, $12
+    andi t1, t0, 0x8006 // No other Compare owner or active exception context.
+    bnez t1, full_dsp_profile_denied
+    nop
+    li t1, -2
+    and t1, t0, t1
+    mtc0 t1, $12
+    nop
+    nop
+    sw t0, full_dsp_profile_status
+    mfc0 t1, $11
+    sw t1, full_dsp_profile_compare
+    sw a0, full_dsp_profile_base
+    sw a0, full_dsp_profile_write
+    sw zero, full_dsp_profile_samples
+    li t1, 1
+    sw t1, full_dsp_profile_active
+    mfc0 t1, $9
+    li t2, 65521
+    addu t1, t1, t2
+    mtc0 t1, $11
+    // Only the k0/k1-only sampler may interrupt this paused synthetic scope.
+    li t1, -65281
+    and t0, t0, t1
+    ori t0, t0, 0x8001
+    mtc0 t0, $12
+    nop
+    nop
+    jr ra
+    li v0, 1
+full_dsp_profile_denied:
+    jr ra
+    move v0, zero
+full_dsp_profile_end: // a0: next-index output; v0: total samples
+    mfc0 t0, $12
+    li t1, -2
+    and t0, t0, t1
+    mtc0 t0, $12
+    nop
+    nop
+    sw zero, full_dsp_profile_active
+    lw v0, full_dsp_profile_samples
+    lw t0, full_dsp_profile_write
+    lw t1, full_dsp_profile_base
+    subu t0, t0, t1
+    srl t0, t0, 2
+    sw t0, 0(a0)
+    lw t0, full_dsp_profile_compare
+    mtc0 t0, $11 // Restores value; acknowledges any previously masked IP7.
+    lw t0, full_dsp_profile_status
+    mtc0 t0, $12
+    nop
+    nop
+    jr ra
+    nop
+full_dsp_profile_interrupt:
+    // Same EPC/ring/Count algorithm as profile_interrupt, only k0/k1.
+    mfc0 k0, $14
+    lw k1, full_dsp_profile_write
+    sw k0, 0(k1)
+    addiu k1, k1, 4
+    lw k0, full_dsp_profile_base
+    addiu k0, k0, 512
+    bne k1, k0, full_dsp_profile_no_wrap
+    nop
+    addiu k1, k0, -512
+full_dsp_profile_no_wrap:
+    la k0, full_dsp_profile_write
+    sw k1, 0(k0)
+    la k1, full_dsp_profile_samples
+    lw k0, 0(k1)
+    addiu k0, k0, 1
+    sw k0, 0(k1)
+    mfc0 k0, $9
+    li k1, 65521
+    addu k0, k0, k1
+    mtc0 k0, $11
+full_dsp_profile_irq_return:
+    eret
+    nop
+#endif
+

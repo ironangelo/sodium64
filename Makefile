@@ -66,6 +66,14 @@ DSP_DRY_MIX ?= 0
 DSP_VOICE_BASE ?= 0
 DSP_GAIN_PROBE ?= 0
 FULL_DSP_PROBE ?= 0
+FULL_DSP_PC_PROFILE ?= 0
+ifeq ($(FULL_DSP_PC_PROFILE),1)
+ifneq ($(FULL_DSP_PROBE),1)
+$(error FULL_DSP_PC_PROFILE requires FULL_DSP_PROBE=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_FULL_DSP_PC_PROFILE=1
+N64_CXXFLAGS_PROBE += -DSODIUM64_FULL_DSP_PC_PROFILE=1
+endif
 DSP_SIGNAL_ELIDE ?= 0
 ifeq ($(DSP_SIGNAL_ELIDE),1)
 ifneq ($(FULL_DSP_PROBE),1)
@@ -349,6 +357,9 @@ ifeq ($(FULL_DSP_PROBE),1)
 N64_ASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
 N64_RSPASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
 endif
+ifeq ($(FULL_DSP_PC_PROFILE),1)
+N64_ASFLAGS += -DSODIUM64_FULL_DSP_PC_PROFILE=1
+endif
 ifeq ($(AUDIO_OBSERVER),1)
 N64_ASFLAGS += -DSODIUM64_AUDIO_OBSERVER=1
 N64_RSPASFLAGS += -DSODIUM64_AUDIO_OBSERVER=1
@@ -560,7 +571,7 @@ $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h s
 
 $(BUILD_DIR)/src/full_dsp_probe.o: src/full_dsp_probe.cpp src/full_dsp_probe.h $(wildcard third_party/snes_spc/*.h)
 	@mkdir -p $(dir $@)
-	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror -o $@ $<
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror $(N64_CXXFLAGS_PROBE) -o $@ $<
 
 $(BUILD_DIR)/src/scene_rsp_probe.o: src/scene_rsp_probe.c src/scene_rsp_probe.h
 	@mkdir -p $(dir $@)

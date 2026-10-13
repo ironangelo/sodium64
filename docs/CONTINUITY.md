@@ -1,3 +1,22 @@
+# 2026-10-13 - R54 single-image native cache discriminator running
+
+RESUME HERE: yielded native exec94780 is LIVE; single-image menu/install/
+readback passed. Runtime9a0092d50d6f1d2e1ad064432be6fbcb6f49e326,
+experiment/full-dsp-cache-r54; preflightcontinuityddd741b. Frozen private
+dsp-cache-r54-archive/native_dsp_cache_r54.py and plan. WorkerSHA
+c5e6d138afaa1e9b62a6b919014948bf476e15311f42b0c3a3d5f9537adb10c9.
+Poll94780 and dsp-cache-r54-native/report.json; root aloneCOM3. No competing
+transport or worker restart after observation timeout. ALttPpaused600; modes
+0/1/2/4/7 round-robin3x, originalthree2048-frame cases/92160frames, actual
+cacheindices/ownedoffsets/hostchecksums/nonzero/RAMrestore. Full live image/
+PCM/head/regs/enabled/boundary unchanged, step660, finallycoordinate8/menu/
+install/readback. Native outcome PENDING. Terminal checkpoint before another
+technical batch. Same binary/phases/arithmetic, no sampler/IRQ change; colors
+diagnostic only. HistoricalR49 budget comparison remains explicit as below.
+Full DSP/DAC/SNES/native60/corpus/integration remain OPEN. History retained.
+
+---
+
 # 2026-10-13 - R54 cache placement implemented; single-image native discriminator next
 
 RESUME HERE: runtime9a0092d50d6f1d2e1ad064432be6fbcb6f49e326, experiment/full-dsp-cache-r54,

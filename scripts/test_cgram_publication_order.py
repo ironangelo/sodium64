@@ -21,7 +21,12 @@ class PublicationOrderTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError,'renderer publication'):prove_main_publication(changed)
 
     def test_wrong_main_source_rejected(self):
-        changed=self.source.replace('la t0, rsp_main_text_start','la t0, rsp_hcomp_text_start',1)
+        # R43 also loads Main for its immutable no-span copy. Mutate the
+        # actual renderer publication rather than that unrelated earlier load.
+        binding='    la t0, rsp_main_text_start\n    addi t0, t0, 0x3A8\n'
+        self.assertEqual(self.source.count(binding),1,'unique Main publication source')
+        changed=self.source.replace(binding,binding.replace('rsp_main_text_start','rsp_hcomp_text_start'),1)
+        self.assertNotEqual(changed,self.source,'negative mutation must execute')
         with self.assertRaisesRegex(AssertionError,'source binding'):prove_main_publication(changed)
 
     def test_late_raw_shadow_rejected(self):

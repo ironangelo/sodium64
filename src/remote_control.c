@@ -7,7 +7,7 @@
 #include "../tools/sc64-diagnostic-save/recorder_runtime_abi.h"
 #ifdef SODIUM64_SCENE_SLOT
 #include "scene_slot.h"
-volatile uint32_t scene_rom_cart,scene_rom_bytes,scene_rom_type;
+volatile uint32_t scene_rom_cart,scene_rom_bytes,scene_rom_type,scene_rom_exp;
 static unsigned scene_slot_needs_menu;
 static uint32_t scene_slot_bytes,scene_slot_stage;
 static uint32_t slot_fingerprints[29];
@@ -407,7 +407,7 @@ static int slot_bind(void) {
      * complete cart-prefix and guest-ROM CRC are computed once, before save. */
     if(!slot_bound) {
         if((scene_rom_cart!=0x10104000u&&scene_rom_cart!=0x10200000u)||
-           scene_rom_bytes<0x8000u||scene_rom_bytes>0x800000u||scene_rom_type>2||
+           scene_rom_exp<5||scene_rom_exp>13||scene_rom_bytes<0x8000u||scene_rom_bytes>0x800000u||scene_rom_type>2||
            native_diag_guest_sram_exp>3)return 0;
         if(!slot_rom_crc(scene_rom_cart,scene_rom_bytes,&slot_binding.rom_crc)||
            !slot_rom_crc(0x10000000u,scene_rom_cart-0x10000000u,&slot_binding.code_crc))return 0;
@@ -1185,6 +1185,7 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
 #if defined(SODIUM64_SCENE_SLOT) && !defined(REMOTE_CONTROL_HOST)
         field(" slot_saved_status=",remote_saved_status);
         field(" slot_rom_cart=",scene_rom_cart);field(" slot_rom_bytes=",scene_rom_bytes);
+        field(" slot_rom_exp=",scene_rom_exp);
         field(" slot_rom_type=",scene_rom_type);field(" slot_sram_exp=",native_diag_guest_sram_exp);
 #endif
 #if (defined(SODIUM64_SCENE_RSP_REBIND) || defined(SODIUM64_SCENE_RSP_CONTEXT)) && !defined(REMOTE_CONTROL_HOST)

@@ -61,3 +61,11 @@ First native runtime999db32 worker50104 is terminal: normal ALttP600 image
 control. Fingerprint rejected at ROM binding stage104 before any SP operation.
 No machine save/load was attempted. Coordinate8/menu/readback restored. Keep
 this failure distinct from local passes; inspect exact mapper metadata next.
+
+Metadata runtimefaa4b7b physically reported an invalid2048-byte size and type3
+for the ordinary control. Direct cart LBU was the new source of these fields.
+Extract size/type from the mapper's existing aligned header word instead;
+retain both mapper address/cycle behavior and the original SRAM word path.
+Explicit ROM exponent bounds prevent masked shifts accepting malformed sizes.
+The metadata-only worker completed and restored coordinate8/menu/readback.
+Full restore remains pending for this repair.

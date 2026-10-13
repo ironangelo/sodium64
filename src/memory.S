@@ -250,23 +250,28 @@ check_lorom:
 map_lorom:
     // Keep the original single instruction in check_lorom's delay slot.
     li t0, 0x000000 // Current address
-#ifdef SODIUM64_SCENE_SLOT
-    sw t8, scene_rom_cart
-    lbu t0, 0xA0007FD7(t8)
-    addiu t0, t0, 10
-    li t1, 1
-    sllv t1, t1, t0
-    sw t1, scene_rom_bytes
-    lbu t0, 0xA0007FD6(t8)
-    sw t0, scene_rom_type
-    li t0, 0 // Metadata does not change the mapper's initial address.
-#endif
     // Set initial values for building the memory map
     li t1, 0xFFFFFF // Maximum address
     li t2, 0x2000 // Block size (8KB)
 
     // Set the ROM mask using the header size
     lw t5, 0xA0007FD4(t8)
+#ifdef SODIUM64_SCENE_SLOT
+.globl scene_rom_lomap_metadata
+scene_rom_lomap_metadata:
+    // Reuse the mapper's proven aligned PI word; direct cart byte reads
+    // returned incorrect size/type on the physical console.
+    sw t8, scene_rom_cart
+    andi t3, t5, 0xFF
+    sw t3, scene_rom_exp
+    addiu t3, t3, 10
+    li t4, 1
+    sllv t4, t4, t3
+    sw t4, scene_rom_bytes
+    srl t3, t5, 8
+    andi t3, t3, 0xFF
+    sw t3, scene_rom_type
+#endif
     li t7, 0x7F0000
     li t3, 0x800
     andi t4, t5, 0xFF
@@ -408,18 +413,21 @@ check_hirom:
     li t2, 0x2000 // Block size (8KB)
 
     // Set the ROM mask using the header size
-#ifdef SODIUM64_SCENE_SLOT
-    sw t8, scene_rom_cart
-    lbu t0, 0xA000FFD7(t8)
-    addiu t0, t0, 10
-    li t3, 1
-    sllv t3, t3, t0
-    sw t3, scene_rom_bytes
-    lbu t3, 0xA000FFD6(t8)
-    sw t3, scene_rom_type
-    li t0, 0 // Restore current mapper address before building the table.
-#endif
     lw t5, 0xA000FFD4(t8)
+#ifdef SODIUM64_SCENE_SLOT
+.globl scene_rom_himap_metadata
+scene_rom_himap_metadata:
+    sw t8, scene_rom_cart
+    andi t3, t5, 0xFF
+    sw t3, scene_rom_exp
+    addiu t3, t3, 10
+    li t4, 1
+    sllv t4, t4, t3
+    sw t4, scene_rom_bytes
+    srl t3, t5, 8
+    andi t3, t3, 0xFF
+    sw t3, scene_rom_type
+#endif
     li t7, 0x3FFFFF
     li t3, 0x400
     andi t4, t5, 0xFF

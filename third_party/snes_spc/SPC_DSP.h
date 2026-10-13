@@ -43,6 +43,9 @@ public:
 	// Runs DSP for specified number of clocks (~1024000 per second). Every 32 clocks
 	// a pair of samples is be generated.
 	void run( int clock_count );
+#ifdef SODIUM64_TEST_DSP_COUNTER
+	unsigned test_counter_probe( int rate );
+#endif
 	
 // Sound control
 

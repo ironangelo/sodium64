@@ -26,6 +26,27 @@ static unsigned checks,directed,slices,frames;
 static uint32_t rng=0x49d5a7;
 static uint32_t random_word(){rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return rng;}
 static void check(bool ok,const char *what){if(!ok){fprintf(stderr,"mismatch %s check=%u\n",what,checks);abort();}}
+#ifdef SODIUM64_TEST_DSP_COUNTER
+static unsigned counter_cases;
+static void counter_case(unsigned rate,uint32_t counter){
+    memcpy(&ref.m.counter,&counter,sizeof(counter));memcpy(&opt.m.counter,&counter,sizeof(counter));
+    check((ref.test_counter_probe(rate)==0)==(opt.test_counter_probe(rate)==0),"counter predicate");
+    counter_cases++;
+}
+static void counters(){
+    static const unsigned rates[]={30721,2048,1536,1280,1024,768,640,512,384,320,256,192,160,128,96,80,64,48,40,32,24,20,16,12,10,8,6,5,4,3,2,1};
+    static const unsigned offsets[]={1,0,1040,536,0,1040,536,0,1040,536,0,1040,536,0,1040,536,0,1040,536,0,1040,536,0,1040,536,0,1040,536,0,1040,0,0};
+    uint32_t saved=rng;
+    for(unsigned rate=0;rate<32;rate++){
+        for(uint32_t c=0;c<30720;c++)counter_case(rate,c);
+        uint32_t d=rates[rate],last=(0xffffffffu/d)*d;
+        uint32_t values[]={0,1,d-1,d,d+1,last-1,last,last+1,0xffffffffu,0xfffffffeu,0x80000000u,0x80000001u};
+        for(unsigned i=0;i<12;i++)counter_case(rate,values[i]-offsets[rate]);
+        for(unsigned i=0;i<4096;i++)counter_case(rate,random_word());
+    }
+    rng=saved;ref.m.counter=opt.m.counter=0;
+}
+#endif
 
 template<class Core>
 static short *sample_pointer(Core &core,short *p,short *output){
@@ -87,6 +108,9 @@ static void initialize(unsigned voices){
 }
 int main(){
     initialize(255);
+#ifdef SODIUM64_TEST_DSP_COUNTER
+    counters();
+#endif
     for(unsigned voice=0;voice<8;voice++)for(unsigned e=0;e<3;e++)
     for(unsigned non=0;non<2;non++)for(unsigned fraction=0;fraction<256;fraction++){
         unsigned envs[]={0,1,2047};
@@ -130,4 +154,7 @@ int main(){
         }
     }
     printf("DSP_SIGNAL_ELIDE PASS directed=%u slices=%u frames=%u state_checks=%u\n",directed,slices,frames,checks);
+#ifdef SODIUM64_TEST_DSP_COUNTER
+    printf("DSP_COUNTER_PREDICATE PASS counter_cases=%u\n",counter_cases);
+#endif
 }

@@ -1,6 +1,9 @@
 // snes_spc 0.9.0. http://www.slack.net/~ant/
 
 #include "SPC_DSP.h"
+#ifdef SODIUM64_DSP_COUNTER_FAST
+#include "dsp_counter_predicate.h"
+#endif
 
 #include "blargg_endian.h"
 #include <string.h>
@@ -197,11 +200,30 @@ inline void SPC_DSP::run_counters()
 
 inline unsigned SPC_DSP::read_counter( int rate )
 {
+#ifdef SODIUM64_DSP_COUNTER_FAST
+	// Both private consumers ask only whether the remainder is0. For period
+	// 2^k*u with odd u, rotate(n*inverse(u),k) <= floor(UINT_MAX/period)
+	// iff period divides n. Unsigned32 multiplication/offsets wrap exactly.
+	if ( rate == 31 )
+		return 0; // period1, including unsigned counter wrap
+	unsigned config = dsp_counter_metadata [rate];
+	unsigned shift = (config >> 2) & 15;
+	unsigned group = config >> 6;
+	unsigned n = (unsigned) m.counter + dsp_counter_offset [config & 3];
+	unsigned product = n * dsp_counter_inverse [group];
+	unsigned folded = (product >> shift) | (product << ((0u-shift) & 31));
+	unsigned limit = dsp_counter_limit [group] >> shift;
+	return folded > limit; // zero/nonzero contract, not a remainder API
+#else
 	return ((unsigned) m.counter + counter_offsets [rate]) % counter_rates [rate];
+#endif
 }
 
 
 //// Envelope
+#ifdef SODIUM64_TEST_DSP_COUNTER
+unsigned SPC_DSP::test_counter_probe( int rate ) { return read_counter( rate ); }
+#endif
 
 inline void SPC_DSP::run_envelope( voice_t* const v )
 {

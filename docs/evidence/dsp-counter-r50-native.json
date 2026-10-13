@@ -1,0 +1,50 @@
+{
+  "status": "REJECTED as the next material core performance direction",
+  "runtime_source": "248f9c1723660da16ed61483446dba445e56ada2",
+  "same_source_flags": [
+    0,
+    1
+  ],
+  "DSP_SIGNAL_ELIDE_in_both": 1,
+  "physical_console": true,
+  "trials_per_variant": 3,
+  "core_costs": [
+    {
+      "case": 0,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 56.12494933333333,
+      "candidate_median_ms": 56.437824,
+      "time_saving_percent": -0.5574609338325764,
+      "candidate_budget_fraction": 0.881841
+    },
+    {
+      "case": 1,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 92.39402666666666,
+      "candidate_median_ms": 92.711744,
+      "time_saving_percent": -0.3438721579692272,
+      "candidate_budget_fraction": 1.448621
+    },
+    {
+      "case": 2,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 95.49597866666667,
+      "candidate_median_ms": 95.02193066666666,
+      "time_saving_percent": 0.4964062430887206,
+      "candidate_budget_fraction": 1.4847176666666666
+    }
+  ],
+  "original_synthetic_stereo_frames_with_host_checksums": 36864,
+  "per_trial_APURAM_backup_readback_restore_bytes": 65536,
+  "per_variant_live_image_pixels_unchanged": 67200,
+  "per_variant_live_PCM_bytes_unchanged": 8192,
+  "live_heads_registers_enabled_boundary_and_guest_step660_pass": true,
+  "coordinate8_menu_install_readback_restored": true,
+  "synthetic_PCM_submitted_to_AI": false,
+  "full_active_budget_gameplay_DAC_SNES_native60_corpus_and_integration_not_claimed": true,
+  "broader_CI_or_further_counter_tuning": false,
+  "master_integration": false
+}

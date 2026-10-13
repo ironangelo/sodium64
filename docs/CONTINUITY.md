@@ -1,3 +1,33 @@
+# 2026-10-13 - R50 counter idea natively rejected; scope complete-core profile next
+
+RESUME HERE: worker39257 terminal exit0, all controls/coordinate8 menu install/
+readback restored, no native controller live. Runtime248f9c1723660da16ed61483446dba445e56ada2,
+experiment/dsp-counter-r50, isolated/defaultDSP_COUNTER_FAST0. Native medians:
+one56.124949->56.437824ms
+(-0.557461% time saving), active892.394027
+->92.711744ms (-0.343872%), allfeatures
+95.495979->95.021931ms (+0.496406%).
+2048frames/64ms budget; both active results fail predeclared3% material gate.
+DIVsites2->0 was not throughput proof. The compiler also outlined run_envelope.
+Keep semantic math proof/code preserved; no more counter tuning or broadCI.
+[Report](DSP_COUNTER_R50.md); numeric native receipt. All18 synthetic checksums/
+36864frames/full64KiBRAM pertrial/live67200pixels/8192PCM/state/step660 match.
+
+Original active scenarios are mostly directGAIN/rate31; do not turn this into
+an all-rate performance claim or swap in a new convenient synthetic test.
+Next use the existing statistical sampler, if its paused probe scope can be
+owned safely, to identify actual complete-core function residency in the
+active8/allfeatures workloads before another larger implementation. No new
+profiler framework, standalone emulator or unchanged drop-in trial is needed.
+Inspect current sampler/admission/IRQ owners first; retain all guest state,
+profile overhead limits and the original uninstrumented cost evidence.
+R49 signal saving remains isolated, R47 limited gain preserved, R48 rejected,
+R44/R45/master/state prototype unchanged. Full active budgets, CPU/APU/render,
+DSP/DAC/SNES/game fidelity/native60/corpus/integration remain OPEN.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R50 complete-DSP counter native A/B running
 
 RESUME HERE: yielded native exec39257 is live; flag0 installed/readback passed.

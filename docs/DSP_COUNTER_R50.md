@@ -1,6 +1,6 @@
 # R50 - Exact counter divisibility in the complete DSP probe
 
-IMPLEMENTED; native cost pending. DSP_COUNTER_FAST1 defaults0, requires
+REJECTED as the next material core performance direction; correctness measured. DSP_COUNTER_FAST1 defaults0, requires
 FULL_DSP_PROBE1 and changes the diagnostic complete core only. The preserved
 R49 signal-elision flag is1 in both native A/B variants. No gameplay replacement
 or master integration follows. Eight active voices still exceed the64ms core
@@ -56,3 +56,34 @@ times each; Count covers only core32-frame calls. Mandatory host checksums,
 and final coordinate8/menu/install/readback. No synthetic AI or SD writes.
 Full active budgets, guest CPU/APU/rendering cost, DAC/SNES/game fidelity,
 native60/corpus and integration remain open regardless of this discriminator.
+
+
+## Native discriminator rejects the performance direction
+
+Worker39257 terminal exit0, runtime248f9c1723660da16ed61483446dba445e56ada2; three repeats per flag.
+R49 signal1 is enabled in both. All18 case checksums/36864 original synthetic
+stereo frames match host. Every trial restores/readbacks64KiB APURAM. Both
+variants preserve full67200 live pixels/8192 live PCM bytes/head/registers/
+enabled/boundary and step600->660. Coordinate8/menu/install/readback restored.
+
+| Original workload | Baseline ms | Candidate ms | Time saving |
+| --- | ---: | ---: | ---: |
+| One voice | 56.124949 | 56.437824 | -0.557461% |
+| Eight high-pitch voices | 92.394027 | 92.711744 | -0.343872% |
+| Eight with echo/FIR/PMON/noise | 95.495979 | 95.021931 | +0.496406% |
+
+Both active gains are below the predeclared3% rejection threshold. Eliminating
+DIV sites does not establish a native cost reduction; the compiler also emits
+run_envelope out of line, and opcode counts alone cannot assign the cost.
+Keep the mathematically correct experiment isolated/default0; no further
+counter patch campaign, wider CI or promotion for this failed discriminator.
+These original workloads are predominantly direct GAIN/rate31; this is not
+an exhaustive performance statement for every ADSR rate or a hardware ceiling.
+No new convenient rate workload replaces the predeclared comparison.
+[Numeric receipt](evidence/dsp-counter-r50-native.json).
+
+Next inspect/reuse the existing statistical CPU sampler to obtain a scoped
+complete-core function profile before selecting a larger arithmetic/scheduling
+change. Preserve the R49 signal reduction/pinned oracle and all prior evidence.
+Full active64ms budgets, actual gameplay/full DSP/DAC/SNES fidelity/native60,
+the required corpus and integration remain open.

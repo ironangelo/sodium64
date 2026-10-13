@@ -7,6 +7,8 @@
 #define SP_STATUS 0xa4040010u
 #define CONTEXT_SLOT 8192u
 #define CONTEXT_WORDS (SCENE_RSP_CONTEXT_BYTES/4)
+volatile uint32_t scene_rsp_context_stage;
+volatile uint32_t scene_rsp_context_mismatch_word;
 
 static uint32_t hash(uint32_t value,uint32_t word) {
     for(unsigned shift=24;;shift-=8) {
@@ -48,6 +50,8 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
     const uint32_t *restore,unsigned restore_words,
     scene_rsp_read read,scene_rsp_write write,scene_rsp_transfer transfer,
     scene_rsp_wait wait) {
+    scene_rsp_context_stage=1;
+    scene_rsp_context_mismatch_word=0xffffffffu;
     if(!scratch||!capture||!capture_words||capture_words>1024||!restore||
        !restore_words||restore_words>1024||!read||!write||!transfer||!wait)return 0;
     uint32_t status=read(SP_STATUS),pc=read(SP_PC);
@@ -56,6 +60,7 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
        read(SP_MEM+0x13c0)!=0x40882000||read(SP_MEM+0x13c4)!=0x0900040f||
        read(SP_MEM+0x13c8)!=0||read(0xa4040018)||read(0xa4040014))return 0;
     uint32_t original=2166136261u;
+    scene_rsp_context_stage=2;
     for(unsigned start=0;start<2048;start+=128) {
         for(unsigned i=0;i<128;i++) {
             scratch[i]=read(SP_MEM+4*(start+i));original=hash(original,scratch[i]);
@@ -69,9 +74,13 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
     /* Sentinels independently prove the early stores ran after clearing the
      * stopped pipeline. The matched HALT prologue guarantees original t0=2. */
     write(SP_MEM,0xffffffffu);write(SP_MEM+32,0xffffffffu);
+    scene_rsp_context_stage=3;
     if(!run(capture,capture_words,write,read,wait))return 2;
-    if(read(SP_MEM)!=0||read(SP_MEM+32)!=2)return 2;
+    scene_rsp_context_stage=4;
+    if(read(SP_MEM)!=0){scene_rsp_context_mismatch_word=0;return 2;}
+    if(read(SP_MEM+32)!=2){scene_rsp_context_mismatch_word=8;return 2;}
     uint32_t context=2166136261u;
+    scene_rsp_context_stage=5;
     for(unsigned start=0;start<CONTEXT_WORDS;start+=128) {
         unsigned n=CONTEXT_WORDS-start;if(n>128)n=128;
         for(unsigned i=0;i<128;i++) {
@@ -85,24 +94,37 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
     /* Force a different register context, then capture and check every field
      * is zero. This is an actual restore test, not an unchanged-state copy. */
     for(unsigned i=0;i<CONTEXT_WORDS;i++)write(SP_MEM+4*i,0);
+    scene_rsp_context_stage=6;
     prepare(read,write);
-    if(!run(restore,restore_words,write,read,wait)||!run(capture,capture_words,write,read,wait))return 2;
-    for(unsigned i=0;i<CONTEXT_WORDS;i++)if(read(SP_MEM+4*i))return 2;
+    scene_rsp_context_stage=7;
+    if(!run(restore,restore_words,write,read,wait))return 2;
+    scene_rsp_context_stage=8;
+    if(!run(capture,capture_words,write,read,wait))return 2;
+    scene_rsp_context_stage=9;
+    for(unsigned i=0;i<CONTEXT_WORDS;i++)if(read(SP_MEM+4*i)){scene_rsp_context_mismatch_word=i;return 2;}
     if(!verify(scratch,CONTEXT_SLOT,CONTEXT_WORDS,context,transfer))return 2;
+    scene_rsp_context_stage=10;
     for(unsigned start=0;start<CONTEXT_WORDS;start+=128) {
         if(!transfer(scratch,CONTEXT_SLOT+4*start,0))return 2;
         unsigned n=CONTEXT_WORDS-start;if(n>128)n=128;
         for(unsigned i=0;i<n;i++)write(SP_MEM+4*(start+i),scratch[i]);
-        for(unsigned i=0;i<n;i++)if(read(SP_MEM+4*(start+i))!=scratch[i])return 2;
+        for(unsigned i=0;i<n;i++)if(read(SP_MEM+4*(start+i))!=scratch[i]){scene_rsp_context_mismatch_word=start+i;return 2;}
     }
+    scene_rsp_context_stage=11;
     prepare(read,write);
-    if(!run(restore,restore_words,write,read,wait)||!run(capture,capture_words,write,read,wait))return 2;
+    scene_rsp_context_stage=12;
+    if(!run(restore,restore_words,write,read,wait))return 2;
+    scene_rsp_context_stage=13;
+    if(!run(capture,capture_words,write,read,wait))return 2;
+    scene_rsp_context_stage=14;
     for(unsigned start=0;start<CONTEXT_WORDS;start+=128) {
         if(!transfer(scratch,CONTEXT_SLOT+4*start,0))return 2;
         unsigned n=CONTEXT_WORDS-start;if(n>128)n=128;
-        for(unsigned i=0;i<n;i++)if(read(SP_MEM+4*(start+i))!=scratch[i])return 2;
+        for(unsigned i=0;i<n;i++)if(read(SP_MEM+4*(start+i))!=scratch[i]){scene_rsp_context_mismatch_word=start+i;return 2;}
     }
+    scene_rsp_context_stage=15;
     if(!verify(scratch,0,2048,original,transfer))return 2;
+    scene_rsp_context_stage=16;
     uint32_t restored=2166136261u;
     for(unsigned start=0;start<2048;start+=128) {
         if(!transfer(scratch,4*start,0))return 2;
@@ -112,6 +134,8 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
         for(unsigned i=0;i<128;i++)if(read(SP_MEM+4*(start+i))!=scratch[i])return 2;
     }
     if(restored!=original)return 2;
+    scene_rsp_context_stage=17;
     write(SP_PC,0x3c);write(SP_STATUS,6);
-    return read(SP_PC)==0x3c&&read(SP_STATUS)==status?1u:2u;
+    if(read(SP_PC)!=0x3c||read(SP_STATUS)!=status)return 2;
+    scene_rsp_context_stage=18;return 1;
 }

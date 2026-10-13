@@ -21,6 +21,8 @@
 #define SCENE_RSP_WORK_END 0x2F0
 #ifndef __ASSEMBLER__
 #include "scene_rsp_probe.h"
+extern volatile uint32_t scene_rsp_context_stage;
+extern volatile uint32_t scene_rsp_context_mismatch_word;
 /* 0 untouched/rejected; 1 exact context/memory readback; 2 unsafe/incomplete
  * hardware recovery, caller must permit menu recovery only. */
 uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],

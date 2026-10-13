@@ -61,3 +61,20 @@ Next native title600 roundtrip, then normal601/660/1200 image/PCM/head/regs/
 enabled against the same frozen control. If successful, run Mode7 race4500
 roundtrip and4501/4560/5100 using the existing exact reference. Each finally
 restores coordinate8/menu/install/readback. Private register bytes stay local.
+
+## First physical context transaction failed; stage trace next
+
+Runtime74c66f2 title600 ordinary image/PCM match, canonical pause succeeds,
+but the full context transaction returns restore_failed. Stage was not exposed;
+do not infer which register or helper failed. No next-frame comparison or broad
+CI. Worker32249 terminal; coordinate8/menu/readback PASS.
+[Native failure](evidence/scene-state-rsp-context-native-failure.json).
+
+The diagnostic now retains stage and first mismatching word index in error/
+status receipts. Stages:1 admission,2 SP backup,3 capture execution,4 early
+store sentinels,5 context slot backup,7 zero restore,8 zero capture,9 zero check,
+10 original context memory,12 original register restore,13 recapture,14 context
+comparison,15 SP backup validation,16 SP memory restore/readback/checksum,
+17 final pipeline/status,18 success. Raw register values stay private; no new
+game work. Parser254/fuzz1000 and production transaction175 still pass. Repeat
+the same title gate to localize the discrepancy before changing reconstruction.

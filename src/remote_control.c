@@ -752,6 +752,8 @@ static void status(const char *id) {
 #endif
 #ifdef SODIUM64_SCENE_RSP_CONTEXT
     field(" scene_rsp_context_needs_menu=",scene_rsp_context_needs_menu);
+    field(" scene_rsp_context_stage=",scene_rsp_context_stage);
+    field(" scene_rsp_context_mismatch_word=",scene_rsp_context_mismatch_word);
 #endif
     (void)finish();
 }
@@ -820,7 +822,8 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
 #endif
         if(state==2)scene_rsp_context_needs_menu=1;
         if(state!=1||scene_rsp_context_needs_menu) {
-            error(id,state==0?"scene_context_backup_failed":"scene_context_restore_failed");return;
+            prefix(id,0);append(state==0?"scene_context_backup_failed":"scene_context_restore_failed");
+            field(" stage=",scene_rsp_context_stage);field(" mismatch_word=",scene_rsp_context_mismatch_word);(void)finish();return;
         }
         prefix(id,1);append(" rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
         field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);

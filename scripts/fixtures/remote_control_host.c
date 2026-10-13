@@ -50,6 +50,8 @@ uint32_t remote_dsp_gain_probe(uint32_t voice,uint32_t gain,uint32_t result[2]) 
 static char response[2048];
 #ifdef SODIUM64_SCENE_RSP_CONTEXT
 static uint32_t scene_context_result=1,scene_context_calls;
+volatile uint32_t scene_rsp_context_stage;
+volatile uint32_t scene_rsp_context_mismatch_word;
 uint32_t remote_host_scene_rsp_context(void) {scene_context_calls++;return scene_context_result;}
 #endif
 #ifdef SODIUM64_SCENE_RSP_REBIND

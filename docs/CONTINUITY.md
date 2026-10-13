@@ -1,3 +1,21 @@
+# 2026-10-13 - Mode7 scoped-EPC worker running; keep sole COM3
+
+Verified live yielded native worker handle24734, work/native_scene_slot.py
+--name scene-slot-epc-mode7 --plan scene-slot-epc-plan.json --quiet-counter
+--mode7. Kernel1990fb016e3d010027fda427d618bf57de661e03, lastreport phase
+route1800. Artifact/worker frozenprivate scene-slot-epc plan/archive.
+Do not open competingCOM3 or restart on observationtimeout. RESUME HERE poll
+24734 and itsprivate report/process. It runs exactroute4500, save/control5100,
+load4500, next1/60/600; allmemory/SP/TLB/fullcurrentimage/PCM/input and268
+nonEPCrawCPUbytes compare. OnlyinactiveEPC4B permitted. Serializer/readback
+stillfull272B. Finallycoordinate8/menu/install/readback onallterminalpaths.
+Afterterminal outcome checkpointnumericresults and returnto mainperformance
+work; do not expand into persistent/crossbuild/UI before itsvalue is justified.
+Title fulladvance-restore gate35kernel alreadyPASS. Full60/fullDSP/DAC/SNES
+oracle/corpus/master open. Earlierhistory preserved below.
+
+---
+
 # 2026-10-13 - Mode7 restores; comparison delta is inactive host EPC
 
 Runtime35e1d3a worker41679 terminal/restored. Exactroute/control4500/4501/

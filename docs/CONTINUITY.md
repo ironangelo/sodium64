@@ -1,3 +1,23 @@
+# 2026-10-13 - Native full context failed; stage diagnostic frozen
+
+Native74c66f2 title600 image/PCM exact, canonicalpark succeeds, context
+restore_failed with no exposedstage. Worker32249 terminal/menu/coordinate8/
+readback PASS; no new frames or full CI. Does not isolate failing context yet.
+New diagnostic runtimecdc601d76c64b3c90623d18db4be50dac52068af, scene-context-stage-plan/archive,
+same transaction plus stage/first mismatch word. Parser254/fuzz1000 and
+productiontransaction175 PASS, staticend0xd3d48<D4000. No liveCOM3 beforedispatch.
+
+RESUME HERE: work/native_scene_context_stage.py --candidate --name
+scene-context-stage-title --control privateDate13/scene-s1-reference/report.json.
+Same normal600/canonical/fullRSProundtrip; read exact failure stage/index from
+receipt/report. Finallycoordinate8/menu/readback. RootsoleCOM3. Local381/65536MID
+and13noDIV banks are not physicalacceptance. GPR-onlyMode7passes; fullreset
+fails. Stageguide inSCENE_STATE_RSP_CONTEXT.md. Resolvehardwaredifference
+before machine-slot work; full60/audio/corpus/state/crossbuild/master open.
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - Full RSP context native transaction frozen; title then Mode7
 
 IMPLEMENTED runtime 74c66f2a1f0c84f4da01a953eefd48666afa7a79, experiment/scene-state-s1.

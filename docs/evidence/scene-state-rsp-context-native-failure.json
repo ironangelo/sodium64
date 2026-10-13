@@ -1,0 +1,15 @@
+{
+  "status": "MEASURED native context transaction failure; precise stage unknown",
+  "runtime_source": "74c66f2a1f0c84f4da01a953eefd48666afa7a79",
+  "physical_console": true,
+  "normal600_pixels": 67200,
+  "normal600_difference": 0,
+  "normal600_PCM_bytes": 8192,
+  "PCM_difference": 0,
+  "canonical600": true,
+  "full_context_roundtrip": "FAILED",
+  "failure_stage": "NOT_EXPOSED_first_artifact",
+  "no_next_frame_comparison": true,
+  "menu_coordinate8_restore_readback": true,
+  "next": "Expose stage and first mismatch index; repeat the same physical gate."
+}

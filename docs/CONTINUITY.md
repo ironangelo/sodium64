@@ -1,3 +1,22 @@
+# 2026-10-13 - S2 Mode7 reference captured; reconstruction candidate next
+
+Reference313642a flag0 worker52638 terminal/coordinate8/menu/readback PASS.
+Same previously sampled F-Zero race route, tenoldPNG/fourPCM/inputACK exact;
+new normal4500/4501/4560/5100 captured. Thirteenimages/sevenpausedPCM total,
+referenceonly/no rebind/performancecapture. S2title rebindnext1/60/600 passed.
+
+RESUME HERE: soleCOM3 work/native_scene_s2_mode7.py --candidate --name
+scene-s2-mode7-candidate --control privateDate13/scene-s2-mode7-reference/report.json.
+Frozen296aa4a scene-s2-pipeline-plan/archive; ordinary4500 then canonicalpark/
+rebind, compare4501/4560/5100 plusentire same route images/PCM/heads/regs/
+enabled/ACK. Finallycoordinate8/menu/readback. Do not compete with liveworker.
+Aftergate close owner spans/private samebuild slot restore per
+SCENE_STATE_OWNERS.md; serializer/import/complete restore/crossbuild/full60/
+audio/corpus/master remain open. [S2](SCENE_STATE_S2.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - S2 Mode7 continuation reference running
 
 S2 title native296aa4a park/rebind next1/60/600 exact268800px/32768pausedPCM,

@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--mix-observer',action='store_true')
     parser.add_argument('--gain-probe',action='store_true')
     parser.add_argument('--full-dsp-probe',action='store_true')
+    parser.add_argument('--scene-state',action='store_true')
     args=parser.parse_args();root=Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix='s64-runtime-model-') as directory:
         executable=Path(directory)/('remote.exe' if os.name=='nt' else 'remote')
@@ -22,10 +23,16 @@ def main():
         if args.mix_observer:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_MIX_OBSERVER=1']
         if args.gain_probe:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_MIX_OBSERVER=1','-DSODIUM64_DSP_GAIN_PROBE=1']
         if args.full_dsp_probe:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_FULL_DSP_PROBE=1']
+        if args.scene_state:
+            (Path(directory)/'regdef.h').write_text('/* Host C ABI fixture; no MIPS register macros. */\n')
+            cmd+=['-DSODIUM64_SCENE_STATE=1','-DSODIUM64_NATIVE_DIAG_TRACE=1','-I',directory]
         if os.name!='nt':cmd+=['-fsanitize=address,undefined','-fno-omit-frame-pointer','-no-pie']
         cmd += [str(root/'src/remote_control.c'),str(root/'scripts/fixtures/remote_control_host.c'),'-o',str(executable)]
         subprocess.run(cmd,check=True)
-        result=subprocess.run([str(executable)],check=True,capture_output=True,text=True)
+        result=subprocess.run([str(executable)],capture_output=True,text=True)
+        if result.returncode:
+            print(result.stdout+result.stderr,end='')
+            result.check_returncode()
         print(result.stdout,end='')
         match=re.search(r'PASS cases=(\d+) fuzz=(\d+)',result.stdout);assert match
         proof=dict(passed=True,cases=int(match[1]),fuzz=int(match[2]),production_parser=True,

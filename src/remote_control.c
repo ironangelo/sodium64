@@ -5,7 +5,7 @@
  */
 #include "remote_control.h"
 #include "../tools/sc64-diagnostic-save/recorder_runtime_abi.h"
-#if SODIUM64_REMOTE_SECTION_OBSERVER || defined(SODIUM64_RDP_MATH_PROBE)
+#if SODIUM64_REMOTE_SECTION_OBSERVER || defined(SODIUM64_RDP_MATH_PROBE) || defined(SODIUM64_SCENE_STATE)
 /* Use the exact arena/DMEM ABI selected by this build's diagnostic flags. */
 #include "defines.h"
 _Static_assert(SECTION_SIZE==64,"section observer requires the queued 64-byte ABI");
@@ -19,6 +19,11 @@ volatile uint32_t remote_vi_count, remote_presentations;
 volatile uint32_t remote_buttons, remote_button_frames;
 volatile uint32_t remote_paused, remote_arm_pending;
 volatile uint32_t remote_pause_pending, remote_pause_target;
+#ifdef SODIUM64_SCENE_STATE
+volatile uint32_t remote_scene_pending, remote_scene_canonical, remote_scene_error;
+volatile uint32_t remote_scene_framebuffer, remote_scene_origin_guest;
+static int scene_wait(uint32_t address,uint32_t mask,uint32_t expected,uint32_t timeout);
+#endif
 /* Filled by main.S before Sodium replaces the IPL3 boot-info in SP DMEM. */
 volatile uint32_t remote_boot_tv_type=1;
 extern volatile uint16_t joyxlh[4];
@@ -270,6 +275,29 @@ static unsigned receive(void) {
 static int eq(const char *a,const char *b) {
     while(*a&&*a==*b){a++;b++;}return *a==*b;
 }
+#ifdef SODIUM64_SCENE_STATE
+static int scene_wait(uint32_t address,uint32_t mask,uint32_t expected,uint32_t timeout) {
+#ifdef REMOTE_CONTROL_HOST
+    extern int remote_host_scene_wait(uint32_t,uint32_t,uint32_t,uint32_t);
+    return remote_host_scene_wait(address,mask,expected,timeout);
+#else
+    return wait_io(address,mask,expected,timeout);
+#endif
+}
+void remote_scene_parked(uint32_t framebuffer) {
+    remote_scene_pending=0;remote_scene_error=0;remote_scene_canonical=0;
+    uint32_t physical=framebuffer&0x1fffffffu;
+    if(remote_guest_frames!=remote_render_frames ||
+       (physical!=(FRAMEBUFFER1&0x1fffffffu)&&physical!=(FRAMEBUFFER2&0x1fffffffu)&&physical!=(FRAMEBUFFER3&0x1fffffffu)))
+        remote_scene_error=1;
+    else if(!scene_wait(0xa4040010,1,1,REMOTE_COUNT_HZ*2u))remote_scene_error=2;
+    else if(!scene_wait(0xa4040018,1,0,REMOTE_COUNT_HZ/5u)||!scene_wait(0xa4040014,1,0,REMOTE_COUNT_HZ/5u))remote_scene_error=3;
+    else if(!scene_wait(0xa410000c,0x770,0,REMOTE_COUNT_HZ/5u))remote_scene_error=4;
+    else if(!scene_wait(0xa450000c,0xc0000000u,0,REMOTE_COUNT_HZ))remote_scene_error=5;
+    if(!remote_scene_error){remote_scene_canonical=1;remote_scene_framebuffer=framebuffer;}
+    remote_paused=1; // A failure also stays parked for inspection/menu recovery.
+}
+#endif
 static void append(const char *p) {
     while(*p&&reply_length<sizeof(reply)-2)reply[reply_length++]=*p++;
 }
@@ -620,6 +648,9 @@ static void status(const char *id) {
 #ifdef SODIUM64_AUDIO_OBSERVER
     append(",audio,audio-reset");
 #endif
+#ifdef SODIUM64_SCENE_STATE
+    append(",state-park,state-check");
+#endif
 #ifdef SODIUM64_BRR_OBSERVER
     append(",audio-brr");
 #endif
@@ -668,6 +699,10 @@ static void status(const char *id) {
     field(" frame_control_max=",REMOTE_FRAME_CONTROL_MAX);
     append(" usb_poll_scope=C_handler_excludes_bridge");
     append(" metric_provenance=cp0_count,guest_boundary,rsp_retired,vi_irq,vi_origin_publish fps_claim=none");
+#ifdef SODIUM64_SCENE_STATE
+    field(" scene_pending=",remote_scene_pending);field(" scene_canonical=",remote_scene_canonical);
+    field(" scene_error=",remote_scene_error);field(" scene_origin_guest=",remote_scene_origin_guest);
+#endif
     (void)finish();
 }
 
@@ -772,6 +807,32 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     if(eq(verb,"hello")||eq(verb,"status")||eq(verb,"profile")) {
         if(nt!=3){error(id,"argument_count");return;}status(id);return;
     }
+#ifdef SODIUM64_SCENE_STATE
+    if(eq(verb,"state-check")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        prefix(id,1);field(" scene_canonical=",remote_scene_canonical);
+        field(" scene_error=",remote_scene_error);field(" scene_pending=",remote_scene_pending);
+        field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
+        append(" provenance=post_submit_natural_rsp_dp_ai_retirement serializer=0 restore=0");
+        (void)finish();return;
+    }
+    if(eq(verb,"state-park")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        if(busy_capture()||remote_arm_pending||remote_scene_pending){error(id,"capture_busy");return;}
+        if(!remote_paused){error(id,"not_paused");return;}
+        if(remote_scene_canonical){error(id,"already_canonical");return;}
+        if(!retired_framebuffer||!remote_render_frames||remote_guest_frames!=remote_render_frames){error(id,"scene_boundary");return;}
+        prefix(id,1);append(" scene_park_pending=1");
+        field(" accepted_guest_frame_id=",remote_guest_frames);
+        append(" outcome=pending");
+        if(finish()) {
+            cancel_pause_target();remote_scene_error=0;remote_scene_origin_guest=remote_guest_frames;
+            remote_scene_pending=1;remote_paused=0;
+        }
+        return;
+    }
+    if(remote_scene_error&&!eq(verb,"resume")&&!eq(verb,"menu")) {error(id,"scene_park_failed");return;}
+#endif
     if(eq(verb,"pause-at")||eq(verb,"step")) {
         int step=eq(verb,"step");uint32_t value,target;
         if(nt!=4||!decimal(tokens[3],&value,step?REMOTE_FRAME_CONTROL_MAX:UINT32_MAX)||
@@ -798,7 +859,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
          * Keep buttons and their guest-frame duration under the existing hook. */
         if(finish()) {
             remote_pause_target=target;remote_pause_pending=1;
-            if(step)remote_paused=0;
+            if(step) {
+                remote_paused=0;
+#ifdef SODIUM64_SCENE_STATE
+                remote_scene_canonical=0;remote_scene_error=0;
+#endif
+            }
         }
         return;
     }
@@ -842,6 +908,9 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         if(menu_error){error(id,"transition_failed_requires_reset");return;}
         cancel_pause_target();
         remote_paused=0;prefix(id,1);append(" paused=0");
+#ifdef SODIUM64_SCENE_STATE
+        remote_scene_canonical=0;remote_scene_error=0;
+#endif
         field(" retired_frame_id=",remote_render_frames);(void)finish();return;
     }
     if(eq(verb,"pause")||eq(verb,"frame")||eq(verb,"snapshot")||eq(verb,"sav")||eq(verb,"export")||eq(verb,"menu")) {
@@ -870,7 +939,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         if(!send_packet(3,header,16)||!send_packet(4,(const void *)(uintptr_t)retired_framebuffer,FRAME_BYTES)) {
             error(id,"usb_export_failed");return;
         }
+#ifdef SODIUM64_SCENE_STATE
+        prefix(id,1);append(" exported=frame width=280 height=240 pixel_bytes=2");
+        append(remote_scene_canonical?" boundary=scene_canonical_raw":" boundary=rsp_retired");
+#else
         prefix(id,1);append(" exported=frame width=280 height=240 pixel_bytes=2 boundary=rsp_retired");
+#endif
         field(" render_frame_id=",remote_render_frames);(void)finish();return;
     }
     if(eq(verb,"sav")||eq(verb,"export")) {

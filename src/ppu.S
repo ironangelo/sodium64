@@ -1166,10 +1166,36 @@ native_diag_submit_count_done:
 #endif
 
     // Unhalt the RSP so it can render the next frame
+#ifdef SODIUM64_SCENE_STATE
+scene_state_submit_hook:
+#endif
     li t0, 0x1 // Clear halt
     lui t1, 0xA404
+#ifdef SODIUM64_SCENE_STATE
+    sw t0, 0x0010(t1) // Submit every queued row before the canonical drain.
+    lw t0, remote_scene_pending
+    beqz t0, scene_return_to_guest
+    nop
+    // a0 is dead on the PPU continuation; use the just-submitted frame for
+    // parked exports. Preserve t4/t5 and all architectural guest registers.
+    lw a0, DMEM(FRAMEBUFFER)(t5)
+    mfc0 t0, $12
+    li t1, -2
+    and t1, t0, t1
+    mtc0 t1, $12
+    nop
+    nop
+    la k0, remote_saved_status
+    sw t0, (k0)
+    jal remote_scene_bridge
+    nop
+scene_return_to_guest:
+    jr t4
+    nop
+#else
     jr t4
     sw t0, 0x0010(t1) // SP_STATUS
+#endif
 
 ignore_frame:
     // Reset the section pointers and reuse them for the next frame

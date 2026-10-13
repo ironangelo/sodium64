@@ -15,6 +15,11 @@ extern volatile uint32_t remote_vi_count, remote_presentations;
 extern volatile uint32_t remote_buttons, remote_button_frames;
 extern volatile uint32_t remote_paused, remote_arm_pending;
 extern volatile uint32_t remote_pause_pending, remote_pause_target;
+#ifdef SODIUM64_SCENE_STATE
+extern volatile uint32_t remote_scene_pending, remote_scene_canonical, remote_scene_error;
+extern volatile uint32_t remote_scene_framebuffer, remote_scene_origin_guest;
+void remote_scene_parked(uint32_t framebuffer);
+#endif
 void remote_control_init(void);
 void remote_control_frame(uint32_t retired_framebuffer);
 void remote_control_idle(uint32_t retired_framebuffer);

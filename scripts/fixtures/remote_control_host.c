@@ -48,6 +48,16 @@ uint32_t remote_dsp_gain_probe(uint32_t voice,uint32_t gain,uint32_t result[2]) 
 }
 #endif
 static char response[2048];
+#ifdef SODIUM64_SCENE_STATE
+#include "../../src/defines.h"
+static unsigned scene_wait_calls,scene_wait_failure;
+int remote_host_scene_wait(uint32_t address,uint32_t mask,uint32_t expected,uint32_t budget) {
+    static const uint32_t addresses[]={0xa4040010,0xa4040018,0xa4040014,0xa410000c,0xa450000c};
+    static const uint32_t masks[]={1,1,1,0x770,0xc0000000u};
+    unsigned i=scene_wait_calls++;if(i>=5||address!=addresses[i]||mask!=masks[i]||expected!=(i?0u:1u)||!budget)abort();
+    return scene_wait_failure!=i+1;
+}
+#endif
 #ifdef SODIUM64_FULL_DSP_PROBE
 #include "../../src/full_dsp_probe.h"
 static unsigned full_probe_calls;
@@ -403,6 +413,34 @@ int main(void){
         remote_process_request(fuzz,n,0);
     }
     check(menu_calls==before&&!remote_arm_pending);
+#ifdef SODIUM64_SCENE_STATE
+    native_diag_phase=0;remote_arm_pending=0;remote_scene_pending=remote_scene_canonical=remote_scene_error=0;
+    remote_guest_frames=remote_render_frames=20;remote_paused=0;
+    expect("s64 12345678 state-park","ERR not_paused");check(!remote_scene_pending);
+    remote_paused=1;native_diag_phase=1;
+    expect("s64 12345678 state-park","ERR capture_busy");check(remote_paused);
+    native_diag_phase=0;remote_guest_frames=21;
+    expect("s64 12345678 state-park","ERR scene_boundary");check(remote_paused&&!remote_scene_pending);
+    remote_guest_frames=20;fail_send=1;run("s64 12345678 state-park");fail_send=0;
+    check(remote_paused&&!remote_scene_pending&&remote_guest_frames==20);
+    expect("s64 12345678 state-park","scene_park_pending=1 accepted_guest_frame_id=20 outcome=pending");
+    check(remote_scene_pending&&!remote_paused&&remote_scene_origin_guest==20&&remote_render_frames==20);
+    scene_wait_calls=0;remote_scene_parked(FRAMEBUFFER1);
+    check(scene_wait_calls==5&&remote_scene_canonical&&remote_paused&&!remote_scene_error&&!remote_scene_pending);
+    check(remote_guest_frames==20&&remote_render_frames==20);
+    expect("s64 12345678 state-check","scene_canonical=1 scene_error=0 scene_pending=0 guest_frame_id=20 render_frame_id=20");
+    expect("s64 12345678 state-park","ERR already_canonical");
+    expect("s64 12345678 resume","OK paused=0");check(!remote_scene_canonical);
+    for(unsigned failure=1;failure<=5;failure++) {
+        scene_wait_calls=0;scene_wait_failure=failure;remote_scene_pending=1;
+        remote_scene_parked(FRAMEBUFFER1);
+        check(remote_paused&&!remote_scene_canonical&&remote_scene_error&&scene_wait_calls==failure);
+        expect("s64 12345678 frame","ERR scene_park_failed");
+        expect("s64 12345678 resume","OK paused=0");check(!remote_scene_error);
+    }
+    scene_wait_failure=0;scene_wait_calls=0;remote_scene_parked(FRAMEBUFFER1+2);
+    check(!scene_wait_calls&&remote_scene_error==1&&remote_paused);
+#endif
     printf("REMOTE_CONTROL PASS cases=%u fuzz=1000 production_parser=1 hardware_mocked=1\n",cases);
     return 0;
 }

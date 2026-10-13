@@ -7,6 +7,9 @@
 #ifdef SODIUM64_REMOTE
 .globl remote_init_bridge, remote_frame_bridge, remote_saved_status
 .globl remote_reboot_start, remote_reboot_end, remote_reboot_jump
+#ifdef SODIUM64_SCENE_STATE
+.globl remote_scene_bridge, remote_bridge_saved
+#endif
 .data
 .align 3
 remote_saved_status: .word 0
@@ -31,6 +34,14 @@ remote_frame_bridge:
     li k1, 1
     la k0, remote_bridge_kind
     sw k1, (k0)
+#ifdef SODIUM64_SCENE_STATE
+    b remote_bridge_enter
+    nop
+remote_scene_bridge:
+    li k1, 2
+    la k0, remote_bridge_kind
+    sw k1, (k0)
+#endif
 remote_bridge_enter:
     la k0, remote_bridge_saved
     .set push
@@ -80,6 +91,17 @@ remote_bridge_enter:
     b remote_bridge_restore
     nop
 remote_bridge_frame:
+#ifdef SODIUM64_SCENE_STATE
+    lw t0, remote_bridge_kind
+    addiu t0, t0, -2
+    bnez t0, remote_bridge_normal_frame
+    nop
+    jal remote_scene_parked
+    nop
+    b remote_bridge_pause_check
+    nop
+remote_bridge_normal_frame:
+#endif
     jal remote_control_frame
     nop
 remote_bridge_pause_check:

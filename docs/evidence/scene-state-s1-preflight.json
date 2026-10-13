@@ -1,0 +1,30 @@
+{
+  "status": "IMPLEMENTED canonical post-submit park; native continuation pending",
+  "production_parser_cases": 218,
+  "fuzz": 1000,
+  "linked_boundary": {
+    "passed": true,
+    "actual_linked_cases": 16,
+    "mutations_rejected": [
+      "missing_submit",
+      "wrong_bridge_kind"
+    ],
+    "architectural_GPR64_HI_LO_EPC_Status_preserved": true,
+    "normal_frame_counters_unchanged": true,
+    "natural_submit_only": true,
+    "RCP_timing_mocked": true,
+    "native_acceptance": false,
+    "serializer": false,
+    "restore": false
+  },
+  "inherited_RSP_extents_exact": 26,
+  "default_off_CPU_text_data_exact_R44_metadata": true,
+  "static_end": 862872,
+  "event_arena_start": 868352,
+  "owners": 43,
+  "boot_cases": 12,
+  "TV_cases": 5,
+  "existing_compiled_continuous_cases": 102,
+  "serializer": false,
+  "restore": false
+}

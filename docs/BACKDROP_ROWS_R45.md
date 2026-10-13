@@ -300,3 +300,27 @@ window if the declared extent is missing. R45 must match the same ten images/
 four PCM first, then measure quietly and recover coordinate8/menu/readback.
 Current313642a CI: CGRAM38354693122 SUCCESS, Build38354690610 and
 Ares38354695628 in progress; these do not substitute for native/fidelity gates.
+
+## Native DKC gain reproduced on predeclared identical absolute IDs
+
+Both flag0/1 source313642a variants pass ten images672000 pixels and four
+paused PCM buffers32768 bytes, heads/registers/enabled and input ACKs, with
+zero differences. Full checksum/settings and coordinate8/menu/readback PASS;
+workers68661/67487 terminal, no COM3 worker. ACK boundaries and relative S64D
+ordinals now prove every declared endpoint4330..4569 appears exactly once
+in both traces,240 intervals. Initial partial intervals remain excluded.
+
+Paired cadence13.753867
+->28.702821/s (108.689096percent);
+explicit wait53.236506->14.938192ms.
+[Paired receipt](evidence/backdrop45-dkc-absolute-pair.json). Full quiet traces
+remain separate: reference276 intervals13.770917/s, candidate793 intervals
+39.479317/s. Their different guest extents are not used as paired work.
+This confirms material native renderer value on this bounded route; no
+presentation60Hz, complete sound/title/corpus qualification follows.
+
+Next native Mode7 representative with the same metadata on/off variants and
+private replay/image/PCM controls, then resolve ALttP small residuals using
+aligned intervals as needed. Current CI results are recorded separately;
+no rerun of unchanged qualified banks is needed. State feasibility remains
+positive and bounded after these material renderer gates, no serializer yet.

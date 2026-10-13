@@ -1,3 +1,24 @@
+# 2026-10-13 - R45 material DKC gain confirmed on identical absolute guest IDs
+
+Source313642a flag0/1, exact predeclared endpointIDs4330..4569 (240 intervals):
+13.753867->28.702821/s (108.689096percent),
+wait53.236506->14.938192ms. BothtenPNG/fourPCM exact,
+heads/regs/enabled/inputACK/checksum/settings/coordinate8/menu/readback PASS.
+Workers68661/67487 terminal/noCOM3 worker. Fullquiet27613.770917 vs79339.479317
+separate different guest extents. No presented60/fulltitle/sound/corpus claim.
+
+RESUME HERE: native representative Mode7 control using immutable metadata
+on/off archives/plans; inspect menu inventory safely to choose an available
+unchipped Mode7 game, same exact paused replay/image/PCM and aligned IDs.
+No directPC SD writes while powered. RootsoleCOM3/finallycoordinate8/menu.
+Source313642a CI CGRAM38354693122 SUCCESS; Build38354690610 opt-in bg-spans
+job SUCCESS, full run pending emulator-smoke; Ares38354695628 pending.
+ALttP small residuals still open; state serializer/full60/audio/corpus open,
+default0/master/R44/R43 preserved, no merge. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R44 capture anchor native exact; R45 fixed endpoints4330..4569 next
 
 Source313642a flag0 control r44-dkc-anchor passes tenPNG/fourPCM/heads/regs/

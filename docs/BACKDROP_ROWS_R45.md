@@ -420,3 +420,30 @@ image/audio semantics or adding game profiles. Actual linked owner/phase/bounds
 checks before a discriminating native comparison; no duplicate broadCI until
 changed code demonstrates value. Save-state continuation/owner plan remains
 positive and bounded after this gate; no serializer or restore is implemented.
+
+## Dense Main row input constructed as sampled equal-color runs
+
+The same pre-HDMA lineN sample still owns rowN-1. A changed sample materializes
+the preceding run; the new row belongs to the new color. Frame handoff flushes
+the final run through its existing cur_line-1 extent before make_section or
+renderer submission. The result is the same dense RGB5551 array. Aligned64-bit
+stores write four equal rows, with exact halfword heads/tails and fail-closed
+range checks. Only t0..t3 and assembler AT are borrowed; a0, guest registers
+and the frame continuation/queue t4/t5 survive. Both queue parities remain.
+
+Linked PASS:488 sampler boundaries,102 range/alignment/fail-closed controls,
+40 whole-frame pre-HDMA sequences (black/constant/gradient/runs/random, both
+queues and heights),160 inherited epoch barriers/two bindings. Actual wrong
+phase, bulk stride and omitted handoff faults reject alongside the seven
+prior RSP/dispatch faults. Forty row packet cases/589824pixels/240 dispatch
+cases pass; all28 embedded RSP text/data extents remain byte-exact to313642a.
+Default-off CPU text/data remain exact to the qualified metadata R44 variant.
+StaticD2E88<D4000,43 owners, boot12/TV5 and compiled backup bindings/three
+faults pass. [Preflight](evidence/backdrop45-runs-preflight.json).
+
+Freeze distinct runs plan/archive, then same-source ALttP story discriminator:
+predeclared1000 endpoints1862..2861 against immutable metadata flag0 control,
+threeimages/pausedPCM before quiet capture, finallycoordinate8/menu/readback.
+If producer cost improves without semantic differences, retain DKC gain and
+Mode7 controls before relevant changed-CPU qualification. No broad CI repeated
+before native value, no state serializer or full60/audio acceptance claim.

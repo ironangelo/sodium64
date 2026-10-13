@@ -1,3 +1,23 @@
+# 2026-10-13 - Full RSP context title native pass; Mode7 next
+
+MEASURED native1b85b64 worker40307 terminal/coordinate8/menu/readback PASS.
+Sharedentrybody3C fixesearlystore; full700byte capture/zero poison/restore/
+recapture andSP8KiB backup/restore/readback/hash/status pass finalstage18.
+Guest/render remain600. Normal600/601/660/1200 exact268800px/32768pausedPCM,
+heads/DSPregs/enabled. No complete machine restore or file state yet.
+
+RESUME HERE: soleCOM3 work/native_scene_context_entry_mode7.py --candidate
+--name scene-context-entry-mode7 --control privateDate13/scene-s2-mode7-reference/report.json.
+Frozen1b85b64 scene-context-entry-plan/archive. Same exactrace4500, canonical
+fullroundtrip700/8192 then4501/4560/5100 +routecontrols/ACK/image/PCM. Finally
+coordinate8/menu/readback. No competingCOM3. Ifpass close fullCPU/TLB/guestmem/
+JIT/mapper/input/hostclock ownership then private samebuild slot; immutable/
+code/config/ROM/checksum/bounds prevalidation before transactional restore.
+S3format1209only, oldfullresetREJECTED, GPR-onlyMode7PASS. Full60/audio/corpus/
+crossbuild/master remainopen. Earlier history untouched below.
+
+---
+
 # 2026-10-13 - Native context early store failed; shared target3C repair frozen
 
 Nativecdc601d worker76955 terminal/coordinate8/menu/readback PASS. Normal600

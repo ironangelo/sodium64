@@ -1,6 +1,6 @@
 # R52 - Complete clocked DSP four-sample BRR dataflow
 
-IMPLEMENTED; native cost pending. Isolated from R49 6d6e4eb, default
+REJECTED; material native performance gate failed. Isolated from R49 6d6e4eb, default
 DSP_FULL_BRR_GROUP0, FULL_DSP_PROBE1 required. DSP_SIGNAL_ELIDE1 in both
 variants; no R50 counter, R51 sampler or gameplay mixer replacement.
 
@@ -52,3 +52,23 @@ isolated/unqualified, without open-ended tuning. Each2048-frame standalone
 budget is64ms before guest CPU/APU/rendering; passing does not establish native
 game60, DAC/SNES sound fidelity or corpus compatibility. R44/R45/master and
 the state prototype stay preserved; full objective and integration remain open.
+
+
+## Native cost outcome
+
+Worker89966 terminal exit0, runtime9f00e9bf3861a0dddd65e752245fa5f23fad7c88. Three repeats per flag;
+all18 checksums/nonzero results and36864 original synthetic frames match host.
+Every trial64KiB RAM backup/readback/restore. Both live67200pixels/8192PCM/
+heads/regs/enabled/boundary unchanged; gueststep600->660 succeeds. Recovery
+coordinate8/menu/install/readback verified. No synthetic waveform sent to AI.
+
+| Original workload | Baseline ms | Candidate ms | Time saving | Fraction of64ms |
+| --- | ---: | ---: | ---: | ---: |
+| One voice | 56.128064 | 61.476181 | -9.528419% | 96.057% |
+| Eight high-pitch voices | 92.424981 | 107.983595 | -16.833775% | 168.724% |
+| Eight with echo/FIR/PMON/noise | 95.529451 | 138.018496 | -44.477431% | 215.654% |
+
+REJECTED; material native performance gate failed. No BRR micro-tuning or broad CI for this failed material gate. Preserve code/proofs isolated; inspect the remaining full-core scheduling cost for a larger generic reduction.
+The64ms standalone core budgets still exclude guest CPU/APU/rendering. This
+does not establish native game60, DAC/SNES sound fidelity or general corpus
+compatibility. [Numeric receipt](evidence/full-dsp-brr-r52-native.json).

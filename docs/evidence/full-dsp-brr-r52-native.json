@@ -1,0 +1,86 @@
+{
+  "status": "REJECTED; material native performance gate failed",
+  "runtime_source": "9f00e9bf3861a0dddd65e752245fa5f23fad7c88",
+  "physical_console": true,
+  "same_source_flags": [
+    0,
+    1
+  ],
+  "R49_signal_and_snapshot_scratch_in_both": true,
+  "R50_counter_R51_sampler": false,
+  "trials_per_variant": 3,
+  "original_synthetic_stereo_frames_with_host_checksums": 36864,
+  "core_costs": [
+    {
+      "case": 0,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 56.128064,
+      "candidate_median_ms": 61.47618133333334,
+      "time_saving_percent": -9.52841938986766,
+      "candidate_budget_fraction": 0.9605653333333334,
+      "baseline_trials_ms": [
+        56.17143466666667,
+        56.128064,
+        56.12317866666667
+      ],
+      "candidate_trials_ms": [
+        61.51899733333333,
+        61.47618133333334,
+        61.467648
+      ]
+    },
+    {
+      "case": 1,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 92.42498133333333,
+      "candidate_median_ms": 107.98359466666666,
+      "time_saving_percent": -16.833774926305622,
+      "candidate_budget_fraction": 1.6872436666666666,
+      "baseline_trials_ms": [
+        92.42734933333334,
+        92.42498133333333,
+        92.424576
+      ],
+      "candidate_trials_ms": [
+        107.986432,
+        107.98308266666666,
+        107.98359466666666
+      ]
+    },
+    {
+      "case": 2,
+      "frames": 2048,
+      "standalone_budget_ms": 64,
+      "baseline_median_ms": 95.52945066666666,
+      "candidate_median_ms": 138.018496,
+      "time_saving_percent": -44.47743082035658,
+      "candidate_budget_fraction": 2.156539,
+      "baseline_trials_ms": [
+        95.53444266666666,
+        95.52945066666666,
+        95.52868266666667
+      ],
+      "candidate_trials_ms": [
+        138.04407466666666,
+        138.005504,
+        138.018496
+      ]
+    }
+  ],
+  "each_trial_APURAM_backup_readback_restore_bytes": 65536,
+  "per_variant_unchanged_live_image_pixels": 67200,
+  "per_variant_unchanged_live_PCM_bytes": 8192,
+  "live_heads_registers_enabled_guest_boundary_unchanged": true,
+  "guest_step600_to660_both": true,
+  "coordinate8_menu_install_readback_restored": true,
+  "synthetic_PCM_submitted_to_AI": false,
+  "budget_excludes_guest_CPU_APU_rendering_USB_setup_and_checksums": true,
+  "predeclared_both_active_saving_percent_material": 8,
+  "predeclared_both_active_below_percent_reject": 3,
+  "predeclared_regression_percent_limit": 2,
+  "material_gate_passed": false,
+  "DAC_SNES_game_fidelity_native60_corpus_and_integration_not_claimed": true,
+  "master_integration": false
+}

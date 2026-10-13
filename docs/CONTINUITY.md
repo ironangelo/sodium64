@@ -1,3 +1,39 @@
+# 2026-10-13 - R51 scoped complete-DSP PC sampler implemented; native next
+
+RESUME HERE: runtimea7f852601ee71fdeee91e30b767495e62a8af628, experiment/full-dsp-profile-r51,
+isolated sodium64-dsp-profile-r51. DefaultFULL_DSP_PC_PROFILE0; R49 signal1,
+R50 counter excluded. Core18 executable sections exact R49 in all variants;
+off871404 allocated bytes exact physical R49. Reuse PROFILE's65521-count/k0-k1
+EPC ring algorithm in the512B transfer scratch only while synthetic core runs.
+PCs go to owned volatile USBcart65536..67071, disjoint from64KiB RAM backup.
+Scratch clears first; unfilled PC tail cannot retain guest RAM.
+
+No arena/capacity reduction: metadata and core lease otherwise unpublished
+32768B snapshot storage; RPC rejects nonzero capture phase/ready snapshot before
+mutating RAM. Initial link failures never installed. StaticD5AD8<D6000/gap528,
+43owners/full24576events/194slots. The instrumented diagnostic usesSIGNAL0;
+uninstrumented R49 timings remain authority. Masks other hostIRQs temporarily,
+restores Status/Compare values; inactive pendingIP7 may clear, not exact Cause
+or O64 restoration. Guest state/core phases are unchanged. Local8 begin/end,
+7 denied,32 actual IRQs/ring wraps, dispatcher preserves recorder;221 parser+
+1000fuzz;6144-frame transaction/PC I/O/admission faults/RAM restore/snapshot tail
+checks pass. Boot12/TV5/9core/36HI-LO/CPU6/two banks/fourD6400/three faults pass.
+[Report](FULL_DSP_PC_PROFILE_R51.md); numeric preflight receipt. No broadCI.
+
+Next confirm no controller, run frozen private dsp-profile-r51-archive/
+native_dsp_profile_r51.py once, root aloneCOM3. One instrumented artifact,
+six original three-case2048-frame probes at paused600, checksum/RAM restore
+and each3-ring export; exact ELF9-function classification, total/retained/
+outside/wrap all explicit. Full live image/PCM/state unchanged, step660 then
+finallycoordinate8 menu install/readback. Record live handle; poll it rather
+than restart on observation timeout. Profile tells which larger active-core
+change is justified; instrumented timing does not replace native R49 cost or
+prove exclusive function cycles/FPS/DAC/SNES fidelity. R50 rejected, earlier
+candidates preserved, master/R44/R45/state unchanged. Full target remains OPEN.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R50 counter idea natively rejected; scope complete-core profile next
 
 RESUME HERE: worker39257 terminal exit0, all controls/coordinate8 menu install/

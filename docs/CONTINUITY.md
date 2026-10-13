@@ -1,3 +1,21 @@
+# 2026-10-13 - R45 ALttP rain exact; direct scalar fallback hypothesis next
+
+Runtime1fcc940 rain4images268800pixels/8192pausedPCM exact, checksum/settings/
+coordinate8/menu/readback PASS; worker67412 terminal, no COM3 worker. Rain
+40.472334 vsR4440.540954/s (-0.169261percent),
+story55.874278 vs56.089884 (-0.384394percent). Preserve small losses as open;
+seven ALttP frames/twoPCM unchanged does not prove complete non-regression.
+DKC matched240 remains13.754889->28.710314/s (+108.728065percent).
+
+RESUME HERE: bounded CGWSEL-excluded scalar dispatch bypass before helper load,
+fixed ABI/arena, exact Main/Sub masks/alpha/blank/retired packets. Local linked
+guards then native story/rain discriminator, retained DKC and Mode7/broader CI
+before promotion. Frozen scissor archives/reports retained; default0, no merge.
+Save states feasibility documented/no serializer. Full60/audio/corpus open.
+[R45](BACKDROP_ROWS_R45.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 ALttP story exact image/PCM; small cadence loss open; rain next
 
 Frozen1fcc940 nativeDkc matched24013.754889->28.710314/s (+108.728065percent),

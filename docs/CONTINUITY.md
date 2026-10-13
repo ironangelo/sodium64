@@ -1,3 +1,32 @@
+# 2026-10-13 - R53 whole-sample complete-DSP scheduler implemented; native next
+
+RESUME HERE: runtime98c212dcc4b92f03063f0ba5567eb5698c041021, experiment/full-dsp-schedule-r53,
+isolated sodium64-dsp-schedule-r53 fromR49. DefaultDSP_FULL_SAMPLE_CHUNKS0;
+signal1/scratch1 both, no R50/R51/R52. Partial prefix/tail use original ordered
+dispatcher; full32-clock groups expand same timing sequence, no interior stop
+tests. All phases/work/read-write order/final phase/caller clock bounds intact.
+9216 directed cases/all32 phases+edges/13052stereoframes,12288V3c/8192slices/
+11601otherframes/38912state checks/fullRAM128regsPCM pass, five faults reject.
+Transaction6144frames/RAMrestore/faults/snapshot tail pass. Parser219+1000fuzz/
+snapshot admission reused exactsources. Off18coresections exactR49; wholeoff
+ELF exactphysicalR52baseline393ab260.13RSPbanks exact, nine/tenfunctions/36/61
+HI-LO writers, boot12/TV5/CPU6/two banks/fourD6400DMA/3faults pass. Static
+D4A88/D5A88<D6000; full24576events/194slots/43owners, no IRQ/arena changes.
+[Report](FULL_DSP_SCHEDULE_R53.md); numeric preflight. No broadCI before value.
+
+Next confirm no controller/frozenworker hash, run private dsp-schedule-r53-
+archive/native_dsp_schedule_r53.py once. Fresh same-source0then1, original
+three2048frame cases three repeats atALttP600, checksum/nonzero/64KiB RAM
+restore/live67200pixels8192PCM/headsregsboundary+step660, finallycoordinate8/
+menu/install/readback. RootsoleCOM3; record livehandle and pollsame, no restart.
+>=8%both active saves broadens, below3%both rejects; mismatch/>2%regression
+blocks; intermediate isolated, no endless tuning. Standalone64ms excludes
+guestCPU/APU/rendering. R52 rejected/preserved, earlierR44/R45/master/state
+unchanged. FullDSP/DAC/SNES/nativegame60/corpus/integration remain OPEN.
+History bytes retained below.
+
+---
+
 # 2026-10-13 - R52 native complete-DSP BRR outcome preserved
 
 RESUME HERE: worker89966 terminal exit0, all controls/recovery passed; no

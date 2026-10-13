@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "default_allocated_bytes_exact_to_R49": 871404,
+  "core_executable_sections_byte_exact_in_all_variants": 18,
+  "profile_SIGNAL_PROFILE": 0,
+  "unchanged_CGRAM_arena": "0xd6000",
+  "static_end": "0xd5ad8",
+  "gap": "0x528",
+  "full_event_capacity": 24576,
+  "ROM_slots": 194,
+  "concurrent_owners": 43,
+  "sampler_ring_bytes_borrowed_transfer_buffer": 512,
+  "core_object_borrows_only_unpublished_snapshot_storage": true,
+  "saved_capture_phase_or_snapshot_rejects_profile_before_mutation": true,
+  "PC_cart_storage_offset_bytes": [
+    65536,
+    1536
+  ],
+  "masked_inactive_IP7_may_be_acknowledged": true,
+  "native_profile_or_gameplay_claim": false,
+  "runtime_source": "a7f852601ee71fdeee91e30b767495e62a8af628",
+  "status": "IMPLEMENTED; native profile pending"
+}

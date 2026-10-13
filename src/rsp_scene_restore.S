@@ -8,6 +8,9 @@
 .text
 .set noreorder
 .set noat
+    // Match capture and the renderer's pending target3C. No control transfer
+    // executes in the inherited delay slot; normal entry0 falls through.
+    .space 0x3c
 scene_rsp_restore:
     lqv $v00,0,SCENE_RSP_ACC_LO,zero
     lqv $v01,0,SCENE_RSP_ACC_MID,zero

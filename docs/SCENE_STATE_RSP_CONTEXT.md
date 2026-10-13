@@ -78,3 +78,23 @@ comparison,15 SP backup validation,16 SP memory restore/readback/checksum,
 17 final pipeline/status,18 success. Raw register values stay private; no new
 game work. Parser254/fuzz1000 and production transaction175 still pass. Repeat
 the same title gate to localize the discrepancy before changing reconstruction.
+
+## Native early-store failure and shared pending entry hypothesis
+
+Stage diagnosticcdc601d reports stage4/mismatchword8:the early t0=2 sentinel
+fails after capture. Word0's zero store did run. Worker76955 terminal/menu/
+coordinate8/readback PASS. Thus the failure precedes context slot backup or
+ACC restoration. No raw register values or game payload are published.
+
+Hypothesis:the stopped renderer's target3C survives CPU PC0 write, skipping
+early stores after the first instruction. The model with this pending entry
+reproduces the original unprefixed artifact's exact stage4/word8 rejection.
+This is a hardware-derived hypothesis, not a general claim about PC writes.
+Both programs now reserve60 NOP bytes so ordinary entry0 and pending target3C
+reach the same body without a control transfer in the inherited delay slot.
+Local637 roundtrips cover both entries, all65536 MID values and nine faults;
+production transaction176 includes the original-artifact failure reproduction.
+StaticD3DA8<D4000. [Entry evidence](evidence/scene-state-rsp-pending-entry.json).
+
+Native repeat is required before accepting this fix. The programs remain
+experimental; complete machine state and full native cadence/fidelity are open.

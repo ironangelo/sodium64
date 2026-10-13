@@ -10,13 +10,14 @@ from check_rsp_branch_delay_slots import read_text
 MASK=(1<<48)-1
 def signed(value,bits):return value if value<(1<<(bits-1)) else value-(1<<bits)
 
-def execute(code,d,r,v,acc,flags,stop=None):
-    for pc in range(0,len(code),4):
-        if pc==stop:return pc//4
+def execute(code,d,r,v,acc,flags,stop=None,pending_entry=None):
+    pc=steps=0;pending=pending_entry
+    while pc<len(code):
+        if pc==stop:return steps
         w=struct.unpack_from('>I',code,pc)[0]
         op,rs,rt,rd,vd,fn=w>>26,w>>21&31,w>>16&31,w>>11&31,w>>6&31,w&63
         imm=w&65535;si=signed(imm,16)
-        if op==0 and fn==13:return pc//4+1
+        if op==0 and fn==13:return steps+1
         if w==0:pass
         elif op in (35,43):
             address=(r[rs]+si)&4095;assert address%4==0
@@ -51,6 +52,8 @@ def execute(code,d,r,v,acc,flags,stop=None):
             else:raise AssertionError(('unproved COP2 operation',hex(w)))
         else:raise AssertionError(('unexpected control/RCP write',pc,hex(w)))
         r[0]=0
+        pc=pending if pending is not None else pc+4;pending=None;steps+=1
+        assert steps<512,'program did not stop'
     raise AssertionError('no BREAK')
 
 def encoded(r,v,acc,flags):
@@ -68,18 +71,18 @@ def state(seed):
             [[rng.randrange(65536) for _ in range(8)] for _ in range(32)],
             [rng.getrandbits(48) for _ in range(8)],
             [rng.randrange(65536),rng.randrange(65536),rng.randrange(256)])
-def case(capture,restore,seed,override=None):
+def case(capture,restore,seed,override=None,pending_entry=None):
     r,v,acc,flags=state(seed)
     if override is not None:acc[:]=override
     golden=encoded(r,v,acc,flags)
     before=([*r],[x.copy() for x in v],acc.copy(),flags.copy())
     d=bytearray((i*31+97)&255 for i in range(4096));guard=bytes(d[700:])
-    capture_steps=execute(capture,d,r,v,acc,flags)
+    capture_steps=execute(capture,d,r,v,acc,flags,pending_entry=pending_entry)
     assert (r,v,acc,flags)==before,'capture changed architectural state'
     assert d[:700]==golden and bytes(d[700:])==guard,'capture owner/guard mismatch'
     helpers(d,acc);memory=bytes(d)
     r,v,acc,flags=state(seed+10000)
-    restore_steps=execute(restore,d,r,v,acc,flags)
+    restore_steps=execute(restore,d,r,v,acc,flags,pending_entry=pending_entry)
     assert (r,v,acc,flags)==before,'restored architectural context differs'
     assert bytes(d)==memory,'restore unexpectedly changed DMEM'
     return capture_steps,restore_steps
@@ -87,6 +90,8 @@ def case(capture,restore,seed,override=None):
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('build',type=Path);ap.add_argument('--output',type=Path)
     a=ap.parse_args();_,capture=read_text(a.build/'src/rsp_scene_capture.elf');_,restore=read_text(a.build/'src/rsp_scene_restore.elf')
+    prefix=0x3c
+    assert capture[:prefix]==restore[:prefix]==bytes(prefix),'safe shared pending entry moved'
     banks=0
     for path in a.build.glob('src/rsp_*.elf'):
         if path.stem.startswith('rsp_scene_'):continue
@@ -95,7 +100,8 @@ def main():
             assert not (w>>26==18 and w>>21&31>=16 and w&63 in (0x30,0x31,0x32,0x34,0x35,0x36)), 'DIV unit ownership opened: '+path.name
         banks+=1
     counts=set();cases=0
-    for seed in range(256):counts.add(case(capture,restore,seed));cases+=1
+    for pending_entry in (None,0x3c):
+        for seed in range(256):counts.add(case(capture,restore,seed,pending_entry=pending_entry));cases+=1
     edges=(0,1,0x7fff,0x8000,0xffff)
     for hi,mid,lo in itertools.product(edges,repeat=3):
         x=hi<<32|mid<<16|lo;counts.add(case(capture,restore,cases,[x]*8));cases+=1
@@ -106,7 +112,7 @@ def main():
         values=[edges[(base//8+i)%5]<<32|(base+i)<<16|edges[(base//16+i)%5] for i in range(8)]
         d=bytearray(4096);struct.pack_into('>8H',d,0x290,*((x>>16)&65535 for x in values))
         struct.pack_into('>8H',d,0x2a0,*(x&65535 for x in values));helpers(d,values)
-        r,v,acc,flags=state(base);execute(restore,d,r,v,acc,flags,stop=36)
+        r,v,acc,flags=state(base);execute(restore,d,r,v,acc,flags,stop=prefix+36)
         assert acc==values,'MID signed-carry reconstruction';mid_sweep+=8
     faults=[]
     words=lambda b:list(struct.unpack('>'+str(len(b)//4)+'I',b))
@@ -116,7 +122,7 @@ def main():
         ('missing_ACC_mid_add','restore',6),('missing_ACC_high_add','restore',8),
         ('missing_vector_restore','restore',13),('missing_flag_restore','restore',42),
         ('missing_GPR_restore','restore',55)]:
-        changed=(cw if side=='capture' else rw).copy();changed[index]=0
+        changed=(cw if side=='capture' else rw).copy();changed[prefix//4+index]=0
         blob=struct.pack('>'+str(len(changed))+'I',*changed)
         try:case(blob if side=='capture' else capture,blob if side=='restore' else restore,321,
                  [0xffff80001234,0x80007fffffff,0x1234fedc9876]*2+[0,0xabcdef012345])
@@ -126,6 +132,7 @@ def main():
                 instruction_counts=[list(x) for x in counts],mutations_rejected=faults,
                 GPR32_vector32_flags3_ACC48x8_exact=True,context_bytes=700,
                 capture_preserves_context=True,restore_DMEM_readonly=True,
+                delayed_entry_3C_and_ordinary_entry_tested=True,
                 current_banks_without_DIV_instructions=banks,
                 reference='ares9408cb43 RSP SISD vector semantics',
                 CPU_hardware_transaction_tested=False,native_acceptance=False,

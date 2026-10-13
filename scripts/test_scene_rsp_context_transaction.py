@@ -7,6 +7,7 @@ import argparse,ctypes as c,json,os,random,struct,subprocess,tempfile
 from pathlib import Path
 from check_rsp_branch_delay_slots import read_text
 from test_scene_rsp_context import execute,state
+from test_native_diag_continuous import load_elf
 U32=c.POINTER(c.c_uint32)
 Read=c.CFUNCTYPE(c.c_uint32,c.c_uint32)
 Write=c.CFUNCTYPE(None,c.c_uint32,c.c_uint32)
@@ -15,6 +16,7 @@ Wait=c.CFUNCTYPE(c.c_int)
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('build',type=Path)
     ap.add_argument('--cc',default=os.environ.get('CC','gcc'));ap.add_argument('--output',type=Path)
+    ap.add_argument('--unprefixed-elf',type=Path)
     a=ap.parse_args();root=Path(__file__).resolve().parents[1];cases=0
     _,capture=read_text(a.build/'src/rsp_scene_capture.elf');_,restore=read_text(a.build/'src/rsp_scene_restore.elf')
     def array(blob):return (c.c_uint32*(len(blob)//4))(*struct.unpack('>'+str(len(blob)//4)+'I',blob))
@@ -26,7 +28,7 @@ def main():
         subprocess.run(cmd+[str(root/'src/scene_rsp_context.c'),'-o',str(dll)],check=True)
         lib=c.CDLL(str(dll));fn=lib.scene_rsp_context_roundtrip
         fn.argtypes=[U32,U32,c.c_uint,U32,c.c_uint,Read,Write,Transfer,Wait];fn.restype=c.c_uint32
-        def test(*,fail=0,corrupt=0,wait_fault=0,bad_stop=False,SP_busy=False,readback_fault=False):
+        def test(*,fail=0,corrupt=0,wait_fault=0,bad_stop=False,SP_busy=False,readback_fault=False,old_programs=None):
             nonlocal cases
             rng=random.Random(4560);sp=bytearray(rng.randbytes(8192));cart=bytearray(9216)
             struct.pack_into('>III',sp,0x13c0,0x40882000,0x0900040f,0)
@@ -81,17 +83,21 @@ def main():
                     if waits==wait_fault:return 0
                     assert pc==0 and not status&3
                     d=bytearray(sp[:4096]);code=bytes(sp[4096:])
-                    execute(code,d,*machine);sp[:4096]=d;status|=3;return 1
+                    execute(code,d,*machine,pending_entry=0x3c);sp[:4096]=d;status|=3;return 1
                 except Exception as e:errors.append(e);return 0
             scratch=(c.c_uint32*128)()
-            actual=fn(scratch,cap,len(cap),res,len(res),read,write,transfer,wait)
+            selected_cap,selected_res=old_programs or (cap,res)
+            actual=fn(scratch,selected_cap,len(selected_cap),selected_res,len(selected_res),read,write,transfer,wait)
             assert not errors,errors
-            expected=0 if bad_stop or SP_busy or 0<fail<=48 or 0<corrupt<=48 else 2 if fail or corrupt or wait_fault or readback_fault else 1
+            expected=0 if bad_stop or SP_busy or 0<fail<=48 or 0<corrupt<=48 else 2 if fail or corrupt or wait_fault or readback_fault or old_programs else 1
             assert actual==expected,(cases,actual,expected,calls,waits)
             if actual==0:assert not writes and bytes(sp)==saved and tuple(machine)==before,'mutation before full backup'
             if actual==1:
                 assert calls==92 and waits==5 and bytes(sp)==saved and tuple(machine)==before
                 assert status==0x1801 and pc==0x3c
+            if old_programs:
+                assert c.c_uint32.in_dll(lib,'scene_rsp_context_stage').value==4
+                assert c.c_uint32.in_dll(lib,'scene_rsp_context_mismatch_word').value==8
             cases+=1;return trace
         trace=test()
         for position in range(1,93):test(fail=position)
@@ -99,12 +105,19 @@ def main():
             if not to_cart:test(corrupt=position)
         for wait in range(1,6):test(wait_fault=wait)
         test(bad_stop=True);test(SP_busy=True);test(readback_fault=True)
+        if a.unprefixed_elf:
+            memory,symbols=load_elf(a.unprefixed_elf)
+            def previous(name):
+                first=symbols['rsp_scene_'+name+'_text_start'];last=symbols['rsp_scene_'+name+'_text_end']
+                return array(bytes(memory[(first&0x1fffffff)+i] for i in range(last-first)))
+            test(old_programs=(previous('capture'),previous('restore')))
         result=dict(passed=True,cases=cases,production_C_and_actual_RSP_binaries=True,
             transfer_fault_positions=92,read_corruptions=sum(not x[2] for x in trace),wait_fault_positions=5,
             pre_mutation_full_backup=True,deliberate_zero_context_proved=True,
             full700byte_register_recapture_exact=True,SP8KiB_restore_checksum_readback=True,
             no_DP_AI_guest_SD_or_ROM_access=True,callback_exceptions_fail=True,
             hardware_timing_mocked=True,native_acceptance=False,complete_machine_restore=False)
+        result['unprefixed_native_stage4_word8_reproduced']=bool(a.unprefixed_elf)
         if a.output:a.output.write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result))
         if os.name=='nt':c.windll.kernel32.FreeLibrary(c.c_void_p(lib._handle))

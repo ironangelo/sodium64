@@ -37,20 +37,29 @@
 .data
 
 .align 12 // TLB alignment
-sram: .byte 0:0x8000
+SCENE_OWNER_BEGIN(sram_guest8)
+sram: .byte 0:0x2000
+SCENE_OWNER_END(sram_guest8)
+    .byte 0:0x6000
+SCENE_OWNER_BEGIN(wram)
 wram: .byte 0:0x20000
+SCENE_OWNER_END(wram)
 empty: .byte 0:0x2000
 
 .align 4
+SCENE_OWNER_BEGIN(mapper)
 memory_map: .word 0:0x800
 rom_addrs: .word 0:0x100
 rom_entries: .word 0:0x100
+SCENE_OWNER_END(mapper)
 
 .align 4
+SCENE_OWNER_BEGIN(memory_io)
 wmadd: .word 0
 rom_pointer: .byte 0
 sram_dirty: .byte 0
 io_disable: .byte 0
+SCENE_OWNER_END(memory_io)
 
 .align 4
 dsp1_reads: .word read_dsp1dr, read_dsp1sr

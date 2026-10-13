@@ -51,6 +51,7 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(dma)
 dma_stack: .hword 0
 hdma_mask: .byte 0
 end_mask: .byte 0
@@ -64,6 +65,7 @@ dmapx: .byte 0:8
 bbadx: .byte 0:8
 ntrlx: .byte 0:8
 unusedx: .byte 0:8
+SCENE_OWNER_END(dma)
 
 .align 4
 transfer_modes: // I/O address offsets, repeated every 4 bytes

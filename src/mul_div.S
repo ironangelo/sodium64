@@ -19,6 +19,8 @@
 
 #include <regdef.h>
 
+#include "scene_owner_markers.h"
+
 .globl read_rddivl
 .globl read_rddivh
 .globl read_rdmpyl
@@ -32,10 +34,12 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(cpu_arithmetic_io)
 wrdiva: .hword 0
 rddiv: .hword 0
 rdmpy: .hword 0
 wrmpya: .byte 0
+SCENE_OWNER_END(cpu_arithmetic_io)
 
 .text
 .set noreorder

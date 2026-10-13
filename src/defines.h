@@ -18,6 +18,7 @@
 */
 
 #include <regdef.h>
+#include "scene_owner_markers.h"
 
 // Opt-in hardware bank residency observer. Normal recorder builds retain BAN4.
 #ifndef SODIUM64_SIGNAL_PROFILE

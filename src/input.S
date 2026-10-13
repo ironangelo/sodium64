@@ -33,9 +33,11 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(input)
 joyxlh: .hword 0:4
 joy_shifts: .hword 0
 btn_state: .byte 0xFF
+SCENE_OWNER_END(input)
 
 .align 4
 joybus_cmd: // Reads controller status when copied to PIF RAM

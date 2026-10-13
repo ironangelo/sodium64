@@ -95,6 +95,7 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(ppu)
 vram: .hword 0:0x8000
 cgram: .hword 0:0x100
 oam: .byte 0:0x220
@@ -176,6 +177,7 @@ tmw: .byte 0
 bg_mode: .byte 0
 stat_flags: .byte 0
 split_line: .byte 0
+SCENE_OWNER_END(ppu)
 
 .align 4
 // Double-buffered addresses for queued frame data
@@ -187,20 +189,28 @@ sect_queues: .word SECTION_QUEUE1, SECTION_QUEUE2
 hcomp_cgram_base_queues: .word HCOMP_CGRAM_BASE_QUEUE1, HCOMP_CGRAM_BASE_QUEUE2
 hcomp_cgram_sideband_queues: .word HCOMP_CGRAM_SIDEBAND_QUEUE1, HCOMP_CGRAM_SIDEBAND_QUEUE2
 hcomp_cgram_event_queues: .word HCOMP_CGRAM_EVENT_QUEUE1, HCOMP_CGRAM_EVENT_QUEUE2
+SCENE_OWNER_BEGIN(ppu_cursors)
 hcomp_cgram_event_ptr: .word HCOMP_CGRAM_EVENT_QUEUE1
 hcomp_cgram_sideband_ptr: .word HCOMP_CGRAM_SIDEBAND_QUEUE1
 hcomp_row_fixed_ptr: .word HCOMP_ROW_FIXED_QUEUE1
+SCENE_OWNER_END(ppu_cursors)
 hcomp_row_fixed_queues: .word HCOMP_ROW_FIXED_QUEUE1, HCOMP_ROW_FIXED_QUEUE2
 #if SODIUM64_BACKDROP_ROWS
+SCENE_OWNER_BEGIN(ppu_main_cursor)
 hcomp_row_main_ptr: .word HCOMP_ROW_MAIN_QUEUE1
+SCENE_OWNER_END(ppu_main_cursor)
 hcomp_row_main_queues: .word HCOMP_ROW_MAIN_QUEUE1, HCOMP_ROW_MAIN_QUEUE2
+SCENE_OWNER_BEGIN(ppu_main_candidate)
 hcomp_main_rows_candidate: .byte 0
+SCENE_OWNER_END(ppu_main_candidate)
 .align 1
 #endif
+SCENE_OWNER_BEGIN(ppu_epochs)
 hcomp_last_section_count: .hword 0
 hcomp_cgram_event_count: .hword 0
 hcomp_cgram_event_overflow: .byte 0
 hcomp_last_section_brightness: .byte 0
+SCENE_OWNER_END(ppu_epochs)
 
 .align 4
 // Values that control the cooldown between frame sections (shift, minimum, increment)

@@ -44,15 +44,21 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(dsp_pcm)
 dsp_buffer: .word 0:0x800
+SCENE_OWNER_END(dsp_pcm)
+SCENE_OWNER_BEGIN(dsp_regs)
 dsp_regs: .byte 0:0x80
+SCENE_OWNER_END(dsp_regs)
 
 #ifdef SODIUM64_DSP_PITCH_CACHE
 // Same 16-byte voice stride as the existing register/voice arrays. These are
 // raw 14-bit pitches, independent of the host clock and DSP_SAMPLE setting.
 .globl dsp_pitches, dsp_pitch_load_begin, dsp_pitch_load_end, write_pitch
 .align 4
+SCENE_OWNER_BEGIN(dsp_pitches)
 dsp_pitches: .word 0:0x20
+SCENE_OWNER_END(dsp_pitches)
 #define PITCH_WRITE write_pitch
 #else
 #define PITCH_WRITE write_reg
@@ -103,14 +109,17 @@ dsp_mix_ready: .word 0
 #endif
 
 .align 4
+SCENE_OWNER_BEGIN(dsp_noise)
 noise_sample: .hword 0x4000
 noise_step: .hword 0x8000
 dsp_timer: .hword 0
 dsp_pointer: .hword 0
 dsp_addr: .byte 0
 enabled: .byte 0
+SCENE_OWNER_END(dsp_noise)
 
 .align 4
+SCENE_OWNER_BEGIN(dsp_voices)
 mode_funcs: .word 0
 cached_vols: .word 0
 counters: .hword 0
@@ -121,6 +130,7 @@ cur_addrs: .hword 0
 .align 4
 voice_dups: .dword 0:14
 cur_samples: .dword 0:8
+SCENE_OWNER_END(dsp_voices)
 
 .align 4
 filter_jumps: .word filter_end, filter_1, filter_2, filter_3

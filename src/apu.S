@@ -47,8 +47,10 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(apu_memory)
 apu_map: .byte 0:0x3FF, 0x40
 apu_ram: .byte 0:0x10000
+SCENE_OWNER_END(apu_memory)
 apu_rom: // Allows uploading code from the CPU
     .byte 0xCD, 0xEF, 0xBD, 0xE8, 0x00, 0xC6, 0x1D, 0xD0 // 0xFFC0-0xFFC7
     .byte 0xFC, 0x8F, 0xAA, 0xF4, 0x8F, 0xBB, 0xF5, 0x78 // 0xFFC8-0xFFCF
@@ -60,6 +62,7 @@ apu_rom: // Allows uploading code from the CPU
     .byte 0x5D, 0xD0, 0xDB, 0x1F, 0x00, 0x00, 0xC0, 0xFF // 0xFFF8-0xFFFF
 
 .align 4
+SCENE_OWNER_BEGIN(apu_regs)
 apu_cycle1: .word 341 * 4
 apu_cycle2: .word 341 * 4
 apu_ocycles: .word INT_MIN:3
@@ -79,6 +82,7 @@ apu_accum: .byte 0
 apu_stack: .byte 0xFF
 apu_flags: .byte 0
 apu_clock: .byte APU_CYCLE
+SCENE_OWNER_END(apu_regs)
 
 .align 4
 read_iomap:

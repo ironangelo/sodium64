@@ -37,6 +37,7 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(presentation)
 framebuffer: .word FRAMEBUFFER1
 fps_native: .byte 0
 fps_emulate: .byte 0
@@ -44,6 +45,7 @@ fps_display: .byte 0
 skip_native: .byte 0
 skip_emulate: .byte 0
 frame_count: .byte 0
+SCENE_OWNER_END(presentation)
 
 #if SODIUM64_ADAPTIVE_NOSPAN
 .section .bss

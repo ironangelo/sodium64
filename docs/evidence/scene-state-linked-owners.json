@@ -1,0 +1,137 @@
+{
+  "status": "IMPLEMENTED zero-byte owner boundaries",
+  "owner_count": 21,
+  "static_guest_bytes": 559691,
+  "ranges": [
+    {
+      "name": "apu_memory",
+      "start": 2147581952,
+      "end": 2147648512,
+      "bytes": 66560
+    },
+    {
+      "name": "apu_regs",
+      "start": 2147648576,
+      "end": 2147648632,
+      "bytes": 56
+    },
+    {
+      "name": "apu_jit",
+      "start": 2147648768,
+      "end": 2147915528,
+      "bytes": 266760
+    },
+    {
+      "name": "cpu_regs",
+      "start": 2147917600,
+      "end": 2147917612,
+      "bytes": 12
+    },
+    {
+      "name": "dma",
+      "start": 2147938096,
+      "end": 2147938240,
+      "bytes": 144
+    },
+    {
+      "name": "dsp_pcm",
+      "start": 2147938288,
+      "end": 2147946480,
+      "bytes": 8192
+    },
+    {
+      "name": "dsp_regs",
+      "start": 2147946480,
+      "end": 2147946608,
+      "bytes": 128
+    },
+    {
+      "name": "dsp_pitches",
+      "start": 2147946608,
+      "end": 2147946736,
+      "bytes": 128
+    },
+    {
+      "name": "dsp_noise",
+      "start": 2147946768,
+      "end": 2147946778,
+      "bytes": 10
+    },
+    {
+      "name": "dsp_voices",
+      "start": 2147946784,
+      "end": 2147946976,
+      "bytes": 192
+    },
+    {
+      "name": "input",
+      "start": 2147952896,
+      "end": 2147952907,
+      "bytes": 11
+    },
+    {
+      "name": "presentation",
+      "start": 2147952976,
+      "end": 2147952986,
+      "bytes": 10
+    },
+    {
+      "name": "sram_guest8",
+      "start": 2147954688,
+      "end": 2147962880,
+      "bytes": 8192
+    },
+    {
+      "name": "wram",
+      "start": 2147987456,
+      "end": 2148118528,
+      "bytes": 131072
+    },
+    {
+      "name": "mapper",
+      "start": 2148126720,
+      "end": 2148136960,
+      "bytes": 10240
+    },
+    {
+      "name": "memory_io",
+      "start": 2148136960,
+      "end": 2148136967,
+      "bytes": 7
+    },
+    {
+      "name": "cpu_arithmetic_io",
+      "start": 2148208288,
+      "end": 2148208295,
+      "bytes": 7
+    },
+    {
+      "name": "ppu",
+      "start": 2148209328,
+      "end": 2148277104,
+      "bytes": 67776
+    },
+    {
+      "name": "ppu_cursors",
+      "start": 2148277168,
+      "end": 2148277180,
+      "bytes": 12
+    },
+    {
+      "name": "ppu_epochs",
+      "start": 2148277188,
+      "end": 2148277194,
+      "bytes": 6
+    },
+    {
+      "name": "dsp1",
+      "start": 2148305088,
+      "end": 2148305264,
+      "bytes": 176
+    }
+  ],
+  "CPU_text_data_allocated_extents_exact_measured_context_artifact": true,
+  "host_stacks_transport_observers_and_immutable_tables_excluded": true,
+  "complete_machine_state": false,
+  "native_restore": false
+}

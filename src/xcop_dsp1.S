@@ -19,6 +19,8 @@
 
 #include <regdef.h>
 
+#include "scene_owner_markers.h"
+
 .globl read_dsp1sr
 .globl read_dsp1dr
 .globl write_dsp1dr
@@ -26,6 +28,7 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(dsp1)
 cmd_func: .word 0
 cmd_count: .word 0
 dsp1_sr: .hword 0x8400
@@ -72,6 +75,7 @@ vert_y: .hword 0
 vert_z: .hword 0
 hori_x: .hword 0
 hori_y: .hword 0
+SCENE_OWNER_END(dsp1)
 
 .align 4
 azsc_bounds:

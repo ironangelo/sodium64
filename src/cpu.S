@@ -35,11 +35,13 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(cpu_regs)
 data_bank: .word 0
 accumulator: .hword 0
 register_x: .hword 0
 register_y: .hword 0
 stack_ptr: .hword 0x1FF
+SCENE_OWNER_END(cpu_regs)
 
 .macro OPS_E d // Lookup table for 6502 emulation mode
     .word cpu_brke, 0,  cpu_idx, cpu_ora8,  cpu_cope, 0,  cpu_drs, cpu_ora8 // 0x00-0x03

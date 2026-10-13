@@ -43,6 +43,7 @@
 .data
 
 .align 4
+SCENE_OWNER_BEGIN(apu_jit)
 jit_tags: .word 0:0x400
 jit_lookup: .word 0:0x10000
 jit_pointer: .word JIT_BUFFER
@@ -51,6 +52,7 @@ jit_block_cycles: .word 0
 // have remained zero since boot or their last reset; every published pointer
 // marks its owner before it can become callable. Existing tag checks stay intact.
 jit_lookup_live_groups: .byte 0:512
+SCENE_OWNER_END(apu_jit)
 
 .align 4
 jit_opcodes: // Lookup table for addressing and operation functions

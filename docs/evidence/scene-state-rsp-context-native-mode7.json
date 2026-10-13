@@ -1,0 +1,25 @@
+{
+  "status": "MEASURED full architectural RSP Mode7 roundtrip continuation",
+  "runtime_source": "1b85b64b05ee47a4d5819749dfd3f953c01d55f5",
+  "physical_console": true,
+  "final_stage": 18,
+  "paused_guest_render": 4500,
+  "register_context_poison_restore_recapture_bytes": 700,
+  "SP_memory_backup_restore_hash_readback_bytes": 8192,
+  "paired_normal_checkpoints": [
+    4500,
+    4501,
+    4560,
+    5100
+  ],
+  "images": 13,
+  "pixels": 873600,
+  "pixel_differences": 0,
+  "paused_PCM_buffers": 7,
+  "paused_PCM_bytes": 57344,
+  "PCM_differences": 0,
+  "heads_registers_enabled_inputs_match": true,
+  "menu_coordinate8_restore_readback": true,
+  "machine_state_restore": false,
+  "native_FPS_claim": false
+}

@@ -1,3 +1,27 @@
+# 2026-10-13 - R47 native intermediate gain measured; one confirmation next
+
+RESUME HERE: worker36280 terminal exit0; no native controller remains live.
+Source849412ee911c27850a22af45866a4439e99e380b, experiment/dsp-brr-group-r47.
+Title920..1219:49.214139->50.698544/s (+3.016215%);
+room2000..2599:55.398884->57.583910/s (+3.944171%).
+All201600 pixels/24576 paused implemented PCM bytes/head/regs/enabled/input
+ACKs exact. Full capture checksum/settings/retention pass. Coordinate8/menu/
+install/readback restored. These are retired-boundary rates, not presentation
+FPS or full-speed fidelity acceptance. [Report](DSP_BRR_GROUP_R47.md).
+
+Both gains are in the predeclared intermediate2..5% zone. Next run the single
+frozen private dsp-brr-r47-archive/native_dsp_brr_r47_confirm.py after checking
+no competing controller. Reverse flag order1->0; same frozen849412e artifacts,
+same title/room replay, exact guest windows and capture integrity/settings;
+reuse the passed exact-source image/PCM gate. No cross-build state transfer.
+Finally coordinate8/menu/install/readback on every terminal path. Record live
+handle before interruption; don't restart a live worker on observation timeout.
+No broad unchanged suites, wider acceptance or master promotion yet.
+Full DSP/DAC/SNES oracle/native60/corpus/integration open. R44/R45 unmerged.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R47 native A/B running; sole COM3 controller
 
 RESUME HERE: yielded native exec session36280 is live. Frozen source

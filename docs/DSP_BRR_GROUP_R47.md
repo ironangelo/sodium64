@@ -1,6 +1,6 @@
 # R47 - Four-sample BRR register recurrence
 
-IMPLEMENTED; native discrimination pending. `DSP_BRR_GROUP=1` defaults off
+MEASURED; intermediate native gain awaits one confirmation. `DSP_BRR_GROUP=1` defaults off
 and requires `DSP_BRR_ACCURATE=1`. No change is integrated into master.
 
 The complete native room profile contains 2889 DSP residency samples out of
@@ -59,3 +59,24 @@ a capped baseline is interpreted separately. Any image or implemented PCM delta
 stops the trial. These thresholds are fixed before native measurement. Full
 DSP features, DAC/SNES fidelity, native60, wider corpus and integration remain
 open. The rejected direct C++ full-DSP drop-in is not repeated.
+
+
+## First native discrimination
+
+Source 849412ee911c27850a22af45866a4439e99e380b, worker36280 terminal exit0. Title absolute920..1219:
+49.214139->50.698544
+completed boundaries/s (+3.016215%). Room absolute2000..2599:
+55.398884->57.583910
+(+3.944171%). Both lie in the predeclared intermediate zone.
+These Count-based retired guest intervals are not presentation FPS. All three
+full image controls201600 pixels and paused implemented PCM24576 bytes plus
+heads/registers/enabled/input ACKs match. Full capture checksum/configuration/
+retention passes. Coordinate8/menu/install/readback restored.
+[Numeric receipt](evidence/dsp-brr-group-r47-native.json).
+
+One timing-only confirmation will reverse variant order1->0, using the same
+frozen artifacts/source and replayed checkpoints. Reuse the passed exact-source
+image/PCM gate; do not repeat broad unchanged suites. Full capture and admission
+checks and final restoration remain mandatory. No further fine-tuning loop is
+authorized by this intermediate result alone. Wider scenes/changed-DSP CI and
+master promotion remain pending, as do full DSP/DAC/native60/corpus goals.

@@ -69,3 +69,13 @@ retain both mapper address/cycle behavior and the original SRAM word path.
 Explicit ROM exponent bounds prevent masked shifts accepting malformed sizes.
 The metadata-only worker completed and restored coordinate8/menu/readback.
 Full restore remains pending for this repair.
+
+Runtime25a748a native worker88793 terminal/restored: the aligned header repair
+admits the control and saves3887607 bytes at600. After progressing1200, load600
+passes destination/SP/TLB readback and all live owner fingerprints. Next601
+also matches all fingerprints/image/PCM. Next660 image/PCM/head/registers and
+all owners except the combined dynamic arena match; owner22 CRC differs.
+Stopped before restored1200. Six normal images403200 pixels and six implemented
+PCM rings49152 bytes match the frozen control, but complete continuation gate
+is not passed. Locate the dynamic difference; do not silently drop it from the
+gate. Private64KiB region fingerprints subdivide that existing owner only.

@@ -11,6 +11,7 @@ volatile uint32_t scene_rom_cart,scene_rom_bytes,scene_rom_type,scene_rom_exp;
 static unsigned scene_slot_needs_menu;
 static uint32_t scene_slot_bytes,scene_slot_stage;
 static uint32_t slot_fingerprints[29];
+static uint32_t slot_regions[51];
 #endif
 #ifdef SODIUM64_SCENE_RSP_CONTEXT
 #include "scene_rsp_context.h"
@@ -454,14 +455,20 @@ static uint32_t slot_execute(int load) {
         if(load==2) {
             /* Paused complete owner fingerprints exclude host presentation
              * clocks and metadata copies of remote counters. Never upload. */
+            for(unsigned region=0;region<51;region++)slot_regions[region]=0;
             for(unsigned owner=0;owner<SLOT_COUNT;owner++) {
                 slot_fingerprints[owner]=0;
                 if(owner==11||owner==25)continue;
-                uint32_t crc=0xffffffffu;
+                uint32_t crc=0xffffffffu,region_crc=0xffffffffu;
                 for(uint32_t done=0;done<slot_owners[owner].bytes;) {
                     unsigned n=slot_owners[owner].bytes-done;if(n>512)n=512;
                     if(!slot_owner_io(owner,done,n,slot_work.piece,0)){result=0;goto done;}
-                    crc=scene_state_crc32_update(crc,slot_work.piece,n);done+=n;
+                    crc=scene_state_crc32_update(crc,slot_work.piece,n);
+                    if(owner==21)region_crc=scene_state_crc32_update(region_crc,slot_work.piece,n);
+                    done+=n;
+                    if(owner==21&&(!(done&0xffffu)||done==slot_owners[owner].bytes)) {
+                        slot_regions[(done-1)>>16]=~region_crc;region_crc=0xffffffffu;
+                    }
                 }
                 slot_fingerprints[owner]=~crc;
             }
@@ -1037,6 +1044,9 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         append(fingerprint?" machine_fingerprint=":load?" state_loaded=":" state_saved=");number(state==1&&!scene_slot_needs_menu);
         if(fingerprint&&state==1)for(unsigned i=0;i<29;i++) {
             append(" o");number(i+1);append("=");number(slot_fingerprints[i]);
+        }
+        if(fingerprint&&state==1)for(unsigned i=0;i<51;i++) {
+            append(" r");number(i);append("=");number(slot_regions[i]);
         }
         field(" slot_bytes=",scene_slot_bytes);field(" slot_stage=",scene_slot_stage);
         field(" rsp_stage=",scene_rsp_context_stage);

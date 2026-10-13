@@ -1,3 +1,52 @@
+# 2026-10-13 - Dynamic difference narrowed; private bytes/canonical image next
+
+Runtime96e4a9b worker28199 terminal/restored repeatsfull600load/601exact;
+restored660 normalimage/PCM exact butdynamicregions1/2/6 differ. Physical
+E6000..F6000 coversQ1events/rawpalette/consumedsection andframebuffer1;
+F6000..106000 framebuffer1; 136000..146000 framebuffer3. JIT/ROMcache/later
+composition surfaces same. Stillunexplained; nofullcontinuation acceptance.
+Coordinate8/menu/install/readback verified. No liveCOM3 before nextworker.
+
+Code e9f6a81f681e4f5201647f7242ff9ed56843fefc pushed. Kernelmatches9472d78;
+lastcommit onlyrejectsBACKDROP_ROWS1 unownedMaincursor/candidate. Default0.
+Private state-region ordinal0..50 exportsfixed64KiB span(last40960B), noaddress
+orimport. Parser240+1000fuzz, full43owner/24576event/194ROM bounds pass.
+Frozenprivate scene-slot-bytes plan/archive. RESUME HERE run
+work/native_scene_slot.py --name scene-slot-bytes-title --plan scene-slot-bytes-plan.json
+--regions 1,2,6. Capturecontrol/restored660 canonicalPNG plusonlythree private
+regions, findexactbyte/physicaloffset classes; stopmismatch andfinallyrestore.
+Do not dropchecksum gate basedonmatchingnormal660 (pendingframe can differ).
+Full60/fullDSPaudio/fidelity/corpus/master open. Earlierhistory preserved below.
+
+---
+
+# 2026-10-13 - Private full-machine slot implemented; native gate next
+
+Code e9f6a81f681e4f5201647f7242ff9ed56843fefc, experiment/scene-state-s1, pushed; master unchanged.
+SCENE_SLOT1 default0, samebuild/sameboot volatile slot29owners3887607B.
+Static21/559691B +D6000..400000 dynamicarena, O64continuation/Status,
+indexed32TLB/currentCP0, remoteinput, SP8192+full700context. Fullbody/header
+CRC/bindings beforeload; destination/SP/TLB readback, freshhostmeasurement
+clocks. Noimport/persistence/crossbuild. InitialplainROMtypes0..2/8KiBSRAM;
+rejectEXL/ERL/FPU/64bitaddress/Wired/frameskip. Failureaftermutationmenuonly.
+Local269RSPstoreload/1908envelopefaults/64TLBcache/16bridge/234parser+1000fuzz
+PASS. All43ownerextents/full24576events/194ROMslots. SlotonlyOs keepsmemory
+belowD6000. OffCPUtext/data/allocatedextents exactnativefullRSPbaseline.
+
+ROMmetadata repair reuses aligned mapper headerword; no directcartLBU. Prior
+999db32 failedbinding104 beforeSP; faa4b7b metadata probe terminal/restored.
+Linkedmapper64 cases pass. Measured stage0 rejection is notfullrestorefailure.
+RESUME HERE: native private worker work/native_scene_slot.py --name scene-slot-bytes-title --plan scene-slot-bytes-plan.json.
+Frozenprivate scene-slot-bytes-plan/archive. No worker started at this checkpoint;
+inspect process/session/report before newCOM3. Savecanonical600, control601/
+660/1200, load600 after1200, restored1/60/600 normalimage/PCM and liveowner
+fingerprints. PendingnativeRDP/TMEM/pipeline/CPUcontinuation; stopmismatch,
+preserveevidence and finallyverifiedcoordinate8/menu/readback. ThenMode7.
+This prototype is not accepted save states, full60/fullDSP/audio/fidelity/corpus
+or master integration. Earlierhistory untouched below.
+
+---
+
 # 2026-10-13 - Advanced machine restore works; dynamic660 difference open
 
 MEASURED runtime25a748a worker88793 terminal/restored. Complete3887607B slot

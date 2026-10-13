@@ -1,0 +1,24 @@
+{
+  "source": "313642af247ff15ffdf34031c185bb1234825173",
+  "status": "Build/CGRAM SUCCESS; Ares pending; native broader gates open",
+  "workflows": [
+    {
+      "name": "Build and Validate",
+      "run": 38354690610,
+      "conclusion": "success",
+      "explicit_BACKDROP_ROWS_1": true
+    },
+    {
+      "name": "Gate C CGRAM Epoch Replay Regression",
+      "run": 38354693122,
+      "conclusion": "success"
+    },
+    {
+      "name": "Ares Profile Validation",
+      "run": 38354695628,
+      "conclusion": null,
+      "status": "in_progress"
+    }
+  ],
+  "native_full_fidelity_or_60Hz_qualification": false
+}

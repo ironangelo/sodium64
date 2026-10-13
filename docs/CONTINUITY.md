@@ -1,3 +1,22 @@
+# 2026-10-13 - R45 Build/CGRAM pass; native Mode7 F-Zero control running
+
+Runtime313642a: Build38354690610 SUCCESS (explicit BACKDROP_ROWS1 included),
+CGRAM38354693122 SUCCESS, Ares38354695628 pending. DKC exact endpoints4330..4569
+13.753867->28.702821/s (+108.689096percent),tenPNG/fourPCM exact, allrestored.
+
+RESUME HERE: sole COM3 worker52933 r44-mode7-fzero currently running the
+unchipped NTSC F-Zero control from menu inventory, immutable flag0 metadata
+plan/archive. Current chat work/native_breadth_anchor.py, privateDate13 output.
+At2100 paused, inspect private frame to select bounded route commands via
+next.json (15min deadline). Reach representative Mode7, capture quiet20s with
+ACK boundary and sample proof; then finish, finallycoordinate8/menu/readback.
+Replay flag1 same route/images/PCM and align declared common absolute IDs.
+Do not open another COM3 session while worker live. Ares/ALttP small residuals
+and full60/audio/corpus/state serializer remain open, no master promotion.
+[R45](BACKDROP_ROWS_R45.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 material DKC gain confirmed on identical absolute guest IDs
 
 Source313642a flag0/1, exact predeclared endpointIDs4330..4569 (240 intervals):

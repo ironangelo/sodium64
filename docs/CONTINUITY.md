@@ -1,3 +1,23 @@
+# 2026-10-13 - Mode7 race baseline captured; R45 exact120 endpoint comparison next
+
+Flag0 source313642a r44-mode7-fzero captures tenPNG/fourPCM, all inputACKs,
+checksum/settings/coordinate8/menu/readback PASS; worker52933 terminal/noCOM3.
+New reference only/no oracle comparison.3858 Mode7 residency samples53.920335
+percent; full166 intervals8.290765/s, wait89.053920ms. ACKguest/render4501.
+Before candidate declare paired120 endpoint IDs4510..4629, all present in off.
+
+RESUME HERE: current chat work/native_breadth_anchor.py --version r45 --name
+r45-mode7-fzero, immutable backdrop45-anchor-plan, replay privateDate13/
+r44-mode7-fzero/report.json, same observed ordinary F-Zero menu path. Ten
+images/fourPCM/heads/registers/enabled/inputACK before quiet20s then align
+declared120 endpoints; finallycoordinate8/menu/readback, root soleCOM3.
+Build38354690610/CGRAM38354693122/Ares38354695628 all SUCCESS at313642a.
+Repair any Mode7 helper overhead if material; ALttP tiny losses remain open.
+DKC exact240 +108.689096percent; no full60/audio/corpus/state serializer or
+master promotion. [R45](BACKDROP_ROWS_R45.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 Build/CGRAM pass; native Mode7 F-Zero control running
 
 Runtime313642a: Build38354690610 SUCCESS (explicit BACKDROP_ROWS1 included),

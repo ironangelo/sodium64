@@ -1,6 +1,6 @@
 {
   "source": "313642af247ff15ffdf34031c185bb1234825173",
-  "status": "Build/CGRAM SUCCESS; Ares pending; native broader gates open",
+  "status": "Build/CGRAM/Ares SUCCESS; native broader and permanent non-regression gates open",
   "workflows": [
     {
       "name": "Build and Validate",
@@ -16,8 +16,8 @@
     {
       "name": "Ares Profile Validation",
       "run": 38354695628,
-      "conclusion": null,
-      "status": "in_progress"
+      "conclusion": "success",
+      "status": "completed"
     }
   ],
   "native_full_fidelity_or_60Hz_qualification": false

@@ -1,0 +1,32 @@
+{
+  "status": "MEASURED reference captured; candidate comparison pending",
+  "source": "313642af247ff15ffdf34031c185bb1234825173",
+  "images_captured": 10,
+  "paused_PCM_buffers_captured": 4,
+  "paused_PCM_bytes": 32768,
+  "reference_fidelity_comparison": "NOT_RUN_reference_capture",
+  "actual_Mode7_draw_window_residency": {
+    "bank": "mode7_draw_or_window_residency",
+    "samples": 3858,
+    "percent_all_irq": 53.920335429769395,
+    "percent_running_irq": 54.10180900294489
+  },
+  "metrics": {
+    "completed_boundaries_per_second": 8.290764910333767,
+    "mean_CPU_RSP_wait_ms": 89.05392,
+    "intervals": 166,
+    "full_checksum_validated": true
+  },
+  "accepted_arm_boundary": {
+    "guest": 4501,
+    "render": 4501,
+    "provenance": "parked_retired_bridge"
+  },
+  "predeclared_paired_absolute_endpoints": {
+    "first": 4510,
+    "last": 4629,
+    "count": 120
+  },
+  "checksum_settings_and_coordinate8_menu_restoration_readback": true,
+  "presentation_FPS_or_full_fidelity": false
+}

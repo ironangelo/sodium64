@@ -341,3 +341,26 @@ work under its original fallback? Capture a representative sample proving
 Mode7 residency, then replay flag1 against exact paused-frame/control inputs.
 Finallycoordinate8/menu/readback for each run. A matching title alone cannot
 qualify Mode7 gameplay or full sound. All game payloads/inventory remain private.
+
+## Mode7 race reference and exact pairing scope
+
+Flag0 source313642a captures ten frames/four pausedPCM buffers through ordinary
+title/car/league/class selections and a race with600 exact B-held guest frames.
+Worker52933 terminal; checksum/settings/coordinate8/menu/readback PASS.
+This is a new reference capture with no fidelity comparison; do not interpret
+its route PASS label as an oracle match. Images and raw state remain private.
+Race4500 sample has3858 Mode7 draw/window residency observations (53.920335
+percent of all IRQs), alongside Setup19.636618percent and Math12.299092percent.
+These are residency, not exclusive instruction cost. Full166 intervals
+8.290765/s, wait89.053920ms. [Reference receipt](evidence/r44-mode7-baseline.json).
+
+Before flag1 run, declare120 exact paired absolute interval endpoints4510..4629
+from the same race/replay. Require every endpoint once in both traces after
+the ten frame/four PCM/heads/registers/enabled and input ACK comparisons.
+Same immutable metadata plans, no alternate window if the extent is absent.
+If a permanent Mode7 loss appears, repair the optional helper admission rather
+than accepting a game-specific exception. No full title/fidelity claim.
+
+Ares38354695628 now SUCCESS; Build38354690610 and CGRAM38354693122 SUCCESS at
+the same313642a source. No rerun of these unchanged code gates is needed.
+This qualifies their CI scope, not the remaining native corpus or full audio.

@@ -398,3 +398,25 @@ route-relative story loss persists on identical guest work and same source.
 No renderer change or repeated broad CI is involved. Reject a missing declared
 extent; retain both full traces separately. If a small producer cost persists,
 keep it open and choose an efficient generic repair before promotion.
+
+## Same-source story alignment retains a small observed loss
+
+Both313642a on/off variants pass threeimages201600pixels/8192pausedPCM and
+heads/registers/enabled/checksum/settings/coordinate8/menu/readback. Workers
+31791/48152 terminal; no COM3 worker. Exact declared1000 endpoints1862..2861
+map from the same accepted guest/render1853 boundary. Paired56.162905
+->55.910416/s (-0.449566percent), mean17.805347->17.885755ms (+80.408235us);
+RSP wait2.991366->2.749145ms. Full traces56.097809 vs55.852895/s separate.
+[Receipt](evidence/backdrop45-alttp-absolute-pair.json).
+
+The small observed loss survives aligned same-source work. Its cause is still
+unproved; a smaller RSP wait does not establish lower total CPU preparation
+cost. Keep R45 default0/isolated and avoid complete non-regression/promotion.
+Next bounded generic question: can dense Main row input be built as exact
+color runs rather than240 separate uncached stores, retaining the original
+pre-HDMA sampling phase, both queues, all epochs and fully materialized row
+values before handoff? This targets introduced producer cost without relaxing
+image/audio semantics or adding game profiles. Actual linked owner/phase/bounds
+checks before a discriminating native comparison; no duplicate broadCI until
+changed code demonstrates value. Save-state continuation/owner plan remains
+positive and bounded after this gate; no serializer or restore is implemented.

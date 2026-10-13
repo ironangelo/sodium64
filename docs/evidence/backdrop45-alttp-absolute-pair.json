@@ -1,0 +1,50 @@
+{
+  "predeclared_absolute_endpoints": {
+    "first": 1862,
+    "last": 2861,
+    "count": 1000
+  },
+  "reference": {
+    "source": "313642af247ff15ffdf34031c185bb1234825173",
+    "arm": {
+      "guest": 1853,
+      "render": 1853,
+      "provenance": "parked_retired_bridge"
+    },
+    "completed_boundaries_per_second": 56.162905307199374,
+    "mean_interval_ms": 17.805346688,
+    "mean_CPU_RSP_wait_ms": 2.9913658026666665,
+    "full_quiet_metrics": {
+      "completed_boundaries_per_second": 56.097809417994,
+      "mean_CPU_RSP_wait_ms": 2.9381409252669037,
+      "scope": "full quiet trace",
+      "full_checksum_validated": true
+    }
+  },
+  "candidate": {
+    "source": "313642af247ff15ffdf34031c185bb1234825173",
+    "arm": {
+      "guest": 1853,
+      "render": 1853,
+      "provenance": "parked_retired_bridge"
+    },
+    "completed_boundaries_per_second": 55.91041610061968,
+    "mean_interval_ms": 17.885754922666667,
+    "mean_CPU_RSP_wait_ms": 2.749144725333333,
+    "full_quiet_metrics": {
+      "completed_boundaries_per_second": 55.85289454479116,
+      "mean_CPU_RSP_wait_ms": 2.6984761346440274,
+      "scope": "full quiet trace",
+      "full_checksum_validated": true
+    }
+  },
+  "change_percent": -0.44956578581295537,
+  "images_per_variant": 3,
+  "pixels_per_variant": 201600,
+  "pixel_differences": 0,
+  "paused_PCM_bytes_per_variant": 8192,
+  "paused_PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "checksum_settings_and_coordinate8_menu_restoration_readback": true,
+  "full_fidelity_or_native60_qualified": false
+}

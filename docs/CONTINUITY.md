@@ -1,3 +1,25 @@
+# 2026-10-13 - R45 same-source aligned story loss observed; generic producer repair next
+
+Source313642a flag0/1 same ACKguest/render1853, exact declared1000 endpoints
+1862..2861:56.162905->55.910416/s (-0.449566percent),17.805347->17.885755ms
+(+80.408235us), wait2.991366->2.749145ms. BoththreePNG/8192pausedPCM/heads/regs/
+enabled/checksum/settings/coordinate8/menu/readback PASS. Workers31791/48152
+terminal/noCOM3 worker. Fullquiet56.097809vs55.852895 separate. Cause unproved.
+
+RESUME HERE: keep R45 isolated/default0; bounded generic Main-row producer
+run batching hypothesis, original pre-HDMA sample phase/dense exact arrays/
+both queues/epoch barriers/fully published before handoff. No implementation
+of run batching yet. Locate main_color mutations in ppu.S:set_fill and current
+row sampler; preserve liveness/phase and use linked bounds/owner/original
+sampling comparison before native. This repairs introduced cost; no game
+profile or permanent loss accepted. Reuse unchanged RSP/CI313642a authority.
+DKC exact240 +108.689096percent, Mode7 exact120 -0.135081percent/imagesPCM exact.
+All Build/CGRAM/Ares CI SUCCESS. States owner pass positive/bounded aftergate,
+no serializer/restore. Full60/audio/corpus/master integration unresolved.
+[R45](BACKDROP_ROWS_R45.md), [states](SAVE_STATE_FEASIBILITY_2026-10-12.md).
+Earlier history untouched below.
+
+---
 # 2026-10-13 - Same-source ALttP flag0 control exact; flag1 comparison next
 
 Source313642a flag0 metadata baseline passes threeimages201600pixels and8192

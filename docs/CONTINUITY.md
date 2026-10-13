@@ -1,3 +1,53 @@
+# 2026-10-13 - Mode7 restores; comparison delta is inactive host EPC
+
+Runtime35e1d3a worker41679 terminal/restored. Exactroute/control4500/4501/
+4560/5100 image/PCM pass; complete load5100->4500 destination/SP/TLB/readback
+andallfingerprints pass. Restored4501 fullimage/PCM/dynamic/guestowners exact;
+onlyO64owner23 differs. Private272B dump isolatesEPC256..259 only; allGPR64/
+HI/LO/otherbytes equal. OriginalStatus401 EXL/ERLclear, soEPC is completedhost
+VIreturnPC, notliveguestcontinuation. Stopped before4560/5100 and restored
+coordinate8/menu/install/readback; no liveCOM3 before nextworker.
+
+Code1990fb016e3d010027fda427d618bf57de661e03 pushed normalizesonlyinactiveEPC4B
+in comparison fingerprint; full272serialized/restored/readback bytes unchanged.
+EXL/ERLstates stillreject; noGPR/HI/LO/memorymask. Full43owner/24576event/
+194ROM bounds pass. Frozenprivate scene-slot-epc plan/archive. RESUME HERE run
+work/native_scene_slot.py --name scene-slot-epc-mode7 --plan scene-slot-epc-plan.json
+--quiet-counter --mode7. Fullcurrentimage/PCM/allmemory/RSP/TLB/input and
+explicit268rawCPUbytes compare; permitonlyEPC difference withEXL/ERLclear.
+Repeatnext1/60/600, stopotherdelta, finallycoordinate8 restore. Titlefullgate
+alreadypassed35kernel. Full60/fullDSP/DAC/SNESoracle/corpus/master remainopen.
+No broadCI for unqualifiedprototype. Earlierhistory preserved below.
+
+---
+
+# 2026-10-13 - Private full-machine slot implemented; native gate next
+
+Code 1990fb016e3d010027fda427d618bf57de661e03, experiment/scene-state-s1, pushed; master unchanged.
+SCENE_SLOT1 default0, samebuild/sameboot volatile slot29owners3887607B.
+Static21/559691B +D6000..400000 dynamicarena, O64continuation/Status,
+indexed32TLB/currentCP0, remoteinput, SP8192+full700context. Fullbody/header
+CRC/bindings beforeload; destination/SP/TLB readback, freshhostmeasurement
+clocks. Noimport/persistence/crossbuild. InitialplainROMtypes0..2/8KiBSRAM;
+rejectEXL/ERL/FPU/64bitaddress/Wired/frameskip. Failureaftermutationmenuonly.
+Local269RSPstoreload/1908envelopefaults/64TLBcache/16bridge/234parser+1000fuzz
+PASS. All43ownerextents/full24576events/194ROMslots. SlotonlyOs keepsmemory
+belowD6000. OffCPUtext/data/allocatedextents exactnativefullRSPbaseline.
+
+ROMmetadata repair reuses aligned mapper headerword; no directcartLBU. Prior
+999db32 failedbinding104 beforeSP; faa4b7b metadata probe terminal/restored.
+Linkedmapper64 cases pass. Measured stage0 rejection is notfullrestorefailure.
+RESUME HERE: native private worker work/native_scene_slot.py --name scene-slot-epc-title --plan scene-slot-epc-plan.json.
+Frozenprivate scene-slot-epc-plan/archive. No worker started at this checkpoint;
+inspect process/session/report before newCOM3. Savecanonical600, control601/
+660/1200, load600 after1200, restored1/60/600 normalimage/PCM and liveowner
+fingerprints. PendingnativeRDP/TMEM/pipeline/CPUcontinuation; stopmismatch,
+preserveevidence and finallyverifiedcoordinate8/menu/readback. ThenMode7.
+This prototype is not accepted save states, full60/fullDSP/audio/fidelity/corpus
+or master integration. Earlierhistory untouched below.
+
+---
+
 # 2026-10-13 - Complete title machine restore PASS; Mode7 next
 
 MEASURED kernel35e1d3a051edc3b07fff0e2d29b92055e05fde90 worker9963 terminal

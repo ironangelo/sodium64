@@ -1,3 +1,22 @@
+# 2026-10-12 - R44 native rain gains measured; story control next
+
+Source7a83d4982f20f7dd2fd44ab506d66a5a084f6db1, experiment/sub-alpha-r44. MEASURED rain40.540954 vs
+R43 36.804012 (+10.153626percent), corrected control32.288968 (+25.556674percent).
+Wait4.879743ms vs6.976365ms; four frames268800 pixels/8192 paused PCM/heads/
+regs/enabled identical. Full checksum/settings and menu/coordinate8 restore/
+readback PASS. Precision20/skip0/APU21/audio4. Native session48388 completed;
+root sole COM3/no worker. No VALIDATED/integration/60/audio/corpus claim.
+
+RESUME HERE: use frozen subalpha44-plan/archive, then private
+subalpha44-story-native.py for1852/3600/4800 image/PCM and quiet20s control
+against56.149815 reference/R43 56.044680. Retain material rain benefit without
+accepting permanent regression. Expand native scene/Mode7 controls and exact
+relevant CI after those bounds. R43/master preserved, raw game data/hashes
+private; no marginal tuning campaign. [Evidence](SUB_ALPHA_R44.md). Full goal
+open; previous history unchanged below.
+
+---
+
 # 2026-10-12 - R44 fixed-space repair locally qualified; physical rain next
 
 Source 7a83d4982f20f7dd2fd44ab506d66a5a084f6db1, experiment/sub-alpha-r44. IMPLEMENTED/local preflight, not

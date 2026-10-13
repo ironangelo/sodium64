@@ -1,0 +1,26 @@
+{
+  "status": "MEASURED title-scene RSP reconstruction continuation",
+  "runtime_source": "296aa4a3cbfef69d2b13ede9bae15c78030594e0",
+  "physical_console": true,
+  "parked_boundary": 600,
+  "RSP_reconstruction": true,
+  "SP_memory_restore_readback": true,
+  "guest_render_counters_unchanged": true,
+  "normal_checkpoints": [
+    600,
+    601,
+    660,
+    1200
+  ],
+  "compared_pixels": 268800,
+  "pixel_differences": 0,
+  "paused_PCM_bytes": 32768,
+  "PCM_differences": 0,
+  "ring_heads_DSP_registers_enabled_match": true,
+  "menu_coordinate8_restore_readback": true,
+  "serializer": false,
+  "machine_state_restore": false,
+  "complete_fidelity": false,
+  "native_FPS_claim": false,
+  "next": "Expand canonical reconstruction to Mode7 and later ALttP scenes before state owner closure."
+}

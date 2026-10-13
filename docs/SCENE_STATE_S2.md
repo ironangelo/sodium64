@@ -56,3 +56,18 @@ stop locations, three corrupted sequence words and invalid pipeline stops.
 Actual linked RSP32 cases/four mutations plus HALT/entry ownership pass.
 No renderer bank or ordinary frame work changes. The first native rejection
 and its immutable artifact remain preserved. Native retry is still pending.
+
+## Native pipeline retry: title continuation passed
+
+MEASURED runtime `296aa4a3cbfef69d2b13ede9bae15c78030594e0`. Canonical park600 plus
+explicit reconstruction completed SP memory restore/readback without guest or
+render counter progress. Normal600/601/660/1200 match the frozen replay:
+268800 pixels and32768 paused PCM bytes exact, including ring heads, DSP
+registers and enabled state. Menu/coordinate8 install/readback passed.
+[Native title evidence](evidence/scene-state-s2-native-title.json).
+
+Only this continuation has been measured. No full-state file, import, complete
+restore, cross-build compatibility, native cadence or full DSP/DAC fidelity is
+qualified. Next expand to Mode7 and later scene states, then close the CPU/
+guest memory/mapper/input/renderer/JIT/host-clock ownership rules. Replay
+remains the control. First guard failure and artifacts remain preserved.

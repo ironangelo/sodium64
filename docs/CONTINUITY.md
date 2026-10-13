@@ -1,3 +1,24 @@
+# 2026-10-13 - S2 native RSP reconstruction title continuation passed; Mode7 next
+
+MEASURED runtime 296aa4a3cbfef69d2b13ede9bae15c78030594e0, experiment/scene-state-s1.
+scene-s2-pipeline-title worker10401 terminal; rebind resets GPR/vector/flags/
+ACC, reloads parity/constants, SP8KiB readback/restoredstatus/restart3C.
+Guest/render remain600, normal600/601/660/1200 exact268800px/32768pausedPCM,
+heads/DSPregs/enabled. Coordinate8/menu/install/readback PASS. No liveCOM3.
+Earlier conservative PC guard failure at7a57124 preserved; repaired admission
+matches HALT/jump/delayslot3C0/3C4/3C8 and consumes pendingjump viaentry3C.
+
+RESUME HERE: expand reconstruction to FZero Mode7 using the existing exact
+input replay and source/artifact controls, then later ALttP scene. Each needs
+normal checkpoint before park/rebind and next1/60/600 comparison plus native
+restoration. Do not call serializer/restore complete: full CPU/guestmem/input/
+mapper/renderer/JIT/cache/hostclock ownership and ROM/layout/checksum/bounded
+transaction still open. RootsoleCOM3. Full60/audio/corpus/master open; no broad
+CI or productionintegration yet. [S2](SCENE_STATE_S2.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - S2 native pipeline repair frozen; reconstruction retry next
 
 IMPLEMENTED runtime 296aa4a3cbfef69d2b13ede9bae15c78030594e0, experiment/scene-state-s1.

@@ -1,3 +1,20 @@
+# 2026-10-13 - R53 routing correction; R54 cache question next
+
+RESUME HERE: R53 terminal53531/recovery verified. Exact preserved branch is
+experiment/full-dsp-schedule-r53, documentaryHEADe1e213b, runtime98c212d.
+Frozen worker is dsp-schedule-r53-archive/native_dsp_schedule_r53.py. Earlier
+running/terminal notes abbreviated the branch/worker incorrectly; those bytes
+stay below as history. Current correct metadata is authoritative. No live COM3.
+R53 rejected; no dispatch/BRR retuning or broadCI. Next R54 examines pure
+data placement in one unchanged complete core/image: state/output cache-index
+overlap, all original workloads and checksums retained. NEC manual confirms
+8KiB direct-mapped D-cache,16-byte lines,indexVA12:4. Existing R49 code already
+carries BRR histories in registers, so R52's claimed history-load removal was
+not present in compiled baseline. Cache effects are a hypothesis, not a result.
+Full native60/audio/fidelity/corpus/integration remain OPEN. History retained.
+
+---
+
 # 2026-10-13 - R53 native complete-DSP scheduling outcome preserved
 
 RESUME HERE: worker53531 terminal exit0, all controls/recovery passed; no

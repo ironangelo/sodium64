@@ -1,3 +1,23 @@
+# 2026-10-13 - S1 native continuation reference captured; canonical candidate next
+
+Immutable metadataR44 control scene-s1-reference captures normal600/601/660/
+1200 fourPNG/four8192PCM buffers, exactguest/render boundaries; worker13559
+terminal/menu/coordinate8/readback PASS. Reference capture only/no oracle.
+S1runtime4ebdccd state-park local218parser/16linked/102continuous gates PASS,
+26RSP extents exactR44 and option0 CPU exact; no serializer/restore.
+
+RESUME HERE: current chat work/native_scene_s1.py --candidate --name
+scene-s1-candidate --control privateDate13/scene-s1-reference/report.json.
+Same menuROM/settings pause600 ordinaryframe/audio, state-park until canonical
+with guest/render still600, then exactstep601/660/1200 comparedimage/PCM/
+heads/regs/enabled. Raw canonicalframe hasdifferentUI provenance; do notcompare
+it to oldnormal600. Finallycoordinate8/menu/readback. RootsoleCOM3/no worker
+before dispatch. Failures block nextserialization phase until continuation
+understood; no broadCI now. R45 branches/results intact, full60/audio/corpus
+and ROM/layout-bound state format open. [S1](SCENE_STATE_S1.md).
+Earlier history untouched below.
+
+---
 # 2026-10-13 - S1 canonical scene park implemented; native continuation test next
 
 Active experiment/scene-state-s1 runtime4ebdccd05e574e8cf1734ef20d8c8b05d59daaef, immutable scene-s1-plan/archive.

@@ -1,3 +1,24 @@
+# 2026-10-13 - R44 DKC pixels/PCM preserved; speed unchanged; section diagnostic next
+
+Frozen7a83d49 vs4382ae80:10 frames672000 pixels/four paused PCM32768 bytes exact,
+heads/registers/enabled/input acknowledgements allmatch. Full checksum/settings/
+trace and menu-coordinate8 readback restoration PASS. Quiet276 intervals
+13.771777 vs13.778162/s (-0.046346percent), explicitwait53.298928ms.
+First240 match also retained. Native worker28558 terminal; menu responsive.
+R44 retains ALttP gain but does not solve DKC. Trace~97 sections/frame; dominant
+renderer wait suggests actual section causes must be inspected before tuning.
+
+RESUME HERE: isolated existing SECTION_OBSERVER1 flag build, same7a83d49 source,
+13 RSP banks byte-identical. StaticD2A88<D4000,41 owners/4D4400 sites/3 mutations/
+142 observer guards PASS; no full CI rerun. Private frozen sections plan/archive,
+nextnative r44-dkc-sections exact route,10 image/four PCM controls, retired section
+export4320 only, no performance capture. Root soleCOM3/no worker before dispatch;
+finallycoordinate8/menu restoration. Keep raw epochs/private payloads local.
+Mode7/state serializer/full60/audio/corpus open. [Detail](NATIVE_BREADTH_R44.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - DKC R43 stage control measured; exact R44 replay next
 
 R43 runtime4382ae80:10 images and fixed route from boot to Jungle Hijinxs4320.

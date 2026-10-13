@@ -1,3 +1,26 @@
+# 2026-10-13 - R53 native complete-DSP scheduling outcome preserved
+
+RESUME HERE: worker53531 terminal exit0, all controls/recovery passed; no
+native controller live. Runtime98c212dcc4b92f03063f0ba5567eb5698c041021, experiment/dsp-schedule-r53.
+REJECTED; material native performance gate failed. Native medians/three repeats:
+case0 56.127125->54.110165ms (+3.593557% time saving)
+case1 92.425067->91.921749ms (+0.544568% time saving)
+case2 95.532373->97.067243ms (-1.606648% time saving)
+All18 hostPCM checksums/nonzero/36864 synthetic frames match. Everytrial64KiB
+RAMbackup/readback/restore; both live67200pixels/8192PCM/head/regs/enabled/
+boundary unchanged, gueststep600->660 pass, coordinate8/menu/install/readback
+verified. [Report](FULL_DSP_SCHEDULE_R53.md); full numeric receipt. Predeclared8%
+both-active material gate and3%both rejection/2%regression guards kept intact.
+2048frames need64ms standalone before guestCPU/APU/rendering; no game60 claim.
+
+Next: No scheduling micro-tuning or broad CI for this failed material gate. Preserve code/proofs isolated; use the native results to reconsider the complete-core architecture before another local arithmetic tweak.
+No R50counter/R51sampler in these artifacts; fresh same-source scratch1/0vs1,
+R49signal1. Keep every earlier candidate/proof, R44/R45 unmerged, master and
+bounded state prototype unchanged. Full DSP/DAC/SNES/game fidelity/native60/
+corpus/integration remain OPEN. Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R53 complete-DSP scheduling native A/B running
 
 RESUME HERE: yielded native exec53531 live, flag0 menu/install/readback passed.

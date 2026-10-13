@@ -1,3 +1,36 @@
+# 2026-10-13 - R51 native complete-DSP profile complete; V4/BRR dataflow next
+
+RESUME HERE: worker3060 terminal exit0, allcontrols/recovery passed, no native
+controller live. Runtimea7f852601ee71fdeee91e30b767495e62a8af628, experiment/full-dsp-profile-r51.
+Six repeats/all18 PCM checksum+nonzero results/36864 original frames match host;
+pertrial64KiB RAM backup/readback/restore, full67200pixels/8192PCM/state and
+step600->660 pass; coordinate8/menu/install/readback verified. All246/402/432
+samples retained,1080 total, no ringwrap/unclassified PC. Wrapper is separate.
+Active8: V4 143/402=35.572%, V3c111/402=27.612%, run84/402.
+Allfeatures: V4 154/432=35.648%, V3c108/432=25%, run104/432.
+[Report](FULL_DSP_PC_PROFILE_R51.md); full numeric native receipt.
+
+V4 includes BRR/position/leftmix; V3c includes interpolation/PMON/KON/envelope.
+Do not attribute allV4 to BRR or call sample shares exclusive cycle costs.
+Alternative object placement/hostIRQ mask/sampling perturb timing: instrumented
+allfeatures~100.61ms versus R49uninstrumented95.50ms. Do not substitute this
+profile artifact as performancebaseline. R49's original uninstrumented costs
+remain authority; all18 core executable sections are still byte-exact.
+
+Next bounded R52 question: full clocked-core BRR four-sample group dispatch/
+register recurrence to remove repeated filter branches/history loads. Keep
+originalcachedbyte/livebyte phase/header/KON transforms, full-scale history,
+range13..15, integerfloors/clamp/sign16 doubling, mirrored buffers andall
+wraps. No whole-block batching. Independent/pinned directed cases across
+voices/buffer positions plus arbitrary-phase full state/RAM/PCM/ABI/arena
+before a short same-source native A/B. Use separate branch from preserved
+R49, no R50counter or R51sampling in performance builds; reuse valid unchanged
+gates. Reject material failures before broadCI. No more profiler expansion.
+Master/R44/R45/state prototype and prior experiments preserved; full60/DSP/
+DAC/SNES/game fidelity/corpus/integration stay OPEN. Earlier history retained.
+
+---
+
 # 2026-10-13 - R51 native scoped complete-DSP profile running
 
 RESUME HERE: yielded native exec3060 is live; flag1 install/readback passed.

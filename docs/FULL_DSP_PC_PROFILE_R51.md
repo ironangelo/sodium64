@@ -1,6 +1,6 @@
 # R51 - Scoped complete-DSP PC sampling
 
-IMPLEMENTED; native profile pending. FULL_DSP_PC_PROFILE1 defaults0 and requires
+MEASURED; scoped native profile complete. FULL_DSP_PC_PROFILE1 defaults0 and requires
 FULL_DSP_PROBE1. R49 signal1 is retained; R50 counter optimization is excluded.
 This reuses PROFILE's Count/Compare/EPC ring algorithm during the existing three
 original synthetic complete-core workloads. No separate emulator or general
@@ -62,3 +62,38 @@ a larger change. Instrumented timings, masked VI service, alternate diagnostic
 layout and statistical uncertainty are explicit: they do not replace R49's
 uninstrumented cost measurements or prove exclusive instruction cost, gameplay
 cadence, SNES/DAC fidelity, the corpus or master integration.
+
+
+## Native profile complete
+
+Worker3060 terminal exit0, runtimea7f852601ee71fdeee91e30b767495e62a8af628. All18 scenario checksum/nonzero
+results/36864 original synthetic stereo frames match host. Every trial backs
+up/readbacks/restores64KiB APURAM; full67200 live pixels/8192 live PCM bytes,
+heads/registers/enabled/boundary stay unchanged. Actual step600->660 and final
+coordinate8/menu/install/readback pass. No synthetic PCM goes to AI.
+
+Six repeats retain all246/402/432 samples for one voice/active8/allfeatures,
+1080 total, no ring wrap or unclassified address. The wrapper is separately
+named in the full receipt. Active8 has V4=143/402
+(35.572%), V3c=111/402
+(27.612%), run84/402. Allfeatures has
+V4=154/432 (35.648%),
+V3c=108/432 (25.000%), run104/432.
+[Complete numeric receipt](evidence/full-dsp-pc-profile-r51-native.json).
+
+V4 includes BRR decoding, position advancement and left-channel output; this
+does not assign its entire share to BRR. V3c includes interpolation/PMON/KON/
+envelope work. The observed largest active residency justifies investigating
+a larger V4/BRR dataflow reduction rather than more counter guard variants.
+Next bounded question: dispatch each four-sample BRR chunk once by filter and
+keep its full-scale history recurrence in registers, preserving the original
+one cached/one live input byte phase, invalid ranges, clamp/sign16 doubling,
+two mirrored writes and buffer positions. Compare all filters/ranges/history/
+wrap/voices and actual clocked state against the pinned core before native.
+
+These are statistical counts in this instrumented layout, not exclusive costs
+or exact R49 residency. The core object and temporary storage addresses differ;
+host IRQ masks and sampling also perturb timings. Instrumented allfeatures
+time is about100.61ms versus R49's uninstrumented95.50ms, so it must not be
+used as the next performance baseline. R49 remains the uninstrumented authority.
+Full DSP/gameplay integration, native60, DAC/SNES fidelity and corpus remain open.

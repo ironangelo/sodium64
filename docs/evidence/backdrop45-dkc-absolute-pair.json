@@ -1,0 +1,47 @@
+{
+  "status": "MEASURED exact absolute guest interval pairing; broader native gates open",
+  "source": "313642af247ff15ffdf34031c185bb1234825173",
+  "same_source_on_off": true,
+  "reference_BACKDROP_ROWS": 0,
+  "candidate_BACKDROP_ROWS": 1,
+  "predeclared_absolute_guest_endpoints": {
+    "first": 4330,
+    "last": 4569,
+    "count": 240
+  },
+  "reference": {
+    "completed_boundaries_per_second": 13.753867141203528,
+    "mean_CPU_RSP_wait_ms": 53.23650586666667,
+    "mean_interval_ms": 72.70682417777778
+  },
+  "candidate": {
+    "completed_boundaries_per_second": 28.702821010455796,
+    "mean_CPU_RSP_wait_ms": 14.938192444444445,
+    "mean_interval_ms": 34.83978106666667
+  },
+  "change_percent": 108.68909606134353,
+  "full_quiet_traces_separately": [
+    {
+      "completed_boundaries_per_second": 13.770917482132324,
+      "mean_CPU_RSP_wait_ms": 53.30289043478261,
+      "intervals": 276,
+      "full_checksum_validated": true
+    },
+    {
+      "completed_boundaries_per_second": 39.479316827136046,
+      "mean_CPU_RSP_wait_ms": 6.625716970155527,
+      "intervals": 793,
+      "full_checksum_validated": true
+    }
+  ],
+  "images_per_variant": 10,
+  "pixels_per_variant": 672000,
+  "pixel_differences": 0,
+  "paused_PCM_buffers_per_variant": 4,
+  "paused_PCM_bytes_per_variant": 32768,
+  "paused_PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "input_acknowledgements_match": true,
+  "checksum_settings_and_coordinate8_menu_restoration_readback": true,
+  "presented_60Hz_or_full_title_sound_corpus_fidelity": false
+}

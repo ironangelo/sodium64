@@ -1,3 +1,44 @@
+# 2026-10-13 - R47 BRR register recurrence implemented; native A/B next
+
+RESUME HERE: code batch 849412ee911c27850a22af45866a4439e99e380b pushed on
+experiment/dsp-brr-group-r47, isolated sodium64-dsp-brr-r47 checkout.
+DSP_BRR_GROUP defaults0, requires accurate1, same four-sample guest phase.
+R46 remains rejected and isolated. R44 SUB_ALPHA1 is enabled in this experimental
+base; R45 BACKDROP_ROWS0. Neither R44 nor R45 is integrated into master, freshly
+verified at7cc8facfe8643fb85888f301f79995575830521d. No native R47 result yet.
+
+Local PASS57344 voice cases against arithmetic/scalar, six emitted faults;
+decoder total8554552->7185608, maximum190->160. Scheduler2048 samples, all256
+voice masks/64 BRR pairs/both AI halves/PCM active state/672 guest cycles pass,
+total2095557->1924069. Observer512 cases/owned records and CPU/RSP DMA owners
+pass. Its instrumented counts are not compared for speed with the scalar
+uninstrumented control; an initial harness assertion was corrected. No semantic
+or ownership relaxation. Native artifact observer0 is separate.
+
+Full unroll failed linking after a text page crossing and was never installed.
+The bounded loop adds160 text bytes, staticD58D8<D6000, gap728, full24576 events,
+194 ROM slots/43 owners unchanged. Off872964 bytes exact native1990fb0, all15
+RSP banks on/off exact. Boot12/TV5 pass. No broad CI before native value.
+[Details](DSP_BRR_GROUP_R47.md). Private plan/archive frozen, both artifact
+hashes checked against local gates and immutable native_dsp_brr_r47.py.
+
+Next: confirm no native controller, run archived helper once; root alone COM3.
+Same-source flags0/1, SCENE_SLOT1 quiet bench, clock21/audio4/skip0; no cross-build
+state transfer. Replay title and room; compare full201600 pixels/24576 paused
+implemented PCM bytes plus heads/registers/enabled and input1380 ACK. Quiet20s
+captures predeclare absolute title920..1219 (300) and room2000..2599 (600),
+accepted parked-retired ACK/checksum/settings/full retention mandatory. Finally
+coordinate8/menu/install/readback on every terminal path. Poll a live worker,
+do not restart on observation timeout. Record live handle before interruption.
+
+At least5% uncapped gain is promising; below2% in both rejects material value;
+middle needs one confirmation. Stop any fidelity delta. Rain/DKC/changed-DSP CI
+only after promise. Full DSP/DAC/SNES oracle/native60/corpus/integration open.
+Preserve prior state prototype and rejected full-DSP/Main-row evidence.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R46 native result rejected; main DSP work next
 
 RESUME HERE: R46 is terminal MEASURED and REJECTED as a material performance

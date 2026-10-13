@@ -97,3 +97,23 @@ producer timing. The difference blocks promotion; do not label the baseline
 wrong or accept a regression without a matching semantic/reference proof.
 Use a bounded source/retired-state control, retain original frozen evidence,
 repair or reject the mechanism, then repeat the same frame/image/PCM gates.
+
+## Bounded paused producer-state diagnostic preflight
+
+663ef49 adds16-row paging to the existing section observer, only when both
+SECTION_OBSERVER and BACKDROP_ROWS are selected. It reuses the complete paused,
+HALT/SP-DMA/DP/retired-frame/queue/end-geometry checks; never accepts arbitrary
+addresses or changes any guest/renderer/transport state.177 synthetic controls
+include the original142 and row cursor/truncation/ownership/busy/read failure
+cases. No new running profiling hook. Raw rows remain private.
+
+The diagnostic binary retains all14 RSP text/data banks byte-exact to9e1194f,
+43 owners, staticD2E88<D4000, actualD4400 backups/mutations and linked boot
+controls pass. Frozen private rows plan/archive. Read sections at4200 in the
+existing R44 observer, then R45 sections and all224 captured Main rows. The
+R45 observer compares images against its original discrepant9e1194f artifact
+to prove observation isolation; that comparison is not fidelity acceptance.
+Paused audio still compares against R44. Native run names
+r44-dkc4200-sections/r45-dkc4200-rows, sole rootCOM3, no performance capture,
+finallycoordinate8/menu readback. Determine whether row inputs themselves
+disagree with the effective legacy section colors before changing rendering.

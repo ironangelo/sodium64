@@ -1,3 +1,23 @@
+# 2026-10-13 - R45 paused row/section diagnostic frozen before paired native read
+
+9e1194f discrepancy retained:27 pixels/one row at4200,8 prior frames/onePCM
+exact, no speedcapture. Diagnostic663ef49 only adds16-row paging to existing
+paused section observer;177 guards pass including prior142. Same14 RSP banks,
+staticD2E88<D4000,43 owners/boot/actualbackups PASS. No running profiler/hook.
+
+RESUME HERE: root soleCOM3/no worker before dispatch. Native paired reads
+r44-dkc4200-sections (existing frozenR44 observer plan) then r45-dkc4200-rows
+(private frozenrowsplan/archive). New private trimmed4200 route controls;
+R45 images compare to original discrepantR45, audio toR44: observation isolation,
+not accepted fidelity. Export full owned sections and224Main row values, no
+performance capture; finallycoordinate8/menu restore/readback. Compare Main row
+colors to effective R44 section colors at the mismatched row before deciding
+phase versus draw/coalescing fault. All raw colors/state private. Full goal/
+states serializer/60/audio/corpus open. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 first native image discrepancy; no performance capture
 
 Runtime9e1194f retained,8 initial frames537600 pixels/one paused8192 PCM exact.

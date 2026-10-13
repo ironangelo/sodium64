@@ -1,3 +1,22 @@
+# 2026-10-13 - R44 capture anchor native exact; R45 fixed endpoints4330..4569 next
+
+Source313642a flag0 control r44-dkc-anchor passes tenPNG/fourPCM/heads/regs/
+enabled/input/checksum/settings and coordinate8/menu/readback, worker68661
+terminal/noCOM3 worker. ACKg/r4321; endpoints4323..4598. Full27613.770917/s.
+Predeclare paired240 absolute endpoint IDs4330..4569 before candidate run.
+
+RESUME HERE: immutable backdrop45-anchor-plan/archive, current chat
+work/native_breadth_anchor.py --version r45 --name r45-dkc-anchor with replay
+privateDate13/r44-dkc-anchor/report.json. Same ten images/fourPCM then quiet20s;
+each declared endpoint exactly once in both traces, no replacement window.
+Root soleCOM3/finallycoordinate8/menu/readback. Source313642a CI CGRAM
+38354693122 SUCCESS; Build38354690610/Ares38354695628 running. Mode7/native
+broader and ALttP small residuals still open; no promotion/master merge.
+Save states feasibility/no serializer/full60/audio/corpus open. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - Capture boundary metadata frozen; aligned DKC on/off next
 
 Runtime 313642af247ff15ffdf34031c185bb1234825173; immutable backdrop45-anchor/subalpha44-anchor plan/archives.

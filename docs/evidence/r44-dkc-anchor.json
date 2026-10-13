@@ -1,0 +1,32 @@
+{
+  "status": "MEASURED R44 metadata control; on comparison pending",
+  "source": "313642af247ff15ffdf34031c185bb1234825173",
+  "BACKDROP_ROWS": 0,
+  "images": 10,
+  "pixels": 672000,
+  "pixel_differences": 0,
+  "paused_PCM_buffers": 4,
+  "paused_PCM_bytes": 32768,
+  "paused_PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "checksum_settings_coordinate8_menu_restoration_readback": true,
+  "accepted_arm_boundary": {
+    "guest": 4321,
+    "render": 4321,
+    "provenance": "parked_retired_bridge"
+  },
+  "first_absolute_endpoint": 4323,
+  "last_absolute_endpoint": 4598,
+  "full_quiet_metrics": {
+    "completed_boundaries_per_second": 13.770917482132324,
+    "mean_CPU_RSP_wait_ms": 53.30289043478261,
+    "intervals": 276,
+    "full_checksum_validated": true
+  },
+  "predeclared_paired_endpoints": {
+    "first": 4330,
+    "last": 4569,
+    "count": 240
+  },
+  "presented_FPS_or_full_fidelity": false
+}

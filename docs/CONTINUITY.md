@@ -1,3 +1,24 @@
+# 2026-10-13 - GPR-only RSP isolation frozen; Mode7 native next
+
+IMPLEMENTED runtime 0d2c9fb7f0f1efb09e8007684e8aea61df5d6b84, experiment/scene-state-s1.
+scene-s2-gpr-plan/archive frozen; SCENE_RSP_GPR_ONLY1 resets scalar registers
+and reloads parity, preserves all vector/flags/ACC. Normal renderer26extents
+exact296aa4a, actualbinary32/twofaults/bridge16/43owners/fullcapacity PASS.
+Staticend0xd3b38<D4000. Rejected fullresetS2 lost2596px atMode74560; preserve
+it/failures but never adopt it inrestore. S3format1209/O64 integrity only,
+not linked/no full serializer or machine restore. No liveCOM3 before dispatch.
+
+RESUME HERE: soleCOM3 work/native_scene_s2_gpr_mode7.py --candidate --name
+scene-s2-gpr-mode7 --control privateDate13/scene-s2-mode7-reference/report.json.
+Same original race route; normal4500/canonicalpark/GPR-onlyprobe, compare
+next4501/4560/5100 image/PCM/heads/regs/enabled+routecontrols/ACK. Finally
+coordinate8/menu/readback. Pass isolates needed context to preserved group in
+thiscase; fail shows scalar/pipeline state also matters. No timingcapture/CI.
+Close full live state owners before restoring private slots; full60/audio/
+corpus/crossbuild/master remain open. Earlier history untouched below.
+
+---
+
 # 2026-10-13 - S2 Mode7 reconstruction REJECTED; S3 envelope validation only
 
 Native runtime296aa4a worker27620 terminal/menu/coordinate8/readback PASS.

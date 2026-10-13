@@ -99,3 +99,21 @@ isolated. Preserve this opt-in probe and both failed/successful archives for
 diagnosis, but never use it in state restore or gameplay. S1 natural park
 continuation remains valid; subsequent work must preserve complete live RSP
 state or prove a different reconstruction. Full save states remain open.
+
+## GPR-only isolation hypothesis
+
+SCENE_RSP_GPR_ONLY1 requires the existing opt-in rebind probe. Its140-byte
+program clears only scalar registers and reloads queue parity, then BREAKs.
+It issues no vector/flag/ACC operation; all of that original live context
+remains untouched. The same SP memory transaction/pipeline admission/restart
+and menu-only failure recovery apply. Default0 retains the rejected fullreset
+for diagnosis; ordinary builds keep the entire feature off.
+Actual linked program32 cases/two mutations, bridge16 and43 full-capacity
+owners pass; all26 normal renderer extents match the frozen296aa4a artifact.
+[Isolation preflight](evidence/scene-state-s2-gpr-preflight.json).
+
+Native question: does this narrower change retain Mode7 normal4501/4560/5100
+from the same exact race4500? Compare the existing reference and all route
+image/PCM/ACK controls, finally coordinate8/menu/readback. A pass would isolate
+necessary context to the preserved group in this control, not prove full state
+restore or universal dead scalar registers. No new performance capture/CI.

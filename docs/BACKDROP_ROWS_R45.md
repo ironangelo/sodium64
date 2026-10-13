@@ -79,3 +79,21 @@ characterize the difference before measuring. Otherwise compare the previously
 declared first240 intervals and report the full quiet20s segment separately;
 faster emulation can advance farther in that wall-time window. Relevant broader
 ALttP/Mode7/default CI follows only if native material value is demonstrated.
+
+## Native first trial: image gate stops before performance
+
+Frozen9e1194f:8 initial images537600 pixels and one paused8192-byte PCM buffer
+match R44 (heads/registers/enabled too). At stage4200,27 of67200 pixels differ,
+all in one horizontal row. The route stops before the second PCM comparison,
+frame4320 or any quiet capture. Worker88106 is terminal; coordinate8/menu
+restoration/readback PASS. No speed result and no full CI follows this trial.
+[Curated discrepancy](evidence/backdrop45-native-difference.json).
+
+Next compare the row's effective retired-section Main color against its new
+captured row input/epoch boundary. A live row capture can differ from the
+existing section renderer's effective timing; primitive adoption and palette
+grouping also remain candidates. Local packet tests do not prove this complete
+producer timing. The difference blocks promotion; do not label the baseline
+wrong or accept a regression without a matching semantic/reference proof.
+Use a bounded source/retired-state control, retain original frozen evidence,
+repair or reject the mechanism, then repeat the same frame/image/PCM gates.

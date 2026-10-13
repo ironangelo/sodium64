@@ -1,3 +1,51 @@
+# 2026-10-13 - Advanced machine restore works; dynamic660 difference open
+
+MEASURED runtime25a748a worker88793 terminal/restored. Complete3887607B slot
+saved600, control601/660/1200 image/PCM exact, thenload1200->600. Destination/
+SP/TLB readback and all29owner fingerprints exact600. Restored601 all exact.
+Restored660 image/PCM/head/registers andallowners except22 dynamicarena exact;
+dynamic CRCdiff stopped before1200. SixPNG403200px/sixPCM49152B exact, but
+fullcontinuation gate NOTPASS. Coordinate8/menu/install/readback verified;
+no liveCOM3 at this checkpoint. Don't classify unexplained difference harmless.
+
+Code96e4a9ba4d59b65778495dd0d27dc56a0b12c229 pushed adds51 private64KiB
+regionfingerprints within existingdynamicspan. Full43owners/24576events/
+194ROMslots disjoint; staticendD58D8<D6000. Frozenprivate scene-slot-region
+plan/archive. RESUME HERE: work/native_scene_slot.py --name scene-slot-region-title
+--plan scene-slot-region-plan.json, theninspect report/handle for changedregions.
+Stopmismatch and finallyrestorecoordinate8. No broadCI; full60/fullDSPaudio/
+fidelity/corpus/master remainopen. Samebuild slot stillcandidate, noimport/
+persistence/crossbuild UI. Earlierhistory preserved below.
+
+---
+
+# 2026-10-13 - Private full-machine slot implemented; native gate next
+
+Code 96e4a9ba4d59b65778495dd0d27dc56a0b12c229, experiment/scene-state-s1, pushed; master unchanged.
+SCENE_SLOT1 default0, samebuild/sameboot volatile slot29owners3887607B.
+Static21/559691B +D6000..400000 dynamicarena, O64continuation/Status,
+indexed32TLB/currentCP0, remoteinput, SP8192+full700context. Fullbody/header
+CRC/bindings beforeload; destination/SP/TLB readback, freshhostmeasurement
+clocks. Noimport/persistence/crossbuild. InitialplainROMtypes0..2/8KiBSRAM;
+rejectEXL/ERL/FPU/64bitaddress/Wired/frameskip. Failureaftermutationmenuonly.
+Local269RSPstoreload/1908envelopefaults/64TLBcache/16bridge/234parser+1000fuzz
+PASS. All43ownerextents/full24576events/194ROMslots. SlotonlyOs keepsmemory
+belowD6000. OffCPUtext/data/allocatedextents exactnativefullRSPbaseline.
+
+ROMmetadata repair reuses aligned mapper headerword; no directcartLBU. Prior
+999db32 failedbinding104 beforeSP; faa4b7b metadata probe terminal/restored.
+Linkedmapper64 cases pass. Measured stage0 rejection is notfullrestorefailure.
+RESUME HERE: native private worker work/native_scene_slot.py --name scene-slot-region-title --plan scene-slot-region-plan.json.
+Frozenprivate scene-slot-region-plan/archive. No worker started at this checkpoint;
+inspect process/session/report before newCOM3. Savecanonical600, control601/
+660/1200, load600 after1200, restored1/60/600 normalimage/PCM and liveowner
+fingerprints. PendingnativeRDP/TMEM/pipeline/CPUcontinuation; stopmismatch,
+preserveevidence and finallyverifiedcoordinate8/menu/readback. ThenMode7.
+This prototype is not accepted save states, full60/fullDSP/audio/fidelity/corpus
+or master integration. Earlierhistory untouched below.
+
+---
+
 # 2026-10-13 - Private full-machine slot implemented; native gate next
 
 Code 25a748ab85e966f47978d61606ada9888fb7ebb8, experiment/scene-state-s1, pushed; master unchanged.

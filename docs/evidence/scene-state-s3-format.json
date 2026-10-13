@@ -1,0 +1,14 @@
+{
+  "status": "IMPLEMENTED envelope validation only; not linked into gameplay",
+  "corrected_production_C_cases": 1209,
+  "independent_BE_struct_zlib_oracle": true,
+  "first_harness_result_invalidated": true,
+  "callback_errors_fail_validation": true,
+  "wrong_ROM_code_layout_config_owner_sizes_offsets_bounds_truncation_checksums_IO_rejected": true,
+  "decoded_progress_unchanged_on_failure": true,
+  "native_O64_compile": true,
+  "machine_mutation": false,
+  "full_serializer": false,
+  "state_restore": false,
+  "native_acceptance": false
+}

@@ -1,3 +1,27 @@
+# 2026-10-13 - Private full-machine slot implemented; native gate next
+
+Code 999db32badfd4027e6cad7dfe5bb2466f43c3c95, experiment/scene-state-s1, pushed; master unchanged.
+SCENE_SLOT1 default0, samebuild/sameboot volatile slot29owners3887607B.
+Static21/559691B +D6000..400000 dynamicarena, O64continuation/Status,
+indexed32TLB/currentCP0, remoteinput, SP8192+full700context. Fullbody/header
+CRC/bindings beforeload; destination/SP/TLB readback, freshhostmeasurement
+clocks. Noimport/persistence/crossbuild. InitialplainROMtypes0..2/8KiBSRAM;
+rejectEXL/ERL/FPU/64bitaddress/Wired/frameskip. Failureaftermutationmenuonly.
+Local269RSPstoreload/1908envelopefaults/64TLBcache/16bridge/234parser+1000fuzz
+PASS. All43ownerextents/full24576events/194ROMslots. SlotonlyOs keepsmemory
+belowD6000. OffCPUtext/data/allocatedextents exactnativefullRSPbaseline.
+
+RESUME HERE: native private worker work/native_scene_slot.py --name scene-slot-title.
+Frozenprivate scene-slot-plan/archive. No worker started at this checkpoint;
+inspect process/session/report before newCOM3. Savecanonical600, control601/
+660/1200, load600 after1200, restored1/60/600 normalimage/PCM and liveowner
+fingerprints. PendingnativeRDP/TMEM/pipeline/CPUcontinuation; stopmismatch,
+preserveevidence and finallyverifiedcoordinate8/menu/readback. ThenMode7.
+This prototype is not accepted save states, full60/fullDSP/audio/fidelity/corpus
+or master integration. Earlierhistory untouched below.
+
+---
+
 # 2026-10-13 - Full RSP native title/Mode7 gate passes; linked owners ready
 
 MEASURED runtime1b85b64 Mode7 worker88822 terminal/menu/coordinate8/readback PASS.

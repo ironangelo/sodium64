@@ -1,0 +1,346 @@
+{
+  "status": "MEASURED cache-placement effects; REJECTED as retained full-core improvement",
+  "runtime_source": "9a0092d50d6f1d2e1ad064432be6fbcb6f49e326",
+  "physical_console": true,
+  "single_image_round_robin_repeats": 3,
+  "original_synthetic_stereo_frames": 92160,
+  "all45_host_PCM_checksums_and_nonzero_counts_match": true,
+  "modes": {
+    "0": [
+      {
+        "case": 0,
+        "median_ms": 56.311338666666664,
+        "trials_ms": [
+          56.37467733333333,
+          56.306688,
+          56.311338666666664
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 0.0,
+        "budget_fraction": 0.8798646666666666
+      },
+      {
+        "case": 1,
+        "median_ms": 95.36128,
+        "trials_ms": [
+          95.36128,
+          95.35005866666667,
+          95.36142933333333
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 0.0,
+        "budget_fraction": 1.49002
+      },
+      {
+        "case": 2,
+        "median_ms": 102.341824,
+        "trials_ms": [
+          102.34690133333334,
+          102.341824,
+          102.34005333333333
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 0.0,
+        "budget_fraction": 1.599091
+      }
+    ],
+    "1": [
+      {
+        "case": 0,
+        "median_ms": 56.78845866666666,
+        "trials_ms": [
+          56.78845866666666,
+          56.786432,
+          56.79893333333333
+        ],
+        "cache": {
+          "core_cache_index": 4096,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 12880,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": -0.8472893937476744,
+        "budget_fraction": 0.8873196666666666
+      },
+      {
+        "case": 1,
+        "median_ms": 95.88411733333334,
+        "trials_ms": [
+          95.888256,
+          95.873792,
+          95.88411733333334
+        ],
+        "cache": {
+          "core_cache_index": 4096,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 12880,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": -0.5482700455922362,
+        "budget_fraction": 1.4981893333333334
+      },
+      {
+        "case": 2,
+        "median_ms": 102.87662933333333,
+        "trials_ms": [
+          102.88317866666667,
+          102.87662933333333,
+          102.871808
+        ],
+        "cache": {
+          "core_cache_index": 4096,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 12880,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": -0.5225677171176057,
+        "budget_fraction": 1.6074473333333332
+      }
+    ],
+    "2": [
+      {
+        "case": 0,
+        "median_ms": 56.29408,
+        "trials_ms": [
+          56.292565333333336,
+          56.29408,
+          56.294464
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 7168,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 15952,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 0.030648652785236763,
+        "budget_fraction": 0.879595
+      },
+      {
+        "case": 1,
+        "median_ms": 94.76763733333334,
+        "trials_ms": [
+          94.76763733333334,
+          94.77105066666667,
+          94.75221333333333
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 7168,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 15952,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 0.6225196082379036,
+        "budget_fraction": 1.4807443333333334
+      },
+      {
+        "case": 2,
+        "median_ms": 101.08672,
+        "trials_ms": [
+          101.08215466666667,
+          101.10528,
+          101.08672
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 7168,
+          "gauss_cache_index": 2128,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 15952,
+          "gauss_scratch_offset": 4294967295
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 1.2263842395460967,
+        "budget_fraction": 1.57948
+      }
+    ],
+    "4": [
+      {
+        "case": 0,
+        "median_ms": 56.23381333333333,
+        "trials_ms": [
+          56.22944,
+          56.23381333333333,
+          56.237696
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 6144,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 14928
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 0.13767268754210082,
+        "budget_fraction": 0.8786533333333333
+      },
+      {
+        "case": 1,
+        "median_ms": 93.36945066666667,
+        "trials_ms": [
+          93.36945066666667,
+          93.37045333333333,
+          93.365632
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 6144,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 14928
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 2.0887191670805216,
+        "budget_fraction": 1.4588976666666666
+      },
+      {
+        "case": 2,
+        "median_ms": 96.44842666666666,
+        "trials_ms": [
+          96.44842666666666,
+          96.44910933333334,
+          96.44283733333333
+        ],
+        "cache": {
+          "core_cache_index": 7600,
+          "output_cache_index": 2840,
+          "gauss_cache_index": 6144,
+          "core_scratch_offset": 0,
+          "output_scratch_offset": 4294967295,
+          "gauss_scratch_offset": 14928
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 5.758542405237311,
+        "budget_fraction": 1.5070066666666666
+      }
+    ],
+    "7": [
+      {
+        "case": 0,
+        "median_ms": 56.694976,
+        "trials_ms": [
+          56.70114133333333,
+          56.694976,
+          56.68782933333333
+        ],
+        "cache": {
+          "core_cache_index": 4096,
+          "output_cache_index": 7168,
+          "gauss_cache_index": 6144,
+          "core_scratch_offset": 12880,
+          "output_scratch_offset": 15952,
+          "gauss_scratch_offset": 14928
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": -0.6812790148787995,
+        "budget_fraction": 0.885859
+      },
+      {
+        "case": 1,
+        "median_ms": 93.379136,
+        "trials_ms": [
+          93.371008,
+          93.379136,
+          93.386048
+        ],
+        "cache": {
+          "core_cache_index": 4096,
+          "output_cache_index": 7168,
+          "gauss_cache_index": 6144,
+          "core_scratch_offset": 12880,
+          "output_scratch_offset": 15952,
+          "gauss_scratch_offset": 14928
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 2.0785627038563126,
+        "budget_fraction": 1.459049
+      },
+      {
+        "case": 2,
+        "median_ms": 96.533632,
+        "trials_ms": [
+          96.52718933333334,
+          96.53853866666667,
+          96.533632
+        ],
+        "cache": {
+          "core_cache_index": 4096,
+          "output_cache_index": 7168,
+          "gauss_cache_index": 6144,
+          "core_scratch_offset": 12880,
+          "output_scratch_offset": 15952,
+          "gauss_scratch_offset": 14928
+        },
+        "standalone_budget_ms": 64,
+        "saving_against_same_image_mode0_percent": 5.675286772297516,
+        "budget_fraction": 1.508338
+      }
+    ]
+  },
+  "best_active_costs_and_modes": [
+    [
+      93.36945066666667,
+      4
+    ],
+    [
+      96.44842666666666,
+      4
+    ]
+  ],
+  "previous_R49_active_costs_ms": [
+    92.391893,
+    95.496213
+  ],
+  "retained_material_gate_passed": false,
+  "each_trial_RAM_backup_readback_restore_bytes": 65536,
+  "live_image_pixels_unchanged": 67200,
+  "live_PCM_bytes_unchanged": 8192,
+  "heads_regs_enabled_boundary_unchanged": true,
+  "guest_step600_to660": true,
+  "coordinate8_menu_install_readback_restored": true,
+  "actual_cache_miss_counts_not_measured": true,
+  "causal_effects_only_for_this_image_workloads_and_placements": true,
+  "all_active_standalone64ms_budgets_still_failed": true,
+  "native_game60_DAC_SNES_corpus_and_integration_not_claimed": true,
+  "master_integration": false
+}

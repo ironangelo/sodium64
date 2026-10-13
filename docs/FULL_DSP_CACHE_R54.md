@@ -1,6 +1,6 @@
 # R54 - Complete-DSP data-cache placement discriminator
 
-IMPLEMENTED; native outcome pending. Isolated from R49 6d6e4eb, default
+MEASURED cache-placement effects; REJECTED as retained full-core improvement. Isolated from R49 6d6e4eb, default
 DSP_FULL_CACHE_PROBE0 requires snapshot-core1/full-probe1. R49 signal1 remains;
 no R50 counter, R51 sampler, R52 BRR grouping or R53 sample chunks. No gameplay
 replacement. Original scalar arithmetic, phases, RAM reads, workloads and
@@ -57,3 +57,40 @@ Any mismatch blocks. Keep each standalone64ms budget explicit before guest CPU/
 APU/rendering. No broadCI or another placement sweep unless the result changes
 the architecture decision. These addresses are diagnostic; no universal fixed
 layout, game60, DAC/SNES/corpus fidelity or integration acceptance is claimed.
+
+
+## Native placement outcome
+
+Worker94780 terminal exit0, runtime9a0092d50d6f1d2e1ad064432be6fbcb6f49e326; one image/five modes,
+three round-robin repeats each. All45 PCM checksum/nonzero results and92160
+original frames match host; each trial64KiB RAMbackup/readback/restore. Full
+67200 live pixels/8192PCM/head/regs/enabled/boundary unchanged; step600->660
+and coordinate8/menu/install/readback pass. Synthetic PCM was not sent to AI.
+
+| Placement | One voice ms | Eight voices ms | All effects ms | Eight saving vs mode0 | Effects saving vs mode0 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Original placements | 56.311339 | 95.361280 | 102.341824 | +0.000% | +0.000% |
+| Core only | 56.788459 | 95.884117 | 102.876629 | -0.548% | -0.523% |
+| PCM only | 56.294080 | 94.767637 | 101.086720 | +0.623% | +1.226% |
+| Gaussian only | 56.233813 | 93.369451 | 96.448427 | +2.089% | +5.759% |
+| All three | 56.694976 | 93.379136 | 96.533632 | +2.079% | +5.675% |
+
+Observed default cache indices: core1db0,PCM0b18,Gaussian0850. Colored indices
+1000/1c00/1800 match their fixed owners in all replies. The Gaussian
+placement gives the largest partial reduction in this image's cost; moving core alone
+increases it, PCM alone is limited, and the combined layout is slower than
+Gaussian alone. Changes in storage cause cost differences in this controlled
+image; no hardware miss counter or universal cause for R52 is proven.
+
+Best active modes remain above prior physicalR49 costs92.391893/95.496213ms,
+and all exceed64ms before guestCPU/APU/rendering. Neither predeclared8% both-
+active gate nor historical-baseline improvement gate passes. Retain source/
+ownership proofs as diagnostic knowledge, default0; no placement sweep, broad
+CI or game-path promotion. A worse measurement artifact cannot be used as a
+convenient baseline. [Numeric receipt](evidence/full-dsp-cache-r54-native.json).
+
+Next architecture question must recover roughly31..33% just to meet this
+standalone complete-core budget. Reuse R49 cost authority and R51 residency;
+evaluate a broader CPU/RSP DSP execution design with exact clock/write order
+and renderer contention bounds before another local arithmetic/layout tweak.
+Full game60/DAC/SNES/audio fidelity/corpus/integration remain OPEN.

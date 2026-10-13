@@ -1,3 +1,42 @@
+# 2026-10-13 - R49 complete-DSP signal work implemented; native cost A/B next
+
+RESUME HERE: runtime68667b74e5d472a01cd38e9f926c155a4695f391, docs3755a2382e3542e9c76224b4988c2024dd785990,
+experiment/dsp-signal-elide-r49 in isolated sodium64-dsp-signal-r49. Published,
+defaultDSP_SIGNAL_ELIDE0 requires FULL_DSP_PROBE1. Gameplay mixer untouched.
+Discard only pure Gaussian result superseded by latched NON or multiplied by
+env0; every clocked voice/BRR/history/KON/PMON/envelope/echo/FIR action remains.
+Pinned flag0 core retains all18 executable sections exactly; V3c and compiled
+run caller differ only in flag1. Initial preflight count incorrectly borrowed
+15 banks from the state config; actual complete-probe13 banks all byte-exact.
+Published documentation corrected; no unsafe artifact installed.
+
+LocalPASS12288 V3c/8192 arbitrary clock slices/11601 stereo frames/20480 full
+state checks after host-pointer normalization only; full64KiB RAM/all128 regs/
+PCM extents equal. Env1/noise faults reject. Existing original transaction6144
+frames/checksums/backup/restore/faults pass. Boot12/TV5,9 linked functions/36
+HI/LO sites,CPU6 words/two banks/fourD6400 DMA sites/three faults pass. Equal
+staticD50A8<D6000,gapF58; full24576 events/194 slots/43 owners retained.
+[Report](DSP_SIGNAL_ELIDE_R49.md); numeric preflight receipt. No broad CI.
+
+Next confirm no controller, run frozen private dsp-signal-r49-archive/
+native_dsp_signal_r49.py once. Root alone COM3. Same-source flag0/1, three
+existing synthetic workloads three times each,2048frames/case, at paused600.
+Count only core32-frame calls, no AI output; host PCM checksums and64KiB RAM
+backup/readback/restore required. Full live image/PCM/head/regs/enabled unchanged,
+gueststep660, finallycoordinate8/menu/install/readback on every terminal path.
+Persist live handle before interruption; poll it, never restart on timeout.
+
+Predeclared>=15% one-voice saving and <=2% active worst-case regression retains
+limited complete-core value; below5% saving rejects material direction. No
+open-ended tuning. All three standalone64ms budgets remain; meeting one does
+not pay for guest CPU/APU/rendering or prove gameplay60. Worst all-active cases
+may remain blocked. This is a changed-core cost question, not another unchanged
+drop-in. R47 remains isolated with3..4% measured benefit, R48 rejected, master/
+R44/R45/state prototype unchanged. Full DSP/DAC/SNES/native60/corpus open.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R48 compile-only alias idea rejected; R49 signal work next
 
 RESUME HERE: R48 REJECTED without native trial. The run() non-alias qualifier

@@ -13,11 +13,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('elf', type=Path)
     parser.add_argument('--reference-elf', type=Path, required=True)
+    parser.add_argument('--brr-group', action='store_true',
+                        help='Both artifacts use voice pointers; compare group to scalar BRR.')
     parser.add_argument('--json-output', type=Path)
     args = parser.parse_args()
     models = [(CPU(m), s) for m, s in
               (load_elf(args.reference_elf), load_elf(args.elf))]
-    assert 'dsp_voice_base' not in models[0][1]
+    if args.brr_group:
+        assert 'dsp_voice_base' in models[0][1]
+        assert 'brr_group_dispatch' not in models[0][1]
+        assert 'brr_group_dispatch' in models[1][1]
+    else:
+        assert 'dsp_voice_base' not in models[0][1]
     assert 'dsp_voice_base' in models[1][1]
     modes = ('attack_mode', 'decay_mode', 'sustain_mode', 'gain_mode', 'release_mode')
     optimized, symbols = models[1]

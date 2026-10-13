@@ -594,6 +594,96 @@ dsp_brr_trace_input_done:
     li t1, 9
 brr_range_ready:
 #endif
+#ifdef SODIUM64_DSP_BRR_GROUP
+brr_group_dispatch:
+    // The same two packed bytes are already sampled. Dispatch once for the
+    // existing four-sample chunk, retaining its exact guest read phase.
+    jr t9
+    sll s0, s0, 16
+
+    // s1/t9 retain the two half-scaled history samples; s0 owns the packed
+    // nibbles. These are already decoder scratch. t2, t4/t5, t6/t8, HI/LO,
+    // voice pointer and all scheduler registers keep their existing ABI.
+.macro BRR_GROUP kind
+.if \kind >= 1
+    lh s1, 0(v1)
+.endif
+.if \kind >= 2
+    lh t9, 2(v1)
+.endif
+    // Every voice buffer is aligned8. Descend6/4/2/0 and restore its original
+    // base before the observer; no fourth scratch register is borrowed.
+    addiu v1, v1, 6
+.Lbrr_group_next\@:
+    sra t0, s0, 28
+    sll s0, s0, 4
+    sll t0, t0, t1
+    sra t0, t0, 1
+.if \kind == 1
+    addu t0, t0, s1
+    subu t7, zero, s1
+    sra t7, t7, 4
+    addu t0, t0, t7
+.elseif \kind == 2
+    sll t3, s1, 1
+    addu t0, t0, t3
+    sll t3, s1, 1
+    addu t3, t3, s1
+    subu t3, zero, t3
+    sra t3, t3, 5
+    addu t0, t0, t3
+    subu t0, t0, t9
+    sra t3, t9, 4
+    addu t0, t0, t3
+.elseif \kind == 3
+    sll t3, s1, 1
+    addu t0, t0, t3
+    sll t3, s1, 3
+    addu t3, t3, s1
+    sll t7, s1, 2
+    addu t3, t3, t7
+    subu t3, zero, t3
+    sra t3, t3, 6
+    addu t0, t0, t3
+    subu t0, t0, t9
+    sll t3, t9, 1
+    addu t3, t3, t9
+    sra t3, t3, 4
+    addu t0, t0, t3
+.endif
+    // Preserve the exact signed16 clamp, then signed15 half-sample wrap.
+    sll t3, t0, 16
+    sra t3, t3, 16
+    beq t0, t3, .Lbrr_group_clamped\@
+    sra t7, t0, 31
+    xori t0, t7, 0x7FFF
+.Lbrr_group_clamped\@:
+    sll t0, t0, 17
+    sra t0, t0, 17
+    sh t0, 0(v1)
+.if \kind >= 2
+    move t9, s1
+.endif
+.if \kind >= 1
+    move s1, t0
+.endif
+    andi t3, v1, 6
+    bnez t3, .Lbrr_group_next\@
+    addiu v1, v1, -2
+    b brr_group_done
+    addiu v1, v1, 2
+.endm
+
+filter_end:
+    BRR_GROUP 0
+filter_1:
+    BRR_GROUP 1
+filter_2:
+    BRR_GROUP 2
+filter_3:
+    BRR_GROUP 3
+brr_group_done:
+#else
     li s1, 8
 
 next_sample:
@@ -705,6 +795,7 @@ brr_clamped:
     add t3, v1, s1
     bnez s1, next_sample
     sh t0, (t3)
+#endif
 #ifdef SODIUM64_BRR_OBSERVER
 dsp_brr_trace_end:
     // All four stores are complete; publish the ring only after both words.

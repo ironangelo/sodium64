@@ -1,6 +1,6 @@
 # Private scene slot prototype
 
-MEASURED ALttP title advanced-machine continuation passes; Mode7 pending.
+MEASURED ALttP title and F-Zero Mode7 advanced-machine continuation pass.
 SCENE_SLOT1 requires the
 canonical scene hook, full RSP context, trace recorder and audio observer.
 Default0. It exposes state-save, state-load and state-fingerprint only through
@@ -136,3 +136,21 @@ clear. Full272-byte serialization and destination readback remain unchanged;
 active exception states remain rejected. Every other O64 byte, all RSP/SP/TLB,
 guest input and the entire dynamic arena remain compared. No GPR, HI/LO or
 memory mask is added. Repeat the Mode7 continuation under this exact scope.
+
+Runtime1990fb0 worker24734 terminal PASS/restored: save4500, advance5100,
+load4500 and repeat4501/4560/5100. Full destination/SP/TLB readback and loaded
+owner fingerprints pass. All27 compared live owners and51 unmasked dynamic
+regions match. Explicit raw O64 comparison checks268 non-EPC bytes at each
+checkpoint: only inactive EPC differs at4501/5100; no bytes differ at4560.
+Full272-byte serialization/readback remains enforced, with EXL/ERL clear.
+Current-control/restored images match all201600 pixels. Seventeen images
+match1139136 old-reference pixels outside only its FPS glyph box; ten paused
+PCM rings81920 bytes, heads/registers/enabled and input ACKs match. Saving
+took13.766s and loading20.406s in this trial. Menu/coordinate8 install/readback
+restored. Curated numeric receipt: evidence/scene-state-slot-native-mode7.json.
+
+This closes the bounded title/Mode7 state-tool discriminants. The slot helps
+repeat long scenes in one build/boot; recompilation or reboot still requires
+replaying the route. Other games, active gameplay and enhancement chips remain
+coverage gates. Persistent/cross-build/UI work is deferred while returning to
+the main performance goal. No full corpus, audio fidelity or integration claim.

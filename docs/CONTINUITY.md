@@ -1,3 +1,22 @@
+# 2026-10-13 - R45 Mode7 native images/PCM exact; small cadence residual still open
+
+Source313642a Mode7 tenPNG/fourPCM/heads/regs/enabled/inputACK/checksum/settings/
+coordinate8/menu/readback PASS; worker33441 terminal/noCOM3 worker. Exact120
+endpointIDs4510..4629 8.292780->8.281578/s (-0.135081percent),
+wait88.728239->88.065571ms. Full1668.290765vs8.279444 separate.
+DKC exact240 +108.689096percent, all source313642a Build/CGRAM/Ares CI SUCCESS.
+
+RESUME HERE: small ALttP/Mode7 cadence residuals remain unresolved; no full
+non-regression/promotion. Choose bounded generic admission or aligned
+measurement control with discriminating value; no duplicate broad CI. Keep
+source/archives/master/default0 protected. States owner pass now identifies
+queued history and guest/host continuation; positive bounded prototype after
+these renderer gates, no serializer. Native Mode7 itself8.3/s remains far from
+60 and is a control, not accepted title fidelity. Full60/audio/corpus open.
+[R45](BACKDROP_ROWS_R45.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - Native Mode7 candidate running; save-state owner pass preserved
 
 Sole COM3 worker33441 r45-mode7-fzero running from immutable source313642a

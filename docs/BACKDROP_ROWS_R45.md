@@ -364,3 +364,26 @@ than accepting a game-specific exception. No full title/fidelity claim.
 Ares38354695628 now SUCCESS; Build38354690610 and CGRAM38354693122 SUCCESS at
 the same313642a source. No rerun of these unchanged code gates is needed.
 This qualifies their CI scope, not the remaining native corpus or full audio.
+
+## Native Mode7 exact image/PCM control; small residual kept open
+
+Flag1 source313642a matches all ten Mode7-route frames672000 pixels and four
+paused PCM buffers32768 bytes, heads/registers/enabled and input ACKs. Checksum/
+settings/coordinate8/menu/readback PASS, worker33441 terminal/no COM3 worker.
+All declared120 endpoints4510..4629 occur once in both traces. Paired cadence
+8.292780->8.281578/s (-0.135081percent),
+wait88.728239->88.065571ms.
+Full traces each166 intervals8.290765 vs8.279444/s, retained separately.
+[Paired receipt](evidence/backdrop45-mode7-pair.json). This is actual Mode7
+gameplay control, not full-title/SNES-reference or complete sound qualification.
+The small loss remains unresolved; no permanent loss or noise conclusion.
+
+Current CI at313642a is all SUCCESS and DKC identical240 endpoints retain
+108.689096percent native value. Representative imagery/pausedPCM pass, but
+small ALttP/Mode7 cadence residuals still block a complete non-regression
+claim. Avoid chasing those deltas with repeated full suites. Use a bounded
+generic admission/measurement control if it changes that decision; keep
+baseline/source/archives unchanged and default0 until promotion is justified.
+The save-state owner pass is preserved; a bounded continuation/restore trial
+must retain historical queued frame state, CPU/SPC/DSP semantic owners and
+current bindings, not merely a paused framebuffer. No serializer yet.

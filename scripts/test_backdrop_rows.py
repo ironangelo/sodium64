@@ -218,6 +218,56 @@ def rsp_case(build, *, start=0, rows=224, parity=0, pattern='gradient', cgws=0, 
     return dict(rows=rows if eligible else 0,packets=len(vm.captures))
 
 
+def dispatch_case(build, *, cgws, screen=1, blank=False, delay=9, parity=0, fault=None):
+    addr = parse_macros(ROOT).name
+    main = read_text(build/'src/rsp_main.elf')[1]
+    phase = read_text(build/'src/rsp_hcomp.elf')[1]
+    syms = symbols(build/'src/rsp_hcomp.elf')
+    resident = symbols(build/'src/rsp_main.elf')
+    assert resident['hcomp_scalar_layers'] == 0x348
+    assert syms['hcomp_context_ready'] == 0x42c and syms['hcomp_math_return'] == 0x778
+    code = bytearray(main); code[0x3a8:0x790] = phase
+    d = bytearray(section(build/'src/rsp_main.elf', '.data'))
+    d[addr('CGWSEL')] = cgws; d[addr('HCOMP_SCREEN')] = screen
+    d[addr('STAT_FLAGS')] = 128 if blank else 0
+    d[addr('BG_MODE')] = 7
+    put(d, addr('OVERLAY_HCOMP_SRC'), 0xa0180003)
+    put(d, addr('OVERLAY_MAIN_SRC'), 0x80190001)
+    put(d, addr('PRIO_CHECKS'), 0xabcd1234); put(d, addr('PRIO_CHECKS')+4, 0x56789abc)
+    fill, window = addr('RDP_FILL'), addr('RDP_WINDOW')
+    put(d, fill+20, 0x38689800 | (255 if screen else 63))
+    before = bytes(d)
+    ram = bytearray(0x400000); put(ram, 0x180000+1000, 0x801a0003)
+    owners = set(range(addr('PRIO_CHECKS'), addr('PRIO_CHECKS')+8))
+    owners.update(range(addr('SCRN_DATA'), addr('SCRN_DATA')+8))
+    regs = [0]*32; regs[23] = 0x1345; regs[26] = 10; regs[27] = 42; regs[29] = parity
+    vm = PacketVM(code, d, regs, owners, delay, True); vm.ram = ram
+    vm.pc = syms['hcomp_backdrop_dispatch']
+    if fault == 'screen_mask_reload':
+        put(vm.code, resident['hcomp_scalar_layers']+4, (36<<26)|(23<<16)|addr('TS'))
+    elif fault == 'wrong_blank_return':
+        w = struct.unpack_from('>I', vm.code, resident['hcomp_scalar_layers'])[0]
+        put(vm.code, resident['hcomp_scalar_layers'], (w & 0xffff0000) | ((w+2)&65535))
+    bypass = bool(cgws & 0xf3)
+    stop = syms['hcomp_band_done'] if bypass and blank else STOP
+    vm.execute(stop, max_steps=10000)
+    assert vm.pending_fetch is None and vm.dma is None
+    assert (regs[23], regs[26], regs[27], regs[29]) == (0x1345, 10, 42, parity), 'scalar screen/band ownership'
+    if bypass:
+        assert not vm.transfers, 'excluded CGWSEL loaded a helper/descriptor'
+        assert vm.captures == [before[fill+8:window]], 'scalar packet/alpha changed'
+        assert d[fill:window] == before[fill:window], 'scalar geometry/color changed'
+        if not blank:
+            assert regs[5] == 0x80190001 and regs[25] == 0x1370
+            assert regs[19] == 7<<4 and d[addr('PRIO_CHECKS'):addr('PRIO_CHECKS')+8] == bytes(8)
+        else:
+            assert d[addr('PRIO_CHECKS'):addr('PRIO_CHECKS')+8] == before[addr('PRIO_CHECKS'):addr('PRIO_CHECKS')+8]
+    else:
+        assert not vm.captures and regs[5] == 0x801a0003 and regs[25] == 0x13b0
+        assert len(vm.transfers) == 1 and vm.transfers[0]['ram'] == 0x180000+1000 and vm.transfers[0]['size'] == 8
+    assert all(d[i] == before[i] for i in range(4096) if i not in owners), 'dispatch changed an unowned byte'
+
+
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('build',type=Path); ap.add_argument('--output',type=Path)
@@ -233,8 +283,20 @@ def main():
         try: rsp_case(args.build,fault=fault)
         except AssertionError: rejected.append(fault)
         else: raise AssertionError('escaped negative: '+fault)
+    dispatches = 0
+    for cgws in (0,4,8,12,1,2,0x10,0x40,0x80,0xf3):
+        for screen in (0,1):
+            for blank in (False,True):
+                for delay in (2,9,31):
+                    for parity in (0,4):
+                        dispatch_case(args.build,cgws=cgws,screen=screen,blank=blank,delay=delay,parity=parity)
+                        dispatches += 1
+    for fault in ('screen_mask_reload','wrong_blank_return'):
+        try: dispatch_case(args.build,cgws=0x12,blank=(fault=='wrong_blank_return'),fault=fault)
+        except AssertionError: rejected.append(fault)
+        else: raise AssertionError('escaped dispatch negative: '+fault)
     result.update(rsp_cases=len(cases),colored_rows=sum(c['rows'] for c in outcomes),
-                  pixels=sum(c['rows'] for c in outcomes)*256,negative_mutations_rejected=rejected,
+                  pixels=sum(c['rows'] for c in outcomes)*256,linked_dispatch_cases=dispatches,negative_mutations_rejected=rejected,
                   passed=True,native_fidelity_or_performance=False)
     if args.output: args.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2))

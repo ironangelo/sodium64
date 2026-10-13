@@ -91,7 +91,9 @@ hcomp_band_bounds_ready:
     bnez t1, hcomp_bad_geometry
     sltiu t1, t2, 249
     beqz t1, hcomp_bad_geometry
+#if !SODIUM64_BACKDROP_ROWS
     nop
+#endif
     sll t1, t0, 2
     sh t1, RDP_FILL + 10
     sh t1, RDP_FILL + 38
@@ -133,7 +135,9 @@ hcomp_band_targets_ready:
     beqz t0, hcomp_dispatch_policy
     sltu t1, k0, t0
     bnez t1, hcomp_dispatch_policy
+#if !SODIUM64_BACKDROP_ROWS
     nop
+#endif
     li t0, 1
     sw t0, HCOMP_BAND_RAW
 hcomp_dispatch_policy:
@@ -243,18 +247,31 @@ hcomp_backdrop_color:
     or t1, t1, t2
     sw t1, RDP_FILL + 32
 #if SODIUM64_BACKDROP_ROWS
-    // The helper retains the scalar fallback and Main dispatch. Its descriptor
-    // lives in owned RDRAM, without allocating another live DMEM pointer.
+hcomp_backdrop_dispatch:
+    // These CGWSEL policies cannot use the CPU's Main-row representation.
+    // Keep their original scalar fill without a helper/descriptor round trip.
+    lbu t0, CGWSEL
+    andi t0, t0, 0xF3
+    bnez t0, hcomp_scalar_fill
     lw a1, OVERLAY_HCOMP_SRC
-    li t0, -8
-    and a1, a1, t0
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // CPU publication owns the aligned phase source with its exact bank3 tag.
+    addi a1, a1, 997
+#else
     addi a1, a1, 1000
+#endif
     li a0, SCRN_DATA
     jal 0xA4001F40
     li a2, 7
     lw a1, SCRN_DATA
     j 0xA4001F7C
     li t9, 0x13B0
+hcomp_scalar_fill:
+    li a0, RDP_FILL + 8
+    jal 0xA4001F5C
+    li a1, RDP_WINDOW
+    j 0xA4001348 // Resident Main/blank dispatch; keep the current screen mask.
+    lb t4, STAT_FLAGS
 #else
     li a0, RDP_FILL + 8
     jal 0xA4001F5C
@@ -330,7 +347,9 @@ hcomp_band_done:
     // No subsequent general/raw epoch may inherit a transformed TLUT.
     lbu t0, HCOMP_TLUT_CLASS
     beqz t0, hcomp_band_palette_restored
+#if !SODIUM64_BACKDROP_ROWS
     nop
+#endif
     lw a1, OVERLAY_HCOMP_TLUT_SRC
     j 0xA4001F7C
     li t9, 0x13C0

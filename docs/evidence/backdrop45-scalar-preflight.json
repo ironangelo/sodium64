@@ -1,0 +1,29 @@
+{
+  "row_bounds": 488,
+  "epoch_barriers": 160,
+  "cpu_source_bindings": 2,
+  "rsp_cases": 40,
+  "colored_rows": 2304,
+  "pixels": 589824,
+  "linked_dispatch_cases": 240,
+  "negative_mutations_rejected": [
+    "short_restore",
+    "pending_latch",
+    "wrong_queue",
+    "main_alpha",
+    "skip_scissor_restore",
+    "screen_mask_reload",
+    "wrong_blank_return"
+  ],
+  "passed": true,
+  "native_fidelity_or_performance": false,
+  "status": "IMPLEMENTED direct scalar dispatch; native comparison pending",
+  "fixed_phase_bytes": 1000,
+  "main_bytes": 4096,
+  "runtime_static_end": 859784,
+  "event_arena_start": 868352,
+  "disjoint_owners": 43,
+  "linked_boot_cases": 12,
+  "linked_TV_cases": 5,
+  "backup_binding_mutations_rejected": 3
+}

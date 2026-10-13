@@ -638,6 +638,21 @@ dma_write_owned:
     mtc0 a2, COP0_DMA_WRITE
     .org 0x348
 
+#if SODIUM64_BACKDROP_ROWS
+hcomp_scalar_layers:
+    // The phase still owns this slot on the direct scalar path. Blank can
+    // return through its fixed band-done entry without another bank DMA.
+    bltz t4, hcomp_scalar_layers + (0x778 - 0x348)
+    nop
+    sw zero, PRIO_CHECKS
+    sw zero, PRIO_CHECKS + 4
+    lbu s3, BG_MODE
+    andi s3, s3, 0xF
+    sll s3, s3, 4
+    lw a1, OVERLAY_MAIN_SRC
+    b overlay_load_slot
+    li t9, 0x1370
+#else
     // Skip layers for force blank, or set the initial lookup offset
     lbu s3, BG_MODE
     bltz t4, next_section
@@ -655,6 +670,7 @@ dma_write_owned:
     lbu t0, TM
     sll t0, t0, 8
     or s7, s7, t0
+#endif
 
 next_layer:
     // Look up the next layer and check if it's BG or OBJ

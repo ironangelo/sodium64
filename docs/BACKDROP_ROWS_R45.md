@@ -206,3 +206,24 @@ RDP packet retirement and all existing eligible-row behavior. Local actual
 linked dispatch/packet ownership checks before an ALttP native discriminator;
 DKC then Mode7/broader and relevant CI if this removes overhead. State serializer
 remains a bounded follow-up; default0 and master/R44/R43 remain preserved.
+
+## Direct scalar dispatch preflight
+
+CGWSEL & F3 excluded policies use the original scalar packet in the current
+phase bank and a resident Main/blank dispatch at1348. The current screen mask
+is preserved; it must not be reloaded as combined TS/TM at the Main transition.
+The fixed1778 blank return retains the phase without any helper load. Eligible
+policies retain the row helper. The exact CPU-published phase bank3 tag is
+removed when locating its1000-byte descriptor; untagged builds use offset1000.
+Three harmless former delay-slot NOPs consume their following instructions
+only in the opt-in build so the1000-byte slot and fixed public entries fit.
+
+Local actual linked240 dispatch cases cover both screen masks/queue parities,
+blank and normal, excluded and admitted policies, delayed DMA/packet adoption;
+two real faults (screen mask reload and wrong blank return) reject. Existing
+488 row bounds/160 epoch barriers/two CPU bindings and40 row packet cases,
+589824 pixels/five faults still pass. All14 banks have safe delay slots,
+43 memory owners, staticD1E88<D4000,12 boot/five TV and inherited compiled
+backup bindings/three faults pass. [Preflight](evidence/backdrop45-scalar-preflight.json).
+No native or complete non-regression claim yet. Freeze a distinct scalar
+archive/plan, compare ALttP story first, then rain and retained DKC/Mode7.

@@ -11,6 +11,13 @@ NATIVE_DIAG ?= 0
 NATIVE_DIAG_TRACE ?= 0
 REMOTE ?= 0
 SCENE_STATE ?= 0
+SCENE_RSP_REBIND ?= 0
+ifeq ($(SCENE_RSP_REBIND),1)
+ifneq ($(SCENE_STATE),1)
+$(error SCENE_RSP_REBIND requires SCENE_STATE=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_SCENE_RSP_REBIND=1
+endif
 ifeq ($(SCENE_STATE),1)
 ifneq ($(REMOTE),1)
 $(error SCENE_STATE requires REMOTE=1)
@@ -206,6 +213,9 @@ PROFILE := 1
 endif
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
+ifneq ($(SCENE_RSP_REBIND),1)
+SFILES := $(filter-out src/rsp_scene_rebind.S,$(SFILES))
+endif
 ifneq ($(ADAPTIVE_SPANS),1)
 SFILES := $(filter-out src/rsp_decoder_original.S,$(SFILES))
 endif
@@ -230,6 +240,9 @@ endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 HFILES += $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.inc))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
+ifeq ($(SCENE_RSP_REBIND),1)
+OFILES += $(BUILD_DIR)/src/scene_rsp_probe.o
+endif
 ifeq ($(FULL_DSP_PROBE),1)
 OFILES += $(BUILD_DIR)/src/full_dsp_probe.o $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o
 endif
@@ -484,13 +497,17 @@ $(BUILD_DIR)/src/continuous_save_c.o: src/continuous_save.c tools/sc64-diagnosti
 	@mkdir -p $(dir $@)
 	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
 
-$(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h src/defines.h tools/sc64-diagnostic-save/recorder_runtime_abi.h
+$(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h src/defines.h src/scene_rsp_probe.h tools/sc64-diagnostic-save/recorder_runtime_abi.h
 	@mkdir -p $(dir $@)
 	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_CFLAGS_REMOTE) -o $@ $<
 
 $(BUILD_DIR)/src/full_dsp_probe.o: src/full_dsp_probe.cpp src/full_dsp_probe.h $(wildcard third_party/snes_spc/*.h)
 	@mkdir -p $(dir $@)
 	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror -o $@ $<
+
+$(BUILD_DIR)/src/scene_rsp_probe.o: src/scene_rsp_probe.c src/scene_rsp_probe.h
+	@mkdir -p $(dir $@)
+	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
 
 $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o: third_party/snes_spc/SPC_DSP.cpp $(wildcard third_party/snes_spc/*.h)
 	@mkdir -p $(dir $@)

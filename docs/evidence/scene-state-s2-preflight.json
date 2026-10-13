@@ -1,0 +1,25 @@
+{
+  "status": "IMPLEMENTED context-reconstruction hypothesis",
+  "SCENE_RSP_REBIND": 1,
+  "production_parser_cases": 254,
+  "fuzz": 1000,
+  "production_transaction_cases": 185,
+  "actual_RSP_binary_cases": 32,
+  "rebind_mutations_rejected": [
+    "missing_queue",
+    "missing_constant",
+    "missing_flags",
+    "missing_accumulator"
+  ],
+  "canonical_bridge_cases": 16,
+  "existing_RSP_extents_identical": 26,
+  "option_off_CPU_text_data_identical": true,
+  "runtime_end": 867288,
+  "arena_start": 868352,
+  "owners": 43,
+  "capacity": 24576,
+  "ROM_slots": 194,
+  "serializer": false,
+  "restore": false,
+  "native_acceptance": false
+}

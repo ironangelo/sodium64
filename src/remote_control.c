@@ -5,6 +5,10 @@
  */
 #include "remote_control.h"
 #include "../tools/sc64-diagnostic-save/recorder_runtime_abi.h"
+#ifdef SODIUM64_SCENE_RSP_REBIND
+#include "scene_rsp_probe.h"
+static unsigned scene_rsp_needs_menu;
+#endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER || defined(SODIUM64_RDP_MATH_PROBE) || defined(SODIUM64_SCENE_STATE)
 /* Use the exact arena/DMEM ABI selected by this build's diagnostic flags. */
 #include "defines.h"
@@ -272,6 +276,27 @@ static unsigned receive(void) {
 }
 #endif
 
+#ifdef SODIUM64_SCENE_RSP_REBIND
+#ifdef REMOTE_CONTROL_HOST
+extern uint32_t remote_host_scene_rsp_rebind(void);
+#else
+extern const uint32_t rsp_scene_rebind_text_start[],rsp_scene_rebind_text_end[];
+static uint32_t scene_rsp_read_word(uint32_t address) {
+    return *(volatile uint32_t *)(uintptr_t)address;
+}
+static void scene_rsp_write_word(uint32_t address,uint32_t value) {
+    *(volatile uint32_t *)(uintptr_t)address=value;
+    __asm__ volatile("sync":::"memory");
+}
+static int scene_rsp_transfer_block(uint32_t *scratch,uint32_t offset,int write) {
+    return pi_transfer(scratch,USB_CART+offset,512,write);
+}
+static int scene_rsp_wait_halted(void) {
+    return wait_io(0xa4040010,1,1,REMOTE_COUNT_HZ/5u)&&
+           wait_io(0xa4040018,1,0,REMOTE_COUNT_HZ/5u);
+}
+#endif
+#endif
 static int eq(const char *a,const char *b) {
     while(*a&&*a==*b){a++;b++;}return *a==*b;
 }
@@ -651,6 +676,9 @@ static void status(const char *id) {
 #ifdef SODIUM64_SCENE_STATE
     append(",state-park,state-check");
 #endif
+#ifdef SODIUM64_SCENE_RSP_REBIND
+    append(",state-rsp-rebind");
+#endif
 #ifdef SODIUM64_BRR_OBSERVER
     append(",audio-brr");
 #endif
@@ -703,6 +731,9 @@ static void status(const char *id) {
     field(" scene_pending=",remote_scene_pending);field(" scene_canonical=",remote_scene_canonical);
     field(" scene_error=",remote_scene_error);field(" scene_origin_guest=",remote_scene_origin_guest);
 #endif
+#ifdef SODIUM64_SCENE_RSP_REBIND
+    field(" scene_rsp_needs_menu=",scene_rsp_needs_menu);
+#endif
     (void)finish();
 }
 
@@ -745,6 +776,40 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
     if(nt<3||!eq(tokens[0],"s64")||!hex(tokens[1],8,&unused)) {error(id,"invalid_request");return;}
     id=tokens[1];const char *verb=tokens[2];
+#ifdef SODIUM64_SCENE_RSP_REBIND
+    if(scene_rsp_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
+       !eq(verb,"profile")&&!eq(verb,"state-check")&&!eq(verb,"menu")) {
+        error(id,"scene_rsp_needs_menu");return;
+    }
+    if(eq(verb,"state-rsp-rebind")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+        if(!remote_paused){error(id,"not_paused");return;}
+        if(!remote_scene_canonical||remote_scene_error){error(id,"not_canonical");return;}
+        if(!present||transport_error||menu_error){error(id,"scene_transport_unready");return;}
+        uint32_t state;
+#ifdef REMOTE_CONTROL_HOST
+        state=remote_host_scene_rsp_rebind();
+#else
+        uint32_t config[2];
+        if(!wait_usb('U')||!command('C',1,1,config)){error(id,"scene_rsp_backup_failed");return;}
+        state=scene_rsp_probe_execute((uint32_t *)uncached(transfer_buffer),
+            rsp_scene_rebind_text_start,
+            (unsigned)(rsp_scene_rebind_text_end-rsp_scene_rebind_text_start),
+            queue_id,scene_rsp_read_word,scene_rsp_write_word,
+            scene_rsp_transfer_block,scene_rsp_wait_halted);
+        if(!command('C',1,config[1],0))scene_rsp_needs_menu=1;
+#endif
+        if(state==2)scene_rsp_needs_menu=1;
+        if(state!=1||scene_rsp_needs_menu) {
+            error(id,state==0?"scene_rsp_backup_failed":"scene_rsp_restore_failed");return;
+        }
+        prefix(id,1);append(" scene_rsp_rebound=1 restored_sp_memory=1");
+        field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
+        append(" provenance=canonical_context_reconstruction_probe serializer=0 restore=0");
+        (void)finish();return;
+    }
+#endif
 #ifdef SODIUM64_FULL_DSP_PROBE
     if(full_dsp_probe_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
        !eq(verb,"frame")&&!eq(verb,"profile")&&!eq(verb,"menu")) {
@@ -814,6 +879,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" scene_error=",remote_scene_error);field(" scene_pending=",remote_scene_pending);
         field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
         append(" provenance=post_submit_natural_rsp_dp_ai_retirement serializer=0 restore=0");
+#if defined(SODIUM64_SCENE_RSP_REBIND) && !defined(REMOTE_CONTROL_HOST)
+        if(remote_scene_canonical) {
+            field(" scene_rsp_halt_pc=",scene_rsp_read_word(0xa4080000));
+            field(" scene_rsp_halt_status=",scene_rsp_read_word(0xa4040010));
+        }
+#endif
         (void)finish();return;
     }
     if(eq(verb,"state-park")) {

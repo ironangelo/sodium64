@@ -799,6 +799,43 @@ PHASE(31)  V(V4,0)       V(V1,2)\
 
 #if !SPC_DSP_CUSTOM_RUN
 
+#ifdef SODIUM64_DSP_FULL_SAMPLE_CHUNKS
+void SPC_DSP::run_partial( int phase, int clocks_remain )
+{
+	switch ( phase )
+	{
+	loop:
+		#define PHASE( n ) if ( n && !--clocks_remain ) break; case n:
+		GEN_DSP_TIMING
+		#undef PHASE
+		if ( --clocks_remain ) goto loop;
+	}
+}
+
+void SPC_DSP::run( int clocks_remain )
+{
+	require( clocks_remain > 0 );
+	int const phase = m.phase;
+	m.phase = ( phase + clocks_remain ) & 31;
+	// Finish a partial sample before taking whole, uninterrupted 32-clock groups.
+	if ( phase )
+	{
+		int prefix = 32 - phase;
+		if ( prefix > clocks_remain ) prefix = clocks_remain;
+		run_partial( phase, prefix );
+		clocks_remain -= prefix;
+	}
+	while ( clocks_remain >= 32 )
+	{
+		// Expand the exact same ordered phases, without per-clock stop checks.
+		#define PHASE( n ) /* full32 */
+		GEN_DSP_TIMING
+		#undef PHASE
+		clocks_remain -= 32;
+	}
+	if ( clocks_remain ) run_partial( 0, clocks_remain );
+}
+#else
 void SPC_DSP::run( int clocks_remain )
 {
 	require( clocks_remain > 0 );
@@ -817,6 +854,7 @@ void SPC_DSP::run( int clocks_remain )
 			goto loop;
 	}
 }
+#endif
 
 #endif
 

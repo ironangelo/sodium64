@@ -85,6 +85,32 @@ static void initialize(unsigned voices){
     memset(pcm0,0xcc,sizeof(pcm0));memset(pcm1,0xcc,sizeof(pcm1));
     ref.set_output(pcm0,32);opt.set_output(pcm1,32);
 }
+#ifdef SODIUM64_TEST_SAMPLE_CHUNKS
+static unsigned chunk_cases,chunk_frames;
+static void chunks_directed(){
+    const unsigned masks[]={0,1,0x55,0xff};
+    const unsigned longer[]={95,96,97,127,128,129,255,256};
+    uint32_t saved_rng=rng;
+    for(unsigned mask=0;mask<4;mask++)for(unsigned phase=0;phase<32;phase++)
+    for(unsigned n=0;n<72;n++){
+        initialize(masks[mask]);
+        ref.run(256+phase);opt.run(256+phase);compare();
+        check(ref.m.phase==(int)phase&&opt.m.phase==(int)phase,"directed entry phase");
+        // Mutations occur between calls, just as clock-bounded SPC writes do.
+        unsigned addr=random_word()&127,value=random_word()&255;
+        ref.write(addr,value);opt.write(addr,value);
+        unsigned byte=random_word()&65535;
+        ram0[byte]=ram1[byte]=(unsigned char)random_word();
+        memset(pcm0,0xcc,sizeof(pcm0));memset(pcm1,0xcc,sizeof(pcm1));
+        ref.set_output(pcm0,32);opt.set_output(pcm1,32);
+        unsigned clocks=n<64?n+1:longer[n-64];
+        ref.run(clocks);opt.run(clocks);compare();
+        for(unsigned reg=0;reg<128;reg++)check(ref.read(reg)==opt.read(reg),"directed DSP registers");
+        chunk_frames+=(unsigned)ref.sample_count()/2;chunk_cases++;
+    }
+    rng=saved_rng;
+}
+#endif
 int main(){
     initialize(255);
     for(unsigned voice=0;voice<8;voice++)for(unsigned e=0;e<3;e++)
@@ -108,6 +134,9 @@ int main(){
         ref.m.regs[0x6c]=opt.m.regs[0x6c]=fraction&8?0x80:0;
         ref.voice_V3c(&a);opt.voice_V3c(&b);compare();directed++;
     }
+#ifdef SODIUM64_TEST_SAMPLE_CHUNKS
+    chunks_directed();
+#endif
     const unsigned masks[]={0,1,0x55,0xff};
     for(unsigned scenario=0;scenario<4;scenario++){
         initialize(masks[scenario]);
@@ -130,4 +159,7 @@ int main(){
         }
     }
     printf("DSP_SIGNAL_ELIDE PASS directed=%u slices=%u frames=%u state_checks=%u\n",directed,slices,frames,checks);
+#ifdef SODIUM64_TEST_SAMPLE_CHUNKS
+    printf("SAMPLE_CHUNKS PASS cases=%u frames=%u\n",chunk_cases,chunk_frames);
+#endif
 }

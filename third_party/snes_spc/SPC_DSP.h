@@ -231,6 +231,9 @@ private:
 	void echo_30();
 	
 	void soft_reset_common();
+#ifdef SODIUM64_DSP_FULL_SAMPLE_CHUNKS
+	void run_partial( int phase, int clocks_remain );
+#endif
 };
 
 #include <assert.h>

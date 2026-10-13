@@ -98,3 +98,18 @@ StaticD3DA8<D4000. [Entry evidence](evidence/scene-state-rsp-pending-entry.json)
 
 Native repeat is required before accepting this fix. The programs remain
 experimental; complete machine state and full native cadence/fidelity are open.
+
+## Native shared-entry title roundtrip passed
+
+MEASURED runtime1b85b64b05ee47a4d5819749dfd3f953c01d55f5, worker40307
+terminal. Full capture/zero poison/restore/recapture700 architectural bytes
+plus original8KiB SP memory/hash/status pass, finalstage18. Guest/render stay
+600. Normal600/601/660/1200 compare268800 pixels and32768 pausedPCM bytes exact,
+heads/DSP regs/enabled. Coordinate8/menu/readback PASS.
+[Native title proof](evidence/scene-state-rsp-context-native-title.json).
+
+The shared body3C repairs the measured early-store failure under this boundary.
+Mode7 full context still needs the same physical gate; GPR-only Mode7's previous
+pass does not substitute for it. This is complete architectural RSP roundtrip
+within a paused transaction, not restoration of an advanced guest machine or
+a portable/persistent save file. Full-state owners remain open.

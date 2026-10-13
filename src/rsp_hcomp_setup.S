@@ -93,11 +93,22 @@ hcomp_mask_selected:
     sub t8, zero, t8
     sh t8, 512(s5)
     addi s6, s6, 1
+#if !SODIUM64_SUB_ALPHA
     addi s5, s5, 2
+#endif
     li t0, 256
     bne s6, t0, hcomp_mask_pixel
+#if SODIUM64_SUB_ALPHA
+    addi s5, s5, 2
+#else
     nop
+#endif
 hcomp_vector_constants:
+#if SODIUM64_SUB_ALPHA
+    // All arithmetic fallbacks preserve s8. Publish this shared mode once.
+    jal hcomp_sub_alpha_state
+    vnor $v21, $v31, $v31, 0
+#endif
     li t0, 1
     mtc2 t0, $v15, 0
     li t0, 0x8000
@@ -106,7 +117,9 @@ hcomp_vector_constants:
     mtc2 t0, $v16, 2
     li t0, 31
     mtc2 t0, $v19, 0
+#if !SODIUM64_SUB_ALPHA
     vnor $v21, $v31, $v31, 0
+#endif
     mtc2 gp, $v22, 0
     vor $v22, $v31, $v22, 8
     sll t0, v1, 31
@@ -327,6 +340,17 @@ bg_span_initialize:
 hcomp_screen_switch:
     b hcomp_setup_copy
     nop
+#if SODIUM64_SUB_ALPHA
+.org (0x768 - 0x3A8)
+hcomp_sub_alpha_state:
+    lbu s8, HCOMP_SUB_ALPHA_DESC
+    lbu t0, HCOMP_EFFECTIVE_TS
+    sltu t0, zero, t0
+    sub t0, zero, t0
+    and s8, s8, t0
+    jr ra
+    nop
+#endif
 .org (0x788 - 0x3A8)
 draw_mode7_entry:
     j 0xA4001F78

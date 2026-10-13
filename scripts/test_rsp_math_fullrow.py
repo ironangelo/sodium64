@@ -57,13 +57,14 @@ class FullRowVM(MathVM):
         return result
 
 
-def run_case(main, math, phase, c, case_id, backup, stage, full=False, fault=None):
+def run_case(main, math, phase, c, case_id, backup, stage, full=False, fault=None, sub_alpha=None):
     addr = parse_macros(ROOT).name
     main_code, initial, main_symbols = main
     math_base, math_code, math_symbols = math
     phase_code, phase_symbols = phase
     name, rows, y, cgwsel, ts, cgadsub, masks, wide = c
     has_sub = bool(cgwsel & 2 and ts)
+    alpha = 'hcomp_alpha_inputs' in math_symbols and sub_alpha is not False
     row_fixed = not cgwsel & 0xf2
     admitted = bool(full and wide and has_sub)
     batch = 512 if admitted else 256 if wide else 64
@@ -99,7 +100,11 @@ def run_case(main, math, phase, c, case_id, backup, stage, full=False, fault=Non
         sub_pixels[0], sub_pixels[255] = 0x7fff, (row*0x421) & 0x7fff
         tags = [TAGS[(x+row) % len(TAGS)] for x in range(256)]
         absent = [(x+row) % 5 == 0 for x in range(256)]
-        streams = (list(map(rgba, main_pixels)), list(map(rgba, sub_pixels)),
+        # Opaque black must remain present; absence must not depend on RGB.
+        sub_pixels[1] = 0
+        sub_words = [rgba(pixel) & (0xfffe if alpha and missing else 0xffff)
+                     for pixel, missing in zip(sub_pixels, absent)]
+        streams = (list(map(rgba, main_pixels)), sub_words,
                    stage(cgadsub, tags), [0x400 if a else 0xc00 for a in absent])
         for start, values in zip(starts, streams):
             halves(ram, start+row*560, values)
@@ -120,6 +125,9 @@ def run_case(main, math, phase, c, case_id, backup, stage, full=False, fault=Non
         expected_ram[backup:backup+1024] = before[addr('VRAM_TABLE'):addr('OAM')]
     regs = [0xcafe0000+i for i in range(32)]
     regs[0], regs[2], regs[3], regs[16], regs[26], regs[29] = 0, cgwsel, cgadsub, starts[0], y, queue
+    # Setup publishes this state; its actual linked producer is checked by
+    # test_rsp_sub_alpha.py. Mode7 and absent Sub retain the old Z consumer.
+    regs[30] = 0x10 if alpha and ts else 0
     vectors = seeds()
     vectors[22] = [rgba(fixed)]*8
     for i in range(23, 31):
@@ -147,10 +155,20 @@ def run_case(main, math, phase, c, case_id, backup, stage, full=False, fault=Non
         assert word & 0xffff == 1023
         put(vm.code, at, (word & 0xffff0000) | 511)
     elif fault == 'oam_overlap':
-        at = math_symbols['hcomp_fullrow_admission']+52
+        # The presence DMA is retired in R44. Mutate the live Sub source
+        # instead, so this guard still exercises an actual OAM overwrite.
+        at = math_symbols['hcomp_fullrow_admission']+(48 if alpha else 52)
         word = struct.unpack_from('>I', vm.code, at)[0]
         assert word >> 26 == 8 and word & 0xffff == 1024
-        put(vm.code, at, (word & 0xffff0000) | 1280)
+        put(vm.code, at, (word & 0xffff0000) | (2048 if alpha else 1280))
+    elif fault == 'presence_dma':
+        anchors = [pc for pc in range(math_symbols['hcomp_batch'], math_symbols['hcomp_optional_sub_done'], 4)
+                   if (struct.unpack_from('>I', vm.code, pc)[0] >> 26 == 5 and
+                       struct.unpack_from('>I', vm.code, pc)[0] >> 21 & 31 == 30)]
+        assert len(anchors) == 1
+        at = anchors[0]
+        word = struct.unpack_from('>I', vm.code, at)[0]
+        put(vm.code, at, (4 << 26) | (word & 0x03ffffff))
     steps = vm.execute(phase_symbols['hcomp_band_done'], require_phase=True)
     assert vm.ram == expected_ram, ('output or RDRAM owner changed', name)
     assert d[addr('VRAM_TABLE'):addr('OAM')] == before[addr('VRAM_TABLE'):addr('OAM')], 'VRAM byte-exact return'
@@ -176,14 +194,15 @@ def run_case(main, math, phase, c, case_id, backup, stage, full=False, fault=Non
             expected.extend(((False, starts[0]+row*560+offset, batch, scratch),
                              (False, starts[2]+row*560+offset, batch, scratch+win)))
             if has_sub:
-                expected.extend(((False, starts[1]+row*560+offset, batch, scratch+sub),
-                                 (False, starts[3]+row*560+offset, batch, scratch+present)))
+                expected.append((False, starts[1]+row*560+offset, batch, scratch+sub))
+                if not alpha:
+                    expected.append((False, starts[3]+row*560+offset, batch, scratch+present))
             expected.append((True, starts[0]+row*560+offset, batch, scratch))
     if admitted:
         expected.append((False, backup, 1024, addr('VRAM_TABLE')))
     assert [(t['write'], t['ram'], t['size'], t['sp']) for t in data] == expected, ('DMA row ABI', name)
     pixels = b''.join(vm.ram[starts[0]+row*560:starts[0]+row*560+512] for row in range(rows))
-    return dict(case=name, rows=rows, queue_slot=queue//4, batch_pixels=batch//2,
+    return dict(case=name, rows=rows, queue_slot=queue//4, batch_pixels=batch//2, sub_alpha=alpha,
                 data_dma_calls=len(data), data_dma_bytes=sum(t['size'] for t in data),
                 row_dma_calls=(len(data)-2 if admitted else len(data))//rows,
                 backup_restore_calls=2 if admitted else 0, vram_restore_before_phase=True,
@@ -197,7 +216,7 @@ def main():
     ap.add_argument('phase', type=Path)
     ap.add_argument('--baseline', type=Path, required=True, help='same MASK/TAGS Math with FULL_ROW=0')
     ap.add_argument('--backup-address', type=lambda v: int(v, 0), default=0xd2400,
-                    help='physical Q1 sideband: 0xd2400 trace, 0xc2400 ordinary')
+                    help='physical Q1 sideband: 0xd2400 trace, 0xd4400 audio trace, 0xc2400 ordinary')
     ap.add_argument('--baseline-only', action='store_true', help='fixture validation only; no candidate PASS')
     ap.add_argument('--output', type=Path)
     a = ap.parse_args()
@@ -207,7 +226,7 @@ def main():
     initial = section(a.main, '.data')
     assert mb == 0 and pb == candidate[0] == baseline[0] == 0x3a8
     assert len(mc) == len(initial) == 4096 and len(pc) == len(candidate[1]) == len(baseline[1]) == 1000
-    assert a.backup_address in (0xd2400, 0xc2400)
+    assert a.backup_address in (0xd2400, 0xd4400, 0xc2400)
     for image in (candidate, baseline):
         assert image[2]['hcomp_screen_switch'] == 0x760 and image[2]['draw_mode7_entry'] == 0x788
     if not a.baseline_only:
@@ -246,11 +265,22 @@ def main():
         if not a.baseline_only:
             new.append(run_case(main_image, candidate, phase, case, i, a.backup_address, stage, full=True))
             assert new[-1]['output_sha256'] == old[-1]['output_sha256'], ('baseline pixels differ', case[0])
+    mode7 = []
+    alpha = 'hcomp_alpha_inputs' in candidate[2]
+    if alpha and not a.baseline_only:
+        for i in (0, 3, 11):
+            result = run_case(main_image, candidate, phase, cases[i], i, a.backup_address,
+                              stage, full=True, sub_alpha=False)
+            assert result['output_sha256'] == old[i]['output_sha256'], 'Mode7 Z fallback differs'
+            mode7.append(result)
     negatives = []
     if not a.baseline_only:
-        for fault, message in (('skip_restore', 'VRAM not restored before Phase'),
+        faults = [('skip_restore', 'VRAM not restored before Phase'),
                                ('short_backup', 'backup DMA ABI'),
-                               ('oam_overlap', 'DMA overwrote DMEM owner')):
+                               ('oam_overlap', 'DMA overwrote DMEM owner')]
+        if alpha:
+            faults.append(('presence_dma', 'DMA row ABI'))
+        for fault, message in faults:
             try:
                 run_case(main_image, candidate, phase, cases[0], 0, a.backup_address, stage, full=True, fault=fault)
             except AssertionError as e:
@@ -263,13 +293,14 @@ def main():
                   pixels=sum(c[1] for c in cases)*256, hardware_mocked=True,
                   native_timing_authority=False, rdp_rasterization_authority=False, private_data=False,
                   backup_address=hex(a.backup_address), candidate_case_results=new, baseline_case_results=old,
+                  mode7_z_fallback_results=mode7, sub_alpha=alpha,
                   negative_guards=negatives, elf_sha256={str(p):hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in (a.main, a.math, a.phase, a.baseline)})
     if a.output:
         a.output.parent.mkdir(parents=True, exist_ok=True)
         a.output.write_text(json.dumps(report, indent=2)+'\n')
     print('RSP_MATH_FULLROW', 'FIXTURE_ONLY_PASS' if a.baseline_only else 'PASS',
-          json.dumps({k:v for k,v in report.items() if k not in ('candidate_case_results', 'baseline_case_results', 'elf_sha256')}))
+          json.dumps({k:v for k,v in report.items() if k not in ('candidate_case_results', 'baseline_case_results', 'mode7_z_fallback_results', 'elf_sha256')}))
 
 
 if __name__ == '__main__':

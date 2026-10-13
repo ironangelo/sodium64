@@ -49,13 +49,6 @@ hcomp_math_sources:
     lw s2, HCOMP_BAND_BASES + 4
     lw s3, HCOMP_BAND_BASES + 8
     lw s7, HCOMP_BAND_ROWS
-#if SODIUM64_SUB_ALPHA
-    lbu s8, HCOMP_SUB_ALPHA_DESC
-    lbu t0, HCOMP_EFFECTIVE_TS
-    sltu t0, zero, t0
-    sub t0, zero, t0
-    and s8, s8, t0
-#endif
 #if SODIUM64_HCOMP_WIDE_MATH
     // Uniform COLOR masks leave TILE_TABLE available after setup. Four
     // 256-byte streams fit exactly in 040..43F; VRAM_TABLE/OAM stay owned.
@@ -209,9 +202,10 @@ hcomp_batch:
     move a2, t9
 #if SODIUM64_SUB_ALPHA
     bnez s8, hcomp_optional_sub_done
-    nop
-#endif
     move a0, t4
+#else
+    move a0, t4
+#endif
 #else
     li a2, 63
     li a0, SCRN_DATA + 192
@@ -269,12 +263,7 @@ hcomp_uniform_math_mask:
     vor $v05, $v21, $v31, 0
 hcomp_math_mask_ready:
 #if SODIUM64_SUB_ALPHA
-    beqz s8, hcomp_alpha_inputs_ready
-    nop
-    vand $v03, $v01, $v15, 8
-    vmudn $v03, $v03, $v16, 10
-    vaddc $v03, $v03, $v16, 9
-hcomp_alpha_inputs_ready:
+    jal hcomp_alpha_inputs
 #endif
     vand $v00, $v00, $v04, 0
     // Zero eligibility while retiring any incoming vector carry bits.
@@ -384,10 +373,16 @@ hcomp_vector_output:
     addi s1, s1, 48
     addi s2, s2, 48
     addi s3, s3, 48
+#if !SODIUM64_SUB_ALPHA
     addi s4, s4, 2
+#endif
     addi s7, s7, -1
     bnez s7, hcomp_row
+#if SODIUM64_SUB_ALPHA
+    addi s4, s4, 2
+#else
     nop
+#endif
 hcomp_section_done:
     // shared_decode expects its upper-plane accumulator empty on entry.
     vand $v20, $v31, $v31, 0
@@ -411,6 +406,18 @@ hcomp_screen_switch:
     lw a1, OVERLAY_HCOMP_SRC
     j 0xA4001F7C
     li t9, 0x1760
+#if SODIUM64_SUB_ALPHA
+.org (0x76C - 0x3A8)
+hcomp_alpha_inputs:
+    beqz s8, hcomp_alpha_inputs_return
+    nop
+    vand $v03, $v01, $v15, 8
+    vmudn $v03, $v03, $v16, 10
+    vaddc $v03, $v03, $v16, 9
+hcomp_alpha_inputs_return:
+    jr ra
+    nop
+#endif
 .org (0x788 - 0x3A8)
 draw_mode7_entry:
     j 0xA4001F78

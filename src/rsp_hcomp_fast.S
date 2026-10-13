@@ -31,12 +31,8 @@ hcomp_fast_admit:
 hcomp_fast_operand_ready:
     sb t0, HCOMP_EFFECTIVE_TS
 #if SODIUM64_SUB_ALPHA
-    lbu t0, BG_MODE
-    andi t0, t0, 7
-    sltiu t0, t0, 7
-    sll t0, t0, 1
-    lhu t0, HCOMP_SUB_ALPHA_MODES(t0)
-    sh t0, HCOMP_SUB_ALPHA_DESC
+    // The fixed tail owns this selector; keep admission within 1740.
+    jal hcomp_sub_alpha_select
 #endif
     sw zero, HCOMP_BAND_RAW
     sw zero, HCOMP_OBJ_ADAPTIVE
@@ -309,6 +305,19 @@ hcomp_fast_resume:
 hcomp_fast_screen_switch:
     b hcomp_fast_mask
     nop
+#if SODIUM64_SUB_ALPHA
+// Only the full admission path consumes this descriptor for compact Math.
+// Resident direct composition never consumes presence or invokes Math.
+.org (0x768 - 0x3A8)
+hcomp_sub_alpha_select:
+    lbu t0, BG_MODE
+    andi t0, t0, 7
+    sltiu t0, t0, 7
+    sll t0, t0, 1
+    lhu t0, HCOMP_SUB_ALPHA_MODES(t0)
+    jr ra
+    sh t0, HCOMP_SUB_ALPHA_DESC
+#endif
 .org (0x788 - 0x3A8)
 draw_mode7_entry:
     j 0xA4001F78

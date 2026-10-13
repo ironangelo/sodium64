@@ -188,6 +188,14 @@ def run(build,c,number,fault=False):
                 rdp_commands=12+sizes+7*tiles+sum(len(p)//8 for p in vm.captures[-4:]),instructions=steps)
 
 
+def regression_cases():
+    cases=[dict(rows=r,mask=m,cad=c) for r,m in ((1,'spans'),(64,'spans'),(65,'spans'),(224,'all'),(33,'random'),(12,'none')) for c in (0x23,0xa3)]
+    cases += [dict(fixed=f) for f in ((0,16,1),(16,16,16),(17,0,0),(0,17,0),(0,0,17),(31,31,31))]
+    cases += [dict(cgws=w) for w in (0,1,0x41,0xc2,0x12,0x20,2)]
+    cases += [dict(cad=0xe3),dict(cgws=0x12,ts=1),dict(limit=8)]
+    return cases
+
+
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('build',type=Path)
     ap.add_argument('--cpu',required=True,type=Path);ap.add_argument('--baseline',required=True,type=Path)
@@ -198,10 +206,7 @@ def main():
     for subtract in (False,True):
         for b in range(17):
             for x in range(32):assert channel(x,b,subtract)==(max(x-b,0) if subtract else min(x+b,31))
-    cases=[dict(rows=r,mask=m,cad=c) for r,m in ((1,'spans'),(64,'spans'),(65,'spans'),(224,'all'),(33,'random'),(12,'none')) for c in (0x23,0xa3)]
-    cases += [dict(fixed=f) for f in ((0,16,1),(16,16,16),(17,0,0),(0,17,0),(0,0,17),(31,31,31))]
-    cases += [dict(cgws=w) for w in (0,1,0x41,0xc2,0x12,0x20,2)]
-    cases += [dict(cad=0xe3),dict(cgws=0x12,ts=1),dict(limit=8)]
+    cases=regression_cases()
     results=[run(a.build,c,i) for i,c in enumerate(cases)]
     try:run(a.build,dict(rows=3),0,fault=True)
     except AssertionError as e:assert 'GPU source not retired before Phase' in str(e),str(e)

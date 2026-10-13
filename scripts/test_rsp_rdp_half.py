@@ -64,6 +64,7 @@ def run_case(build, c, case_id):
     _, rdpcode = read_text(rdp)
     _, mathcode = read_text(math)
     _, phasecode = read_text(phase)
+    alpha = 'hcomp_alpha_inputs' in symbols(math) and c.get('sub_alpha', True)
     rdpdata = section(rdp,'.data')
     assert len(rdpcode) == len(mathcode) == len(phasecode) == 1000
     assert len(rdpdata) == 232
@@ -96,6 +97,8 @@ def run_case(build, c, case_id):
     put(d,addr('HCOMP_PROOF_RDP_CMDS')+20,zbase)
     d[addr('WOBJSEL')] = wobj
     d[addr('HCOMP_EFFECTIVE_TS')] = ts
+    if 'hcomp_alpha_inputs' in symbols(math):
+        d[addr('HCOMP_SUB_ALPHA_DESC')] = 0x10 if alpha else 0
     struct.pack_into('>H',d,addr('SUB_COLOR'),fixed)
     ram = bytearray([0xa5])*0x400000
     ram[RDP_BANK:RDP_BANK+1000] = rdpcode
@@ -113,7 +116,9 @@ def run_case(build, c, case_id):
                 c.get('eligibility','mixed') == 'mixed' and (x+row)%3)
             exists = c.get('presence','mixed') == 'all' or (
                 c.get('presence','mixed') == 'mixed' and (x+row)%5)
-            values = (rgba(a),rgba(b),0xc00 if eligible else 0x400,0xc00 if exists else 0x400)
+            if x == 1: b = 0 # Present opaque black must retain HALF.
+            values = (rgba(a),rgba(b) & (0xfffe if alpha and not exists else 0xffff),
+                      0xc00 if eligible else 0x400,0xc00 if exists else 0x400)
             for p,value in zip(starts,values): struct.pack_into('>H',ram,p+row*560+x*2,value)
             row_expected.append(reference(rgba(a)>>1,rgba(b)>>1,bool(cad&0x80),True)
                                 if eligible and exists else rgba(a))
@@ -205,16 +210,27 @@ def main():
     ap.add_argument('--output',type=Path)
     args = ap.parse_args()
     binding = cpu_binding(args.cpu)
-    assert read_text(args.build/'src/rsp_hcomp_math.elf')[1] == read_text(args.baseline/'src/rsp_hcomp_math.elf')[1]
+    alpha = 'hcomp_alpha_inputs' in symbols(args.build/'src/rsp_hcomp_math.elf')
+    def kernel(build):
+        path = build/'src/rsp_hcomp_math.elf'
+        base, code = read_text(path)
+        syms = symbols(path)
+        return code[syms['hcomp_channels_start']-(base&0xfff):syms['hcomp_vector_output']+4-(base&0xfff)]
+    assert kernel(args.build) == kernel(args.baseline), 'RGB555 arithmetic kernel changed'
+    if not alpha:
+        assert read_text(args.build/'src/rsp_hcomp_math.elf')[1] == read_text(args.baseline/'src/rsp_hcomp_math.elf')[1]
     cases = [dict(rows=r,y=8+(i%4),cad=m) for i,r in enumerate((1,31,32,33,224)) for m in (0x72,0xf2)]
     cases += [dict(cgws=w) for w in (2,0x22,0x82,0xa2)]
     cases += [dict(eligibility=e,presence=p) for e in ('all','none') for p in ('all','none')]
     cases += [dict(cgws=w) for w in (0,1,3,0x12,0x32,0x42,0xc2)]
     cases += [dict(wobj=w) for w in (0x20,0x80,0xa0)]
     cases += [dict(cad=0x32),dict(ts=0),dict(ts=2),dict(ts=0x11),dict(fixed=2),dict(limit=8)]
+    if alpha:
+        cases += [dict(sub_alpha=False,cad=m) for m in (0x72,0xf2)]
     result = [run_case(args.build,c,i) for i,c in enumerate(cases)]
     report = dict(passed=True,linked_cases=len(result),cpu_binding=binding,
-                  pixels=sum(r.get('pixels',0) for r in result),original_math_byte_exact=True,
+                  pixels=sum(r.get('pixels',0) for r in result),original_math_byte_exact=not alpha,
+                  packed_kernel_byte_exact=True,sub_alpha=alpha,
                   native_timing_authority=False,commercial_data=False,results=result,
                   candidate_sha256=hashlib.sha256(args.cpu.read_bytes()).hexdigest())
     if args.output: args.output.write_text(json.dumps(report,indent=2)+'\n')

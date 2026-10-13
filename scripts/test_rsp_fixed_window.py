@@ -45,9 +45,9 @@ def binding(cpu):
     return dict(chain='rdp_half,fixed_window,original_math',uncached=True)
 
 
-def run(build, c, number, fault=None):
+def run(build, c, number, fault=None, arena=0xA00D2000):
     macros = parse_macros(ROOT)
-    macros.macros['HCOMP_CGRAM_ARENA'] = '0xA00D2000' # Native trace layout.
+    macros.macros['HCOMP_CGRAM_ARENA'] = hex(arena)
     addr = macros.name
     _, maincode = read_text(build/'src/rsp_main.elf')
     _, fixedcode = read_text(build/'src/rsp_hcomp_fixed_window.elf')
@@ -145,6 +145,14 @@ def run(build, c, number, fault=None):
     return dict(admitted=True,policy=c,pixels=rows*256,data_dma_calls=len(data),instructions=steps)
 
 
+def regression_cases():
+    cases = [dict(rows=128,mask='all',cad=c,fixed=f) for c in (0x23,0xa3) for f in (0,0x294a,0xffff)]
+    cases += [dict(rows=r,mask=m,cgws=w) for r,m,w in ((1,'none',0x30),(33,'spans',0x10),(224,'random',0x20),(3,'spans',0x12),(2,'all',2))]
+    cases += [dict(cgws=w) for w in (0,1,0x41,0x82,0xc2)]
+    cases += [dict(cad=0xe3),dict(cgws=0x12,ts=1),dict(limit=8)]
+    return cases
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('build',type=Path);ap.add_argument('--cpu',required=True,type=Path)
@@ -153,10 +161,7 @@ def main():
     chain = binding(a.cpu)
     for name in ('rsp_main','rsp_hcomp','rsp_hcomp_math','rsp_hcomp_rdp','rsp_hcomp_setup','rsp_hcomp_tlut'):
         assert read_text(a.build/'src'/f'{name}.elf')[1] == read_text(a.baseline/'src'/f'{name}.elf')[1], (name,'existing bank changed')
-    cases = [dict(rows=128,mask='all',cad=c,fixed=f) for c in (0x23,0xa3) for f in (0,0x294a,0xffff)]
-    cases += [dict(rows=r,mask=m,cgws=w) for r,m,w in ((1,'none',0x30),(33,'spans',0x10),(224,'random',0x20),(3,'spans',0x12),(2,'all',2))]
-    cases += [dict(cgws=w) for w in (0,1,0x41,0x82,0xc2)]
-    cases += [dict(cad=0xe3),dict(cgws=0x12,ts=1),dict(limit=8)]
+    cases = regression_cases()
     results = [run(a.build,c,i) for i,c in enumerate(cases)]
     try:run(a.build,dict(rows=3,mask='spans'),0,fault='restoration')
     except AssertionError as e:assert 'restoration failed before overlay' in str(e),str(e)

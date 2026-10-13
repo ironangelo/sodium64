@@ -143,3 +143,25 @@ No duplicated full CI or performance claim. Freeze repaired source/artifact,
 then private r45-dkc-scissor reruns the same10-image/four-PCM gates against R44
 before quiet20s and the predeclared first240 comparison. First discrepant9e1194f
 artifact/report and original no-performance result stay preserved.
+
+## Repaired native DKC: material value measured
+
+Frozen1fcc940 passes all10 images672000 pixels and four paused8192-byte PCM
+buffers32768 bytes,0 differences; heads/registers/enabled and all guest input
+acknowledgements match. Full checksum/settings/trace and coordinate8/menu
+restoration/readback PASS. Worker13682 terminal. Original27-pixel/no-performance
+trial remains preserved, superseded for this exact route by the repaired run.
+
+Predeclared same first240 complete guest intervals:13.754889
+->28.710314 completions/s (+108.728065percent), explicitwait
+53.346966->15.343220ms. Separately, full quiet trace787
+intervals39.197267/s and wait6.787748ms; baseline wall-time trace had276 intervals,
+so this longer guest-progress segment must not replace the matched comparison.
+[Curated native receipt](evidence/backdrop45-dkc-native.json). No presentation
+60Hz, full-title/complete sound or corpus qualification follows.
+
+Native material value now justifies broader ALttP image/PCM/cadence and Mode7
+controls, then relevant candidate/default CI. The added helper loads on scalar
+policies remain a possible regression; repair any permanent loss before
+promotion. Full original replay remains available; state serializer still
+pending. Master/R44/R43 untouched and BACKDROP_ROWS remains default0.

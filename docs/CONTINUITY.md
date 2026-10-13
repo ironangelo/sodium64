@@ -1,3 +1,20 @@
+# 2026-10-13 - R52 complete-DSP BRR native A/B running
+
+RESUME HERE: yielded native exec89966 live, flag0 menu/install/readback passed.
+Runtime9f00e9bf3861a0dddd65e752245fa5f23fad7c88, preflightcontinuity52ec36a,
+frozen private full-dsp-brr-r52-archive/native_full_dsp_brr_r52.py and plan.
+WorkerSHAa44e5c1bc6ef97fe4695d627addeee0ad91ac484d429852acecd1c6ab13cd4a3.
+Poll89966 and full-dsp-brr-r52-native/report.json; root soleCOM3. Never restart
+after observation timeout or open a competing transport. Same-source group0/1,
+signal1/scratch1 both, no counter/sampler; original three2048frame cases three
+times at ALttPpaused600, hostchecksums/nonzero/64KiB backup-readback-restore,
+full live image/PCM/state and gueststep660, finallycoordinate8/menu/install/
+readback. All native outcomes still pending. Terminal checkpoint before any
+next technical batch. Full native60/DSP/DAC/SNES/corpus/integration remain open.
+Earlier history bytes preserved below.
+
+---
+
 # 2026-10-13 - R52 complete-DSP BRR group implemented; native A/B next
 
 RESUME HERE: runtime9f00e9bf3861a0dddd65e752245fa5f23fad7c88, experiment/full-dsp-brr-r52,

@@ -87,3 +87,6 @@ are unchanged by these region checks. The source of the exact bytes is still
 unknown. Worker terminal, coordinate8/menu/readback restored. The pause-only
 state-region ordinal0..50 exports a whitelisted64KiB slice (last40960 bytes)
 privately for diagnosis; it accepts no arbitrary address or state import.
+SCENE_SLOT rejects BACKDROP_ROWS1 until its additional Main row cursor and
+candidate owners are included and separately qualified. The current29-owner
+slot is explicitly BACKDROP_ROWS0; this limit does not change renderer defaults.

@@ -17,6 +17,9 @@ ifneq ($(SCENE_STATE)$(SCENE_RSP_CONTEXT)$(NATIVE_DIAG_TRACE)$(AUDIO_OBSERVER),1
 $(error SCENE_SLOT requires SCENE_STATE=1 SCENE_RSP_CONTEXT=1 NATIVE_DIAG_TRACE=1 AUDIO_OBSERVER=1)
 endif
 N64_CFLAGS_REMOTE += -DSODIUM64_SCENE_SLOT=1 -Os
+ifeq ($(BACKDROP_ROWS),1)
+$(error SCENE_SLOT currently covers BACKDROP_ROWS=0; Main row cursor/candidate owners require a separate continuation gate)
+endif
 endif
 SCENE_RSP_CONTEXT ?= 0
 ifeq ($(SCENE_RSP_CONTEXT),1)

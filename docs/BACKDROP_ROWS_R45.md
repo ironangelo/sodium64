@@ -227,3 +227,18 @@ two real faults (screen mask reload and wrong blank return) reject. Existing
 backup bindings/three faults pass. [Preflight](evidence/backdrop45-scalar-preflight.json).
 No native or complete non-regression claim yet. Freeze a distinct scalar
 archive/plan, compare ALttP story first, then rain and retained DKC/Mode7.
+
+## Direct scalar native story control
+
+Frozen d96796a: three images201600 pixels and8192 pausedPCM/heads/registers/
+enabled remain exact. Full checksum/settings and coordinate8/menu/readback
+PASS; worker70919 terminal. Story55.942863/s vs previous
+55.874278 and R4456.089884/s (-0.262117percent vsR44).
+The small movement does not prove its cause or complete non-regression.
+[Story receipt](evidence/backdrop45-scalar-story.json). Rain is the next
+discriminator; do not spend broad suites repeatedly on these small deltas.
+
+After the source change, default-off CPU .text/.data are still byte-exact to
+frozen R44. Twelve of fourteen opt-in RSP text banks match the earlier scissor
+artifact; only Main/phase changed. Current1000/4096 slots and fixed public
+context/return entries remain guarded. No measured DKC recheck or Mode7 yet.

@@ -283,3 +283,20 @@ then compare the same240 absolute guest interval endpoints across on/off.
 Relative frame ordinals and initial partial interval exclusion are retained.
 Record both full quiet traces separately; complete 60Hz/audio/title/Mode7
 qualification remains open. No save-state serializer is introduced here.
+
+## Native R44 metadata control; absolute paired extent declared
+
+Flag0 at313642a matches all ten original R44 images672000 pixels and four
+paused PCM buffers32768 bytes, heads/registers/enabled and input acknowledgements.
+Full checksum/settings and coordinate8/menu/readback PASS; worker68661 terminal.
+Capture ACK accepts guest/render4321, relative ordinals map to endpoints
+4323..4598. Full276 intervals13.770917/s, wait53.302890ms, retained separately.
+[Receipt](evidence/r44-dkc-anchor.json).
+
+Before candidate run, declare the paired240 absolute interval endpoints
+4330..4569, skipping the same initial guest extent in both traces. Require
+each endpoint present exactly once in both complete captures; no substitute
+window if the declared extent is missing. R45 must match the same ten images/
+four PCM first, then measure quietly and recover coordinate8/menu/readback.
+Current313642a CI: CGRAM38354693122 SUCCESS, Build38354690610 and
+Ares38354695628 in progress; these do not substitute for native/fidelity gates.

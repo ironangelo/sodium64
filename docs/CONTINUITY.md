@@ -1,3 +1,28 @@
+# 2026-10-13 - Full RSP context native transaction frozen; title then Mode7
+
+IMPLEMENTED runtime 74c66f2a1f0c84f4da01a953eefd48666afa7a79, experiment/scene-state-s1.
+scene-context-plan/archive frozen, CONTEXT1/REBINDoFF/BACKDROP0. New
+state-rsp-roundtrip canonical command backs up8KiBSP/checks/earlystores,
+captures700bytes, deliberatelyzeroes/restores/recaptureszero, restoresoriginal
+fullGPR/vector/flags/ACC and recaptures700exact, restoresSP8KiB/hash/status/
+restart3C. NoDP/AI/SD/ROM/guestwork. Failedcommitmenu-only. No machine state.
+Parser254/fuzz1000, actualC/RSPtransaction175 (92transfer/74corrupt/5wait),
+actual381context/65536MID/O64boundary16/43owners/fullcapacity PASS.26 oldRSP
+extents exactS1, staticend0xd3d38<D4000. No liveCOM3 before dispatch.
+
+RESUME HERE: work/native_scene_context_title.py --candidate --name
+scene-context-title --control privateDate13/scene-s1-reference/report.json.
+Normal600/canonicalpark/fullroundtrip/readback and601/660/1200 image/PCM/
+heads/regs/enabled; finallycoordinate8/menu/readback. Ifpass then same Mode7
+worker native_scene_context_mode7.py --candidate --name scene-context-mode7
+--control privateDate13/scene-s2-mode7-reference/report.json (4500/4501/4560/
+5100). RootsoleCOM3; nevercompetewithliveworker. Failureblocksfullstate until
+contextunderstood. FullresetS2REJECTED; GPR-onlyMode7passes. S3 envelope1209
+only. FullCPU/guestmem/JIT/mapper/input/hostclock slot/restore/crossbuild/full60/
+audio/corpus/master remainopen. Earlier history untouched below.
+
+---
+
 # 2026-10-13 - GPR-only Mode7 passes; exact RSP context programs assembled
 
 MEASURED native0d2c9fb worker77698 terminal/coordinate8/menu/readback PASS.

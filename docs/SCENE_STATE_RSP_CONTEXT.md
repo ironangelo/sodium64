@@ -35,3 +35,29 @@ pending resident jump; compare next1/60/600 image/PCM. Prevalidate before any
 mutation and retain menu-only recovery after incomplete commit. Keep recorder,
 transport, ordinary saves/SD and code pointers protected. Full CPU/guest memory,
 JIT/mapper/input/host-clock owners and complete state slot remain separate gates.
+
+## Bounded native transaction implemented
+
+SCENE_RSP_CONTEXT1 now links the two programs and production transaction.
+`state-rsp-roundtrip` requires healthy canonical pause/no recorder. Full8KiB
+SP memory is backed up/read back/rechecked before the first mutation. Early
+capture sentinels and matched HALT t0=2 check pipeline admission. Capture700
+bytes, read back, restore deliberately zero register state and recapture all
+zeros, then restore original registers and recapture700 bytes exact. Finally
+validate/restore/read back original SP memory, checksum and status/restart3C.
+All transfers use exclusive volatile TX scratch; no SD/guest ROM/save or
+DP/AI access. Incomplete recovery locks gameplay to status/state-check/menu.
+Success stays paused without guest/render progress; no full machine restore.
+
+Production parser254/fuzz1000; C plus actual RSP transaction175 cases including
+92 transfer-error positions,74 read corruptions and five waits; linked O64
+bridge16; full43-owner/capacity bounds pass. Original26 renderer extents exactS1;
+staticD3D38<D4000. Arena and capacities were not loosened. Existing continuous
+102 bridge/recorder checks passed before the final early-store sentinel addition;
+the final O64 boundary proof is fresh. No broad CI.
+[Native preflight](evidence/scene-state-rsp-context-preflight.json).
+
+Next native title600 roundtrip, then normal601/660/1200 image/PCM/head/regs/
+enabled against the same frozen control. If successful, run Mode7 race4500
+roundtrip and4501/4560/5100 using the existing exact reference. Each finally
+restores coordinate8/menu/install/readback. Private register bytes stay local.

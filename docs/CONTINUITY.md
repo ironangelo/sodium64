@@ -1,3 +1,26 @@
+# 2026-10-13 - DKC section diagnosis complete; R45 bounded backdrop rows hypothesis
+
+R44 observer reproduces10 frames672000 pixels/four PCM32768 bytes exact.
+Retired4320 has97 sections/96 nonempty/224 rows:84 single-row.85/95 adjacent
+changes onlyMAIN_COLOR,2alsoBGHOFS,1onlyBGHOFS,7samepayload. No speedcapture;
+rawfields/epochs private.142 guard/12boot+5TV/41owners/4backup+3mutants PASS.
+Worker31745 terminal; coordinate8/menu restoration/readback PASS. SoleCOM3,
+no worker. R44 nativeDKC13.771777 vs13.778162, wait53.298928ms, no materialgain.
+
+RESUME HERE: next isolated experiment/backdrop-rows-r45 from retained R44.
+HYPOTHESIS only, no new runtimecode yet: per-row Main backdrop plus guarded
+CGRAM0 epoch coalescing for Mode0/1 fixed/unclipped/uniform/no-backdrop-math.
+Preserve all other typed events, palette/brightness/geometry/window/OAM barriers,
+full row colors and source/scratch/ABI retirement.64-byte records alone cannot
+prove all CGRAM commits are0; actual producer guard must. Default0. Prove CPU
+row/event and RSP packet/depth/restore negatives locally then short exact DKC
+native A/B; CI only after material value, ALttP/Mode7 regressions before promotion.
+Save-state bounded proof remains positive/pending, no serializer. Full60/audio/
+corpus/integration open; master/R43/R44 preserved. [Hypothesis](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R44 DKC pixels/PCM preserved; speed unchanged; section diagnostic next
 
 Frozen7a83d49 vs4382ae80:10 frames672000 pixels/four paused PCM32768 bytes exact,

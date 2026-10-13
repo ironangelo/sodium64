@@ -1,0 +1,38 @@
+{
+  "frame": 4320,
+  "section_count": 97,
+  "nonempty_sections": 96,
+  "row_count": 224,
+  "row_height_histogram": {
+    "1": 84,
+    "2": 7,
+    "3": 3,
+    "4": 1,
+    "113": 1
+  },
+  "adjacent_changed_fields": {
+    "MAIN_COLOR": 85,
+    "BGHOFS,MAIN_COLOR": 2,
+    "": 7,
+    "BGHOFS": 1
+  },
+  "fixed_operand_groups": {
+    "variable_or_empty": 1,
+    "constant": 96
+  },
+  "limitation": "64-byte section records do not independently establish CGRAM event/brightness equality",
+  "status": "MEASURED read-only diagnosis",
+  "physical_console": true,
+  "images": 10,
+  "pixels": 672000,
+  "image_differences": 0,
+  "paused_PCM_buffers": 4,
+  "paused_PCM_bytes": 32768,
+  "paused_PCM_differences": 0,
+  "heads_registers_enabled_match": true,
+  "renderer_banks_byte_exact": 13,
+  "presentation_FPS_or_fidelity_qualified": false,
+  "performance_capture": "NOT_RUN",
+  "menu_coordinate8_restoration_readback": true,
+  "raw_game_records_published": false
+}

@@ -75,3 +75,23 @@ Frozen artifact/plan `subalpha44-sections-plan` and private native run
 `r44-dkc-sections` are recorded before dispatch. This answers whether geometry,
 palette/window or another real epoch blocks larger reusable rendering work.
 Save-state trial remains bounded and useful, pending this material decision.
+
+## Paused section diagnosis complete
+
+Diagnostic10 images/four PCM buffers match frozen R44 and R43; all142 observer
+guards and linked boot/arena/source controls passed. Actual retired4320 read
+has97 sections,96 nonempty over224 rows.85/95 adjacent changes affect only
+Main backdrop color;2 also BG scroll,1 scroll only,7 identical payload state.
+84 visible sections have one row. This disproves the guess that fixed Sub
+color alone causes the sections. Color0 palette commits/backdrop state are
+the next mechanism to prove;64-byte snapshots cannot independently exclude
+other palette commits or brightness changes. No performance capture in this
+diagnostic. Native worker31745 terminal; coordinate8/menu restoration/readback
+pass. [Curated diagnosis](evidence/r44-dkc-sections.json).
+
+Next [R45 bounded backdrop rows](BACKDROP_ROWS_R45.md): guard indexed Mode0/1,
+fixed/unclipped/uniform policy with backdrop math disabled; preserve every
+nonzero CGRAM/geometry/window/OAM/brightness barrier and all row colors. Test
+actual typed-event/row/scissor/source/depth/restore chain before native. Keep
+default0/isolation; preserve R44 measured ALttP gain and controls. Save-state
+follow-up stays useful after this material renderer experiment.

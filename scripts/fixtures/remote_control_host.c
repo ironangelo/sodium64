@@ -53,6 +53,22 @@ static uint32_t scene_context_result=1,scene_context_calls;
 volatile uint32_t scene_rsp_context_stage;
 volatile uint32_t scene_rsp_context_mismatch_word;
 uint32_t remote_host_scene_rsp_context(void) {scene_context_calls++;return scene_context_result;}
+#ifdef SODIUM64_SCENE_SLOT
+static unsigned slot_calls,slot_result=1;
+static uint32_t slot_guest,slot_render,slot_buttons,slot_remaining;
+uint32_t remote_host_scene_slot(int load,uint32_t *bytes,uint32_t *stage) {
+    slot_calls++;
+    if(slot_result!=1)return slot_result;
+    if(load==1) {
+        remote_guest_frames=slot_guest;remote_render_frames=slot_render;
+        remote_buttons=slot_buttons;remote_button_frames=slot_remaining;*stage=13;
+    } else if(!load) {
+        slot_guest=remote_guest_frames;slot_render=remote_render_frames;
+        slot_buttons=remote_buttons;slot_remaining=remote_button_frames;*bytes=1024;*stage=4;
+    }
+    return 1;
+}
+#endif
 #endif
 #ifdef SODIUM64_SCENE_RSP_REBIND
 static uint32_t scene_rsp_result=1,scene_rsp_calls;
@@ -480,7 +496,7 @@ int main(void){
     unsigned old_menu_calls=menu_calls;
     expect("s64 12345678 menu","transition_ready=menu");check(menu_calls==old_menu_calls+1&&remote_paused);
 #endif
-#ifdef SODIUM64_SCENE_RSP_CONTEXT
+#if defined(SODIUM64_SCENE_RSP_CONTEXT) && !defined(SODIUM64_SCENE_SLOT)
     remote_scene_error=0;remote_scene_canonical=0;remote_paused=1;
     expect("s64 12345678 state-rsp-roundtrip","ERR not_canonical");check(!scene_context_calls);
     remote_scene_canonical=1;
@@ -508,6 +524,27 @@ int main(void){
     expect("s64 12345678 state-check","scene_canonical=1");
     unsigned before_context_menu=menu_calls;
     expect("s64 12345678 menu","transition_ready=menu");check(menu_calls==before_context_menu+1&&remote_paused);
+#endif
+#ifdef SODIUM64_SCENE_SLOT
+    remote_scene_error=0;remote_scene_canonical=0;remote_paused=1;
+    expect("s64 12345678 state-save","ERR not_canonical");check(!slot_calls);
+    remote_scene_canonical=1;
+    expect("s64 12345678 state-load","ERR scene_slot_empty");check(!slot_calls);
+    expect("s64 12345678 state-save arg","ERR argument_count");check(!slot_calls);
+    native_diag_phase=1;expect("s64 12345678 state-save","ERR capture_busy");check(!slot_calls);
+    native_diag_phase=0;remote_paused=0;
+    expect("s64 12345678 state-save","ERR not_paused");check(!slot_calls);
+    remote_paused=1;remote_guest_frames=remote_render_frames=20;
+    remote_buttons=0x8000;remote_button_frames=7;
+    expect("s64 12345678 state-save","OK state_saved=1");check(slot_calls==1&&remote_paused);
+    remote_guest_frames=remote_render_frames=80;remote_buttons=remote_button_frames=0;
+    expect("s64 12345678 state-load","OK state_loaded=1");
+    check(remote_guest_frames==20&&remote_render_frames==20&&remote_buttons==0x8000&&remote_button_frames==7&&remote_paused);
+    expect("s64 12345678 state-fingerprint","OK machine_fingerprint=1");
+    scene_context_result=2;
+    expect("s64 12345678 state-rsp-roundtrip","ERR scene_context_restore_failed");
+    expect("s64 12345678 state-save","ERR scene_rsp_context_needs_menu");
+    expect("s64 12345678 menu","transition_ready=menu");
 #endif
     printf("REMOTE_CONTROL PASS cases=%u fuzz=1000 production_parser=1 hardware_mocked=1\n",cases);
     return 0;

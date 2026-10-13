@@ -1,0 +1,21 @@
+{
+  "status": "IMPLEMENTED native machine continuation pending",
+  "RSP_store_load_cases": 269,
+  "envelope_commit_cases": 1908,
+  "linked_TLB_cache_cases": 64,
+  "linked_O64_boundary_cases": 16,
+  "production_parser_cases": 234,
+  "parser_fuzz_packets": 1000,
+  "static_guest_owners": 21,
+  "static_guest_bytes": 559691,
+  "serialized_owners": 29,
+  "serialized_payload_bytes": 3887195,
+  "serialized_envelope_bytes": 3887607,
+  "concurrent_arena_owners": 43,
+  "event_capacity": 24576,
+  "ROM_cache_slots": 194,
+  "SCENE_SLOT0_CPU_text_data_allocated_extents_exact_measured_baseline": true,
+  "hardware_timing_mocked": true,
+  "native_machine_restore": false,
+  "cadence_full_audio_fidelity_corpus_and_master_open": true
+}

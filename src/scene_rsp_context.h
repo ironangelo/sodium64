@@ -30,5 +30,19 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
     const uint32_t *restore,unsigned restore_words,
     scene_rsp_read read,scene_rsp_write write,scene_rsp_transfer transfer,
     scene_rsp_wait wait);
+/* Private same-build slot: 8192 SP bytes followed by a 1024-byte padded
+ * architectural context. Offset is 512-aligned, outside live USB packets.
+ * Store returns with the original registers/memory; load validates both
+ * complete hashes before its first SP mutation. Return meanings as above. */
+typedef struct { uint32_t memory_hash,context_hash,status; } scene_rsp_saved;
+uint32_t scene_rsp_context_store(uint32_t scratch[128],uint32_t offset,
+    scene_rsp_saved *saved,const uint32_t *capture,unsigned capture_words,
+    scene_rsp_read read,scene_rsp_write write,scene_rsp_transfer transfer,
+    scene_rsp_wait wait);
+uint32_t scene_rsp_context_load(uint32_t scratch[128],uint32_t offset,
+    const scene_rsp_saved *saved,const uint32_t *capture,unsigned capture_words,
+    const uint32_t *restore,unsigned restore_words,
+    scene_rsp_read read,scene_rsp_write write,scene_rsp_transfer transfer,
+    scene_rsp_wait wait);
 #endif
 #endif

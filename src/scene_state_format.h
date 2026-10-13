@@ -13,6 +13,8 @@ typedef struct {uint32_t id,bytes;} scene_state_owner;
 typedef struct {uint32_t guest,render;} scene_state_progress;
 typedef int (*scene_state_read)(uint32_t offset,unsigned bytes,unsigned char *destination);
 uint32_t scene_state_crc32(const unsigned char *data,unsigned bytes);
+/* Streaming internal CRC, initialize to UINT32_MAX and complement at end. */
+uint32_t scene_state_crc32_update(uint32_t value,const unsigned char *data,unsigned bytes);
 /* Descriptors: BE id/bytes/relative payload offset, in whitelist order.
  * CRC covers descriptor table and payload. Header CRC zeroes its own word48.
  * File has exact length64+12*owners+payload; words52..60 are reserved zero. */

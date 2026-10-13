@@ -248,8 +248,20 @@ check_lorom:
     beqz t0, lorom_ret
 
 map_lorom:
-    // Set initial values for building the memory map
+    // Keep the original single instruction in check_lorom's delay slot.
     li t0, 0x000000 // Current address
+#ifdef SODIUM64_SCENE_SLOT
+    sw t8, scene_rom_cart
+    lbu t0, 0xA0007FD7(t8)
+    addiu t0, t0, 10
+    li t1, 1
+    sllv t1, t1, t0
+    sw t1, scene_rom_bytes
+    lbu t0, 0xA0007FD6(t8)
+    sw t0, scene_rom_type
+    li t0, 0 // Metadata does not change the mapper's initial address.
+#endif
+    // Set initial values for building the memory map
     li t1, 0xFFFFFF // Maximum address
     li t2, 0x2000 // Block size (8KB)
 
@@ -396,6 +408,17 @@ check_hirom:
     li t2, 0x2000 // Block size (8KB)
 
     // Set the ROM mask using the header size
+#ifdef SODIUM64_SCENE_SLOT
+    sw t8, scene_rom_cart
+    lbu t0, 0xA000FFD7(t8)
+    addiu t0, t0, 10
+    li t3, 1
+    sllv t3, t3, t0
+    sw t3, scene_rom_bytes
+    lbu t3, 0xA000FFD6(t8)
+    sw t3, scene_rom_type
+    li t0, 0 // Restore current mapper address before building the table.
+#endif
     lw t5, 0xA000FFD4(t8)
     li t7, 0x3FFFFF
     li t3, 0x400

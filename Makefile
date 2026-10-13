@@ -11,6 +11,13 @@ NATIVE_DIAG ?= 0
 NATIVE_DIAG_TRACE ?= 0
 REMOTE ?= 0
 SCENE_STATE ?= 0
+SCENE_SLOT ?= 0
+ifeq ($(SCENE_SLOT),1)
+ifneq ($(SCENE_STATE)$(SCENE_RSP_CONTEXT)$(NATIVE_DIAG_TRACE)$(AUDIO_OBSERVER),1111)
+$(error SCENE_SLOT requires SCENE_STATE=1 SCENE_RSP_CONTEXT=1 NATIVE_DIAG_TRACE=1 AUDIO_OBSERVER=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_SCENE_SLOT=1 -Os
+endif
 SCENE_RSP_CONTEXT ?= 0
 ifeq ($(SCENE_RSP_CONTEXT),1)
 ifneq ($(SCENE_STATE),1)
@@ -256,6 +263,9 @@ endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 HFILES += $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.inc))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
+ifeq ($(SCENE_SLOT),1)
+OFILES += $(BUILD_DIR)/src/scene_slot.o $(BUILD_DIR)/src/scene_state_format.o
+endif
 ifeq ($(SCENE_RSP_CONTEXT),1)
 OFILES += $(BUILD_DIR)/src/scene_rsp_context.o
 endif
@@ -314,6 +324,10 @@ endif
 N64_ASFLAGS += $(N64_ASFLAGS_REMOTE)
 ifeq ($(SCENE_STATE),1)
 N64_ASFLAGS += -DSODIUM64_SCENE_STATE=1
+endif
+ifeq ($(SCENE_SLOT),1)
+N64_ASFLAGS += -DSODIUM64_SCENE_SLOT=1
+N64_RSPASFLAGS += -DSODIUM64_SCENE_SLOT=1
 endif
 ifeq ($(FULL_DSP_PROBE),1)
 N64_ASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
@@ -426,7 +440,9 @@ ifeq ($(SIGNAL_PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_SIGNAL_PROFILE=1
 N64_RSPASFLAGS += -DSODIUM64_SIGNAL_PROFILE=1
 endif
-ifeq ($(FULL_DSP_PROBE),1)
+ifeq ($(SCENE_SLOT),1)
+N64_LDFLAGS += -Tsrc/scene_slot_memory.ld
+else ifeq ($(FULL_DSP_PROBE),1)
 N64_LDFLAGS += -Tsrc/full_dsp_probe_memory.ld
 else ifneq ($(filter 1,$(AUDIO_OBSERVER) $(BRR_OBSERVER) $(MIX_OBSERVER)),)
 N64_LDFLAGS += -Tsrc/brr_observer_memory.ld
@@ -533,7 +549,11 @@ $(BUILD_DIR)/src/scene_rsp_probe.o: src/scene_rsp_probe.c src/scene_rsp_probe.h
 
 $(BUILD_DIR)/src/scene_rsp_context.o: src/scene_rsp_context.c src/scene_rsp_context.h src/scene_rsp_probe.h
 	@mkdir -p $(dir $@)
-	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
+	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_CFLAGS_REMOTE) -o $@ $<
+
+$(BUILD_DIR)/src/scene_slot.o $(BUILD_DIR)/src/scene_state_format.o: $(BUILD_DIR)/%.o: %.c src/scene_slot.h src/scene_state_format.h
+	@mkdir -p $(dir $@)
+	$(N64_CC) -c -Os -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
 
 $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o: third_party/snes_spc/SPC_DSP.cpp $(wildcard third_party/snes_spc/*.h)
 	@mkdir -p $(dir $@)

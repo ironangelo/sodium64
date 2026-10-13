@@ -10,6 +10,9 @@ static uint32_t crc(uint32_t value,const unsigned char *data,unsigned bytes) {
     }
     return value;
 }
+uint32_t scene_state_crc32_update(uint32_t value,const unsigned char *data,unsigned bytes) {
+    return crc(value,data,bytes);
+}
 uint32_t scene_state_crc32(const unsigned char *data,unsigned bytes) {
     return ~crc(0xffffffffu,data,bytes);
 }

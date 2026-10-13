@@ -40,6 +40,7 @@ class CPU:
         self.hi = 0x13579BDF2468ACE0
         self.lo = 0xFEDCBA9876543210
         self.cp_writes = []
+        self.tlb = [(0,0,0,0) for _ in range(32)]
         self.memory_writes = []
         self.cache_ops = []
         self.hooks = {}
@@ -182,6 +183,10 @@ class CPU:
                 elif rs == 4:
                     self.cp[rd] = r[rt] & MASK32
                     self.cp_writes.append((rd, r[rt] & MASK32))
+                elif word == 0x42000001: # TLBR, timing/hazards not modeled.
+                    for index,value in zip((10,2,3,5),self.tlb[self.cp[0]&31]):self.cp[index]=value
+                elif word == 0x42000002: # Indexed TLBWI; no random replacement.
+                    self.tlb[self.cp[0]&31]=tuple(self.cp.get(index,0) for index in (10,2,3,5))
                 else: raise AssertionError(('unhandled COP0', hex(pc), hex(word)))
             elif op in (24, 25): r[rt] = (r[rs] + offset) & MASK64
             elif op in (32, 33, 35, 36, 37, 39, 40, 41, 43, 55, 63):

@@ -5,6 +5,13 @@
  */
 #include "remote_control.h"
 #include "../tools/sc64-diagnostic-save/recorder_runtime_abi.h"
+#ifdef SODIUM64_SCENE_SLOT
+#include "scene_slot.h"
+volatile uint32_t scene_rom_cart,scene_rom_bytes,scene_rom_type;
+static unsigned scene_slot_needs_menu;
+static uint32_t scene_slot_bytes,scene_slot_stage;
+static uint32_t slot_fingerprints[29];
+#endif
 #ifdef SODIUM64_SCENE_RSP_CONTEXT
 #include "scene_rsp_context.h"
 static unsigned scene_rsp_context_needs_menu;
@@ -47,7 +54,11 @@ static int present;
 static unsigned char request_buffer[REMOTE_REQUEST_MAX] __attribute__((aligned(16)));
 static unsigned char transfer_buffer[512] __attribute__((aligned(16)));
 #endif
+#ifdef SODIUM64_SCENE_SLOT
+static char reply[2048];
+#else
 static char reply[1536];
+#endif
 static unsigned reply_length;
 enum { USB_CART = 0x13800000, RX_CART = 0x1ffe0000, FRAME_BYTES = 280*240*2,
        CMD_TIMEOUT = REMOTE_COUNT_HZ/10, DMA_TIMEOUT = REMOTE_COUNT_HZ/5,
@@ -309,6 +320,189 @@ static int scene_rsp_wait_halted(void) {
            wait_io(0xa4040018,1,0,REMOTE_COUNT_HZ/5u);
 }
 #endif
+#endif
+#if defined(SODIUM64_SCENE_SLOT) && !defined(REMOTE_CONTROL_HOST)
+extern unsigned char remote_bridge_saved[272];
+extern uint32_t remote_saved_status;
+extern volatile uint32_t native_diag_state[80];
+extern volatile uint32_t native_diag_guest_sram_exp;
+extern volatile uint32_t native_diag_notice_count,native_diag_ok_deadline,native_diag_notice_active;
+extern volatile uint32_t dsp_audio_blocks,dsp_audio_idle,dsp_audio_full,dsp_audio_gap_max,dsp_audio_last_count;
+extern unsigned char frame_count,layer_set,precision_set,skipped_set,audio_set,apu_clock,counter_set,underclk_set;
+extern void scene_slot_cache_sync(void),scene_slot_tlb_save(uint32_t *),scene_slot_tlb_load(uint32_t *);
+#define SLOT_OWNER(name) extern unsigned char scene_owner_##name##_begin[],scene_owner_##name##_end[];
+SLOT_OWNER(apu_memory) SLOT_OWNER(apu_regs) SLOT_OWNER(apu_jit) SLOT_OWNER(cpu_regs)
+SLOT_OWNER(dma) SLOT_OWNER(dsp_pcm) SLOT_OWNER(dsp_regs) SLOT_OWNER(dsp_pitches)
+SLOT_OWNER(dsp_noise) SLOT_OWNER(dsp_voices) SLOT_OWNER(input) SLOT_OWNER(presentation)
+SLOT_OWNER(sram_guest8) SLOT_OWNER(wram) SLOT_OWNER(mapper) SLOT_OWNER(memory_io)
+SLOT_OWNER(cpu_arithmetic_io) SLOT_OWNER(ppu) SLOT_OWNER(ppu_cursors) SLOT_OWNER(ppu_epochs) SLOT_OWNER(dsp1)
+#undef SLOT_OWNER
+enum { SLOT_BASE=0x40000, SLOT_COUNT=29 };
+static scene_slot_work slot_work __attribute__((aligned(16)));
+static scene_state_owner slot_owners[SLOT_COUNT];
+static uintptr_t slot_addresses[SLOT_COUNT];
+static uint32_t slot_tlb[133],slot_controls[8];
+static scene_rsp_saved slot_rsp;
+static scene_state_binding slot_binding;
+static unsigned slot_bound;
+static void slot_add(unsigned id,uintptr_t address,unsigned bytes) {
+    slot_owners[id]=(scene_state_owner){id+1,bytes};slot_addresses[id]=address;
+}
+static void slot_ranges(void) {
+    unsigned i=0;
+#define SLOT_ADD_SPAN(name) slot_add(i++,((uintptr_t)scene_owner_##name##_begin)|0xa0000000u,(unsigned)(scene_owner_##name##_end-scene_owner_##name##_begin));
+    SLOT_ADD_SPAN(apu_memory) SLOT_ADD_SPAN(apu_regs) SLOT_ADD_SPAN(apu_jit) SLOT_ADD_SPAN(cpu_regs) SLOT_ADD_SPAN(dma) SLOT_ADD_SPAN(dsp_pcm)
+    SLOT_ADD_SPAN(dsp_regs) SLOT_ADD_SPAN(dsp_pitches) SLOT_ADD_SPAN(dsp_noise) SLOT_ADD_SPAN(dsp_voices) SLOT_ADD_SPAN(input)
+    SLOT_ADD_SPAN(presentation) SLOT_ADD_SPAN(sram_guest8) SLOT_ADD_SPAN(wram) SLOT_ADD_SPAN(mapper) SLOT_ADD_SPAN(memory_io)
+    SLOT_ADD_SPAN(cpu_arithmetic_io) SLOT_ADD_SPAN(ppu) SLOT_ADD_SPAN(ppu_cursors) SLOT_ADD_SPAN(ppu_epochs) SLOT_ADD_SPAN(dsp1)
+#undef SLOT_ADD_SPAN
+    slot_add(21,HCOMP_CGRAM_ARENA,0xa0400000u-HCOMP_CGRAM_ARENA);
+    slot_add(22,(uintptr_t)uncached(remote_bridge_saved),272);
+    slot_add(23,(uintptr_t)uncached(&remote_saved_status),4);
+    slot_add(24,(uintptr_t)uncached(slot_tlb),sizeof(slot_tlb));
+    slot_add(25,(uintptr_t)uncached(slot_controls),sizeof(slot_controls));
+    slot_add(26,0,8192);slot_add(27,8192,700);
+    slot_add(28,(uintptr_t)uncached(&slot_rsp),sizeof(slot_rsp));
+}
+static int slot_block(uint32_t offset,unsigned char buffer[512],int write) {
+    if((offset&511u)||offset>=SCENE_STATE_MAX_BYTES)return 0;
+    unsigned char *dma=uncached(transfer_buffer);
+    if(write)for(unsigned i=0;i<512;i++)dma[i]=buffer[i];
+    if(!pi_transfer(dma,USB_CART+SLOT_BASE+offset,512,write))return 0;
+    if(!write)for(unsigned i=0;i<512;i++)buffer[i]=dma[i];
+    return 1;
+}
+static int slot_owner_io(unsigned owner,uint32_t offset,unsigned bytes,unsigned char *buffer,int write) {
+    if(owner>=SLOT_COUNT||offset>slot_owners[owner].bytes||bytes>slot_owners[owner].bytes-offset)return 0;
+    uintptr_t address=slot_addresses[owner]+offset;
+    if(owner!=26&&owner!=27) {
+        volatile unsigned char *p=(volatile unsigned char *)address;
+        for(unsigned i=0;i<bytes;i++)if(write)p[i]=buffer[i];else buffer[i]=p[i];
+        __asm__ volatile("sync":::"memory");return 1;
+    }
+    unsigned done=0;unsigned char *dma=uncached(transfer_buffer);
+    while(done<bytes) {
+        uint32_t at=(uint32_t)address+done,base=at&~511u;
+        unsigned skip=at&511u,n=512-skip;if(n>bytes-done)n=bytes-done;
+        if(!pi_transfer(dma,USB_CART+base,512,0))return 0;
+        if(write) {
+            for(unsigned i=0;i<n;i++)dma[skip+i]=buffer[done+i];
+            if(!pi_transfer(dma,USB_CART+base,512,1))return 0;
+        } else for(unsigned i=0;i<n;i++)buffer[done+i]=dma[skip+i];
+        done+=n;
+    }
+    return 1;
+}
+static int slot_rom_crc(uint32_t cart,uint32_t bytes,uint32_t *output) {
+    uint32_t crc=0xffffffffu;unsigned char *dma=uncached(transfer_buffer);
+    if(!bytes||(bytes&511u)||(cart&511u))return 0;
+    for(uint32_t offset=0;offset<bytes;offset+=512) {
+        if(!pi_transfer(dma,cart+offset,512,0))return 0;
+        crc=scene_state_crc32_update(crc,dma,512);
+    }
+    *output=~crc;return 1;
+}
+static int slot_bind(void) {
+    /* These immutable images are mapped for this boot. No import/reboot reuse;
+     * complete cart-prefix and guest-ROM CRC are computed once, before save. */
+    if(!slot_bound) {
+        if((scene_rom_cart!=0x10104000u&&scene_rom_cart!=0x10200000u)||
+           scene_rom_bytes<0x8000u||scene_rom_bytes>0x800000u||scene_rom_type>2||
+           native_diag_guest_sram_exp>3)return 0;
+        if(!slot_rom_crc(scene_rom_cart,scene_rom_bytes,&slot_binding.rom_crc)||
+           !slot_rom_crc(0x10000000u,scene_rom_cart-0x10000000u,&slot_binding.code_crc))return 0;
+        for(unsigned i=0;i<SLOT_COUNT;i++) {
+            uint32_t values[3]={slot_owners[i].id,slot_owners[i].bytes,(uint32_t)slot_addresses[i]};
+            for(unsigned j=0;j<3;j++)for(unsigned k=0;k<4;k++)
+                slot_work.piece[12*i+4*j+k]=(unsigned char)(values[j]>>(24-8*k));
+        }
+        slot_binding.layout_crc=scene_state_crc32(slot_work.piece,12*SLOT_COUNT);slot_bound=1;
+    }
+    uint32_t settings[10]={remote_boot_tv_type,layer_set,precision_set,skipped_set,audio_set,apu_clock,
+        counter_set,underclk_set,scene_rom_type,native_diag_guest_sram_exp};
+    slot_binding.config_crc=scene_state_crc32((const unsigned char *)settings,sizeof(settings));return 1;
+}
+static uint32_t slot_execute(int load) {
+    /* Drain presentation while VI is enabled, then fence all machine copying.
+     * The same frame_count/origin must be stable for the entire transaction. */
+    slot_work.stage=100;
+    uint32_t start=count();while(frame_count)if((uint32_t)(count()-start)>=REMOTE_COUNT_HZ) {
+        scene_slot_stage=101;return 0;
+    }
+    uint32_t saved_status,wired;
+    __asm__ volatile("mfc0 %0,$12\n mfc0 %1,$6":"=r"(saved_status),"=r"(wired));
+    if((remote_saved_status&(6u|0xe0u|0x20000000u))||wired||skipped_set) {
+        scene_slot_stage=102;return 0;
+    }
+    uint32_t masked=saved_status&~0x8001u;
+    __asm__ volatile("mtc0 %0,$12\n nop\n nop"::"r"(masked):"memory");
+    uint32_t result=0;scene_slot_cache_sync();slot_ranges();
+    slot_work.stage=103;if(!wait_io(0xa4800018,3,0,DMA_TIMEOUT))goto done;
+    slot_work.stage=104;if(!slot_bind())goto done;
+    if(load!=1) {
+        if(!load)slot_work.bytes=0;
+        result=scene_rsp_context_store((uint32_t *)uncached(transfer_buffer),0,&slot_rsp,
+            rsp_scene_capture_text_start,(unsigned)(rsp_scene_capture_text_end-rsp_scene_capture_text_start),
+            scene_rsp_read_word,scene_rsp_write_word,scene_rsp_transfer_block,scene_rsp_wait_halted);
+        if(result!=1)goto done;
+        scene_slot_tlb_save(slot_tlb);
+        slot_controls[0]=remote_guest_frames;slot_controls[1]=remote_render_frames;
+        slot_controls[2]=remote_buttons;slot_controls[3]=remote_button_frames;
+        slot_controls[4]=remote_scene_framebuffer;slot_controls[5]=remote_scene_origin_guest;
+        slot_controls[6]=*(volatile uint32_t *)0xa4400004;slot_controls[7]=0;
+        scene_slot_cache_sync();
+        if(load==2) {
+            /* Paused complete owner fingerprints exclude host presentation
+             * clocks and metadata copies of remote counters. Never upload. */
+            for(unsigned owner=0;owner<SLOT_COUNT;owner++) {
+                slot_fingerprints[owner]=0;
+                if(owner==11||owner==25)continue;
+                uint32_t crc=0xffffffffu;
+                for(uint32_t done=0;done<slot_owners[owner].bytes;) {
+                    unsigned n=slot_owners[owner].bytes-done;if(n>512)n=512;
+                    if(!slot_owner_io(owner,done,n,slot_work.piece,0)){result=0;goto done;}
+                    crc=scene_state_crc32_update(crc,slot_work.piece,n);done+=n;
+                }
+                slot_fingerprints[owner]=~crc;
+            }
+            result=1;goto done;
+        }
+        scene_state_progress progress={remote_guest_frames,remote_render_frames};
+        result=(uint32_t)scene_slot_store(&slot_work,slot_block,slot_owner_io,&slot_binding,
+            slot_owners,SLOT_COUNT,progress);
+    } else {
+        scene_state_progress progress;
+        result=(uint32_t)scene_slot_load(&slot_work,slot_block,slot_owner_io,&slot_binding,
+            slot_owners,SLOT_COUNT,&progress);
+        if(result!=1)goto done;
+        scene_slot_cache_sync();
+        result=scene_rsp_context_load((uint32_t *)uncached(transfer_buffer),0,&slot_rsp,
+            rsp_scene_capture_text_start,(unsigned)(rsp_scene_capture_text_end-rsp_scene_capture_text_start),
+            rsp_scene_restore_text_start,(unsigned)(rsp_scene_restore_text_end-rsp_scene_restore_text_start),
+            scene_rsp_read_word,scene_rsp_write_word,scene_rsp_transfer_block,scene_rsp_wait_halted);
+        if(result!=1){result=2;goto done;}
+        scene_slot_tlb_load(slot_tlb);
+        uint32_t tlb_readback[133];scene_slot_tlb_save(tlb_readback);
+        for(unsigned i=0;i<133;i++)if(tlb_readback[i]!=slot_tlb[i]){result=2;goto done;}
+        remote_guest_frames=progress.guest;remote_render_frames=progress.render;
+        remote_buttons=slot_controls[2];remote_button_frames=slot_controls[3];
+        remote_scene_framebuffer=slot_controls[4];remote_scene_origin_guest=slot_controls[5];
+        *(volatile uint32_t *)0xa4400004=slot_controls[6];*(volatile uint32_t *)0xa4400010=0;
+        remote_pause_pending=remote_pause_target=remote_arm_pending=0;
+        remote_scene_pending=remote_scene_error=0;remote_scene_canonical=remote_paused=1;
+        native_diag_phase=native_diag_snapshot_ready=native_diag_capture_result=0;
+        native_diag_notice_active=native_diag_notice_count=native_diag_ok_deadline=0;
+        for(unsigned i=0;i<80;i++)native_diag_state[i]=0;
+        dsp_audio_blocks=dsp_audio_idle=dsp_audio_full=dsp_audio_gap_max=dsp_audio_last_count=0;
+        uint32_t compare=count()+REMOTE_COUNT_HZ;
+        __asm__ volatile("mtc0 %0,$11\n nop\n nop"::"r"(compare):"memory");
+        saved_status&=~0x8000u;
+    }
+done:
+    scene_slot_bytes=slot_work.bytes;scene_slot_stage=slot_work.stage;
+    __asm__ volatile("mtc0 %0,$12\n nop\n nop"::"r"(saved_status):"memory");
+    return result;
+}
 #endif
 static int eq(const char *a,const char *b) {
     while(*a&&*a==*b){a++;b++;}return *a==*b;
@@ -689,6 +883,9 @@ static void status(const char *id) {
 #ifdef SODIUM64_SCENE_STATE
     append(",state-park,state-check");
 #endif
+#ifdef SODIUM64_SCENE_SLOT
+    append(",state-save,state-load,state-fingerprint");
+#endif
 #ifdef SODIUM64_SCENE_RSP_REBIND
     append(",state-rsp-rebind");
 #endif
@@ -747,6 +944,10 @@ static void status(const char *id) {
     field(" scene_pending=",remote_scene_pending);field(" scene_canonical=",remote_scene_canonical);
     field(" scene_error=",remote_scene_error);field(" scene_origin_guest=",remote_scene_origin_guest);
 #endif
+#ifdef SODIUM64_SCENE_SLOT
+    field(" slot_bytes=",scene_slot_bytes);field(" slot_stage=",scene_slot_stage);
+    field(" slot_needs_menu=",scene_slot_needs_menu);
+#endif
 #ifdef SODIUM64_SCENE_RSP_REBIND
     field(" scene_rsp_needs_menu=",scene_rsp_needs_menu);
 #endif
@@ -797,6 +998,53 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     }
     if(nt<3||!eq(tokens[0],"s64")||!hex(tokens[1],8,&unused)) {error(id,"invalid_request");return;}
     id=tokens[1];const char *verb=tokens[2];
+#ifdef SODIUM64_SCENE_SLOT
+    if(scene_rsp_context_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
+       !eq(verb,"profile")&&!eq(verb,"state-check")&&!eq(verb,"menu")) {
+        error(id,"scene_rsp_context_needs_menu");return;
+    }
+#ifdef SODIUM64_SCENE_RSP_REBIND
+    if(scene_rsp_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
+       !eq(verb,"profile")&&!eq(verb,"state-check")&&!eq(verb,"menu")) {
+        error(id,"scene_rsp_needs_menu");return;
+    }
+#endif
+    if(scene_slot_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
+       !eq(verb,"profile")&&!eq(verb,"state-check")&&!eq(verb,"menu")) {
+        error(id,"scene_slot_needs_menu");return;
+    }
+    if(eq(verb,"state-save")||eq(verb,"state-load")||eq(verb,"state-fingerprint")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+        if(!remote_paused){error(id,"not_paused");return;}
+        if(!remote_scene_canonical||remote_scene_error){error(id,"not_canonical");return;}
+        if(!present||transport_error||menu_error){error(id,"scene_transport_unready");return;}
+        int load=eq(verb,"state-load");
+        int fingerprint=eq(verb,"state-fingerprint");
+        if(load&&!scene_slot_bytes){error(id,"scene_slot_empty");return;}
+        uint32_t state;
+#ifdef REMOTE_CONTROL_HOST
+        extern uint32_t remote_host_scene_slot(int,uint32_t *,uint32_t *);
+        state=remote_host_scene_slot(fingerprint?2:load,&scene_slot_bytes,&scene_slot_stage);
+#else
+        uint32_t config[2];
+        if(!wait_usb('U')||!command('C',1,1,config)){error(id,"scene_slot_transport_failed");return;}
+        state=slot_execute(fingerprint?2:load);
+        if(!command('C',1,config[1],0))scene_slot_needs_menu=1;
+#endif
+        if(state==2)scene_slot_needs_menu=1;
+        prefix(id,state==1&&!scene_slot_needs_menu);
+        append(fingerprint?" machine_fingerprint=":load?" state_loaded=":" state_saved=");number(state==1&&!scene_slot_needs_menu);
+        if(fingerprint&&state==1)for(unsigned i=0;i<29;i++) {
+            append(" o");number(i+1);append("=");number(slot_fingerprints[i]);
+        }
+        field(" slot_bytes=",scene_slot_bytes);field(" slot_stage=",scene_slot_stage);
+        field(" rsp_stage=",scene_rsp_context_stage);
+        field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
+        append(" provenance=private_same_build_same_boot_volatile_slot native_acceptance=pending");
+        (void)finish();return;
+    }
+#endif
 #ifdef SODIUM64_SCENE_RSP_CONTEXT
     if(scene_rsp_context_needs_menu&&!eq(verb,"hello")&&!eq(verb,"status")&&
        !eq(verb,"profile")&&!eq(verb,"state-check")&&!eq(verb,"menu")) {
@@ -934,6 +1182,9 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" scene_error=",remote_scene_error);field(" scene_pending=",remote_scene_pending);
         field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
         append(" provenance=post_submit_natural_rsp_dp_ai_retirement serializer=0 restore=0");
+#if defined(SODIUM64_SCENE_SLOT) && !defined(REMOTE_CONTROL_HOST)
+        field(" slot_saved_status=",remote_saved_status);
+#endif
 #if (defined(SODIUM64_SCENE_RSP_REBIND) || defined(SODIUM64_SCENE_RSP_CONTEXT)) && !defined(REMOTE_CONTROL_HOST)
         if(remote_scene_canonical) {
             field(" scene_rsp_halt_pc=",scene_rsp_read_word(0xa4080000));

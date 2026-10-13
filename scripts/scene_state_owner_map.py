@@ -7,11 +7,12 @@ from check_runtime_arena import allocated_sections
 
 def owners(elf):
     symbols={name:address for address,name in elf_symbols(elf)}
+    limit=0x800d6000 if 'scene_slot_tlb_save' in symbols else 0x800d4000
     result=[]
     for name,start in symbols.items():
         if not name.startswith('scene_owner_') or not name.endswith('_begin'):continue
         owner=name[len('scene_owner_'):-len('_begin')];end=symbols[name[:-len('_begin')]+'_end']
-        assert 0x80000000<=start<end<=0x800d4000,(owner,'invalid linked owner')
+        assert 0x80000000<=start<end<=limit,(owner,'invalid linked owner')
         result.append(dict(name=owner,start=start,end=end,bytes=end-start))
     result.sort(key=lambda x:x['start'])
     assert len(result)<=32

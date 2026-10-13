@@ -1,5 +1,8 @@
 # Scene state ownership gate
 
+Latest implementation: [private same-build slot](SCENE_STATE_SLOT.md), native
+machine continuation pending. The history below describes its ownership gate.
+
 Owner gate after native S1 park and full architectural RSP title/Mode7 roundtrip. A complete
 serializer/restore is not implemented. The linked baseline is S2 runtime
 1b85b64b05ee47a4d5819749dfd3f953c01d55f5, existing renderer banks unchanged.

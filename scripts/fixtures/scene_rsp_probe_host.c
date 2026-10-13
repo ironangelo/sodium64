@@ -20,7 +20,7 @@ static void write_word(uint32_t address,uint32_t value) {
         else abort();
         return;
     }
-    if(address==0xa4080000){pc=pc_fault&&value==0x3c0?value+4:value;return;}
+    if(address==0xa4080000){pc=pc_fault&&value==0x3c?value+4:value;return;}
     if(address<0xa4000000||address>=0xa4002000||(address&3))abort();
     if(word_fault&&calls>48&&address==0xa4000020)value^=1;
     sp[(address-0xa4000000)/4]=value;
@@ -41,9 +41,11 @@ static int wait_halt(void) {
 }
 static void reset(void) {
     for(unsigned i=0;i<2048;i++)sp[i]=i*971u+123u;
-    sp[1024+0x3c0/4]=0x0900040f;
+    sp[1024+0x3c0/4]=0x40882000;
+    sp[1024+0x3c4/4]=0x0900040f;
+    sp[1024+0x3c8/4]=0;
     memcpy(gold,sp,sizeof(sp));memset(cart,0,sizeof(cart));
-    status=0x101;pc=0x3c0;calls=writes=0;
+    status=0x101;pc=0x3c8;calls=writes=0;
     fail_call=corrupt_call=word_fault=wait_fault=pc_fault=0;
 }
 static unsigned run(unsigned queue) {
@@ -52,7 +54,8 @@ static unsigned run(unsigned queue) {
 static void check(int ok) {cases++;if(!ok){fprintf(stderr,"scene transaction failure case=%u calls=%u writes=%u\n",cases,calls,writes);exit(1);}}
 int main(void) {
     for(unsigned q=0;q<=4;q+=4) {
-        reset();check(run(q)==1&&calls==64&&pc==0x3c0&&status==0x101&&!memcmp(sp,gold,sizeof(sp)));
+        reset();check(run(q)==1&&calls==64&&pc==0x3c&&status==0x101&&!memcmp(sp,gold,sizeof(sp)));
+        reset();pc=0x3c4;check(run(q)==1&&pc==0x3c&&!memcmp(sp,gold,sizeof(sp)));
     }
     for(unsigned f=1;f<=64;f++) {
         reset();fail_call=f;unsigned result=run(0);
@@ -76,6 +79,9 @@ int main(void) {
         reset();status^=bit;check(run(0)==0&&!calls&&!writes);
     }
     reset();sp[1024+pc/4]^=1;check(run(0)==0&&!calls&&!writes);
+    reset();sp[1024+0x3c4/4]^=1;check(run(0)==0&&!calls&&!writes);
+    reset();sp[1024+0x3c0/4]^=1;check(run(0)==0&&!calls&&!writes);
+    reset();pc=0x3c0;check(run(0)==0&&!calls&&!writes);
     reset();pc=4096;check(run(0)==0&&!calls&&!writes);
     reset();pc=0x3c1;check(run(0)==0&&!calls&&!writes);
     reset();check(scene_rsp_probe_execute(scratch,program,1025,0,read_word,write_word,transfer,wait_halt)==0&&!writes);

@@ -1,0 +1,18 @@
+{
+  "status": "IMPLEMENTED native pipeline guard repair",
+  "transaction_cases": 190,
+  "actual_RSP_binary_cases": 32,
+  "mutations_rejected": 4,
+  "exact_linked_HALT_jump_delay_and_restart_entry": true,
+  "admitted_stop_PC": [
+    964,
+    968
+  ],
+  "normalized_restart_PC": 60,
+  "runtime_end": 867288,
+  "arena_start": 868352,
+  "capacity_unchanged": true,
+  "serializer": false,
+  "restore": false,
+  "native_acceptance": false
+}

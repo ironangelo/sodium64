@@ -17,10 +17,12 @@ uint32_t scene_rsp_probe_execute(uint32_t scratch[128],
     if(!scratch||!program||!words||words>1024||(queue!=0&&queue!=4)||
        !read||!write||!transfer||!wait)return 0;
     const uint32_t status=read(0xa4040010),pc=read(0xa4080000);
-    /* Canonical H-COMP HALT precedes its jump to the ordinary resident
-     * draw-frame entry. Refuse another stop/IRQ/single-step or branch delay. */
-    if((status&0x63)!=1||pc>0xffc||(pc&3)||
-       read(0xa4001000+pc)!=0x0900040fu)return 0;
+    /* Native HALT reports the following jump's delay-slot PC=3C8. Preserve
+     * its exact instruction ownership, then normalize the pending branch to
+     * resident draw-frame3C; a stopped PC alone is not a resumable pipeline. */
+    if((status&0x63)!=1||(pc!=0x3c4&&pc!=0x3c8)||
+       read(0xa40013c0)!=0x40882000u||
+       read(0xa40013c4)!=0x0900040fu||read(0xa40013c8)!=0)return 0;
     uint32_t original=2166136261u;
     for(unsigned offset=0;offset<8192;offset+=512) {
         for(unsigned i=0;i<128;i++) {
@@ -53,8 +55,8 @@ uint32_t scene_rsp_probe_execute(uint32_t scratch[128],
             if(read(0xa4000000+offset+4*i)!=scratch[i])return 2;
     }
     if(restored!=original)return 2;
-    write(0xa4080000,pc);
+    write(0xa4080000,0x3c);
     write(0xa4040010,6); /* keep HALT, clear probe BROKE */
-    if(read(0xa4080000)!=pc||read(0xa4040010)!=status)return 2;
+    if(read(0xa4080000)!=0x3c||read(0xa4040010)!=status)return 2;
     return 1;
 }

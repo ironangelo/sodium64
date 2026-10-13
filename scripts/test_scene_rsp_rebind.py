@@ -8,6 +8,7 @@ import argparse,json,random,struct
 from pathlib import Path
 from check_rsp_branch_delay_slots import read_text
 from test_hcomp_sub_presence import section
+from native_diag_report import elf_symbols
 
 def execute(code,data,queue,seed):
     rng=random.Random(seed)
@@ -54,6 +55,10 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('build',type=Path);ap.add_argument('--output',type=Path)
     a=ap.parse_args();_,code=read_text(a.build/'src/rsp_scene_rebind.elf')
     assert len(code)<4096 and len(code)%4==0
+    base,halt=read_text(a.build/'src/rsp_hcomp.elf')
+    assert struct.unpack_from('>III',halt,0xa40013c0-base)==(0x40882000,0x0900040f,0), 'canonical HALT/jump/delay slot ownership'
+    main_symbols={n:p for p,n in elf_symbols(a.build/'src/rsp_main.elf')}
+    assert main_symbols['draw_frame']&4095==0x3c,'normal restart entry moved'
     data=section(a.build/'src/rsp_main.elf','.data');cases=0;steps=set()
     for queue in (0,4):
         for seed in range(16):steps.add(execute(code,data,queue,seed));cases+=1

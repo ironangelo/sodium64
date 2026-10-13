@@ -184,3 +184,25 @@ retained. CGRAM/Ares already use master/PR/manual and remain unchanged.
 Build now explicitly compiles/tests BACKDROP_ROWS1 plus its177 paused observer
 guards, fixed slot/arena/backups/boot and inherited/default variants. Dispatch
 relevant CI once the native regression decision is resolved; no gate weakened.
+
+## ALttP rain control and bounded fallback hypothesis
+
+Frozen1fcc940 completes the full acknowledged replay, four images268800 pixels
+and8192 pausedPCM/heads/registers/enabled exact. Checksum/settings and
+coordinate8/menu/readback PASS; rain worker67412 is terminal, no COM3 worker.
+Rain cadence40.472334 vsR4440.540954/s
+(-0.169261percent), wait4.970375ms.
+[Rain receipt](evidence/backdrop45-alttp-rain.json). Together with story,
+seven ALttP images470400 pixels and two PCM buffers16384 bytes are unchanged.
+The small cadence differences are unresolved, not proven permanent regressions
+or dismissed as noise; repeated measurement without a discriminating change
+would not establish a mechanism.
+
+Next hypothesis: CGWSEL policies excluded by the CPU Main-row proof can retain
+the original scalar fill directly, avoiding the additional1000-byte helper
+bank load and descriptor DMA. Keep that fallback in fixed resident/phase slots,
+preserve screen/layer masks, opaque Main and Sub presence alpha, blank return,
+RDP packet retirement and all existing eligible-row behavior. Local actual
+linked dispatch/packet ownership checks before an ALttP native discriminator;
+DKC then Mode7/broader and relevant CI if this removes overhead. State serializer
+remains a bounded follow-up; default0 and master/R44/R43 remain preserved.

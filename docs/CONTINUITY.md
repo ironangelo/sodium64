@@ -1,3 +1,50 @@
+# 2026-10-13 - Native scene slot title and Mode7 gates pass; resume performance
+
+RESUME HERE: bounded state-tool work is MEASURED, complete for its title/Mode7
+discriminants. Resume the main native cadence/fidelity objective. Do not expand
+into persistent states, cross-build reuse or game UI without a demonstrated
+need. The slot is useful for repeating long scenes in one build and boot;
+code changes or reboot still require replay. Other games, active gameplay and
+enhancement chips remain coverage gates. This answers Iron's capability query:
+native save/advance/load works, but it is not yet a universal scene library.
+
+Mode7 worker24734 is terminal PASS, report completed, coordinate8/menu install
+and readback restored. No native worker remains live. Kernel
+1990fb016e3d010027fda427d618bf57de661e03; documentation checkpoint d7a071a23d2b4d97e56a751aa6a5076ffb807e8c
+on experiment/scene-state-s1 is pushed. The previous running-worker header
+below is historical and superseded. Before any new COM3 use inspect processes;
+one controller only, normal verified menu-mediated install/launch/restoration.
+
+Save4500, control4501/4560/5100, advance5100, load4500, restored4501/4560/5100.
+All29 destination owners read back; SP8192/RSP700/TLB+CP0532 restoration pass.
+All27 compared live owners and51 unmasked dynamic regions match. Full272 O64
+bytes are serialized and read back; raw continuation comparison checks268
+non-EPC bytes. Only inactive EPC differs at4501/5100 with EXL/ERL clear; all
+bytes match at4560. No GPR/HI/LO/memory mask. Three current/restored images
+match201600 pixels. Seventeen old-reference images match1139136 pixels outside
+only the documented host FPS glyph box. Ten paused implemented PCM rings match
+81920 bytes and heads/registers/enabled; input ACKs match. Save13.766s/load20.406s
+in this trial. Numeric receipt: docs/evidence/scene-state-slot-native-mode7.json.
+ALttP title gate35e1d3a is separately preserved; no new title claim for1990fb0.
+
+Next performance decision: use the existing full rain sample totals, not the
+retained223-PC tail. Of7110 CPU samples: DSP1719, APU1525, RSP wait1440,
+PPU1008, S-CPU700, DMA615, other103. These are residency samples, not exclusive
+subsystem costs. RSP is nearly busy; offload needs a real scheduling argument.
+Direct clocked C++ full-DSP replacement was already natively REJECTED: standalone
+2048-frame costs68.197/92.255/96.740ms exceed the64ms audio budget. Keep it as
+the behavior oracle; do not repeat that probe. Main-row run producer was also
+REJECTED; do not retry it. Select one material work/scheduling reduction from
+this evidence, implement on an isolated branch, run minimal integrity gates,
+then native discrimination before broad CI. BACKDROP_ROWS B1 and its unresolved
+ALttP story cost remain separate, not integrated or fully qualified.
+
+Master remains unchanged. Native60/full DSP/DAC/SNES oracle/corpus and final
+integration remain OPEN. Private game/state/PCM/images/hashes remain private.
+This documentation batch reran no unchanged suites. Earlier history preserved.
+
+---
+
 # 2026-10-13 - Mode7 scoped-EPC worker running; keep sole COM3
 
 Verified live yielded native worker handle24734, work/native_scene_slot.py

@@ -15,7 +15,8 @@ write. Later envelope advancement remains after the same output/envx capture.
 The default compiled core retains all18 executable sections byte-exact to the
 pinned source. Only V3c and its compiled run caller differ with the flag1.
 The reference source remains preserved on the parent/pinned branch and as a
-flag0 compiled oracle. All15 RSP banks are byte-exact between flags. Linked
+flag0 compiled oracle. All13 RSP banks are byte-exact between flags. The
+scene-context probe banks are absent from this complete-DSP configuration. Linked
 text96624/data729716/bss45064 and staticD50A8<D6000 are equal, gapF58. Full
 24576 events,194 ROM slots and43 simultaneous owners remain. Six CPU queue
 words/two banks/four actual D6400 backup DMA sites and three faults pass;

@@ -1,3 +1,24 @@
+# 2026-10-13 - R45 repaired DKC material gain measured; ALttP/Mode7/CI next
+
+Frozenruntime1fcc940 passes10 frames672000 pixels/four pausedPCM32768 bytes,
+0differences/heads/regs/enabled/inputacks. Fullchecksum/settings/trace and
+coordinate8/menu/readback PASS; worker13682 terminal. Same predeclared240
+guestintervals13.754889->28.710314/s (+108.728065percent), wait
+53.346966->15.343220ms. Separatefullquiet787 intervals39.197267/s wait6.787748ms;
+not equivalent guestextent to baseline276interval wall window. Original9e1194f
+27pixel/no-speed trial retained; repaired exactroute supersedes it. Default0.
+
+RESUME HERE: retained measured experiment/backdrop-rows-r45 now earns expanded
+ALttP native image/PCM/cadence, Mode7 and relevant CI before promotion. Use
+immutable scissorplan/archive, comparefrozenR44 controls; source remains1fcc940.
+Added scalar helper loads couldregress others: measure/repair, no permanent
+tradeoff. Root soleCOM3/no worker/menu confirmed; finallycoordinate8/menu.
+Keep rawpayloads/hashes local. Save states bounded future/no serializer, full
+native60/audio/corpus/integration open. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 retired row inputs exact; missing scissor send repaired before native retry
 
 Paired native4200:224Main rows equal effectiveR44 sections,0differences;97->28

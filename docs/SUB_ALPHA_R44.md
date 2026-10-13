@@ -1,5 +1,22 @@
 # R44 - Sub presence in coverage, work in progress
 
+## 2026-10-12 - native no-Sub story control
+
+Same frozen7a83d49 runtime:56.089884 completions/s versus R43 56.044680 and
+corrected control56.149815 (small0.106735percent residual remains). Three
+frames201600 pixels/8192 paused PCM/heads/registers/enabled identical; checksum/
+settings and menu/coordinate8 restoration/readback PASS. Wait2.941052ms.
+No new story regression observed versus R43; complete non-regression versus
+the corrected reference,60Hz and full image/audio compatibility stay open.
+[Story record](evidence/sub-alpha-r44-story.json).
+
+The measured candidate now earns exact-head Build/CGRAM/Ares qualification.
+The Build workflow adds explicit R43 no-span and R44 Sub-alpha builds plus
+the actual consumer, full-row, HALF, owner/window/lifetime and boot gates.
+Default normal/PROFILE lab results alone would not exercise SUB_ALPHA.
+All numeric fixtures/public receipts exclude private game data and hashes.
+Native DKC/Mode7 controls follow; this remains a measured experimental branch.
+
 ## 2026-10-12 - native rain result
 
 MEASURED source7a83d49, actual N64:40.540954 completions/s versus R43

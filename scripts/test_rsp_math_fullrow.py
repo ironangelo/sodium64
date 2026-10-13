@@ -218,6 +218,7 @@ def main():
     ap.add_argument('--backup-address', type=lambda v: int(v, 0), default=0xd2400,
                     help='physical Q1 sideband: 0xd2400 trace, 0xd4400 audio trace, 0xc2400 ordinary')
     ap.add_argument('--baseline-only', action='store_true', help='fixture validation only; no candidate PASS')
+    ap.add_argument('--baseline-full-row', action='store_true', help='compare to a retained FULL_ROW bank such as R43')
     ap.add_argument('--output', type=Path)
     a = ap.parse_args()
     mb, mc, ms = load(a.main)
@@ -231,7 +232,7 @@ def main():
         assert image[2]['hcomp_screen_switch'] == 0x760 and image[2]['draw_mode7_entry'] == 0x788
     if not a.baseline_only:
         assert 'hcomp_fullrow_admission' in candidate[2] and 'hcomp_fullrow_restore' in candidate[2], 'candidate FULL_ROW flag absent'
-        assert 'hcomp_fullrow_admission' not in baseline[2], 'baseline already full row'
+        assert ('hcomp_fullrow_admission' in baseline[2]) == a.baseline_full_row, 'baseline FULL_ROW declaration disagrees'
         def core(image):
             base, code, syms = image
             return code[syms['hcomp_channels_start']-base:syms['hcomp_vector_output']+4-base]
@@ -261,7 +262,7 @@ def main():
     ))
     old, new = [], []
     for i, case in enumerate(cases):
-        old.append(run_case(main_image, baseline, phase, case, i, a.backup_address, stage))
+        old.append(run_case(main_image, baseline, phase, case, i, a.backup_address, stage, full=a.baseline_full_row))
         if not a.baseline_only:
             new.append(run_case(main_image, candidate, phase, case, i, a.backup_address, stage, full=True))
             assert new[-1]['output_sha256'] == old[-1]['output_sha256'], ('baseline pixels differ', case[0])
@@ -293,6 +294,7 @@ def main():
                   pixels=sum(c[1] for c in cases)*256, hardware_mocked=True,
                   native_timing_authority=False, rdp_rasterization_authority=False, private_data=False,
                   backup_address=hex(a.backup_address), candidate_case_results=new, baseline_case_results=old,
+                  baseline_full_row=a.baseline_full_row,
                   mode7_z_fallback_results=mode7, sub_alpha=alpha,
                   negative_guards=negatives, elf_sha256={str(p):hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in (a.main, a.math, a.phase, a.baseline)})

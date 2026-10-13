@@ -1,3 +1,23 @@
+# 2026-10-12 - R44 rain value and story control preserved; qualification next
+
+Native runtime7a83d4982f20f7dd2fd44ab506d66a5a084f6db1: rain40.540954 (+10.153626percent vs R43);
+story56.089884 vsR43 56.044680/control56.149815. Story retains small0.106735percent
+residual, without new observed regression. Seven checkpoints470400 pixels/
+two paused8192 PCM comparisons, heads/regs/enabled and full checksum/settings
+all pass. Story session79318 completed; menu/coordinate8 restored/readback.
+Root sole COM3/no live worker. No full60/audio/corpus/VALIDATED/integration.
+
+RESUME HERE: retain R44 isolated. Qualify exact workflow head Build/CGRAM/Ares
+after recording run IDs; Build now explicitly compiles/test R43 no-span/R44
+Sub-alpha variants, beyond default normal/PROFILE. Native frozen artifacts
+stay7a83d49. Add DKC and Mode7 controls via established safe menu loop; no new
+profiler or marginal tuning. After qualification decide generic next material
+renderer/CPU budget action from rain24.667ms and explicit wait4.880ms, preserving
+audio/fidelity. Raw files/hashes private; source fixtures/curated counts public.
+[Evidence and limits](SUB_ALPHA_R44.md). Full goal open; prior history below.
+
+---
+
 # 2026-10-12 - R44 native rain gains measured; story control next
 
 Source7a83d4982f20f7dd2fd44ab506d66a5a084f6db1, experiment/sub-alpha-r44. MEASURED rain40.540954 vs

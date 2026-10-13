@@ -1,0 +1,22 @@
+{
+  "status": "MEASURED/not VALIDATED or integrated",
+  "source": "7a83d4982f20f7dd2fd44ab506d66a5a084f6db1",
+  "route": "ALttP story1852",
+  "completed_boundaries_per_second": 56.089883969202184,
+  "R43_completed_boundaries_per_second": 56.04468,
+  "corrected_reference": 56.149815,
+  "residual_vs_reference_percent": -0.1067341553980472,
+  "mean_CPU_RSP_wait_ms": 2.941051896705254,
+  "images_compared": 3,
+  "pixels_compared": 201600,
+  "pixel_differences": 0,
+  "paused_PCM": {
+    "bytes": 8192,
+    "differences": 0,
+    "heads_registers_enabled_match": true
+  },
+  "checksum_and_settings_validated": true,
+  "coordinate8_menu_restoration_readback": true,
+  "full_CI": false,
+  "full_60_or_audio_or_game_fidelity_proved": false
+}

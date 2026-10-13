@@ -447,3 +447,22 @@ threeimages/pausedPCM before quiet capture, finallycoordinate8/menu/readback.
 If producer cost improves without semantic differences, retain DKC gain and
 Mode7 controls before relevant changed-CPU qualification. No broad CI repeated
 before native value, no state serializer or full60/audio acceptance claim.
+
+## Main run producer rejected as the native cost repair
+
+Runtimec623d91 passes threeimages201600pixels/8192pausedPCM/heads/registers/
+enabled and checksum/settings/coordinate8/menu/readback; worker16488 terminal.
+Declared1000 endpoints1862..2861:55.888611/s vs original dense55.910416/s
+(-0.038999percent), reference56.162905/s (-0.488390percent). The run version
+does not recover the observed loss. [Receipt](evidence/backdrop45-runs-native-rejected.json).
+RSP wait2.638335ms alone does not establish lower total frame cost. Keep every
+artifact/report/preflight; no expanded DKC/Mode7 or fullCI for this failed
+discriminator. The cause of the small broad cost remains unproved.
+
+Preserve this code/evidence on experiment/main-row-runs-r45, then restore only
+ppu.S and test_backdrop_rows.py to the qualified original dense315 metadata
+source on experiment/backdrop-rows-r45. Keep the DKC measured value and all
+historical docs/receipts, default0, no promotion or master merge. Avoid another
+chain of marginal repair experiments; the current R45 admission/cost question
+remains explicitly pending while pursuing the larger goal and bounded states
+owner/continuation feasibility requested by the user.

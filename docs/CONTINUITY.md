@@ -1,3 +1,26 @@
+# 2026-10-13 - Main row run repair rejected natively; original dense R45 restored
+
+Runtimec623d91 run producer matches3PNG/8192PCM/heads/regs/enabled/checksum/
+settings/coordinate8/menu/readback, worker16488 terminal/noCOM3. Exact1000
+endpoints55.888611 vs dense55.910416/s (-0.038999percent), ref56.162905
+(-0.488390percent). No useful repair; expandednative/fullCI NOT_RUN.
+Code/evidence retained on experiment/main-row-runs-r45. ActiveR45 fa77692e9f8d5c04d38da19ed3d866db7108f4c7
+restores only ppu.S/test_backdrop_rows.py to original qualified313642a dense
+source; docs/evidence unchanged, default0/master preserved. Prior28.702821 DKC
+exact240 gain +108.689096percent and CI315 authority intact; small costs open.
+
+RESUME HERE: avoid more marginal repair chains. Bounded state owner/continuation
+prototype can now be evaluated on immutable metadata flag0 baseline, keeping
+R45 isolated and its pending admission cost explicit. Current paused UI bridge
+has queued frame history; prove a canonical/drained continuation or retain all
+history/CPU/SPC/DSP/bindings before restore. Source owner map in states document,
+1/60/600 equivalence and safe rejection before replacing full replay. No
+serializer/restore implemented, full60/audio/corpus/master integration open.
+RootsoleCOM3/no native worker/menu. [R45](BACKDROP_ROWS_R45.md),
+[states](SAVE_STATE_FEASIBILITY_2026-10-12.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 exact dense Main run producer locally qualified; native next
 
 Runtime c623d918e157bfb0d5a78581e990aaeae19b1eb6; immutable privateDate13 backdrop45-runs-plan/archive.

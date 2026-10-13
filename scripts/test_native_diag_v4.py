@@ -32,6 +32,7 @@ def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False,inject_irq=Fals
             if fn==0:regs[rd]=sx((regs[rt]&0xffffffff)<<(w>>6&31))
             elif fn==2:regs[rd]=sx((regs[rt]&0xffffffff)>>(w>>6&31))
             elif fn==4:regs[rd]=sx((regs[rt]&0xffffffff)<<(regs[rs]&31))
+            elif fn==6:regs[rd]=sx((regs[rt]&0xffffffff)>>(regs[rs]&31))
             elif fn==8:target=regs[rs]&0xffffffff
             elif fn==9:
                 target=regs[rs]&0xffffffff;regs[rd]=sx(pc+8)

@@ -103,6 +103,12 @@ hcomp_backdrop_emit_run:
     sh t1, RDP_FILL + 14
     sh t0, RDP_FILL + 38
     sh t1, RDP_FILL + 34
+hcomp_backdrop_restore_scissor:
+    // Restoring command bytes does not restore the RDP's latched scissor.
+    // The first BG may use the no-window path without another state send.
+    li a0, RDP_FILL + 8
+    jal 0xA4001F5C
+    li a1, RDP_FILL + 16
     li a0, TILE_TABLE
     li a1, BACKUP
     jal 0xA4001F40

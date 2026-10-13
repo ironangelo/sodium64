@@ -178,6 +178,8 @@ def rsp_case(build, *, start=0, rows=224, parity=0, pattern='gradient', cgws=0, 
         matches=[pc for pc in range(0x3a8,0x790,4) if struct.unpack_from('>I',vm.code,pc)[0]==wanted]
         assert len(matches)==1
         put(vm.code,matches[0],replacement)
+    elif fault=='skip_scissor_restore':
+        put(vm.code,syms['hcomp_backdrop_restore_scissor']+4,0)
     vm.execute(STOP,max_steps=150000)
     assert vm.pending_fetch is None and vm.dma is None
     assert d[table:table+1024]==original, 'TILE_TABLE not restored'
@@ -190,7 +192,10 @@ def rsp_case(build, *, start=0, rows=224, parity=0, pattern='gradient', cgws=0, 
     assert vm.captures
     if eligible:
         actual = [None]*rows
-        for packet in vm.captures:
+        assert len(vm.captures[-1])==8, 'restored scissor never adopted by RDP'
+        final_scissor=struct.unpack('>Q',vm.captures[-1])[0]
+        assert final_scissor>>56==0x2d and (final_scissor>>32&0xfff)==(start+8)*4 and final_scissor&0xfff==(start+rows+8)*4
+        for packet in vm.captures[:-1]:
             assert len(packet)==addr('RDP_WINDOW')-(fill+8)
             words = struct.unpack('>'+'Q'*(len(packet)//8),packet)
             assert [w>>56 for w in words] == [0x2d,0x3a,0x3c,0x36,0x27,0x3c]
@@ -224,7 +229,7 @@ def main():
     cases += [dict(cad=0xe2),dict(mode=7),dict(screen=0),dict(flags=128),dict(limit=8)]
     outcomes=[rsp_case(args.build,**c) for c in cases]
     rejected=[]
-    for fault in ('short_restore','pending_latch','wrong_queue','main_alpha'):
+    for fault in ('short_restore','pending_latch','wrong_queue','main_alpha','skip_scissor_restore'):
         try: rsp_case(args.build,fault=fault)
         except AssertionError: rejected.append(fault)
         else: raise AssertionError('escaped negative: '+fault)

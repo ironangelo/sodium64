@@ -1,3 +1,24 @@
+# 2026-10-13 - S1 native canonical continuation passed; state owners next
+
+MEASURED runtime 4ebdccd05e574e8cf1734ef20d8c8b05d59daaef, experiment/scene-state-s1.
+Native scene-s1-candidate worker74145 terminal; canonical post-submit park600
+guest/render unchanged, naturalSP/DP/AI retirement/noerror. Normal600/601/660/
+1200 vs frozen replay control:268800 pixels and32768 pausedPCM bytes exact,
+ring heads/DSP regs/enabled match. Coordinate8/menu/install/readback PASS.
+Root sole COM3; no live worker. No serializer/import/restore implemented yet.
+
+RESUME HERE: map complete mutable owners and hardware/cache closure for a
+versioned, ROM/layout-bound private state. Validate incoming compatibility,
+bounds/checksum before any mutation; fresh recorder/host clocks on restore.
+Prove next1/60/600 continuation and same warmup before replacing replay.
+Cross-build pointers/JIT/RSP descriptors need explicit rebind rules, not blind
+RAM copying. No broadCI yet. R45 branches/results preserved, master untouched;
+full60/native presented cadence/complete audio/corpus remain open.
+[S1](SCENE_STATE_S1.md), [native evidence](evidence/scene-state-s1-native.json).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - S1 native continuation reference captured; canonical candidate next
 
 Immutable metadataR44 control scene-s1-reference captures normal600/601/660/

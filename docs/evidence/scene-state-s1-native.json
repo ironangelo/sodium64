@@ -1,0 +1,34 @@
+{
+  "status": "MEASURED canonical pause continuation equivalence",
+  "runtime_source": "4ebdccd05e574e8cf1734ef20d8c8b05d59daaef",
+  "physical_console": true,
+  "controls": {
+    "SCENE_STATE": 1,
+    "BACKDROP_ROWS": 0,
+    "frameskip": 0
+  },
+  "parked_guest_frame": 600,
+  "parked_render_frame": 600,
+  "canonical_retirement": true,
+  "retirement_error": 0,
+  "normal_checkpoints": [
+    600,
+    601,
+    660,
+    1200
+  ],
+  "compared_pixels": 268800,
+  "pixel_differences": 0,
+  "compared_paused_PCM_bytes": 32768,
+  "PCM_differences": 0,
+  "ring_heads_DSP_registers_enabled_match": true,
+  "menu_coordinate8_restore_readback": true,
+  "serializer": false,
+  "machine_state_restore": false,
+  "limits": [
+    "Continuation test only; no save/restore yet.",
+    "Normal frames compared; canonical raw frame has different UI provenance.",
+    "Paused PCM equivalence is not complete DSP or DAC fidelity.",
+    "No native cadence or corpus qualification."
+  ]
+}

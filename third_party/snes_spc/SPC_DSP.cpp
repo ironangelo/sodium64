@@ -446,6 +446,21 @@ VOICE_CLOCK( V3c )
 	
 	// Gaussian interpolation
 	{
+#ifdef SODIUM64_DSP_SIGNAL_ELIDE
+		// Probe-only variant: interpolate() reads history but changes no state.
+		// NON replaces that result, and env0 makes its contribution exactly0.
+		// All other voice phases, history, envelope and latches still execute.
+		if ( v->env )
+		{
+			int output = (m.t_non & v->vbit) ?
+				(int16_t) (m.noise * 2) : interpolate( v );
+			m.t_output = (output * v->env) >> 11 & ~1;
+		}
+		else
+		{
+			m.t_output = 0;
+		}
+#else
 		int output = interpolate( v );
 		
 		// Noise
@@ -454,6 +469,7 @@ VOICE_CLOCK( V3c )
 		
 		// Apply envelope
 		m.t_output = (output * v->env) >> 11 & ~1;
+#endif
 		v->t_envx_out = (uint8_t) (v->env >> 4);
 	}
 	

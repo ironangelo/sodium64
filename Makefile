@@ -66,6 +66,13 @@ DSP_DRY_MIX ?= 0
 DSP_VOICE_BASE ?= 0
 DSP_GAIN_PROBE ?= 0
 FULL_DSP_PROBE ?= 0
+DSP_SIGNAL_ELIDE ?= 0
+ifeq ($(DSP_SIGNAL_ELIDE),1)
+ifneq ($(FULL_DSP_PROBE),1)
+$(error DSP_SIGNAL_ELIDE requires FULL_DSP_PROBE=1)
+endif
+N64_CXXFLAGS_DSP += -DSODIUM64_DSP_SIGNAL_ELIDE=1
+endif
 ifeq ($(FULL_DSP_PROBE),1)
 ifneq ($(REMOTE)$(AUDIO_OBSERVER),11)
 $(error FULL_DSP_PROBE requires REMOTE=1 AUDIO_OBSERVER=1)
@@ -569,7 +576,7 @@ $(BUILD_DIR)/src/scene_slot.o $(BUILD_DIR)/src/scene_state_format.o: $(BUILD_DIR
 
 $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o: third_party/snes_spc/SPC_DSP.cpp $(wildcard third_party/snes_spc/*.h)
 	@mkdir -p $(dir $@)
-	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wno-implicit-fallthrough -o $@ $<
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wno-implicit-fallthrough $(N64_CXXFLAGS_DSP) -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

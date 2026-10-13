@@ -1,0 +1,15 @@
+{
+  "status": "MEASURED retired-state diagnosis; scissor repair locally qualified",
+  "physical_console": true,
+  "frame": 4200,
+  "legacy_sections": 97,
+  "candidate_sections": 28,
+  "compared_Main_rows": 224,
+  "differing_Main_rows": 0,
+  "paired_observation_restoration_readback": true,
+  "performance_capture": "NOT_RUN",
+  "original_discrepancy_retained": true,
+  "cause": "Command memory was restored but full RDP scissor was not resubmitted before the first layer",
+  "correction": "Submit and retire the restored full-band SetScissor before layer dispatch",
+  "original_missing_state_send_mutation_now_rejected": true
+}

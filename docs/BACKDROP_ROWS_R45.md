@@ -117,3 +117,29 @@ Paused audio still compares against R44. Native run names
 r44-dkc4200-sections/r45-dkc4200-rows, sole rootCOM3, no performance capture,
 finallycoordinate8/menu readback. Determine whether row inputs themselves
 disagree with the effective legacy section colors before changing rendering.
+
+## Paired native state excludes color-phase fault; scissor repair preflight
+
+Both paired diagnostics complete and restore coordinate8/menu/readback. The
+R45 observer reproduces its original discrepant image and retains R44 paused
+PCM at4200. All224 Main row values equal the effective R44 retired-section
+colors:0 differences. Sections97->28. The synthetic actual CPU line/section
+control also matches224 rows under two settings; its existing directed fixture
+needed SRLV32 support, not a guest/renderer change. Raw colors remain private.
+[Curated paired diagnosis](evidence/backdrop45-scissor-diagnosis.json).
+
+The helper restored RDP_FILL scissor bytes after row fills but never submitted
+that restored state. The first no-window BG thus inherited the last row-run
+scissor; later OBJ/window cleanup could hide the mistake for later layers.
+Memory restoration alone was an incomplete oracle. The repair sends the owned
+full-band SetScissor and waits for its command adoption before any layer.
+Original source/color/geometry barriers and every row remain intact.
+
+The40 delayed packet cases/589824 pixels now also require the final adopted
+full-band scissor. A fifth genuine mutation removes that send and rejects,
+alongside short restore/latch/queue/alpha controls.488 row bounds/160 epochs/
+2 CPU bindings pass. Bank still1000 bytes, delay slots clean, staticD1E88<D4000.
+No duplicated full CI or performance claim. Freeze repaired source/artifact,
+then private r45-dkc-scissor reruns the same10-image/four-PCM gates against R44
+before quiet20s and the predeclared first240 comparison. First discrepant9e1194f
+artifact/report and original no-performance result stay preserved.

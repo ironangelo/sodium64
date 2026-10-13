@@ -1,3 +1,28 @@
+# 2026-10-13 - R45 retired row inputs exact; missing scissor send repaired before native retry
+
+Paired native4200:224Main rows equal effectiveR44 sections,0differences;97->28
+sections. Both observers preserve their proper images/pausedPCM and recover
+coordinate8/menu/readback; workers50757/48531 terminal. Original9e1194f has
+27pixels/one-row discrepancy/no speedcapture, retained. The helper restored
+command bytes but omitted the restored RDP scissor send; first no-window BG
+kept lastrowrun scissor. Three-instruction state-send repair compiled safely.
+40packet/589824pixels now check adopted final fullband state; missing-send
+fifth realmutation rejects.488row/160epochs/2bindings,1000slot/delay/static
+D1E88<D4000 pass. SRLV added to actual synthetic CPU-line fixture;224row phase
+controls match. No full CI or speed claim.
+
+RESUME HERE: repaired runtime1fcc9400ff9f37e986de6929101cf608acbfd75a, private immutable
+backdrop45-scissor-plan/archive, native r45-dkc-scissor exactR44 route and
+10image/fourPCM gate before quiet20s. Compare first240 guest intervals and
+separate full window. Root soleCOM3/no worker before dispatch; finallymenu/
+coordinate8/readback. If matching/material value broaden ALttP/Mode7/CI before
+promotion; scalar helper overhead still needs representative controls. Original
+discrepancy retained, R44/R43/master untouched. States/no serializer/full60/
+audio/corpus remain open. [R45](BACKDROP_ROWS_R45.md).
+Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 paused row/section diagnostic frozen before paired native read
 
 9e1194f discrepancy retained:27 pixels/one row at4200,8 prior frames/onePCM

@@ -387,3 +387,14 @@ baseline/source/archives unchanged and default0 until promotion is justified.
 The save-state owner pass is preserved; a bounded continuation/restore trial
 must retain historical queued frame state, CPU/SPC/DSP semantic owners and
 current bindings, not merely a paused framebuffer. No serializer yet.
+
+## Final alignment control for the ALttP residual
+
+Before either new story run, declare1000 absolute endpoint IDs1862..2861
+from the exact story1852 checkpoint. Same313642a on/off metadata artifacts,
+three historical frame/pausedPCM comparisons, full checksum/settings and
+coordinate8/menu/readback. This bounded A/B asks whether the small prior
+route-relative story loss persists on identical guest work and same source.
+No renderer change or repeated broad CI is involved. Reject a missing declared
+extent; retain both full traces separately. If a small producer cost persists,
+keep it open and choose an efficient generic repair before promotion.

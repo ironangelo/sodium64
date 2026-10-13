@@ -1,3 +1,21 @@
+# 2026-10-13 - Same-source ALttP exact1000 endpoint control predeclared
+
+R45 source313642a: DKC exact240 +108.689096percent, Mode7 exact120 -0.135081
+percent with all image/PCM/input/checksum/settings/restoration gates passing.
+All Build/CGRAM/Ares CI SUCCESS. Small residuals open, default0/master preserved.
+
+RESUME HERE: private Date13 subalpha44-anchor-story-native.py then
+backdrop45-anchor-story-native.py, immutable same-source on/off metadata
+plans/archives. Before either run declare exact1000 endpointIDs1862..2861
+from story1852. Threehistorical images/pausedPCM then quiet20s/checksum/settings,
+finallycoordinate8/menu/readback. Root soleCOM3/no worker before dispatch.
+No new code or duplicate broadCI; this changes alignment/same-source control
+for the small prior story loss. Reject missing extent; full traces separate.
+Then efficient generic repair if needed, and bounded states prototype owner
+map/1,60,600 progress proof; no serializer currently. Full60/audio/corpus open.
+[R45](BACKDROP_ROWS_R45.md). Earlier history untouched below.
+
+---
 # 2026-10-13 - R45 Mode7 native images/PCM exact; small cadence residual still open
 
 Source313642a Mode7 tenPNG/fourPCM/heads/regs/enabled/inputACK/checksum/settings/

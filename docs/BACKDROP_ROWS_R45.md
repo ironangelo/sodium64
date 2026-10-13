@@ -264,3 +264,22 @@ guest/render boundary at the same parked bridge before arming. Host comparison
 can then align relative S64D ordinals to absolute frame IDs. No new running
 profiler, state export or extended suite is needed. Add/test that metadata,
 freeze new on/off controls, then DKC/Mode7 representative native and relevantCI.
+
+## Existing capture ACK now exposes its parked boundary
+
+The ACK adds accepted guest/render IDs and parked-retired-bridge provenance.
+No running hook or new mutable guest state is added; the bridge consumes the
+pending arm after the successful ACK before returning to guest execution.
+The previous pause/busy/sink/failure guards remain. Host182 cases/1000 fuzz
+and compiled continuous102 cases, boot12/TV5 pass. On/off embedded RSP text
+and data are all identical to their respective frozen scalar/R44 controls
+(28/26 extents). Reuse their renderer proofs. Static ends stay belowD4000;
+the new C metadata changes layout, so the prior whole CPU byte-equality claim
+applies to the pre-metadata artifact only. [Preflight](evidence/capture-boundary-r45-preflight.json).
+
+Freeze separate on/off metadata archives and retain all earlier measured
+artifacts. First replay DKC against the frozen old R44 image/PCM reference,
+then compare the same240 absolute guest interval endpoints across on/off.
+Relative frame ordinals and initial partial interval exclusion are retained.
+Record both full quiet traces separately; complete 60Hz/audio/title/Mode7
+qualification remains open. No save-state serializer is introduced here.

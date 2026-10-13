@@ -1,3 +1,22 @@
+# 2026-10-13 - Capture boundary metadata frozen; aligned DKC on/off next
+
+Runtime 313642af247ff15ffdf34031c185bb1234825173; immutable backdrop45-anchor/subalpha44-anchor plan/archives.
+Capture ACK exposes parked accepted guest/render IDs before arm. Parser182/
+fuzz1000, continuous compiled102, boot12TV5 PASS. On/off RSP text/data all
+exact scalar/R44 controls (28/26 extents), static ends<0xd4000.
+No running profiler/guest mutation/state serializer; all old artifacts retained.
+
+RESUME HERE: root soleCOM3/no worker/menu; replay r44-dkc-anchor flag0 then
+r45-dkc-anchor flag1 against old frozenR44 ten-image/fourPCM route, quiet20s,
+align first240 shared absolute endpoint IDs using ACK plus S64D ordinals.
+Finallycoordinate8/menu/readback per run. ThenMode7/native broader/relevantCI.
+ALttP scalar story55.942863/rain40.491967 exactimagesPCM with small residual
+losses open; old DKC108.728percent was relative same-route intervals.
+Default0/master/R44/R43 preserved. Save states/full60/audio/corpus unresolved.
+[R45](BACKDROP_ROWS_R45.md). Earlier history untouched below.
+
+---
+
 # 2026-10-13 - R45 scalar ALttP controls exact; capture boundary metadata next
 
 Frozen d96796a rain4images/8192PCM exact, story3images/8192PCM exact; full

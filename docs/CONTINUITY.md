@@ -1,3 +1,25 @@
+# 2026-10-13 - Complete title machine restore PASS; Mode7 next
+
+MEASURED kernel35e1d3a051edc3b07fff0e2d29b92055e05fde90 worker9963 terminal
+PASS. Save600, advance1200, load600; destination/SP/TLB readback andloaded600
+fingerprints exact. Restored601/660/1200 all27rawowners/51dynamicregions exact;
+all272O64bytes exact, noEPC/fieldnormalization. Currentcontrol/restored full
+201600imagepixels exact; sevenPCM57344B/head/registers/enabled exact. Oldref
+469056imagepixels outsideonlyhostFPSbox exact. Coordinate8/menu/readback
+restored; no liveCOM3. FPSglyphsoff onlySLOTbuild; no dynamic checksum mask.
+
+Code/docs checkpoint6dee0c3 pushed, masterunchanged. Private Mode7 frozenworker/
+plan reusesexactqualified35kernel. RESUME HERE run
+work/native_scene_slot.py --name scene-slot-mode7 --plan scene-slot-mode7-plan.json
+--quiet-counter --mode7. ExactpreviousFZero route/buttonACK to4500; save,
+control4501/4560/5100, restore4500after5100, fullcurrentimage/PCM/inputACK/
+rawowner+region+CPUcontext equivalence next1/60/600. Finallycoordinate8restore.
+Inspectprocess/session/report before anotherCOM3. No fullsave feature acceptance
+until complex/activegameplay controls; no cadence/fullDSP/DAC/SNESoracle/
+corpus/master acceptance. No broaderCI yet. Earlierhistory preserved below.
+
+---
+
 # 2026-10-13 - Dynamic delta identified as FPS glyphs; quiet full gate next
 
 Runtimee9f6a81 worker96383 terminal/restored. Exactprivatebyte comparison:

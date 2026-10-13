@@ -48,6 +48,7 @@ def execute(memory,pc,regs,cp,stop=0xdead0000,terminal_rcp=False,inject_irq=Fals
                 right=regs[rt] if regs[rt]<1<<63 else regs[rt]-(1<<64)
                 regs[rd]=int(left<right)
             elif fn==43:regs[rd]=int(regs[rs]<regs[rt])
+            elif fn==56:regs[rd]=regs[rt]<<(w>>6&31) # DSLL keeps all64 source bits.
             else:raise AssertionError(('forbidden/unhandled special instruction',hex(pc),hex(w)))
         elif op in (2,3):
             if op==3:regs[31]=sx(pc+8)

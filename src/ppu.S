@@ -191,6 +191,12 @@ hcomp_cgram_event_ptr: .word HCOMP_CGRAM_EVENT_QUEUE1
 hcomp_cgram_sideband_ptr: .word HCOMP_CGRAM_SIDEBAND_QUEUE1
 hcomp_row_fixed_ptr: .word HCOMP_ROW_FIXED_QUEUE1
 hcomp_row_fixed_queues: .word HCOMP_ROW_FIXED_QUEUE1, HCOMP_ROW_FIXED_QUEUE2
+#if SODIUM64_BACKDROP_ROWS
+hcomp_row_main_ptr: .word HCOMP_ROW_MAIN_QUEUE1
+hcomp_row_main_queues: .word HCOMP_ROW_MAIN_QUEUE1, HCOMP_ROW_MAIN_QUEUE2
+hcomp_main_rows_candidate: .byte 0
+.align 1
+#endif
 hcomp_last_section_count: .hword 0
 hcomp_cgram_event_count: .hword 0
 hcomp_cgram_event_overflow: .byte 0
@@ -253,6 +259,12 @@ hcomp_record_row_input:
     lw t2, hcomp_row_fixed_ptr
     add t2, t2, t1
     sh t0, 0(t2)
+#if SODIUM64_BACKDROP_ROWS
+    lhu t0, main_color
+    lw t2, hcomp_row_main_ptr
+    add t2, t2, t1
+    sh t0, 0(t2)
+#endif
 hcomp_row_fixed_recorded:
 
     // Decrement the section cooldown if non-zero
@@ -399,6 +411,36 @@ make_section: // a0: line
     sb a0, (t1)
 
 section_init:
+#if SODIUM64_BACKDROP_ROWS
+    // Indexed Mode0/1, uniform fixed operand, unclipped Main and no backdrop
+    // arithmetic. Preserve every other palette/geometry/brightness barrier.
+    sb zero, hcomp_main_rows_candidate
+    lbu t0, hcomp_cgram_event_overflow
+    bnez t0, hcomp_new_section
+    nop
+    lbu t0, stat_flags
+    andi t0, t0, 0xC0
+    bnez t0, hcomp_legacy_epoch
+    nop
+    lbu t0, cgwsel
+    andi t0, t0, 0xF3
+    bnez t0, hcomp_legacy_epoch
+    nop
+    lbu t0, cgadsub
+    andi t0, t0, 0x20
+    bnez t0, hcomp_legacy_epoch
+    nop
+    lbu t0, bg_mode
+    andi t0, t0, 7
+    sltiu t0, t0, 2
+    beqz t0, hcomp_legacy_epoch
+    nop
+    li t0, 1
+    sb t0, hcomp_main_rows_candidate
+    b hcomp_epoch_brightness
+    nop
+hcomp_legacy_epoch:
+#endif
     // Merge only fixed-operand HALF epochs with uniform COLOR masks. Every
     // source byte must match, with no new CGRAM event or dirty OAM. Row colors
     // retain the operand at each line, so no palette/window/geometry is lost.
@@ -414,14 +456,43 @@ section_init:
     andi t0, t0, 0x40
     beqz t0, hcomp_new_section
     nop
+hcomp_epoch_brightness:
     lbu t0, brightness
     lbu t1, hcomp_last_section_brightness
     bne t0, t1, hcomp_new_section
     nop
     lhu t0, hcomp_cgram_event_count
     lhu t1, hcomp_last_section_count
+#if SODIUM64_BACKDROP_ROWS
+    beq t0, t1, hcomp_epoch_events_ready
+    nop
+    lbu t2, hcomp_main_rows_candidate
+    beqz t2, hcomp_new_section
+    nop
+    lbu t2, hcomp_cgram_event_overflow
+    bnez t2, hcomp_new_section
+    nop
+    sltu t2, t1, t0
+    beqz t2, hcomp_new_section
+    nop
+    // The complete new typed stream is retained. Only CGRAM index0 color
+    // records may share the Main row representation; markers also reject.
+    subu t2, t0, t1
+    sll t2, t2, 2
+    lw t3, hcomp_cgram_event_ptr
+    subu t2, t3, t2
+hcomp_main_rows_event_scan:
+    lhu t1, 2(t2)
+    bnez t1, hcomp_new_section
+    nop
+    addi t2, t2, 4
+    bne t2, t3, hcomp_main_rows_event_scan
+    nop
+hcomp_epoch_events_ready:
+#else
     bne t0, t1, hcomp_new_section
     nop
+#endif
     lbu t0, queue_id
     lw t1, sect_queues(t0)
     lw t0, section_ptr
@@ -446,7 +517,17 @@ section_init:
     nop
     ld t2, 40(t0)
     ld t3, 40(t1)
+#if SODIUM64_BACKDROP_ROWS
+    xor t2, t2, t3
+    lbu t3, hcomp_main_rows_candidate
+    beqz t3, hcomp_main_rows_compare_color
+    nop
+    dsll t2, t2, 16 // Exclude only MAIN_COLOR, bytes40..41, on the proved path.
+hcomp_main_rows_compare_color:
+    bnez t2, hcomp_new_section
+#else
     bne t2, t3, hcomp_new_section
+#endif
     nop
     ld t2, 48(t0)
     ld t3, 48(t1)
@@ -455,8 +536,19 @@ section_init:
     ld t2, 32(t0)
     ld t3, 32(t1)
     xor t2, t2, t3
+#if SODIUM64_BACKDROP_ROWS
+    // Full fixed arithmetic keeps the scalar operand equal. Only HALF may
+    // retain the existing per-row Sub color merge, with its old exact inputs.
+    lbu t3, cgadsub
+    andi t3, t3, 0x40
+    beqz t3, hcomp_main_rows_compare_sub
+    nop
+#endif
     li t3, -65536 // Exclude only SUB_COLOR, bytes38..39.
     and t2, t2, t3
+#if SODIUM64_BACKDROP_ROWS
+hcomp_main_rows_compare_sub:
+#endif
     bnez t2, hcomp_new_section
     nop
     ld t2, 56(t0)
@@ -466,6 +558,14 @@ section_init:
     and t2, t2, t3
     bnez t2, hcomp_new_section
     nop
+#if SODIUM64_BACKDROP_ROWS
+    lbu t0, hcomp_main_rows_candidate
+    beqz t0, hcomp_main_rows_merge_done
+    nop
+    lhu t0, hcomp_cgram_event_count
+    sh t0, hcomp_last_section_count // Each typed record is checked once.
+hcomp_main_rows_merge_done:
+#endif
     jr ra
     nop
 hcomp_new_section:
@@ -572,6 +672,10 @@ hcomp_cgram_begin_frame:
     lbu t0, queue_id
     lw t1, hcomp_row_fixed_queues(t0)
     sw t1, hcomp_row_fixed_ptr
+#if SODIUM64_BACKDROP_ROWS
+    lw t1, hcomp_row_main_queues(t0)
+    sw t1, hcomp_row_main_ptr
+#endif
     sh zero, hcomp_last_section_count
     lw t1, hcomp_cgram_base_queues(t0)
     lw t2, hcomp_cgram_event_queues(t0)

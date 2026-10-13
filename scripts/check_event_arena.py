@@ -74,6 +74,8 @@ def layout(defines, diagnostic_trace=False, cc=None, profile=False, brr_observer
     for queue in (1,2):
         name=f'HCOMP_ROW_FIXED_QUEUE{queue}'
         start=value(name);owners[name]=(start,start+512)
+        name=f'HCOMP_ROW_MAIN_QUEUE{queue}'
+        start=value(name);owners[name]=(start,start+512)
     owners['consumed_section']=(0xf0000,0xf0010)
     chain = ['FRAMEBUFFER1', 'FRAMEBUFFER2', 'FRAMEBUFFER3', 'MODE7_TEXTURE',
              'VRAM_BUFFER', 'PALETTE_QUEUE1', 'PALETTE_QUEUE2', 'OAM_QUEUE1',

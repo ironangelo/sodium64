@@ -5,7 +5,11 @@
 #include <rsp.inc>
 #include "defines.h"
 .data
+#if SODIUM64_BACKDROP_ROWS
+.word 0, 0 // CPU publishes the immutable row helper source, after1000 text bytes.
+#else
 .byte 0
+#endif
 .text
 draw_bg:
     j 0xA4001F90
@@ -238,6 +242,20 @@ hcomp_backdrop_color:
     li t2, 268 << 14
     or t1, t1, t2
     sw t1, RDP_FILL + 32
+#if SODIUM64_BACKDROP_ROWS
+    // The helper retains the scalar fallback and Main dispatch. Its descriptor
+    // lives in owned RDRAM, without allocating another live DMEM pointer.
+    lw a1, OVERLAY_HCOMP_SRC
+    li t0, -8
+    and a1, a1, t0
+    addi a1, a1, 1000
+    li a0, SCRN_DATA
+    jal 0xA4001F40
+    li a2, 7
+    lw a1, SCRN_DATA
+    j 0xA4001F7C
+    li t9, 0x13B0
+#else
     li a0, RDP_FILL + 8
     jal 0xA4001F5C
     li a1, RDP_WINDOW
@@ -251,6 +269,7 @@ hcomp_backdrop_color:
     lw a1, OVERLAY_MAIN_SRC
     j 0xA4001F7C
     li t9, 0x1370
+#endif
 
 hcomp_screen_end:
     lbu t0, HCOMP_SCREEN

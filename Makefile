@@ -62,6 +62,12 @@ BG_SPANS ?= 0
 ADAPTIVE_SPANS ?= 0
 ADAPTIVE_NOSPAN ?= 0
 SUB_ALPHA ?= 0
+BACKDROP_ROWS ?= 0
+ifeq ($(BACKDROP_ROWS),1)
+ifneq ($(SUB_ALPHA),1)
+$(error BACKDROP_ROWS requires SUB_ALPHA=1)
+endif
+endif
 ifeq ($(SUB_ALPHA),1)
 ifneq ($(ADAPTIVE_NOSPAN),1)
 $(error SUB_ALPHA requires ADAPTIVE_NOSPAN=1)
@@ -211,6 +217,9 @@ endif
 ifneq ($(RDP_FIXED_MATH),1)
 SFILES := $(filter-out src/rsp_hcomp_rdp_fixed.S,$(SFILES))
 endif
+ifneq ($(BACKDROP_ROWS),1)
+SFILES := $(filter-out src/rsp_hcomp_backdrop.S,$(SFILES))
+endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 HFILES += $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.inc))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
@@ -320,6 +329,10 @@ endif
 ifeq ($(SUB_ALPHA),1)
 N64_RSPASFLAGS += -DSODIUM64_SUB_ALPHA=1
 endif
+ifeq ($(BACKDROP_ROWS),1)
+N64_ASFLAGS += -DSODIUM64_BACKDROP_ROWS=1
+N64_RSPASFLAGS += -DSODIUM64_BACKDROP_ROWS=1
+endif
 ifeq ($(FETCH_SIGNAL),1)
 N64_RSPASFLAGS += -DSODIUM64_RDP_FETCH_SIGNAL=1
 endif
@@ -428,7 +441,7 @@ $(BUILD_DIR)/%.o: %.S
 		DATASECTION="$(basename $@).data"; \
 		BINARY="$(basename $@).elf"; \
 		RSPLINK=rsp.ld; \
-		case "$$FILENAME" in rsp_decoder_original) RSPLINK=src/rsp_decoder_original.ld;; rsp_object_cache|rsp_hcomp|rsp_hcomp_math|rsp_hcomp_fast|rsp_hcomp_setup|rsp_hcomp_tlut|rsp_hcomp_rdp|rsp_hcomp_fixed_window|rsp_hcomp_rdp_fixed|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
+		case "$$FILENAME" in rsp_decoder_original) RSPLINK=src/rsp_decoder_original.ld;; rsp_object_cache|rsp_hcomp|rsp_hcomp_math|rsp_hcomp_fast|rsp_hcomp_setup|rsp_hcomp_tlut|rsp_hcomp_rdp|rsp_hcomp_fixed_window|rsp_hcomp_rdp_fixed|rsp_hcomp_backdrop|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
 		echo "    [RSP] $<"; \
 		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-T$$RSPLINK -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
 		mv "$@" $$BINARY; \
@@ -491,6 +504,7 @@ $(BUILD_DIR)/src/rsp_hcomp_tlut.o: src/rsp_hcomp.ld
 $(BUILD_DIR)/src/rsp_hcomp_rdp.o: src/rsp_hcomp.ld
 $(BUILD_DIR)/src/rsp_hcomp_fixed_window.o: src/rsp_hcomp.ld
 $(BUILD_DIR)/src/rsp_hcomp_rdp_fixed.o: src/rsp_hcomp.ld
+$(BUILD_DIR)/src/rsp_hcomp_backdrop.o: src/rsp_hcomp.ld
 $(BUILD_DIR)/src/rsp_object_cache.o: src/rsp_hcomp.ld
 
 clean:

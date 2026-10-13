@@ -1,3 +1,33 @@
+# 2026-10-13 - R52 complete-DSP BRR group implemented; native A/B next
+
+RESUME HERE: runtime9f00e9bf3861a0dddd65e752245fa5f23fad7c88, experiment/full-dsp-brr-r52,
+isolated sodium64-full-dsp-brr-r52. DefaultDSP_FULL_BRR_GROUP0, R49 signal1,
+no R50counter/R51sampler. Full V4 four-sample filter dispatch/register history,
+all cached/live read phases/ranges/floors/clamp/wrap/mirrors unchanged.
+82944 independent/pinned V4 cases+12288V3c/8192slices/11550PCMframes/103424
+state checks/65536RAM/all128regs pass; five mutations reject. Transaction6144
+frames/faults/RAMrestore/snapshot tail, parser219+1000fuzz/admission guards pass.
+Off core18sections exact physicalR49signal1,13RSPbanks exact, nine/ten linked
+functions/36HI-LO writers, boot12/TV5/CPU6/two banks/fourD6400DMA/3faults pass.
+StaticD4A88/D5A88<D6000; full24576events/194slots/43owners. Static-instance
+overflow never installed. Both A/B variants lease unpublished32768B snapshot;
+deny ready snapshot/every nonzero capture phase before backup. No IRQ changes.
+[Report](FULL_DSP_BRR_R52.md); public numeric preflight. No broadCI yet.
+
+Next verify no controller and frozen worker hash, run private full-dsp-brr-r52-
+archive/native_full_dsp_brr_r52.py once. Root soleCOM3. Same-source0then1,
+original three2048frame scenarios three repeats each at ALttPpaused600; all
+hostchecksums/nonzero/64KiB RAMbackup-readback-restore and full live67200pixels/
+8192PCM/head/regs/enabled/boundary unchanged, step660, finallycoordinate8/menu/
+install/readback. Record live handle before interruption; poll same, no restart.
+Predeclared>=8% saving both active cases broadens; below3%both rejects material;
+mismatch/>2%regression blocks. Intermediate isolated, no endless tuning. Fresh
+same-source/same-scratch baseline only; R51 timing is instrumented. Standalone
+2048frames need64ms before CPU/APU/rendering. Full DSP/DAC/SNES/game60/corpus/
+integration OPEN; R44/R45/master/state prototype unchanged. History retained.
+
+---
+
 # 2026-10-13 - R51 native complete-DSP profile complete; V4/BRR dataflow next
 
 RESUME HERE: worker3060 terminal exit0, allcontrols/recovery passed, no native

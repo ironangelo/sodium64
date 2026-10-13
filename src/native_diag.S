@@ -132,7 +132,13 @@ native_diag_init:
     sb zero, underclk_set
     li t0, 4
     sb t0, audio_set
+#ifdef SODIUM64_SCENE_SLOT
+    // Native scene equality must not contain host-clock FPS glyphs. Observer
+    // counters still run; default diagnostic and gameplay builds are unchanged.
+    sb zero, counter_set
+#else
     sb t0, counter_set
+#endif
     li t0, APU_CYCLE
     sb t0, apu_clock
 #ifdef SODIUM64_NATIVE_DIAG_TRACE

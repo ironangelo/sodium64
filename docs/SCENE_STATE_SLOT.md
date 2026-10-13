@@ -90,3 +90,19 @@ privately for diagnosis; it accepts no arbitrary address or state import.
 SCENE_SLOT rejects BACKDROP_ROWS1 until its additional Main row cursor and
 candidate owners are included and separately qualified. The current29-owner
 slot is explicitly BACKDROP_ROWS0; this limit does not change renderer defaults.
+
+Runtimee9f6a81 worker96383 terminal/restored: all96 changed dynamic bytes are
+48 black/white pixels in framebuffer1/3 rows23..30 x28..43, exactly the FPS
+glyphs. Canonical660 image67200 RGB pixels matches. No event/palette/JIT data
+differs in the exported regions. native_diag_init explicitly enables this
+host-clock counter; its value and stale glyphs differ with bench dwell time.
+This identifies the dynamic delta as instrumentation, not an unexplained guest
+change. A raw O64 context CRC also differs in this run; classify its fields.
+
+SCENE_SLOT only disables FPS glyph drawing at init; observer counters remain
+active and default diagnostic/gameplay behavior is unchanged. New controls and
+restored images compare all67200 pixels. Comparisons against old frozen images
+exclude only their FPS glyph box rows23..30 x20..43 (up to3 decimal digits);
+this exclusion must not be applied to current-control fidelity comparisons.
+state-cpu-context exports only the canonical272-byte O64 owner privately for
+field-level diagnosis. No arbitrary memory or state import is exposed.

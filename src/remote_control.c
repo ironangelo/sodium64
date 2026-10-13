@@ -891,7 +891,7 @@ static void status(const char *id) {
     append(",state-park,state-check");
 #endif
 #ifdef SODIUM64_SCENE_SLOT
-    append(",state-save,state-load,state-fingerprint,state-region");
+    append(",state-save,state-load,state-fingerprint,state-region,state-cpu-context");
 #endif
 #ifdef SODIUM64_SCENE_RSP_REBIND
     append(",state-rsp-rebind");
@@ -1037,6 +1037,20 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         prefix(id,1);append(" exported=private_scene_region");field(" region=",region);
         field(" bytes=",bytes);field(" render_frame_id=",remote_render_frames);
         append(" scope=canonical_whitelisted_renderer_region");(void)finish();return;
+    }
+    if(eq(verb,"state-cpu-context")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+        if(!remote_paused){error(id,"not_paused");return;}
+        if(!remote_scene_canonical||remote_scene_error){error(id,"not_canonical");return;}
+#ifdef REMOTE_CONTROL_HOST
+        static const unsigned char synthetic_cpu[272];const void *source=synthetic_cpu;
+#else
+        const void *source=remote_bridge_saved;
+#endif
+        if(!send_packet(2,source,272)){error(id,"scene_cpu_export_failed");return;}
+        prefix(id,1);append(" exported=private_O64_context bytes=272");
+        field(" render_frame_id=",remote_render_frames);(void)finish();return;
     }
     if(eq(verb,"state-save")||eq(verb,"state-load")||eq(verb,"state-fingerprint")) {
         if(nt!=3){error(id,"argument_count");return;}

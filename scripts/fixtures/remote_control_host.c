@@ -546,6 +546,8 @@ int main(void){
     expect("s64 12345678 state-region 0","exported=private_scene_region region=0 bytes=65536");
     check(types[0]==2&&sizes[0]==65536);
     expect("s64 12345678 state-region 50","region=50 bytes=40960");
+    expect("s64 12345678 state-cpu-context","exported=private_O64_context bytes=272");
+    check(types[0]==2&&sizes[0]==272);
     remote_scene_canonical=0;
     expect("s64 12345678 state-region 1","ERR not_canonical");remote_scene_canonical=1;
     scene_context_result=2;

@@ -406,6 +406,9 @@ int main(void){
 #endif
 #ifdef SODIUM64_FULL_DSP_PROBE
     remote_render_frames=10;remote_paused=0;native_diag_phase=0;remote_arm_pending=0;
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    native_diag_snapshot_ready=0;
+#endif
     expect("s64 12345678 audio-full-dsp-probe","ERR not_paused");check(!full_probe_calls);
     remote_paused=1;native_diag_phase=1;
     expect("s64 12345678 audio-full-dsp-probe","ERR capture_busy");check(!full_probe_calls);
@@ -415,6 +418,19 @@ int main(void){
     expect("s64 12345678 audio-full-dsp-probe","ERR frame_unavailable");check(!full_probe_calls);
     remote_render_frames=10;
     expect("s64 12345678 audio-full-dsp-probe extra","ERR argument_count");check(!full_probe_calls);
+#ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
+    unsigned char snapshot_before[32768];memcpy(snapshot_before,native_diag_snapshot,sizeof(snapshot_before));
+    native_diag_snapshot_ready=1;
+    expect("s64 12345678 audio-full-dsp-probe","ERR capture_snapshot_owned");check(!full_probe_calls);
+    native_diag_snapshot_ready=0;
+    static const uint32_t occupied_phases[]={6,7,0xffffffff};
+    for(unsigned i=0;i<3;i++){
+        native_diag_phase=occupied_phases[i];
+        expect("s64 12345678 audio-full-dsp-probe","ERR capture_snapshot_owned");check(!full_probe_calls);
+        check(!memcmp(snapshot_before,native_diag_snapshot,sizeof(snapshot_before)));
+    }
+    native_diag_phase=0;
+#endif
     expect("s64 12345678 audio-full-dsp-probe","full_dsp_probe=1 cases=3 restored=1");check(full_probe_calls==1);
     check(strstr(response,"case2_frames=2048 case2_ticks=1236")!=NULL);
     full_probe_status=0;

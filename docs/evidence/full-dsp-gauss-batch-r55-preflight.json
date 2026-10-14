@@ -1,0 +1,170 @@
+{
+  "passed": true,
+  "flag0_core_executable_sections_exact_R49_signal1": 18,
+  "changed_core_executable_sections": [
+    ".text._ZN7SPC_DSP10copy_stateEPPhPFvS1_PvjE",
+    ".text._ZN7SPC_DSP10soft_resetEv",
+    ".text._ZN7SPC_DSP17soft_reset_commonEv",
+    ".text._ZN7SPC_DSP20begin_gaussian_batchEv",
+    ".text._ZN7SPC_DSP3runEi",
+    ".text._ZN7SPC_DSP4initEPv",
+    ".text._ZN7SPC_DSP4loadEPKh",
+    ".text._ZN7SPC_DSP9voice_V3cEPNS_7voice_tE"
+  ],
+  "RSP_banks_byte_exact_on_off": 13,
+  "full_event_capacity": 24576,
+  "ROM_slots": 194,
+  "variants": {
+    "0": {
+      "static_end": "0xd4a88",
+      "arena_start": "0xd6000",
+      "gap": "0x1578",
+      "concurrent_owners": 43,
+      "ELF_sha256": "393ab26095ad07dd19cac669a8df9e719658ab34f155061c648dc0036fea6267",
+      "hilo": {
+        "passed": true,
+        "linked_reference_functions": 9,
+        "straight_line_product_writer_sites": 36,
+        "spacing_checked": true,
+        "ELF_sha256": "393ab26095ad07dd19cac669a8df9e719658ab34f155061c648dc0036fea6267",
+        "complete_waveform_timing_or_gameplay_claim": false,
+        "commercial_data": false
+      },
+      "boot": {
+        "passed": true,
+        "cases": 12,
+        "linked_instructions": true,
+        "receiver_bytes": 248,
+        "elf_sha256": "393ab26095ad07dd19cac669a8df9e719658ab34f155061c648dc0036fea6267",
+        "compiled_tv_capture_cases": 5,
+        "modern_ipl3_dmem_tv_source": true,
+        "legacy_low_ram_tv_ignored": true,
+        "invalid_tv_unsigned_byte_falls_back_ntsc": true,
+        "receiver_pc": "a4001020",
+        "ipl3_pc": "a4000040",
+        "external_code_references_after_jump": false,
+        "physical_acceptance": false
+      }
+    },
+    "1": {
+      "static_end": "0xd5a88",
+      "arena_start": "0xd6000",
+      "gap": "0x578",
+      "concurrent_owners": 43,
+      "ELF_sha256": "7267b81d206ae8573f54390fd9abe2c746abf7523ef27094decc8a3c7b771648",
+      "hilo": {
+        "passed": true,
+        "linked_reference_functions": 10,
+        "straight_line_product_writer_sites": 40,
+        "spacing_checked": true,
+        "ELF_sha256": "7267b81d206ae8573f54390fd9abe2c746abf7523ef27094decc8a3c7b771648",
+        "complete_waveform_timing_or_gameplay_claim": false,
+        "commercial_data": false
+      },
+      "boot": {
+        "passed": true,
+        "cases": 12,
+        "linked_instructions": true,
+        "receiver_bytes": 248,
+        "elf_sha256": "7267b81d206ae8573f54390fd9abe2c746abf7523ef27094decc8a3c7b771648",
+        "compiled_tv_capture_cases": 5,
+        "modern_ipl3_dmem_tv_source": true,
+        "legacy_low_ram_tv_ignored": true,
+        "invalid_tv_unsigned_byte_falls_back_ntsc": true,
+        "receiver_pc": "a4001020",
+        "ipl3_pc": "a4000040",
+        "external_code_references_after_jump": false,
+        "physical_acceptance": false
+      }
+    }
+  },
+  "R50_counter_or_R51_sampling_included": false,
+  "snapshot_core_lease_both_variants": true,
+  "native_timing_or_gameplay_claim": false,
+  "commercial_data": false,
+  "local": {
+    "passed": true,
+    "directed_V3c_cases": 12288,
+    "clock_slices": 8192,
+    "output_stereo_frames": 11590,
+    "all_state_checks": 39944,
+    "directed_phase_cases": 9216,
+    "directed_phase_stereo_frames": 13052,
+    "negative_mutations_rejected": [
+      "env_one_boundary",
+      "noise_substitution",
+      "batch_value",
+      "voice_identity",
+      "reset_cache"
+    ],
+    "all_core_state_after_host_pointer_normalization": true,
+    "full_APURAM_bytes": 65536,
+    "all_DSP_registers": 128,
+    "PCM_full_extent_equal": true,
+    "arbitrary_clock_phases_and_internal_output_buffer": true,
+    "PMON_KON_KOFF_envelope_noise_BRR_echo_and_reset_exercised": true,
+    "pinned_core_is_flag0_reference": true,
+    "native_timing_or_gameplay_claim": false,
+    "gauss_batch": true,
+    "derived_cache_is_outside_original_logical_state": true,
+    "commercial_data": false
+  },
+  "transaction-snapshot": {
+    "passed": true,
+    "synthetic_scenarios": [
+      {
+        "case": 0,
+        "frames": 2048,
+        "checksum": 10420156,
+        "nonzero": 4056
+      },
+      {
+        "case": 1,
+        "frames": 2048,
+        "checksum": 4185267178,
+        "nonzero": 4080
+      },
+      {
+        "case": 2,
+        "frames": 2048,
+        "checksum": 422544410,
+        "nonzero": 4096
+      }
+    ],
+    "unmodified_complete_core": false,
+    "signal_elide": true,
+    "gauss_batch": true,
+    "snapshot_core": true,
+    "memory_restoration_bytes": 65536,
+    "backup_readback_blocks": 128,
+    "restore_blocks": 128,
+    "backup_fault_positions": 16,
+    "restore_fault_positions": 2,
+    "backup_corruption_rejected": true,
+    "invalid_inputs": 5,
+    "native_performance_or_game_audio_claim": false,
+    "commercial_data": false
+  },
+  "parser": {
+    "passed": true,
+    "cases": 219,
+    "fuzz": 1000,
+    "production_parser": true,
+    "hardware_mocked": true,
+    "physical_acceptance": false,
+    "full_dsp_snapshot_core": true,
+    "source_sha256": {
+      "src/remote_control.c": "fdb07847acd380eebe7d5196064a5e0b792fdfeeb294302a2302724afa33dfc7",
+      "src/remote_control.S": "abfdd01a6af2643dda491ae3814a995450e366a55e5b6b44f645cab9e47c780b",
+      "src/remote_control.h": "f86c6e6d3d53d984b262b995a594bbb99f232997850c4270072dd0bcec262856",
+      "scripts/fixtures/remote_control_host.c": "c4ab692d15999e7a90410dbbcb8d922d22eaab067b17a7e018cd4f49de83e003"
+    }
+  },
+  "status": "IMPLEMENTED; CPU cost and RSP integration pending",
+  "derived_cache_bytes": 36,
+  "original_logical_state_layout_unchanged": true,
+  "phase0_closed_input_batch_boundary": true,
+  "per_clock_reg_writes_and_RAM_mutations": 1024,
+  "soft_reset_and_serialization_import_export_cache_invalidations_tested": true,
+  "RSP_backend_implemented": false
+}

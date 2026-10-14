@@ -148,6 +148,24 @@ inline int SPC_DSP::interpolate( voice_t const* v )
 
 
 //// Counters
+#ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
+void SPC_DSP::begin_gaussian_batch()
+{
+	gaussian_valid = 0;
+	for ( int i = 0; i < voice_count; i++ )
+	{
+		voice_t const* v = &m.voices [i];
+		if ( v->env && !v->kon_delay )
+		{
+			gaussian_cache [i] = interpolate( v );
+			gaussian_valid |= v->vbit;
+		}
+	}
+}
+#define GAUSSIAN_BATCH_WORK begin_gaussian_batch();
+#else
+#define GAUSSIAN_BATCH_WORK
+#endif
 
 int const simple_counter_range = 2048 * 5 * 3; // 30720
 
@@ -415,6 +433,12 @@ inline VOICE_CLOCK( V3b )
 }
 VOICE_CLOCK( V3c )
 {
+#ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
+	unsigned const cached = gaussian_valid & v->vbit;
+	gaussian_valid &= ~v->vbit;
+	// regs identifies the voice without a division by voice_t's stride.
+	int const cached_index = (v->regs - m.regs) >> 4;
+#endif
 	// Pitch modulation using previous voice's output
 	if ( m.t_pmon & v->vbit )
 		m.t_pitch += ((m.t_output >> 5) * m.t_pitch) >> 10;
@@ -453,7 +477,11 @@ VOICE_CLOCK( V3c )
 		if ( v->env )
 		{
 			int output = (m.t_non & v->vbit) ?
-				(int16_t) (m.noise * 2) : interpolate( v );
+				(int16_t) (m.noise * 2) :
+#ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
+				cached ? gaussian_cache [cached_index] :
+#endif
+				interpolate( v );
 			m.t_output = (output * v->env) >> 11 & ~1;
 		}
 		else
@@ -461,7 +489,11 @@ VOICE_CLOCK( V3c )
 			m.t_output = 0;
 		}
 #else
-		int output = interpolate( v );
+		int output =
+#ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
+			cached ? gaussian_cache [cached_index] :
+#endif
+			interpolate( v );
 		
 		// Noise
 		if ( m.t_non & v->vbit )
@@ -764,7 +796,7 @@ V(V9_V6_V3,2) -> V(V9,2) V(V6,3) V(V3,4) */
 
 // Voice      0      1      2      3      4      5      6      7
 #define GEN_DSP_TIMING \
-PHASE( 0)  V(V5,0)V(V2,1)\
+PHASE( 0) GAUSSIAN_BATCH_WORK V(V5,0)V(V2,1)\
 PHASE( 1)  V(V6,0)V(V3,1)\
 PHASE( 2)  V(V7_V4_V1,0)\
 PHASE( 3)  V(V8_V5_V2,0)\
@@ -825,6 +857,9 @@ void SPC_DSP::run( int clocks_remain )
 
 void SPC_DSP::init( void* ram_64k )
 {
+#ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
+	gaussian_valid = 0;
+#endif
 	m.ram = (uint8_t*) ram_64k;
 	mute_voices( 0 );
 	disable_surround( false );
@@ -849,6 +884,9 @@ void SPC_DSP::init( void* ram_64k )
 
 void SPC_DSP::soft_reset_common()
 {
+#ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
+	gaussian_valid = 0;
+#endif
 	require( m.ram ); // init() must have been called already
 	
 	m.noise              = 0x4000;
@@ -934,6 +972,9 @@ void SPC_State_Copier::extra()
 
 void SPC_DSP::copy_state( unsigned char** io, copy_func_t copy )
 {
+#ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
+	gaussian_valid = 0;
+#endif
 	SPC_State_Copier copier( io, copy );
 	
 	// DSP registers

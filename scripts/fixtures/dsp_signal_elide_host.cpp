@@ -11,12 +11,16 @@
 #undef SPC_DSP
 #undef SPC_State_Copier
 #undef SPC_DSP_H
+#ifdef SODIUM64_TEST_GAUSS_BATCH
+#define SODIUM64_DSP_FULL_GAUSS_BATCH 1
+#endif
 #define SPC_DSP Optimized_DSP
 #define SPC_State_Copier Optimized_State_Copier
 #include "../../third_party/snes_spc/SPC_DSP.h"
 #undef SPC_DSP
 #undef SPC_State_Copier
 #undef private
+#undef SODIUM64_DSP_FULL_GAUSS_BATCH
 
 static Reference_DSP ref;
 static Optimized_DSP opt;
@@ -85,6 +89,63 @@ static void initialize(unsigned voices){
     memset(pcm0,0xcc,sizeof(pcm0));memset(pcm1,0xcc,sizeof(pcm1));
     ref.set_output(pcm0,32);opt.set_output(pcm1,32);
 }
+#ifdef SODIUM64_TEST_GAUSS_BATCH
+static unsigned chunk_cases,chunk_frames;
+static void save_state(unsigned char **out,void *state,size_t bytes){memcpy(*out,state,bytes);*out+=bytes;}
+static void load_state(unsigned char **in,void *state,size_t bytes){memcpy(state,*in,bytes);*in+=bytes;}
+static void batch_lifetime(){
+    initialize(255);ref.run(257);opt.run(257);compare();
+    check(opt.gaussian_valid!=0,"Gauss batch admitted");
+    ref.soft_reset();opt.soft_reset();compare();
+    check(!opt.gaussian_valid,"Gauss reset invalidation");
+    initialize(255);ref.run(257);opt.run(257);compare();
+    unsigned char a[8192],b[8192],*p=a,*q=b;
+    ref.copy_state(&p,save_state);opt.copy_state(&q,save_state);
+    check(p-a==q-b&&!memcmp(a,b,p-a),"serialized logical state");
+    check(!opt.gaussian_valid,"Gauss copy invalidation");compare();
+    ref.run(32);opt.run(32);compare();
+    p=a;q=b;ref.copy_state(&p,load_state);opt.copy_state(&q,load_state);
+    check(!opt.gaussian_valid,"Gauss import invalidation");compare();
+    ref.run(1);opt.run(1);compare();
+}
+static void per_clock_events(){
+    const unsigned regs[]={0x4c,0x5c,0x6c,0x2d,0x3d,0x4d,0x0c,0x1c,0x0d,0x2c,0x3c,0x5d,0x6d,0x7d};
+    initialize(255);ref.run(256);opt.run(256);compare();
+    for(unsigned step=0;step<1024;step++){
+        unsigned addr=regs[step%14],value=random_word()&255;
+        ref.write(addr,value);opt.write(addr,value);
+        unsigned byte=random_word()&65535;ram0[byte]=ram1[byte]=(unsigned char)random_word();
+        memset(pcm0,0xcc,sizeof(pcm0));memset(pcm1,0xcc,sizeof(pcm1));
+        ref.set_output(pcm0,32);opt.set_output(pcm1,32);
+        ref.run(1);opt.run(1);compare();
+        for(unsigned reg=0;reg<128;reg++)check(ref.read(reg)==opt.read(reg),"per-clock DSP registers");
+    }
+    printf("GAUSS_BATCH_EVENTS PASS clocks=1024 writes=1024 RAM_mutations=1024\n");
+}
+static void chunks_directed(){
+    const unsigned masks[]={0,1,0x55,0xff};
+    const unsigned longer[]={95,96,97,127,128,129,255,256};
+    uint32_t saved_rng=rng;
+    for(unsigned mask=0;mask<4;mask++)for(unsigned phase=0;phase<32;phase++)
+    for(unsigned n=0;n<72;n++){
+        initialize(masks[mask]);
+        ref.run(256+phase);opt.run(256+phase);compare();
+        check(ref.m.phase==(int)phase&&opt.m.phase==(int)phase,"directed entry phase");
+        // Mutations occur between calls, just as clock-bounded SPC writes do.
+        unsigned addr=random_word()&127,value=random_word()&255;
+        ref.write(addr,value);opt.write(addr,value);
+        unsigned byte=random_word()&65535;
+        ram0[byte]=ram1[byte]=(unsigned char)random_word();
+        memset(pcm0,0xcc,sizeof(pcm0));memset(pcm1,0xcc,sizeof(pcm1));
+        ref.set_output(pcm0,32);opt.set_output(pcm1,32);
+        unsigned clocks=n<64?n+1:longer[n-64];
+        ref.run(clocks);opt.run(clocks);compare();
+        for(unsigned reg=0;reg<128;reg++)check(ref.read(reg)==opt.read(reg),"directed DSP registers");
+        chunk_frames+=(unsigned)ref.sample_count()/2;chunk_cases++;
+    }
+    rng=saved_rng;
+}
+#endif
 int main(){
     initialize(255);
     for(unsigned voice=0;voice<8;voice++)for(unsigned e=0;e<3;e++)
@@ -108,6 +169,11 @@ int main(){
         ref.m.regs[0x6c]=opt.m.regs[0x6c]=fraction&8?0x80:0;
         ref.voice_V3c(&a);opt.voice_V3c(&b);compare();directed++;
     }
+#ifdef SODIUM64_TEST_GAUSS_BATCH
+    chunks_directed();
+    batch_lifetime();
+    per_clock_events();
+#endif
     const unsigned masks[]={0,1,0x55,0xff};
     for(unsigned scenario=0;scenario<4;scenario++){
         initialize(masks[scenario]);
@@ -130,4 +196,7 @@ int main(){
         }
     }
     printf("DSP_SIGNAL_ELIDE PASS directed=%u slices=%u frames=%u state_checks=%u\n",directed,slices,frames,checks);
+#ifdef SODIUM64_TEST_GAUSS_BATCH
+    printf("GAUSS_BATCH_PHASE PASS cases=%u frames=%u\n",chunk_cases,chunk_frames);
+#endif
 }

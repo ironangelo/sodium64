@@ -7,6 +7,8 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--cxx',default=os.environ.get('CXX','g++'))
     p.add_argument('--signal-elide',action='store_true')
+    p.add_argument('--gauss-batch',action='store_true')
+    p.add_argument('--snapshot-core',action='store_true')
     p.add_argument('--json-output',type=Path)
     a=p.parse_args();root=Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix='s64-full-dsp-') as tmp:
@@ -15,6 +17,8 @@ def main():
              str(root/'src/full_dsp_probe.cpp'),str(root/'third_party/snes_spc/SPC_DSP.cpp'),
              str(root/'scripts/fixtures/full_dsp_probe_host.cpp'),'-o',str(exe)]
         if a.signal_elide:cmd.insert(1,'-DSODIUM64_DSP_SIGNAL_ELIDE=1')
+        if a.gauss_batch:cmd.insert(1,'-DSODIUM64_DSP_FULL_GAUSS_BATCH=1')
+        if a.snapshot_core:cmd.insert(1,'-DSODIUM64_FULL_DSP_SNAPSHOT_CORE=1')
         subprocess.run(cmd,check=True)
         result=subprocess.run([str(exe)],check=True,capture_output=True,text=True)
     print(result.stdout,end='')
@@ -23,8 +27,10 @@ def main():
     assert len(scenarios)==3 and 'FULL_DSP_PROBE PASS' in result.stdout
     assert [x['checksum'] for x in scenarios]==[10420156,4185267178,422544410]
     assert [x['nonzero'] for x in scenarios]==[4056,4080,4096]
-    proof=dict(passed=True,synthetic_scenarios=scenarios,unmodified_complete_core=not a.signal_elide,
+    proof=dict(passed=True,synthetic_scenarios=scenarios,unmodified_complete_core=not(a.signal_elide or a.gauss_batch),
                signal_elide=a.signal_elide,
+               gauss_batch=a.gauss_batch,
+               snapshot_core=a.snapshot_core,
                memory_restoration_bytes=65536,backup_readback_blocks=128,
                restore_blocks=128,backup_fault_positions=16,restore_fault_positions=2,
                backup_corruption_rejected=True,invalid_inputs=5,

@@ -186,6 +186,12 @@ private:
 		sample_t extra [extra_size];
 	};
 	state_t m;
+#ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
+	// Pure derived values; invalidated after every state import/reset.
+	int gaussian_cache [voice_count];
+	unsigned gaussian_valid;
+	void begin_gaussian_batch();
+#endif
 	
 	void init_counter();
 	void run_counters();

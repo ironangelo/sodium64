@@ -1,0 +1,47 @@
+{
+  "status": "MEASURED exact primitive/owners; REJECTED standalone BRR resident DMA cost",
+  "runtime_source": "942c8324be967f0a7fa6572a7163b00e17bb6f63",
+  "physical_console": true,
+  "Count_Hz": 46875000,
+  "trials": [
+    {
+      "scalar_ticks": 43705,
+      "backend_ticks": 45311,
+      "max_packet_ticks": 1077,
+      "install_ticks": 3875,
+      "samples": 2048
+    },
+    {
+      "scalar_ticks": 43701,
+      "backend_ticks": 45314,
+      "max_packet_ticks": 1089,
+      "install_ticks": 3867,
+      "samples": 2048
+    },
+    {
+      "scalar_ticks": 43700,
+      "backend_ticks": 45179,
+      "max_packet_ticks": 1065,
+      "install_ticks": 3231,
+      "samples": 2048
+    }
+  ],
+  "metrics": {
+    "scalar_packet_us": 14.567,
+    "backend_packet_us": 15.103666666666667,
+    "time_saving_percent": -3.6841262213679338,
+    "worst_packet_us": 23.232,
+    "R59_DMA_protocol_reduction_percent": 32.21786740067017
+  },
+  "all6144_original_fixture_samples_exact": true,
+  "all3_context700_SP8192_currentDMA_restored": true,
+  "all3_pixels67200_PCM8192_heads_regs_boundaries_exact": true,
+  "step660": true,
+  "coordinate8_menu_install_readback_recovered": true,
+  "raw_jobs_input128_private_output64": true,
+  "cache_mailbox_bothDMAs_adapter_wait_cached_output_included": true,
+  "source_generation_install_context_cleanup_excluded": true,
+  "nominal_nine_DSP_clock_budget_us": 8.7890625,
+  "fullDSP_DAC_native60_50_corpus_integration_acceptance": false,
+  "commercial_data": false
+}

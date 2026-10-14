@@ -31,10 +31,10 @@ their registers (which would launch more DMA). Then use the existing exact
 700-byte context/8192-byte SP restoration/readback gates. Primitive result
 mismatch or task timeout still follows that complete safe restoration.
 
-Local C/actual-RSP transaction passes243 cases: all92 transfer faults,
+Local C/actual-RSP transaction passes244 cases: all92 transfer faults,
 74 read corruptions,67 task-wait positions, DMA BUSY timeout, corrupt input,
 idle-length mismatch and address-restore fault. Same-image PIO control passes.
-Parser263+1000 fuzz includes both selectors, malformed/out-of-range modes
+Parser264+1000 fuzz includes both selectors, malformed/out-of-range modes
 and strict recovery-only dispatch. Unchanged R56 primitive/context arithmetic
 gates are reused, including the exact linked kernel and1536 physical lanes.
 Boot/actual renderer DMA/full24576 events/194 slots/43 owners/arena pass.
@@ -67,3 +67,13 @@ stop failure from the new DMA-address/idle-length restoration guard. No DMA
 cost or primitive acceptance can be claimed from this response.
 Preserve the strict guard and add only failure readbacks to distinguish the
 case, reusing all unchanged semantic/ownership gates. No broad CI or promotion.
+
+## Diagnostic v2 - keep the failed gate and expose exact numeric cause
+
+The next artifact reports failure kind, expected/observed readback and the
+DMA register index. Kind1 is bounded DMA BUSY/FULL timeout,2 is failed task
+HALT,3 is restored-address/idle-length mismatch,4 is invalid CPU DMA source.
+It also reports how many primitive lanes completed before the failure.
+All safety/ownership/latency gates remain unchanged. The added source-invalid
+case and precise diagnostic assertions pass; all16 RSP binaries remain exact.
+Use the unique v2 artifact/frozen worker/plan; do not restart terminal10433.

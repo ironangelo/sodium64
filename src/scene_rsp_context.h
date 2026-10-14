@@ -29,6 +29,8 @@ extern volatile uint32_t scene_rsp_context_mismatch_word;
 extern volatile uint32_t scene_rsp_gauss_metrics[8];
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
 extern volatile uint32_t scene_rsp_gauss_dma;
+/* Failure kind, expected readback, observed readback; numeric diagnostics. */
+extern volatile uint32_t scene_rsp_gauss_dma_diag[3];
 #endif
 #endif
 /* 0 untouched/rejected; 1 exact context/memory readback; 2 unsafe/incomplete

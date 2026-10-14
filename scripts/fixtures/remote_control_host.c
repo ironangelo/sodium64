@@ -56,6 +56,7 @@ volatile uint32_t scene_rsp_context_mismatch_word;
 volatile uint32_t scene_rsp_gauss_metrics[8]={1,512,0xffffffffu,111,222,33,444,55};
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
 volatile uint32_t scene_rsp_gauss_dma;
+volatile uint32_t scene_rsp_gauss_dma_diag[3]={3,42,43};
 #endif
 #endif
 uint32_t remote_host_scene_rsp_context(void) {scene_context_calls++;return scene_context_result;}
@@ -553,6 +554,9 @@ int main(void){
 #endif
     scene_context_result=2;
     expect("s64 12345678 state-rsp-roundtrip","ERR scene_context_restore_failed");
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+    check(strstr(response,"gauss_dma_failure=3 gauss_dma_expected=42 gauss_dma_observed=43")!=0);
+#endif
     unsigned expected_context_calls=3;
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
     expected_context_calls=5;

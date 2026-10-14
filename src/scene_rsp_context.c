@@ -15,6 +15,7 @@ extern const uint32_t rsp_dsp_gauss_text_start[],rsp_dsp_gauss_text_end[];
 volatile uint32_t scene_rsp_gauss_metrics[8];
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
 volatile uint32_t scene_rsp_gauss_dma;
+volatile uint32_t scene_rsp_gauss_dma_diag[3];
 static uint32_t dma_source(uint32_t *packet) {
 #ifdef SODIUM64_RSP_GAUSS_HOST
     extern uint32_t scene_rsp_gauss_host_dma_source(uint32_t *);
@@ -89,11 +90,19 @@ static int gauss_probe(scene_rsp_read read,
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
         if(scene_rsp_gauss_dma) {
             uint32_t physical=dma_source(scratch);
-            if(!physical)return 0;
+            if(!physical) {
+                scene_rsp_gauss_dma_diag[0]=4;
+                scene_rsp_gauss_dma_diag[1]=0x80000000u;
+                scene_rsp_gauss_dma_diag[2]=(uint32_t)(uintptr_t)scratch;return 0;
+            }
             write(0xa4040000u,0);write(0xa4040004u,physical);
             write(0xa4040008u,127); /* one128-byte DRAM->DMEM input, no IMEM */
             while(read(0xa4040018u)||read(0xa4040014u))
-                if((uint32_t)(ticks()-start)>=46875000u/5u)return -1;
+                if((uint32_t)(ticks()-start)>=46875000u/5u) {
+                    scene_rsp_gauss_dma_diag[0]=1;
+                    scene_rsp_gauss_dma_diag[2]=(read(0xa4040018u)<<16)|read(0xa4040014u);
+                    return -1;
+                }
         } else
 #endif
         for(unsigned i=0;i<32;i++)write(SP_MEM+4*i,scratch[i]);
@@ -102,7 +111,12 @@ static int gauss_probe(scene_rsp_read read,
             /* This fixed kernel has no DMA/RCP instructions. Stop it before
              * reloading the original owner; a failed HALT requires menu. */
             write(SP_STATUS,2);
-            return (read(SP_STATUS)&1)?0:-1;
+            if(read(SP_STATUS)&1)return 0;
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+            scene_rsp_gauss_dma_diag[0]=2;scene_rsp_gauss_dma_diag[1]=1;
+            scene_rsp_gauss_dma_diag[2]=read(SP_STATUS);
+#endif
+            return -1;
         }
         for(unsigned i=0;i<4;i++)scratch[40+i]=read(SP_MEM+144+4*i);
         uint32_t elapsed=ticks()-start;
@@ -162,6 +176,9 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
     scene_rsp_wait wait) {
     scene_rsp_context_stage=1;
     scene_rsp_context_mismatch_word=0xffffffffu;
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+    for(unsigned i=0;i<3;i++)scene_rsp_gauss_dma_diag[i]=0;
+#endif
     if(!scratch||!capture||!capture_words||capture_words>1024||!restore||
        !restore_words||restore_words>1024||!read||!write||!transfer||!wait)return 0;
     uint32_t status=read(SP_STATUS),pc=read(SP_PC);
@@ -215,7 +232,14 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
         /* Length registers are not rewritten: that would launch another DMA.
          * Require their idle readbacks unchanged and restore both addresses. */
         write(0xa4040000u,dma_original[0]);write(0xa4040004u,dma_original[1]);
-        for(unsigned i=0;i<4;i++)if(read(0xa4040000u+4*i)!=dma_original[i])return 2;
+        for(unsigned i=0;i<4;i++) {
+            uint32_t observed=read(0xa4040000u+4*i);
+            if(observed!=dma_original[i]) {
+                scene_rsp_context_mismatch_word=0x80000000u|i;
+                scene_rsp_gauss_dma_diag[0]=3;scene_rsp_gauss_dma_diag[1]=dma_original[i];
+                scene_rsp_gauss_dma_diag[2]=observed;return 2;
+            }
+        }
     }
 #endif
 #else

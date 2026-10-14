@@ -1133,7 +1133,13 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         if(state==2)scene_rsp_context_needs_menu=1;
         if(state!=1||scene_rsp_context_needs_menu) {
             prefix(id,0);append(state==0?"scene_context_backup_failed":"scene_context_restore_failed");
-            field(" stage=",scene_rsp_context_stage);field(" mismatch_word=",scene_rsp_context_mismatch_word);(void)finish();return;
+            field(" stage=",scene_rsp_context_stage);field(" mismatch_word=",scene_rsp_context_mismatch_word);
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+            field(" gauss_dma_failure=",scene_rsp_gauss_dma_diag[0]);field(" gauss_dma_expected=",scene_rsp_gauss_dma_diag[1]);
+            field(" gauss_dma_observed=",scene_rsp_gauss_dma_diag[2]);field(" gauss_pass=",scene_rsp_gauss_metrics[0]);
+            field(" gauss_lanes=",scene_rsp_gauss_metrics[1]);field(" gauss_transport_DMA=",scene_rsp_gauss_dma);
+#endif
+            (void)finish();return;
         }
         prefix(id,1);append(" rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
@@ -1143,6 +1149,8 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" gauss_checksum=",scene_rsp_gauss_metrics[6]);field(" gauss_install_ticks=",scene_rsp_gauss_metrics[7]);
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
         field(" gauss_transport_DMA=",scene_rsp_gauss_dma);
+        field(" gauss_dma_failure=",scene_rsp_gauss_dma_diag[0]);field(" gauss_dma_expected=",scene_rsp_gauss_dma_diag[1]);
+        field(" gauss_dma_observed=",scene_rsp_gauss_dma_diag[2]);
 #endif
 #endif
         field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);

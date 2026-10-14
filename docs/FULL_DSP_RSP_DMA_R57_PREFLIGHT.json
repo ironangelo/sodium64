@@ -1,8 +1,8 @@
 {
   "passed": true,
-  "static_end": "0xd1e28",
+  "static_end": "0xd2e38",
   "arena_start": "0xd4000",
-  "gap": "0x21d8",
+  "gap": "0x11c8",
   "full_event_capacity": 24576,
   "ROM_slots": 194,
   "concurrent_owners": 43,
@@ -29,7 +29,7 @@
   "CPU_private_packet_alignment": 16,
   "source_within_RDRAM_8MiB_and_cached_KSEG0_guarded": true,
   "linked_hit_writeback_D_sites": [
-    "0x80010de4"
+    "0x80010df4"
   ],
   "SP_addresses_restored_and_idle_length_readbacks_required": true,
   "bounded_DMA_busy_failure_requires_menu_without_owner_overwrite": true,
@@ -37,7 +37,7 @@
   "commercial_data": false,
   "transaction": {
     "passed": true,
-    "cases": 243,
+    "cases": 244,
     "production_C_and_actual_RSP_binaries": true,
     "transfer_fault_positions": 92,
     "read_corruptions": 74,
@@ -62,21 +62,23 @@
     "DMA_corrupt_input_detected": true,
     "DMA_length_or_address_restore_fault_requires_menu": true,
     "same_image_PIO_control": true,
+    "DMA_fault_kind_expected_observed_and_register_index_exact": true,
+    "invalid_CPU_DMA_source_safely_restores_and_reports_failure": true,
     "CPU_cache_writeback_and_hardware_DMA_timing_mocked": true
   },
   "parser": {
     "passed": true,
-    "cases": 263,
+    "cases": 264,
     "fuzz": 1000,
     "production_parser": true,
     "hardware_mocked": true,
     "physical_acceptance": false,
     "full_dsp_snapshot_core": false,
     "source_sha256": {
-      "src/remote_control.c": "83c08178a383b6d67e5cd7949a8aa70324f41310ce5b12744dd5e3a7263e38da",
+      "src/remote_control.c": "8ef30b6bea2815eeeb4cc7b019cedfc5088bc7ed562a44221f06034f8cbae393",
       "src/remote_control.S": "abfdd01a6af2643dda491ae3814a995450e366a55e5b6b44f645cab9e47c780b",
       "src/remote_control.h": "f86c6e6d3d53d984b262b995a594bbb99f232997850c4270072dd0bcec262856",
-      "scripts/fixtures/remote_control_host.c": "d061f78d41bde4312f492a6de1b75e7d926ed5cf56edfe455c0ad5c3d46dc7c0"
+      "scripts/fixtures/remote_control_host.c": "e830857423d7640e5510bcf93d404d76c2462f5bcc50acc28fc0a38cfd4bd72c"
     }
   },
   "boot": {
@@ -84,7 +86,7 @@
     "cases": 12,
     "linked_instructions": true,
     "receiver_bytes": 248,
-    "elf_sha256": "aaca1b12e52218067dd61437e0b2c20a1a9ccc6b0f8db99bc3ed0b6ddc10e588",
+    "elf_sha256": "14717be9a23f5e46a7622a621f48d59dcdc75b4d8be5db18643f51d2340a218b",
     "compiled_tv_capture_cases": 5,
     "modern_ipl3_dmem_tv_source": true,
     "legacy_low_ram_tv_ignored": true,
@@ -124,7 +126,7 @@
         "bytes": 1024
       }
     ],
-    "linked_elf_sha256": "aaca1b12e52218067dd61437e0b2c20a1a9ccc6b0f8db99bc3ed0b6ddc10e588",
+    "linked_elf_sha256": "14717be9a23f5e46a7622a621f48d59dcdc75b4d8be5db18643f51d2340a218b",
     "negative_mutations_rejected": [
       "CPU_queue_disagreement",
       "stale_RSP_backup",
@@ -134,6 +136,6 @@
   },
   "unchanged_kernel_arithmetic_and_context_proof_reused_from_R56": true,
   "R56_physical_arithmetic_lanes": 1536,
-  "ELF_sha256": "aaca1b12e52218067dd61437e0b2c20a1a9ccc6b0f8db99bc3ed0b6ddc10e588",
-  "Z64_sha256": "90659f00c1d809e29a15b27f134499b676104ffb921a912f7d7c0be166df75b6"
+  "ELF_sha256": "14717be9a23f5e46a7622a621f48d59dcdc75b4d8be5db18643f51d2340a218b",
+  "Z64_sha256": "39aec2e66b0b730c308885e91be882920439fcb6796eeaf63fbaa943e3c1137c"
 }

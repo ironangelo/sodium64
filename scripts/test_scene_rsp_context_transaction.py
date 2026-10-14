@@ -36,16 +36,17 @@ def main():
             stub.write_text('#include <stdint.h>\nconst uint32_t rsp_dsp_gauss_text_start[20]={'+words+'};\n'
                 '__asm__(".globl rsp_dsp_gauss_text_end\\n.set rsp_dsp_gauss_text_end,rsp_dsp_gauss_text_start+80");\n'
                 'volatile uint32_t scene_rsp_gauss_host_stride=1;\n'
+                'volatile uint32_t scene_rsp_gauss_host_source_invalid=0;\n'
                 'uint32_t scene_rsp_gauss_host_visible[32];\n'
                 'uint32_t scene_rsp_gauss_host_ticks(void){static uint32_t n;return n+=scene_rsp_gauss_host_stride;}\n'
                 'uint32_t scene_rsp_gauss_host_dma_source(uint32_t *p){\n'
-                'if((uintptr_t)p&15)return 0;\nfor(unsigned i=0;i<32;i++)scene_rsp_gauss_host_visible[i]=p[i];\nreturn 0x10000;}\n')
+                'if(((uintptr_t)p&15)||scene_rsp_gauss_host_source_invalid)return 0;\nfor(unsigned i=0;i<32;i++)scene_rsp_gauss_host_visible[i]=p[i];\nreturn 0x10000;}\n')
             cmd+=['-DSODIUM64_DSP_RSP_GAUSS_PROBE=1','-DSODIUM64_RSP_GAUSS_HOST=1',str(stub)]
             if a.gauss_dma:cmd+=['-DSODIUM64_DSP_RSP_GAUSS_DMA=1']
         subprocess.run(cmd+[str(root/'src/scene_rsp_context.c'),'-o',str(dll)],check=True)
         lib=c.CDLL(str(dll));fn=lib.scene_rsp_context_roundtrip
         fn.argtypes=[U32,U32,c.c_uint,U32,c.c_uint,Read,Write,Transfer,Wait];fn.restype=c.c_uint32
-        def test(*,fail=0,corrupt=0,wait_fault=0,bad_stop=False,SP_busy=False,readback_fault=False,old_programs=None,gauss_fault=False,dma_mode=1,dma_busy_fault=False,dma_input_fault=False,dma_length_fault=False,dma_address_fault=False):
+        def test(*,fail=0,corrupt=0,wait_fault=0,bad_stop=False,SP_busy=False,readback_fault=False,old_programs=None,gauss_fault=False,dma_mode=1,dma_busy_fault=False,dma_input_fault=False,dma_length_fault=False,dma_address_fault=False,dma_source_fault=False):
             nonlocal cases
             rng=random.Random(4560);sp=bytearray(rng.randbytes(8192));cart=bytearray(9216)
             struct.pack_into('>III',sp,0x13c0,0x40882000,0x0900040f,0)
@@ -58,6 +59,7 @@ def main():
             if a.gauss_dma:
                 c.c_uint32.in_dll(lib,'scene_rsp_gauss_dma').value=dma_mode
                 c.c_uint32.in_dll(lib,'scene_rsp_gauss_host_stride').value=1
+                c.c_uint32.in_dll(lib,'scene_rsp_gauss_host_source_invalid').value=int(dma_source_fault)
             @Read
             def read(address):
                 try:
@@ -134,12 +136,19 @@ def main():
                 assert status==0x1801 and pc==0x3c
                 if gauss:
                     metrics=(c.c_uint32*8).in_dll(lib,'scene_rsp_gauss_metrics')
-                    assert metrics[0]==(0 if safe_gauss_wait or gauss_fault or dma_input_fault else 1)
+                    assert metrics[0]==(0 if safe_gauss_wait or gauss_fault or dma_input_fault or dma_source_fault else 1)
                     if metrics[0]:assert waits==67 and metrics[1]==512 and metrics[2]==0xffffffff
                 else:assert waits==5
                 if a.gauss_dma:
                     assert dma_regs==dma_before,'DMA register owner not restored'
-                    if not safe_gauss_wait and not gauss_fault and not dma_input_fault:assert dma_started==(64 if dma_mode else 0)
+                    if not safe_gauss_wait and not gauss_fault and not dma_input_fault and not dma_source_fault:assert dma_started==(64 if dma_mode else 0)
+            if a.gauss_dma and (dma_busy_fault or dma_length_fault or dma_address_fault or dma_source_fault):
+                diag=(c.c_uint32*3).in_dll(lib,'scene_rsp_gauss_dma_diag')
+                assert diag[0]==(1 if dma_busy_fault else 4 if dma_source_fault else 3)
+                if dma_length_fault or dma_address_fault:
+                    index=2 if dma_length_fault else 0
+                    assert diag[1]==dma_before[index] and diag[2]==dma_regs[index]
+                    assert c.c_uint32.in_dll(lib,'scene_rsp_context_mismatch_word').value==0x80000000|index
             if old_programs:
                 assert c.c_uint32.in_dll(lib,'scene_rsp_context_stage').value==4
                 assert c.c_uint32.in_dll(lib,'scene_rsp_context_mismatch_word').value==8
@@ -153,7 +162,7 @@ def main():
         if gauss:test(gauss_fault=True)
         if a.gauss_dma:
             test(dma_mode=0);test(dma_busy_fault=True);test(dma_input_fault=True)
-            test(dma_length_fault=True);test(dma_address_fault=True)
+            test(dma_length_fault=True);test(dma_address_fault=True);test(dma_source_fault=True)
         test(bad_stop=True);test(SP_busy=True);test(readback_fault=True)
         if a.unprefixed_elf:
             memory,symbols=load_elf(a.unprefixed_elf)
@@ -173,6 +182,8 @@ def main():
         if a.gauss_dma:result.update(DMA_input_extent_and_alignment=True,DMA_register_addresses_and_idle_lengths_exact=True,
             DMA_busy_timeout_stops_before_context_memory_overwrite=True,DMA_corrupt_input_detected=True,
             DMA_length_or_address_restore_fault_requires_menu=True,same_image_PIO_control=True,
+            DMA_fault_kind_expected_observed_and_register_index_exact=True,
+            invalid_CPU_DMA_source_safely_restores_and_reports_failure=True,
             CPU_cache_writeback_and_hardware_DMA_timing_mocked=True)
         if a.output:a.output.write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result))

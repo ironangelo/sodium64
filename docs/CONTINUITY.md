@@ -1,3 +1,27 @@
+# 2026-10-14 - R59 preparation-only repair rejected by physical attribution
+
+RESUME HERE: exec79430 terminal exit0, allcontrols/step660/final coordinate8/
+menu/install/readback passed. Runtime 36d907606ba2c8bff375d3ceb09a9f26acb6ed41,
+experiment/brr-packet-cost-r59. [R59](BRR_PACKET_COST_R59.md), curated NATIVE.json.
+Four trials/8192 original samples exact; full700context/8192SP/currentDMA and
+67200pixels/8192PCM/headregs/boundaries unchanged. No native controller live.
+PIO scalar14.539333/prep7.924500/total21.923167/residual13.998667us;
+DMA scalar14.538333/prep7.927833/total22.282667/residual14.354833us.
+Preparation share36.146694%/35.578477%. Even free preparation fails40-percent
+saving and nominal8.7890625us. Preparation remains included; residual is only
+attribution. REJECTED preparation-only repair; no broadCI/promotion.
+
+Next material architecture question: replace CPU packet/task/word-readback
+protocol with bounded resident DMA input/output using original captured jobs.
+Inspect current wait/transfer path first; preserve proven BRR arithmetic and
+phase21 boundary, count cache maintenance/completion/all output work, require
+safe private output ownership and full context/cursor recovery. Do not tune
+R58 formatting or infer a universal RSP ceiling. R49/master/R44/R45/prior
+candidates remain preserved; fullDSP/DAC/renderer sharing/native60/50/corpus/
+integration remain OPEN. Earlier history retained below.
+
+---
+
 # 2026-10-14 - R59 physical preparation attribution running
 
 RESUME HERE: exec79430 LIVE; normal menu/install/readback passed. Runtime

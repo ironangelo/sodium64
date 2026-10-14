@@ -1,6 +1,6 @@
 # R59 - BRR packet preparation cost discriminator
 
-Status: IMPLEMENTED diagnostic; physical cost pending. R58's current PIO/DMA
+Status: MEASURED diagnostic; preparation-only remedy REJECTED. R58's current PIO/DMA
 backend remains REJECTED. No full-core DSP, game cadence or integration claim.
 
 R58 measured 32-sample packets at 21.924 us PIO and 22.281333 us DMA, versus
@@ -38,3 +38,23 @@ Only emulator source and original numeric-fixture summaries are public. ROMs,
 states, captures, PCM, raw reports and game-derived hashes remain private.
 R49, R44/R45, all earlier candidates and master are preserved. Complete DSP/DAC,
 renderer sharing, sustained native 60/50 Hz and the full corpus remain open.
+
+## Physical result
+
+Exec79430 completed exit0. All 8192 original decoded samples, four full
+context/SP/current-DMA readbacks and four image/paused-PCM/head/register/
+boundary controls passed; step660 and coordinate8/menu/install/readback passed.
+
+PIO: scalar 14.539333 us, preparation 7.924500 us, total 21.923167 us. Preparation is 36.146694% of total; residual attribution is 13.998667 us.
+
+DMA: scalar 14.538333 us, preparation 7.927833 us, total 22.282667 us. Preparation is 35.578477% of total; residual attribution is 14.354833 us.
+
+Even hypothetical free preparation leaves only 3.72% PIO / 1.26% DMA saving
+versus scalar, far below 40%, and exceeds the 8.7890625 us engineering window.
+This rejects a preparation-only representation repair. It does not establish
+a universal RSP limit. The present CPU packet/task/word-readback protocol must
+change materially before another backend candidate; inspect the existing wait
+and transfer path and test a bounded resident DMA return protocol with original
+captured jobs. Count cache maintenance, task completion and all output work.
+Do not retune R58 or run broad CI for the rejected backend. Full-core DSP/DAC,
+renderer sharing, native60/50, corpus and integration remain open.

@@ -809,7 +809,13 @@ ECHO_CLOCK( 28 )
 inline void SPC_DSP::echo_write( int ch )
 {
 	if ( !(m.t_echo_enabled & 0x20) )
+	{
 		SET_LE16A( ECHO_PTR( ch ), m.t_echo_out [ch] );
+#ifdef SODIUM64_DSP_FULL_WINDOW
+		if ( echo_publish )
+			echo_publish( echo_publish_context, m.t_echo_ptr + ch * 2, ECHO_PTR( ch ) );
+#endif
+	}
 	m.t_echo_out [ch] = 0;
 }
 ECHO_CLOCK( 29 )
@@ -916,6 +922,10 @@ void SPC_DSP::run( int clocks_remain )
 
 void SPC_DSP::init( void* ram_64k )
 {
+#ifdef SODIUM64_DSP_FULL_WINDOW
+	echo_publish = 0;
+	echo_publish_context = 0;
+#endif
 #ifdef SODIUM64_DSP_FULL_BRR_BATCH
 	brr_pending = 0;
 	brr_batch_peak = 0;

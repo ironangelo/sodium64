@@ -120,6 +120,12 @@ public:
 		uint8_t t_envx_out;
 	};
 private:
+#ifdef SODIUM64_DSP_FULL_WINDOW
+	friend class SPC_DSP_Window;
+	// Transport callback is derived ownership, outside serialized logical state.
+	void (*echo_publish)( void*, unsigned, unsigned char const* );
+	void* echo_publish_context;
+#endif
 	enum { brr_block_size = 9 };
 	
 	struct state_t

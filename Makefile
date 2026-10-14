@@ -104,6 +104,17 @@ N64_CXXFLAGS_PROBE += -DSODIUM64_FULL_DSP_SNAPSHOT_CORE=1
 endif
 DSP_FULL_GAUSS_BATCH ?= 0
 DSP_FULL_BRR_BATCH ?= 0
+DSP_FULL_WINDOW ?= 0
+ifeq ($(DSP_FULL_WINDOW),1)
+ifneq ($(FULL_DSP_PROBE),1)
+$(error DSP_FULL_WINDOW requires FULL_DSP_PROBE=1)
+endif
+ifneq ($(DSP_FULL_GAUSS_BATCH)$(DSP_FULL_BRR_BATCH),00)
+$(error DSP_FULL_WINDOW is qualified with DSP_FULL_GAUSS_BATCH=0 DSP_FULL_BRR_BATCH=0)
+endif
+N64_CXXFLAGS_DSP += -DSODIUM64_DSP_FULL_WINDOW=1
+N64_CXXFLAGS_PROBE += -DSODIUM64_DSP_FULL_WINDOW=1
+endif
 ifeq ($(DSP_FULL_BRR_BATCH),1)
 ifneq ($(FULL_DSP_PROBE),1)
 $(error DSP_FULL_BRR_BATCH requires FULL_DSP_PROBE=1)
@@ -350,6 +361,9 @@ OFILES += $(BUILD_DIR)/src/scene_rsp_probe.o
 endif
 ifeq ($(FULL_DSP_PROBE),1)
 OFILES += $(BUILD_DIR)/src/full_dsp_probe.o $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o
+endif
+ifeq ($(DSP_FULL_WINDOW),1)
+OFILES += $(BUILD_DIR)/src/full_dsp_window.o
 endif
 ifeq ($(NATIVE_DIAG_TRACE),1)
 OFILES += $(BUILD_DIR)/src/continuous_save_c.o
@@ -622,6 +636,10 @@ $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h s
 	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_CFLAGS_REMOTE) -o $@ $<
 
 $(BUILD_DIR)/src/full_dsp_probe.o: src/full_dsp_probe.cpp src/full_dsp_probe.h $(wildcard third_party/snes_spc/*.h)
+	@mkdir -p $(dir $@)
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror $(N64_CXXFLAGS_PROBE) -o $@ $<
+
+$(BUILD_DIR)/src/full_dsp_window.o: src/full_dsp_window.cpp src/full_dsp_window.h $(wildcard third_party/snes_spc/*.h)
 	@mkdir -p $(dir $@)
 	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror $(N64_CXXFLAGS_PROBE) -o $@ $<
 

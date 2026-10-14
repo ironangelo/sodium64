@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "status": "IMPLEMENTED semantic window controller",
+  "counts": {
+    "state_checks": 72645,
+    "producer_reads": 20023,
+    "clocks": 933286,
+    "directed": 5669,
+    "FIFO_overflow": 31,
+    "echo_word_publications": 50955,
+    "original_hazards": 4
+  },
+  "original_immediate_core_reference": true,
+  "separate_CPU_DSP_RAM": true,
+  "timestamped_ordered_event_replay": true,
+  "full_normalized_state_RAM_PCM": true,
+  "echo_publish_cache_JIT_callback_semantics": true,
+  "rejected_mutations": [
+    "future_RAM_visible",
+    "late_event_replay",
+    "missing_echo_RAM_barrier",
+    "wrong_post_latch_echo_pointer",
+    "missing_DSP_register_read_barrier",
+    "FIFO_drops_old_events",
+    "missing_echo_publication",
+    "missing_PCM_consumption_barrier",
+    "missing_export_barrier",
+    "missing_soft_reset_barrier"
+  ],
+  "live_SPC_JIT_timestamps_implemented": false,
+  "native_memory_owner_assigned": false,
+  "resident_RSP_complete_DSP_implemented": false,
+  "native_performance_acceptance": false,
+  "commercial_data": false
+}

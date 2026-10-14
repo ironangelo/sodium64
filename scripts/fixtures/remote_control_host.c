@@ -52,6 +52,9 @@ static char response[2048];
 static uint32_t scene_context_result=1,scene_context_calls;
 volatile uint32_t scene_rsp_context_stage;
 volatile uint32_t scene_rsp_context_mismatch_word;
+#ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+volatile uint32_t scene_rsp_gauss_metrics[8]={1,512,0xffffffffu,111,222,33,444,55};
+#endif
 uint32_t remote_host_scene_rsp_context(void) {scene_context_calls++;return scene_context_result;}
 #ifdef SODIUM64_SCENE_SLOT
 static unsigned slot_calls,slot_result=1;
@@ -526,7 +529,11 @@ int main(void){
     expect("s64 12345678 state-rsp-roundtrip","ERR scene_context_backup_failed");
     check(scene_context_calls==1&&remote_scene_canonical&&remote_paused);
     scene_context_result=1;
+#ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+    expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192 gauss_pass=1 gauss_lanes=512 gauss_mismatch=4294967295 gauss_scalar_ticks=111 gauss_PIO_ticks=222 gauss_PIO_max=33 gauss_checksum=444 gauss_install_ticks=55");
+#else
     expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
+#endif
     check(scene_context_calls==2&&remote_guest_frames==20&&remote_render_frames==20&&remote_paused);
     scene_context_result=2;
     expect("s64 12345678 state-rsp-roundtrip","ERR scene_context_restore_failed");

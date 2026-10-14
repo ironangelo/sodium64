@@ -28,6 +28,13 @@ $(error SCENE_RSP_CONTEXT requires SCENE_STATE=1)
 endif
 N64_CFLAGS_REMOTE += -DSODIUM64_SCENE_RSP_CONTEXT=1
 endif
+DSP_RSP_GAUSS_PROBE ?= 0
+ifeq ($(DSP_RSP_GAUSS_PROBE),1)
+ifneq ($(SCENE_STATE)$(SCENE_RSP_CONTEXT)$(NATIVE_DIAG_TRACE)$(AUDIO_OBSERVER),1111)
+$(error DSP_RSP_GAUSS_PROBE requires SCENE_STATE=1 SCENE_RSP_CONTEXT=1 NATIVE_DIAG_TRACE=1 AUDIO_OBSERVER=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_DSP_RSP_GAUSS_PROBE=1 -Os
+endif
 SCENE_RSP_REBIND ?= 0
 SCENE_RSP_GPR_ONLY ?= 0
 ifeq ($(SCENE_RSP_GPR_ONLY),1)
@@ -264,6 +271,9 @@ PROFILE := 1
 endif
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
+ifneq ($(DSP_RSP_GAUSS_PROBE),1)
+SFILES := $(filter-out src/rsp_dsp_gauss.S,$(SFILES))
+endif
 ifneq ($(SCENE_RSP_CONTEXT),1)
 SFILES := $(filter-out src/rsp_scene_capture.S src/rsp_scene_restore.S,$(SFILES))
 endif

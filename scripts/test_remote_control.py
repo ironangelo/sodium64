@@ -16,6 +16,7 @@ def main():
     parser.add_argument('--scene-state',action='store_true')
     parser.add_argument('--scene-rsp-rebind',action='store_true')
     parser.add_argument('--scene-rsp-context',action='store_true')
+    parser.add_argument('--dsp-rsp-gauss-probe',action='store_true')
     parser.add_argument('--scene-slot',action='store_true')
     args=parser.parse_args();root=Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix='s64-runtime-model-') as directory:
@@ -28,11 +29,12 @@ def main():
         if args.gain_probe:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_MIX_OBSERVER=1','-DSODIUM64_DSP_GAIN_PROBE=1']
         if args.full_dsp_probe:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_FULL_DSP_PROBE=1']
         if args.full_dsp_snapshot_core:cmd+=['-DSODIUM64_AUDIO_OBSERVER=1','-DSODIUM64_FULL_DSP_PROBE=1','-DSODIUM64_FULL_DSP_SNAPSHOT_CORE=1']
-        if args.scene_state or args.scene_rsp_rebind or args.scene_rsp_context or args.scene_slot:
+        if args.scene_state or args.scene_rsp_rebind or args.scene_rsp_context or args.scene_slot or args.dsp_rsp_gauss_probe:
             (Path(directory)/'regdef.h').write_text('/* Host C ABI fixture; no MIPS register macros. */\n')
             cmd+=['-DSODIUM64_SCENE_STATE=1','-DSODIUM64_NATIVE_DIAG_TRACE=1','-I',directory]
         if args.scene_rsp_rebind:cmd+=['-DSODIUM64_SCENE_RSP_REBIND=1']
         if args.scene_rsp_context:cmd+=['-DSODIUM64_SCENE_RSP_CONTEXT=1']
+        if args.dsp_rsp_gauss_probe:cmd+=['-DSODIUM64_SCENE_RSP_CONTEXT=1','-DSODIUM64_DSP_RSP_GAUSS_PROBE=1']
         if args.scene_slot:cmd+=['-DSODIUM64_SCENE_RSP_CONTEXT=1','-DSODIUM64_SCENE_SLOT=1']
         if os.name!='nt':cmd+=['-fsanitize=address,undefined','-fno-omit-frame-pointer','-no-pie']
         cmd += [str(root/'src/remote_control.c'),str(root/'scripts/fixtures/remote_control_host.c'),'-o',str(executable)]

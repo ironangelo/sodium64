@@ -1127,6 +1127,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
             field(" stage=",scene_rsp_context_stage);field(" mismatch_word=",scene_rsp_context_mismatch_word);(void)finish();return;
         }
         prefix(id,1);append(" rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
+#ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+        field(" gauss_pass=",scene_rsp_gauss_metrics[0]);field(" gauss_lanes=",scene_rsp_gauss_metrics[1]);
+        field(" gauss_mismatch=",scene_rsp_gauss_metrics[2]);field(" gauss_scalar_ticks=",scene_rsp_gauss_metrics[3]);
+        field(" gauss_PIO_ticks=",scene_rsp_gauss_metrics[4]);field(" gauss_PIO_max=",scene_rsp_gauss_metrics[5]);
+        field(" gauss_checksum=",scene_rsp_gauss_metrics[6]);field(" gauss_install_ticks=",scene_rsp_gauss_metrics[7]);
+#endif
         field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
         append(" provenance=canonical_full_RSP_register_roundtrip serializer=0 machine_restore=0");
         (void)finish();return;

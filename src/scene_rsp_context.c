@@ -10,6 +10,87 @@
 volatile uint32_t scene_rsp_context_stage;
 volatile uint32_t scene_rsp_context_mismatch_word;
 
+#ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+extern const uint32_t rsp_dsp_gauss_text_start[],rsp_dsp_gauss_text_end[];
+volatile uint32_t scene_rsp_gauss_metrics[8];
+static uint32_t ticks(void) {
+#ifdef SODIUM64_RSP_GAUSS_HOST
+    extern uint32_t scene_rsp_gauss_host_ticks(void);
+    return scene_rsp_gauss_host_ticks();
+#else
+    uint32_t value;__asm__ volatile("mfc0 %0,$9":"=r"(value)::"memory");return value;
+#endif
+}
+static int gauss_probe(scene_rsp_read read,
+                       scene_rsp_write write,scene_rsp_wait wait) {
+    /* Cached private CPU stack, not the uncached PI transfer-buffer alias:
+     * otherwise scalar timing would unfairly include uncached sample loads. */
+    uint32_t scratch[44];
+    static const uint16_t coef[4][4]={
+        {370,1305,374,0},{168,1210,659,11},
+        {56,965,969,58},{0,374,1305,370}};
+    for(unsigned i=0;i<8;i++)scene_rsp_gauss_metrics[i]=0;
+    scene_rsp_gauss_metrics[2]=0xffffffffu;
+    if(rsp_dsp_gauss_text_end-rsp_dsp_gauss_text_start!=20)return 0;
+    uint32_t start=ticks();
+    for(unsigned i=0;i<20;i++)write(SP_MEM+4096+4*i,rsp_dsp_gauss_text_start[i]);
+    for(unsigned i=0;i<4;i++)write(SP_MEM+128+4*i,0xfffefffeu);
+    scene_rsp_gauss_metrics[7]=ticks()-start;
+    for(unsigned i=0;i<20;i++)if(read(SP_MEM+4096+4*i)!=rsp_dsp_gauss_text_start[i])return 0;
+    uint32_t checksum=2166136261u;
+    for(unsigned n=0;n<64;n++) {
+        /* Preparation is outside both timings. Four pinned fractions per
+         * packet, all lanes independent, signed samples spanning full16. */
+        for(unsigned lane=0;lane<8;lane++)for(unsigned tap=0;tap<4;tap++) {
+            uint32_t sample=(n*15583+lane*29519+tap*32749+0x8000)&65535;
+            uint32_t coefficient=(uint32_t)coef[(n+lane)&3][tap]<<5;
+            unsigned i=tap*8+lane/2;
+            if(!(lane&1)){scratch[i]=sample<<16;scratch[i+4]=coefficient<<16;}
+            else {scratch[i]|=sample;scratch[i+4]|=coefficient;}
+        }
+        start=ticks();
+        for(unsigned lane=0;lane<8;lane++) {
+            int sum=0;unsigned shift=(lane&1)?0:16;
+            for(unsigned tap=0;tap<4;tap++) {
+                unsigned i=tap*8+lane/2;
+                int sample=(int16_t)(scratch[i]>>shift);
+                unsigned coefficient=((scratch[i+4]>>shift)&65535)>>5;
+                sum+=(sample*(int)coefficient)>>11;
+                if(tap==2)sum=(int16_t)sum;
+            }
+            if(sum>32767)sum=32767;
+            if(sum< -32768)sum= -32768;
+            uint32_t expected=(uint32_t)sum&65534;
+            if(!(lane&1))scratch[36+lane/2]=expected<<16;
+            else scratch[36+lane/2]|=expected;
+        }
+        scene_rsp_gauss_metrics[3]+=ticks()-start;
+        for(unsigned i=0;i<4;i++)write(SP_MEM+144+4*i,~scratch[36+i]);
+        start=ticks();
+        for(unsigned i=0;i<32;i++)write(SP_MEM+4*i,scratch[i]);
+        write(SP_PC,0);write(SP_STATUS,5);
+        if(!wait()||(read(SP_STATUS)&0x63)!=3) {
+            /* This fixed kernel has no DMA/RCP instructions. Stop it before
+             * reloading the original owner; a failed HALT requires menu. */
+            write(SP_STATUS,2);
+            return (read(SP_STATUS)&1)?0:-1;
+        }
+        for(unsigned i=0;i<4;i++)scratch[40+i]=read(SP_MEM+144+4*i);
+        uint32_t elapsed=ticks()-start;
+        scene_rsp_gauss_metrics[4]+=elapsed;
+        if(elapsed>scene_rsp_gauss_metrics[5])scene_rsp_gauss_metrics[5]=elapsed;
+        for(unsigned i=0;i<4;i++) {
+            if(scratch[40+i]!=scratch[36+i]) {
+                scene_rsp_gauss_metrics[2]=n*8+i*2;return 0;
+            }
+            checksum=(checksum^scratch[40+i])*16777619u;
+        }
+        scene_rsp_gauss_metrics[1]+=8;
+    }
+    scene_rsp_gauss_metrics[6]=checksum;scene_rsp_gauss_metrics[0]=1;return 1;
+}
+#endif
+
 static uint32_t hash(uint32_t value,uint32_t word) {
     for(unsigned shift=24;;shift-=8) {
         value=(value^((word>>shift)&255))*16777619u;
@@ -91,6 +172,12 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
         for(unsigned i=0;i<n;i++)if(scratch[i]!=read(SP_MEM+4*(start+i)))return 2;
     }
     if(!verify(scratch,CONTEXT_SLOT,CONTEXT_WORDS,context,transfer))return 2;
+#ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+    /* The primitive deliberately changes vectors/ACC/flags. The original
+     * architectural context and all8KiB still follow the same restore gate. */
+    scene_rsp_context_stage=6;
+    if(gauss_probe(read,write,wait)<0)return 2;
+#else
     /* Force a different register context, then capture and check every field
      * is zero. This is an actual restore test, not an unchanged-state copy. */
     for(unsigned i=0;i<CONTEXT_WORDS;i++)write(SP_MEM+4*i,0);
@@ -102,6 +189,7 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
     if(!run(capture,capture_words,write,read,wait))return 2;
     scene_rsp_context_stage=9;
     for(unsigned i=0;i<CONTEXT_WORDS;i++)if(read(SP_MEM+4*i)){scene_rsp_context_mismatch_word=i;return 2;}
+#endif
     if(!verify(scratch,CONTEXT_SLOT,CONTEXT_WORDS,context,transfer))return 2;
     scene_rsp_context_stage=10;
     for(unsigned start=0;start<CONTEXT_WORDS;start+=128) {

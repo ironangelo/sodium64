@@ -41,14 +41,29 @@ def execute(code,d,r,v,acc,flags,stop=None,pending_entry=None):
                     assert e in (8,9,10)
                     v[vd]=[(x>>((10-e)*16))&65535 for x in acc]
                 else:
-                    assert e==0 and fn in (6,15),('unproved vector arithmetic',hex(w))
+                    assert e==0 and fn in (5,6,15,16,20,40),('unproved vector arithmetic',hex(w))
                     a,b=v[rd].copy(),v[rt].copy()
-                    if fn==6:
+                    if fn==5: # VMUDM: signed VS * unsigned VT, result ACC MID.
+                        acc[:]=[(signed(x,16)*y)&MASK for x,y in zip(a,b)]
+                        v[vd]=[(x>>16)&65535 for x in acc]
+                    elif fn==6:
                         acc[:]=[(x*signed(y,16))&MASK for x,y in zip(a,b)]
                         v[vd]=[x&65535 for x in acc]
-                    else:
+                    elif fn==15:
                         acc[:]=[(old+((signed(x,16)*signed(y,16))<<16))&MASK for old,x,y in zip(acc,a,b)]
                         v[vd]=[max(-32768,min(32767,signed(x>>16,32)))&65535 for x in acc]
+                    elif fn==16: # VADD includes VCOL; clears both VCO halves.
+                        values=[signed(x,16)+signed(y,16)+((flags[0]>>i)&1) for i,(x,y) in enumerate(zip(a,b))]
+                        acc[:]=[(old&~65535)|(x&65535) for old,x in zip(acc,values)]
+                        v[vd]=[max(-32768,min(32767,x))&65535 for x in values];flags[0]=0
+                    elif fn==20: # VADDC wraps and publishes unsigned carry only.
+                        values=[x+y for x,y in zip(a,b)]
+                        acc[:]=[(old&~65535)|(x&65535) for old,x in zip(acc,values)]
+                        v[vd]=[x&65535 for x in values]
+                        flags[0]=sum((x>>16)<<i for i,x in enumerate(values))
+                    else: # VAND changes ACC low, not its upper32 bits.
+                        values=[x&y for x,y in zip(a,b)]
+                        acc[:]=[(old&~65535)|x for old,x in zip(acc,values)];v[vd]=values
             else:raise AssertionError(('unproved COP2 operation',hex(w)))
         else:raise AssertionError(('unexpected control/RCP write',pc,hex(w)))
         r[0]=0

@@ -23,6 +23,11 @@
 #include "scene_rsp_probe.h"
 extern volatile uint32_t scene_rsp_context_stage;
 extern volatile uint32_t scene_rsp_context_mismatch_word;
+#ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+/* passed, lanes, mismatch, scalar ticks, PIO/task ticks, max task ticks,
+ * result checksum, kernel/mask installation ticks. Not gameplay timing. */
+extern volatile uint32_t scene_rsp_gauss_metrics[8];
+#endif
 /* 0 untouched/rejected; 1 exact context/memory readback; 2 unsafe/incomplete
  * hardware recovery, caller must permit menu recovery only. */
 uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],

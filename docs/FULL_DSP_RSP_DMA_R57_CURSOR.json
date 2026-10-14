@@ -1,0 +1,21 @@
+{
+  "status": "MEASURED DMA arithmetic; exact DMA cursor restoration OPEN",
+  "runtime_source": "3f6ec0e250c116e5c2217a6cf86afab1102a04a3",
+  "physical_console": true,
+  "primitive_DMA_lanes_exact": 512,
+  "primitive_PIO_lanes_exact": 512,
+  "DMA_failure_kind": 3,
+  "failed_register": "SP_MEM_ADDR readback/current DMA cursor",
+  "expected_cursor": 6032,
+  "observed_cursor": 128,
+  "expected_cursor_hex": "0x1790",
+  "observed_cursor_hex": "0x80",
+  "PIO_full_context_SP_images_PCM_control": true,
+  "recovery_coordinate8_menu_install_readback": true,
+  "DMA_cost_or_full_owner_restoration_accepted": false,
+  "commercial_data": false,
+  "primary_IO_reference": "https://raw.githubusercontent.com/ares-emulator/ares/master/ares/n64/rsp/io.cpp",
+  "primary_DMA_reference": "https://raw.githubusercontent.com/ares-emulator/ares/master/ares/n64/rsp/dma.cpp",
+  "inference": "CPU address writes update pending; reads report current/last DMA. Physical mismatch agrees.",
+  "prior_host_direct_write_readback_DMA_model_requires_correction": true
+}

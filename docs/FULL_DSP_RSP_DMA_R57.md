@@ -77,3 +77,32 @@ It also reports how many primitive lanes completed before the failure.
 All safety/ownership/latency gates remain unchanged. The added source-invalid
 case and precise diagnostic assertions pass; all16 RSP binaries remain exact.
 Use the unique v2 artifact/frozen worker/plan; do not restart terminal10433.
+
+## Physical v2 - DMA arithmetic exact; current/pending cursor distinction
+
+Exec21219 finished exit1; coordinate8/menu/install/readback recovery passed.
+PIO0 passed512 arithmetic lanes/fullcontext/SP/images/PCM. DMA1 also completed
+all512 original arithmetic lanes, but its exact owner gate failed for register0:
+SP_MEM_ADDR expected6032 (0x1790), observed128 (0x80), mismatch80000000,
+failurekind3. Cost acceptance and DMA context restoration remain OPEN.
+
+The primary [ares RSP I/O](https://raw.githubusercontent.com/ares-emulator/ares/master/ares/n64/rsp/io.cpp)
+reads DMA current addresses and writes pending addresses. Its
+[DMA implementation](https://raw.githubusercontent.com/ares-emulator/ares/master/ares/n64/rsp/dma.cpp)
+copies pending to current only when starting a transfer, and advances the current
+cursor through the transfer. This explains the observed physical end cursor;
+the former synthetic direct-write/readback fixture modeled that register
+incorrectly. This is semantic evidence, not N64 performance from ares.
+
+Next correct the existing transaction model to separate current/pending DMA,
+and reproduce the actual6032->128 rejection before changing the implementation.
+Preserve exact readback and memory guarantees. Evaluate a bounded8-byte
+no-change read DMA ending at the original SP/DRAM cursors, only after checking
+alignment, whole RDRAM/SP bounds, canonical idle counters, and exact equality
+of source/tail bytes captured before the first mutation. It must preserve
+both idle length readbacks and all8KiB, with no writes to RDRAM. Any mismatch
+or timeout still locks to menu recovery. Audit future DMA helpers' complete
+address/length rebinding; hidden pending descriptors must not be assumed equal.
+This is an implementation hypothesis, not a completed repair or permission
+to waive the failed gate. Retry only after the meaningful fault controls pass.
+See the companion CURSOR.json for original-fixture/hardware-register numbers.

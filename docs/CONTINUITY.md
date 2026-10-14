@@ -1,3 +1,22 @@
+# 2026-10-13 - R57 physical same-image PIO/DMA discriminator running
+
+RESUME HERE: native exec21219 LIVE, normalmenu/install/readback passed;
+runtime3f6ec0e250c116e5c2217a6cf86afab1102a04a3, experiment/rsp-gauss-dma-r57,
+preflightcontinuity8954ee5. Frozen private rsp-gauss-dma-r57-v2-archive worker
+and plan; workerSHA83b2b92909c887da71e81983d494f0fb3ffd5204ecd626812dcc60f637461325.
+Poll21219 and rsp-gauss-dma-r57-native-v2/report.json; rootsoleCOM3, no competing
+transport/restart on observation timeout. Six64packet512lane trials at600..605
+alternatePIO0/DMA1; inputDMA128B includescache/writeback/SYNC/setup/wait and
+output readback. Cost gate>=40%median saving and DMAmax<=nominal7.8125us.
+Fullcontext/SP/DMA readbacks, same67200pixels8192PCM/headregs/guestboundary,
+step660 and finallycoordinate8/menu/install/readback required. Nativecost and
+hardware cache/DMA restoration remain PENDING. First10433 failedstage6;
+v2 addsfailure kind/expected/observed only, keeps strictgate. Terminal checkpoint before
+next batch; no broadCI/promotion/fullDSP/DAC/game60/50/corpus/integration
+acceptance. Prior evidence and history retained below.
+
+---
+
 # 2026-10-13 - R57 bounded DMA failure diagnostics implemented; native cause test next
 
 RESUME HERE: code3f6ec0e250c116e5c2217a6cf86afab1102a04a3, experiment/rsp-gauss-dma-r57,

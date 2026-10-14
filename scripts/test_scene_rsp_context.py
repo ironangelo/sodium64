@@ -41,7 +41,7 @@ def execute(code,d,r,v,acc,flags,stop=None,pending_entry=None):
                     assert e in (8,9,10)
                     v[vd]=[(x>>((10-e)*16))&65535 for x in acc]
                 else:
-                    assert e==0 and fn in (5,6,15,16,20,40),('unproved vector arithmetic',hex(w))
+                    assert e==0 and fn in (5,6,7,15,16,20,33,39,40),('unproved vector arithmetic',hex(w))
                     a,b=v[rd].copy(),v[rt].copy()
                     if fn==5: # VMUDM: signed VS * unsigned VT, result ACC MID.
                         acc[:]=[(signed(x,16)*y)&MASK for x,y in zip(a,b)]
@@ -49,6 +49,9 @@ def execute(code,d,r,v,acc,flags,stop=None,pending_entry=None):
                     elif fn==6:
                         acc[:]=[(x*signed(y,16))&MASK for x,y in zip(a,b)]
                         v[vd]=[x&65535 for x in acc]
+                    elif fn==7: # VMUDH: signed product<<16, final MID saturation.
+                        acc[:]=[((signed(x,16)*signed(y,16))<<16)&MASK for x,y in zip(a,b)]
+                        v[vd]=[max(-32768,min(32767,signed(x>>16,32)))&65535 for x in acc]
                     elif fn==15:
                         acc[:]=[(old+((signed(x,16)*signed(y,16))<<16))&MASK for old,x,y in zip(acc,a,b)]
                         v[vd]=[max(-32768,min(32767,signed(x>>16,32)))&65535 for x in acc]
@@ -61,6 +64,14 @@ def execute(code,d,r,v,acc,flags,stop=None,pending_entry=None):
                         acc[:]=[(old&~65535)|(x&65535) for old,x in zip(acc,values)]
                         v[vd]=[x&65535 for x in values]
                         flags[0]=sum((x>>16)<<i for i,x in enumerate(values))
+                    elif fn==33: # VEQ uses !VCOH, publishes VCCL, clears VCCH/VCO.
+                        equal=[x==y and not ((flags[0]>>(8+i))&1) for i,(x,y) in enumerate(zip(a,b))]
+                        values=[x if equal[i] else y for i,(x,y) in enumerate(zip(a,b))]
+                        flags[1]=sum(int(ok)<<i for i,ok in enumerate(equal));flags[0]=0
+                        acc[:]=[(old&~65535)|x for old,x in zip(acc,values)];v[vd]=values
+                    elif fn==39: # VMRG follows VCCL, preserves VCC, clears VCO.
+                        values=[x if (flags[1]>>i)&1 else y for i,(x,y) in enumerate(zip(a,b))]
+                        acc[:]=[(old&~65535)|x for old,x in zip(acc,values)];v[vd]=values;flags[0]=0
                     else: # VAND changes ACC low, not its upper32 bits.
                         values=[x&y for x,y in zip(a,b)]
                         acc[:]=[(old&~65535)|x for old,x in zip(acc,values)];v[vd]=values

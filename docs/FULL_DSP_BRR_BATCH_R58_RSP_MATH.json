@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "linked_kernel_bytes": 444,
+  "instructions_per32_samples": 111,
+  "directed_lane_groups": 21952,
+  "all65536_encoded_words": true,
+  "random_lane_groups": 65536,
+  "all16_ranges_all4_filters_signed_odd_histories": true,
+  "all_entry_vectors_ACC_flags_randomized": true,
+  "output_owner_bytes": 64,
+  "all_other4096_DMEM_bytes_unchanged": true,
+  "negative_mutations_rejected": [
+    "wrong_raw_unsigned_product",
+    "wrong_filter1_coefficient",
+    "missing_odd_history_half",
+    "premature_ACC_reset",
+    "wrong_second_history",
+    "missing_nybble_shift"
+  ],
+  "kernel_sha256": "10f38b9538b62508bed15922be73d6c31938a5572d96ad37290f5a8114591122",
+  "native_RSP_transport_or_performance_tested": false,
+  "commercial_data": false
+}

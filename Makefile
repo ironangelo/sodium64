@@ -36,6 +36,7 @@ endif
 N64_CFLAGS_REMOTE += -DSODIUM64_DSP_RSP_GAUSS_PROBE=1 -Os
 endif
 DSP_RSP_GAUSS_DMA ?= 0
+DSP_RSP_BRR_PROBE ?= 0
 ifeq ($(DSP_RSP_GAUSS_DMA),1)
 ifneq ($(DSP_RSP_GAUSS_PROBE),1)
 $(error DSP_RSP_GAUSS_DMA requires DSP_RSP_GAUSS_PROBE=1)
@@ -289,6 +290,9 @@ PROFILE := 1
 endif
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
+ifneq ($(DSP_RSP_BRR_PROBE),1)
+SFILES := $(filter-out src/rsp_dsp_brr.S,$(SFILES))
+endif
 ifneq ($(DSP_RSP_GAUSS_PROBE),1)
 SFILES := $(filter-out src/rsp_dsp_gauss.S,$(SFILES))
 endif

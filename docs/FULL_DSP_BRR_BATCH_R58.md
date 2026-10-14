@@ -55,3 +55,28 @@ recovery proof and all earlier evidence remain preserved.
 Full SPC/DSP/DAC audio, renderer contention, sustained native60/50, complete
 required corpus and master integration remain open. R44 stays experimental,
 R45 off, and no candidate is merged by this semantic batch.
+
+## Linked RSP arithmetic primitive implemented; native transport pending
+
+`rsp_dsp_brr.S` is444 bytes/111 instructions for32 decoded samples. Its96-byte
+input contains eight encoded words, two signed-history vectors, range weight/
+scale and filter IDs. It handles all invalid ranges and odd histories exactly;
+per-term floors remain independent, full48-bit ACC survives intermediate
+partial sums, final signed16 saturation precedes the original double/wrap.
+Twelve resident constant vectors occupy060..11F; only120..15F is output.
+It uses no DMA/RCP/reciprocal instructions. This is not cycle/performance proof.
+
+Actual linked binary PASS:21952 directed groups over all16 ranges/four filters/
+signed-history edges, all65536 encoded words, and65536 random groups:153024
+groups/612096 decoded samples. Entry vectors/ACC/flags are randomized; allDMEM
+outside64 output bytes is unchanged. Six real instruction mutations reject.
+The existing full-context model still passes637 roundtrips/65536 MID values/
+nine mutations after the necessary VMUDH/VEQ/VMRG semantic additions. These
+match the pinned primary ares RSP SISD source; native acceptance remains open.
+
+Next use the existing exclusive full-RSP context/current-DMA-cursor transaction
+for a short native scalar/PIO/DMA discriminator. Count packet preparation from
+the captured encoded/header/history inputs, cache writeback/setup/wait/output
+together. Compare the same original scalar recurrence, not precomputed samples.
+Record installation/whole-context cleanup separately, preserve live controls
+and restorecoordinate8 via menu/install/readback. No broadCI until value.

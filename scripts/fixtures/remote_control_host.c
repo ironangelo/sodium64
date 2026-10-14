@@ -53,7 +53,11 @@ static uint32_t scene_context_result=1,scene_context_calls;
 volatile uint32_t scene_rsp_context_stage;
 volatile uint32_t scene_rsp_context_mismatch_word;
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+#ifdef SODIUM64_DSP_RSP_BRR_PROBE
+volatile uint32_t scene_rsp_gauss_metrics[8]={1,2048,0xffffffffu,111,222,33,444,55};
+#else
 volatile uint32_t scene_rsp_gauss_metrics[8]={1,512,0xffffffffu,111,222,33,444,55};
+#endif
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
 volatile uint32_t scene_rsp_gauss_dma;
 volatile uint32_t scene_rsp_gauss_dma_diag[3]={3,42,43};
@@ -542,7 +546,11 @@ int main(void){
     check(scene_context_calls==1&&remote_scene_canonical&&remote_paused);
     scene_context_result=1;
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+#ifdef SODIUM64_DSP_RSP_BRR_PROBE
+    expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192 brr_packet_samples=32 brr_input_bytes=96 brr_output_bytes=64 brr_prep_included=1 gauss_pass=1 gauss_lanes=2048 gauss_mismatch=4294967295 gauss_scalar_ticks=111 gauss_PIO_ticks=222 gauss_PIO_max=33 gauss_checksum=444 gauss_install_ticks=55");
+#else
     expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192 gauss_pass=1 gauss_lanes=512 gauss_mismatch=4294967295 gauss_scalar_ticks=111 gauss_PIO_ticks=222 gauss_PIO_max=33 gauss_checksum=444 gauss_install_ticks=55");
+#endif
 #else
     expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
 #endif

@@ -11,7 +11,13 @@ volatile uint32_t scene_rsp_context_stage;
 volatile uint32_t scene_rsp_context_mismatch_word;
 
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
+#ifdef SODIUM64_DSP_RSP_BRR_PROBE
+extern const uint32_t rsp_dsp_brr_text_start[],rsp_dsp_brr_text_end[];
+#define DSP_INPUT_BYTES 96u
+#else
 extern const uint32_t rsp_dsp_gauss_text_start[],rsp_dsp_gauss_text_end[];
+#define DSP_INPUT_BYTES 128u
+#endif
 volatile uint32_t scene_rsp_gauss_metrics[8];
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
 volatile uint32_t scene_rsp_gauss_dma;
@@ -23,10 +29,10 @@ static uint32_t dma_source(uint32_t *packet) {
 #else
     uintptr_t address=(uintptr_t)packet;
     if((address&15)||((uint32_t)address&0xe0000000u)!=0x80000000u||
-       (address&0x1fffffffu)>0x7fff80u)return 0;
+       (address&0x1fffffffu)>0x800000u-DSP_INPUT_BYTES)return 0;
     /* Same hit-writeback operation as the existing renderer/profile owners.
      * Exactly eight private aligned lines, no adjacent stack data. */
-    for(unsigned i=0;i<128;i+=16)
+    for(unsigned i=0;i<DSP_INPUT_BYTES;i+=16)
         __asm__ volatile("cache 0x19,0(%0)"::"r"((unsigned char *)packet+i):"memory");
     __asm__ volatile("sync":::"memory");
     return (uint32_t)address&0x1fffffffu;
@@ -65,6 +71,96 @@ static int dma_cursor_restore(const uint32_t original[4],const uint32_t tail[2],
     return 1;
 }
 #endif
+#ifdef SODIUM64_DSP_RSP_BRR_PROBE
+static int gauss_probe(scene_rsp_read read,scene_rsp_write write,scene_rsp_wait wait) {
+    static const uint16_t constants[12]={0,1,65535,32768,0xf000,2,3,63488,62464,58880,4096,12288};
+    typedef struct { unsigned word,header;int p1,p2; } job_t;
+    job_t jobs[8];
+    uint32_t packet[56] __attribute__((aligned(16)));
+    for(unsigned i=0;i<8;i++)scene_rsp_gauss_metrics[i]=0;
+    scene_rsp_gauss_metrics[2]=0xffffffffu;
+    if(rsp_dsp_brr_text_end-rsp_dsp_brr_text_start!=111)return 0;
+    uint32_t start=ticks();
+    for(unsigned i=0;i<111;i++)write(SP_MEM+4096+4*i,rsp_dsp_brr_text_start[i]);
+    for(unsigned vector=0;vector<12;vector++)for(unsigned word=0;word<4;word++)
+        write(SP_MEM+96+vector*16+word*4,((uint32_t)constants[vector]<<16)|constants[vector]);
+    scene_rsp_gauss_metrics[7]=ticks()-start;
+    for(unsigned i=0;i<111;i++)if(read(SP_MEM+4096+4*i)!=rsp_dsp_brr_text_start[i])return 0;
+    uint32_t checksum=2166136261u;
+    for(unsigned n=0;n<64;n++) {
+        /* Original captured-job shape. Synthetic source generation is outside
+         * both costs; all packet formatting below is charged to the RSP path. */
+        for(unsigned lane=0;lane<8;lane++) {
+            jobs[lane].word=(n*15583+lane*29519+0x87f0)&65535;
+            jobs[lane].header=(((n+lane*3)&15)<<4)|(((n+lane)&3)<<2)|(n&3);
+            jobs[lane].p1=(int16_t)(n*32749+lane*15583+0x8000);
+            jobs[lane].p2=(int16_t)(n*29519+lane*32749+0x7fff);
+        }
+        start=ticks();
+        for(unsigned lane=0;lane<8;lane++) {
+            unsigned range=jobs[lane].header>>4;
+            uint32_t values[6]={jobs[lane].word,(uint32_t)jobs[lane].p1&65535,
+                (uint32_t)jobs[lane].p2&65535,range<=12?1u<<(range+3):1u,
+                range<=12?1u:2048u,(jobs[lane].header>>2)&3};
+            for(unsigned vector=0;vector<6;vector++) {
+                unsigned i=vector*4+lane/2;
+                if(!(lane&1))packet[i]=values[vector]<<16;
+                else packet[i]|=values[vector];
+            }
+        }
+        uint32_t preparation=ticks()-start;
+        start=ticks();
+        for(unsigned lane=0;lane<8;lane++) {
+            int p1=jobs[lane].p1,p2=jobs[lane].p2;
+            unsigned word=jobs[lane].word,range=jobs[lane].header>>4,filter=jobs[lane].header&12;
+            for(unsigned sample=0;sample<4;sample++,word=(word<<4)&65535) {
+                int s=(int16_t)word>>12;
+                s=(s<<range)>>1;
+                if(range>=13)s=(s>>25)<<11;
+                int half=p2>>1;
+                if(filter>=8) {
+                    s+=p1;s-=half;
+                    if(filter==8){s+=half>>4;s+=(p1*-3)>>6;}
+                    else {s+=(p1*-13)>>7;s+=(half*3)>>4;}
+                } else if(filter){s+=p1>>1;s+=(-p1)>>5;}
+                if(s>32767)s=32767;
+                if(s< -32768)s= -32768;
+                s=(int16_t)(s*2);p2=p1;p1=s;
+                unsigned i=24+sample*4+lane/2;
+                if(!(lane&1))packet[i]=((uint32_t)s&65535)<<16;
+                else packet[i]|=(uint32_t)s&65535;
+            }
+        }
+        scene_rsp_gauss_metrics[3]+=ticks()-start;
+        for(unsigned i=0;i<16;i++)write(SP_MEM+0x120+4*i,~packet[24+i]);
+        start=ticks();
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+        if(scene_rsp_gauss_dma) {
+            uint32_t physical=dma_source(packet);
+            if(!physical){scene_rsp_gauss_dma_diag[0]=4;return 0;}
+            write(0xa4040000u,0);write(0xa4040004u,physical);write(0xa4040008u,DSP_INPUT_BYTES-1);
+            while(read(0xa4040018u)||read(0xa4040014u))
+                if((uint32_t)(ticks()-start)>=46875000u/5u){scene_rsp_gauss_dma_diag[0]=1;return -1;}
+        } else
+#endif
+        for(unsigned i=0;i<24;i++)write(SP_MEM+4*i,packet[i]);
+        write(SP_PC,0);write(SP_STATUS,5);
+        if(!wait()||(read(SP_STATUS)&0x63)!=3) {
+            write(SP_STATUS,2);return (read(SP_STATUS)&1)?0:-1;
+        }
+        for(unsigned i=0;i<16;i++)packet[40+i]=read(SP_MEM+0x120+4*i);
+        uint32_t elapsed=ticks()-start+preparation;
+        scene_rsp_gauss_metrics[4]+=elapsed;
+        if(elapsed>scene_rsp_gauss_metrics[5])scene_rsp_gauss_metrics[5]=elapsed;
+        for(unsigned i=0;i<16;i++) {
+            if(packet[40+i]!=packet[24+i]){scene_rsp_gauss_metrics[2]=n*32+i*2;return 0;}
+            checksum=(checksum^packet[40+i])*16777619u;
+        }
+        scene_rsp_gauss_metrics[1]+=32;
+    }
+    scene_rsp_gauss_metrics[6]=checksum;scene_rsp_gauss_metrics[0]=1;return 1;
+}
+#else
 static int gauss_probe(scene_rsp_read read,
                        scene_rsp_write write,scene_rsp_wait wait) {
     /* Cached private CPU stack, not the uncached PI transfer-buffer alias:
@@ -156,6 +252,7 @@ static int gauss_probe(scene_rsp_read read,
     }
     scene_rsp_gauss_metrics[6]=checksum;scene_rsp_gauss_metrics[0]=1;return 1;
 }
+#endif
 #endif
 
 static uint32_t hash(uint32_t value,uint32_t word) {

@@ -18,6 +18,7 @@ def main():
     ap.add_argument('--cc',default=os.environ.get('CC','gcc'));ap.add_argument('--output',type=Path)
     ap.add_argument('--unprefixed-elf',type=Path)
     ap.add_argument('--gauss-elf',type=Path,help='exercise opt-in primitive and its safe timeout recovery')
+    ap.add_argument('--brr-elf',type=Path,help='exercise the32-sample primitive under the same owner')
     ap.add_argument('--gauss-dma',action='store_true',help='test bounded input DMA and register recovery')
     ap.add_argument('--expect-cursor-rejection',action='store_true',help='reproduce native v2 current/pending cursor rejection')
     ap.add_argument('--source',type=Path,help='optional preserved production C source for a regression reproduction')
@@ -26,7 +27,12 @@ def main():
     def array(blob):return (c.c_uint32*(len(blob)//4))(*struct.unpack('>'+str(len(blob)//4)+'I',blob))
     cap,res=array(capture),array(restore)
     gauss=b''
+    assert not(a.gauss_elf and a.brr_elf)
     if a.gauss_elf:_,gauss=read_text(a.gauss_elf);assert len(gauss)==80
+    if a.brr_elf:_,gauss=read_text(a.brr_elf);assert len(gauss)==444
+    input_bytes=96 if a.brr_elf else 128
+    output_offset=0x120 if a.brr_elf else 0x90
+    expected_samples=2048 if a.brr_elf else 512
     assert not a.gauss_dma or gauss
     assert not a.expect_cursor_rejection or a.gauss_dma
     with tempfile.TemporaryDirectory(prefix='s64-rsp-ctx-',ignore_cleanup_errors=True) as directory:
@@ -35,9 +41,10 @@ def main():
         cmd+=['-Wl,--export-all-symbols'] if os.name=='nt' else ['-fPIC']
         if gauss:
             stub=Path(directory)/'gauss.c'
-            words=','.join(hex(x)+'u' for x in struct.unpack('>20I',gauss))
-            stub.write_text('#include <stdint.h>\nconst uint32_t rsp_dsp_gauss_text_start[20]={'+words+'};\n'
-                '__asm__(".globl rsp_dsp_gauss_text_end\\n.set rsp_dsp_gauss_text_end,rsp_dsp_gauss_text_start+80");\n'
+            program='rsp_dsp_brr' if a.brr_elf else 'rsp_dsp_gauss'
+            words=','.join(hex(x)+'u' for x in struct.unpack('>'+str(len(gauss)//4)+'I',gauss))
+            stub.write_text('#include <stdint.h>\nconst uint32_t '+program+'_text_start['+str(len(gauss)//4)+']={'+words+'};\n'
+                '__asm__(".globl '+program+'_text_end\\n.set '+program+'_text_end,'+program+'_text_start+'+str(len(gauss))+'");\n'
                 'volatile uint32_t scene_rsp_gauss_host_stride=1;\n'
                 'volatile uint32_t scene_rsp_gauss_host_source_invalid=0;\n'
                 'uint32_t scene_rsp_gauss_host_visible[32];\n'
@@ -45,6 +52,7 @@ def main():
                 'uint32_t scene_rsp_gauss_host_dma_source(uint32_t *p){\n'
                 'if(((uintptr_t)p&15)||scene_rsp_gauss_host_source_invalid)return 0;\nfor(unsigned i=0;i<32;i++)scene_rsp_gauss_host_visible[i]=p[i];\nreturn 0x10000;}\n')
             cmd+=['-DSODIUM64_DSP_RSP_GAUSS_PROBE=1','-DSODIUM64_RSP_GAUSS_HOST=1',str(stub)]
+            if a.brr_elf:cmd+=['-DSODIUM64_DSP_RSP_BRR_PROBE=1']
             if a.gauss_dma:cmd+=['-DSODIUM64_DSP_RSP_GAUSS_DMA=1']
         subprocess.run(cmd+['-I',str(root/'src'),str(a.source or root/'src/scene_rsp_context.c'),'-o',str(dll)],check=True)
         lib=c.CDLL(str(dll));fn=lib.scene_rsp_context_roundtrip
@@ -99,10 +107,11 @@ def main():
                     elif a.gauss_dma and address==0xa4040008:
                         assert dma_mode==1
                         dma_regs[:2]=dma_pending
-                        if value==127:
+                        if value==input_bytes-1:
                             assert dma_pending==[0,0x10000]
                             visible=(c.c_uint32*32).in_dll(lib,'scene_rsp_gauss_host_visible')
-                            sp[:128]=struct.pack('>32I',*visible);dma_regs[0]=128;dma_regs[1]+=128;dma_started+=1
+                            sp[:input_bytes]=struct.pack('>'+str(input_bytes//4)+'I',*visible[:input_bytes//4])
+                            dma_regs[0]=input_bytes;dma_regs[1]+=input_bytes;dma_started+=1
                             if dma_input_fault:sp[0]^=0x80
                             if dma_busy_fault:c.c_uint32.in_dll(lib,'scene_rsp_gauss_host_stride').value=10000000
                         else:
@@ -143,7 +152,7 @@ def main():
                     d=bytearray(sp[:4096]);code=bytes(sp[4096:])
                     is_gauss=bool(gauss) and code[:len(gauss)]==gauss
                     execute(code,d,*machine,pending_entry=None if is_gauss else 0x3c)
-                    if is_gauss and gauss_fault:d[144]^=1
+                    if is_gauss and gauss_fault:d[output_offset]^=1
                     sp[:4096]=d;status|=3;return 1
                 except Exception as e:errors.append(e);return 0
             scratch=(c.c_uint32*128)()
@@ -161,7 +170,7 @@ def main():
                 if gauss:
                     metrics=(c.c_uint32*8).in_dll(lib,'scene_rsp_gauss_metrics')
                     assert metrics[0]==(0 if safe_gauss_wait or gauss_fault or dma_input_fault or dma_source_fault else 1)
-                    if metrics[0]:assert waits==67 and metrics[1]==512 and metrics[2]==0xffffffff
+                    if metrics[0]:assert waits==67 and metrics[1]==expected_samples and metrics[2]==0xffffffff
                 else:assert waits==5
                 if a.gauss_dma:
                     assert dma_regs==dma_before,'DMA register owner not restored'
@@ -222,7 +231,7 @@ def main():
             no_DP_AI_guest_SD_or_ROM_access=True,callback_exceptions_fail=True,
             hardware_timing_mocked=True,native_acceptance=False,complete_machine_restore=False)
         result['unprefixed_native_stage4_word8_reproduced']=bool(a.unprefixed_elf)
-        if gauss:result.update(gauss_lanes=512,gauss_clobbered_context_restored=True,
+        if gauss:result.update(primitive_output_samples=expected_samples,gauss_clobbered_context_restored=True,
             all64_primitive_wait_faults_safely_halted_and_restored=True,gauss_result_mutation_rejected=True)
         if a.gauss_dma:result.update(DMA_input_extent_and_alignment=True,DMA_register_addresses_and_idle_lengths_exact=True,
             DMA_busy_timeout_stops_before_context_memory_overwrite=True,DMA_corrupt_input_detected=True,
@@ -233,6 +242,8 @@ def main():
             DMEM_IMEM_wrap_and_skip_preserved=True,source_tail_guards_before_and_after_mutation=True,
             cursor_DMA_timeout_and_byte_fault_require_menu=True,no_RDRAM_writes=True,
             CPU_cache_writeback_and_hardware_DMA_timing_mocked=True)
+        if a.brr_elf:result.update(BRR32_sample_actual_kernel=True,input_bytes=96,output_bytes=64,
+            preparation_included_in_transport_metric=True,per_term_floors_saturation_double_wrap_exact=True)
         if a.output:a.output.write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result))
         if os.name=='nt':c.windll.kernel32.FreeLibrary(c.c_void_p(lib._handle))

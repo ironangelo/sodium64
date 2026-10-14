@@ -1,6 +1,7 @@
 # R58 - closed-input mixed-epoch BRR batch
 
-Status: IMPLEMENTED semantic boundary; RSP backend/native cost NOT IMPLEMENTED.
+Status: IMPLEMENTED semantic boundary, RSP primitive and native discriminator;
+complete-core RSP backend/native cost acceptance remain pending.
 R57's thin Gaussian PIO/DMA cost remains rejected. This experiment tests a
 larger useful-work boundary before constructing another vector kernel.
 
@@ -80,3 +81,29 @@ the captured encoded/header/history inputs, cache writeback/setup/wait/output
 together. Compare the same original scalar recurrence, not precomputed samples.
 Record installation/whole-context cleanup separately, preserve live controls
 and restorecoordinate8 via menu/install/readback. No broadCI until value.
+
+## Native discriminator ready - preparation included
+
+The opt-in BRR probe uses the existing full-context/canonical scene guards,
+PIO0/DMA1 selector and current-cursor repair. Its96-byte input DMA writes back
+six private aligned lines;64-byte outputs are compared to the original scalar
+recurrence in cached original-job form. Packet formatting from encoded word,
+header and two histories is charged to transport: timing includes preparation,
+writeback/setup/kernel/wait/output. Synthetic source generation is outside
+both paths. Installation/full-context cleanup are recorded separately.
+
+The production C transaction with actual BRR/capture/restore binaries passes
+253 meaningful fault/extent/current-pending/source/cursor/byte controls.
+RPC264+1000 passes the explicit32-sample/96-byte/64-byte/preparation receipt.
+The native artifact's remaining16 RSP banks are byte-exact R57, new kernel
+hash exact arithmetic proof, all43 owners/full24576 events/194 slots and
+boot/actual DMA/static arena pass. No event/ROM capacity or arena relaxed.
+
+Physical plan: three alternating64-packet PIO/DMA pairs, each2048 original
+decoded samples, atALttP600..605. Require exact checksum/currentDMA readbacks/
+700-byte context/8192-byte SP/image67200/pausedPCM8192/head/register/boundary
+controls, step660 and finalcoordinate8/menu/install/readback. Retain a backend
+only with at least40% median cost saving versus this image's original scalar
+formula and observed maximum fitting the nominalnine-DSP-clock8.7890625us
+first-use budget. This is an engineering discriminator, not complete DSP or
+renderer-sharing acceptance. Reject failed value before broadCI or tuning.

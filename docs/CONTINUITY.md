@@ -1,3 +1,19 @@
+# 2026-10-13 - R57 first DMA ownership gate failed; safe recovery verified
+
+RESUME HERE: exec10433 terminal exit1, coordinate8/menu/install/readback
+verified, no controller live. Runtime4a622befb5699525ba5be013cc1295befdca2570, experiment/rsp-gauss-dma-r57.
+PIO0 at600 passed512results/fullcontext+SP/allpixels+PCM controls; scalar28686
+/PIO22294Count, maxPIO513. One trial, no complete paired performance result.
+DMA1 at601 rejected scene_context_restore_failed stage6/mismatch_wordFFFFFFFF.
+Cause not yet resolved: existing error cannot distinguish DMA/task-stop failure
+from DMAaddress/idle-length restore readback. No native DMAcost/math acceptance.
+[R57](FULL_DSP_RSP_DMA_R57.md). Preserve safety/ownership gate; add bounded
+failure readbacks before the next native attempt. Reuse unchanged exact local
+proofs. No broadCI/promotion; fullDSP/DAC/game60/50/corpus/renderer sharing/
+integration OPEN. Prior candidates and history retained below.
+
+---
+
 # 2026-10-13 - R57 physical same-image PIO/DMA discriminator running
 
 RESUME HERE: native exec10433 LIVE, normalmenu/install/readback passed;

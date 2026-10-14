@@ -1,3 +1,21 @@
+# 2026-10-13 - R56 physical vector/PIO experiment running
+
+RESUME HERE: native exec62811 LIVE, normalmenu/install/readback passed;
+source09c7c00f2ff06c3f1836bf06707acf7a9b33076a, experiment/full-dsp-rsp-r56,
+preflightcontinuityb2f203f. Frozen rsp-gauss-r56-archive worker and plan;
+workerSHA6a90524af0f29a3a94928db9d92ddb861f1da7688b49e1d526ee548329fc0289.
+Poll62811 and private rsp-gauss-r56-native/report.json, rootsoleCOM3;
+no competing transport/restart on observation timeout. Three64packet512lane
+physical math/PIOtiming trials atALttP600/601/602, exactindependent checksum,
+full700context8192SPreadback, same67200pixels8192PCM/headregs/guestboundary,
+step660 and finallycoordinate8/menu/install/readback. Nativecost PENDING;
+nominal8DSPclock7.8125us first-use gate, not fullDSP/rendering/gameplay60.
+Terminal checkpoint before next technical batch; no broadCI/promotion yet.
+FullDSP/DAC/SNES/native60/50/corpus/renderer sharing/integration OPEN.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R56 exact vector primitive implemented; native PIO discriminator next
 
 RESUME HERE: code09c7c00f2ff06c3f1836bf06707acf7a9b33076a, experiment/full-dsp-rsp-r56,

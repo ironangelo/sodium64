@@ -13,9 +13,14 @@ boot top64KiB. Linked15 rejection+one32KiB copy/2048cache cases,16init/arm,
 CPU/RSP DMA backup tables agree. Loaded/static end0xD0DC0 < CGRAM0xD6000.
 No live guest DSP, SP DMA, new guest save owner or native speed claim.
 
-Exec95649 LIVE: frozen native_full_window_r61_memory.py installed/readback
-passed; launch/control/snapshot/recovery pending. Poll that exact exec session;
-do not restart on observation timeout. Frozen full-window-r61-memory-plan.json.
+Exec95649 terminal exit1; both native owner probes PASS, all67200 image pixels/
+8192PCM/headregs/boundary controls and step660 PASS; capture sealed_ready1/
+phase6/result2. Controller incorrectly tried profile (status alias) as a binary
+export. No .bin produced; snapshot byte parse remains PENDING. Final coordinate8/
+menu/install/readback recovered. No COM3 process live. Resource proof preserved;
+do not rerun the two owner probes. Next frozen snapshot-only worker
+native_full_window_r61_snapshot.py/full-window-r61-snapshot-plan.json uses sav
+export on the exact same artifact/source and final recovery. Record new handle.
 Install/readback, ALttP pause/park600; two audio-window-memory-probe trials,
 image/PCM/heads/registers/boundary controls; step660; one USB capture/32KiB
 profile parse to qualify moved snapshot; finally coordinate8/menu/install/

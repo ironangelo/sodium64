@@ -1,3 +1,28 @@
+# 2026-10-14 - R58 linked32-sample BRR primitive exact; native probe next
+
+RESUME HERE: code2733bd613ed489d8060339debea6520ac47d3f78, experiment/full-dsp-brr-batch-r58,
+isolated sodium64-dsp-brr-batch-r58. [R58](FULL_DSP_BRR_BATCH_R58.md).
+Closed-input phase21/peak8 semanticproof remains52231statechecks/12288V4+
+12288V3c/9216phase/8192slices, original6144fullDSPframes, off18nativeexec
+sections exactR49. NewRSP444B/111instr per32samples; 96Binputencoded/history/
+rangeweight+scale/filterIDs,192Bresidentconstants,64Boutput120..15F.
+Actuallinkedprimitive153024groups/612096samples exact:21952directed/all65536
+encodedwords/65536randomgroups/allrangesfilters/oddhistories. Allentryvector/
+ACC/flags randomized, otherDMEM unchanged, sixrealinstructionfaults rejected.
+OnlyVMUDH/VEQ/VMRG addedtoexistingdirectedmodel perprimarypinnedares source;
+fullcontext637roundtrips/65536MID/ninefaults stillpass. CountsnotN64timing.
+
+Next bindthisprimitive toexistingfullcontext/currentDMAcursor transaction,
+sameoriginal scalar formula/PIO/DMA inoneimage. Countpacketprep fromcaptured
+encoded/header/history pluscache/writeback/setup/wait/output; install/whole
+contextcleanup separate. Semantic/extent/fault gate then shortphysicalcost,
+fullSP/context/currentcursor/imagePCM/step660/finalcoordinate8recovery.
+Full-coreRSPbackendNOTIMPLEMENTED/nativecostPENDING. NoGaussmicrotuning/
+broadCI/promotion; fullDSP/DAC/renderer sharing/native60/50/corpus/integration
+OPEN. No nativejoblive, priorR49/R57/master/candidates preserved. History below.
+
+---
+
 # 2026-10-14 - R58 closed-input BRR boundary proved; wider RSP primitive next
 
 RESUME HERE: code033fd8e0648797d49638ad594a8a80fdf6f138b6, experiment/full-dsp-brr-batch-r58,

@@ -1,3 +1,35 @@
+# 2026-10-13 - R55 eight-voice Gaussian boundary proved; native CPU cost next
+
+RESUME HERE: runtime89467e4d5141a5c21c62f47df17ca23f9617e829, experiment/full-dsp-gauss-batch-r55,
+isolated sodium64-dsp-batch-r55. Published/defaultDSP_FULL_GAUSS_BATCH0, R49
+signal1/snapshot1; no R50/R51/R52/R53/R54 changes. Atphase0 pure Gaussian
+inputs for eight voices are ready before each V3c; batch computes raw values,
+original phase consumes them. All RAM/register/KON/PMON/envelope/echo/BRR
+ordering retained.36 derived bytes outside unchanged logicalstate_t; init,
+load,reset,serialize/import invalidate; arbitrary partial starts fall back.
+RSP BACKEND NOT IMPLEMENTED. This establishes its possible closed-input
+boundary; DMA/first-use deadlines/renderer contention remain open.
+[Report](FULL_DSP_GAUSS_BATCH_R55.md); full numeric preflight.
+
+LocalPASS12288V3c/9216phase cases/13052phase frames/8192slices/11590other
+frames/39944 logicalstate+RAM+PCM checks.1024 one-clock DSPwrites/RAMmutations
+and reset/export/import cache lifecycle pass; five faults reject. Transaction
+6144frames/checksums/nonzero/fullRAMrestore/faults/snapshot tail pass. Parser
+219+1000fuzz reused exactsources. Off18coresections exactR49,13RSPbanks exact,
+boot12/TV5/alllinkedHI-LO/CPU6/two banks/fourD6400DMAs/3faults pass. Static
+D4A88/D5A88<D6000/full24576events194slots43owners, no capacity reduction.
+
+Next frozen private dsp-batch-r55-archive/native_dsp_batch_r55.py, rootalone
+COM3 after no-controller/hash check. Same-source0/1, originalthree2048frame
+cases3x atALttP600; hostPCM/RAMrestore/liveimagePCMstate+step660, finally
+coordinate8/menu/install/readback. Record livehandle and pollsame. >=8%both
+active CPU savings material, below3%both rejects CPU cost value; batch semantic
+boundary is separate from performance. No broadCI before value; all64ms budgets
+before CPU/APU/rendering and fullDSP/DAC/SNES/native60/corpus/integration OPEN.
+Keep earlierR44/R45/master/state unchanged. History retained.
+
+---
+
 # 2026-10-13 - R54 native cache effects measured; retained cost improvement rejected
 
 RESUME HERE: worker94780 terminal exit0/recovery verified, no controller live.

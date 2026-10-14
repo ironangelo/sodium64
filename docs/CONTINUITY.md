@@ -1,3 +1,28 @@
+# 2026-10-14 - R60 raw-job resident DMA discriminator ready
+
+RESUME HERE: runtime 942c8324be967f0a7fa6572a7163b00e17bb6f63, experiment/brr-resident-dma-r60,
+isolated sodium64-brr-resident-dma-r60. [R60](BRR_RESIDENT_DMA_R60.md).
+R59 preparation-only repair remains rejected; new architecture reads original
+128-byte captured jobs and returns64 bytes by resident RSP DMA. All257instr/
+1028B, unchanged110instr R58 arithmetic body, 47104 original adapter samples,
+six mutations, transaction254 input/output stall/guard/context/cursor faults,
+parser264+1000, context637/65536MID/nine faults, 17banks/43owners/boot/cache/
+DMA bounds pass. Private static224B owner has input128/output64/guards32.
+All cache maintenance/mailbox/bothDMAs/adapter/wait/output reads are charged.
+
+Next frozen private brr-rsp-r60-archive/native_brr_rsp_r60.py and plan;
+worker SHA b6e4dfa0ce29ea29dac0b55ac099aa75413d9cb01db9d8d6ab39154001d8d677. Three native trials600..602,
+each64packets/2048original samples versus same captured-job scalar reference.
+Require >=40% median saving and observedmax<=8.7890625us, plus all700context/
+8192SP/currentDMA/67200pixels/8192PCM/headregs/boundary controls/step660/final
+coordinate8/menu/install/readback. Root sole COM3 after controller/hash check;
+record handle/poll same, never restart on observation timeout. Native cost
+PENDING; live closed-input integration/fullDSP/DAC/renderer sharing/native
+60/50/corpus/integration remain OPEN. No broadCI/promotion; prior R49/R58/R59/
+R44/R45/master/candidates preserved. Earlier history retained below.
+
+---
+
 # 2026-10-14 - R59 preparation-only repair rejected by physical attribution
 
 RESUME HERE: exec79430 terminal exit0, allcontrols/step660/final coordinate8/

@@ -1,3 +1,25 @@
+# 2026-10-13 - R56 native vector arithmetic exact; PIO cost/deadline rejected
+
+RESUME HERE: exec91245 terminal exit0, coordinate8/menu/install/readback
+verified. Runtime09c7c00f2ff06c3f1836bf06707acf7a9b33076a, experiment/full-dsp-rsp-r56.
+Three64packet trials at600/601/602: all1536lane results/independent checksums
+exact. Full700context8192SP restored; each67200pixels8192PCM/headregs/enabled/
+guestboundary unchanged, step660 passes. [R56](FULL_DSP_RSP_GAUSS_R56.md).
+Scalarcached packed formula Count totals27614/27607/27691; PIO27145/27113/27079.
+Median9.204667->9.037667us perpacket, 1.814297% saving;
+worstPIO12.266667us. REJECTED PIO: mean/worst exceednominal8DSPclock7.8125us
+and material saving absent. Installationmedian5.952us separate. Not R49's
+completecore Gaussian cost; preparation/whole-context recovery excluded.
+
+Next one bounded DMA input-packet transport under same existing exclusive
+fullcontext owner, count cachewriteback/setup/wait/readback together. No PIO
+micro-tuning/fullCI. Require materially less latency and nominal first-use
+budget before integration/renderer-sharing work. Physical primitive proof
+does not prove fullDSP/DAC/game60/50/corpus; all remain OPEN. No native job
+live; priorR44/R45/master/state/candidates preserved. History retained below.
+
+---
+
 # 2026-10-13 - R56 physical vector/PIO experiment running
 
 RESUME HERE: native exec91245 LIVE, normalmenu/install/readback passed;

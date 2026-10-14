@@ -1,6 +1,6 @@
 # R56 - eight-lane Gaussian primitive and physical transport discriminator
 
-Status: IMPLEMENTED; native RSP performance and integration remain pending.
+Status: MEASURED native arithmetic; PIO transport REJECTED for deadline and material benefit. Integration remains open.
 R55's CPU batching cost remains rejected. This isolated branch retains its
 semantic boundary but moves it from DSP phase0 to phase22. Voice0 targets the
 current sample's V3c30; voices1..7 target the next sample's V3c1..19. The local
@@ -76,3 +76,27 @@ recovery passed. This is a lab assertion failure, not a native math/cost result.
 The frozen v2 worker requires the exact canonical boundary. No C/RSP source,
 artifact, arithmetic gate, byte comparison or recovery requirement changed.
 Native math/transport timing remains pending; reuse all exact preflight gates.
+
+## Native result - three trials complete, PIO rejected
+
+Exec91245 finished exit0 and recovery passed. All1536 original synthetic lane
+results/checksums were exact on physical RSP. All three full700-byte contexts,
+8192-byte SP owners,67200 image pixels/8192 paused PCM bytes/head/register/
+enabled and guest boundaries were restored/preserved; continuation660 passed.
+The64-packet scalar totals were27614/27607/27691 Count ticks; PIO totals
+27145/27113/27079. Median per packet is9.204667us scalar and
+9.037667us PIO, only1.814297% saving. Maximum PIO packet
+was12.266667us. Both mean and worst exceed the nominal8-DSP-clock7.8125us
+engineering budget. Installation median was5.952us, measured separately.
+
+The scalar timing is a cached packed reference formula, not the actual R49
+full-core Gaussian cost. Packet preparation and per-trial ownership recovery
+are excluded. This proves primitive arithmetic and bounded owner restoration;
+it does not establish a complete-DSP or game speedup. The guest phase deadline
+will also require actual partial-call scheduling checks during integration.
+No PIO tuning or broad CI for this failed transport. Retain its evidence and
+try one DMA input packet under the same exclusive owner, including cache
+writeback/setup/wait/output in physical latency. Reject DMA unless it materially
+reduces transport and meets the nominal first-use budget; renderer contention,
+CPU packet preparation and full DSP semantics remain separate open gates.
+See `FULL_DSP_RSP_GAUSS_R56_NATIVE.json` for curated original-fixture counts/costs only.

@@ -1,3 +1,18 @@
+# 2026-10-14 - R62 physical memory-presence check running
+
+RESUME HERE: exec48145 LIVE; normal menu/install/readback passed. Runtime
+ d5e3a5e6c414eb837830626141911c2dbbdd1316, experiment/hardware-memory-r62,
+preflightcontinuity328bd06. Frozen private hardware-r62-archive worker/plan.
+Poll exec48145 and hardware-r62-native/report.json; root sole COM3, no competing
+controller or restart on observation timeout. Only IPL3-reported size read;
+no upper-memory write/allocation, no DSP task or FPS claim. Finalcoordinate8/
+menu/install/readback required. Physical memory presence/recovery PENDING.
+After terminal checkpoint, resume R61 controller/dataflow semantic work and
+use expanded RAM only if verified with explicit owners/bounds. Full target OPEN.
+Earlier history retained below.
+
+---
+
 # 2026-10-14 - R62 whole-N64 resource inventory and safe memory capture ready
 
 RESUME HERE: source d5e3a5e6c414eb837830626141911c2dbbdd1316, experiment/hardware-memory-r62,

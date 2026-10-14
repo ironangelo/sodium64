@@ -54,3 +54,16 @@ switching, partial DSP-call/write ordering, complete DSP/DAC audio and sustained
 native60/50/corpus/integration are open. No packet timing is a game FPS claim.
 Master/R44/R45/state prototype and earlier rejected/preserved evidence remain
 unchanged. Companion preflight JSON contains source-only/numeric fixture proof.
+
+## First physical run - DMA ownership gate failed before cost acceptance
+
+Exec10433 ended exit1; coordinate8/menu/install/readback restoration passed.
+PIO mode0 at600 passed all512 primitive results, fullcontext/SP readback and
+live image/PCM controls. Its totals were scalar28686/PIO22294 Count ticks,
+PIO maximum513 ticks. These are one trial, not a complete paired result.
+DMA mode1 at601 returned `scene_context_restore_failed stage=6
+mismatch_word=4294967295`. The current error does not distinguish a DMA/task
+stop failure from the new DMA-address/idle-length restoration guard. No DMA
+cost or primitive acceptance can be claimed from this response.
+Preserve the strict guard and add only failure readbacks to distinguish the
+case, reusing all unchanged semantic/ownership gates. No broad CI or promotion.

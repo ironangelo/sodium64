@@ -34,10 +34,9 @@ DMA registers nor guest audio. Any failure requires menu recovery.
 Local proof uses the actual probe with modeled cached/uncached aliases: eight
 invalid size cases reject before pointer access; stale plans/null results reject;
 a corrupted guard returns failure. Native cache/memory behavior remains pending.
-Parser tests cover306 combined-context cases plus1000 fuzz, and a separate269
-case configuration proves the terminal window failure/menu gate. The latter
-predates three additional full-probe memory denials; repeat only if its exact
-current count is needed, not as a new performance gate.
+Parser tests cover306 combined-context cases plus1000 fuzz, and a separate275
+case configuration plus1000 fuzz proves the terminal window failure/menu gate
+and full-probe rejection before using the relocated snapshot on unsupported RAM.
 
 Actual linked proof covers43 base owners plus the two disjoint upper leases,
 all below the top64KiB boot reservation;15 invalid arm/remote/copy cases produce

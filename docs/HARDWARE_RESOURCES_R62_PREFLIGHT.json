@@ -1,0 +1,258 @@
+{
+  "passed": true,
+  "private_output_owner": {
+    "bytes": 224,
+    "alignment": 16,
+    "input": 128,
+    "output": 64,
+    "guards": 32,
+    "static_lifetime": true
+  },
+  "static_end": "0xd32e8",
+  "arena_start": "0xd4000",
+  "gap": "0xd18",
+  "full_event_capacity": 24576,
+  "ROM_slots": 194,
+  "concurrent_owners": 43,
+  "unchanged16_RSP_banks": [
+    "rsp_decoder_original.elf",
+    "rsp_dsp_gauss.elf",
+    "rsp_hcomp.elf",
+    "rsp_hcomp_fast.elf",
+    "rsp_hcomp_fixed_window.elf",
+    "rsp_hcomp_math.elf",
+    "rsp_hcomp_rdp.elf",
+    "rsp_hcomp_rdp_fixed.elf",
+    "rsp_hcomp_setup.elf",
+    "rsp_hcomp_tlut.elf",
+    "rsp_main.elf",
+    "rsp_mode7.elf",
+    "rsp_mode7_window.elf",
+    "rsp_object_cache.elf",
+    "rsp_scene_capture.elf",
+    "rsp_scene_restore.elf"
+  ],
+  "linked_resident_DMA_rebinds": [
+    {
+      "bank": "rsp_dsp_brr.elf",
+      "instruction": 5
+    },
+    {
+      "bank": "rsp_dsp_brr.elf",
+      "instruction": 252
+    },
+    {
+      "bank": "rsp_main.elf",
+      "instruction": 206
+    },
+    {
+      "bank": "rsp_main.elf",
+      "instruction": 978
+    },
+    {
+      "bank": "rsp_mode7.elf",
+      "instruction": 206
+    },
+    {
+      "bank": "rsp_mode7.elf",
+      "instruction": 978
+    }
+  ],
+  "CPU_uploader_rebinds": true,
+  "linked_input_cache_writeback": true,
+  "input_bytes": 128,
+  "output_bytes": 64,
+  "samples_per_packet": 32,
+  "packet_preparation_included": true,
+  "raw_captured_jobs": true,
+  "static_private_output_bytes": 64,
+  "unchanged_110_instruction_math_body": "R58",
+  "guarded8byte_cursor_cleanup_required": true,
+  "native_performance_or_gameplay_acceptance": false,
+  "commercial_data": false,
+  "math": {
+    "passed": true,
+    "linked_kernel_bytes": 1028,
+    "minimum_program_instructions": 257,
+    "delayed_DMA_model_instructions": 275,
+    "packets": 1472,
+    "original_samples": 47104,
+    "original_R58_110_instruction_body_byte_exact": true,
+    "all16_ranges_all4_filters_signed_odd_histories": true,
+    "raw32bit_word_upper_bits_ignored": true,
+    "input128_readonly_output64_only": true,
+    "DMEM_plane96_output64_raw128_owners_only": true,
+    "input_output_waits_required": true,
+    "negative_mutations_rejected": [
+      "wrong_job_history",
+      "wrong_range_table",
+      "missing_input_wait",
+      "wrong_input_extent",
+      "wrong_output_address",
+      "missing_output_wait"
+    ],
+    "kernel_sha256": "8afb4eca4a45b2eea7d58f9c0c1691d8d24b264dae68705029f8e18d3b9db8b1",
+    "primary_reference": "ares9408cb43d4948fc3ea6e152a307a34348df3fe04 RSP IPU/SCC/io",
+    "hardware_timing_cache_and_bus_mocked": true,
+    "native_acceptance": false,
+    "commercial_data": false
+  },
+  "transaction": {
+    "passed": true,
+    "cases": 254,
+    "production_C_and_actual_RSP_binaries": true,
+    "transfer_fault_positions": 92,
+    "read_corruptions": 74,
+    "wait_fault_positions": 67,
+    "pre_mutation_full_backup": true,
+    "deliberate_zero_context_proved": false,
+    "full700byte_register_recapture_exact": true,
+    "SP8KiB_restore_checksum_readback": true,
+    "no_DP_AI_guest_SD_or_ROM_access": true,
+    "callback_exceptions_fail": true,
+    "hardware_timing_mocked": true,
+    "native_acceptance": false,
+    "complete_machine_restore": false,
+    "unprefixed_native_stage4_word8_reproduced": false,
+    "primitive_output_samples": 2048,
+    "gauss_clobbered_context_restored": true,
+    "all64_primitive_wait_faults_safely_halted_and_restored": true,
+    "gauss_result_mutation_rejected": true,
+    "DMA_input_extent_and_alignment": true,
+    "DMA_register_addresses_and_idle_lengths_exact": true,
+    "DMA_busy_timeout_stops_before_context_memory_overwrite": true,
+    "DMA_corrupt_input_detected": true,
+    "DMA_length_or_address_restore_fault_requires_menu": true,
+    "same_image_PIO_control": false,
+    "DMA_fault_kind_expected_observed_and_register_index_exact": true,
+    "invalid_CPU_DMA_source_safely_restores_and_reports_failure": true,
+    "current_and_pending_DMA_distinct": true,
+    "exact8byte_no_change_cursor_DMA": true,
+    "DMEM_IMEM_wrap_and_skip_preserved": true,
+    "source_tail_guards_before_and_after_mutation": true,
+    "cursor_DMA_timeout_and_byte_fault_require_menu": true,
+    "no_RDRAM_writes": false,
+    "CPU_cache_writeback_and_hardware_DMA_timing_mocked": true,
+    "BRR32_sample_actual_kernel": true,
+    "input_bytes": 128,
+    "output_bytes": 64,
+    "preparation_included_in_transport_metric": true,
+    "per_term_floors_saturation_double_wrap_exact": true,
+    "only_static_private64B_output_DMA_writes": true,
+    "all64_input_and_output_transfers_exact": true,
+    "output_DMA_timeout_requires_menu": true,
+    "output_guard_fault_detected": true,
+    "static_output_lifetime_survives_unhalted_DMA": true
+  },
+  "parser": {
+    "passed": true,
+    "cases": 267,
+    "fuzz": 1000,
+    "production_parser": true,
+    "hardware_mocked": true,
+    "physical_acceptance": false,
+    "full_dsp_snapshot_core": false,
+    "source_sha256": {
+      "src/remote_control.c": "a2b54362afd966c1a3d0c22b7b58dc26e6820598cf8e86145d8a79190a1295a8",
+      "src/remote_control.S": "abfdd01a6af2643dda491ae3814a995450e366a55e5b6b44f645cab9e47c780b",
+      "src/remote_control.h": "b0ec8cfe11534d7610806e0e56443f5025321474460eed1f482bd3377f3d4ba8",
+      "scripts/fixtures/remote_control_host.c": "12b138d8a178de1323595e8f76d7d81deafa118ea2932a49f0cc0cf0fa7eebf4"
+    }
+  },
+  "context-model": {
+    "passed": true,
+    "actual_binary_roundtrips": 637,
+    "ACC_MID_values": 65536,
+    "instruction_counts": [
+      [
+        94,
+        94
+      ],
+      [
+        80,
+        80
+      ]
+    ],
+    "mutations_rejected": [
+      "missing_GPR_capture",
+      "missing_vector_capture",
+      "missing_ACC_capture",
+      "missing_capture_t0_restore",
+      "missing_ACC_mid_add",
+      "missing_ACC_high_add",
+      "missing_vector_restore",
+      "missing_flag_restore",
+      "missing_GPR_restore"
+    ],
+    "GPR32_vector32_flags3_ACC48x8_exact": true,
+    "context_bytes": 700,
+    "capture_preserves_context": true,
+    "restore_DMEM_readonly": true,
+    "delayed_entry_3C_and_ordinary_entry_tested": true,
+    "current_banks_without_DIV_instructions": 15,
+    "reference": "ares9408cb43 RSP SISD vector semantics",
+    "CPU_hardware_transaction_tested": false,
+    "native_acceptance": false,
+    "full_serializer_or_machine_restore": false
+  },
+  "boot": {
+    "passed": true,
+    "cases": 30,
+    "linked_instructions": true,
+    "receiver_bytes": 248,
+    "elf_sha256": "63a48b24fa94f2b54a77ae098e13821c27fc2ebd5acb5c622f69ac45aa89d4c7",
+    "compiled_tv_capture_cases": 5,
+    "modern_ipl3_dmem_tv_source": true,
+    "compiled_RAM_capture_cases": 18,
+    "modern_ipl3_DMEM_memory_size_source": true,
+    "legacy_low_RAM_memory_size_ignored": true,
+    "invalid_RAM_size_reports_unknown": true,
+    "expansion_allocation_enabled": false,
+    "legacy_low_ram_tv_ignored": true,
+    "invalid_tv_unsigned_byte_falls_back_ntsc": true,
+    "receiver_pc": "a4001020",
+    "ipl3_pc": "a4000040",
+    "external_code_references_after_jump": false,
+    "physical_acceptance": false
+  },
+  "dma": {
+    "passed": true,
+    "cpu_queue_words": 6,
+    "embedded_banks": 2,
+    "actual_dma_sites": [
+      {
+        "pc": "a40014c4",
+        "direction": "write",
+        "rdram_start": "a00d4400",
+        "bytes": 1024
+      },
+      {
+        "pc": "a400174c",
+        "direction": "read",
+        "rdram_start": "a00d4400",
+        "bytes": 1024
+      },
+      {
+        "pc": "a40013f8",
+        "direction": "write",
+        "rdram_start": "a00d4400",
+        "bytes": 1024
+      },
+      {
+        "pc": "a4001580",
+        "direction": "read",
+        "rdram_start": "a00d4400",
+        "bytes": 1024
+      }
+    ],
+    "linked_elf_sha256": "63a48b24fa94f2b54a77ae098e13821c27fc2ebd5acb5c622f69ac45aa89d4c7",
+    "negative_mutations_rejected": [
+      "CPU_queue_disagreement",
+      "stale_RSP_backup",
+      "embedded_bank_disagreement"
+    ],
+    "physical_acceptance": false
+  },
+  "ELF_sha256": "63a48b24fa94f2b54a77ae098e13821c27fc2ebd5acb5c622f69ac45aa89d4c7",
+  "Z64_sha256": "6246097c8204d3148d62a7eed6fcd0a340ef33891aa730d16eaed89b05bfed86"
+}

@@ -1,3 +1,27 @@
+# 2026-10-14 - R62 whole-N64 resource inventory and safe memory capture ready
+
+RESUME HERE: source d5e3a5e6c414eb837830626141911c2dbbdd1316, experiment/hardware-memory-r62,
+isolated sodium64-hardware-memory-r62. [R62](HARDWARE_RESOURCES_R62.md).
+User requested all N64 resources, including Expansion Pak, for the entire
+emulator. Audit confirms current fixed arena uses base4MiB, no upper-memory
+policy; CPU/RSP/RDP/VI/AI/DMA/caches already used, FPU not used for emulation.
+New boot capture preserves IPL3 DMEM0..3 size before RSP initialization;
+only4/8MiB accepted, others unknown0. Status rdram_bytes/expansion_available.
+No upper-memory allocation or destructive RAM probing. Linked boot30 cases/
+18RAM/TV, parser267+1000,17unchangedRSPbanks/43owners/boot/cache/DMA PASS.
+
+Next private hardware-r62-archive/native_hardware_r62.py and plan; worker SHA
+0d99163f863e072a83d7790d26934084e764a22867702ad9471fa424f280d47f. Normalmenu/install/readback,
+launch existing private ALttP, read size, finalcoordinate8/menu/install/readback.
+Root sole COM3 after controller/hash check; record live handle/poll same.
+Physical presence PENDING; do not infer8MiB from pointer upper bounds. If8MiB
+verified, use explicit small upper-RAM owner for proved R61 shadow/event work;
+ROM/JIT/tile/render cache possibilities remain independent measured hypotheses.
+Then resume R61 window controller semantic implementation, source6dc6a03.
+No broadCI/promotion, native60/50/fullDSP/DAC/corpus/integration OPEN. History below.
+
+---
+
 # 2026-10-14 - R61 full-DSP bus window hazards proved; controller next
 
 RESUME HERE: source6dc6a034362c1cab8f972b353e09f1f8e1b5376c,

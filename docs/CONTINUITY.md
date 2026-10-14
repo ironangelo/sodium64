@@ -1,3 +1,26 @@
+# 2026-10-14 - R58 native BRR arithmetic exact; current backend cost rejected
+
+RESUME HERE: exec96482 terminal exit0, allcontrols/step660/coordinate8/menu/
+install/readback verified, no nativejoblive. Runtimee2a79cad53ea82c537e7b0f382e5565be8b50662,
+experiment/full-dsp-brr-batch-r58. All12288 originaldecoded samples exact;
+all6currentDMA/700context8192SP/image67200/PCM8192/headregs/boundaries unchanged.
+[R58](FULL_DSP_BRR_BATCH_R58.md), curatedNATIVE.json. Medianper32samples:
+PIO14.539667->21.924000us,
+DMA14.548000->22.281333us;
+saving-50.787501%/-53.157364% (worse).
+Worst34.730667/36.693333us >nominal8.7890625us.
+REJECTED thisPIO/DMAbackend: preparation+writeback/setup/kernel/wait/output
+allcharged, no40%saving/deadline. Do nottune/repeat/broadCI or promoteit.
+
+Next bounded architecture discriminator: expose existingpreparation interval
+separately withoutsubtracting itfromacceptedcost, to decide whether resident/
+capturedjob representation canremovetheoverhead. Aggregate alone doesnot
+prove universalRSPceiling. Preservephase21closedinputs/612096linkedmathproof/
+fullownerrecovery/R49andpriorcandidates. CompletecoreRSP/DAC/renderer sharing/
+native60/50/corpus/integration OPEN. Earlier history bytes retained below.
+
+---
+
 # 2026-10-14 - R58 physical32-sample BRR cost discriminator running
 
 RESUME HERE: exec96482 LIVE, normalmenu/install/readback passed;

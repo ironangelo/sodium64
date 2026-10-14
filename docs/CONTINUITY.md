@@ -20,7 +20,8 @@ export. No .bin produced; snapshot byte parse remains PENDING. Final coordinate8
 menu/install/readback recovered. No COM3 process live. Resource proof preserved;
 do not rerun the two owner probes. Next frozen snapshot-only worker
 native_full_window_r61_snapshot.py/full-window-r61-snapshot-plan.json uses sav
-export on the exact same artifact/source and final recovery. Record new handle.
+export on the exact same artifact/source and final recovery. Exec1913 LIVE,
+installed/readback passed; poll that same session, no competing COM3 controller.
 Install/readback, ALttP pause/park600; two audio-window-memory-probe trials,
 image/PCM/heads/registers/boundary controls; step660; one USB capture/32KiB
 profile parse to qualify moved snapshot; finally coordinate8/menu/install/

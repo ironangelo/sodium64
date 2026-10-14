@@ -13,8 +13,9 @@ boot top64KiB. Linked15 rejection+one32KiB copy/2048cache cases,16init/arm,
 CPU/RSP DMA backup tables agree. Loaded/static end0xD0DC0 < CGRAM0xD6000.
 No live guest DSP, SP DMA, new guest save owner or native speed claim.
 
-Next launch frozen private native_full_window_r61_memory.py using
-full-window-r61-memory-plan.json; no COM3 process live at this checkpoint.
+Exec95649 LIVE: frozen native_full_window_r61_memory.py installed/readback
+passed; launch/control/snapshot/recovery pending. Poll that exact exec session;
+do not restart on observation timeout. Frozen full-window-r61-memory-plan.json.
 Install/readback, ALttP pause/park600; two audio-window-memory-probe trials,
 image/PCM/heads/registers/boundary controls; step660; one USB capture/32KiB
 profile parse to qualify moved snapshot; finally coordinate8/menu/install/

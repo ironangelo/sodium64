@@ -1,3 +1,31 @@
+# 2026-10-14 - R61 full-DSP bus window hazards proved; controller next
+
+RESUME HERE: source6dc6a034362c1cab8f972b353e09f1f8e1b5376c,
+experiment/full-dsp-window-r61, isolated sodium64-full-dsp-window-r61.
+[R61](FULL_DSP_WINDOW_R61.md). Four original counterexamples execute against
+unchanged production full DSP: late PMON latch, future BRR RAM byte, echo RAM
+CPU read and OUTX read. All reject unqualified deferred execution; eventual
+catch-up does not repair a past CPU read. No runtime change/controller/RSP
+complete-core implementation or native cost claim at this checkpoint.
+
+Next bounded code: transport-independent window controller using the existing
+full DSP backend, distinct CPU/DSP RAM views and timestamped write journal.
+Flush before DSP reads, pending four-byte echo RAM accesses, exports/reset/PCM
+consumption and period boundary; never discard events. Prove echo-span phase
+admission, ESA/EDL/FLG/wrap/same-clock ordering/FIFO overflow and full-state/
+RAM/PCM equivalence against an immediate clock-by-clock reference. See R61
+for exact source interfaces/gates; native JIT within-block bus timestamps,
+cache/JIT tag updates and a dedicated64KiB shadow lease remain unimplemented.
+Do not jump to a naive32clock RSP batch or another standalone BRR tweak.
+
+R60 exec94802 terminal exit0, allcontrols/step660/final coordinate8/menu/
+readback passed; no COM3 controller live. R59/R60 cost directions rejected,
+proofs preserved; no broadCI/promotion. R49/master/R44/R45/prior candidates
+preserved. FullDSP/DAC/renderer sharing/native60/50/corpus/integration OPEN.
+Earlier history retained below.
+
+---
+
 # 2026-10-14 - R60 raw-job resident DMA exact; standalone BRR cost rejected
 
 RESUME HERE: exec94802 terminal exit0; allcontrols/step660/coordinate8/menu/

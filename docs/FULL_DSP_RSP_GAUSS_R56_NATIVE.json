@@ -1,0 +1,55 @@
+{
+  "status": "MEASURED arithmetic; REJECTED PIO transport deadline/material benefit",
+  "runtime_source": "09c7c00f2ff06c3f1836bf06707acf7a9b33076a",
+  "physical_console": true,
+  "transport": "PIO",
+  "trials": [
+    {
+      "gauss_lanes": 512,
+      "gauss_scalar_ticks": 27614,
+      "gauss_PIO_ticks": 27145,
+      "gauss_PIO_max": 575,
+      "gauss_checksum": 3860160491,
+      "gauss_install_ticks": 295
+    },
+    {
+      "gauss_lanes": 512,
+      "gauss_scalar_ticks": 27607,
+      "gauss_PIO_ticks": 27113,
+      "gauss_PIO_max": 536,
+      "gauss_checksum": 3860160491,
+      "gauss_install_ticks": 257
+    },
+    {
+      "gauss_lanes": 512,
+      "gauss_scalar_ticks": 27691,
+      "gauss_PIO_ticks": 27079,
+      "gauss_PIO_max": 536,
+      "gauss_checksum": 3860160491,
+      "gauss_install_ticks": 279
+    }
+  ],
+  "Count_Hz": 46875000,
+  "packets_per_trial": 64,
+  "lanes_exact": 1536,
+  "scalar_cached_packed_formula_mean_us": 9.204666666666666,
+  "PIO_mean_us": 9.037666666666667,
+  "PIO_worst_packet_us": 12.266666666666667,
+  "mean_time_saving_percent": 1.8142970956761095,
+  "nominal8DSPclock_budget_us": 7.8125,
+  "kernel_install_median_us": 5.952,
+  "complete700byte_RSP_context_and8192byte_memory_restored": true,
+  "live_controls": {
+    "pixels_exact_each": 67200,
+    "paused_PCM_bytes_exact_each": 8192,
+    "trials": 3,
+    "heads_registers_enabled_exact": true,
+    "guest_boundary_unchanged": true,
+    "step660": true
+  },
+  "recovery_coordinate8_menu_install_readback": true,
+  "compiler_reference": "Os cached packed scalar formula; not the R49 full-core Gaussian cost",
+  "packet_preparation_and_per_trial_context_recovery_excluded_from_cost": true,
+  "native_full_DSP_DAC_renderer_sharing_gameplay60_or_corpus_acceptance": false,
+  "commercial_data": false
+}

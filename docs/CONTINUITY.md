@@ -1,3 +1,34 @@
+# 2026-10-14 - R57 exact DMA cursor repair implemented; native v3 next
+
+RESUME HERE: code49ef166d0816174b7cbd074652c633154fdcc69e, experiment/rsp-gauss-dma-r57,
+isolated sodium64-dsp-dma-r57; [report](FULL_DSP_RSP_DMA_R57.md).
+DefaultDMA0, all16RSPbanks exactR56/native primitive. One128B cached aligned
+stack input, eight writebacks/SYNC, SP DMA length127 ->DMEM000..07F, bounded
+idle wait beforekernel; guarded no-change8B cleanup restores currentcursors,
+allfourreadbacks/tailbytes required unchanged. NoRDRAMwrite. Timings includecache/writeback/setup/wait/output, not
+packet preparation/install/wholecontext recovery. No capacity/arena changes.
+Ctransaction253cases includingDMA busy/corruptinput/length/address/sourcefaults,
+full700context8192SPrestore plusoriginal92transfer/74read/67waitfaults pass;
+parser264+1000, boot/actualrendererDMA/43owners/24576events194slots/arena pass.
+R56 exactprimitive680192local+1536native lanes/context proofs reused.
+
+Oldcurrent/pending model corrected, actualv2 failure1790->80 reproduced before
+repair; source/tailpre/postguards, wrap/skip/cleanupbusy/bytefaults pass. Four
+linked residentDMAs rebindbothaddresses; pendingstate not assumed equal.
+21219 terminal/recoveryverified; allfailedguard evidence preserved.
+Next frozen private rsp-gauss-dma-r57-v3-archive/native_rsp_gauss_dma_r57.py and
+plan; workerSHA1ae07bee14248df44b651e387bcf22cbe9c69c22590c98bc3dc70bfb90bd02f3. RootsoleCOM3 after
+controller/hash check, sameimage selectors0PIO/1DMA alternatingthreepairs,
+each64packets512independentresults/checksum at600..605. Retain cost value only
+>=40%median latency saving and observedDMAmax<=nominal7.8125us. Requireall
+context/SP/DMA/images67200/PCM8192/headregs/guestboundaries, step660, finally
+coordinate8/menu/install/readback. Record livehandle; pollsame, no restart.
+No broadCI/promotion before value. Actualpartial DSPscheduling/preparation/
+renderer sharing/residency/fullDSP/DAC/game60/50/corpus/integration OPEN.
+R56 PIO rejected, R44/R45/master/state/priorcandidates retained. History below.
+
+---
+
 # 2026-10-13 - R57 DMA arithmetic exact; physical cursor failure explained
 
 RESUME HERE: exec21219 terminal exit1, coordinate8/menu/install/readback

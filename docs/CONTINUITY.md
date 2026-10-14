@@ -1,3 +1,32 @@
+# 2026-10-13 - R57 bounded DMA failure diagnostics implemented; native cause test next
+
+RESUME HERE: code3f6ec0e250c116e5c2217a6cf86afab1102a04a3, experiment/rsp-gauss-dma-r57,
+isolated sodium64-dsp-dma-r57; [report](FULL_DSP_RSP_DMA_R57.md).
+DefaultDMA0, all16RSPbanks exactR56/native primitive. One128B cached aligned
+stack input, eight writebacks/SYNC, SP DMA length127 ->DMEM000..07F, bounded
+idle wait beforekernel; bothSP DMA addresses restored and idle lengthreadbacks
+required unchanged. Timings includecache/writeback/setup/wait/output, not
+packet preparation/install/wholecontext recovery. No capacity/arena changes.
+Ctransaction244cases includingDMA busy/corruptinput/length/address/sourcefaults,
+full700context8192SPrestore plusoriginal92transfer/74read/67waitfaults pass;
+parser264+1000, boot/actualrendererDMA/43owners/24576events194slots/arena pass.
+R56 exactprimitive680192local+1536native lanes/context proofs reused.
+
+Firstnative10433 failedstage6, recoveryverified; v2 addsfailure kind/expected/
+observed readbacks and registerindex only, no ownership/safety gate removed.
+Next frozen private rsp-gauss-dma-r57-v2-archive/native_rsp_gauss_dma_r57.py and
+plan; workerSHA83b2b92909c887da71e81983d494f0fb3ffd5204ecd626812dcc60f637461325. RootsoleCOM3 after
+controller/hash check, sameimage selectors0PIO/1DMA alternatingthreepairs,
+each64packets512independentresults/checksum at600..605. Retain cost value only
+>=40%median latency saving and observedDMAmax<=nominal7.8125us. Requireall
+context/SP/DMA/images67200/PCM8192/headregs/guestboundaries, step660, finally
+coordinate8/menu/install/readback. Record livehandle; pollsame, no restart.
+No broadCI/promotion before value. Actualpartial DSPscheduling/preparation/
+renderer sharing/residency/fullDSP/DAC/game60/50/corpus/integration OPEN.
+R56 PIO rejected, R44/R45/master/state/priorcandidates retained. History below.
+
+---
+
 # 2026-10-13 - R57 first DMA ownership gate failed; safe recovery verified
 
 RESUME HERE: exec10433 terminal exit1, coordinate8/menu/install/readback

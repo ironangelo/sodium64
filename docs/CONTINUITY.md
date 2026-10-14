@@ -1,3 +1,22 @@
+# 2026-10-14 - R58 physical32-sample BRR cost discriminator running
+
+RESUME HERE: exec96482 LIVE, normalmenu/install/readback passed;
+runtimee2a79cad53ea82c537e7b0f382e5565be8b50662, experiment/full-dsp-brr-batch-r58,
+preflightcontinuity0611106. Frozenprivate brr-rsp-r58-archive worker/plan;
+workerSHA845d95156bc3587ba9a69fc4e723aced90426b4b039ff81780bde91a6751e90f. Poll96482 and
+brr-rsp-r58-native/report.json, rootsoleCOM3; no competingtransport/restart
+onobservationtimeout. Six64packet trials at600..605 alternatePIO0/DMA1,
+each2048originaldecoded samples/independentchecksum. Packetpreparation+
+cachewriteback/setup/kernel/wait/64Boutput chargedtogether. >=40%median
+savingvsscalar andobservedmax<=nominalnineclock8.7890625us; install/whole
+contextcursorcleanup separate. FullcurrentDMA/700context8192SP/image67200/
+PCM8192/headregs/boundary/step660/finalcoordinate8recovery required.
+NativecostPENDING; terminalcheckpointbefore nextbatch. No broaderCI/promotion/
+completecoreRSPbackend/fullDSP/DAC/game60/50/corpus/integration acceptance.
+Earlier evidence/history retained below.
+
+---
+
 # 2026-10-14 - R58 native32-sample BRR discriminator ready
 
 RESUME HERE: runtimee2a79cad53ea82c537e7b0f382e5565be8b50662, experiment/full-dsp-brr-batch-r58,

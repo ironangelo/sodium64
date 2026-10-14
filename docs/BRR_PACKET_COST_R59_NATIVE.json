@@ -1,0 +1,75 @@
+{
+  "status": "MEASURED preparation attribution; REJECTED preparation-only remedy",
+  "runtime_source": "36d907606ba2c8bff375d3ceb09a9f26acb6ed41",
+  "physical_console": true,
+  "Count_Hz": 46875000,
+  "trials": [
+    {
+      "mode": 0,
+      "scalar_ticks": 43620,
+      "preparation_ticks": 23772,
+      "total_ticks": 65777,
+      "max_packet_ticks": 1587,
+      "install_ticks": 1754,
+      "samples": 2048
+    },
+    {
+      "mode": 1,
+      "scalar_ticks": 43615,
+      "preparation_ticks": 23800,
+      "total_ticks": 66656,
+      "max_packet_ticks": 1711,
+      "install_ticks": 1796,
+      "samples": 2048
+    },
+    {
+      "mode": 0,
+      "scalar_ticks": 43616,
+      "preparation_ticks": 23775,
+      "total_ticks": 65762,
+      "max_packet_ticks": 1572,
+      "install_ticks": 1456,
+      "samples": 2048
+    },
+    {
+      "mode": 1,
+      "scalar_ticks": 43615,
+      "preparation_ticks": 23767,
+      "total_ticks": 67040,
+      "max_packet_ticks": 1693,
+      "install_ticks": 1484,
+      "samples": 2048
+    }
+  ],
+  "metrics": {
+    "0": {
+      "scalar_packet_us": 14.539333333333333,
+      "preparation_packet_us": 7.9245,
+      "total_packet_us": 21.923166666666667,
+      "preparation_percent": 36.14669413633979,
+      "residual_attribution_packet_us": 13.998666666666667,
+      "accepted_time_saving_percent": -50.78522628272732,
+      "hypothetical_zero_preparation_saving_percent": 3.718648264477964,
+      "worst_packet_us": 33.856
+    },
+    "1": {
+      "scalar_packet_us": 14.538333333333334,
+      "preparation_packet_us": 7.927833333333333,
+      "total_packet_us": 22.282666666666668,
+      "preparation_percent": 35.57847654380086,
+      "residual_attribution_packet_us": 14.354833333333334,
+      "accepted_time_saving_percent": -53.268370973289,
+      "hypothetical_zero_preparation_saving_percent": 1.2621804425083094,
+      "worst_packet_us": 36.501333333333335
+    }
+  },
+  "all8192_original_samples_exact": true,
+  "all4_context700_SP8192_currentDMA_restored": true,
+  "all4_pixels67200_PCM8192_heads_regs_boundary_exact": true,
+  "step660": true,
+  "coordinate8_menu_readback_recovered": true,
+  "preparation_remains_in_accepted_total": true,
+  "residual_is_attribution_not_a_candidate": true,
+  "fullDSP_DAC_native60_50_corpus_integration_acceptance": false,
+  "commercial_data": false
+}

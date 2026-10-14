@@ -65,3 +65,14 @@ sustained native60/50, required corpus and master integration remain open.
 R44 is experimental and R45 remains off. Master and all prior evidence stay
 preserved. Numeric original-fixture/preflight evidence is in the companion
 `FULL_DSP_RSP_GAUSS_R56_PREFLIGHT.json`.
+
+## First physical attempt - observer fixture corrected
+
+Worker62811 ended exit1 after successful menu/install/readback, launch and
+canonical parking at600. It executed zero primitive RPCs: the worker expected
+`boundary=rsp_retired`, while the existing canonical frame observer correctly
+returned `boundary=scene_canonical_raw`. Coordinate8/menu/install/readback
+recovery passed. This is a lab assertion failure, not a native math/cost result.
+The frozen v2 worker requires the exact canonical boundary. No C/RSP source,
+artifact, arithmetic gate, byte comparison or recovery requirement changed.
+Native math/transport timing remains pending; reuse all exact preflight gates.

@@ -1,6 +1,6 @@
 # R60 - raw BRR jobs and resident DMA return
 
-Status: IMPLEMENTED, locally qualified; physical cost pending. Default-off
+Status: MEASURED exact native arithmetic/restoration; standalone BRR cost REJECTED. Default-off
 diagnostic under the existing canonical pause and full-context guards.
 
 R59 measured preparation at approximately36% of packet cost. Even free
@@ -60,3 +60,25 @@ renderer residency/sharing, full guest emulation, native60/50, corpus fidelity
 and master integration remain open. All earlier candidates are preserved.
 ROMs, states, captures, PCM, raw native reports and game-derived hashes stay
 private; only emulator source and original numeric-fixture summaries are public.
+
+## Physical result
+
+Exec94802 completed exit0. All6144 original-fixture samples/checksums and all
+three700-byte contexts/8192-byte SP/current-DMA/image/paused-PCM/head/register/
+boundary controls pass. Step660 and coordinate8/menu/install/readback pass.
+
+Scalar totals43705/43701/43700 ticks; backend45311/45314/45179 ticks. Median
+per32 samples: scalar14.567000 us, backend15.103667 us;
+saving-3.684126% (slower). Observed maximum23.232000 us
+exceeds8.7890625 us. The resident raw-job/DMA return protocol reduces the old
+R59 DMA cost by32.217867%, but fails the required
+comparison against CPU scalar work. It is not an accepted emulator speedup.
+
+Keep the protocol, pure arithmetic and ownership evidence isolated; do not
+retune this standalone BRR packet or run broad CI. A complete DSP resident
+direction must amortize work and synchronization across a materially larger
+state/dataflow boundary while preserving every SPC-visible register and
+shared-RAM interaction at its original clock. Inspect the existing full DSP
+phase schedule and SPC interface before proposing that boundary; do not infer
+a universal RSP ceiling or defer observable effects across an unproved window.
+FullDSP/DAC/renderer sharing/native60/50/corpus/integration remain open.

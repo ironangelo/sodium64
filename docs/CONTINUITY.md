@@ -1,3 +1,25 @@
+# 2026-10-14 - R60 raw-job resident DMA exact; standalone BRR cost rejected
+
+RESUME HERE: exec94802 terminal exit0; allcontrols/step660/coordinate8/menu/
+install/readback pass, no controller live. Runtime 942c8324be967f0a7fa6572a7163b00e17bb6f63,
+experiment/brr-resident-dma-r60. [R60](BRR_RESIDENT_DMA_R60.md), curated NATIVE.json.
+All6144 original samples and three700context/8192SP/currentDMA/67200pixels/
+8192PCM/headregs/boundary controls exact. Scalar43705/43701/43700 versus
+backend45311/45314/45179 ticks; median14.567000->15.103667us,
+saving-3.684126% (slower), max23.232000>8.7890625us.
+Old R59 DMA protocol cost reduced32.217867%, but this is not
+accepted emulator value. REJECTED standalone BRR backend, no tuning/broadCI.
+
+Next material direction: full resident DSP state/dataflow boundary, retaining
+raw-job/DMA ownership proof. Inspect full DSP phase schedule and SPC-visible
+register/shared-RAM interactions first. Any larger window must preserve exact
+read/write visibility and returns; no speculative batching over future inputs.
+Do not build more standalone BRR/Gauss refinements or claim a universal RSP
+ceiling. R49/master/R44/R45/all earlier candidates preserved. FullDSP/DAC/
+renderer sharing/native60/50/corpus/integration remain OPEN. History below.
+
+---
+
 # 2026-10-14 - R60 raw-job resident DMA physical discriminator running
 
 RESUME HERE: exec94802 LIVE; normal menu/install/readback passed. Runtime

@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "actual_owner_probe_executed": true,
+  "rejected_sizes_before_pointer": 8,
+  "no_null_or_rejected_plan_stale_addresses": true,
+  "temporary_upper_owner_bytes": 213152,
+  "actual_probe_state_checks": 48,
+  "clocks": 512,
+  "producer_reads": 64,
+  "echo_word_publications": 32,
+  "guard_fault_rejected": true,
+  "cache_and_aliases_host_model_only": true,
+  "native_DMA_or_save_owner_integration": false,
+  "native_hardware_acceptance": false,
+  "commercial_data": false
+}

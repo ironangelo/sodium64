@@ -107,6 +107,17 @@ uint32_t remote_host_full_dsp_probe(full_dsp_probe_result result[FULL_DSP_PROBE_
     return full_probe_status;
 }
 #endif
+#ifdef SODIUM64_DSP_FULL_WINDOW
+#include "../../src/full_dsp_window_memory.h"
+static unsigned window_memory_calls;
+static uint32_t window_memory_status=1;
+uint32_t remote_host_window_memory_probe(uint32_t bytes,full_dsp_window_memory_result* result) {
+    if(bytes!=8388608u)abort();
+    ++window_memory_calls;
+    *result=(full_dsp_window_memory_result){4,512,48,64,32,DSP_WINDOW_OWNER_END-DSP_WINDOW_OWNER_BEGIN};
+    return window_memory_status;
+}
+#endif
 uint32_t remote_host_count(void){return clock_value;}
 int remote_host_menu(void){menu_calls++;return 0;}
 int remote_host_frame_ready(void){return frame_ready;}
@@ -193,6 +204,12 @@ int main(void){
     remote_guest_frames=70;remote_render_frames=35;remote_vi_count=99;remote_presentations=29;
     clock_value=0xfffffff0u;run("s64 12345678 profile");
     check(strstr(response,"guest_frame_id=70 render_frame_id=35 boot_tv_type=1 vi=99 new_presentations=29")!=NULL);
+    remote_boot_ram_bytes=0x800000u;
+    expect("s64 12345678 status","rdram_bytes=8388608 expansion_available=1");
+    remote_boot_ram_bytes=0x400000u;
+    expect("s64 12345678 status","rdram_bytes=4194304 expansion_available=0");
+    remote_boot_ram_bytes=0;
+    expect("s64 12345678 status","rdram_bytes=0 expansion_available=0");
     clock_value=20;run("s64 12345678 status");check(strstr(response,"count_wraps_observed=1")!=NULL);
     remote_control_idle(0);check(remote_guest_frames==70&&remote_render_frames==35);
     frame_ready=0;expect("s64 12345678 frame","ERR frame_dp_busy");
@@ -443,8 +460,32 @@ int main(void){
     }
     native_diag_phase=0;
 #endif
+#ifdef SODIUM64_DSP_FULL_WINDOW
+    expect("s64 12345678 audio-window-memory-probe extra","ERR argument_count");check(!window_memory_calls);
+    remote_paused=0;
+    expect("s64 12345678 audio-window-memory-probe","ERR not_paused");check(!window_memory_calls);
+    remote_paused=1;native_diag_phase=1;
+    expect("s64 12345678 audio-window-memory-probe","ERR capture_busy");check(!window_memory_calls);
+    native_diag_phase=0;remote_arm_pending=1;
+    expect("s64 12345678 audio-window-memory-probe","ERR capture_busy");check(!window_memory_calls);
+    remote_arm_pending=0;remote_render_frames=0;
+    expect("s64 12345678 audio-window-memory-probe","ERR frame_unavailable");check(!window_memory_calls);
+    remote_render_frames=10;
+    const uint32_t unavailable_memory[]={0,0x400000u,0x800001u};
+    for(unsigned i=0;i<3;i++) {
+        remote_boot_ram_bytes=unavailable_memory[i];
+        expect("s64 12345678 audio-window-memory-probe","ERR expanded_memory_unavailable");check(!window_memory_calls);
+        expect("s64 12345678 audio-full-dsp-probe","ERR expanded_memory_unavailable");check(!full_probe_calls);
+    }
+    remote_boot_ram_bytes=0x800000u;
+    expect("s64 12345678 audio-window-memory-probe","window_memory_probe=1 temporary_upper_owner=1");check(window_memory_calls==1);
+    check(strstr(response,"stage=4 owner_bytes=213152 clocks=512 state_checks=48 producer_reads=64 echo_writes=32")!=NULL);
+#endif
     expect("s64 12345678 audio-full-dsp-probe","full_dsp_probe=1 cases=3 restored=1");check(full_probe_calls==1);
     check(strstr(response,"case2_frames=2048 case2_ticks=1236")!=NULL);
+#ifndef SODIUM64_DSP_FULL_WINDOW
+    /* The window configuration runs its terminal failure at the end, after
+     * unrelated context tests. A real menu reboot resets this process state. */
     full_probe_status=0;
     expect("s64 12345678 audio-full-dsp-probe","ERR full_dsp_backup_failed");check(full_probe_calls==2&&remote_paused);
     full_probe_status=2;
@@ -456,6 +497,7 @@ int main(void){
     expect("s64 12345678 status","full_dsp_probe_needs_menu=1");
     unsigned menus_before=menu_calls;
     expect("s64 12345678 menu","OK transition_ready=menu outcome=pending");check(menu_calls==menus_before+1);
+#endif
 #endif
     /* Random text and adversarial bounds exercise the same production parser.
      * Each case must remain within buffers and may never boot or arm. */
@@ -623,6 +665,20 @@ int main(void){
     expect("s64 12345678 state-rsp-roundtrip","ERR scene_context_restore_failed");
     expect("s64 12345678 state-save","ERR scene_rsp_context_needs_menu");
     expect("s64 12345678 menu","transition_ready=menu");
+#endif
+#ifdef SODIUM64_DSP_FULL_WINDOW
+#ifndef SODIUM64_SCENE_RSP_CONTEXT
+    remote_paused=1;remote_arm_pending=0;native_diag_phase=native_diag_snapshot_ready=0;
+    remote_render_frames=10;remote_boot_ram_bytes=8388608u;window_memory_status=2;
+    expect("s64 12345678 audio-window-memory-probe","ERR window_memory_probe_failed");check(window_memory_calls==2);
+    expect("s64 12345678 resume","ERR full_dsp_needs_menu");check(remote_paused);
+    expect("s64 12345678 step 1","ERR full_dsp_needs_menu");check(remote_paused);
+    expect("s64 12345678 status","full_dsp_probe_needs_menu=1");
+#else
+    /* The context fault test deliberately ended this process in needs-menu.
+     * Confirm its higher-priority denial rather than pretending a reboot. */
+    expect("s64 12345678 audio-window-memory-probe","ERR scene_rsp_context_needs_menu");check(window_memory_calls==1);
+#endif
 #endif
     printf("REMOTE_CONTROL PASS cases=%u fuzz=1000 production_parser=1 hardware_mocked=1\n",cases);
     return 0;

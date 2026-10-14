@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "base_owners": 43,
+  "upper_owners": {
+    "window_probe": [
+      4194304,
+      4407456
+    ],
+    "diagnostic_snapshot": [
+      4423680,
+      4456448
+    ]
+  },
+  "linked_rejected_arm_remote_copy_cases": 15,
+  "linked_32KiB_copy_cases": 1,
+  "linked_snapshot_cache_lines": 2048,
+  "total_cases": 16,
+  "loaded_sections_and_boot_clear_stay_below4MiB": true,
+  "all_owners_below_boot_reserved_top64KiB": true,
+  "live_guest_state_added": false,
+  "SP_DMA_or_new_save_owner_implemented": false,
+  "native_memory_or_performance_acceptance": false,
+  "commercial_data": false
+}

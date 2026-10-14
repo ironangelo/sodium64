@@ -68,7 +68,13 @@ native_diag_continuous_irq_save: .dword 0:2
 native_diag_service_save: .dword 0:35
 .section .bss
 .align 4
+#ifdef SODIUM64_DSP_FULL_WINDOW
+// Explicit upper-RAM diagnostic owner; no IPL3/BSS write to absent memory.
+// Native/manual arm and the full-DSP snapshot lease are guarded before use.
+.set native_diag_snapshot, 0x80438000
+#else
 native_diag_snapshot: .space 32768
+#endif
 .data
 #endif
 .align 5
@@ -212,6 +218,12 @@ native_diag_unsupported_clear:
 // Runtime calls this at the retired UI boundary on its own O64 stack. Tail
 // entry preserves ra/sp and returns v0 without invoking C on Sodium's queue sp.
 native_diag_remote_arm:
+#ifdef SODIUM64_DSP_FULL_WINDOW
+    lw t0, remote_boot_ram_bytes
+    li t1, 0x800000
+    bne t0, t1, native_diag_remote_unready
+    nop
+#endif
     la t0, native_diag_state
     lw t1, 112(t0)
     bnez t1, native_diag_remote_busy
@@ -254,6 +266,16 @@ native_diag_remote_unready:
     nop
 #endif
 native_diag_arm:
+#ifdef SODIUM64_DSP_FULL_WINDOW
+    lw t0, remote_boot_ram_bytes
+    li t1, 0x800000
+    beq t0, t1, native_diag_expansion_arm_ready
+    nop
+    li v0, -1
+    jr ra
+    nop
+native_diag_expansion_arm_ready:
+#endif
     // Called at the completed-frame UI boundary. Only t0..t3/k0/k1 are borrowed;
     // a0 and the renderer's t4/t5/t6 survive. No guest state is reset.
     mfc0 t3, $12
@@ -2038,6 +2060,16 @@ native_diag_continuous_seal:
 // Caller has interrupts excluded. Flush/invalidate the cached destination alias
 // before copying through KSEG1; later guest SRAM changes cannot alter this copy.
 native_diag_copy_snapshot:
+#ifdef SODIUM64_DSP_FULL_WINDOW
+    lw t0, remote_boot_ram_bytes
+    li t1, 0x800000
+    beq t0, t1, native_diag_expansion_snapshot_ready
+    nop
+    sw zero, native_diag_snapshot_ready
+    jr ra
+    nop
+native_diag_expansion_snapshot_ready:
+#endif
     sw zero, native_diag_snapshot_ready
     la t0, native_diag_snapshot
     li t1, 32768

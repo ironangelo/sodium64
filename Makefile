@@ -114,6 +114,7 @@ $(error DSP_FULL_WINDOW is qualified with DSP_FULL_GAUSS_BATCH=0 DSP_FULL_BRR_BA
 endif
 N64_CXXFLAGS_DSP += -DSODIUM64_DSP_FULL_WINDOW=1
 N64_CXXFLAGS_PROBE += -DSODIUM64_DSP_FULL_WINDOW=1
+N64_CFLAGS_REMOTE += -DSODIUM64_DSP_FULL_WINDOW=1
 endif
 ifeq ($(DSP_FULL_BRR_BATCH),1)
 ifneq ($(FULL_DSP_PROBE),1)
@@ -364,6 +365,7 @@ OFILES += $(BUILD_DIR)/src/full_dsp_probe.o $(BUILD_DIR)/third_party/snes_spc/SP
 endif
 ifeq ($(DSP_FULL_WINDOW),1)
 OFILES += $(BUILD_DIR)/src/full_dsp_window.o
+OFILES += $(BUILD_DIR)/src/full_dsp_window_memory.o
 endif
 ifeq ($(NATIVE_DIAG_TRACE),1)
 OFILES += $(BUILD_DIR)/src/continuous_save_c.o
@@ -425,6 +427,9 @@ endif
 ifeq ($(FULL_DSP_PROBE),1)
 N64_ASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
 N64_RSPASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
+endif
+ifeq ($(DSP_FULL_WINDOW),1)
+N64_ASFLAGS += -DSODIUM64_DSP_FULL_WINDOW=1
 endif
 ifeq ($(AUDIO_OBSERVER),1)
 N64_ASFLAGS += -DSODIUM64_AUDIO_OBSERVER=1
@@ -640,6 +645,10 @@ $(BUILD_DIR)/src/full_dsp_probe.o: src/full_dsp_probe.cpp src/full_dsp_probe.h $
 	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror $(N64_CXXFLAGS_PROBE) -o $@ $<
 
 $(BUILD_DIR)/src/full_dsp_window.o: src/full_dsp_window.cpp src/full_dsp_window.h $(wildcard third_party/snes_spc/*.h)
+	@mkdir -p $(dir $@)
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror $(N64_CXXFLAGS_PROBE) -o $@ $<
+
+$(BUILD_DIR)/src/full_dsp_window_memory.o: src/full_dsp_window_memory.cpp src/full_dsp_window_memory.h src/full_dsp_window.h $(wildcard third_party/snes_spc/*.h)
 	@mkdir -p $(dir $@)
 	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror $(N64_CXXFLAGS_PROBE) -o $@ $<
 

@@ -52,6 +52,22 @@ def main():
         assert cpu.cp_writes==[(12,0)],'TV capture must run before IRQs/RSP initialization'
         assert cpu.memory[0x04000009]==tv and cpu.regs[20]==(tv+1)%3
         tv_capture_cases+=1;cases+=1
+    assert all(name in s for name in ('remote_boot_ram_captured','remote_boot_ram_bytes'))
+    ram_capture_cases=0
+    for size in (0,0x400000,0x800000,0x7c0000,0xffffffff,0x400001):
+        for tv in (0,1,2):
+            cpu=CPU(base.copy());cpu.pattern();cpu.cp[12]=0x9403
+            for i in range(4):cpu.memory[0x04000000+i]=(size>>(24-8*i))&255
+            cpu.memory[0x04000009]=tv
+            cpu.write(0xa0000318,0x400000 if size==0x800000 else 0x800000)
+            cpu.memory_writes.clear();cpu.cp_writes.clear()
+            cpu.execute(s['_start'],stop=s['remote_boot_ram_captured'],max_steps=100)
+            expected=size if size in (0x400000,0x800000) else 0
+            assert cpu.read(s['remote_boot_ram_bytes'])==expected
+            assert cpu.memory_writes==[(s['remote_boot_tv_type']&0x1fffffff,4,tv),
+                (s['remote_boot_ram_bytes']&0x1fffffff,4,expected)]
+            assert cpu.read(0xa4000000)==size and cpu.cp_writes==[(12,0)]
+            ram_capture_cases+=1;cases+=1
     # Execute the linked entry for all supported TV types. This catches GNU as
     # truncating a symbolic li to its low immediate, before touching hardware.
     for tv,version in [(0,6),(1,1),(2,4)]:
@@ -95,6 +111,9 @@ def main():
     proof=dict(passed=True,cases=cases,linked_instructions=True,receiver_bytes=end-start,
                elf_sha256=hashlib.sha256(a.elf.read_bytes()).hexdigest(),
                compiled_tv_capture_cases=tv_capture_cases,modern_ipl3_dmem_tv_source=True,
+               compiled_RAM_capture_cases=ram_capture_cases,modern_ipl3_DMEM_memory_size_source=True,
+               legacy_low_RAM_memory_size_ignored=True,invalid_RAM_size_reports_unknown=True,
+               expansion_allocation_enabled=False,
                legacy_low_ram_tv_ignored=True,invalid_tv_unsigned_byte_falls_back_ntsc=True,
                receiver_pc=f'{target:08x}',ipl3_pc='a4000040',external_code_references_after_jump=False,
                physical_acceptance=False)

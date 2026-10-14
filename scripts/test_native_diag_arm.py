@@ -66,6 +66,7 @@ def execute(memory,pc,regs,cp,stop=0xdead0000,cache_trace=None):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('elf',type=Path)
+    ap.add_argument('--expanded-window',action='store_true')
     a=ap.parse_args();base,s=load_elf(a.elf)
     assert all(n in s for n in ('native_diag_init','native_diag_arm','native_diag_state'))
     state=s['native_diag_state']&0x1fffffff;sram=s['sram']&0x1fffffff
@@ -74,6 +75,10 @@ def main():
     for now in (0,0x12345678,0xffff0000):
         for status in (0x401,0x403,0x1401,0x9403):
             m=base.copy();guest=bytes((i*43+7)&255 for i in range(0x2000))
+            if a.expanded_window:
+                assert s['native_diag_snapshot']==0x80438000
+                at=s['remote_boot_ram_bytes']&0x1fffffff
+                m.update((at+i,v) for i,v in enumerate((8388608).to_bytes(4,'big')))
             m.update((sram+i,v) for i,v in enumerate(guest+bytes([0xab])*0x6000))
             r=[0x80000100+i for i in range(32)];r[0]=0;r[31]=0xdead0000
             cp={9:now,11:0xdeadbeef,12:status}

@@ -4,6 +4,12 @@
  * Registers and command arguments follow sw/controller + libdragon/src/usb.c.
  */
 #include "remote_control.h"
+#ifdef SODIUM64_DSP_FULL_WINDOW
+#include "full_dsp_window_memory.h"
+#ifdef REMOTE_CONTROL_HOST
+extern uint32_t remote_host_window_memory_probe(uint32_t,full_dsp_window_memory_result*);
+#endif
+#endif
 #include "../tools/sc64-diagnostic-save/recorder_runtime_abi.h"
 #ifdef SODIUM64_SCENE_SLOT
 #include "scene_slot.h"
@@ -42,6 +48,7 @@ static int scene_wait(uint32_t address,uint32_t mask,uint32_t expected,uint32_t 
 #endif
 /* Filled by main.S before Sodium replaces the IPL3 boot-info in SP DMEM. */
 volatile uint32_t remote_boot_tv_type=1;
+volatile uint32_t remote_boot_ram_bytes;
 extern volatile uint16_t joyxlh[4];
 static uint32_t poll_calls, poll_total, poll_max, transport_error;
 static uint32_t menu_error;
@@ -863,6 +870,9 @@ static void full_probe(const char *id,uint32_t framebuffer) {
 #ifdef SODIUM64_FULL_DSP_SNAPSHOT_CORE
     if(native_diag_snapshot_ready||native_diag_phase){error(id,"capture_snapshot_owned");return;}
 #endif
+#ifdef SODIUM64_DSP_FULL_WINDOW
+    if(remote_boot_ram_bytes!=8388608u){error(id,"expanded_memory_unavailable");return;}
+#endif
     uint32_t state;
 #ifdef REMOTE_CONTROL_HOST
     state=remote_host_full_dsp_probe(result);
@@ -921,6 +931,9 @@ static void status(const char *id) {
 #ifdef SODIUM64_FULL_DSP_PROBE
     append(",audio-full-dsp-probe");
 #endif
+#ifdef SODIUM64_DSP_FULL_WINDOW
+    append(",audio-window-memory-probe");
+#endif
 #if SODIUM64_REMOTE_SECTION_OBSERVER
     append(",sections");
 #endif
@@ -936,6 +949,8 @@ static void status(const char *id) {
     field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
     field(" boot_tv_type=",remote_boot_tv_type);
     field(" vi=",remote_vi_count);field(" new_presentations=",remote_presentations);
+    field(" rdram_bytes=",remote_boot_ram_bytes);
+    field(" expansion_available=",remote_boot_ram_bytes==0x800000u);
     field(" recorder_phase=",native_diag_phase);
     signed_field(" recorder_result=",native_diag_capture_result);
     field(" recorder_error_stage=",continuous_save_error_stage);
@@ -1211,6 +1226,29 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
        !eq(verb,"frame")&&!eq(verb,"profile")&&!eq(verb,"menu")) {
         error(id,"full_dsp_needs_menu");return;
     }
+#ifdef SODIUM64_DSP_FULL_WINDOW
+    if(eq(verb,"audio-window-memory-probe")) {
+        if(nt!=3){error(id,"argument_count");return;}
+        if(!present||transport_error||menu_error){error(id,"audio_transport_unready");return;}
+        if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
+        if(!remote_paused){error(id,"not_paused");return;}
+        if(!retired_framebuffer||!remote_render_frames){error(id,"frame_unavailable");return;}
+        if(remote_boot_ram_bytes!=8388608u){error(id,"expanded_memory_unavailable");return;}
+        full_dsp_window_memory_result result;
+        uint32_t state;
+#ifdef REMOTE_CONTROL_HOST
+        state=remote_host_window_memory_probe(remote_boot_ram_bytes,&result);
+#else
+        state=full_dsp_window_memory_probe(remote_boot_ram_bytes,&result);
+#endif
+        if(state!=1){full_dsp_probe_needs_menu=1;error(id,"window_memory_probe_failed");return;}
+        prefix(id,1);append(" window_memory_probe=1 temporary_upper_owner=1");
+        field(" stage=",result.stage);field(" owner_bytes=",result.owner_bytes);
+        field(" clocks=",result.clocks);field(" state_checks=",result.state_checks);
+        field(" producer_reads=",result.producer_reads);field(" echo_writes=",result.echo_writes);
+        append(" live_guest_DSP=0 performance_claim=0");(void)finish();return;
+    }
+#endif
     if(eq(verb,"audio-full-dsp-probe")) {
         if(nt!=3){error(id,"argument_count");return;}
         full_probe(id,retired_framebuffer);return;

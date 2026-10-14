@@ -1,3 +1,20 @@
+# 2026-10-14 - R60 raw-job resident DMA physical discriminator running
+
+RESUME HERE: exec94802 LIVE; normal menu/install/readback passed. Runtime
+942c8324be967f0a7fa6572a7163b00e17bb6f63, experiment/brr-resident-dma-r60;
+preflight continuity8c08c99. Frozen private brr-rsp-r60-archive worker/plan,
+worker SHA b6e4dfa0ce29ea29dac0b55ac099aa75413d9cb01db9d8d6ab39154001d8d677. Poll exec94802 and
+brr-rsp-r60-native/report.json; root sole COM3, no competing transport or
+restart on observation timeout. Three trials600..602, raw128Binput/private64B
+DMA output, each2048 original samples. All cache/mailbox/DMAs/adapter/wait/
+output work counted versus original scalar; >=40% median saving and max
+<=8.7890625us. Full context/SP/currentDMA/image/PCM/boundary controls, step660,
+final coordinate8/menu/install/readback required. Native cost/restoration
+PENDING; terminal checkpoint before next batch. FullDSP/DAC/native60/50/
+corpus/integration remain open. Earlier history retained below.
+
+---
+
 # 2026-10-14 - R60 raw-job resident DMA discriminator ready
 
 RESUME HERE: runtime 942c8324be967f0a7fa6572a7163b00e17bb6f63, experiment/brr-resident-dma-r60,

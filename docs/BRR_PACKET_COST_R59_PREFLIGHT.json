@@ -1,0 +1,227 @@
+{
+  "passed": true,
+  "static_end": "0xd2fb8",
+  "arena_start": "0xd4000",
+  "gap": "0x1048",
+  "full_event_capacity": 24576,
+  "ROM_slots": 194,
+  "concurrent_owners": 43,
+  "unchanged16_RSP_banks": [
+    "rsp_decoder_original.elf",
+    "rsp_dsp_gauss.elf",
+    "rsp_hcomp.elf",
+    "rsp_hcomp_fast.elf",
+    "rsp_hcomp_fixed_window.elf",
+    "rsp_hcomp_math.elf",
+    "rsp_hcomp_rdp.elf",
+    "rsp_hcomp_rdp_fixed.elf",
+    "rsp_hcomp_setup.elf",
+    "rsp_hcomp_tlut.elf",
+    "rsp_main.elf",
+    "rsp_mode7.elf",
+    "rsp_mode7_window.elf",
+    "rsp_object_cache.elf",
+    "rsp_scene_capture.elf",
+    "rsp_scene_restore.elf"
+  ],
+  "linked_resident_DMA_rebinds": [
+    {
+      "bank": "rsp_main.elf",
+      "instruction": 206
+    },
+    {
+      "bank": "rsp_main.elf",
+      "instruction": 978
+    },
+    {
+      "bank": "rsp_mode7.elf",
+      "instruction": 206
+    },
+    {
+      "bank": "rsp_mode7.elf",
+      "instruction": 978
+    }
+  ],
+  "CPU_uploader_rebinds": true,
+  "linked_input_cache_writeback": true,
+  "input_bytes": 96,
+  "output_bytes": 64,
+  "samples_per_packet": 32,
+  "packet_preparation_included": true,
+  "preparation_metric_reported": true,
+  "unchanged_math_proof_source": "R58",
+  "guarded8byte_cursor_cleanup_required": true,
+  "native_performance_or_gameplay_acceptance": false,
+  "commercial_data": false,
+  "math": {
+    "passed": true,
+    "linked_kernel_bytes": 444,
+    "instructions_per32_samples": 111,
+    "directed_lane_groups": 21952,
+    "all65536_encoded_words": true,
+    "random_lane_groups": 65536,
+    "all16_ranges_all4_filters_signed_odd_histories": true,
+    "all_entry_vectors_ACC_flags_randomized": true,
+    "output_owner_bytes": 64,
+    "all_other4096_DMEM_bytes_unchanged": true,
+    "negative_mutations_rejected": [
+      "wrong_raw_unsigned_product",
+      "wrong_filter1_coefficient",
+      "missing_odd_history_half",
+      "premature_ACC_reset",
+      "wrong_second_history",
+      "missing_nybble_shift"
+    ],
+    "kernel_sha256": "10f38b9538b62508bed15922be73d6c31938a5572d96ad37290f5a8114591122",
+    "native_RSP_transport_or_performance_tested": false,
+    "commercial_data": false
+  },
+  "transaction": {
+    "passed": true,
+    "cases": 253,
+    "production_C_and_actual_RSP_binaries": true,
+    "transfer_fault_positions": 92,
+    "read_corruptions": 74,
+    "wait_fault_positions": 67,
+    "pre_mutation_full_backup": true,
+    "deliberate_zero_context_proved": false,
+    "full700byte_register_recapture_exact": true,
+    "SP8KiB_restore_checksum_readback": true,
+    "no_DP_AI_guest_SD_or_ROM_access": true,
+    "callback_exceptions_fail": true,
+    "hardware_timing_mocked": true,
+    "native_acceptance": false,
+    "complete_machine_restore": false,
+    "unprefixed_native_stage4_word8_reproduced": false,
+    "primitive_output_samples": 2048,
+    "gauss_clobbered_context_restored": true,
+    "all64_primitive_wait_faults_safely_halted_and_restored": true,
+    "gauss_result_mutation_rejected": true,
+    "DMA_input_extent_and_alignment": true,
+    "DMA_register_addresses_and_idle_lengths_exact": true,
+    "DMA_busy_timeout_stops_before_context_memory_overwrite": true,
+    "DMA_corrupt_input_detected": true,
+    "DMA_length_or_address_restore_fault_requires_menu": true,
+    "same_image_PIO_control": true,
+    "DMA_fault_kind_expected_observed_and_register_index_exact": true,
+    "invalid_CPU_DMA_source_safely_restores_and_reports_failure": true,
+    "current_and_pending_DMA_distinct": true,
+    "exact8byte_no_change_cursor_DMA": true,
+    "DMEM_IMEM_wrap_and_skip_preserved": true,
+    "source_tail_guards_before_and_after_mutation": true,
+    "cursor_DMA_timeout_and_byte_fault_require_menu": true,
+    "no_RDRAM_writes": true,
+    "CPU_cache_writeback_and_hardware_DMA_timing_mocked": true,
+    "BRR32_sample_actual_kernel": true,
+    "input_bytes": 96,
+    "output_bytes": 64,
+    "preparation_included_in_transport_metric": true,
+    "per_term_floors_saturation_double_wrap_exact": true
+  },
+  "parser": {
+    "passed": true,
+    "cases": 264,
+    "fuzz": 1000,
+    "production_parser": true,
+    "hardware_mocked": true,
+    "physical_acceptance": false,
+    "full_dsp_snapshot_core": false,
+    "source_sha256": {
+      "src/remote_control.c": "e7d28cab0b57f10c397fbe46176dfa7a8e2410523c36f4be4140b02d81d24e2a",
+      "src/remote_control.S": "abfdd01a6af2643dda491ae3814a995450e366a55e5b6b44f645cab9e47c780b",
+      "src/remote_control.h": "f86c6e6d3d53d984b262b995a594bbb99f232997850c4270072dd0bcec262856",
+      "scripts/fixtures/remote_control_host.c": "7482c70bc9d98bf8a7a563acdb7d2a4daf1dc53da3fa45576cd2c7b33eada157"
+    }
+  },
+  "context-model": {
+    "passed": true,
+    "actual_binary_roundtrips": 637,
+    "ACC_MID_values": 65536,
+    "instruction_counts": [
+      [
+        94,
+        94
+      ],
+      [
+        80,
+        80
+      ]
+    ],
+    "mutations_rejected": [
+      "missing_GPR_capture",
+      "missing_vector_capture",
+      "missing_ACC_capture",
+      "missing_capture_t0_restore",
+      "missing_ACC_mid_add",
+      "missing_ACC_high_add",
+      "missing_vector_restore",
+      "missing_flag_restore",
+      "missing_GPR_restore"
+    ],
+    "GPR32_vector32_flags3_ACC48x8_exact": true,
+    "context_bytes": 700,
+    "capture_preserves_context": true,
+    "restore_DMEM_readonly": true,
+    "delayed_entry_3C_and_ordinary_entry_tested": true,
+    "current_banks_without_DIV_instructions": 14,
+    "reference": "ares9408cb43 RSP SISD vector semantics",
+    "CPU_hardware_transaction_tested": false,
+    "native_acceptance": false,
+    "full_serializer_or_machine_restore": false
+  },
+  "boot": {
+    "passed": true,
+    "cases": 12,
+    "linked_instructions": true,
+    "receiver_bytes": 248,
+    "elf_sha256": "64b2e911023a138e81440bc95d0b144f5ffd863c16d1a67bc6124f4dd4de8d10",
+    "compiled_tv_capture_cases": 5,
+    "modern_ipl3_dmem_tv_source": true,
+    "legacy_low_ram_tv_ignored": true,
+    "invalid_tv_unsigned_byte_falls_back_ntsc": true,
+    "receiver_pc": "a4001020",
+    "ipl3_pc": "a4000040",
+    "external_code_references_after_jump": false,
+    "physical_acceptance": false
+  },
+  "dma": {
+    "passed": true,
+    "cpu_queue_words": 6,
+    "embedded_banks": 2,
+    "actual_dma_sites": [
+      {
+        "pc": "a40014c4",
+        "direction": "write",
+        "rdram_start": "a00d4400",
+        "bytes": 1024
+      },
+      {
+        "pc": "a400174c",
+        "direction": "read",
+        "rdram_start": "a00d4400",
+        "bytes": 1024
+      },
+      {
+        "pc": "a40013f8",
+        "direction": "write",
+        "rdram_start": "a00d4400",
+        "bytes": 1024
+      },
+      {
+        "pc": "a4001580",
+        "direction": "read",
+        "rdram_start": "a00d4400",
+        "bytes": 1024
+      }
+    ],
+    "linked_elf_sha256": "64b2e911023a138e81440bc95d0b144f5ffd863c16d1a67bc6124f4dd4de8d10",
+    "negative_mutations_rejected": [
+      "CPU_queue_disagreement",
+      "stale_RSP_backup",
+      "embedded_bank_disagreement"
+    ],
+    "physical_acceptance": false
+  },
+  "ELF_sha256": "64b2e911023a138e81440bc95d0b144f5ffd863c16d1a67bc6124f4dd4de8d10",
+  "Z64_sha256": "f0965afdbc07ecf60d9a1533135ee111c25cbe4f4dd2f6079c82cd675f7d7b2e"
+}

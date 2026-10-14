@@ -1,3 +1,26 @@
+# 2026-10-14 - R59 preparation-cost discriminator ready
+
+RESUME HERE: runtime 36d907606ba2c8bff375d3ceb09a9f26acb6ed41, experiment/brr-packet-cost-r59.
+[R59](BRR_PACKET_COST_R59.md). Existing preparation interval is now reported
+separately and remains included in accepted packet cost. Parser 264+1000,
+transaction 253 cases, 17 unchanged RSP banks, 43 owners/boot/current-DMA/cache
+and original R58 linked-math proof pass. No broad CI or performance promotion.
+
+Next: frozen private brr-rsp-r59-archive/native_brr_rsp_r59.py and plan.
+Worker SHA da8ba075ccae3f61763c397ff6910fd97df7e43b6987f6f32ae67ce6478e9b7a. Four alternating PIO/DMA
+trials at canonical ALttP 600..603, each 64 packets/2048 original samples;
+full context/SP/current-DMA/pixels/paused-PCM controls, step660 and final
+coordinate8/menu/install/readback. Root sole COM3 after controller/hash check.
+Record live handle and poll it; observation timeout must not restart the run.
+Native preparation share pending. Compare residual attribution against the
+40-percent saving/8.7890625us engineering gates; eliminating preparation alone
+may be insufficient. Every later candidate must charge all work.
+R58 backend remains rejected; R49/master/R44/R45/prior candidates preserved.
+Full DSP/DAC, renderer sharing, native60/50 and corpus/integration remain open.
+Earlier history retained below.
+
+---
+
 # 2026-10-14 - R58 native BRR arithmetic exact; current backend cost rejected
 
 RESUME HERE: exec96482 terminal exit0, allcontrols/step660/coordinate8/menu/

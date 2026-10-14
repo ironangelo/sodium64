@@ -1,3 +1,20 @@
+# 2026-10-14 - R59 physical preparation attribution running
+
+RESUME HERE: exec79430 LIVE; normal menu/install/readback passed. Runtime
+36d907606ba2c8bff375d3ceb09a9f26acb6ed41, experiment/brr-packet-cost-r59;
+preflight continuity0381d6c. Frozen private brr-rsp-r59-archive worker/plan,
+worker SHA da8ba075ccae3f61763c397ff6910fd97df7e43b6987f6f32ae67ce6478e9b7a.
+Poll the same exec79430 and brr-rsp-r59-native/report.json; root sole COM3,
+no competing controller or restart on observation timeout. Four PIO/DMA
+trials600..603, original 8192 samples and full context/SP/current-DMA/image/
+PCM/guest-boundary controls, step660 and final coordinate8/menu/readback.
+Preparation remains included in total; separate counter is attribution only.
+Native cost/restoration PENDING; terminal checkpoint before next batch.
+Full DSP/DAC/native60/50/corpus/integration remain open; R58 remains rejected.
+Earlier history retained below.
+
+---
+
 # 2026-10-14 - R59 preparation-cost discriminator ready
 
 RESUME HERE: runtime 36d907606ba2c8bff375d3ceb09a9f26acb6ed41, experiment/brr-packet-cost-r59.

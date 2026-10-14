@@ -1,7 +1,8 @@
 # R61 - explicit expanded-RAM DSP window owners
 
-Status: IMPLEMENTED and locally qualified; physical memory/coexistence result
-pending. This is a prerequisite for complete resident DSP dataflow, not a speed
+Status: MEASURED on real N64: two upper-owner probes and the moved32KiB
+snapshot pass with live guest coexistence/recovery controls. This is a
+prerequisite for complete resident DSP dataflow, not a speed
 claim or a live SPC integration. Commercial inputs and derived data stay local.
 
 R62's proven IPL3 capture is carried into this branch. Only exact8388608 admits
@@ -53,7 +54,32 @@ within-JIT bus timestamps, echo CPU-cache/JIT-tag invalidation and complete save
 ownership still need implementation; a complete resident RSP DSP kernel and its
 native full-work discriminator remain open.
 
-Next physical action: install/readback this frozen artifact, launch existing
+## Physical result
+
+Runtime7900ce09cf95c15b0704306e3b58c143827c5975, checkpointf2c8f36e.
+Exec95649 terminal exit1 after both memory trials passed: each512clocks,
+48 state/three-RAM/PCM comparisons,64 producer reads,32 echo publications,
+all guards and uncached aliases. All67200 image pixels,8192 PCM bytes,
+head/register/enabled fields and guest boundary stay exact; step660 succeeds.
+The capture sealed, but that controller used `profile` (status alias) where
+`sav` binary export was required. Resource results remain valid; it recovered
+coordinate8/menu/install/readback. This was a collection error, not a failed
+native memory result.
+
+Snapshot-only exec1913 completed exit0 using the exact same source/artifact:
+ordinary USB capture, `sav` export, actual32768bytes parsed as complete v5.
+Final coordinate8/menu/install/readback passed again. No COM3 controller live.
+See curated MEMORY_NATIVE.json; raw inputs/images/PCM/captures/reports stay
+private. No SP DMA to the new owner, new live guest/save owner, full DSP/DAC
+audio, native performance gain or corpus acceptance is asserted.
+
+Next implement native within-JIT bus timestamps/echo cache and JIT-tag behavior
+before a live bridge. Preserve this memory proof and the existing R61 ordering
+proof; full resident RSP DSP still needs its early native full-work discriminator.
+
+## Original physical plan (completed above)
+
+Install/readback this frozen artifact, launch existing
 private ALttP, pause/park600, compare image/PCM/heads/registers around two owner
 probes, continue660, then perform one ordinary USB capture to qualify the moved
 32KiB snapshot. Finally restore coordinate8/menu/install/readback. Record the

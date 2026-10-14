@@ -1,0 +1,33 @@
+{
+  "status": "MEASURED upper-memory ownership and coexistence",
+  "runtime_source": "7900ce09cf95c15b0704306e3b58c143827c5975",
+  "checkpoint_source": "f2c8f36ed84ee4bf208684309a6d875fb2091ff0",
+  "physical_console": true,
+  "owner_probe_trials": 2,
+  "temporary_upper_owner_bytes": 213152,
+  "DSP_clocks_per_trial": 512,
+  "state_comparisons_per_trial": 48,
+  "producer_reads_per_trial": 64,
+  "echo_word_publications_per_trial": 32,
+  "guard_and_uncached_alias_checks": true,
+  "controls": {
+    "pixels_exact": 67200,
+    "PCM_bytes_exact": 8192,
+    "heads_registers_enabled_match": true,
+    "boundary_unchanged": true
+  },
+  "continued_to_frame": 660,
+  "diagnostic_snapshot": {
+    "bytes": 32768,
+    "version": 5,
+    "complete": true,
+    "parse_pass": true
+  },
+  "final_menu_install_readback_recovery": true,
+  "first_controller_export_error": "profile is status-only; snapshot-only sav export completed",
+  "SP_DMA_to_upper_owner_measured": false,
+  "new_live_guest_save_owner": false,
+  "live_full_DSP_or_DAC_acceptance": false,
+  "native_performance_gain": false,
+  "commercial_data_uploaded": false
+}

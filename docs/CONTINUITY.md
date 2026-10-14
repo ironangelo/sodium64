@@ -1,3 +1,39 @@
+# 2026-10-14 - R61 upper-memory window and relocated snapshot physically proved
+
+RESUME HERE: [R61 memory](FULL_DSP_WINDOW_R61_MEMORY.md), curated MEMORY_NATIVE.json.
+Runtime7900ce09cf95c15b0704306e3b58c143827c5975; docHEAD61505bc6c3a0a40b3c293bde214b0248851c0fb0,
+experiment/full-dsp-window-r61. Exec95649 terminal exit1 only because controller
+used profile/status as a binary export; two owner trials already PASS. Each:
+512 clocks,48 state/three-RAM/PCM checks,64 producer reads,32 echo publications,
+guards and uncached aliases exact. All67200 image pixels/8192 PCM/headregs/
+enabled/boundary controls and step660 PASS. Snapshot-only exec1913 terminal
+exit0: same source/artifact, sav export32768bytes completev5 parsed; final
+coordinate8/menu/install/readback restored. Both recoveries PASS. No COM3
+controller live. Do not repeat these closed owner tests for an export mistake.
+
+Explicit upper temporary owner0x400000..0x4340A0 and host snapshot0x438000..
+0x440000 now physically exercised, preserving all43 base owners/194 ROM slots.
+4MiB/unknown guarded; cache, boot, init/arm/copy and parser local proof retained.
+No SP DMA to upper owners, new live guest/save owner, full DSP/DAC audio,
+native speed improvement or corpus acceptance is claimed. Master7cc8facf and
+all prior candidates preserved; no broad CI for this prerequisite.
+
+Next actual blocker: exact native SPC bus timestamps and echo cache/JIT tags.
+apu_read8/write8 DO debit their one bus cycle at runtime; opcode/operand fetch
+and fixed idle debits still accumulate in compile S2 and reach runtime S3 only
+in finish_block's return delay slot. Current mid-block S3 therefore cannot be
+passed directly as a complete DSP timestamp. First prove that with small
+original F3 snippets using the existing compiled-JIT harness, then implement
+ordered bus timing; preserve aggregate cycles, conditional paths, halt and
+cached replay. Echo writes to code require correct future instruction fetch,
+not merely invalidating the next block's tag. R61 window/core/upper-owner proof
+is a reusable boundary, not a second emulator or accepted performance backend.
+Complete resident RSP DSP and early full-work native discriminator remain next
+architectural gates. Full fidelity/native60/50/corpus/integration OPEN.
+Earlier history below is chronological.
+
+---
+
 # 2026-10-14 - R61 expanded DSP owners ready for bounded physical check
 
 RESUME HERE: runtime7900ce09cf95c15b0704306e3b58c143827c5975,

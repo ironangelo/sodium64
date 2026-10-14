@@ -1,3 +1,23 @@
+# 2026-10-14 - R57 repaired physical PIO/DMA discriminator running
+
+RESUME HERE: native exec81581 LIVE, normalmenu/install/readback passed;
+runtime49ef166d0816174b7cbd074652c633154fdcc69e, experiment/rsp-gauss-dma-r57,
+preflightcontinuityeba7a82. Frozen private rsp-gauss-dma-r57-v3-archive worker
+and plan; workerSHA1ae07bee14248df44b651e387bcf22cbe9c69c22590c98bc3dc70bfb90bd02f3.
+Poll81581 and rsp-gauss-dma-r57-native-v3/report.json; rootsoleCOM3, no competing
+transport/restart on observation timeout. Six64packet512lane trials at600..605
+alternatePIO0/DMA1; inputDMA128B includescache/writeback/SYNC/setup/wait and
+output readback. Cost gate>=40%median saving and DMAmax<=nominal7.8125us.
+Fullcontext/SP/DMA readbacks, same67200pixels8192PCM/headregs/guestboundary,
+step660 and finallycoordinate8/menu/install/readback required. Nativecost and
+hardware cache/DMA restoration remain PENDING. Nativev2 failedcursor1790->80;
+v3 usesguarded no-change8B cleanup/current+pending model,253faultcases.
+All4currentreadbacks/700context8192SP/source/tail remain strict. Terminal checkpoint before
+next batch; no broadCI/promotion/fullDSP/DAC/game60/50/corpus/integration
+acceptance. Prior evidence and history retained below.
+
+---
+
 # 2026-10-14 - R57 exact DMA cursor repair implemented; native v3 next
 
 RESUME HERE: code49ef166d0816174b7cbd074652c633154fdcc69e, experiment/rsp-gauss-dma-r57,

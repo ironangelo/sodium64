@@ -1,3 +1,27 @@
+# 2026-10-14 - R61 full-window directory bus wrap corrected and proved
+
+RESUME HERE: source0a34a97b5a36c8ff0d59391884786dce61eb6076,
+experiment/full-dsp-window-r61. [R61](FULL_DSP_WINDOW_R61.md) and CONTROLLER/BUILD.json.
+Current proof72646 complete-state/CPU RAM/shadow RAM/PCM comparisons,
+20023 producer reads,933286 clocks,5669 directed,31 FIFO overflow cases,
+50955 exact enabled echo word publications;11 unsafe mutations rejected.
+Enabled full-window core now wraps DIR/SRCN sample-directory bus address to
+16bits; otherwise original core could read beyond64KiB. Actual phase31/0 core
+passes131072 DIR/SRCN/start-loop expected-word cases; omitted mask fails.
+Primary pinned ARES voice1/2 supports16-bit address. Existing immediate oracle
+qualifies admitted non-wrapping bus traces, not this unsafe original corner.
+Default-off26 O64 allocated sections still exact original; enabled core9640B,
+controller2224B, no global RAM owner. No commercial/native fidelity result.
+
+Next action unchanged: explicit small upper-RAM shadow/event owner using R62
+verified8MiB boot size, with4MiB/unknown guard, bounds/non-overlap/cache/DMA/save
+proof before live use. Exact within-JIT bus timestamps and echo cache/code-tag
+visibility remain separate gates before native SPC integration and resident
+RSP complete DSP. No COM3 controller live; no broad CI/new physical cost claim.
+Full target/master integration OPEN. Prior protocol/resource history below.
+
+---
+
 # 2026-10-14 - R61 exact bus-window controller implemented and locally proved
 
 RESUME HERE: source c693b2befee7de112ae666060236256b07f768f1 on

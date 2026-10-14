@@ -27,21 +27,35 @@ runs it one clock at a time and checks the controller at every period closure
 and producer-visible barrier. Both cores receive the same original numeric
 inputs; no commercial input/state/PCM is used. Results:
 
-- 72645 complete normalized state/CPU RAM/shadow RAM/PCM comparisons.
+- 72646 complete normalized state/CPU RAM/shadow RAM/PCM comparisons.
 - 20023 producer reads,933286 DSP clocks,5669 directed cases.
 - All32 phases and128 registers, ESA/EDL/FLG/address-wrap changes,31 FIFO
   overflow cases, same-clock order, soft/hard reset, export/import and PCM.
 - 50955 enabled echo word publications, exact callback order/address/value
   and simulated JIT-page tag counts; real cache/JIT integration remains open.
-- Ten distinct unsafe mutations rejected, including future RAM visibility,
+- Eleven distinct unsafe mutations rejected, including future RAM visibility,
   early event replay, missing read/echo/reset/export/PCM barriers, wrong
-  captured pointer, dropped FIFO events and missing echo publication.
+  captured pointer, dropped FIFO events, missing echo publication and an
+  omitted16-bit directory mask.
+
+An existing core limitation was exposed while admitting arbitrary register
+writes: `DIR*256 + SRCN*4` could exceed64KiB, and V2 would read a host pointer
+outside the provided APURAM. The enabled window core now masks the V1 bus
+address to16bits, matching
+[ARES voice1/voice2](https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/sfc/dsp/voice.cpp).
+All65536 DIR/SRCN pairs with both start/loop word selections execute through
+the actual phase31/0 production core:131072 independent numeric expected-word
+checks pass; removing the mask fails. Four-byte entry alignment ensures the
+V2+2 word stays within64KiB after masking. The unchanged immediate oracle is
+used for admitted non-wrapping traces, not as authority for its unsafe corner.
+This fixes the opt-in full-window core; default-off/legacy behavior is preserved.
+No affected commercial game or native fidelity result has been established.
 
 `scripts/test_full_dsp_window_controller.py --mutations` records this proof in
 CONTROLLER.json. `check_full_dsp_window_build.py` compiles the core/controller/
 probe for O64; all26 allocated default-off core sections exactly match source
 6dc6a034362c1cab8f972b353e09f1f8e1b5376c. Disabled controller has no code/data;
-enabled controller has no global writable owner. Code sizes9616/2224 bytes
+enabled controller has no global writable owner. Code sizes9640/2224 bytes
 are object evidence only. See BUILD.json. No native ROM run or broad CI was
 needed to qualify this semantic boundary, and no performance claim is made.
 

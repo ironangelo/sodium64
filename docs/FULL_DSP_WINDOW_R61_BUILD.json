@@ -5,7 +5,7 @@
   "default_off_allocated_sections_exact": 26,
   "default_off_controller_has_no_code_or_data": true,
   "enabled_controller_has_no_global_RAM_owner": true,
-  "enabled_core_text_bytes": 9616,
+  "enabled_core_text_bytes": 9640,
   "enabled_controller_text_bytes": 2224,
   "native_ROM_or_hardware_execution": false,
   "performance_acceptance": false,

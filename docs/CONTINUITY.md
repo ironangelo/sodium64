@@ -1,3 +1,21 @@
+# 2026-10-13 - R56 first physical attempt terminal; canonical observer repaired
+
+RESUME HERE: exec62811 terminal exit1, coordinate8/menu/install/readback
+verified, zero primitive RPCs executed. Install/launch/parkALttP600 succeeded;
+worker wrongly requiredrsp_retired on the existing scene_canonical_raw frame
+observer. LAB LIMITATION/assertion corrected to exact canonical provenance;
+no math/cost result, no C/RSP/artifact/byte-compare/recovery gate changed.
+Runtime09c7c00f2ff06c3f1836bf06707acf7a9b33076a; all exact preflight results reused.
+[Report](FULL_DSP_RSP_GAUSS_R56.md). Frozen private rsp-gauss-r56-v2-archive/
+native_rsp_gauss_r56.py and rsp-gauss-r56-v2-plan.json, workerSHA
+d01caaad80d104b2867442278b7caa3d91d2f33b57f22364f18e8c58e488460c. RootsoleCOM3, inspect controller before
+new launch. Same three512lane trials/fullcontext+SP/images+PCM/step660 and
+finallycoordinate8 as below; native math/PIO deadline remains PENDING.
+Terminal checkpoint before next technical batch. FullDSP/DAC/SNES/game60/50/
+corpus/renderer sharing/integration OPEN; history retained below.
+
+---
+
 # 2026-10-13 - R56 physical vector/PIO experiment running
 
 RESUME HERE: native exec62811 LIVE, normalmenu/install/readback passed;

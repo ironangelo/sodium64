@@ -1,3 +1,20 @@
+# 2026-10-13 - R55 CPU batch cost A/B running
+
+RESUME HERE: yielded native exec83207 LIVE, flag0 menu/install/readback passed.
+Runtime89467e4d5141a5c21c62f47df17ca23f9617e829,
+experiment/full-dsp-gauss-batch-r55; preflightcontinuity00892b8. Frozen private
+dsp-batch-r55-archive/native_dsp_batch_r55.py and plan. WorkerSHA
+12d37dc43c62f9be182576a9f2bc5905589164d265179a1c334ac6f2746ea12d.
+Poll83207 and dsp-batch-r55-native/report.json; root soleCOM3, no competing
+transport or restart on observation timeout. Same-source0/1, originalthree
+2048frame cases3x atALttP600; hostPCMchecksums/nonzero/RAMrestore/liveimage/
+PCMstate/step660, finallycoordinate8/menu/install/readback. Native CPU cost
+PENDING. Semantically proven phase0 eight-voice boundary is separate from
+performance; RSP BACKEND STILL NOT IMPLEMENTED. Terminal checkpoint before
+next batch. FullDSP/DAC/SNES/native60/corpus/integration OPEN. History retained.
+
+---
+
 # 2026-10-13 - R55 eight-voice Gaussian boundary proved; native CPU cost next
 
 RESUME HERE: runtime89467e4d5141a5c21c62f47df17ca23f9617e829, experiment/full-dsp-gauss-batch-r55,

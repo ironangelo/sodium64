@@ -1,3 +1,21 @@
+# 2026-10-13 - R57 physical same-image PIO/DMA discriminator running
+
+RESUME HERE: native exec10433 LIVE, normalmenu/install/readback passed;
+runtime4a622befb5699525ba5be013cc1295befdca2570, experiment/rsp-gauss-dma-r57,
+preflightcontinuityc5b88c6. Frozen private rsp-gauss-dma-r57-archive worker
+and plan; workerSHA34ed15029c23067b219d4f9b227634758afd812349c83795c333047c4a87414b.
+Poll10433 and rsp-gauss-dma-r57-native/report.json; rootsoleCOM3, no competing
+transport/restart on observation timeout. Six64packet512lane trials at600..605
+alternatePIO0/DMA1; inputDMA128B includescache/writeback/SYNC/setup/wait and
+output readback. Cost gate>=40%median saving and DMAmax<=nominal7.8125us.
+Fullcontext/SP/DMA readbacks, same67200pixels8192PCM/headregs/guestboundary,
+step660 and finallycoordinate8/menu/install/readback required. Nativecost and
+hardware cache/DMA restoration remain PENDING. Terminal checkpoint before
+next batch; no broadCI/promotion/fullDSP/DAC/game60/50/corpus/integration
+acceptance. Prior evidence and history retained below.
+
+---
+
 # 2026-10-13 - R57 bounded DMA transport implemented; paired native test next
 
 RESUME HERE: code4a622befb5699525ba5be013cc1295befdca2570, experiment/rsp-gauss-dma-r57,

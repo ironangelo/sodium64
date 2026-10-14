@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "cases": 275,
+  "fuzz": 1000,
+  "production_parser": true,
+  "hardware_mocked": true,
+  "physical_acceptance": false,
+  "full_dsp_snapshot_core": true,
+  "source_sha256": {
+    "src/remote_control.c": "a35000f902412accbd670b2dfd0bec863a4965953c32a3dd09ef3a21a8e3b31b",
+    "src/remote_control.S": "abfdd01a6af2643dda491ae3814a995450e366a55e5b6b44f645cab9e47c780b",
+    "src/remote_control.h": "b0ec8cfe11534d7610806e0e56443f5025321474460eed1f482bd3377f3d4ba8",
+    "scripts/fixtures/remote_control_host.c": "599d4ec09d2d1a09b139a9c0241909925d11ccf586609c489d1ad0c6a57a0582"
+  }
+}

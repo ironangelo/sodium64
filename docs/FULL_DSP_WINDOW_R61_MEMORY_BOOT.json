@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "cases": 30,
+  "linked_instructions": true,
+  "receiver_bytes": 248,
+  "elf_sha256": "a0f6e795c807313842b403c395b1d8097e8d59c92c368b98266ead8348803ed5",
+  "compiled_tv_capture_cases": 5,
+  "modern_ipl3_dmem_tv_source": true,
+  "compiled_RAM_capture_cases": 18,
+  "modern_ipl3_DMEM_memory_size_source": true,
+  "legacy_low_RAM_memory_size_ignored": true,
+  "invalid_RAM_size_reports_unknown": true,
+  "expansion_allocation_enabled": false,
+  "legacy_low_ram_tv_ignored": true,
+  "invalid_tv_unsigned_byte_falls_back_ntsc": true,
+  "receiver_pc": "a4001020",
+  "ipl3_pc": "a4000040",
+  "external_code_references_after_jump": false,
+  "physical_acceptance": false
+}

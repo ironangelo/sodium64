@@ -1,3 +1,32 @@
+# 2026-10-14 - R61 expanded DSP owners ready for bounded physical check
+
+RESUME HERE: runtime7900ce09cf95c15b0704306e3b58c143827c5975,
+checkpointf2c8f36ed84ee4bf208684309a6d875fb2091ff0 on experiment/full-dsp-window-r61.
+[Memory](FULL_DSP_WINDOW_R61_MEMORY.md). Source/default-off window proof preserved.
+R62 verified boot capture carried forward. Temporary upper owner0x400000..
+0x4340A0 holds three independent64KiB RAM views,16KiB state and five guards.
+Host diagnostic snapshot moved out of base BSS to0x438000..0x440000; manual/
+remote arm, copy and full-DSP snapshot lease reject4MiB/unknown before access.
+43 base owners unchanged, caches194slots unchanged, both upper leases below
+boot top64KiB. Linked15 rejection+one32KiB copy/2048cache cases,16init/arm,
+30boot cases,306+275parser(+1000each), model guard-fault/RAM proof PASS.
+CPU/RSP DMA backup tables agree. Loaded/static end0xD0DC0 < CGRAM0xD6000.
+No live guest DSP, SP DMA, new guest save owner or native speed claim.
+
+Next launch frozen private native_full_window_r61_memory.py using
+full-window-r61-memory-plan.json; no COM3 process live at this checkpoint.
+Install/readback, ALttP pause/park600; two audio-window-memory-probe trials,
+image/PCM/heads/registers/boundary controls; step660; one USB capture/32KiB
+profile parse to qualify moved snapshot; finally coordinate8/menu/install/
+readback. Root alone owns COM3; record handle immediately and poll same.
+Output full-window-r61-memory-native/report.json remains private. This tests
+memory/cache/coexistence, not full resident DSP performance or DAC fidelity.
+After terminal checkpoint resume exact native JIT bus timestamps/echo cache+
+JIT tags and complete resident RSP DSP full-work discriminator. Full target OPEN.
+Earlier history below.
+
+---
+
 # 2026-10-14 - R61 full-window directory bus wrap corrected and proved
 
 RESUME HERE: source0a34a97b5a36c8ff0d59391884786dce61eb6076,

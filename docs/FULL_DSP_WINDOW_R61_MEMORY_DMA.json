@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "cpu_queue_words": 6,
+  "embedded_banks": 2,
+  "actual_dma_sites": [
+    {
+      "pc": "a40014c4",
+      "direction": "write",
+      "rdram_start": "a00d6400",
+      "bytes": 1024
+    },
+    {
+      "pc": "a400174c",
+      "direction": "read",
+      "rdram_start": "a00d6400",
+      "bytes": 1024
+    },
+    {
+      "pc": "a40013f8",
+      "direction": "write",
+      "rdram_start": "a00d6400",
+      "bytes": 1024
+    },
+    {
+      "pc": "a4001580",
+      "direction": "read",
+      "rdram_start": "a00d6400",
+      "bytes": 1024
+    }
+  ],
+  "linked_elf_sha256": "a0f6e795c807313842b403c395b1d8097e8d59c92c368b98266ead8348803ed5",
+  "negative_mutations_rejected": [
+    "CPU_queue_disagreement",
+    "stale_RSP_backup",
+    "embedded_bank_disagreement"
+  ],
+  "physical_acceptance": false
+}

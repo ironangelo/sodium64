@@ -1,7 +1,7 @@
 # R58 - closed-input mixed-epoch BRR batch
 
-Status: IMPLEMENTED semantic boundary, RSP primitive and native discriminator;
-complete-core RSP backend/native cost acceptance remain pending.
+Status: MEASURED exact native arithmetic/owner restoration; current BRR PIO/DMA backend cost REJECTED.
+Complete-core RSP/native-game integration remains open.
 R57's thin Gaussian PIO/DMA cost remains rejected. This experiment tests a
 larger useful-work boundary before constructing another vector kernel.
 
@@ -107,3 +107,29 @@ only with at least40% median cost saving versus this image's original scalar
 formula and observed maximum fitting the nominalnine-DSP-clock8.7890625us
 first-use budget. This is an engineering discriminator, not complete DSP or
 renderer-sharing acceptance. Reject failed value before broadCI or tuning.
+
+## Physical result - original32-sample work exact, current backend rejected
+
+Exec96482 completed exit0 with all live controls/step660 and finalcoordinate8
+menu/install/readback. All12288 original decoded samples/checksums were exact.
+All six current-DMA readbacks,700-byte contexts/8192-byte SP owners and
+67200 pixels/8192 paused PCM bytes/head/register/enabled/guest boundaries match.
+
+PIO scalar totals43618/43652/43619, backend65805/65765/65772 ticks;
+DMA scalar43644/43659/43619, backend66844/67142/66737. Median per32 outputs:
+PIO scalar14.539667->backend21.924000us,
+DMA scalar14.548000->backend22.281333us.
+Savings-50.787501%/-53.157364% are negative;
+observed maxima34.730667/36.693333us
+also exceed the nominal8.7890625us first-use engineering budget. Both gates fail.
+Preparation is included; no comparison excluding that work is promoted.
+
+Keep the proven closed-input boundary/kernel/owner transaction isolated. Do
+not tune this implementation or run broad CI. The current aggregate does not
+separate the captured-job formatting cost from transfer/kernel cost, so it is
+insufficient to establish a universal RSP ceiling. Before another backend,
+use the existing preparation interval to decide whether a different resident/
+captured-job representation can remove this architectural overhead. Do not
+hide preparation or repeat the same failed backend. FullDSP/DAC/renderer
+sharing/native60/50/corpus/integration remain open; R49 remains authority.
+See the companion NATIVE.json for curated original-fixture costs/counts only.

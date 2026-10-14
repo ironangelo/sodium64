@@ -1,0 +1,84 @@
+{
+  "status": "MEASURED exact primitive/restoration; REJECTED current BRR PIO/DMA backend cost",
+  "runtime_source": "e2a79cad53ea82c537e7b0f382e5565be8b50662",
+  "physical_console": true,
+  "Count_Hz": 46875000,
+  "trials": [
+    {
+      "mode": 0,
+      "scalar_ticks": 43618,
+      "backend_ticks": 65805,
+      "backend_max_ticks": 1628,
+      "install_ticks": 1775,
+      "samples": 2048
+    },
+    {
+      "mode": 1,
+      "scalar_ticks": 43644,
+      "backend_ticks": 66844,
+      "backend_max_ticks": 1705,
+      "install_ticks": 1792,
+      "samples": 2048
+    },
+    {
+      "mode": 0,
+      "scalar_ticks": 43652,
+      "backend_ticks": 65765,
+      "backend_max_ticks": 1581,
+      "install_ticks": 1459,
+      "samples": 2048
+    },
+    {
+      "mode": 1,
+      "scalar_ticks": 43659,
+      "backend_ticks": 67142,
+      "backend_max_ticks": 1720,
+      "install_ticks": 1468,
+      "samples": 2048
+    },
+    {
+      "mode": 0,
+      "scalar_ticks": 43619,
+      "backend_ticks": 65772,
+      "backend_max_ticks": 1579,
+      "install_ticks": 1790,
+      "samples": 2048
+    },
+    {
+      "mode": 1,
+      "scalar_ticks": 43619,
+      "backend_ticks": 66737,
+      "backend_max_ticks": 1701,
+      "install_ticks": 1467,
+      "samples": 2048
+    }
+  ],
+  "metrics": {
+    "0": {
+      "scalar_total_ticks": 43619,
+      "backend_total_ticks": 65772,
+      "scalar_packet_us": 14.539666666666667,
+      "backend_packet_us": 21.924,
+      "worst_packet_us": 34.73066666666667,
+      "time_saving_percent": -50.787500859717106
+    },
+    "1": {
+      "scalar_total_ticks": 43644,
+      "backend_total_ticks": 66844,
+      "scalar_packet_us": 14.548,
+      "backend_packet_us": 22.281333333333333,
+      "worst_packet_us": 36.693333333333335,
+      "time_saving_percent": -53.15736412794428
+    }
+  },
+  "all12288_original_samples_exact": true,
+  "all6_currentDMA_700context_8192SP_restored": true,
+  "all6_67200pixels_8192PCM_heads_regs_boundaries_exact": true,
+  "step660": true,
+  "recovery_verified": true,
+  "packet_preparation_writeback_transport_kernel_wait_output_included": true,
+  "synthetic_source_generation_install_and_whole_context_cleanup_excluded": true,
+  "nominal_nineDSPclock_budget_us": 8.7890625,
+  "full_core_RSP_DAC_native60_50_corpus_or_integration_acceptance": false,
+  "commercial_data": false
+}

@@ -14,6 +14,18 @@ remaining Road-to-1.0 work, not only DSP.
 | VI/AI | Display presentation and PCM delivery configured | Native cadence, full-rate source generation and faithful DAC audio still require separate acceptance |
 | Expansion Pak | Current fixed renderer/event/ROM-cache arena ends at physical4MiB; no upper4MiB allocation/detection policy found | Use verified extra RAM for persistent state/shadow RAM, ROM/JIT/tile caches or buffers, then measure representative workloads |
 | CPU FPU | No FP arithmetic in the emulation assembly; CU1 disabled in ordinary startup status | Consider only a concrete operation with exact integer-equivalence and native benefit; not a general-purpose spare core |
+| RSP reciprocal/inverse-square-root unit | All17 linked RSP banks contain no VRCP/VRSQ-family instructions | Consider only a concrete operation with exact correction, complete private-unit ownership and native timing proof |
+
+The FPU and RSP reciprocal unit are specific unused functions of engines already
+present, not additional independent processors. RSP reciprocal instructions use
+an approximation table and private DIVIN/DIVOUT/DIVDP state; the existing700-byte
+context does not preserve that state. A future use must extend ownership and
+restoration proof before admission. RDP, DMA, VI and AI are already active;
+further opportunities concern particular operations or scheduling, not newly
+discovered idle chips. No speedup has been established by this inventory.
+Primary instruction semantics:
+[ARES RSP vector unit](https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/n64/rsp/interpreter-vpu.cpp),
+[ARES CPU FPU](https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/n64/cpu/interpreter-fpu.cpp).
 
 The Expansion Pak supplies4MiB of additional memory, bringing an ordinary N64
 to8MiB. It adds storage capacity; it does not replace or increase the CPU/RSP/

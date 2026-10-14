@@ -1,3 +1,30 @@
+# 2026-10-13 - R57 bounded DMA transport implemented; paired native test next
+
+RESUME HERE: code4a622befb5699525ba5be013cc1295befdca2570, experiment/rsp-gauss-dma-r57,
+isolated sodium64-dsp-dma-r57; [report](FULL_DSP_RSP_DMA_R57.md).
+DefaultDMA0, all16RSPbanks exactR56/native primitive. One128B cached aligned
+stack input, eight writebacks/SYNC, SP DMA length127 ->DMEM000..07F, bounded
+idle wait beforekernel; bothSP DMA addresses restored and idle lengthreadbacks
+required unchanged. Timings includecache/writeback/setup/wait/output, not
+packet preparation/install/wholecontext recovery. No capacity/arena changes.
+Ctransaction243cases includingDMA busy/corruptinput/length/addressfaults,
+full700context8192SPrestore plusoriginal92transfer/74read/67waitfaults pass;
+parser263+1000, boot/actualrendererDMA/43owners/24576events194slots/arena pass.
+R56 exactprimitive680192local+1536native lanes/context proofs reused.
+
+Next frozen private rsp-gauss-dma-r57-archive/native_rsp_gauss_dma_r57.py and
+plan; workerSHA34ed15029c23067b219d4f9b227634758afd812349c83795c333047c4a87414b. RootsoleCOM3 after
+controller/hash check, sameimage selectors0PIO/1DMA alternatingthreepairs,
+each64packets512independentresults/checksum at600..605. Retain cost value only
+>=40%median latency saving and observedDMAmax<=nominal7.8125us. Requireall
+context/SP/DMA/images67200/PCM8192/headregs/guestboundaries, step660, finally
+coordinate8/menu/install/readback. Record livehandle; pollsame, no restart.
+No broadCI/promotion before value. Actualpartial DSPscheduling/preparation/
+renderer sharing/residency/fullDSP/DAC/game60/50/corpus/integration OPEN.
+R56 PIO rejected, R44/R45/master/state/priorcandidates retained. History below.
+
+---
+
 # 2026-10-13 - R56 native vector arithmetic exact; PIO cost/deadline rejected
 
 RESUME HERE: exec91245 terminal exit0, coordinate8/menu/install/readback

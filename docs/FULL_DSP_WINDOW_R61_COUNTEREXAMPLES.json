@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "status": "REJECTED unqualified deferred DSP window",
+  "original_counterexamples": 4,
+  "late_register_write_latch_order": true,
+  "future_shared_RAM_write_visibility": true,
+  "echo_RAM_write_CPU_read_barrier": true,
+  "OUTX_publish_CPU_register_read_barrier": true,
+  "production_full_DSP_core_used": true,
+  "runtime_source_changed": false,
+  "safe_window_controller_or_RSP_backend_implemented": false,
+  "native_performance_full_game_DAC_acceptance": false,
+  "commercial_data": false
+}

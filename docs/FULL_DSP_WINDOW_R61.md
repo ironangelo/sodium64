@@ -1,8 +1,62 @@
 # R61 - complete DSP window and SPC bus visibility
 
-Status: HYPOTHESIS for a generic window controller; four original production-
-core counterexamples reject naive deferred execution. No controller, resident
-complete DSP backend, native cost or live audio acceptance yet.
+Status: IMPLEMENTED transport-independent window controller, semantically
+qualified against the unchanged immediate production core. The original four
+counterexamples remain regression gates. No live SPC bridge, native RAM owner,
+resident complete DSP backend, native cost or live audio acceptance yet.
+
+## Implemented semantic boundary
+
+`DSP_FULL_WINDOW=1` requires `FULL_DSP_PROBE=1` and both BRR/Gaussian batch
+flags0; it defaults0. `src/full_dsp_window.{h,cpp}` uses the existing full core,
+caller-owned disjoint CPU/shadow64KiB buffers and an ordered64-entry journal.
+Timestamps are relative0..31, preserving same-clock producer order without an
+absolute-clock wrap dependency. Flushes bound each window to the next period,
+catch DSP reads and pending four-byte echo RAM accesses (including code fetch),
+drain overflow without dropping writes, and precede reset/load/copy/PCM/KON
+observation. Current native SPC bus handlers do not call this interface yet.
+
+The pending echo address uses the previous ESA latch/current offset before
+phase22 and the captured pointer after that latch, with no new period admitted
+before catch-up. Actual enabled echo writes publish exactly two bytes and a
+callback for later CPU cache/JIT-tag integration. Transport callbacks live
+outside serialized logical state. No global64KiB allocation is introduced.
+
+The differential fixture compiles a separate unchanged production reference,
+runs it one clock at a time and checks the controller at every period closure
+and producer-visible barrier. Both cores receive the same original numeric
+inputs; no commercial input/state/PCM is used. Results:
+
+- 72645 complete normalized state/CPU RAM/shadow RAM/PCM comparisons.
+- 20023 producer reads,933286 DSP clocks,5669 directed cases.
+- All32 phases and128 registers, ESA/EDL/FLG/address-wrap changes,31 FIFO
+  overflow cases, same-clock order, soft/hard reset, export/import and PCM.
+- 50955 enabled echo word publications, exact callback order/address/value
+  and simulated JIT-page tag counts; real cache/JIT integration remains open.
+- Ten distinct unsafe mutations rejected, including future RAM visibility,
+  early event replay, missing read/echo/reset/export/PCM barriers, wrong
+  captured pointer, dropped FIFO events and missing echo publication.
+
+`scripts/test_full_dsp_window_controller.py --mutations` records this proof in
+CONTROLLER.json. `check_full_dsp_window_build.py` compiles the core/controller/
+probe for O64; all26 allocated default-off core sections exactly match source
+6dc6a034362c1cab8f972b353e09f1f8e1b5376c. Disabled controller has no code/data;
+enabled controller has no global writable owner. Code sizes9616/2224 bytes
+are object evidence only. See BUILD.json. No native ROM run or broad CI was
+needed to qualify this semantic boundary, and no performance claim is made.
+
+## Current next action
+
+R62 physically confirms8MiB available. Assign an explicit small upper-RAM
+shadow/event owner using its verified boot capture, guard unknown/base4MiB
+without accessing upper memory, and prove non-overlap plus CPU/DMA/cache/save
+ownership. Preserve all existing base caches. Establish exact native SPC JIT
+bus timestamps and echo cache/code-tag behavior before wiring a live bridge.
+Then implement the complete resident RSP backend and use a short physical
+full-work discriminator; scalar-window timing would not prove RSP value.
+
+Full DSP/DAC, native60/50, graphics coexistence, corpus and master integration
+remain OPEN. The earlier source audit and hypotheses below are retained.
 
 R60's raw-job/private-DMA protocol measured15.103667 us per32 BRR outputs
 versus14.567 us scalar, with23.232 us observed maximum. Standalone BRR
@@ -51,7 +105,7 @@ does not repair an earlier wrong CPU read. This proves specific ordering
 hazards, not safe batching, complete bus emulation or hardware performance.
 See `FULL_DSP_WINDOW_R61_COUNTEREXAMPLES.json`.
 
-## Next bounded implementation
+## Original bounded implementation plan (now implemented above)
 
 Prove a transport-independent window controller using the existing full core
 as its execution backend. Keep a DSP RAM view distinct from immediately

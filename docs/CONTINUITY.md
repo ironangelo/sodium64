@@ -1,3 +1,32 @@
+# 2026-10-14 - R61 exact bus-window controller implemented and locally proved
+
+RESUME HERE: source c693b2befee7de112ae666060236256b07f768f1 on
+experiment/full-dsp-window-r61, sodium64-full-dsp-window-r61. [R61](FULL_DSP_WINDOW_R61.md).
+Ordered64-entry timestamp journal, disjoint CPU/DSP RAM,32-phase window bound,
+exact register/echo/fetch/overflow/reset/export/PCM barriers; enabled two-byte
+echo publication callback outside serialized logical state. Default-off.
+Original immediate production core oracle:72645 all-state/RAM/PCM checks,
+20023 producer reads,933286 clocks,5669 directed,31 FIFO overflow cases,
+50955 enabled echo word publications,10 unsafe mutations rejected.
+O64 core/controller/probe compile;26 default-off allocated sections exactly
+match original source6dc6a03. Enabled controller owns no global RAM.
+No live native bus bridge, native shadow owner, resident complete RSP DSP,
+new hardware timing/audio/corpus acceptance or broad CI claimed.
+
+Next assign a small explicit upper-RAM shadow/event owner using R62's captured
+boot size (physical8MiB confirmed), preserving all base caches and guarding
+4MiB/unknown before access. Prove bounds/non-overlap/cache/DMA/save ownership;
+exact within-JIT bus timestamps and echo cache/JIT-tag visibility remain gates
+before live SPC integration. Then complete resident RSP full-work discriminator.
+R62 inventory also records unused CPU FPU and RSP reciprocal math unit;
+RSP use needs exact correction and private DIV-state restoration, no speedup
+implied. CPU/RSP/RDP/DMA/VI/AI already active; whole-emulator resource audit remains.
+No COM3 controller live. R59/R60 cost paths rejected; master/prior candidates
+preserved. FullDSP/DAC/renderer sharing/native60/50/corpus/integration OPEN.
+Earlier history below is chronological, not current unimplemented-state guidance.
+
+---
+
 # 2026-10-14 - R62 N64 Expansion Pak physically confirmed; R61 controller next
 
 RESUME HERE: exec48145 terminal exit0; normal menu/install/readback and final

@@ -1,7 +1,7 @@
 # R62 - whole-emulator N64 resource inventory
 
-Status: source audit and safe boot-memory reporting IMPLEMENTED; physical
-Expansion Pak presence pending. No expanded-memory allocation or speed claim.
+Status: source audit and safe boot-memory reporting MEASURED; physical N64
+reports8MiB and Expansion Pak available. No expanded-memory allocation or speed claim.
 The user's resource question applies to CPU, graphics, audio, memory and all
 remaining Road-to-1.0 work, not only DSP.
 
@@ -63,3 +63,19 @@ controller, exact JIT timestamps and full resident DSP are still unimplemented.
 Continue that semantic implementation after this bounded resource check. All
 other fidelity/native60/50/corpus/integration gates remain open; master and
 all prior candidates preserved. Commercial inputs and derived data stay local.
+
+## Physical result
+
+Exec48145 completed exit0. Actual paired IPL3 reports8388608 bytes; status
+expansion_available=1. Normal menu/install/readback and final coordinate8/menu/
+install/readback pass. No application read/write probe of upper RAM, no DSP task
+or performance/fidelity claim. The active fixed emulator arena still ends at
+4MiB. The remaining4MiB is a confirmed architectural resource, not an already
+implemented optimization or an unqualified memory-health test.
+
+After the R61 dataflow protocol is proved, prefer an explicit small upper-RAM
+shadow/event owner to reclaiming or shrinking an existing base-memory cache.
+Preserve all base owners and guard upper allocations by the captured size.
+Broader ROM/JIT/tile/render memory uses need their own measured discriminator
+when miss/copy/stall evidence supports them. Keep the whole-emulator resource
+audit in scope, including graphics and chips beyond audio.

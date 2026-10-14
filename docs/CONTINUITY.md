@@ -1,3 +1,28 @@
+# 2026-10-14 - R62 N64 Expansion Pak physically confirmed; R61 controller next
+
+RESUME HERE: exec48145 terminal exit0; normal menu/install/readback and final
+coordinate8/menu/install/readback pass. Runtime d5e3a5e6c414eb837830626141911c2dbbdd1316,
+experiment/hardware-memory-r62. [R62](HARDWARE_RESOURCES_R62.md), curated NATIVE.json.
+Actual paired IPL3 reports8388608 RDRAM bytes, expansion_available1. Current
+emulator fixed map remains base4194304; extra4194304 has no application owner.
+No upper-RAM probing/writes/allocation or performance/fidelity claim. Source
+30boot/18RAM cases,267parser+1000/17unchangedRSPbanks/43owners gates preserved.
+User's resource audit applies to the entire emulator, not only DSP.
+
+Next resume R61 semantic window controller on experiment/full-dsp-window-r61
+source6dc6a034362c1cab8f972b353e09f1f8e1b5376c. Four original bus-order hazards
+already proved; implement ordered timestamped CPU RAM/register journal and
+separate DSP RAM view, exact read/echo/export/reset/PCM/period barriers and
+full state/RAM/PCM differential proof. See R61 for pending phase admission,
+within-JIT bus timestamps and cache/JIT tags. Once proved, reserve a small
+explicit upper-RAM shadow/event owner using verified8MiB; no need to shrink
+base caches. Wider ROM/JIT/tile/render cache choices need measured value.
+R59/R60 standalone BRR cost directions remain rejected, no tuning/broadCI.
+No COM3 controller live. Master/R44/R45/R49/prior candidates preserved; complete
+DSP/DAC/renderer sharing/native60/50/corpus/integration OPEN. History below.
+
+---
+
 # 2026-10-14 - R62 physical memory-presence check running
 
 RESUME HERE: exec48145 LIVE; normal menu/install/readback passed. Runtime

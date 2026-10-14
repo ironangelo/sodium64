@@ -1104,11 +1104,20 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         error(id,"scene_rsp_context_needs_menu");return;
     }
     if(eq(verb,"state-rsp-roundtrip")) {
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+        uint32_t dma_mode=0;
+        if(nt!=3&&nt!=4){error(id,"argument_count");return;}
+        if(nt==4&&!decimal(tokens[3],&dma_mode,1)){error(id,"gauss_transport_out_of_range");return;}
+#else
         if(nt!=3){error(id,"argument_count");return;}
+#endif
         if(busy_capture()||remote_arm_pending){error(id,"capture_busy");return;}
         if(!remote_paused){error(id,"not_paused");return;}
         if(!remote_scene_canonical||remote_scene_error){error(id,"not_canonical");return;}
         if(!present||transport_error||menu_error){error(id,"scene_transport_unready");return;}
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+        scene_rsp_gauss_dma=dma_mode;
+#endif
         uint32_t state;
 #ifdef REMOTE_CONTROL_HOST
         state=remote_host_scene_rsp_context();
@@ -1132,6 +1141,9 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" gauss_mismatch=",scene_rsp_gauss_metrics[2]);field(" gauss_scalar_ticks=",scene_rsp_gauss_metrics[3]);
         field(" gauss_PIO_ticks=",scene_rsp_gauss_metrics[4]);field(" gauss_PIO_max=",scene_rsp_gauss_metrics[5]);
         field(" gauss_checksum=",scene_rsp_gauss_metrics[6]);field(" gauss_install_ticks=",scene_rsp_gauss_metrics[7]);
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+        field(" gauss_transport_DMA=",scene_rsp_gauss_dma);
+#endif
 #endif
         field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
         append(" provenance=canonical_full_RSP_register_roundtrip serializer=0 machine_restore=0");

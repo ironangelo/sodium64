@@ -27,6 +27,9 @@ extern volatile uint32_t scene_rsp_context_mismatch_word;
 /* passed, lanes, mismatch, scalar ticks, PIO/task ticks, max task ticks,
  * result checksum, kernel/mask installation ticks. Not gameplay timing. */
 extern volatile uint32_t scene_rsp_gauss_metrics[8];
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+extern volatile uint32_t scene_rsp_gauss_dma;
+#endif
 #endif
 /* 0 untouched/rejected; 1 exact context/memory readback; 2 unsafe/incomplete
  * hardware recovery, caller must permit menu recovery only. */

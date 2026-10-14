@@ -13,6 +13,25 @@ volatile uint32_t scene_rsp_context_mismatch_word;
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
 extern const uint32_t rsp_dsp_gauss_text_start[],rsp_dsp_gauss_text_end[];
 volatile uint32_t scene_rsp_gauss_metrics[8];
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+volatile uint32_t scene_rsp_gauss_dma;
+static uint32_t dma_source(uint32_t *packet) {
+#ifdef SODIUM64_RSP_GAUSS_HOST
+    extern uint32_t scene_rsp_gauss_host_dma_source(uint32_t *);
+    return scene_rsp_gauss_host_dma_source(packet);
+#else
+    uintptr_t address=(uintptr_t)packet;
+    if((address&15)||((uint32_t)address&0xe0000000u)!=0x80000000u||
+       (address&0x1fffffffu)>0x7fff80u)return 0;
+    /* Same hit-writeback operation as the existing renderer/profile owners.
+     * Exactly eight private aligned lines, no adjacent stack data. */
+    for(unsigned i=0;i<128;i+=16)
+        __asm__ volatile("cache 0x19,0(%0)"::"r"((unsigned char *)packet+i):"memory");
+    __asm__ volatile("sync":::"memory");
+    return (uint32_t)address&0x1fffffffu;
+#endif
+}
+#endif
 static uint32_t ticks(void) {
 #ifdef SODIUM64_RSP_GAUSS_HOST
     extern uint32_t scene_rsp_gauss_host_ticks(void);
@@ -25,7 +44,7 @@ static int gauss_probe(scene_rsp_read read,
                        scene_rsp_write write,scene_rsp_wait wait) {
     /* Cached private CPU stack, not the uncached PI transfer-buffer alias:
      * otherwise scalar timing would unfairly include uncached sample loads. */
-    uint32_t scratch[44];
+    uint32_t scratch[44] __attribute__((aligned(16)));
     static const uint16_t coef[4][4]={
         {370,1305,374,0},{168,1210,659,11},
         {56,965,969,58},{0,374,1305,370}};
@@ -67,6 +86,16 @@ static int gauss_probe(scene_rsp_read read,
         scene_rsp_gauss_metrics[3]+=ticks()-start;
         for(unsigned i=0;i<4;i++)write(SP_MEM+144+4*i,~scratch[36+i]);
         start=ticks();
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+        if(scene_rsp_gauss_dma) {
+            uint32_t physical=dma_source(scratch);
+            if(!physical)return 0;
+            write(0xa4040000u,0);write(0xa4040004u,physical);
+            write(0xa4040008u,127); /* one128-byte DRAM->DMEM input, no IMEM */
+            while(read(0xa4040018u)||read(0xa4040014u))
+                if((uint32_t)(ticks()-start)>=46875000u/5u)return -1;
+        } else
+#endif
         for(unsigned i=0;i<32;i++)write(SP_MEM+4*i,scratch[i]);
         write(SP_PC,0);write(SP_STATUS,5);
         if(!wait()||(read(SP_STATUS)&0x63)!=3) {
@@ -140,6 +169,10 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
        read(SP_MEM+0x13bc)!=0x24080002||
        read(SP_MEM+0x13c0)!=0x40882000||read(SP_MEM+0x13c4)!=0x0900040f||
        read(SP_MEM+0x13c8)!=0||read(0xa4040018)||read(0xa4040014))return 0;
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+    uint32_t dma_original[4]={0,0,0,0};
+    if(scene_rsp_gauss_dma)for(unsigned i=0;i<4;i++)dma_original[i]=read(0xa4040000u+4*i);
+#endif
     uint32_t original=2166136261u;
     scene_rsp_context_stage=2;
     for(unsigned start=0;start<2048;start+=128) {
@@ -177,6 +210,14 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
      * architectural context and all8KiB still follow the same restore gate. */
     scene_rsp_context_stage=6;
     if(gauss_probe(read,write,wait)<0)return 2;
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+    if(scene_rsp_gauss_dma) {
+        /* Length registers are not rewritten: that would launch another DMA.
+         * Require their idle readbacks unchanged and restore both addresses. */
+        write(0xa4040000u,dma_original[0]);write(0xa4040004u,dma_original[1]);
+        for(unsigned i=0;i<4;i++)if(read(0xa4040000u+4*i)!=dma_original[i])return 2;
+    }
+#endif
 #else
     /* Force a different register context, then capture and check every field
      * is zero. This is an actual restore test, not an unchanged-state copy. */

@@ -54,6 +54,9 @@ volatile uint32_t scene_rsp_context_stage;
 volatile uint32_t scene_rsp_context_mismatch_word;
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
 volatile uint32_t scene_rsp_gauss_metrics[8]={1,512,0xffffffffu,111,222,33,444,55};
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+volatile uint32_t scene_rsp_gauss_dma;
+#endif
 #endif
 uint32_t remote_host_scene_rsp_context(void) {scene_context_calls++;return scene_context_result;}
 #ifdef SODIUM64_SCENE_SLOT
@@ -519,7 +522,15 @@ int main(void){
     remote_scene_error=0;remote_scene_canonical=0;remote_paused=1;
     expect("s64 12345678 state-rsp-roundtrip","ERR not_canonical");check(!scene_context_calls);
     remote_scene_canonical=1;
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+    expect("s64 12345678 state-rsp-roundtrip arg","ERR gauss_transport_out_of_range");
+    expect("s64 12345678 state-rsp-roundtrip 2","ERR gauss_transport_out_of_range");
+    expect("s64 12345678 state-rsp-roundtrip -1","ERR gauss_transport_out_of_range");
+    expect("s64 12345678 state-rsp-roundtrip 4294967295","ERR gauss_transport_out_of_range");
+    expect("s64 12345678 state-rsp-roundtrip 1 extra","ERR argument_count");check(!scene_context_calls);
+#else
     expect("s64 12345678 state-rsp-roundtrip arg","ERR argument_count");check(!scene_context_calls);
+#endif
     remote_paused=0;expect("s64 12345678 state-rsp-roundtrip","ERR not_paused");check(!scene_context_calls);
     remote_paused=1;native_diag_phase=1;
     expect("s64 12345678 state-rsp-roundtrip","ERR capture_busy");check(!scene_context_calls);
@@ -535,14 +546,23 @@ int main(void){
     expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
 #endif
     check(scene_context_calls==2&&remote_guest_frames==20&&remote_render_frames==20&&remote_paused);
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+    expect("s64 12345678 state-rsp-roundtrip 1","gauss_transport_DMA=1");check(scene_rsp_gauss_dma==1);
+    expect("s64 12345678 state-rsp-roundtrip 0","gauss_transport_DMA=0");check(scene_rsp_gauss_dma==0);
+    check(scene_context_calls==4);
+#endif
     scene_context_result=2;
     expect("s64 12345678 state-rsp-roundtrip","ERR scene_context_restore_failed");
-    check(scene_context_calls==3&&remote_paused);
+    unsigned expected_context_calls=3;
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+    expected_context_calls=5;
+#endif
+    check(scene_context_calls==expected_context_calls&&remote_paused);
     expect("s64 12345678 status","scene_rsp_context_needs_menu=1");
     const char *blocked_context[]={"resume","step 1","buttons 8000 1","capture usb","frame","state-park","state-rsp-roundtrip","audio"};
     for(unsigned i=0;i<sizeof(blocked_context)/sizeof(blocked_context[0]);i++) {
         char command[80];snprintf(command,sizeof(command),"s64 12345678 %s",blocked_context[i]);
-        expect(command,"ERR scene_rsp_context_needs_menu");check(remote_paused&&scene_context_calls==3);
+        expect(command,"ERR scene_rsp_context_needs_menu");check(remote_paused&&scene_context_calls==expected_context_calls);
     }
     expect("s64 12345678 state-check","scene_canonical=1");
     unsigned before_context_menu=menu_calls;

@@ -11,6 +11,7 @@
 #define SODIUM64_REMOTE_SECTION_OBSERVER 0
 #endif
 extern volatile uint32_t remote_guest_frames, remote_render_frames;
+extern volatile uint32_t remote_boot_ram_bytes;
 extern volatile uint32_t remote_vi_count, remote_presentations;
 extern volatile uint32_t remote_buttons, remote_button_frames;
 extern volatile uint32_t remote_paused, remote_arm_pending;

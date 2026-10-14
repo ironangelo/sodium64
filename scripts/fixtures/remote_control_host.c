@@ -193,6 +193,12 @@ int main(void){
     remote_guest_frames=70;remote_render_frames=35;remote_vi_count=99;remote_presentations=29;
     clock_value=0xfffffff0u;run("s64 12345678 profile");
     check(strstr(response,"guest_frame_id=70 render_frame_id=35 boot_tv_type=1 vi=99 new_presentations=29")!=NULL);
+    remote_boot_ram_bytes=0x800000u;
+    expect("s64 12345678 status","rdram_bytes=8388608 expansion_available=1");
+    remote_boot_ram_bytes=0x400000u;
+    expect("s64 12345678 status","rdram_bytes=4194304 expansion_available=0");
+    remote_boot_ram_bytes=0;
+    expect("s64 12345678 status","rdram_bytes=0 expansion_available=0");
     clock_value=20;run("s64 12345678 status");check(strstr(response,"count_wraps_observed=1")!=NULL);
     remote_control_idle(0);check(remote_guest_frames==70&&remote_render_frames==35);
     frame_ready=0;expect("s64 12345678 frame","ERR frame_dp_busy");

@@ -42,6 +42,7 @@ static int scene_wait(uint32_t address,uint32_t mask,uint32_t expected,uint32_t 
 #endif
 /* Filled by main.S before Sodium replaces the IPL3 boot-info in SP DMEM. */
 volatile uint32_t remote_boot_tv_type=1;
+volatile uint32_t remote_boot_ram_bytes;
 extern volatile uint16_t joyxlh[4];
 static uint32_t poll_calls, poll_total, poll_max, transport_error;
 static uint32_t menu_error;
@@ -936,6 +937,8 @@ static void status(const char *id) {
     field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
     field(" boot_tv_type=",remote_boot_tv_type);
     field(" vi=",remote_vi_count);field(" new_presentations=",remote_presentations);
+    field(" rdram_bytes=",remote_boot_ram_bytes);
+    field(" expansion_available=",remote_boot_ram_bytes==0x800000u);
     field(" recorder_phase=",native_diag_phase);
     signed_field(" recorder_result=",native_diag_capture_result);
     field(" recorder_error_stage=",continuous_save_error_stage);

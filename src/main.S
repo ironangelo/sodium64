@@ -88,6 +88,20 @@ remote_boot_tv_valid:
     sw t1, remote_boot_tv_type
 .globl remote_boot_tv_captured
 remote_boot_tv_captured:
+    // Preserve IPL3's detected RDRAM bytes before renderer initialization.
+    // Unknown metadata never admits memory above the base4MiB arena.
+    lw t1,0(t0)
+    li t2,0x400000
+    beq t1,t2,remote_boot_ram_valid
+    nop
+    li t2,0x800000
+    beq t1,t2,remote_boot_ram_valid
+    nop
+    move t1,zero
+remote_boot_ram_valid:
+    sw t1,remote_boot_ram_bytes
+.globl remote_boot_ram_captured
+remote_boot_ram_captured:
 #endif
     li t0, 8
     sw t0, 0xBFC007FC

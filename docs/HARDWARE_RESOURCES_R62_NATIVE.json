@@ -1,0 +1,15 @@
+{
+  "status": "MEASURED physical IPL3 memory-size report",
+  "runtime_source": "d5e3a5e6c414eb837830626141911c2dbbdd1316",
+  "physical_console": true,
+  "detected_RDRAM_bytes": 8388608,
+  "Expansion_Pak_available": true,
+  "current_emulator_fixed_arena_bytes": 4194304,
+  "additional_memory_not_yet_allocated_bytes": 4194304,
+  "application_upper_RAM_probing_or_writes": false,
+  "expanded_layout_or_cache_policy_implemented": false,
+  "normal_menu_install_readback": true,
+  "coordinate8_menu_install_readback_recovered": true,
+  "performance_or_fidelity_acceptance": false,
+  "commercial_data": false
+}

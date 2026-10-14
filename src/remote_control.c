@@ -1144,6 +1144,7 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         prefix(id,1);append(" rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
 #ifdef SODIUM64_DSP_RSP_BRR_PROBE
         append(" brr_packet_samples=32 brr_input_bytes=96 brr_output_bytes=64 brr_prep_included=1");
+        field(" brr_preparation_ticks=",scene_rsp_brr_preparation_ticks);
 #endif
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
         field(" gauss_pass=",scene_rsp_gauss_metrics[0]);field(" gauss_lanes=",scene_rsp_gauss_metrics[1]);

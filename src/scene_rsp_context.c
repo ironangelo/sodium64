@@ -13,6 +13,7 @@ volatile uint32_t scene_rsp_context_mismatch_word;
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
 #ifdef SODIUM64_DSP_RSP_BRR_PROBE
 extern const uint32_t rsp_dsp_brr_text_start[],rsp_dsp_brr_text_end[];
+volatile uint32_t scene_rsp_brr_preparation_ticks;
 #define DSP_INPUT_BYTES 96u
 #else
 extern const uint32_t rsp_dsp_gauss_text_start[],rsp_dsp_gauss_text_end[];
@@ -77,6 +78,7 @@ static int gauss_probe(scene_rsp_read read,scene_rsp_write write,scene_rsp_wait 
     typedef struct { unsigned word,header;int p1,p2; } job_t;
     job_t jobs[8];
     uint32_t packet[56] __attribute__((aligned(16)));
+    scene_rsp_brr_preparation_ticks=0;
     for(unsigned i=0;i<8;i++)scene_rsp_gauss_metrics[i]=0;
     scene_rsp_gauss_metrics[2]=0xffffffffu;
     if(rsp_dsp_brr_text_end-rsp_dsp_brr_text_start!=111)return 0;
@@ -109,6 +111,7 @@ static int gauss_probe(scene_rsp_read read,scene_rsp_write write,scene_rsp_wait 
             }
         }
         uint32_t preparation=ticks()-start;
+        scene_rsp_brr_preparation_ticks+=preparation;
         start=ticks();
         for(unsigned lane=0;lane<8;lane++) {
             int p1=jobs[lane].p1,p2=jobs[lane].p2;

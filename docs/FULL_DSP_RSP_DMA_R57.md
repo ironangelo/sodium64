@@ -31,7 +31,7 @@ their registers (which would launch more DMA). Then use the existing exact
 700-byte context/8192-byte SP restoration/readback gates. Primitive result
 mismatch or task timeout still follows that complete safe restoration.
 
-Local C/actual-RSP transaction passes244 cases: all92 transfer faults,
+Local C/actual-RSP transaction passes253 cases: all92 transfer faults,
 74 read corruptions,67 task-wait positions, DMA BUSY timeout, corrupt input,
 idle-length mismatch and address-restore fault. Same-image PIO control passes.
 Parser264+1000 fuzz includes both selectors, malformed/out-of-range modes
@@ -106,3 +106,30 @@ address/length rebinding; hidden pending descriptors must not be assumed equal.
 This is an implementation hypothesis, not a completed repair or permission
 to waive the failed gate. Retry only after the meaningful fault controls pass.
 See the companion CURSOR.json for original-fixture/hardware-register numbers.
+
+## 2026-10-14 - cursor restoration implemented, native v3 gate next
+
+The corrected current/pending transaction model first reproduced exactly
+the native v2 failure (expected6032, observed128,512 exact arithmetic lanes).
+The implementation now admits only aligned in-range source/SP cursors, idle
+count/lengthFF8 and equal shared length readbacks. Before its first SP mutation
+it verifies the original eight-byte SP tail equals the last DMA's RDRAM tail.
+It rechecks the source before one eight-byte read DMA ending at both original
+cursors. This restores current readbacks without writing RDRAM or changing
+SP contents; DMEM/IMEM wrap and the captured skip field are retained.
+
+The byte comparison, all four DMA readbacks,700-byte context and entire8192-byte
+SP restore/readback remain required. A changed source, changed byte, failed
+counter/address readback or DMA timeout requires menu recovery. Cleanup is
+outside per-packet timing. It neither waives the physical rejection nor claims
+that unreadable pending descriptors equal their old values. All four actual
+resident DMA length sites in the unchanged main/Mode7 binaries completely
+rebind both addresses before issuing length; the CPU uploader does likewise.
+
+The253-case C/actual-RSP gate passes current/pending semantics, all prior faults,
+pre/post source mismatch, invalid bounds, cursor DMA BUSY/byte faults, exact
+current-register readback, DMEM/IMEM wrap, skip preservation and no RDRAM writes.
+All16 RSP binaries are unchanged; the old kernel/context proofs and exact
+264+1000 RPC result are reused. Boot/43 owners/full capacities/arena/DMA pass.
+Use fresh native v3 artifact/plan/worker, same paired physical gates. Native
+cursor restoration and DMA cost remain pending until that run completes.

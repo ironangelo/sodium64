@@ -29,15 +29,38 @@
   "CPU_private_packet_alignment": 16,
   "source_within_RDRAM_8MiB_and_cached_KSEG0_guarded": true,
   "linked_hit_writeback_D_sites": [
-    "0x80010df4"
+    "0x80010ea8"
   ],
   "SP_addresses_restored_and_idle_length_readbacks_required": true,
+  "linked_resident_DMA_sites_fully_rebind_pending_addresses": [
+    {
+      "bank": "rsp_main.elf",
+      "instruction": 206,
+      "direction": "write"
+    },
+    {
+      "bank": "rsp_main.elf",
+      "instruction": 978,
+      "direction": "read"
+    },
+    {
+      "bank": "rsp_mode7.elf",
+      "instruction": 206,
+      "direction": "write"
+    },
+    {
+      "bank": "rsp_mode7.elf",
+      "instruction": 978,
+      "direction": "read"
+    }
+  ],
+  "linked_CPU_uploader_rebinds_both_addresses_and_length": true,
   "bounded_DMA_busy_failure_requires_menu_without_owner_overwrite": true,
   "native_DMA_or_performance_or_gameplay_acceptance": false,
   "commercial_data": false,
   "transaction": {
     "passed": true,
-    "cases": 244,
+    "cases": 253,
     "production_C_and_actual_RSP_binaries": true,
     "transfer_fault_positions": 92,
     "read_corruptions": 74,
@@ -64,6 +87,12 @@
     "same_image_PIO_control": true,
     "DMA_fault_kind_expected_observed_and_register_index_exact": true,
     "invalid_CPU_DMA_source_safely_restores_and_reports_failure": true,
+    "current_and_pending_DMA_distinct": true,
+    "exact8byte_no_change_cursor_DMA": true,
+    "DMEM_IMEM_wrap_and_skip_preserved": true,
+    "source_tail_guards_before_and_after_mutation": true,
+    "cursor_DMA_timeout_and_byte_fault_require_menu": true,
+    "no_RDRAM_writes": true,
     "CPU_cache_writeback_and_hardware_DMA_timing_mocked": true
   },
   "parser": {
@@ -86,7 +115,7 @@
     "cases": 12,
     "linked_instructions": true,
     "receiver_bytes": 248,
-    "elf_sha256": "14717be9a23f5e46a7622a621f48d59dcdc75b4d8be5db18643f51d2340a218b",
+    "elf_sha256": "5880abed5d552a58b2d9ffc9de0634dc2b33097e590969753573c122b62f1e83",
     "compiled_tv_capture_cases": 5,
     "modern_ipl3_dmem_tv_source": true,
     "legacy_low_ram_tv_ignored": true,
@@ -126,7 +155,7 @@
         "bytes": 1024
       }
     ],
-    "linked_elf_sha256": "14717be9a23f5e46a7622a621f48d59dcdc75b4d8be5db18643f51d2340a218b",
+    "linked_elf_sha256": "5880abed5d552a58b2d9ffc9de0634dc2b33097e590969753573c122b62f1e83",
     "negative_mutations_rejected": [
       "CPU_queue_disagreement",
       "stale_RSP_backup",
@@ -134,8 +163,16 @@
     ],
     "physical_acceptance": false
   },
+  "native_cursor_rejection_reproduction": {
+    "passed": true,
+    "native1790_to80_rejection_reproduced": true,
+    "production_C_and_actual_RSP_binary": true,
+    "current_and_pending_DMA_distinct": true,
+    "exact_primitive_lanes": 512,
+    "native_DMA_cost_acceptance": false
+  },
   "unchanged_kernel_arithmetic_and_context_proof_reused_from_R56": true,
   "R56_physical_arithmetic_lanes": 1536,
-  "ELF_sha256": "14717be9a23f5e46a7622a621f48d59dcdc75b4d8be5db18643f51d2340a218b",
-  "Z64_sha256": "39aec2e66b0b730c308885e91be882920439fcb6796eeaf63fbaa943e3c1137c"
+  "ELF_sha256": "5880abed5d552a58b2d9ffc9de0634dc2b33097e590969753573c122b62f1e83",
+  "Z64_sha256": "51a73245c53af52c737e81c845f17e73c09c0750edd6a479e6e6ee395a8f9460"
 }

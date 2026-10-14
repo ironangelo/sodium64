@@ -41,6 +41,30 @@ static uint32_t ticks(void) {
     uint32_t value;__asm__ volatile("mfc0 %0,$9":"=r"(value)::"memory");return value;
 #endif
 }
+#ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+static uint32_t dma_tail_address(uint32_t cursor) {
+    return (cursor&0x1000u)|((cursor-8)&0xfffu);
+}
+static int dma_cursor_restore(const uint32_t original[4],const uint32_t tail[2],
+                              scene_rsp_read read,scene_rsp_write write) {
+    uint32_t target=dma_tail_address(original[0]),source=original[1]-8;
+    /* Address writes only change pending DMA. Replay exactly eight identical
+     * source bytes to advance current back to both captured end cursors.
+     * RDRAM is read-only. All renderer DMA sites rebind addresses and length. */
+    for(unsigned i=0;i<2;i++)if(read(0xa0000000u+source+4*i)!=tail[i])return 0;
+    if(read(0xa4040018u)||read(0xa4040014u))return 0;
+    write(0xa4040000u,target);write(0xa4040004u,source);
+    write(0xa4040008u,7|(original[2]&0xfff00000u));
+    uint32_t start=ticks();
+    while(read(0xa4040018u)||read(0xa4040014u))
+        if((uint32_t)(ticks()-start)>=46875000u/5u)return 0;
+    for(unsigned i=0;i<2;i++)if(read(SP_MEM+target+4*i)!=tail[i])return 0;
+    /* Rebind the pending addresses too. They cannot be read independently;
+     * resumed renderer helpers always overwrite both before their length. */
+    write(0xa4040000u,original[0]);write(0xa4040004u,original[1]);
+    return 1;
+}
+#endif
 static int gauss_probe(scene_rsp_read read,
                        scene_rsp_write write,scene_rsp_wait wait) {
     /* Cached private CPU stack, not the uncached PI transfer-buffer alias:
@@ -187,8 +211,19 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
        read(SP_MEM+0x13c0)!=0x40882000||read(SP_MEM+0x13c4)!=0x0900040f||
        read(SP_MEM+0x13c8)!=0||read(0xa4040018)||read(0xa4040014))return 0;
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
-    uint32_t dma_original[4]={0,0,0,0};
-    if(scene_rsp_gauss_dma)for(unsigned i=0;i<4;i++)dma_original[i]=read(0xa4040000u+4*i);
+    uint32_t dma_original[4]={0,0,0,0},dma_tail[2]={0,0};
+    if(scene_rsp_gauss_dma) {
+        for(unsigned i=0;i<4;i++)dma_original[i]=read(0xa4040000u+4*i);
+        /* Idle current count/length, same shared descriptor in both readbacks,
+         * aligned source and complete8-byte RDRAM/SP tail bounds. No mutation. */
+        if(dma_original[0]>0x1fffu||(dma_original[0]&7)||
+           dma_original[1]<8||dma_original[1]>0x800000u||(dma_original[1]&7)||
+           (dma_original[2]&0xfffffu)!=0xff8u||dma_original[2]!=dma_original[3])return 0;
+        for(unsigned i=0;i<2;i++) {
+            dma_tail[i]=read(SP_MEM+dma_tail_address(dma_original[0])+4*i);
+            if(dma_tail[i]!=read(0xa0000000u+dma_original[1]-8+4*i))return 0;
+        }
+    }
 #endif
     uint32_t original=2166136261u;
     scene_rsp_context_stage=2;
@@ -229,9 +264,9 @@ uint32_t scene_rsp_context_roundtrip(uint32_t scratch[128],
     if(gauss_probe(read,write,wait)<0)return 2;
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
     if(scene_rsp_gauss_dma) {
-        /* Length registers are not rewritten: that would launch another DMA.
-         * Require their idle readbacks unchanged and restore both addresses. */
-        write(0xa4040000u,dma_original[0]);write(0xa4040004u,dma_original[1]);
+        if(!dma_cursor_restore(dma_original,dma_tail,read,write)) {
+            scene_rsp_gauss_dma_diag[0]=5;return 2;
+        }
         for(unsigned i=0;i<4;i++) {
             uint32_t observed=read(0xa4040000u+4*i);
             if(observed!=dma_original[i]) {

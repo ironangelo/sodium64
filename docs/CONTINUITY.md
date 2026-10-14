@@ -1,3 +1,27 @@
+# 2026-10-13 - R57 DMA arithmetic exact; physical cursor failure explained
+
+RESUME HERE: exec21219 terminal exit1, coordinate8/menu/install/readback
+verified, no native job live. Runtime3f6ec0e250c116e5c2217a6cf86afab1102a04a3, experiment/rsp-gauss-dma-r57,
+isolated sodium64-dsp-dma-r57. PIO512lanes/fullcontext+SP/images+PCM pass.
+DMA512lanes exact, but restoredSP_MEM_ADDR readback expected6032(1790),
+observed128(80), mismatch80000000/kind3. NativeDMAcost/fullowner restore OPEN.
+[R57](FULL_DSP_RSP_DMA_R57.md), curated CURSOR.json; no broadCI/promotion.
+Primary ares IO/dma sources read2026-10-13: reads current cursor, writes pending
+address; pending becomes current at DMA start. This explains native failure;
+former direct-write/readback hostDMA fixture is wrong, not hardware acceptance.
+
+Next correct that existing model, reproduceactual1790->80 rejection, then one
+bounded no-change8B cursor-restoring readDMA endingat originalSP/DRAM. Guard
+aligned fullRDRAM/SP extent/canonical idle counters and source/tail exactbytes
+beforemutation; verify postDMA allcurrent regs/lengths/SPbytes, noRDRAMwrites.
+Audit complete futureDMA address/length rebinding: hiddenpending state cannot
+be assumed restored. Do not waivefailedgate or blind-rewrite length registers.
+Fault/timeout->menu; same hardware byte/math/live/recovery gates next. This
+repair is only HYPOTHESIS. FullDSP/DAC/native60/50/corpus/renderer sharing/
+integration remain OPEN; R44/R45/master/state/candidates preserved. History below.
+
+---
+
 # 2026-10-13 - R57 physical same-image PIO/DMA discriminator running
 
 RESUME HERE: native exec21219 LIVE, normalmenu/install/readback passed;

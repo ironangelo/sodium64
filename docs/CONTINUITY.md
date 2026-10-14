@@ -1,3 +1,27 @@
+# 2026-10-14 - R58 native32-sample BRR discriminator ready
+
+RESUME HERE: runtimee2a79cad53ea82c537e7b0f382e5565be8b50662, experiment/full-dsp-brr-batch-r58,
+isolated sodium64-dsp-brr-batch-r58. [R58](FULL_DSP_BRR_BATCH_R58.md).
+Source/math/semantic/nativepreflight published.17RSPbanks/16oldexactR57,
+111instr444Bnewkernel hashmathproofexact. Contexttransaction253faultcases,
+RPC264+1000, boot/currentDMAcursor/source/tail/full43owners/cap24576/194/arena
+pass.32samples/96Binput/64Boutput. CPU scalarusesoriginalcapturedjobs; packet
+formatting/cachewriteback/setup/kernel/wait/output chargedtogether, install/
+wholecontextcursorcleanup separate. No deferred missingwork/perfclaim.
+
+Next frozen private brr-rsp-r58-archive/native_brr_rsp_r58.py andplan,
+workerSHA845d95156bc3587ba9a69fc4e723aced90426b4b039ff81780bde91a6751e90f. RootsoleCOM3 after controller/
+hashcheck, sameimagePIO0/DMA1 threepairs at600..605, each64packets2048samples/
+independentchecksum. Require>=40%median savingvsscalar andobservedmax<=nominal
+nineDSPclock8.7890625us. FullcurrentDMA/700context8192SP/image67200/PCM8192/
+headregs/guestboundary/step660/finalcoordinate8/menu/install/readback required.
+Record livehandle/pollsame; no restartonobservationtimeout. NativecostPENDING;
+fullcoreRSPbackend/renderer sharing/fullDSP/DAC/native60/50/corpus/integration
+OPEN. No broadCI/promotion; R49/R57/priorcandidates/master preserved.
+Earlier history bytes retained below.
+
+---
+
 # 2026-10-14 - R58 linked32-sample BRR primitive exact; native probe next
 
 RESUME HERE: code2733bd613ed489d8060339debea6520ac47d3f78, experiment/full-dsp-brr-batch-r58,

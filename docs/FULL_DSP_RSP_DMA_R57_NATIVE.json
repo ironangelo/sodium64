@@ -1,0 +1,84 @@
+{
+  "status": "MEASURED exact DMA cursor repair; REJECTED thin Gaussian DMA performance",
+  "runtime_source": "49ef166d0816174b7cbd074652c633154fdcc69e",
+  "physical_console": true,
+  "Count_Hz": 46875000,
+  "trials": [
+    {
+      "mode": 0,
+      "scalar_ticks": 28629,
+      "transport_ticks": 21934,
+      "transport_max_ticks": 502,
+      "install_ticks": 337,
+      "lanes": 512
+    },
+    {
+      "mode": 1,
+      "scalar_ticks": 28635,
+      "transport_ticks": 22729,
+      "transport_max_ticks": 627,
+      "install_ticks": 364,
+      "lanes": 512
+    },
+    {
+      "mode": 0,
+      "scalar_ticks": 28662,
+      "transport_ticks": 21934,
+      "transport_max_ticks": 496,
+      "install_ticks": 304,
+      "lanes": 512
+    },
+    {
+      "mode": 1,
+      "scalar_ticks": 28636,
+      "transport_ticks": 22824,
+      "transport_max_ticks": 632,
+      "install_ticks": 312,
+      "lanes": 512
+    },
+    {
+      "mode": 0,
+      "scalar_ticks": 28619,
+      "transport_ticks": 21950,
+      "transport_max_ticks": 515,
+      "install_ticks": 364,
+      "lanes": 512
+    },
+    {
+      "mode": 1,
+      "scalar_ticks": 28637,
+      "transport_ticks": 22725,
+      "transport_max_ticks": 626,
+      "install_ticks": 304,
+      "lanes": 512
+    }
+  ],
+  "metrics": {
+    "0": {
+      "median_total_ticks": 21934,
+      "mean_packet_us": 7.311333333333333,
+      "worst_packet_us": 10.986666666666666,
+      "scalar_mean_packet_us": 9.543
+    },
+    "1": {
+      "median_total_ticks": 22729,
+      "mean_packet_us": 7.576333333333333,
+      "worst_packet_us": 13.482666666666667,
+      "scalar_mean_packet_us": 9.545333333333334
+    }
+  },
+  "DMA_vs_PIO_time_saving_percent": -3.624509893316308,
+  "nominal8DSPclock_budget_us": 7.8125,
+  "all3072_original_primitive_results_exact": true,
+  "all4_DMA_current_readbacks_exact": true,
+  "all700_context_and8192_SP_restored": true,
+  "all6_67200pixels_8192PCM_heads_regs_boundaries_exact": true,
+  "guarded_cursor_cleanup_changes_no_SP_bytes_or_RDRAM": true,
+  "step660": true,
+  "recovery_verified": true,
+  "unreadable_pending_descriptor_not_claimed_equal": true,
+  "all_future_DMA_sites_fully_rebind": true,
+  "input_preparation_kernel_install_and_whole_context_cleanup_excluded_from_packet_timing": true,
+  "full_DSP_DAC_native60_50_corpus_or_integration_acceptance": false,
+  "commercial_data": false
+}

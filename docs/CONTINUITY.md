@@ -1,3 +1,27 @@
+# 2026-10-14 - R57 exact cursor restore measured; thin DMA performance rejected
+
+RESUME HERE: exec81581 terminal exit0, allcontrols/coordinate8/menu/install/
+readback verified, no native job live. Runtime49ef166d0816174b7cbd074652c633154fdcc69e,
+experiment/rsp-gauss-dma-r57. Sixpairedtrials3072 arithmeticlanes exact;
+all4currentDMA readbacks/700context8192SP restored; each67200pixels8192PCM/
+headregs/guestboundary unchanged, step660. [R57](FULL_DSP_RSP_DMA_R57.md).
+PIO21934/21934/21950ticks, DMA22729/22824/22725; median
+7.311333->7.576333us, saving-3.624510%.
+WorstPIO10.986667/DMA13.482667us >nominal7.8125us.
+REJECTED thin Gaussian DMA cost: no40% saving, observed deadline fails.
+Cursor8B cleanup/sourceguards/current-pending model now MEASURED; noSPbytes/
+RDRAM writes. Hiddenpending equality not claimed; completefutureDMA rebinding
+proved. Preparation/install/context+cursorcleanup excluded frompacket timing.
+
+Next material DSP work/transfer granularity; no GaussPIO/DMA microtuning/CI.
+Inspect actual BRR producer/consumer clocks before a larger vector kernel.
+Possiblemixed-epoch V4 batch needsclosedinputs and exactfullcore/partialcall/
+stateexport/RAMwrite semantics; it is only a hypothesis, not a native result.
+Preserve R49 authority and all prior candidates; fullDSP/DAC/renderer sharing/
+native60/50/corpus/integration OPEN. Earlier history retained below.
+
+---
+
 # 2026-10-14 - R57 repaired physical PIO/DMA discriminator running
 
 RESUME HERE: native exec81581 LIVE, normalmenu/install/readback passed;

@@ -1,6 +1,6 @@
 # R57 - one128-byte DMA input packet versus PIO
 
-Status: IMPLEMENTED; physical DMA performance/ownership pending.
+Status: MEASURED exact physical cursor/context restoration; thin Gaussian DMA performance REJECTED.
 R56 proved the80-byte Gaussian kernel on1536 native lanes, but its PIO transport
 averaged9.037667us per eight-wide packet and peaked12.266667us. It missed the
 nominal7.8125us first-use engineering budget and saved only1.814297% against
@@ -133,3 +133,31 @@ All16 RSP binaries are unchanged; the old kernel/context proofs and exact
 264+1000 RPC result are reused. Boot/43 owners/full capacities/arena/DMA pass.
 Use fresh native v3 artifact/plan/worker, same paired physical gates. Native
 cursor restoration and DMA cost remain pending until that run completes.
+
+## 2026-10-14 - physical v3 complete; DMA cost hypothesis rejected
+
+Exec81581 ended exit0, allcontrols and coordinate8/menu/install/readback passed.
+All3072 original arithmetic lane results matched in six alternating PIO/DMA
+trials. All four DMA current readbacks,700-byte RSP context/8192-byte SP memory
+and each67200 image pixels/8192 paused PCM bytes/head/register/enabled/guest
+boundary survived. The guarded eight-byte cleanup restores the observed
+current cursors without changing SP contents or writing RDRAM. Step660 passed.
+
+PIO totals21934/21934/21950 ticks; DMA22729/22824/22725. Median per packet:
+PIO7.311333us, DMA7.576333us,
+DMA time saving-3.624510% (slower). Observed maxima:
+PIO10.986667us, DMA13.482667us.
+Both fail the nominal7.8125us observed-max budget; DMA also fails40% saving.
+These timings include transport/cache writeback/start/wait/output only.
+Cached scalar reference, input preparation, installation, whole-context and
+cursor cleanup remain explicitly separate; no complete-core speed claim.
+
+Do not tune this thin Gaussian transport or run broadCI for it. The next
+material question must carry more useful DSP work per transfer while preserving
+all register/RAM/partial-clock/BRR/echo semantics. Before building a wider BRR
+kernel, inspect its actual producer/consumer clocks and prove a closed-input
+batch boundary against the full pinned core. Mixed epochs may capture voice0's
+prior V4 and other voices' current V4, but that is only a hypothesis. State
+exports and every short run return must still expose the exact original state.
+R49 and every prior result remain preserved; fullDSP/DAC/renderer sharing/
+native60/50/corpus/integration are open. See the companion NATIVE.json.

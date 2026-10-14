@@ -1,3 +1,28 @@
+# 2026-10-13 - R55 CPU cost rejected; semantic vector boundary retained
+
+RESUME HERE: worker83207 terminal exit0/allcontrols/recovery verified, no
+controller live. Runtime89467e4d5141a5c21c62f47df17ca23f9617e829, experiment/full-dsp-gauss-batch-r55.
+REJECTED CPU performance, default0; semantic closed-input batching retained.
+case0 56.121557->64.409835ms (-14.768438% time saving)
+case1 92.420501->110.966635ms (-20.067120% time saving)
+case2 95.532075->140.731243ms (-47.313081% time saving)
+All18 hostPCM checksums/nonzero/36864 originalframes match; eachtrial64KiB
+RAMrestore. Both live67200pixels8192PCM/headsregsboundary unchanged, step660,
+coordinate8/menu/install/readback pass. [Report](FULL_DSP_GAUSS_BATCH_R55.md).
+CPU8%both-active gate failed; no CPU tweak/broadCI/promotion. RSP NOT IMPLEMENTED.
+
+Next: validate earlier phase22 mixed-epoch boundary for an eight-wide RSP
+primitive. Phase0 has only one clock before voice1 first use; phase22 might
+give eight clocks before currentvoice0 V3c30 while other voices target next
+sample. Source-derived hypothesis only; preserve exact partial-phase/register/
+RAM/KON/PMON/reset/import semantics. Then measure actual RSP/DMA/handshake
+and renderer sharing, using existing full RSP context owners. No new emulator
+or performance claim from pure math counts. Keep all previous candidates,
+R44/R45/master/state unchanged. FullDSP/DAC/SNES/native60/corpus/integration
+remain OPEN. Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R55 CPU batch cost A/B running
 
 RESUME HERE: yielded native exec83207 LIVE, flag0 menu/install/readback passed.

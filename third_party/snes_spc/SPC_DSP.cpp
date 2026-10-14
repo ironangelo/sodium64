@@ -303,8 +303,61 @@ inline void SPC_DSP::run_envelope( voice_t* const v )
 
 //// BRR Decoding
 
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+void SPC_DSP::flush_brr_batch()
+{
+	unsigned const pending = brr_pending;
+	brr_pending = 0;
+	unsigned count = 0;
+	for ( int i = 0; i < voice_count; i++ ) if ( pending & (1u << i) )
+	{
+		count++;
+		brr_job_t const& job = brr_jobs [i];
+		int nybbles = job.nybbles, p1 = job.previous1, previous2 = job.previous2;
+		int* pos = &m.voices [i].buf [job.position];
+		for ( int n = 0; n < 4; n++, nybbles <<= 4 )
+		{
+			int s = (int16_t) nybbles >> 12;
+			int const shift = job.header >> 4;
+			s = (s << shift) >> 1;
+			if ( shift >= 0xD ) s = (s >> 25) << 11;
+			int const filter = job.header & 0x0C;
+			int const p2 = previous2 >> 1;
+			if ( filter >= 8 )
+			{
+				s += p1; s -= p2;
+				if ( filter == 8 ) { s += p2 >> 4; s += (p1 * -3) >> 6; }
+				else { s += (p1 * -13) >> 7; s += (p2 * 3) >> 4; }
+			}
+			else if ( filter ) { s += p1 >> 1; s += (-p1) >> 5; }
+			CLAMP16( s );
+			s = (int16_t) (s * 2);
+			pos [n + brr_buf_size] = pos [n] = s;
+			previous2 = p1; p1 = s;
+		}
+	}
+	if ( count > brr_batch_peak ) brr_batch_peak = count;
+}
+#define BRR_BATCH_WORK flush_brr_batch();
+#else
+#define BRR_BATCH_WORK
+#endif
+
 inline void SPC_DSP::decode_brr( voice_t* v )
 {
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+	int const index = (int) (v - m.voices);
+	// Duplicate private calls also materialize prior jobs before capturing.
+	if ( brr_pending & (1u << index) ) flush_brr_batch();
+	brr_job_t& job = brr_jobs [index];
+	job.nybbles = m.t_brr_byte * 0x100 + m.ram [(v->brr_addr + v->brr_offset + 1) & 0xFFFF];
+	job.header = m.t_brr_header;
+	job.position = v->buf_pos;
+	job.previous1 = v->buf [v->buf_pos + brr_buf_size - 1];
+	job.previous2 = v->buf [v->buf_pos + brr_buf_size - 2];
+	if ( (v->buf_pos += 4) >= brr_buf_size ) v->buf_pos = 0;
+	brr_pending |= 1u << index;
+#else
 	// Arrange the four input nybbles in 0xABCD order for easy decoding
 	int nybbles = m.t_brr_byte * 0x100 + m.ram [(v->brr_addr + v->brr_offset + 1) & 0xFFFF];
 	
@@ -358,6 +411,7 @@ inline void SPC_DSP::decode_brr( voice_t* v )
 		s = (int16_t) (s * 2);
 		pos [brr_buf_size] = pos [0] = s; // second copy simplifies wrap-around
 	}
+#endif
 }
 
 
@@ -817,7 +871,7 @@ PHASE(17)  V(V1,0)                            V(V7,5)V(V4,6)\
 PHASE(18)                                     V(V8_V5_V2,5)\
 PHASE(19)                                     V(V9_V6_V3,5)\
 PHASE(20)         V(V1,1)                            V(V7,6)V(V4,7)\
-PHASE(21)                                            V(V8,6)V(V5,7)  V(V2,0)  /* t_brr_next_addr order dependency */\
+PHASE(21) BRR_BATCH_WORK                             V(V8,6)V(V5,7)  V(V2,0)  /* t_brr_next_addr order dependency */\
 PHASE(22) GAUSSIAN_BATCH_WORK V(V3a,0)                 V(V9,6)V(V6,7)  echo_22();\
 PHASE(23)                                                   V(V7,7)  echo_23();\
 PHASE(24)                                                   V(V8,7)  echo_24();\
@@ -848,6 +902,11 @@ void SPC_DSP::run( int clocks_remain )
 		if ( --clocks_remain )
 			goto loop;
 	}
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+	// Every public run boundary exposes all original buffer writes, including
+	// arbitrary single-clock slices. No pending work crosses an external write.
+	flush_brr_batch();
+#endif
 }
 
 #endif
@@ -857,6 +916,10 @@ void SPC_DSP::run( int clocks_remain )
 
 void SPC_DSP::init( void* ram_64k )
 {
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+	brr_pending = 0;
+	brr_batch_peak = 0;
+#endif
 #ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
 	gaussian_valid = 0;
 #endif
@@ -884,6 +947,10 @@ void SPC_DSP::init( void* ram_64k )
 
 void SPC_DSP::soft_reset_common()
 {
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+	// Soft reset retains decoded history, unlike load/hard reset.
+	flush_brr_batch();
+#endif
 #ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
 	gaussian_valid = 0;
 #endif
@@ -906,6 +973,10 @@ void SPC_DSP::soft_reset()
 
 void SPC_DSP::load( uint8_t const regs [register_count] )
 {
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+	// The original load replaces every voice/buffer before soft reset.
+	brr_pending = 0;
+#endif
 	memcpy( m.regs, regs, sizeof m.regs );
 	memset( &m.regs [register_count], 0, offsetof (state_t,ram) - register_count );
 	
@@ -972,6 +1043,9 @@ void SPC_State_Copier::extra()
 
 void SPC_DSP::copy_state( unsigned char** io, copy_func_t copy )
 {
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+	flush_brr_batch();
+#endif
 #ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
 	gaussian_valid = 0;
 #endif

@@ -186,6 +186,15 @@ private:
 		sample_t extra [extra_size];
 	};
 	state_t m;
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+	// Captured pure decode inputs, outside the unchanged serialized state.
+	struct brr_job_t {
+		int nybbles, header, position, previous1, previous2;
+	};
+	brr_job_t brr_jobs [voice_count];
+	unsigned brr_pending, brr_batch_peak;
+	void flush_brr_batch();
+#endif
 #ifdef SODIUM64_DSP_FULL_GAUSS_BATCH
 	// Pure derived values; invalidated after every state import/reset.
 	int gaussian_cache [voice_count];

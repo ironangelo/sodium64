@@ -14,6 +14,9 @@
 #ifdef SODIUM64_TEST_GAUSS_BATCH
 #define SODIUM64_DSP_FULL_GAUSS_BATCH 1
 #endif
+#ifdef SODIUM64_TEST_BRR_BATCH
+#define SODIUM64_DSP_FULL_BRR_BATCH 1
+#endif
 #define SPC_DSP Optimized_DSP
 #define SPC_State_Copier Optimized_State_Copier
 #include "../../third_party/snes_spc/SPC_DSP.h"
@@ -21,6 +24,7 @@
 #undef SPC_State_Copier
 #undef private
 #undef SODIUM64_DSP_FULL_GAUSS_BATCH
+#undef SODIUM64_DSP_FULL_BRR_BATCH
 
 static Reference_DSP ref;
 static Optimized_DSP opt;
@@ -89,10 +93,11 @@ static void initialize(unsigned voices){
     memset(pcm0,0xcc,sizeof(pcm0));memset(pcm1,0xcc,sizeof(pcm1));
     ref.set_output(pcm0,32);opt.set_output(pcm1,32);
 }
-#ifdef SODIUM64_TEST_GAUSS_BATCH
+#if defined(SODIUM64_TEST_GAUSS_BATCH) || defined(SODIUM64_TEST_BRR_BATCH)
 static unsigned chunk_cases,chunk_frames;
 static void save_state(unsigned char **out,void *state,size_t bytes){memcpy(*out,state,bytes);*out+=bytes;}
 static void load_state(unsigned char **in,void *state,size_t bytes){memcpy(state,*in,bytes);*in+=bytes;}
+#ifdef SODIUM64_TEST_GAUSS_BATCH
 static void batch_lifetime(){
     initialize(255);ref.run(257);opt.run(257);compare();
     check(opt.gaussian_valid!=0,"Gauss batch admitted");
@@ -108,6 +113,59 @@ static void batch_lifetime(){
     check(!opt.gaussian_valid,"Gauss import invalidation");compare();
     ref.run(1);opt.run(1);compare();
 }
+#endif
+#ifdef SODIUM64_TEST_BRR_BATCH
+static void brr_directed(){
+    const int histories[8][2]={{-32768,32767},{32767,-32768},{-32767,1},{-1,-1},
+        {1,1},{0,0},{12345,-12345},{32766,-32767}};
+    unsigned cases=0;
+    for(unsigned voice=0;voice<8;voice++)for(unsigned shift=0;shift<16;shift++)
+    for(unsigned filter=0;filter<4;filter++)for(unsigned position=0;position<3;position++)
+    for(unsigned history=0;history<8;history++){
+        initialize(255);
+        Reference_DSP::voice_t &a=ref.m.voices[voice];Optimized_DSP::voice_t &b=opt.m.voices[voice];
+        a.buf_pos=b.buf_pos=(int)(position*4);a.interp_pos=b.interp_pos=0x4000;
+        a.brr_addr=b.brr_addr=0xfff8;a.brr_offset=b.brr_offset=7;
+        for(unsigned i=0;i<24;i++)a.buf[i]=b.buf[i]=(int16_t)random_word();
+        a.buf[a.buf_pos+11]=b.buf[b.buf_pos+11]=histories[history][0];
+        a.buf[a.buf_pos+10]=b.buf[b.buf_pos+10]=histories[history][1];
+        ref.m.t_brr_byte=opt.m.t_brr_byte=0x87;ram0[0]=ram1[0]=0xf0;
+        ref.m.t_brr_header=opt.m.t_brr_header=(int)((shift<<4)|(filter<<2)|3);
+        ref.m.t_brr_next_addr=opt.m.t_brr_next_addr=0x3000;
+        ref.m.t_pitch=opt.m.t_pitch=0x3fff;ref.m.t_output=opt.m.t_output=0;
+        ref.voice_V4(&a);opt.voice_V4(&b);opt.flush_brr_batch();compare();cases++;
+    }
+    printf("BRR_BATCH_DIRECTED PASS cases=%u all_ranges_filters_voices_positions_odd_histories_RAM_wrap=exact\n",cases);
+}
+static void brr_lifetime(){
+    initialize(255);
+    for(unsigned i=0;i<8;i++){
+        ref.write(i*16+2,255);opt.write(i*16+2,255);
+        ref.write(i*16+3,63);opt.write(i*16+3,63);
+    }
+    ref.run(4096);opt.run(4096);compare();
+    check(opt.brr_batch_peak==8,"BRR closed input width");
+    check(!opt.brr_pending,"BRR public return materialization");
+    ref.m.t_brr_byte=opt.m.t_brr_byte=0x87;ref.m.t_brr_header=opt.m.t_brr_header=0x98;
+    ref.m.voices[0].interp_pos=opt.m.voices[0].interp_pos=0x4000;
+    ref.m.t_pitch=opt.m.t_pitch=0;ref.m.t_output=opt.m.t_output=0;
+    ref.voice_V4(&ref.m.voices[0]);opt.voice_V4(&opt.m.voices[0]);
+    check(opt.brr_pending==1,"BRR private input captured");
+    ref.soft_reset();opt.soft_reset();compare();
+    check(!opt.brr_pending,"BRR soft reset materialization");
+    ref.m.voices[2].interp_pos=opt.m.voices[2].interp_pos=0x4000;
+    ref.voice_V4(&ref.m.voices[2]);opt.voice_V4(&opt.m.voices[2]);
+    unsigned char a[8192],b[8192],*p=a,*q=b;
+    ref.copy_state(&p,save_state);opt.copy_state(&q,save_state);
+    check(p-a==q-b&&!memcmp(a,b,p-a),"serialized BRR state");compare();
+    check(!opt.brr_pending,"BRR export materialization");
+    ref.run(32);opt.run(32);compare();
+    p=a;q=b;ref.copy_state(&p,load_state);opt.copy_state(&q,load_state);compare();
+    check(!opt.brr_pending,"BRR import clear");
+    ref.run(1);opt.run(1);compare();
+    printf("BRR_BATCH_BOUNDARY PASS width=%u public_return_export_soft_reset_import=exact\n",opt.brr_batch_peak);
+}
+#endif
 static void per_clock_events(){
     const unsigned regs[]={0x4c,0x5c,0x6c,0x2d,0x3d,0x4d,0x0c,0x1c,0x0d,0x2c,0x3c,0x5d,0x6d,0x7d};
     initialize(255);ref.run(256);opt.run(256);compare();
@@ -169,9 +227,15 @@ int main(){
         ref.m.regs[0x6c]=opt.m.regs[0x6c]=fraction&8?0x80:0;
         ref.voice_V3c(&a);opt.voice_V3c(&b);compare();directed++;
     }
-#ifdef SODIUM64_TEST_GAUSS_BATCH
+#if defined(SODIUM64_TEST_GAUSS_BATCH) || defined(SODIUM64_TEST_BRR_BATCH)
     chunks_directed();
+#ifdef SODIUM64_TEST_GAUSS_BATCH
     batch_lifetime();
+#endif
+#ifdef SODIUM64_TEST_BRR_BATCH
+    brr_directed();
+    brr_lifetime();
+#endif
     per_clock_events();
 #endif
     const unsigned masks[]={0,1,0x55,0xff};
@@ -196,7 +260,7 @@ int main(){
         }
     }
     printf("DSP_SIGNAL_ELIDE PASS directed=%u slices=%u frames=%u state_checks=%u\n",directed,slices,frames,checks);
-#ifdef SODIUM64_TEST_GAUSS_BATCH
+#if defined(SODIUM64_TEST_GAUSS_BATCH) || defined(SODIUM64_TEST_BRR_BATCH)
     printf("GAUSS_BATCH_PHASE PASS cases=%u frames=%u\n",chunk_cases,chunk_frames);
 #endif
 }

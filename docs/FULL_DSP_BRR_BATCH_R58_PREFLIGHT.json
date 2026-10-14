@@ -1,0 +1,93 @@
+{
+  "passed": true,
+  "semantic": {
+    "passed": true,
+    "directed_V3c_cases": 12288,
+    "clock_slices": 8192,
+    "output_stereo_frames": 11578,
+    "all_state_checks": 52231,
+    "directed_phase_cases": 9216,
+    "directed_phase_stereo_frames": 13052,
+    "closed_input_peak_voices": 8,
+    "directed_V4_cases": 12288,
+    "negative_mutations_rejected": [
+      "env_one_boundary",
+      "noise_substitution",
+      "brr_input",
+      "brr_history",
+      "brr_duplicate",
+      "brr_return_flush",
+      "brr_soft_reset"
+    ],
+    "all_core_state_after_host_pointer_normalization": true,
+    "full_APURAM_bytes": 65536,
+    "all_DSP_registers": 128,
+    "PCM_full_extent_equal": true,
+    "arbitrary_clock_phases_and_internal_output_buffer": true,
+    "PMON_KON_KOFF_envelope_noise_BRR_echo_and_reset_exercised": true,
+    "pinned_core_is_flag0_reference": true,
+    "native_timing_or_gameplay_claim": false,
+    "gauss_batch": false,
+    "brr_batch": true,
+    "derived_cache_is_outside_original_logical_state": true,
+    "commercial_data": false
+  },
+  "transaction": {
+    "passed": true,
+    "synthetic_scenarios": [
+      {
+        "case": 0,
+        "frames": 2048,
+        "checksum": 10420156,
+        "nonzero": 4056
+      },
+      {
+        "case": 1,
+        "frames": 2048,
+        "checksum": 4185267178,
+        "nonzero": 4080
+      },
+      {
+        "case": 2,
+        "frames": 2048,
+        "checksum": 422544410,
+        "nonzero": 4096
+      }
+    ],
+    "unmodified_complete_core": false,
+    "signal_elide": true,
+    "gauss_batch": false,
+    "brr_batch": true,
+    "snapshot_core": true,
+    "memory_restoration_bytes": 65536,
+    "backup_readback_blocks": 128,
+    "restore_blocks": 128,
+    "backup_fault_positions": 16,
+    "restore_fault_positions": 2,
+    "backup_corruption_rejected": true,
+    "invalid_inputs": 5,
+    "native_performance_or_game_audio_claim": false,
+    "commercial_data": false
+  },
+  "native-objects": {
+    "passed": true,
+    "flag0_executable_sections_exact_R49": 18,
+    "changed_sections": [
+      ".text._ZN7SPC_DSP10copy_stateEPPhPFvS1_PvjE",
+      ".text._ZN7SPC_DSP10soft_resetEv",
+      ".text._ZN7SPC_DSP15flush_brr_batchEv",
+      ".text._ZN7SPC_DSP17soft_reset_commonEv",
+      ".text._ZN7SPC_DSP3runEi",
+      ".text._ZN7SPC_DSP4initEPv",
+      ".text._ZN7SPC_DSP4loadEPKh",
+      ".text._ZN7SPC_DSP8voice_V4EPNS_7voice_tE"
+    ],
+    "probe_and_core_share_BRR_class_layout": true,
+    "core_snapshot_lease_bytes": 32768,
+    "actual_N64_objects_built": true,
+    "native_performance_claim": false,
+    "commercial_data": false
+  },
+  "native_RSP_backend_or_performance_tested": false,
+  "commercial_data": false
+}

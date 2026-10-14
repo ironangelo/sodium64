@@ -1106,8 +1106,14 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
     if(eq(verb,"state-rsp-roundtrip")) {
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
         uint32_t dma_mode=0;
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+        dma_mode=1;
+#endif
         if(nt!=3&&nt!=4){error(id,"argument_count");return;}
         if(nt==4&&!decimal(tokens[3],&dma_mode,1)){error(id,"gauss_transport_out_of_range");return;}
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+        if(!dma_mode){error(id,"brr_resident_requires_DMA");return;}
+#endif
 #else
         if(nt!=3){error(id,"argument_count");return;}
 #endif
@@ -1143,7 +1149,11 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         }
         prefix(id,1);append(" rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192");
 #ifdef SODIUM64_DSP_RSP_BRR_PROBE
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+        append(" brr_packet_samples=32 brr_input_bytes=128 brr_output_bytes=64 brr_prep_included=1 brr_resident_dma=1");
+#else
         append(" brr_packet_samples=32 brr_input_bytes=96 brr_output_bytes=64 brr_prep_included=1");
+#endif
         field(" brr_preparation_ticks=",scene_rsp_brr_preparation_ticks);
 #endif
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE

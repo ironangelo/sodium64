@@ -11,6 +11,37 @@
 .text
 .set noreorder
 .set noat
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+    // Mailbox200: CPU-validated source of eight original16-byte jobs.
+    // Input DMA180..1FF; output DMA120..15F -> source+128, privately owned.
+    lw a0,0x200(zero)
+    ori t0,zero,0x180
+    mtc0 t0,$0
+    mtc0 a0,$1
+    ori t0,zero,127
+    mtc0 t0,$2
+1:  mfc0 t0,$6
+    bne t0,zero,1b
+    nop
+    .irp lane,0,1,2,3,4,5,6,7
+    lw t0,(0x180+\lane*16)(zero)
+    sh t0,(\lane*2)(zero)
+    lw t0,(0x188+\lane*16)(zero)
+    sh t0,(0x10+\lane*2)(zero)
+    lw t0,(0x18C+\lane*16)(zero)
+    sh t0,(0x20+\lane*2)(zero)
+    lw t0,(0x184+\lane*16)(zero)
+    andi t1,t0,0xF0
+    srl t1,t1,2
+    lw t2,0x240(t1)
+    srl t3,t2,16
+    sh t3,(0x30+\lane*2)(zero)
+    sh t2,(0x40+\lane*2)(zero)
+    andi t0,t0,12
+    srl t0,t0,2
+    sh t0,(0x50+\lane*2)(zero)
+    .endr
+#endif
     .irp vec,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
     .word 0xc8002000 | (\vec << 16) | \vec
     .endr
@@ -60,4 +91,15 @@
     vaddc $v00,$v00,$v00,0
     .endif
     .endr
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+    ori t0,zero,0x120
+    addiu a0,a0,128
+    mtc0 t0,$0
+    mtc0 a0,$1
+    ori t0,zero,63
+    mtc0 t0,$3
+2:  mfc0 t0,$6
+    bne t0,zero,2b
+    nop
+#endif
     break

@@ -548,7 +548,11 @@ int main(void){
     scene_context_result=1;
 #ifdef SODIUM64_DSP_RSP_GAUSS_PROBE
 #ifdef SODIUM64_DSP_RSP_BRR_PROBE
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+    expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192 brr_packet_samples=32 brr_input_bytes=128 brr_output_bytes=64 brr_prep_included=1 brr_resident_dma=1 brr_preparation_ticks=88 gauss_pass=1 gauss_lanes=2048 gauss_mismatch=4294967295 gauss_scalar_ticks=111 gauss_PIO_ticks=222 gauss_PIO_max=33 gauss_checksum=444 gauss_install_ticks=55");
+#else
     expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192 brr_packet_samples=32 brr_input_bytes=96 brr_output_bytes=64 brr_prep_included=1 brr_preparation_ticks=88 gauss_pass=1 gauss_lanes=2048 gauss_mismatch=4294967295 gauss_scalar_ticks=111 gauss_PIO_ticks=222 gauss_PIO_max=33 gauss_checksum=444 gauss_install_ticks=55");
+#endif
 #else
     expect("s64 12345678 state-rsp-roundtrip","OK rsp_context_roundtrip=1 register_readback_bytes=700 sp_memory_readback_bytes=8192 gauss_pass=1 gauss_lanes=512 gauss_mismatch=4294967295 gauss_scalar_ticks=111 gauss_PIO_ticks=222 gauss_PIO_max=33 gauss_checksum=444 gauss_install_ticks=55");
 #endif
@@ -558,8 +562,13 @@ int main(void){
     check(scene_context_calls==2&&remote_guest_frames==20&&remote_render_frames==20&&remote_paused);
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
     expect("s64 12345678 state-rsp-roundtrip 1","gauss_transport_DMA=1");check(scene_rsp_gauss_dma==1);
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+    expect("s64 12345678 state-rsp-roundtrip 0","ERR brr_resident_requires_DMA");check(scene_rsp_gauss_dma==1);
+    check(scene_context_calls==3);
+#else
     expect("s64 12345678 state-rsp-roundtrip 0","gauss_transport_DMA=0");check(scene_rsp_gauss_dma==0);
     check(scene_context_calls==4);
+#endif
 #endif
     scene_context_result=2;
     expect("s64 12345678 state-rsp-roundtrip","ERR scene_context_restore_failed");
@@ -568,7 +577,11 @@ int main(void){
 #endif
     unsigned expected_context_calls=3;
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+    expected_context_calls=4;
+#else
     expected_context_calls=5;
+#endif
 #endif
     check(scene_context_calls==expected_context_calls&&remote_paused);
     expect("s64 12345678 status","scene_rsp_context_needs_menu=1");

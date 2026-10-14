@@ -10,15 +10,31 @@ from check_rsp_branch_delay_slots import read_text
 MASK=(1<<48)-1
 def signed(value,bits):return value if value<(1<<(bits-1)) else value-(1<<bits)
 
-def execute(code,d,r,v,acc,flags,stop=None,pending_entry=None):
+def execute(code,d,r,v,acc,flags,stop=None,pending_entry=None,rcp=None):
     pc=steps=0;pending=pending_entry
     while pc<len(code):
         if pc==stop:return steps
         w=struct.unpack_from('>I',code,pc)[0]
         op,rs,rt,rd,vd,fn=w>>26,w>>21&31,w>>16&31,w>>11&31,w>>6&31,w&63
         imm=w&65535;si=signed(imm,16)
+        old_pending=pending;pending=None
         if op==0 and fn==13:return steps+1
         if w==0:pass
+        elif op==0 and fn==2:r[rd]=r[rt]>>vd
+        elif op in (9,12,13):
+            r[rt]=((r[rs]+si) if op==9 else (r[rs]&imm) if op==12 else (r[rs]|imm))&0xffffffff
+        elif op==5:
+            assert old_pending is None,'branch in delay slot unproved'
+            pending=pc+4+si*4 if r[rs]!=r[rt] else pc+8
+        elif op==41:
+            address=(r[rs]+si)&4095;assert address%2==0
+            struct.pack_into('>H',d,address,r[rt]&65535)
+        elif op==16:
+            assert rcp is not None and rd in (0,1,2,3,6)
+            if rs==0:r[rt]=rcp(False,rd,0)&0xffffffff
+            else:
+                assert rs==4
+                rcp(True,rd,r[rt])
         elif op in (35,43):
             address=(r[rs]+si)&4095;assert address%4==0
             if op==35:r[rt]=struct.unpack_from('>I',d,address)[0]
@@ -78,7 +94,7 @@ def execute(code,d,r,v,acc,flags,stop=None,pending_entry=None):
             else:raise AssertionError(('unproved COP2 operation',hex(w)))
         else:raise AssertionError(('unexpected control/RCP write',pc,hex(w)))
         r[0]=0
-        pc=pending if pending is not None else pc+4;pending=None;steps+=1
+        pc=old_pending if old_pending is not None else pc+4;steps+=1
         assert steps<512,'program did not stop'
     raise AssertionError('no BREAK')
 

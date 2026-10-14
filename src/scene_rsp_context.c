@@ -14,10 +14,17 @@ volatile uint32_t scene_rsp_context_mismatch_word;
 #ifdef SODIUM64_DSP_RSP_BRR_PROBE
 extern const uint32_t rsp_dsp_brr_text_start[],rsp_dsp_brr_text_end[];
 volatile uint32_t scene_rsp_brr_preparation_ticks;
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+#define DSP_INPUT_BYTES 128u
+#define DSP_SOURCE_EXTENT 192u
+#else
 #define DSP_INPUT_BYTES 96u
+#define DSP_SOURCE_EXTENT DSP_INPUT_BYTES
+#endif
 #else
 extern const uint32_t rsp_dsp_gauss_text_start[],rsp_dsp_gauss_text_end[];
 #define DSP_INPUT_BYTES 128u
+#define DSP_SOURCE_EXTENT DSP_INPUT_BYTES
 #endif
 volatile uint32_t scene_rsp_gauss_metrics[8];
 #ifdef SODIUM64_DSP_RSP_GAUSS_DMA
@@ -30,7 +37,7 @@ static uint32_t dma_source(uint32_t *packet) {
 #else
     uintptr_t address=(uintptr_t)packet;
     if((address&15)||((uint32_t)address&0xe0000000u)!=0x80000000u||
-       (address&0x1fffffffu)>0x800000u-DSP_INPUT_BYTES)return 0;
+       (address&0x1fffffffu)>0x800000u-DSP_SOURCE_EXTENT)return 0;
     /* Same hit-writeback operation as the existing renderer/profile owners.
      * Exactly eight private aligned lines, no adjacent stack data. */
     for(unsigned i=0;i<DSP_INPUT_BYTES;i+=16)
@@ -73,6 +80,113 @@ static int dma_cursor_restore(const uint32_t original[4],const uint32_t tail[2],
 }
 #endif
 #ifdef SODIUM64_DSP_RSP_BRR_PROBE
+#ifdef SODIUM64_DSP_RSP_BRR_RESIDENT
+/* Static lifetime keeps the only writable DMA destination owned even if a
+ * timed-out task cannot be halted and the caller must return to the menu. */
+typedef struct { unsigned word,header;int p1,p2; } resident_job_t;
+static struct {
+    uint32_t before[4];
+    resident_job_t jobs[8];
+    uint32_t output[16],after[4];
+} resident_packet __attribute__((aligned(16)));
+
+static void resident_output_cache(int before) {
+#ifndef SODIUM64_RSP_GAUSS_HOST
+    for(unsigned i=0;i<64;i+=16) {
+        if(before)__asm__ volatile("cache 0x15,0(%0)"::"r"((unsigned char *)resident_packet.output+i):"memory");
+        else __asm__ volatile("cache 0x11,0(%0)"::"r"((unsigned char *)resident_packet.output+i):"memory");
+    }
+    __asm__ volatile("sync":::"memory");
+#else
+    (void)before;
+#endif
+}
+static int gauss_probe(scene_rsp_read read,scene_rsp_write write,scene_rsp_wait wait) {
+    static const uint16_t constants[12]={0,1,65535,32768,0xf000,2,3,63488,62464,58880,4096,12288};
+    uint32_t expected[16],actual[16];
+    resident_job_t *jobs=resident_packet.jobs;
+    scene_rsp_brr_preparation_ticks=0;
+    for(unsigned i=0;i<8;i++)scene_rsp_gauss_metrics[i]=0;
+    scene_rsp_gauss_metrics[2]=0xffffffffu;
+    unsigned words=(unsigned)(rsp_dsp_brr_text_end-rsp_dsp_brr_text_start);
+    if(words!=257)return 0;
+    uint32_t start=ticks();
+    for(unsigned i=0;i<words;i++)write(SP_MEM+4096+4*i,rsp_dsp_brr_text_start[i]);
+    for(unsigned v=0;v<12;v++)for(unsigned i=0;i<4;i++)
+        write(SP_MEM+96+v*16+i*4,((uint32_t)constants[v]<<16)|constants[v]);
+    for(unsigned range=0;range<16;range++)
+        write(SP_MEM+0x240+range*4,range<=12?((1u<<(range+3))<<16)|1u:(1u<<16)|2048u);
+    scene_rsp_gauss_metrics[7]=ticks()-start;
+    for(unsigned i=0;i<words;i++)if(read(SP_MEM+4096+4*i)!=rsp_dsp_brr_text_start[i])return 0;
+    for(unsigned i=0;i<4;i++)resident_packet.before[i]=resident_packet.after[i]=0x60b44e00u+i;
+#ifndef SODIUM64_RSP_GAUSS_HOST
+    __asm__ volatile("cache 0x19,0(%0)\ncache 0x19,0(%1)\nsync"::
+        "r"(resident_packet.before),"r"(resident_packet.after):"memory");
+#endif
+    uint32_t checksum=2166136261u;
+    for(unsigned n=0;n<64;n++) {
+        for(unsigned lane=0;lane<8;lane++) {
+            jobs[lane].word=(n*15583+lane*29519+0x87f0)&65535;
+            jobs[lane].header=(((n+lane*3)&15)<<4)|(((n+lane)&3)<<2)|(n&3);
+            jobs[lane].p1=(int16_t)(n*32749+lane*15583+0x8000);
+            jobs[lane].p2=(int16_t)(n*29519+lane*32749+0x7fff);
+        }
+        start=ticks();
+        for(unsigned lane=0;lane<8;lane++) {
+            int p1=jobs[lane].p1,p2=jobs[lane].p2;
+            unsigned word=jobs[lane].word,range=jobs[lane].header>>4,filter=jobs[lane].header&12;
+            for(unsigned sample=0;sample<4;sample++,word=(word<<4)&65535) {
+                int s=(int16_t)word>>12;
+                s=(s<<range)>>1;if(range>=13)s=(s>>25)<<11;
+                int half=p2>>1;
+                if(filter>=8) {
+                    s+=p1;s-=half;
+                    if(filter==8){s+=half>>4;s+=(p1*-3)>>6;}
+                    else {s+=(p1*-13)>>7;s+=(half*3)>>4;}
+                } else if(filter){s+=p1>>1;s+=(-p1)>>5;}
+                if(s>32767)s=32767;
+                if(s< -32768)s= -32768;
+                s=(int16_t)(s*2);p2=p1;p1=s;
+                unsigned i=sample*4+lane/2;
+                if(!(lane&1))expected[i]=((uint32_t)s&65535)<<16;
+                else expected[i]|=(uint32_t)s&65535;
+            }
+        }
+        scene_rsp_gauss_metrics[3]+=ticks()-start;
+        /* Sentinel writes are a diagnostic control outside both costs. Cache
+         * maintenance, mailbox, input/output DMA and cached output reads are
+         * charged to the candidate. There is no CPU vector-plane formatting. */
+        for(unsigned i=0;i<16;i++)resident_packet.output[i]=~expected[i];
+        start=ticks();
+        uint32_t physical=dma_source((uint32_t *)jobs);
+        if(!physical){scene_rsp_gauss_dma_diag[0]=4;return 0;}
+        resident_output_cache(1);
+        write(SP_MEM+0x200,physical);write(SP_PC,0);write(SP_STATUS,5);
+        if(!wait()||(read(SP_STATUS)&0x63)!=3) {
+            write(SP_STATUS,2);
+            if(read(0xa4040018u)||read(0xa4040014u)){scene_rsp_gauss_dma_diag[0]=1;return -1;}
+            return (read(SP_STATUS)&1)?0:-1;
+        }
+        resident_output_cache(0);
+        for(unsigned i=0;i<16;i++)actual[i]=resident_packet.output[i];
+        uint32_t elapsed=ticks()-start;
+        scene_rsp_gauss_metrics[4]+=elapsed;
+        if(elapsed>scene_rsp_gauss_metrics[5])scene_rsp_gauss_metrics[5]=elapsed;
+        volatile uint32_t *before=resident_packet.before,*after=resident_packet.after;
+#ifndef SODIUM64_RSP_GAUSS_HOST
+        before=(volatile uint32_t *)((uintptr_t)before|0xa0000000u);
+        after=(volatile uint32_t *)((uintptr_t)after|0xa0000000u);
+#endif
+        for(unsigned i=0;i<4;i++)if(before[i]!=0x60b44e00u+i||after[i]!=0x60b44e00u+i)return 0;
+        for(unsigned i=0;i<16;i++) {
+            if(actual[i]!=expected[i]){scene_rsp_gauss_metrics[2]=n*32+i*2;return 0;}
+            checksum=(checksum^actual[i])*16777619u;
+        }
+        scene_rsp_gauss_metrics[1]+=32;
+    }
+    scene_rsp_gauss_metrics[6]=checksum;scene_rsp_gauss_metrics[0]=1;return 1;
+}
+#else
 static int gauss_probe(scene_rsp_read read,scene_rsp_write write,scene_rsp_wait wait) {
     static const uint16_t constants[12]={0,1,65535,32768,0xf000,2,3,63488,62464,58880,4096,12288};
     typedef struct { unsigned word,header;int p1,p2; } job_t;
@@ -163,6 +277,7 @@ static int gauss_probe(scene_rsp_read read,scene_rsp_write write,scene_rsp_wait 
     }
     scene_rsp_gauss_metrics[6]=checksum;scene_rsp_gauss_metrics[0]=1;return 1;
 }
+#endif
 #else
 static int gauss_probe(scene_rsp_read read,
                        scene_rsp_write write,scene_rsp_wait wait) {

@@ -19,6 +19,7 @@ def main():
     parser.add_argument('--dsp-rsp-gauss-probe',action='store_true')
     parser.add_argument('--dsp-rsp-gauss-dma',action='store_true')
     parser.add_argument('--dsp-rsp-brr-probe',action='store_true')
+    parser.add_argument('--dsp-rsp-brr-resident',action='store_true')
     parser.add_argument('--scene-slot',action='store_true')
     args=parser.parse_args();root=Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix='s64-runtime-model-') as directory:
@@ -39,6 +40,9 @@ def main():
         if args.dsp_rsp_gauss_probe:cmd+=['-DSODIUM64_SCENE_RSP_CONTEXT=1','-DSODIUM64_DSP_RSP_GAUSS_PROBE=1']
         if args.dsp_rsp_gauss_dma:cmd+=['-DSODIUM64_SCENE_RSP_CONTEXT=1','-DSODIUM64_DSP_RSP_GAUSS_PROBE=1','-DSODIUM64_DSP_RSP_GAUSS_DMA=1']
         if args.dsp_rsp_brr_probe:cmd+=['-DSODIUM64_SCENE_RSP_CONTEXT=1','-DSODIUM64_DSP_RSP_GAUSS_PROBE=1','-DSODIUM64_DSP_RSP_BRR_PROBE=1']
+        if args.dsp_rsp_brr_resident:
+            assert args.dsp_rsp_brr_probe and args.dsp_rsp_gauss_dma
+            cmd+=['-DSODIUM64_DSP_RSP_BRR_RESIDENT=1']
         if args.scene_slot:cmd+=['-DSODIUM64_SCENE_RSP_CONTEXT=1','-DSODIUM64_SCENE_SLOT=1']
         if os.name!='nt':cmd+=['-fsanitize=address,undefined','-fno-omit-frame-pointer','-no-pie']
         cmd += [str(root/'src/remote_control.c'),str(root/'scripts/fixtures/remote_control_host.c'),'-o',str(executable)]

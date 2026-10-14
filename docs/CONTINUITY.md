@@ -1,3 +1,33 @@
+# 2026-10-13 - R56 exact vector primitive implemented; native PIO discriminator next
+
+RESUME HERE: code09c7c00f2ff06c3f1836bf06707acf7a9b33076a, experiment/full-dsp-rsp-r56,
+isolated sodium64-dsp-rsp-r56; source/numeric preflight published, no native job
+started yet. R55 CPU performance rejected; new phase22 mixed-epoch closed-input
+boundary passes12288V3c/9216phase cases/8192slices/39944 logicalstate+RAM+PCM
+checks. Eight clocks before first V3c30, scheduling still unproven.
+[R56 report](FULL_DSP_RSP_GAUSS_R56.md). Actual RSP80B/20instructions,
+680192 lanes/all256fractions/4faults pass. Counts are not native timing.
+Fullcontext637roundtrips/65536MID/9faults, new Ctransaction238cases including
+all64task timeouts safe-HALT/fullrestore, defaultzero test and parser254+1000
+pass. Native v7 probe1/fullDSP0/batch0/context1/slot0/rebind0/signal1/diagnostic
+C-Os: D1E28<D4000/43owners/full24576events194slots/boot/DMA; 13renderer banks
+exact non-slot baseline and both context programs exact qualified prefix pair.
+Earlier link failures never installed; capacities/arenas not relaxed.
+
+Next frozen private rsp-gauss-r56-archive/native_rsp_gauss_r56.py and plan,
+workerSHA6a90524af0f29a3a94928db9d92ddb861f1da7688b49e1d526ee548329fc0289. RootsoleCOM3 after controller/hash check;
+normalmenu/install/readback, ALttP600/601/602, three64packet512lane trials;
+cached scalar formula vs128B PIO/start/wait/16B output and installation
+separate. Require exactoriginal512outputs/checksum, full700context8192SP,
+unchanged67200pixels8192PCM/headregs/guestboundary, step660, finallycoordinate8
+menu/install/readback. Record livehandle before interruption, pollsame.
+Reject a missed nominal8DSPclock7.8125us deadline for this PIO transport;
+no inference about all DMA/resident designs. No broadCI or integration yet.
+FullDSP/DAC/SNES/game60/50/corpus/renderer sharing/master OPEN; priorR44/R45/
+state/candidates preserved. Earlier history bytes retained below.
+
+---
+
 # 2026-10-13 - R55 CPU cost rejected; semantic vector boundary retained
 
 RESUME HERE: worker83207 terminal exit0/allcontrols/recovery verified, no

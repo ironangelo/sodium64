@@ -2,12 +2,13 @@
   "passed": true,
   "status": "IMPLEMENTED semantic window controller",
   "counts": {
-    "state_checks": 72645,
+    "state_checks": 72646,
     "producer_reads": 20023,
     "clocks": 933286,
     "directed": 5669,
     "FIFO_overflow": 31,
     "echo_word_publications": 50955,
+    "directory_bus_cases": 131072,
     "original_hazards": 4
   },
   "original_immediate_core_reference": true,
@@ -25,8 +26,11 @@
     "missing_echo_publication",
     "missing_PCM_consumption_barrier",
     "missing_export_barrier",
-    "missing_soft_reset_barrier"
+    "missing_soft_reset_barrier",
+    "missing_16bit_directory_bus_wrap"
   ],
+  "directory_bus_all_DIR_SRCN_start_loop_combinations": 131072,
+  "directory_bus_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/sfc/dsp/voice.cpp",
   "live_SPC_JIT_timestamps_implemented": false,
   "native_memory_owner_assigned": false,
   "resident_RSP_complete_DSP_implemented": false,

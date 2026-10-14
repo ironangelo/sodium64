@@ -460,6 +460,11 @@ MISC_CLOCK( 30 )
 inline VOICE_CLOCK( V1 )
 {
 	m.t_dir_addr = m.t_dir * 0x100 + m.t_srcn * 4;
+#ifdef SODIUM64_DSP_FULL_WINDOW
+	// The sample-directory bus address is16-bit, even when DIR+SRCN
+	// carries above64KiB. Entries are4-byte aligned, so V2's+2 word fits.
+	m.t_dir_addr &= 0xFFFF;
+#endif
 	m.t_srcn = VREG(v->regs,srcn);
 }
 inline VOICE_CLOCK( V2 )

@@ -21,6 +21,7 @@ static SPC_DSP_Window window;
 static unsigned char ram0[65536],cpu[65536],shadow[65536],regs[128];
 static short pcm0[512],pcm1[512];
 static unsigned checks,reads,clocks,echo_writes,overflow_cases,directed;
+static unsigned directory_cases;
 static uint32_t rng=0x61a49c32;
 static uint32_t random_word(){rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return rng;}
 static void check(bool ok,const char* what){if(!ok){fprintf(stderr,"FAIL %s checks=%u phase=%d pending=%u\n",what,checks,opt.m.phase,window.pending_clocks());exit(1);}}
@@ -206,9 +207,27 @@ static void random_bus(){
         flush();
     }
 }
+static void directory_bus_wrap(){
+    initialize(0);
+    for(unsigned n=0;n<65536;n++)shadow[n]=(unsigned char)(n*37+(n>>8)*13+11);
+    // Independent16-bit bus expectation. The old core is not an oracle for
+    // an out-of-range pointer; it cannot safely execute these full-domain cases.
+    for(unsigned bank=0;bank<256;bank++)for(unsigned source=0;source<256;source++)
+    for(unsigned keyon=0;keyon<2;keyon++){
+        opt.m.phase=31;opt.m.t_dir=bank;opt.m.t_srcn=source;
+        opt.m.voices[1].kon_delay=keyon?1:0;
+        opt.run(2); // V1 at31, V2 at0; every word is read from actual core RAM
+        unsigned base=(bank*256+source*4)&65535;
+        unsigned addr=base+(keyon?0:2);
+        unsigned expected_word=shadow[addr]|shadow[addr+1]<<8;
+        check((unsigned)opt.m.t_dir_addr==base,"16-bit sample-directory address");
+        check((unsigned)opt.m.t_brr_next_addr==expected_word,"wrapped directory start/loop word");
+        directory_cases++;
+    }
+}
 int main(){
     // First use needs no flush of an unbound controller.
     window.pending=window.count=0;
-    original_hazards();all_phases_regs();echo_admission();fifo_and_lifecycle();random_bus();
-    printf("FULL_DSP_WINDOW_CONTROLLER PASS state_checks=%u producer_reads=%u clocks=%u directed=%u FIFO_overflow=%u echo_word_publications=%u original_hazards=4\n",checks,reads,clocks,directed,overflow_cases,echo_writes);
+    original_hazards();all_phases_regs();echo_admission();fifo_and_lifecycle();random_bus();directory_bus_wrap();
+    printf("FULL_DSP_WINDOW_CONTROLLER PASS state_checks=%u producer_reads=%u clocks=%u directed=%u FIFO_overflow=%u echo_word_publications=%u directory_bus_cases=%u original_hazards=4\n",checks,reads,clocks,directed,overflow_cases,echo_writes,directory_cases);
 }

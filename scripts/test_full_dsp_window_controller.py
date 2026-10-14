@@ -63,6 +63,7 @@ def main():
         counts = dict((k, int(v)) for k, v in re.findall(r'(\w+)=(\d+)', result.stdout))
         assert counts['state_checks'] > 4096 and counts['producer_reads'] > 4096
         assert counts['FIFO_overflow'] == 31 and counts['original_hazards'] == 4
+        assert counts['directory_bus_cases'] == 131072
         original = window.read_text()
         if a.mutations:
             for name, (old, new) in mutants.items():
@@ -73,10 +74,21 @@ def main():
                 rejected.append(name)
                 print('MUTANT REJECTED '+name+' '+mutant.stderr.strip())
                 window.write_text(original)
+            source = core.read_text()
+            old = 'm.t_dir_addr &= 0xFFFF;'
+            assert old in source
+            core.write_text(source.replace(old, '(void)m.t_dir_addr;'))
+            compile_obj(core, candidate, ['-DSODIUM64_DSP_FULL_WINDOW=1'])
+            mutant = run()
+            assert mutant.returncode != 0 and 'FAIL 16-bit sample-directory address' in mutant.stderr
+            rejected.append('missing_16bit_directory_bus_wrap')
+            print('MUTANT REJECTED missing_16bit_directory_bus_wrap '+mutant.stderr.strip())
     proof = dict(passed=True, status='IMPLEMENTED semantic window controller', counts=counts,
                  original_immediate_core_reference=True, separate_CPU_DSP_RAM=True,
                  timestamped_ordered_event_replay=True, full_normalized_state_RAM_PCM=True,
                  echo_publish_cache_JIT_callback_semantics=True, rejected_mutations=rejected,
+                 directory_bus_all_DIR_SRCN_start_loop_combinations=131072,
+                 directory_bus_reference='https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/sfc/dsp/voice.cpp',
                  live_SPC_JIT_timestamps_implemented=False, native_memory_owner_assigned=False,
                  resident_RSP_complete_DSP_implemented=False, native_performance_acceptance=False,
                  commercial_data=False)

@@ -1,6 +1,6 @@
 # R55 - Closed-time eight-voice Gaussian batch boundary
 
-IMPLEMENTED; native CPU cost and RSP backend pending. From R49 6d6e4eb, opt-in
+REJECTED CPU performance; semantic batch boundary retained, RSP backend pending. From R49 6d6e4eb, opt-in
 DSP_FULL_GAUSS_BATCH0/FULL_DSP_PROBE1. Signal1/snapshot1 native configurations;
 no R50 counter, R51 sampler, R52 BRR grouping, R53 chunks or R54 placement flags.
 
@@ -52,3 +52,32 @@ foundation. Do not present an unmeasured RSP backend as working or reduce the
 full goal to this cache. No broadCI before native value. All standalone64ms
 budgets, real DSP/CPU/APU/render integration, DSP/DAC/SNES fidelity/native60/
 corpus and master integration stay OPEN. Earlier candidates remain preserved.
+
+
+## Native CPU batch result
+
+Worker83207 terminal exit0, runtime89467e4d5141a5c21c62f47df17ca23f9617e829. All18 original case outputs/
+36864 stereo frames match host checksums/nonzero counts; each trial64KiB RAM
+restore. Both variants retain all67200 live pixels/8192PCM/heads/regs/enabled/
+boundary, step600->660, coordinate8/menu/install/readback recovery.
+
+| Original case | Baseline ms | CPU batch ms | Time saving |
+| --- | ---: | ---: | ---: |
+| 0 | 56.121557 | 64.409835 | -14.768438% |
+| 1 | 92.420501 | 110.966635 | -20.067120% |
+| 2 | 95.532075 | 140.731243 | -47.313081% |
+
+Both active results fail the predeclared material gate and exceed64ms alone.
+Keep this isolated/default0 semantic boundary; reject its CPU implementation
+as a cost improvement. No CPU batching tweak or broadCI for this failed
+performance result. [Numeric receipt](evidence/full-dsp-gauss-batch-r55-native.json).
+
+The RSP backend has not been implemented or measured. Phase0 starts the batch
+only one DSP clock before voice1 V3c atphase1. A real backend needs an earlier
+closed-input boundary or a first-use fallback; producer/transport/renderer
+contention belong in its total cost. Investigate phase22: voices1..7 have
+already advanced V4 and target their next sample, while voice0 still targets
+its current phase30. This mixed-epoch batch may provide eight DSP clocks
+before the first use; that is a source-derived hypothesis requiring the same
+partial-phase/write/reset/import proof, not a confirmed RSP schedule.
+Full native60/DSP/DAC/SNES fidelity/corpus/integration remain OPEN.

@@ -1,3 +1,31 @@
+# 2026-10-14 - R58 closed-input BRR boundary proved; wider RSP primitive next
+
+RESUME HERE: code033fd8e0648797d49638ad594a8a80fdf6f138b6, experiment/full-dsp-brr-batch-r58,
+isolated sodium64-dsp-brr-batch-r58, source/numericproof published. Default0;
+DSP_FULL_BRR_BATCH1 requiresfullprobe1/Gaussbatch0; probe/core classlayout same.
+OriginalV4 capturesheader/twoBRRbytes/twohistories at originalclock, advances
+cursor/offset/loop/pitch originally; purefour-sample decode/bufferwrites queue.
+Phase21 batchesvoice0prior31 +voices1..7current2..20, peak8/32outputs. First
+nextGaussusevoice0V3c30 (nineclocks), wallclock/scheduling notnativeproven.
+Everypublicrunreturn/export/import/softreset exposesexactlogicalhistory;
+load/reset replacesstate safely.168derivedbytes outsideunchangedstate_t m.
+[R58](FULL_DSP_BRR_BATCH_R58.md):12288V4(allranges/filter/oddhistories/wrap),
+12288V3c/9216phasecases/8192slices/52231fullstate+RAM+PCM checks/1024dense
+clockwrites+RAMmutations/sevenfaults pass. Wholecore6144frames/originalthree
+checksums/nonzero/RAMbackupreadbackrestore/snapshottransaction pass. Native
+objects off18execsections exactR49signal1; sameonclasslayout/32Klease. No
+CPUperformance claim/test or broadCI for this semantic surrogate.
+
+Next implement one eight-lane/four-sample RSP BRR primitive withcapturedinputs,
+original perterm floors/int16clamp/signed16doublewrap, invalidranges/oddhistory.
+Reuse existing directedRSP model/fullcontext/DMA/cursorowners. Arithmetic/
+extent/fault gate before shortphysicalcost test; materiallymorework pertransfer
+than rejectedthinGauss. RSPbackendNOTIMPLEMENTED, no nativejob live. Preserve
+R49authority/R57recovery and allcandidates; fullDSP/DAC/renderer sharing/
+native60/50/corpus/integration OPEN. Earlier history bytes retained below.
+
+---
+
 # 2026-10-14 - R57 exact cursor restore measured; thin DMA performance rejected
 
 RESUME HERE: exec81581 terminal exit0, allcontrols/coordinate8/menu/install/

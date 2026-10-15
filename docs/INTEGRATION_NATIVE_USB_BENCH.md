@@ -52,3 +52,15 @@ disabled-image identity, RSP delay/layout checks and integrated CPU/APU/audio
 regressions. Physical gates still require installation/readback, original-guest
 control, pause/step/export/resume, verified return/menu restoration, then aligned
 commercial comparisons. Host/linked checks are not native acceptance.
+
+The first physical preflight on994b9e49 booted and paused at240 exactly, but
+frame export and return failed the RDP idle check. This result is retained as a
+failure. Master's RSP HALT is not a SyncFull; no pixel-completion claim follows
+from it. The diagnostic barrier now waits for command ownership, submits one
+uncached SyncFull outside renderer DMEM, waits for CURRENT and the pipeline/IRQ,
+then restores XBUS and preserves a preexisting DP interrupt. Both emitted RSP
+banks are checked to restart START/END and never depend on the replaced DP
+pointers. A timeout after submission forbids guest resume. No render commands,
+RSP bytes or normal runtime are changed. The production barrier is tested by a
+sequenced device model (35 checks, five rejected ordering/ownership mutants);
+this does not replace its new physical preflight.

@@ -19,6 +19,7 @@ jobs:
       - name: Execute production parser and transport fixtures
         run: |
           python3 scripts/test_remote_control.py --json-output usb-parser-proof.json
+          python3 scripts/test_remote_rdp_barrier.py --json-output usb-rdp-proof.json
           python3 tools/sc64-bench/test_bench.py
       - name: Build ordinary and isolated bench images
         shell: bash
@@ -30,6 +31,7 @@ jobs:
       - name: Execute linked register, boot and memory contracts
         run: |
           python3 scripts/test_remote_bridge.py build_usb_bench/sodium64-usb-bench.elf --json-output usb-bridge-proof.json
+          python3 scripts/test_remote_rdp_barrier.py --rsp-elf build_usb_bench/src/rsp_main.elf build_usb_bench/src/rsp_mode7.elf --json-output usb-rdp-proof.json
           python3 scripts/check_rsp_branch_delay_slots.py build_usb_bench/src/rsp_main.elf build_usb_bench/src/rsp_mode7.elf
           python3 scripts/test_dsp_gain_owner.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_apu_lookup_reset.py build_usb_bench/sodium64-usb-bench.elf
@@ -42,6 +44,7 @@ jobs:
           retention-days: 14
           path: |
             usb-parser-proof.json
+            usb-rdp-proof.json
             usb-bridge-proof.json
             sodium64-usb-bench.z64
             build_usb_bench/sodium64-usb-bench.elf

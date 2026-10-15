@@ -68,6 +68,11 @@ static int owner_guards_valid(void) {
 static uint32_t count(void) {
     uint32_t n; __asm__ volatile("mfc0 %0,$9":"=r"(n)); return n;
 }
+#define RDP_READ(a) (*(volatile uint32_t *)(uintptr_t)(a))
+#define RDP_WRITE(a,v) (*(volatile uint32_t *)(uintptr_t)(a)=(v))
+#define RDP_COUNT() count()
+#define RDP_FENCE() __asm__ volatile("sync":::"memory")
+#include "remote_rdp_barrier.h"
 
 static int sc_io(unsigned index,uint32_t *value,int write) {
     uint32_t saved,status,start=count();
@@ -115,15 +120,6 @@ static int command(unsigned id,uint32_t a,uint32_t b,uint32_t result[2]) {
     if(!sc_read(1,&last_data0))return 0;
     if(result) { result[0]=last_data0;if(!sc_read(2,&result[1]))return 0; }
     if(last_sc_status&0x40000000u) { transport_failure(3);return 0; }
-    return 1;
-}
-
-static int wait_io(uint32_t address,uint32_t mask,uint32_t wanted,uint32_t ticks) {
-    volatile uint32_t *p=(volatile uint32_t *)(uintptr_t)address;
-    uint32_t start=count();
-    while((*p&mask)!=wanted) {
-        if((uint32_t)(count()-start)>=ticks) return 0;
-    }
     return 1;
 }
 
@@ -181,7 +177,7 @@ static int reboot_menu(void) {
     __asm__ volatile("mtc0 %0,$12\n nop\n nop"::"r"(status):"memory");
     if(tv>2)tv=1;
     if(!wait_io(0xa4040010,1,1,DMA_TIMEOUT)||!wait_io(0xa4040018,1,0,DMA_TIMEOUT)) {menu_error=1;return 0;}
-    if(!wait_io(0xa410000c,0x170,0,DMA_TIMEOUT)) {menu_error=2;return 0;}
+    if(remote_rdp_drain(DMA_TIMEOUT)!=1) {menu_error=2;return 0;}
     if(!wait_io(0xa4800018,3,0,DMA_TIMEOUT)) {menu_error=3;return 0;}
     if(!wait_io(0xa4600010,3,0,DMA_TIMEOUT)) {menu_error=4;return 0;}
     if(!wait_io(0xa450000c,0xc0000000u,0,REMOTE_COUNT_HZ)) {menu_error=5;return 0;}
@@ -301,6 +297,9 @@ static void status(const char *id) {
     field(" pause_pending=",remote_pause_pending);field(" pause_at_render_frame_id=",remote_pause_target);
     field(" usb_poll_calls=",poll_calls);field(" usb_poll_count_total_mod32=",poll_total);field(" usb_poll_count_max=",poll_max);
     field(" transport_error=",transport_error);field(" menu_error=",menu_error);field(" boot_ram_bytes=",remote_boot_ram_bytes);
+#ifndef REMOTE_CONTROL_HOST
+    field(" dp_status=",RDP_READ(0xa410000c));field(" dp_current=",RDP_READ(0xa4100008));
+#endif
     append(" metric_provenance=cp0_count,guest_boundary,rsp_retired,vi_irq,vi_origin_publish fps_claim=none");(void)finish();
 }
 void remote_process_request(const unsigned char *request,size_t bytes,uint32_t retired_framebuffer) {
@@ -410,9 +409,10 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
 #ifdef REMOTE_CONTROL_HOST
         int ready=remote_host_frame_ready();
 #else
-        int ready=wait_io(0xa410000c,0x170,0,DMA_TIMEOUT);
+        int ready=remote_rdp_drain(DMA_TIMEOUT);
 #endif
-        if(!ready){error(id,"frame_dp_busy");return;}
+        if(ready<0)menu_error=9;
+        if(ready!=1){error(id,"frame_dp_busy");return;}
         unsigned char header[16]={0,0,0,4,0,0,0,2,0,0,1,24,0,0,0,240};
         if(!send_packet(3,header,16)||!send_packet(4,(const void *)(uintptr_t)retired_framebuffer,FRAME_BYTES)) {error(id,"usb_export_failed");return;}
         prefix(id,1);append(" exported=frame width=280 height=240 pixel_bytes=2 boundary=rsp_retired");

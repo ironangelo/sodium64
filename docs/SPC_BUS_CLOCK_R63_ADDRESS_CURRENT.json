@@ -1,0 +1,834 @@
+{
+  "passed": true,
+  "status": "directed data bus audit",
+  "cases": [
+    {
+      "name": "absolute_read",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "exact": true
+    },
+    {
+      "name": "absolute_write",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "direct_X_read",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "exact": true
+    },
+    {
+      "name": "direct_X_write",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "absolute_X_read",
+      "observed": [
+        [
+          "read",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "absolute_X_write",
+      "observed": [
+        [
+          "read",
+          243,
+          5
+        ],
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          5
+        ],
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": true
+    },
+    {
+      "name": "absolute_Y_read",
+      "observed": [
+        [
+          "read",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "absolute_Y_write",
+      "observed": [
+        [
+          "read",
+          243,
+          5
+        ],
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          5
+        ],
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": true
+    },
+    {
+      "name": "indexed_indirect_read",
+      "observed": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": true
+    },
+    {
+      "name": "indexed_indirect_write",
+      "observed": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "total": 11,
+      "expected_total": 11,
+      "exact": true
+    },
+    {
+      "name": "indirect_indexed_read",
+      "observed": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": true
+    },
+    {
+      "name": "indirect_indexed_write",
+      "observed": [
+        [
+          "read",
+          32,
+          3
+        ],
+        [
+          "read",
+          33,
+          4
+        ],
+        [
+          "read",
+          243,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          3
+        ],
+        [
+          "read",
+          33,
+          4
+        ],
+        [
+          "read",
+          243,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "total": 11,
+      "expected_total": 11,
+      "exact": true
+    },
+    {
+      "name": "direct_direct_write",
+      "observed": [
+        [
+          "read",
+          32,
+          3
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          3
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "direct_Y_read",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "exact": true
+    },
+    {
+      "name": "direct_Y_write",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "direct_modify",
+      "observed": [
+        [
+          "read",
+          243,
+          3
+        ],
+        [
+          "write",
+          243,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          3
+        ],
+        [
+          "write",
+          243,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "exact": true
+    },
+    {
+      "name": "absolute_modify",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "direct_indexed_modify",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "direct_direct_modify",
+      "observed": [
+        [
+          "read",
+          32,
+          3
+        ],
+        [
+          "read",
+          243,
+          5
+        ],
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          3
+        ],
+        [
+          "read",
+          243,
+          5
+        ],
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": true
+    },
+    {
+      "name": "direct_immediate_modify",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "direct_word_read",
+      "observed": [
+        [
+          "read",
+          243,
+          3
+        ],
+        [
+          "read",
+          244,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          3
+        ],
+        [
+          "read",
+          244,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "direct_word_write",
+      "observed": [
+        [
+          "read",
+          243,
+          3
+        ],
+        [
+          "write",
+          243,
+          4
+        ],
+        [
+          "write",
+          244,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          3
+        ],
+        [
+          "write",
+          243,
+          4
+        ],
+        [
+          "write",
+          244,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "indexed_indirect_DP1_wrap",
+      "observed": [
+        [
+          "read",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": true
+    },
+    {
+      "name": "indirect_indexed_DP1_wrap",
+      "observed": [
+        [
+          "read",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": true
+    },
+    {
+      "name": "indirect_indexed_write_DP1_wrap",
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          4
+        ],
+        [
+          "read",
+          243,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          4
+        ],
+        [
+          "read",
+          243,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "total": 11,
+      "expected_total": 11,
+      "exact": true
+    }
+  ],
+  "ELF_sha256": "c514dd8653f93eabcd63042949279775101a1c4464a6d742b7c79159193a1b4b",
+  "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
+  "exact": 25,
+  "open": 0,
+  "actual_linked_JIT_and_cached_replay": true,
+  "full_256_opcode_bus_accuracy_proved": false,
+  "native_performance_claim": false,
+  "commercial_data": false
+}

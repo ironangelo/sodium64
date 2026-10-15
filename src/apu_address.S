@@ -113,9 +113,14 @@ apu_drxr:
 apu_drx:
     // Direct-indexed reads spend one address cycle; pure stores spend that
     // cycle plus one dummy destination-read cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1 // index idle; the destination dummy read is emitted below
+#else
     li t0, 2
     jal jit_charge_cycles
     sub t0, t0, t8
+#endif
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -133,8 +138,10 @@ apu_drx:
     jal emit_op
     or t0, t0, v0
     EMIT_OP ANDI(T0, T0, 0xFF)
+#ifndef SODIUM64_SPC_BUS_CLOCK
     beqz t8, drx_skip
     nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
@@ -154,9 +161,14 @@ apu_dryr:
 apu_dry:
     // Direct-indexed reads spend one address cycle; pure stores spend that
     // cycle plus one dummy destination-read cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#else
     li t0, 2
     jal jit_charge_cycles
     sub t0, t0, t8
+#endif
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -174,8 +186,10 @@ apu_dry:
     jal emit_op
     or t0, t0, v0
     EMIT_OP ANDI(T0, T0, 0xFF)
+#ifndef SODIUM64_SPC_BUS_CLOCK
     beqz t8, dry_skip
     nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
@@ -254,14 +268,23 @@ bxp_skip:
 
 .align 5
 apu_absw: // pure write to aaaa
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    b apu_absa_common
+    li t8, 1
+#else
     // Pure absolute stores dummy-read the destination before writing.
     jal jit_charge_cycles
     li t0, 1
     j apu_absa
     nop
+#endif
 
 .align 5
 apu_absa: // aaaa
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    li t8, 0
+apu_absa_common:
+#endif
     // Get the 16-bit immediate address
     jal jit_read8
     nop
@@ -283,8 +306,22 @@ abs_skip:
     // Emit code to load an absolute address
     li t0, ORI(A0, ZERO, 0)
     or t0, t0, t7
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal emit_op
+    nop
+    beqz t8, abs_clock_done
+    nop
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP OR(A0, ZERO, A0)
+abs_clock_done:
+    jr gp
+    nop
+#else
     j emit_op
     move ra, gp
+#endif
 
 .align 5
 apu_absr: // aaaa
@@ -316,9 +353,14 @@ apu_abxr:
 apu_abx:
     // Absolute-indexed reads spend one index cycle; pure stores also
     // dummy-read the destination.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#else
     li t0, 2
     jal jit_charge_cycles
     sub t0, t0, t8
+#endif
     // Get the 16-bit immediate address
     jal jit_read8
     nop
@@ -335,8 +377,10 @@ apu_abx:
     li t0, ADDI(A0, T9, 0)
     jal emit_op
     or t0, t0, t7
+#ifndef SODIUM64_SPC_BUS_CLOCK
     beqz t8, abx_skip
     nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
@@ -356,9 +400,14 @@ apu_abyr:
 apu_aby:
     // Absolute-indexed reads spend one index cycle; pure stores also
     // dummy-read the destination.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#else
     li t0, 2
     jal jit_charge_cycles
     sub t0, t0, t8
+#endif
     // Get the 16-bit immediate address
     jal jit_read8
     nop
@@ -375,8 +424,10 @@ apu_aby:
     li t0, ADDI(A0, T8, 0)
     jal emit_op
     or t0, t0, t7
+#ifndef SODIUM64_SPC_BUS_CLOCK
     beqz t8, aby_skip
     nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
@@ -396,9 +447,14 @@ apu_idxr:
 apu_idx:
     // [dp+X] spends one index cycle; pure stores also dummy-read the final
     // destination before writing.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#else
     li t0, 2
     jal jit_charge_cycles
     sub t0, t0, t8
+#endif
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -422,6 +478,19 @@ apu_idx:
     la t0, apu_read8
     jal emit_jal
     nop
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_OP OR(S0, ZERO, V0)
+    EMIT_OP ANDI(T0, A0, 0x100)
+    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP ANDI(A0, A0, 0xFF)
+    EMIT_OP OR(A0, A0, T0)
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_OP SLL(V0, V0, 8)
+#else
     EMIT_OP ADDI(A0, A0, 1)
     EMIT_OP SLL(S0, V0, 8)
     la t0, apu_read8
@@ -430,6 +499,7 @@ apu_idx:
     EMIT_OP ADDI(A0, A0, -1)
     beqz t8, idx_skip
     nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
@@ -449,9 +519,17 @@ apu_idyr:
 apu_idy:
     // [dp]+Y spends one index cycle; pure stores also dummy-read the final
     // destination before writing.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    beqz t8, idy_clock_prefix_done
+    nop
+    jal jit_charge_cycles
+    li t0, 1 // read form idles before pointer reads; store form after them
+idy_clock_prefix_done:
+#else
     li t0, 2
     jal jit_charge_cycles
     sub t0, t0, t8
+#endif
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -473,6 +551,25 @@ apu_idy:
     la t0, apu_read8
     jal emit_jal
     nop
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_OP OR(S0, ZERO, V0)
+    EMIT_OP ANDI(T0, A0, 0x100)
+    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP ANDI(A0, A0, 0xFF)
+    EMIT_OP OR(A0, A0, T0)
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_OP SLL(V0, V0, 8)
+    EMIT_OP OR(A0, S0, V0)
+    bnez t8, idy_clock_index_done
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+idy_clock_index_done:
+#else
     EMIT_OP ADDI(A0, A0, 1)
     EMIT_OP SLL(S0, V0, 8)
     la t0, apu_read8
@@ -480,12 +577,15 @@ apu_idy:
     nop
     EMIT_OP ADDI(A0, A0, -1)
     EMIT_OP OR(A0, S0, V0)
+#endif
 
     // Emit code to load a value from an absolute address plus register Y
     EMIT_OP ANDI(T8, T8, 0xFF)
     EMIT_OP ADD(A0, A0, T8)
+#ifndef SODIUM64_SPC_BUS_CLOCK
     beqz t8, idy_skip
     nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
@@ -552,8 +652,12 @@ apu_dr2: // aa,bb
     // Get the two 8-bit immediate addresses
     jal jit_read8
     nop
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    move t7, v0
+#else
     jal jit_read8
     move t7, v0
+#endif
 
     // Update the JIT register state
     jal load_flags
@@ -569,6 +673,12 @@ apu_dr2: // aa,bb
     jal emit_op
     or t0, t0, t7
 
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    // The target operand is fetched after the source bus read, not before it.
+    // This keeps the next fixed prefix in the correct runtime position.
+    jal jit_read8
+    nop
+#endif
     // Emit code to form another zero page address
     li t0, ORI(A0, S0, 0)
     or t0, t0, v0

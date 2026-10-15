@@ -1,0 +1,45 @@
+name: Profiling Memory Owners
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master, integrate/profile-owner-layout]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sodium64-profile-owners-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  owners:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build normal, profile and extended hardware profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/setup_n64_ci.sh
+          make -j$(nproc)
+          make PROFILE=1 BUILD_DIR=build_profile PROJ_NAME=sodium64-profile -j$(nproc)
+          make HW_PROFILE=1 HW_PROFILE_WARMUP=25 BUILD_DIR=build_hw PROJ_NAME=sodium64-hw -j$(nproc)
+      - name: Execute linked boot, ISR, renderer, guard and snapshot contracts
+        run: |
+          python3 scripts/test_profile_report.py
+          python3 scripts/test_hw_profile_report.py
+          python3 scripts/test_profile_owners.py build_profile/sodium64-profile.elf build_hw/sodium64-hw.elf --normal-elf build/sodium64.elf --json-output profile-owner-proof.json
+          python3 scripts/check_rsp_branch_delay_slots.py build_hw/src/rsp_main.elf build_hw/src/rsp_mode7.elf
+          python3 scripts/test_apu_lookup_reset.py build_hw/sodium64-hw.elf
+          python3 scripts/test_dsp_gain_owner.py build_hw/sodium64-hw.elf
+          python3 scripts/test_dsp_brr_accuracy.py build_hw/sodium64-hw.elf
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sodium64-profile-owner-proof
+          retention-days: 14
+          path: |
+            profile-owner-proof.json
+            sodium64-hw.z64
+            build_hw/sodium64-hw.elf
+            build_hw/sodium64-hw.map

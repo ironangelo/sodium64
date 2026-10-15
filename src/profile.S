@@ -14,8 +14,13 @@
 
 #ifdef SODIUM64_HW_PROFILE
 #define HW_PROFILE_MAGIC 0x53363448 /* "S64H" */
-#define HW_PROFILE_VERSION 1
+#define HW_PROFILE_VERSION 2
+#ifndef HW_PROFILE_WARMUP_SECONDS
 #define HW_PROFILE_WARMUP_SECONDS 2
+#endif
+#if HW_PROFILE_WARMUP_SECONDS < 2 || HW_PROFILE_WARMUP_SECONDS > 60
+#error HW_PROFILE_WARMUP_SECONDS must be in 2..60
+#endif
 #define HW_PROFILE_MEASURE_SECONDS 5
 #define HW_PROFILE_HEADER_SIZE 0x80
 #define HW_PROFILE_SNAPSHOT_OFFSET 0x100
@@ -39,23 +44,25 @@
 .globl hw_profile_header_end
 #endif
 
-.data
+// Absolute, never ELF-loaded. 448000..44D000 is disjoint from base4MiB,
+// R61's 400000..4340A0/438000..440000 and USB bench440000..442000 owners.
+// Low/high32-byte guards bound this20KiB profiler lease.
+.equ profile_magic,         0x80448020
+.equ profile_version,       profile_magic + 4
+.equ profile_interval,      profile_magic + 8
+.equ profile_capacity,      profile_magic + 12
+.equ profile_write_ptr,     profile_magic + 16
+.equ profile_sample_count,  profile_magic + 20
+.equ profile_last_epc,      profile_magic + 24
+.equ profile_reserved,      profile_magic + 28
+.equ profile_sample_buffer, profile_magic + 32
+.equ profile_sample_buffer_end, profile_sample_buffer + PROFILE_SAMPLE_CAPACITY * 4
 
-.align 4
-// Header values are intentionally simple so emulator-side tooling can locate and
-// sanity-check a profile snapshot before interpreting the sample ring buffer.
-profile_magic:        .word 0x53363450 // "S64P"
-profile_version:      .word 1
-profile_interval:     .word PROFILE_SAMPLE_INTERVAL
-profile_capacity:     .word PROFILE_SAMPLE_CAPACITY
-profile_write_ptr:    .word profile_sample_buffer
-profile_sample_count: .word 0
-profile_last_epc:     .word 0
-profile_reserved:     .word 0
-
-.align 5
-profile_sample_buffer: .word 0:PROFILE_SAMPLE_CAPACITY
-profile_sample_buffer_end:
+.section .rodata
+.align 3
+profile_header_template:
+    .word 0x53363450,1,PROFILE_SAMPLE_INTERVAL,PROFILE_SAMPLE_CAPACITY
+    .word profile_sample_buffer,0,0,0
 
 #ifdef SODIUM64_HW_PROFILE
 // Real-N64 M0 capture header. The payload written to cart SRAM is:
@@ -63,39 +70,102 @@ profile_sample_buffer_end:
 //   0x0100..       : canonical S64P statistical snapshot
 // All fields are 32-bit big-endian words so the host decoder can also recover
 // flashcart save files that expose N64 words byte-swapped.
-.align 5
-hw_profile_phase:       .byte 0 // 0=warmup, 1=measure, 3=saved/frozen
-hw_profile_second:      .byte 0
-hw_profile_last_native: .byte 0
-hw_profile_pad:         .byte 0
-
-.align 5
-hw_profile_header:
+.equ hw_profile_phase,       0x8044c040 // 0=warmup, 1=measure, 3=saved/frozen
+.equ hw_profile_second,      hw_profile_phase + 1
+.equ hw_profile_last_native, hw_profile_phase + 2
+.equ hw_profile_pad,         hw_profile_phase + 3
+.equ hw_profile_header,      0x8044c060
+.equ hw_profile_header_end,  hw_profile_header + 0x80
+.equ hw_profile_hdr_samples,    hw_profile_header + 16
+.equ hw_profile_hdr_budget,     hw_profile_header + 32
+.equ hw_profile_hdr_skipped,    hw_profile_header + 52
+.equ hw_profile_hdr_apu_clock,  hw_profile_header + 56
+.equ hw_profile_hdr_audio,      hw_profile_header + 60
+.equ hw_profile_hdr_precision,  hw_profile_header + 64
+.equ hw_profile_hdr_frame_count,hw_profile_header + 68
+.equ hw_profile_hdr_sp_status,  hw_profile_header + 72
+.equ hw_profile_hdr_sp_dma_full,hw_profile_header + 76
+.equ hw_profile_hdr_sp_dma_busy,hw_profile_header + 80
+.equ hw_profile_hdr_sp_pc,      hw_profile_header + 84
+.equ hw_profile_hdr_complete,   hw_profile_header + 88
+.equ hw_profile_hdr_guards_ok,  hw_profile_header + 100
+.align 3
+hw_profile_header_template:
     .word HW_PROFILE_MAGIC
     .word HW_PROFILE_VERSION
     .word HW_PROFILE_WARMUP_SECONDS
     .word HW_PROFILE_MEASURE_SECONDS
-hw_profile_hdr_samples:    .word 0
+    .word 0
     .word PROFILE_SAMPLE_INTERVAL
     .word profile_sample_buffer_end - profile_magic
     .word HW_PROFILE_SNAPSHOT_OFFSET
-hw_profile_hdr_budget:     .word 0:5
-hw_profile_hdr_skipped:    .word 0
-hw_profile_hdr_apu_clock:  .word 0
-hw_profile_hdr_audio:      .word 0
-hw_profile_hdr_precision:  .word 0
-hw_profile_hdr_frame_count:.word 0
-hw_profile_hdr_sp_status:  .word 0
-hw_profile_hdr_sp_dma_full:.word 0
-hw_profile_hdr_sp_dma_busy:.word 0
-hw_profile_hdr_sp_pc:      .word 0
-hw_profile_hdr_complete:   .word 0
-    .word 0:9
-hw_profile_header_end:
+    .word 0:5
+    .word 0:10
+    .word 0x00448000,0x0044d000,0 // lease bounds and verified guards
+    .word 0:6
 #endif
 
 .text
 .set noreorder
+
+.globl profile_boot_prepare
+.align 5
+profile_boot_prepare:
+    // Retire cached lines before clearing via KSEG1, including warm reboot.
+    li t0, 0x80448000
+    li t1, 0x8044d000
+1:
+    cache 0x15, (t0)
+    addiu t0, t0, 16
+    bne t0, t1, 1b
+    nop
+    sync
+    li t0, 0xa0448000
+    li t1, 0xa044d000
+2:
+    sd zero, (t0)
+    addiu t0, t0, 8
+    bne t0, t1, 2b
+    nop
+    la t0, profile_header_template
+    li t1, 0xa0448020
+    li t2, 32
+3:
+    ld t3, (t0)
+    sd t3, (t1)
+    addiu t0, t0, 8
+    addiu t1, t1, 8
+    addiu t2, t2, -8
+    bnez t2, 3b
+    nop
+#ifdef SODIUM64_HW_PROFILE
+    la t0, hw_profile_header_template
+    li t1, 0xa044c060
+    li t2, 128
+4:
+    ld t3, (t0)
+    sd t3, (t1)
+    addiu t0, t0, 8
+    addiu t1, t1, 8
+    addiu t2, t2, -8
+    bnez t2, 4b
+    nop
+#endif
+    li t0, 0xa0448000
+    li t1, 0xa044cfe0
+    li t2, 0x50363447 // P64G
+    li t3, 8
+5:
+    sw t2, (t0)
+    sw t2, (t1)
+    addiu t0, t0, 4
+    addiu t1, t1, 4
+    addiu t3, t3, -1
+    bnez t3, 5b
+    nop
+    sync
+    jr ra
+    nop
 
 .align 5
 profile_init:
@@ -111,10 +181,10 @@ profile_init:
 
 #ifdef SODIUM64_HW_PROFILE
     // Hardware M0 measurements start with the Road-to-1.0 settings already in
-    // force before guest execution or APU JIT compilation begins. The defaults
-    // currently match these values except for inherited APU underclocking.
+    // force before guest execution or APU JIT compilation begins.
     li t0, APU_CYCLE
     sb t0, apu_clock
+    sb zero, underclk_set
     sb zero, skipped_set
     li t0, 4
     sb t0, audio_set
@@ -127,6 +197,24 @@ profile_init:
     sb zero, 2(t0)
     la t0, hw_profile_hdr_complete
     sw zero, (t0)
+    // Make a previous terminal capture unparseable before this run starts.
+    sw zero, 0xa8000000
+    sync
+    mfc0 t3, $9
+    li t4, 4687500
+6:
+    lw t0, 0xa4600010
+    andi t0, t0, 3
+    beqz t0, 7f
+    nop
+    mfc0 t0, $9
+    subu t0, t0, t3
+    sltu t0, t0, t4
+    bnez t0, 6b
+    nop
+    b hw_profile_guard_failed
+    nop
+7:
 #endif
 
     // Schedule the first CP0 Compare interrupt. Count increments continuously;
@@ -270,6 +358,25 @@ profile_schedule_next:
 #ifdef SODIUM64_HW_PROFILE
 .align 5
 hw_profile_finalize:
+    // Timing has ended. All normal GPRs can be used by this terminal path.
+    li t0, 0xa0448000
+    li t1, 0xa044cfe0
+    li t2, 0x50363447
+    li t3, 8
+8:
+    lw t4, (t0)
+    bne t4, t2, hw_profile_guard_failed
+    nop
+    lw t4, (t1)
+    bne t4, t2, hw_profile_guard_failed
+    nop
+    addiu t0, t0, 4
+    addiu t1, t1, 4
+    addiu t3, t3, -1
+    bnez t3, 8b
+    nop
+    li t0, 1
+    sw t0, hw_profile_hdr_guards_ok
     // Dynamic measurement metadata.
     la k0, profile_sample_count
     lw k1, (k0)
@@ -396,6 +503,13 @@ hw_profile_red_flush:
 
 hw_profile_done:
     b hw_profile_done
+    nop
+.globl hw_profile_guard_failed
+hw_profile_guard_failed:
+    // Boot invalidated the old SRAM magic. Never publish a completed header
+    // after an owner/PI failure, and never resume the guest from this path.
+    mtc0 zero, $12
+    b hw_profile_guard_failed
     nop
 #endif
 

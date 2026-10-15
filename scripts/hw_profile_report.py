@@ -17,7 +17,7 @@ from pathlib import Path
 
 HW_MAGIC = 0x53363448  # S64H
 PROFILE_MAGIC = 0x53363450  # S64P
-HW_VERSION = 1
+HW_VERSION = 2
 HEADER_WORDS = 32
 HEADER_SIZE = HEADER_WORDS * 4
 MIN_DECISION_SAMPLES = 800
@@ -44,6 +44,9 @@ class HardwareCapture:
     sp_dma_busy: int
     sp_pc_raw: int
     complete: int
+    profile_lease_start: int
+    profile_lease_end: int
+    profile_guards_ok: int
 
     @property
     def sp_pc_meaningful(self) -> bool:
@@ -81,7 +84,7 @@ def normalize_save(blob: bytes) -> tuple[bytes, str]:
     )
 
 
-def parse_capture(blob: bytes, *, strict: bool = True) -> tuple[HardwareCapture, bytes]:
+def parse_capture(blob: bytes, *, strict: bool = True, expected_warmup_seconds: int = 2) -> tuple[HardwareCapture, bytes]:
     blob, capture_format = normalize_save(blob)
     words = struct.unpack_from(">32I", blob, 0)
 
@@ -105,10 +108,16 @@ def parse_capture(blob: bytes, *, strict: bool = True) -> tuple[HardwareCapture,
         sp_dma_busy=words[20],
         sp_pc_raw=words[21],
         complete=words[22],
+        profile_lease_start=words[23],
+        profile_lease_end=words[24],
+        profile_guards_ok=words[25],
     )
 
-    if capture.version != HW_VERSION:
-        raise ValueError(f"unsupported S64H version {capture.version}; expected {HW_VERSION}")
+    if capture.version not in (1, HW_VERSION):
+        raise ValueError(f"unsupported S64H version {capture.version}; expected 1 or {HW_VERSION}")
+    if capture.version == 2 and (capture.profile_lease_start != 0x448000 or
+            capture.profile_lease_end != 0x44d000 or capture.profile_guards_ok != 1):
+        raise ValueError("profiler upper lease/guard receipt invalid")
     if capture.complete != 1:
         raise ValueError("hardware capture is not marked complete; do not interpret a partial save")
     if capture.snapshot_offset < HEADER_SIZE or capture.snapshot_offset % 4:
@@ -126,7 +135,9 @@ def parse_capture(blob: bytes, *, strict: bool = True) -> tuple[HardwareCapture,
         raise ValueError("embedded statistical snapshot does not begin with canonical S64P magic")
 
     if strict:
-        if capture.warmup_seconds != 2 or capture.measure_seconds != 5:
+        if not 2 <= expected_warmup_seconds <= 60:
+            raise ValueError("expected warmup must be in 2..60 seconds")
+        if capture.warmup_seconds != expected_warmup_seconds or capture.measure_seconds != 5:
             raise ValueError(
                 "unexpected M0 timing window: "
                 f"warmup={capture.warmup_seconds}s measure={capture.measure_seconds}s"
@@ -183,6 +194,8 @@ def main() -> int:
         help="write the embedded canonical S64P snapshot to this path",
     )
     parser.add_argument("--json-output", type=Path, help="optional parsed capture JSON")
+    parser.add_argument("--expected-warmup", type=int, default=2,
+                        help="exact predeclared warmup, 2..60 VI seconds (default:2)")
     parser.add_argument(
         "--no-strict",
         action="store_true",
@@ -190,7 +203,8 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    capture, snapshot = parse_capture(args.save.read_bytes(), strict=not args.no_strict)
+    capture, snapshot = parse_capture(args.save.read_bytes(), strict=not args.no_strict,
+                                     expected_warmup_seconds=args.expected_warmup)
     print(render_text(capture), end="")
 
     if args.snapshot_output:

@@ -34,8 +34,19 @@ jobs:
           source scripts/setup_n64_ci.sh
           make -j$(nproc) 2>&1 | tee build.log
 
-      - name: Execute linked regression
-        run: python3 scripts/test_dsp_gain_owner.py build/sodium64.elf
+      - name: Execute available linked CPU regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          checked=0
+          for proof in scripts/test_apu_lookup_reset.py scripts/test_dsp_gain_owner.py scripts/test_dsp_brr_accuracy.py; do
+            if [ -f "$proof" ]; then
+              python3 "$proof" build/sodium64.elf
+              checked=$((checked+1))
+            fi
+          done
+          test "$checked" -gt 0
+          echo "Linked CPU regression suites executed: $checked"
 
       - name: Check RSP branch delay slots
         run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
@@ -75,8 +86,19 @@ jobs:
           source scripts/setup_n64_ci.sh
           make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
 
-      - name: Execute linked regression
-        run: python3 scripts/test_dsp_gain_owner.py build/sodium64.elf
+      - name: Execute available linked CPU regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          checked=0
+          for proof in scripts/test_apu_lookup_reset.py scripts/test_dsp_gain_owner.py scripts/test_dsp_brr_accuracy.py; do
+            if [ -f "$proof" ]; then
+              python3 "$proof" build/sodium64.elf
+              checked=$((checked+1))
+            fi
+          done
+          test "$checked" -gt 0
+          echo "Linked CPU regression suites executed: $checked"
 
       - name: Check profiling RSP branch delay slots
         run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf

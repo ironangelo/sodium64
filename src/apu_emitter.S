@@ -234,7 +234,7 @@ compile_block:
     sw t1, 4(t0)
 
 next_opcode:
-#ifdef SODIUM64_SPC_BUS_CLOCK
+#if defined(SODIUM64_SPC_BUS_CLOCK) && !defined(SODIUM64_SPC_CODE_GUARD_DISABLE)
     // Entry validation already covers the first opcode. Later opcodes must
     // observe producer writes to their source page during this same block.
     beq a0, s0, opcode_guard_done
@@ -242,6 +242,12 @@ next_opcode:
     jal jit_guard_opcode
     nop
 opcode_guard_done:
+#elif defined(SODIUM64_SPC_BUS_CLOCK)
+    // Cost-control build: keep every subsequent CPU/data address identical.
+    nop
+    nop
+    nop
+    nop
 #endif
     // Read an opcode from memory and jump to its functions
     jal jit_read8

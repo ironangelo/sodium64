@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "differing_CPU_text_words": 2,
+  "all_other_allocated_sections_exact": true,
+  "shared_symbol_addresses_exact": 1623,
+  "RSP_banks_allocated_sections_exact": [
+    "rsp_hcomp.elf",
+    "rsp_hcomp_fast.elf",
+    "rsp_hcomp_fixed_window.elf",
+    "rsp_hcomp_math.elf",
+    "rsp_hcomp_rdp.elf",
+    "rsp_hcomp_rdp_fixed.elf",
+    "rsp_hcomp_setup.elf",
+    "rsp_hcomp_tlut.elf",
+    "rsp_main.elf",
+    "rsp_mode7.elf",
+    "rsp_mode7_window.elf",
+    "rsp_object_cache.elf"
+  ],
+  "on_ELF_sha256": "e015c8991e347578ede73ea947b452c08bb448e882c4a10bae9f00e20775e45d",
+  "off_ELF_sha256": "7c4cfc7a5cbf6d662855ef9f22ea2fb82b2472733a80b6a7996628631a9ac888",
+  "section_observer": 0,
+  "native_performance_measured": false,
+  "commercial_data": false
+}

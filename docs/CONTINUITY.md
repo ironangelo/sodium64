@@ -1,3 +1,49 @@
+# 2026-10-15 - R63 lazy guard native result below useful gate; recovery verified
+
+RESUME HERE: docsac44d614192756a7370bb43e0ee6bba5106bcbfe,
+runtime441821b19c4fe17f766b87946f8210256b3c7a93,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63.
+[Lazy guard](SPC_CODE_GUARD_LAZY_R63.md) and curated NATIVE.json.
+Exec25358 terminal exit0; Python PID34444 and COM3 deployer absent verified
+from actual handle and OS inventory. Do not restart that completed pair.
+
+Both installs/readbacks, guest/render600 images and quiet20s captures pass:
+complete32KiB S64D v5, expected precision20/fs0/APU21/audio4/layer0, checksums,
+zero trace overflow. All67200 initial RGB pixels match, even the192 planned
+host-FPS pixels.1051 common complete boundaries, absolute guest603..1653:
+eager19.042996ms mean/18.379115ms median,52.512746 completed Hz;
+lazy18.696323ms mean/18.090517ms median,53.486453 completed Hz.
+Mean reduction0.346673ms/1.820473%, about35.9% of prior observed0.966007ms
+overhead, below the predeclared half-recovery0.483004ms gate. RSP/VI waits also
+change; this is neither exclusive CPU execution time nor presentation FPS.
+One start image/intro pair does not prove later images, complete sound or corpus.
+
+Decision: stop opcode-guard tuning. Preserve mode2 implementation/local proof
+as isolated knowledge; no promotion/integration or further CI for this failed
+performance gate. Eager mode1/default-off/prior artifacts remain preserved.
+Coordinate8/menu/install/readback restored and verified. Raw captures/images/
+game-derived hashes stay private/usb-bench/2026-10-13/
+spc-code-guard-lazy-r63-native-v1/. No native worker remains live.
+
+Next direction: broader runtime fetch/epoch/pre-access/echo dataflow plus an
+early complete resident RSP DSP full-work discriminator. Avoid more isolated
+BRR/Gaussian/guard micro-tuning without a quantitatively different work unit.
+Complete scalar DSP's measured cost and prior thin-transfer rejections remain
+the architectural motivation; no complete resident DSP implementation exists.
+
+User again asks about other N64 hardware: continue the whole-emulator R62
+inventory, not only audio. Fresh source search still finds no emulation FPU
+arithmetic or RSP VRCP/VRSQ use; CPU64-bit loads/stores, TLB, caches, RSP vectors,
+RDP/TMEM and DMA are already active. FPU shares the integer pipeline/datapath
+([MIPS specification](https://ultra64.ca/files/documentation/silicon-graphics/SGI_R4300_RISC_Processor_Specification_REV2.2.pdf),
+A.3.3.1); it is not another independent execution engine.8MiB and small R61
+upper owners are physically proven; wider caches/buffers remain hypotheses.
+No newly identified spare whole processor or resulting speedup is asserted.
+Master unchanged7cc8facf; full DSP/DAC/native60/50/fidelity/corpus goal stays OPEN.
+Earlier implementation/measurement history below.
+
+---
+
 # 2026-10-15 - R63 lazy opcode guard qualified; native pair ready
 
 RESUME HERE: source441821b19c4fe17f766b87946f8210256b3c7a93,

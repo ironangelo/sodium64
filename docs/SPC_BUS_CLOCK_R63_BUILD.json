@@ -5,6 +5,7 @@
     "apu_emitter",
     "apu_address",
     "apu_transfer",
+    "apu_control",
     "apu_alu",
     "dsp"
   ],

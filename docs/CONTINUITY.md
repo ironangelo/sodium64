@@ -1,3 +1,35 @@
+# 2026-10-14 - R63 stack page and control bus sequences repaired
+
+RESUME HERE: sourcedfcd67224194ed789e14117f0ace30ccbc8e7b90,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+Initial real-JIT control audit17/17 open: missing dummy PC reads, misplaced
+CALL/PCALL idles, TCALL/BRK vector reads before pushes and stack-page crossing.
+CALL SP$00 wrote$00FF instead of$01FF; RET/RETI read$0200 instead of$0100,
+giving a wrong return PC. Enabled templates now wrap within page one and use
+the primary bus sequence. RET also needs LA rather than relocatable LI for
+full apu_read8 classification; its old JAL worked but the classifier missed it.
+
+CONTROL_CURRENT passes36 cases/all16 TCALL vectors across four clocks/two JIT
+positions:288 variants,96 actual resets, exact cached replay, PC/A/X/Y/SP/PSW,
+bus order/address/end clock, totals, written bytes and canaries. Two emitted
+mutants rejected. Clock32/address25/word23/KOFF30 still pass on the new ELF;
+default-off allocated sections of six ASM units remain byte-exact R61. New
+artifact build_spc_bus_clock_r63_control/s64-spc-control.elf, bus clock1/KOFF1,
+linked text+data773928 bytes/BSS0. Prior KOFF two-word delta binaries preserved.
+No COM3/CI/native fidelity/DAC/FPS/integration claim for this semantic batch.
+
+Next continue branch/bit and remaining dummy-PC accesses, exact DSP epoch/
+pre-access catch-up and future-code echo/cache/tag integration. Directed
+coverage is not all256-opcode accuracy. Full resident RSP DSP still needs its
+early native full-work discriminator; correctness work is no speed proof.
+The resource question remains whole-emulator scope: FPU/reciprocal units unused,
+CPU/RSP/RDP/DMA/VI/AI active; no newly identified spare large processor. R61's
+physical upper-memory owner/window proof preserved. Last hardware recovery
+coordinate8/menu; no COM3 controller live. Master/prior candidates unchanged.
+Full DSP/DAC/native60/50/corpus/integration remain OPEN. Earlier history below.
+
+---
+
 # 2026-10-14 - R63 KOFF release accumulator corruption repaired
 
 RESUME HERE: source7a83094c914466d45417f214bf210bba5ff5fee4,

@@ -1,0 +1,41 @@
+{
+  "passed": true,
+  "question": "Native eager versus lazy opcode guard; equivalent correctness paths and linked layout.",
+  "pair_instruction_words_different": 1,
+  "only_difference_is_compiler_JAL": true,
+  "all_other_allocated_sections_exact": true,
+  "all_allocated_section_extents_exact": true,
+  "common_symbol_addresses_exact": 1636,
+  "RSP_banks_allocated_sections_exact": [
+    "rsp_hcomp",
+    "rsp_hcomp_fast",
+    "rsp_hcomp_fixed_window",
+    "rsp_hcomp_math",
+    "rsp_hcomp_rdp",
+    "rsp_hcomp_rdp_fixed",
+    "rsp_hcomp_setup",
+    "rsp_hcomp_tlut",
+    "rsp_main",
+    "rsp_mode7",
+    "rsp_mode7_window",
+    "rsp_object_cache"
+  ],
+  "linked_boot_cases": 30,
+  "event_arena_owners": 43,
+  "ROM_cache_slots": 194,
+  "linked_allocated_end": "0xD15C8",
+  "unchanged_event_arena_start": "0xD2000",
+  "gap_bytes": 2616,
+  "full_DSP_backend_active": false,
+  "section_observer_active": false,
+  "native_performance_measured": false,
+  "commercial_data": false,
+  "artifacts": {
+    "eager": {
+      "ELF_sha256": "eb98b6adcb909910882e9431dbe704057ac919fabef1c2ea1f2feb49061623c6"
+    },
+    "lazy": {
+      "ELF_sha256": "1d5300b98ba97b4703c88d3afd2983b6a35db8aac3061f4da54e9c29f07d05a5"
+    }
+  }
+}

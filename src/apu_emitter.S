@@ -239,7 +239,11 @@ next_opcode:
     // observe producer writes to their source page during this same block.
     beq a0, s0, opcode_guard_done
     nop
+#ifdef SODIUM64_SPC_CODE_GUARD_LAZY
+    jal jit_guard_opcode_lazy
+#else
     jal jit_guard_opcode
+#endif
     nop
 opcode_guard_done:
 #elif defined(SODIUM64_SPC_BUS_CLOCK)
@@ -332,6 +336,107 @@ apu_code_changed:
     sh a0, apu_count
     j cpu_execute
     nop
+
+.align 5
+.globl jit_guard_opcode_lazy
+jit_guard_opcode_lazy:
+    // Preserve the ordinary deferred-register/NZ contract on matching tags.
+    // Only the mismatch path receives the compiler's dirty/load/NZ mask.
+    move t8, ra
+    beqz s2, lazy_guard_clock_ready
+    nop
+    lui t1, 0x2273
+    andi s2, s2, 0xFFFF
+    or t1, t1, s2
+    sw t1, (a1)
+    cache 0x10, CACHED(0)(a1)
+    cache 0x11, CACHED(0)(a1)
+    addi a1, a1, 4
+    beq a1, a2, reset_buffer
+    move s2, zero
+lazy_guard_clock_ready:
+    srl t2, a0, 6
+    sll t2, t2, 2
+    la t4, jit_tags
+    addu t4, t4, t2
+    lw t5, (t4)
+    jal full_address
+    li t3, LW(T0, 0, 0)
+    li t0, LUI(T1, 0)
+    srl t1, t5, 16
+    jal emit_op
+    or t0, t0, t1
+    li t0, ORI(T1, T1, 0)
+    andi t1, t5, 0xFFFF
+    jal emit_op
+    or t0, t0, t1
+    EMIT_OP BEQ(T0, T1, 4)
+    li t0, ORI(A0, ZERO, 0)
+    jal emit_op
+    or t0, t0, a0
+    li t0, ORI(A1, ZERO, 0)
+    jal emit_op
+    or t0, t0, s1
+    la t0, apu_code_changed_lazy
+    jal emit_j
+    nop
+    EMIT_OP SLL(ZERO, ZERO, 0)
+    jr t8
+    nop
+
+.align 5
+.globl apu_code_changed_lazy
+apu_code_changed_lazy:
+    // Runtime A1 is compiler metadata, never the guest PSW. Unloaded or clean
+    // registers must retain their architectural memory values.
+    andi t0, a1, FLAG_SA
+    beqz t0, lazy_no_a
+    nop
+    sb t7, apu_accum
+lazy_no_a:
+    andi t0, a1, FLAG_SX
+    beqz t0, lazy_no_x
+    nop
+    sb t9, apu_reg_x
+lazy_no_x:
+    andi t0, a1, FLAG_SY
+    beqz t0, lazy_no_y
+    nop
+    sb t8, apu_reg_y
+lazy_no_y:
+    andi t0, a1, FLAG_SS
+    beqz t0, lazy_no_sp
+    nop
+    sb s2, apu_stack
+lazy_no_sp:
+    andi t0, a1, FLAG_NZ
+    beqz t0, lazy_direct_flags
+    nop
+    andi t0, a1, FLAG_LF
+    bnez t0, lazy_flags_loaded
+    move t1, s1
+    lbu t1, apu_flags
+lazy_flags_loaded:
+    andi t1, t1, 0x7D
+    andi t0, a2, 0x80
+    or t1, t1, t0
+    sltiu t0, a2, 1
+    sll t0, t0, 1
+    or t1, t1, t0
+lazy_nz_store:
+    sb t1, apu_flags
+    b lazy_flags_done
+    nop
+lazy_direct_flags:
+    andi t0, a1, FLAG_SF
+    beqz t0, lazy_flags_done
+    nop
+    sb s1, apu_flags
+lazy_flags_done:
+    sh a0, apu_count
+    j cpu_execute
+    nop
+apu_code_changed_lazy_end:
 #endif
 
 .align 5

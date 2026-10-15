@@ -1,0 +1,956 @@
+{
+  "passed": true,
+  "guard_mode": "lazy",
+  "cases": [
+    {
+      "name": "opcode_redecode",
+      "tag_version": 0,
+      "flags": 32,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 32
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 32
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 0,
+      "flags": 109,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 109
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 109
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 0,
+      "flags": 255,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 125
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 125
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 305419896,
+      "flags": 32,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 32
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 32
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 305419896,
+      "flags": 109,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 109
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 109
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 305419896,
+      "flags": 255,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 125
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 125
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 2147483646,
+      "flags": 32,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 32
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 32
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 2147483646,
+      "flags": 109,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 109
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 109
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 2147483646,
+      "flags": 255,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 125
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 125
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 2147483648,
+      "flags": 32,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 32
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 32
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 2147483648,
+      "flags": 109,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 109
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 109
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 2147483648,
+      "flags": 255,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 125
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 125
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 4294967295,
+      "flags": 32,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 32
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 32
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 4294967295,
+      "flags": 109,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 109
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 109
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "opcode_redecode",
+      "tag_version": 4294967295,
+      "flags": 255,
+      "native_boundaries": [
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 125
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 18,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 5,
+            "apu_reg_y": 6,
+            "apu_stack": 125,
+            "apu_flags": 125
+          }
+        }
+      ],
+      "total": 18,
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "push_trailing_idle",
+      "native_boundaries": [
+        {
+          "PC": 321,
+          "total_cycles": 4,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 126,
+            "apu_flags": 165
+          }
+        },
+        {
+          "PC": 325,
+          "total_cycles": 10,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 126,
+            "apu_flags": 37
+          }
+        }
+      ],
+      "outcome": {
+        "memory": {
+          "0x17f": 17
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 53,
+          "apu_stack": 126,
+          "apu_flags": 37
+        },
+        "PC": 325
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "INC_queued_NZ",
+      "native_boundaries": [
+        {
+          "PC": 322,
+          "total_cycles": 4,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 39
+          }
+        },
+        {
+          "PC": 326,
+          "total_cycles": 10,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 127,
+            "apu_flags": 37
+          }
+        }
+      ],
+      "outcome": {
+        "memory": {
+          "0x17f": 0
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 53,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 326
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "dirty_SP",
+      "native_boundaries": [
+        {
+          "PC": 262,
+          "total_cycles": 10,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 6,
+            "apu_reg_y": 6,
+            "apu_stack": 6,
+            "apu_flags": 32
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 20,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 6,
+            "apu_reg_y": 6,
+            "apu_stack": 4,
+            "apu_flags": 32
+          }
+        }
+      ],
+      "outcome": {
+        "memory": {
+          "0x106": 1,
+          "0xffdc": 0,
+          "0xffdd": 6
+        },
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 6,
+          "apu_reg_y": 6,
+          "apu_stack": 4,
+          "apu_flags": 32
+        },
+        "PC": 1536
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "dirty_Y",
+      "native_boundaries": [
+        {
+          "PC": 263,
+          "total_cycles": 10,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 7,
+            "apu_reg_y": 128,
+            "apu_stack": 127,
+            "apu_flags": 160
+          }
+        },
+        {
+          "PC": 1536,
+          "total_cycles": 20,
+          "registers": {
+            "apu_accum": 0,
+            "apu_reg_x": 7,
+            "apu_reg_y": 128,
+            "apu_stack": 125,
+            "apu_flags": 160
+          }
+        }
+      ],
+      "outcome": {
+        "memory": {
+          "0x107": 0,
+          "0xffdc": 0,
+          "0xffdd": 6
+        },
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 7,
+          "apu_reg_y": 128,
+          "apu_stack": 125,
+          "apu_flags": 160
+        },
+        "PC": 1536
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "queued_NZ_flags_not_loaded",
+      "native_boundaries": [
+        {
+          "PC": 323,
+          "total_cycles": 6,
+          "registers": {
+            "apu_accum": 128,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 126,
+            "apu_flags": 165
+          }
+        },
+        {
+          "PC": 327,
+          "total_cycles": 12,
+          "registers": {
+            "apu_accum": 128,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 126,
+            "apu_flags": 37
+          }
+        }
+      ],
+      "outcome": {
+        "memory": {
+          "0x17f": 128
+        },
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 53,
+          "apu_stack": 126,
+          "apu_flags": 37
+        },
+        "PC": 327
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "queued_NZ_live_carry",
+      "native_boundaries": [
+        {
+          "PC": 323,
+          "total_cycles": 6,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 126,
+            "apu_flags": 39
+          }
+        },
+        {
+          "PC": 327,
+          "total_cycles": 12,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 126,
+            "apu_flags": 37
+          }
+        }
+      ],
+      "outcome": {
+        "memory": {
+          "0x17f": 17
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 53,
+          "apu_stack": 126,
+          "apu_flags": 37
+        },
+        "PC": 327
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "SF_only_CLRC",
+      "synthetic_boundary_tag_publication": true,
+      "native_boundaries": [
+        {
+          "PC": 257,
+          "total_cycles": 2,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 36
+          }
+        },
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 127,
+            "apu_flags": 36
+          }
+        }
+      ],
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "SF_only_SETP",
+      "synthetic_boundary_tag_publication": true,
+      "native_boundaries": [
+        {
+          "PC": 257,
+          "total_cycles": 2,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 32
+          }
+        },
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 127,
+            "apu_flags": 32
+          }
+        }
+      ],
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "SF_only_CLRV",
+      "synthetic_boundary_tag_publication": true,
+      "native_boundaries": [
+        {
+          "PC": 257,
+          "total_cycles": 2,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 183
+          }
+        },
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 127,
+            "apu_flags": 53
+          }
+        }
+      ],
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "no_dirty_registers",
+      "synthetic_boundary_tag_publication": true,
+      "native_boundaries": [
+        {
+          "PC": 257,
+          "total_cycles": 2,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 165
+          }
+        },
+        {
+          "PC": 261,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 127,
+            "apu_flags": 37
+          }
+        }
+      ],
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "POP_A_no_NZ",
+      "synthetic_boundary_tag_publication": true,
+      "native_boundaries": [
+        {
+          "PC": 257,
+          "total_cycles": 4,
+          "registers": {
+            "apu_accum": 128,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 128,
+            "apu_flags": 37
+          }
+        },
+        {
+          "PC": 261,
+          "total_cycles": 10,
+          "registers": {
+            "apu_accum": 128,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 128,
+            "apu_flags": 37
+          }
+        }
+      ],
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "POP_X_no_NZ",
+      "synthetic_boundary_tag_publication": true,
+      "native_boundaries": [
+        {
+          "PC": 257,
+          "total_cycles": 4,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 128,
+            "apu_reg_y": 6,
+            "apu_stack": 128,
+            "apu_flags": 37
+          }
+        },
+        {
+          "PC": 261,
+          "total_cycles": 10,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 128,
+            "apu_reg_y": 53,
+            "apu_stack": 128,
+            "apu_flags": 37
+          }
+        }
+      ],
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "POP_Y_no_NZ",
+      "synthetic_boundary_tag_publication": true,
+      "native_boundaries": [
+        {
+          "PC": 257,
+          "total_cycles": 4,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 128,
+            "apu_stack": 128,
+            "apu_flags": 37
+          }
+        },
+        {
+          "PC": 261,
+          "total_cycles": 10,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 53,
+            "apu_stack": 128,
+            "apu_flags": 37
+          }
+        }
+      ],
+      "tagged_recompile_exact": true
+    }
+  ],
+  "rejected_linked_instruction_mutations": [
+    "omit_guard_prefix",
+    "omit_guard_NZ",
+    "omit_guard_SP_commit"
+  ],
+  "within_instruction_counterexample": {
+    "exact": true,
+    "outcome": {
+      "memory": {
+        "0x102": 255
+      },
+      "registers": {
+        "apu_accum": 17,
+        "apu_reg_x": 4,
+        "apu_reg_y": 6,
+        "apu_stack": 127,
+        "apu_flags": 32
+      },
+      "PC": 258
+    },
+    "total": 7,
+    "expected_PC": 258,
+    "expected_total": 7
+  },
+  "ELF_sha256": "8b2e1743070569a194bda6ba3da231eca342a6ef39d8fe5dc006137266da7c40",
+  "real_native_JIT_and_APU_reentry": true,
+  "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
+  "full_SCPU_scheduler_timing_proved": false,
+  "full_instruction_fetch_coherence_proved": false,
+  "absolute_DSP_epoch_implemented": false,
+  "native_performance_claim": false,
+  "commercial_data": false
+}

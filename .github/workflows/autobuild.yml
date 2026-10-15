@@ -18,4 +18,4 @@ jobs:
       - name: Read Docker failure directly
         run: |
           docker version
-          docker pull ghcr.io/dragonminded/libdragon:latest
+          docker pull ghcr.io/dragonminded/libdragon@sha256:9fe2843c9b7289393c1885be62391140e8b4cdb3edbc715f202dea16f554c5d2

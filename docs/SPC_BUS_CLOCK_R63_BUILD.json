@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "baseline_source": "61505bc6c3a0a40b3c293bde214b0248851c0fb0",
+  "default_off_allocated_sections_byte_exact": [
+    "apu_emitter",
+    "apu_address"
+  ],
+  "native_runtime_or_performance_acceptance": false,
+  "commercial_data": false
+}

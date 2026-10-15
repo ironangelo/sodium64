@@ -70,12 +70,14 @@ apu_dirr:
     li t8, 1
 
 apu_dir:
+#ifndef SODIUM64_SPC_BUS_CLOCK
     // Pure direct stores have one dummy destination-read cycle.
     bnez t8, dir_cycles_done
     nop
     jal jit_charge_cycles
     li t0, 1
 dir_cycles_done:
+#endif
     // Get the 8-bit immediate address
     jal jit_read8
     nop
@@ -87,8 +89,10 @@ dir_cycles_done:
     // Emit code to load a value from a zero page address
     EMIT_OP SLL(A0, S1, 3)
     EMIT_OP ANDI(A0, A0, 0x100)
+#ifndef SODIUM64_SPC_BUS_CLOCK
     beqz t8, dir_skip
     nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop

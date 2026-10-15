@@ -575,6 +575,24 @@ emit_jal: // t0: target
     nop
 
 emit_jal_guest_bus:
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    // Publish the fixed fetch/idle prefix before this guest bus operation.
+    // Keep emit_jal's t0/t1 clobbers: T0 still holds the target. Inline the
+    // ordinary emit_op store/cache/bounds sequence instead of borrowing a
+    // register or Sodium's non-stack SP for a nested compiler call.
+    beqz s2, emit_jal_clock_ready
+    nop
+    lui t1, 0x2273 // ADDI s3,s3,imm
+    andi s2, s2, 0xFFFF
+    or t1, t1, s2
+    sw t1, (a1)
+    cache 0x10, CACHED(0)(a1)
+    cache 0x11, CACHED(0)(a1)
+    addi a1, a1, 4
+    beq a1, a2, reset_buffer
+    move s2, zero
+emit_jal_clock_ready:
+#endif
     lw t1, jit_block_cycles
     addiu t1, t1, 1
     sw t1, jit_block_cycles

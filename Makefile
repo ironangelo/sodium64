@@ -5,6 +5,7 @@ PROJ_NAME := sodium64
 BUILD_DIR := build
 SRC_DIRS := src
 PROFILE ?= 0
+SPC_BUS_CLOCK ?= 0
 HW_PROFILE ?= 0
 COLOR_DIAG ?= 0
 NATIVE_DIAG ?= 0
@@ -409,6 +410,9 @@ N64_AUDIOCONV = $(N64_BINDIR)/audioconv64
 N64_MKSPRITE = $(N64_BINDIR)/mksprite
 
 N64_ASFLAGS = -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
+ifeq ($(SPC_BUS_CLOCK),1)
+N64_ASFLAGS += -DSODIUM64_SPC_BUS_CLOCK=1
+endif
 N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
 ifeq ($(DSP_RSP_BRR_RESIDENT),1)
 N64_RSPASFLAGS += -DSODIUM64_DSP_RSP_BRR_RESIDENT=1

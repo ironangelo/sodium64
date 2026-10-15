@@ -4,6 +4,29 @@ Status: IMPLEMENTED directed native-JIT timing/address correction, default-off.
 This is not a complete256-opcode bus bridge, live full DSP, native speed result
 or integrable candidate. R61's native upper-memory/window proof is preserved.
 
+## Word bus correction
+
+The actual JIT exposed seven word-page failures: MOVW read/write, ADDW/SUBW/
+CMPW and INCW/DECW used0x0200 after0x01FF instead of wrapping to0x0100.
+INCW/DECW also read both bytes before either write. Required order is low read,
+low write, high read, high write. WORD_AUDIT records the original address/order
+failure; its initial SUBW expected-H bit omitted8. Current expectations use
+the primary12-bit no-borrow rule (0x0611-0x1235 ->0xF3DC, PSW0xA8).
+
+Enabled word templates now preserve the direct-page bit when advancing an
+address. INCW/DECW retain a16-bit low adjustment across the low write and high
+read, propagate carry/borrow and publish bytes in the required sequence.
+The shared multi-instruction EMIT_DP_NEXT macro is emitted before a bus JAL,
+never placed in its single-instruction delay slot. No guest cycles are omitted.
+
+WORD_CURRENT passes23 actual-JIT cases: seven operations plus16 increment/
+decrement boundary values. It checks exact bus order/addresses/clocks, data,
+registers/NZH flags, an unchanged0x0200 canary and cold/cached outcomes. Two
+emitted instruction mutations (omit page mask; omit low write) are rejected.
+The preceding32 clock/buffer cases and25 data-address cases remain exact.
+Default-off allocated sections of all four changed ASM units match R61 byte
+for byte. Current artifact text54768/data718296/BSS0, no hardware/CI claim.
+
 ## Address-family correction
 
 The first13-case data-bus audit found nine open cases despite correct aggregate

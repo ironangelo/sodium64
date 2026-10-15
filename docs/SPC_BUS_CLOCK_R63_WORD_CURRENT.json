@@ -1,0 +1,1530 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "name": "MOVW_read",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "total": 9,
+      "outcome": {
+        "memory": {
+          "0x1ff": 53,
+          "0x100": 18,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 53,
+          "apu_reg_x": 4,
+          "apu_reg_y": 18,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {},
+      "expected_registers": {
+        "apu_accum": 53,
+        "apu_reg_y": 18,
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "MOVW_write",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "write",
+          256,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "write",
+          256,
+          5
+        ]
+      ],
+      "total": 9,
+      "outcome": {
+        "memory": {
+          "0x1ff": 17,
+          "0x100": 6,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 17,
+        "0x100": 6
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "ADDW",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "total": 9,
+      "outcome": {
+        "memory": {
+          "0x1ff": 53,
+          "0x100": 18,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 70,
+          "apu_reg_x": 4,
+          "apu_reg_y": 24,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {},
+      "expected_registers": {
+        "apu_accum": 70,
+        "apu_reg_y": 24,
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "SUBW",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "total": 9,
+      "outcome": {
+        "memory": {
+          "0x1ff": 53,
+          "0x100": 18,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 220,
+          "apu_reg_x": 4,
+          "apu_reg_y": 243,
+          "apu_stack": 127,
+          "apu_flags": 168
+        }
+      },
+      "expected_memory": {},
+      "expected_registers": {
+        "apu_accum": 220,
+        "apu_reg_y": 243,
+        "apu_flags": 168
+      }
+    },
+    {
+      "name": "CMPW",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          4
+        ]
+      ],
+      "total": 8,
+      "outcome": {
+        "memory": {
+          "0x1ff": 53,
+          "0x100": 18,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {},
+      "expected_registers": {
+        "apu_accum": 17,
+        "apu_reg_y": 6,
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "INCW_carry_wrap",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 0,
+          "0x100": 0,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 34
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 0,
+        "0x100": 0
+      },
+      "expected_registers": {
+        "apu_flags": 34
+      }
+    },
+    {
+      "name": "DECW_borrow_wrap",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 255,
+          "0x100": 255,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 255,
+        "0x100": 255
+      },
+      "expected_registers": {
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "word_modify_1_0x0",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 1,
+          "0x100": 0,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 1,
+        "0x100": 0
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "word_modify_1_0x1",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 2,
+          "0x100": 0,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 2,
+        "0x100": 0
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "word_modify_1_0xff",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 0,
+          "0x100": 1,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 0,
+        "0x100": 1
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "word_modify_1_0x100",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 1,
+          "0x100": 1,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 1,
+        "0x100": 1
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "word_modify_1_0x7fff",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 0,
+          "0x100": 128,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 0,
+        "0x100": 128
+      },
+      "expected_registers": {
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "word_modify_1_0x8000",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 1,
+          "0x100": 128,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 1,
+        "0x100": 128
+      },
+      "expected_registers": {
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "word_modify_1_0xfffe",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 255,
+          "0x100": 255,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 255,
+        "0x100": 255
+      },
+      "expected_registers": {
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "word_modify_1_0xffff",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 0,
+          "0x100": 0,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 34
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 0,
+        "0x100": 0
+      },
+      "expected_registers": {
+        "apu_flags": 34
+      }
+    },
+    {
+      "name": "word_modify_-1_0x0",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 255,
+          "0x100": 255,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 255,
+        "0x100": 255
+      },
+      "expected_registers": {
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "word_modify_-1_0x1",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 0,
+          "0x100": 0,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 34
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 0,
+        "0x100": 0
+      },
+      "expected_registers": {
+        "apu_flags": 34
+      }
+    },
+    {
+      "name": "word_modify_-1_0xff",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 254,
+          "0x100": 0,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 254,
+        "0x100": 0
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "word_modify_-1_0x100",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 255,
+          "0x100": 0,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 255,
+        "0x100": 0
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "word_modify_-1_0x7fff",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 254,
+          "0x100": 127,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 254,
+        "0x100": 127
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "word_modify_-1_0x8000",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 255,
+          "0x100": 127,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 255,
+        "0x100": 127
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "word_modify_-1_0xfffe",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 253,
+          "0x100": 255,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 253,
+        "0x100": 255
+      },
+      "expected_registers": {
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "word_modify_-1_0xffff",
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 254,
+          "0x100": 255,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 254,
+        "0x100": 255
+      },
+      "expected_registers": {
+        "apu_flags": 160
+      }
+    }
+  ],
+  "rejected_emitted_instruction_mutations": [
+    "omit_page_mask",
+    "omit_low_write"
+  ],
+  "ELF_sha256": "d244171583b65f1f19bb9fecee636045fe25913e707f8387dbd1f52ce2f2fbf4",
+  "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
+  "native_performance_claim": false,
+  "full_256_opcode_bus_accuracy_proved": false,
+  "commercial_data": false
+}

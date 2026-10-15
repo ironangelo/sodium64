@@ -186,10 +186,17 @@ apu_movwya: // MOVW YA,op
 
     // Emit code to move a 16-bit value to register YA
     EMIT_OP OR(T7, ZERO, V0)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_NEXT
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_OP OR(A0, ZERO, A0)
+#else
     EMIT_OP ADDI(A0, A0, 1)
+#endif
     EMIT_OP OR(T8, ZERO, V0)
 
     // Emit code to set flags for the 16-bit value
@@ -280,7 +287,11 @@ apu_movway: // MOVW op,YA
     jal emit_jal
     nop
     EMIT_OP OR(A1, ZERO, T7)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_NEXT
+#else
     EMIT_OP ADDI(A0, A0, 1)
+#endif
     la t0, apu_write8
     jal emit_jal
     nop

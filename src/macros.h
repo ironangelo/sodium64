@@ -57,3 +57,14 @@
     jal emit_op
     ori t0, t0, (\opcode) & 0xFFFF
 .endm
+
+#ifdef SODIUM64_SPC_BUS_CLOCK
+// Emit before a bus JAL, never in its single-instruction delay slot.
+// Advance an8-bit direct-page address, retaining its current P page bit.
+.macro EMIT_DP_NEXT
+    EMIT_OP ANDI(T0, A0, 0x100)
+    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP ANDI(A0, A0, 0xFF)
+    EMIT_OP OR(A0, A0, T0)
+.endm
+#endif

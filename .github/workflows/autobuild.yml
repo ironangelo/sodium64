@@ -19,14 +19,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: latest
-
-      - name: Install libdragon
-        run: npm install -g libdragon
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -39,8 +31,8 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          libdragon init
-          libdragon make -j$(nproc) 2>&1 | tee build.log
+          source scripts/setup_n64_ci.sh
+          make -j$(nproc) 2>&1 | tee build.log
 
       - name: Execute linked regression
         run: python3 scripts/test_dsp_gain_owner.py build/sodium64.elf
@@ -73,14 +65,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: latest
-
-      - name: Install libdragon
-        run: npm install -g libdragon
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -88,8 +72,8 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          libdragon init
-          libdragon make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+          source scripts/setup_n64_ci.sh
+          make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
 
       - name: Execute linked regression
         run: python3 scripts/test_dsp_gain_owner.py build/sodium64.elf

@@ -1,3 +1,48 @@
+# 2026-10-15 - First integrations landed: source SDK and legacy GAIN repair
+
+RESUME HERE: [integration audit](INTEGRATION_AUDIT_2026-10-15.md) and
+[integration receipt](evidence/integration-master-2026-10-15.json). PR24 merged
+as104639bb; PR23 merged as c41631e5f90eb38b47e61d2921b89254fdc240ac.
+All applicable exact pre-merge Build/Ares/CGRAM gates passed. PR21 remains
+draft/unmerged. No experimental renderer, observer or alternate audio mode landed.
+
+The legacy GAIN right accumulator no longer aliases the voice-stride scratch:
+normal/PROFILE2048 handler plus2048 independent scheduled-stereo cases pass.
+Old master fails1792 scheduled cases; repaired master fails0. Exactly six
+instruction words change; all other loaded bytes and layout remain unchanged.
+Pinned SDK recovery runs the unchanged emulator against a verified compiler
+package and fixed libdragon source. CPU/RSP instructions match the local
+reference; one unused empty-TLS alignment metadata byte differs. Failed GHCR
+attempts remain in history, not silently relabelled as passes.
+
+PR22 f0618fef and PR25 19a1fbeb include the integrated GAIN base and have green
+Build/linked positive+mutation gates. Exact-head Ares (both) and APU (PR22) are
+still running. Prior repaired-boot APU run38765609324 executes119 real cases,
+two halted groups/four ticks and cache reuse/tag mutation. The prior failure
+38764141249 was expired boot-asset retrieval before any SPC case; repository
+original gameplay-balanced now boots the same unchanged directed assertions.
+No historical Gothicvania native performance result is substituted by this.
+
+Native capture is active, sole worker/COM3 owner from the integration task.
+Reference7cc8facf balanced and mixed8 each complete five60/60VI windows,
+APU21/fs0/audio4/precision8 and3584/3582 samples. Mixed8 DSP has830/3582 CPU
+samples (23.17%); these capped workloads cannot establish an FPS gain.
+Combined sourcefe5ce0bf with reset+GAIN+BRR is now being captured, not yet
+called integrated or corpus-qualified. All fixtures are original synthetic code.
+
+Recovery correction from the user: Reset leaves a black screen. Both reference
+trials returned to the menu only after physical power off/on. Record this actual
+path rather than claiming Reset-only recovery. No capture/ROM hash or commercial
+payload is published; raw captures and source/build bindings stay local.
+
+Next finish PR22/25 gates and independent merges; finish/bind the combined
+native baseline and restore/read back the known coordinate8/menu installation.
+R44/R45 retain explicit regression/dependency blockers. Only after this base,
+whole resident DSP architectural work including all transport/coexistence costs.
+Earlier checkpoints below are historical evidence, not additional live requests.
+
+---
+
 # 2026-10-15 - Consolidation active: clean-master PR22/23 and CI prerequisite
 
 RESUME HERE: [integration audit](INTEGRATION_AUDIT_2026-10-15.md). Current user

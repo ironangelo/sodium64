@@ -1,0 +1,74 @@
+{
+  "scope": "Integration checkpoint, not Sodium64 1.0 acceptance",
+  "original_master": "7cc8facfe8643fb85888f301f79995575830521d",
+  "current_master": "c41631e5f90eb38b47e61d2921b89254fdc240ac",
+  "integrated": [
+    {
+      "pr": 24,
+      "component": "Pinned source SDK recovery",
+      "head": "afc3135114035f60b9882f0f31f7d28068ee58a9",
+      "merge": "104639bb7f39caa3d4908da803a7ae7ad7821b93",
+      "successful_runs": [
+        38763990140,
+        38763990359,
+        38763990499
+      ]
+    },
+    {
+      "pr": 23,
+      "component": "Legacy DSP GAIN right-accumulator owner repair",
+      "head": "93e0e0afaad470e3c1c2c64c80ce3b6b78bb7220",
+      "merge": "c41631e5f90eb38b47e61d2921b89254fdc240ac",
+      "successful_runs": [
+        38764135169,
+        38764135122,
+        38764135187
+      ],
+      "linked_handler_cases": 2048,
+      "linked_scheduled_stereo_cases": 2048,
+      "old_scheduled_failures": 1792,
+      "corrected_scheduled_failures": 0,
+      "changed_instruction_words": 6,
+      "all_other_loaded_bytes_unchanged": true
+    }
+  ],
+  "pending_ports": [
+    {
+      "pr": 22,
+      "head": "f0618fef3499686e367e5b7c40dd0f2a6647dfc7",
+      "component": "Full APU lookup reset, no live-group cache",
+      "build_run": 38768160265,
+      "build_result": "success",
+      "ares_run": 38768160462,
+      "apu_run": 38768159112,
+      "remaining": "Exact-head Ares/APU completion"
+    },
+    {
+      "pr": 25,
+      "head": "19a1fbebecb93d13a7396c4beb081fad19f90311",
+      "component": "BRR signed arithmetic, ranges and clamp/wrap",
+      "build_run": 38768166170,
+      "build_result": "success",
+      "ares_run": 38768166071,
+      "remaining": "Exact-head Ares completion"
+    }
+  ],
+  "apu_boot_repair": {
+    "previous_failure_run": 38764141249,
+    "failure_stage": "Expired Gothicvania asset, before any SPC case",
+    "repaired_run": 38765609324,
+    "head": "fe56271eeef2ccfc9507ee7ef65b54bf2c85c327",
+    "directed_cases": 119,
+    "passed_cycle_semantic_span_fields": 119,
+    "halt_groups": 2,
+    "ticks_per_halt_group": 2,
+    "covered_tag_recompile": true,
+    "cached_budget_reuse": true,
+    "boot_asset": "Repository-original gameplay-balanced; directed assertions unchanged"
+  },
+  "native": {
+    "status": "Two reference captures complete, combined captures in progress",
+    "recovery": "User observed Reset leaves black screen; power off/on restores menu. This applies to both reference trials.",
+    "claims": "Bounded synthetic workload cadence/profile only; not broad image, PCM, DAC or corpus qualification"
+  }
+}

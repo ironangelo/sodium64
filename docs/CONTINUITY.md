@@ -1,3 +1,35 @@
+# 2026-10-15 - R63 16-bit PC and indirect-pointer wrap repaired
+
+RESUME HERE: sourceb2f293242a62227e27209ee0dfa37513fbe9cb4f,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+Initial13-case wrap audit10 open: BRA/BNE can retain old PC or misencode a
+negative target; compile fetches cross$FFFF into non-SPC data; wrapped operands
+read the wrong byte; CALL source-end tag offset$1000 is outside valid bounds;
+indirect JMP reads its second pointer byte from$10000 instead of$0000.
+Enabled fetch cursor/relative targets/pointer increments now wrap16 bits, and
+completed source-PC wrap ends the block to preserve its source-span bound.
+
+WRAP_CURRENT45 directed cases all pass: flag branches/negative targets,
+BBC/BBS/CBNE/DBNZ, NOP/MOV/CALL/PCALL edges, indirect-pointer wrap, X/Y and
+indirect-Y effective read/write wrap. Bus/total/PC/register/flag/memory, exact
+source-tag offsets and cached replay checked. Three linked/emitted mutants
+rejected. Prior clock32/address25/word23/control288/branch-bit172/implied192/
+KOFF30 plus their existing mutants still pass on new
+build_spc_bus_clock_r63_wrap/s64-spc-wrap.elf, clock1/KOFF1,
+linked text+data774120 bytes/BSS0. Six default-off ASM units allocated sections
+still byte-exact R61. Earlier artifacts/candidates preserved.
+
+Next implement instruction-fetch/pre-access/absolute DSP epoch contract and
+future-code echo/cache/tag behavior. These wrap/access proofs do not make
+compile-time opcode/operand reads coherent with future echo or I/O fetches.
+Full resident RSP DSP still needs its early native full-work cost discriminator;
+do not substitute semantic proof for throughput. No COM3/controller in this
+batch; last physical recovery coordinate8/menu. No broad CI/promotion/native
+speed or complete fidelity claim. Master unchanged; full DSP/DAC/native60/50/
+fidelity/corpus/integration remain OPEN. Earlier history below.
+
+---
+
 # 2026-10-14 - R63 branch/bit/implied and indirect bus corrections
 
 RESUME HERE: sourcef0351f24f8c66e8a394b0b49d4ef105510190226,

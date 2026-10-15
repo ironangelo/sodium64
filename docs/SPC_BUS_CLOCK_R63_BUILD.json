@@ -5,7 +5,8 @@
     "apu_emitter",
     "apu_address",
     "apu_transfer",
-    "apu_alu"
+    "apu_alu",
+    "dsp"
   ],
   "native_runtime_or_performance_acceptance": false,
   "commercial_data": false

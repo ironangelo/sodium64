@@ -1,3 +1,30 @@
+# 2026-10-14 - R63 KOFF release accumulator corruption repaired
+
+RESUME HERE: source7a83094c914466d45417f214bf210bba5ff5fee4,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+Real JIT+KOFF release handler proved A$11 ->$01 after an immediate KOFF$01
+write, corrupting the next stored A. Handler used T7 (live SPC accumulator)
+for its mask. It now uses existing write-handler scratch T4; exactly two text
+words differ, same data/size. Existing DSP_KOFF_RELEASE gate; independent of
+SPC_BUS_CLOCK.30 variants (three A/five masks/immediate+X) previously26 A
+failures; fixed zero with bus-clock both on and off. All8 voice mode/deadline/
+envelope/enabled fields, cycle totals and cached outcomes exact. Six distinct
+linked DSP-write handlers preserve A/X/Y in controls. Five default-off ASM
+units allocated sections still exact R61. See KOFF_* curated source/ELF proof.
+No particular commercial audio symptom or native gameplay/DAC/performance
+acceptance is established by these original numeric counterexamples.
+
+Word proof23 cases/two emitted mutants, clock32/eight resets/two mutants,
+address25 and R61 native upper-memory/snapshot proof preserved. Next continue
+branch/bit/stack/dummy-PC bus order, exact DSP epoch/pre-access/future-code
+echo/cache/tag integration. Full resident RSP DSP needs early native full-work
+discriminator; these semantic repairs are not a throughput substitute. No COM3
+controller/use in this batch; last physical recovery coordinate8/menu. Master/
+prior candidates intact. Full DSP/DAC/native60/50/corpus/integration OPEN.
+Earlier history below.
+
+---
+
 # 2026-10-14 - R63 word-page wrap and byte write order repaired
 
 RESUME HERE: source6b82434e78fcd7c052c9eba3188c867a2d91fa9a on

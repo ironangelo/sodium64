@@ -4,6 +4,29 @@ Status: IMPLEMENTED directed native-JIT timing/address correction, default-off.
 This is not a complete256-opcode bus bridge, live full DSP, native speed result
 or integrable candidate. R61's native upper-memory/window proof is preserved.
 
+## KOFF release guest-register repair
+
+The actual release-enabled binary proved a separate legacy I/O defect. With A
+already live in the JIT, MOV $F3,#$01 targeting KOFF changed A from$11 to$01;
+the following store wrote$01. `write_koff` used T7 for its mask, but T7 holds
+the live SPC accumulator. This is an executed register-corruption case, not a
+claim that a particular commercial audio symptom has been explained.
+
+The release path now uses T4, an existing DSP write-handler scratch register.
+Only two native instruction words change; data/size is identical. No cycle,
+voice-release policy or new state is introduced. This repair is gated by the
+existing DSP_KOFF_RELEASE option and works independently of SPC_BUS_CLOCK.
+
+`test_spc_koff_abi.py` executes30 real-JIT/real-handler variants: three live A
+values, five masks including zero/all/high-bit voices, immediate and X sources.
+The baseline corrupts A in26 cases; fixed binaries have zero failures with bus
+clock both on and off. All8 mode/deadline/envelope fields and enabled bits are
+checked after every case; cycle totals and cached outcomes stay exact. Six
+distinct linked DSP-write handlers also preserve A/X/Y in directed controls.
+COUNTEREXAMPLES/CURRENT/CLOCK_OFF.json pin the actual ELF hashes. Default-off
+allocated sections of all five changed ASM units remain exact source61505bc6.
+No native gameplay/DAC/fidelity or performance acceptance is asserted yet.
+
 ## Word bus correction
 
 The actual JIT exposed seven word-page failures: MOVW read/write, ADDW/SUBW/
@@ -24,7 +47,7 @@ decrement boundary values. It checks exact bus order/addresses/clocks, data,
 registers/NZH flags, an unchanged0x0200 canary and cold/cached outcomes. Two
 emitted instruction mutations (omit page mask; omit low write) are rejected.
 The preceding32 clock/buffer cases and25 data-address cases remain exact.
-Default-off allocated sections of all four changed ASM units match R61 byte
+Default-off allocated sections of all four bus-template ASM units match R61 byte
 for byte. Current artifact text54768/data718296/BSS0, no hardware/CI claim.
 
 ## Address-family correction

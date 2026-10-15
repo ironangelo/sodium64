@@ -34,7 +34,7 @@ layer_set: .byte 0 << 2
 precision_set: .byte 2 << 2
 skipped_set: .byte 0 << 2
 audio_set: .byte 1 << 2
-underclk_set: .byte 1 << 2
+underclk_set: .byte 0 << 2
 left_str: .string "<"
 right_str: .string ">"
 

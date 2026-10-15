@@ -34,6 +34,10 @@ DSP-1 is the only explicit enhancement-chip implementation currently present in 
 
 ## Existing performance/accuracy compromises that must be treated as baseline facts
 
+This list describes the inherited starting point. The full-rate startup/menu
+default is corrected by [the full-rate integration](INTEGRATION_FULL_RATE.md);
+manual underclock runs remain outside Road-to-1.0 performance acceptance.
+
 - Frame skipping is available as a user setting.
 - APU underclock is available and enabled by the current default settings.
 - PPU precision is user-adjustable.

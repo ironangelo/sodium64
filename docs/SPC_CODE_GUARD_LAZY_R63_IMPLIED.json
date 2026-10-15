@@ -1,0 +1,8268 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "name": "NOP",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOP",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOP",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 255
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOP",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOP",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOP",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_X",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 4,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_X",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 4,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_X",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 4,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_X",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 4,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_X",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 4,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_X",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 4,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_A",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 17,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_A",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 128,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_A",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 17,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_A",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 128,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_A",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 17,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_A",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 128,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_Y",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 6,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_Y",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 6,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_Y",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 6,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_Y",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 6,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_Y",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 6,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_A_Y",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 6,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_Y_A",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 17,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_Y_A",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 128,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_Y_A",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 17,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_Y_A",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 128,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_Y_A",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 17,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_Y_A",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 128,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_SP",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 127,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_SP",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 127,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_SP",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 127,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_SP",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 127,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_SP",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 127,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_X_SP",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 127,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_SP_X",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 4,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_SP_X",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 4,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_SP_X",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 4,
+          "apu_flags": 255
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_SP_X",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 4,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_SP_X",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 4,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MOV_SP_X",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 4,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ASL_A",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 34,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ASL_A",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 3
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ASL_A",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 34,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 124
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ASL_A",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 127
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ASL_A",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 34,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 36
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ASL_A",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 39
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "LSR_A",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 8,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 1
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "LSR_A",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 64,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "LSR_A",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 8,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "LSR_A",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 64,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 124
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "LSR_A",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 8,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "LSR_A",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 64,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 36
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROL_A",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 34,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROL_A",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 3
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROL_A",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 35,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 124
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROL_A",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 1,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROL_A",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 35,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 36
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROL_A",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 1,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROR_A",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 8,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 1
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROR_A",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 64,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROR_A",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 136,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROR_A",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 192,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 252
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROR_A",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 136,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "ROR_A",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 192,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 164
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_A",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 16,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_A",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 127,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_A",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 16,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_A",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 127,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_A",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 16,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_A",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 127,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_X",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 3,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_X",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 3,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_X",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 3,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_X",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 3,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_X",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 3,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_X",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 3,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_Y",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 5,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_Y",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 5,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_Y",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 5,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_Y",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 5,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_Y",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 5,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DEC_Y",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 5,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_A",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 18,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_A",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 129,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_A",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 18,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_A",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 129,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_A",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 18,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_A",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 129,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_X",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 5,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_X",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 5,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_X",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 5,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_X",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 5,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_X",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 5,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_X",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 5,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_Y",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 7,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_Y",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 7,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_Y",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 7,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_Y",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 7,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_Y",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 7,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "INC_Y",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 7,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRP",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRP",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRP",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 223
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRP",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 221
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRP",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 5
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRP",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 133
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETP",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETP",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETP",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 255
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETP",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETP",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETP",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "EI",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 4
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "EI",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 132
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "EI",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 255
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "EI",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "EI",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "EI",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DI",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DI",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DI",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 251
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DI",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 249
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DI",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 33
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DI",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 161
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRC",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRC",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRC",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 254
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRC",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 252
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRC",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 36
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRC",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 164
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETC",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 1
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETC",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 129
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETC",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 255
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETC",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETC",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SETC",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOTC",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 1
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOTC",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 129
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOTC",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 254
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOTC",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 252
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOTC",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 36
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "NOTC",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 164
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRV",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRV",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRV",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 183
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRV",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 181
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRV",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 6,
+      "expected_total": 6,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "CLRV",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "XCN",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "XCN",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 11,
+      "expected_total": 11,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 8,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "XCN",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "XCN",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 11,
+      "expected_total": 11,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 8,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "XCN",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "XCN",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 11,
+      "expected_total": 11,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 8,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAA",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAA",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAA",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 119,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAA",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 230,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAA",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 113,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAA",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 224,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAS",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 171,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAS",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 26,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAS",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAS",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAS",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 7,
+      "expected_total": 7,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 11,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DAS",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 122,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MUL",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 13,
+      "expected_total": 13,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 102,
+          "apu_reg_x": 4,
+          "apu_reg_y": 0,
+          "apu_stack": 127,
+          "apu_flags": 2
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MUL",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 15,
+      "expected_total": 15,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 4,
+          "apu_reg_y": 3,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MUL",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 13,
+      "expected_total": 13,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 102,
+          "apu_reg_x": 4,
+          "apu_reg_y": 0,
+          "apu_stack": 127,
+          "apu_flags": 127
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MUL",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 15,
+      "expected_total": 15,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 4,
+          "apu_reg_y": 3,
+          "apu_stack": 127,
+          "apu_flags": 125
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MUL",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 13,
+      "expected_total": 13,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 102,
+          "apu_reg_x": 4,
+          "apu_reg_y": 0,
+          "apu_stack": 127,
+          "apu_flags": 39
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "MUL",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 15,
+      "expected_total": 15,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 0,
+          "apu_reg_x": 4,
+          "apu_reg_y": 3,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DIV",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 16,
+      "expected_total": 16,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 132,
+          "apu_reg_x": 4,
+          "apu_reg_y": 1,
+          "apu_stack": 127,
+          "apu_flags": 200
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DIV",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 18,
+      "expected_total": 18,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 160,
+          "apu_reg_x": 4,
+          "apu_reg_y": 0,
+          "apu_stack": 127,
+          "apu_flags": 200
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DIV",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 16,
+      "expected_total": 16,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 132,
+          "apu_reg_x": 4,
+          "apu_reg_y": 1,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DIV",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 18,
+      "expected_total": 18,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 160,
+          "apu_reg_x": 4,
+          "apu_reg_y": 0,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DIV",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 16,
+      "expected_total": 16,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 132,
+          "apu_reg_x": 4,
+          "apu_reg_y": 1,
+          "apu_stack": 127,
+          "apu_flags": 237
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "DIV",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 18,
+      "expected_total": 18,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 160,
+          "apu_reg_x": 4,
+          "apu_reg_y": 0,
+          "apu_stack": 127,
+          "apu_flags": 237
+        },
+        "PC": 1029,
+        "extra": {
+          "halt": 0
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SLEEP",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 3,
+      "expected_total": 3,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1025,
+        "extra": {
+          "halt": 1
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SLEEP",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 5,
+      "expected_total": 5,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 1
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SLEEP",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 3,
+      "expected_total": 3,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 255
+        },
+        "PC": 1025,
+        "extra": {
+          "halt": 1
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SLEEP",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 5,
+      "expected_total": 5,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 1
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SLEEP",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 3,
+      "expected_total": 3,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1025,
+        "extra": {
+          "halt": 1
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "SLEEP",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 5,
+      "expected_total": 5,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 1
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "STOP",
+      "flags": 0,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 3,
+      "expected_total": 3,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 1025,
+        "extra": {
+          "halt": 2
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "STOP",
+      "flags": 0,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 5,
+      "expected_total": 5,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 128
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 2
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "STOP",
+      "flags": 255,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 3,
+      "expected_total": 3,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 255
+        },
+        "PC": 1025,
+        "extra": {
+          "halt": 2
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "STOP",
+      "flags": 255,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 5,
+      "expected_total": 5,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 253
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 2
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "STOP",
+      "flags": 37,
+      "queued_NZ_prefix": false,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ]
+      ],
+      "total": 3,
+      "expected_total": 3,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 37
+        },
+        "PC": 1025,
+        "extra": {
+          "halt": 2
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    },
+    {
+      "name": "STOP",
+      "flags": 37,
+      "queued_NZ_prefix": true,
+      "exact": true,
+      "observed": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          1025,
+          2
+        ],
+        [
+          "read",
+          1027,
+          4
+        ]
+      ],
+      "total": 5,
+      "expected_total": 5,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 128,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 165
+        },
+        "PC": 1027,
+        "extra": {
+          "halt": 2
+        }
+      },
+      "frozen_outcome_preserved": true,
+      "cached_replay_exact": true
+    }
+  ],
+  "ELF_sha256": "1d5300b98ba97b4703c88d3afd2983b6a35db8aac3061f4da54e9c29f07d05a5",
+  "baseline_ELF_sha256": "a351c204a50c1d8ff38d1f82f84154d454e8738fd3678325f22888ab1d2c8d65",
+  "baseline_outcomes_are_regression_controls_not_exhaustive_semantic_oracle": true,
+  "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
+  "full_256_opcode_bus_accuracy_proved": false,
+  "native_performance_claim": false,
+  "commercial_data": false
+}

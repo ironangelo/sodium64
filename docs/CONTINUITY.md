@@ -1,3 +1,45 @@
+# 2026-10-15 - R63 lazy opcode guard qualified; native pair ready
+
+RESUME HERE: source441821b19c4fe17f766b87946f8210256b3c7a93,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63.
+[Lazy guard](SPC_CODE_GUARD_LAZY_R63.md), companion local reports and PREFLIGHT.
+SPC_BUS_CLOCK1/SPC_CODE_GUARD2 preserves ordinary deferred registers/NZ on
+matching tags. Mismatch metadata commits only dirty bytes and reconstructs
+queued NZ using live flags only when loaded. Fixed debt remains flushed once;
+ordinary JIT/APU re-entry, no new owner/host-SP/second interpreter. Eager mode1
+and default-off remain preserved. Master unchanged.
+
+Both linked native modes pass28 full early/final-state/replay cases and reject
+three debt/NZ/SP mutants. Seven cases use explicitly synthetic source-tag
+publication after SF-only/NOP/POP; no real DSP echo assertion. Lazy also passes
+192 implied/flags/arithmetic controls and six modified-immediate producers plus
+132 normal controls. The DBNZ own-displacement case is exact. Seven default-off
+ASM units remain exact R61. No broad CI or native performance claim yet.
+
+Fresh eager/lazy artifacts differ exactly one compiler JAL word; other allocated
+sections/extents,1636 shared symbol addresses and all12 RSP banks match.
+Both854756B;30 linked boot cases,43 owners/194 ROM slots pass. Allocated end
+D15C8 still leaves2616B below unchanged arenaD2000. Coordinate8 flags, native
+trace/sampler/bus clock/KOFF1, SECTION_OBSERVER0; no full DSP/audio observers.
+
+Private worker native_spc_code_guard_lazy_r63.py and source/artifact/bench/
+recovery-pinned spc-code-guard-lazy-r63-native-plan.json are ready under
+private/usb-bench/2026-10-13/. Unique output spc-code-guard-lazy-r63-native-v1/.
+No worker launched at this checkpoint. Root-only COM3: normal install/readback/
+launch eager then lazy, guest/render600 image, quiet20s capture, matched absolute
+completed boundaries, final coordinate8/menu/install/readback. Record live exec
+handle/PID immediately. Do not repeat old completed native run59854/PID10328.
+
+Gate: recover at least half prior observed0.966007ms overhead (about0.483ms)
+with matching initial game image. If missed, stop guard tuning and advance
+broader fetch/epoch/dataflow and complete resident RSP DSP full-work proof.
+One intro route/image cannot prove full fidelity or presentation FPS. All raw
+commercial/game-derived inputs stay private. Full DSP/DAC/native60/50/corpus/
+integration remain OPEN; whole-emulator FPU/RSP/memory opportunities stay in
+scope. Earlier eager measurement/history below.
+
+---
+
 # 2026-10-15 - R63 physical guard cost measured; recovery verified
 
 RESUME HERE: docsbcea5436dd1d104e34d9391bd4e146995320100a,

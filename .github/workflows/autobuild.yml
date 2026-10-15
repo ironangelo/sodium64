@@ -5,6 +5,9 @@ on:
     branches:
       - '**'
       - '!continuity'
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 concurrency:
@@ -38,6 +41,9 @@ jobs:
           set -o pipefail
           libdragon init
           libdragon make -j$(nproc) 2>&1 | tee build.log
+
+      - name: Execute linked regression
+        run: python3 scripts/test_dsp_gain_owner.py build/sodium64.elf
 
       - name: Check RSP branch delay slots
         run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
@@ -84,6 +90,9 @@ jobs:
           set -o pipefail
           libdragon init
           libdragon make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+
+      - name: Execute linked regression
+        run: python3 scripts/test_dsp_gain_owner.py build/sodium64.elf
 
       - name: Check profiling RSP branch delay slots
         run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf

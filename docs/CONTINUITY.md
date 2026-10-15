@@ -1,3 +1,42 @@
+# 2026-10-15 - Five PRs integrated; native capture and autonomous return pass
+
+Master7c3a7634010e079d0a2cd32e21320e412299e4e9 includes PR24/23/22/25/26.
+PR26 exact587d1ac9 Build38797939600, Ares38797939482 and APU38797939962 pass.
+Fresh combined-master Build38800142106/Ares38800142124/APU38800142085 pass.
+Startup/menu defaults are now APU21/underclock0; only two initialized data bytes
+changed, with every other loaded byte/instruction/extent identical. The older
+four HW_PROFILE controls bind exactly to8da020c3, before that default-byte change.
+[Integration receipt](evidence/integration-master-2026-10-15.json).
+
+PR27 extracts optional retired-frame USB diagnostics on the clean scalar core.
+REMOTE0 loaded bytes and both4KiB RSP banks remain identical. Static end800BE1F0
+stays below original CGRAM800BE200; IPL3-detected8MiB is required before the
+guarded440000..442000 lease. Parser/client/linked owner, GPR64/HI/LO/EPC/Status,
+VI/PI exclusion and negative-mutation gates pass.
+
+First native994b9e49 booted/paused but failed frame/menu RDP idle. Preserved as
+failure. Clean master's HALT does not emit SyncFull. Fix889b7c01 sends only a
+diagnostic SyncFull outside DMEM, waits CURRENT/pipeline/IRQ and restores XBUS/
+previous interrupt. Model35 checks/five mutants and emitted RSP restart proof
+pass. First fixed PC worker queried too early during boot; a fresh session
+verified autonomous menu return. The corrected full physical preflight passes
+pause240, step16, two images,8KiB eight-active-voice ring, resume, autonomous
+menu return and coordinate8 installation/readback with menu recovery0.
+No human reset needed for the fixed bridge. [Receipt](evidence/integration-native-usb-2026-10-15.json).
+
+PR27 is still pending exact-head CI and ongoing matched original-boot commercial
+SMW/ALttP/DKC1 comparison: equal absolute guest/render checkpoints, APU21/fs0,
+quiet20s Count windows without exports/status polling inside them. Original SAVs
+are isolated by paired-menu diagnostic reservations. No commercial bytes, raw
+results or hashes are published. Do not request expired historical Gate-B ROMs
+again. Earlier conversations below are history, not new requests.
+
+Next close these actual PR27/combined-evidence gates, verify restoration, then
+perform the whole-resident-DSP integral architectural cost test. R44/R45 retain
+explicit dependency/regression blockers. No new isolated kernel campaign.
+
+---
+
 # 2026-10-15 - Four PRs integrated and exact-source native controls captured
 
 RESUME HERE: [audit](INTEGRATION_AUDIT_2026-10-15.md), [merge/gate receipt](evidence/integration-master-2026-10-15.json)

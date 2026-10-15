@@ -19,14 +19,6 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: latest
-
-      - name: Install libdragon
-        run: npm install -g libdragon
-
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
@@ -37,8 +29,8 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          libdragon init
-          libdragon make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+          source scripts/setup_n64_ci.sh
+          make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
 
       - name: Record profiling build metrics
         run: |

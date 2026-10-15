@@ -248,14 +248,6 @@ jobs:
       GOTHICVANIA_ROM_SHA256: 5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519
 
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: latest
-
-      - name: Install libdragon
-        run: npm install -g libdragon
-
       - name: Checkout Sodium64
         uses: actions/checkout@v4
 
@@ -266,8 +258,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          libdragon init
-          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
+          source scripts/setup_n64_ci.sh
+          make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
           test -s sodium64.z64
           test -s build/sodium64.elf
           test -s build/sodium64.map

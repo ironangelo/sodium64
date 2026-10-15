@@ -1,0 +1,406 @@
+{
+  "passed": false,
+  "cases": [
+    {
+      "name": "MOVW_read",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          512,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "total": 9,
+      "outcome": {
+        "memory": {
+          "0x1ff": 53,
+          "0x100": 18,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 53,
+          "apu_reg_x": 4,
+          "apu_reg_y": 167,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {},
+      "expected_registers": {
+        "apu_accum": 53,
+        "apu_reg_y": 18,
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "MOVW_write",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "write",
+          512,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "write",
+          256,
+          5
+        ]
+      ],
+      "total": 9,
+      "outcome": {
+        "memory": {
+          "0x1ff": 17,
+          "0x100": 0,
+          "0x200": 6
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 17,
+        "0x100": 6
+      },
+      "expected_registers": {
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "ADDW",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          512,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "total": 9,
+      "outcome": {
+        "memory": {
+          "0x1ff": 53,
+          "0x100": 18,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 70,
+          "apu_reg_x": 4,
+          "apu_reg_y": 173,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {},
+      "expected_registers": {
+        "apu_accum": 70,
+        "apu_reg_y": 24,
+        "apu_flags": 32
+      }
+    },
+    {
+      "name": "SUBW",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          512,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          5
+        ]
+      ],
+      "total": 9,
+      "outcome": {
+        "memory": {
+          "0x1ff": 53,
+          "0x100": 18,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 220,
+          "apu_reg_x": 4,
+          "apu_reg_y": 94,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {},
+      "expected_registers": {
+        "apu_accum": 220,
+        "apu_reg_y": 243,
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "CMPW",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          512,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          256,
+          4
+        ]
+      ],
+      "total": 8,
+      "outcome": {
+        "memory": {
+          "0x1ff": 53,
+          "0x100": 18,
+          "0x200": 167
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        }
+      },
+      "expected_memory": {},
+      "expected_registers": {
+        "apu_accum": 17,
+        "apu_reg_y": 6,
+        "apu_flags": 160
+      }
+    },
+    {
+      "name": "INCW_carry_wrap",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          512,
+          4
+        ],
+        [
+          "write",
+          511,
+          5
+        ],
+        [
+          "write",
+          512,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 0,
+          "0x100": 255,
+          "0x200": 168
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 0,
+        "0x100": 0
+      },
+      "expected_registers": {
+        "apu_flags": 34
+      }
+    },
+    {
+      "name": "DECW_borrow_wrap",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "read",
+          512,
+          4
+        ],
+        [
+          "write",
+          511,
+          5
+        ],
+        [
+          "write",
+          512,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          511,
+          3
+        ],
+        [
+          "write",
+          511,
+          4
+        ],
+        [
+          "read",
+          256,
+          5
+        ],
+        [
+          "write",
+          256,
+          6
+        ]
+      ],
+      "total": 10,
+      "outcome": {
+        "memory": {
+          "0x1ff": 255,
+          "0x100": 0,
+          "0x200": 166
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 160
+        }
+      },
+      "expected_memory": {
+        "0x1ff": 255,
+        "0x100": 255
+      },
+      "expected_registers": {
+        "apu_flags": 160
+      }
+    }
+  ],
+  "ELF_sha256": "c514dd8653f93eabcd63042949279775101a1c4464a6d742b7c79159193a1b4b",
+  "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
+  "native_performance_claim": false,
+  "full_256_opcode_bus_accuracy_proved": false,
+  "commercial_data": false
+}

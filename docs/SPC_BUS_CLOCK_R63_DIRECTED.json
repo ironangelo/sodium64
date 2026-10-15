@@ -15,6 +15,16 @@
       "total_cycles": 7,
       "cached_replay_exact": true,
       "clock": 1,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -43,6 +53,16 @@
       "total_cycles": 7,
       "cached_replay_exact": true,
       "clock": 1,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -71,6 +91,16 @@
       "total_cycles": 7,
       "cached_replay_exact": true,
       "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -99,6 +129,16 @@
       "total_cycles": 7,
       "cached_replay_exact": true,
       "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -127,6 +167,16 @@
       "total_cycles": 7,
       "cached_replay_exact": true,
       "clock": 42,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -155,6 +205,16 @@
       "total_cycles": 7,
       "cached_replay_exact": true,
       "clock": 42,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -183,6 +243,16 @@
       "total_cycles": 7,
       "cached_replay_exact": true,
       "clock": 255,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -211,6 +281,16 @@
       "total_cycles": 7,
       "cached_replay_exact": true,
       "clock": 255,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -239,6 +319,16 @@
       "total_cycles": 11,
       "cached_replay_exact": true,
       "clock": 1,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -267,6 +357,16 @@
       "total_cycles": 11,
       "cached_replay_exact": true,
       "clock": 1,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -295,6 +395,16 @@
       "total_cycles": 11,
       "cached_replay_exact": true,
       "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -323,6 +433,16 @@
       "total_cycles": 11,
       "cached_replay_exact": true,
       "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -351,6 +471,16 @@
       "total_cycles": 11,
       "cached_replay_exact": true,
       "clock": 42,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -379,6 +509,16 @@
       "total_cycles": 11,
       "cached_replay_exact": true,
       "clock": 42,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -407,6 +547,16 @@
       "total_cycles": 11,
       "cached_replay_exact": true,
       "clock": 255,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -435,6 +585,16 @@
       "total_cycles": 11,
       "cached_replay_exact": true,
       "clock": 255,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 85,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -468,6 +628,16 @@
       "total_cycles": 8,
       "cached_replay_exact": true,
       "clock": 1,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -509,6 +679,16 @@
       "total_cycles": 8,
       "cached_replay_exact": true,
       "clock": 1,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801fff94",
       "reset_exercised": false,
@@ -550,6 +730,16 @@
       "total_cycles": 8,
       "cached_replay_exact": true,
       "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -591,6 +781,16 @@
       "total_cycles": 8,
       "cached_replay_exact": true,
       "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801fff94",
       "reset_exercised": false,
@@ -632,6 +832,16 @@
       "total_cycles": 8,
       "cached_replay_exact": true,
       "clock": 42,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -673,6 +883,16 @@
       "total_cycles": 8,
       "cached_replay_exact": true,
       "clock": 42,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801fff94",
       "reset_exercised": false,
@@ -714,6 +934,16 @@
       "total_cycles": 8,
       "cached_replay_exact": true,
       "clock": 255,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -755,6 +985,16 @@
       "total_cycles": 8,
       "cached_replay_exact": true,
       "clock": 255,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801fff94",
       "reset_exercised": false,
@@ -796,6 +1036,16 @@
       "total_cycles": 9,
       "cached_replay_exact": true,
       "clock": 1,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -837,6 +1087,16 @@
       "total_cycles": 9,
       "cached_replay_exact": true,
       "clock": 1,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801fff94",
       "reset_exercised": false,
@@ -878,6 +1138,16 @@
       "total_cycles": 9,
       "cached_replay_exact": true,
       "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -919,6 +1189,16 @@
       "total_cycles": 9,
       "cached_replay_exact": true,
       "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801fff94",
       "reset_exercised": false,
@@ -960,6 +1240,16 @@
       "total_cycles": 9,
       "cached_replay_exact": true,
       "clock": 42,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -1001,6 +1291,16 @@
       "total_cycles": 9,
       "cached_replay_exact": true,
       "clock": 42,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801fff94",
       "reset_exercised": false,
@@ -1042,6 +1342,16 @@
       "total_cycles": 9,
       "cached_replay_exact": true,
       "clock": 255,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -1083,6 +1393,16 @@
       "total_cycles": 9,
       "cached_replay_exact": true,
       "clock": 255,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        }
+      },
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801fff94",
       "reset_exercised": false,

@@ -1,3 +1,27 @@
+# 2026-10-14 - R63 word-page wrap and byte write order repaired
+
+RESUME HERE: source6b82434e78fcd7c052c9eba3188c867a2d91fa9a on
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+MOVW read/write, ADDW/SUBW/CMPW and INCW/DECW incorrectly crossed0x01FF into
+0x0200; enabled templates now wrap to0x0100. INCW/DECW now low-read/low-write/
+high-read/high-write, preserving16-bit carry/borrow.23 word cases check bus,
+data/registers/flags,0x0200 canary and cached outcomes; two emitted mutations
+rejected. Original32clock/buffer and25address cases still PASS. Default-off
+allocated sections of four changed ASM units exactly match R61. Artifact
+build_spc_bus_clock_r63_v1 text54768/data718296/BSS0. No R63 hardware/CI claim.
+
+Next investigate a concrete possible legacy DSP-I/O clobber: KOFF release
+handler uses runtime T7, the SPC accumulator. Use an original numeric snippet
+with A already live, write KOFF through an immediate/non-A source, then observe
+stored A; compile actual DSP_KOFF_RELEASE=1 before asserting a defect. Preserve
+this word checkpoint. Then continue branch/bit/stack/dummy-PC bus cases, DSP
+epoch/pre-access/future-code echo/tag gates and full resident DSP native cost.
+No COM3 controller live; R61 physical owner/snapshot proof closed, recoverymenu
+restored. Master/prior candidates preserved. Full objective remains OPEN.
+Earlier history below.
+
+---
+
 # 2026-10-14 - R63 indexed/indirect data-bus order repaired and proved
 
 RESUME HERE: sourcee899b9f38df51e191c83a98c3bd8e9c7aa7e2d21,

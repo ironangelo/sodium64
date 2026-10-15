@@ -1,3 +1,48 @@
+# 2026-10-15 - Native SMW renderer stall isolated; profiler owner repair prepared
+
+Five clean PRs24/23/22/25/26 remain integrated in master7c3a7634. All applicable
+exact-head gates and latest master Build/Ares/APU passed. PR21 remains unmerged.
+Native commercial SMW at APU21/fs0 exports exact reference/combined images at
+720 and736, but both builds lose progress later. Reference without any image/
+audio export also fails. Human observed frozen graphics, repeated/flickering
+sprites in reference and again in the later independent-profiler run.
+
+The independent route excludes the per-frame USB bridge: clean integrated core
+plus PR28 profiler-owner fix,25 warmup +5 measured60-VI windows. Capture completes
+with intact20KiB-lease guards and3585 decoded samples. Budgets are0/0/0/0/0;
+all3585 CPU samples are in rsp_wait, SP_HALT=0. SP_PC sampled while running is
+not valid evidence of the instruction. This is a failed renderer stability/
+fidelity gate, not a throughput PASS or evidence against the audio corrections.
+Raw ROM/SRAM/images/PCM/registers/hashes remain private. Known coordinate8 was
+restored/read back, paired menu healthy recovery0 after physical power cycle.
+
+PR28 head574e14b4 fixes a newly proven diagnostic defect: old HW_PROFILE static
+end800C02B0 overlaps the fixed CGRAM800BE200 clear. Executing actual linked old
+boot destroys1156 nonzero Mode7 code bytes and395 data bytes. Earlier M1 ordinary
+controls are scoped counts, never Mode7/DSP-1 fidelity. New profile metadata/ring
+is in explicit448000..44D000 storage, disjoint from USB/R61 owners, admitted only
+after exact IPL3-detected8MiB. No upper ELF load; normal loaded image unchanged.
+All four RSP banks survive actual boot clear;27 linked owner/ISR/terminal cases,
+9 reader cases and HW reset/GAIN/57344 BRR cases pass. New v2 capture verifies
+both guards and invalidates old SRAM magic. CI Build/CGRAM/owner gates pass;
+exact Ares still running. Native transport/owner capture passes; SMW itself fails.
+
+PR27 head99008adf retains a bounded existing failure mailbox and passes all
+exact-head CI. Its initial RDP idle failure is repaired by diagnostic SyncFull;
+native original-fixture pause/step/export/resume/menu/readback passes at889b7c01.
+Commercial freeze also occurs without this bridge, so causality is now narrowed
+to the measured renderer path. A fresh original mixed8 preflight with quiet20s
+is running on99008adf to close the long-interval transport gate separately.
+One raw diagnostic read blocked the PC/cart connection; USB reconnect plus N64
+power cycle recovered it. Restoration after reconnect was verified, not assumed.
+
+Next finish only eligible diagnostic integrations, then capture post-HALT RSP
+PC and DMEM/IMEM for this exact SMW stall. Do not infer a running PC or lower APU
+rate to conceal the failure. Commercial baseline and whole-resident-DSP integral
+cost remain open; no isolated kernel/FPU/Expansion Pak campaign is authorized.
+
+---
+
 # 2026-10-15 - Five PRs integrated; native capture and autonomous return pass
 
 Master7c3a7634010e079d0a2cd32e21320e412299e4e9 includes PR24/23/22/25/26.

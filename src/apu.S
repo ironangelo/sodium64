@@ -78,7 +78,7 @@ apu_reg_y: .byte 0
 apu_accum: .byte 0
 apu_stack: .byte 0xFF
 apu_flags: .byte 0
-apu_clock: .byte APU_CYCLE * 2
+apu_clock: .byte APU_CYCLE
 
 .align 4
 read_iomap:

@@ -25,7 +25,11 @@ trace/sampler/bus clock/KOFF1, SECTION_OBSERVER0; no full DSP/audio observers.
 Private worker native_spc_code_guard_lazy_r63.py and source/artifact/bench/
 recovery-pinned spc-code-guard-lazy-r63-native-plan.json are ready under
 private/usb-bench/2026-10-13/. Unique output spc-code-guard-lazy-r63-native-v1/.
-No worker launched at this checkpoint. Root-only COM3: normal install/readback/
+Worker launched: unified exec25358, Python PID34444; both verified live from
+actual handle/OS process inventory after eager install/readback passed.
+Last observed phase eager-installed. Poll that handle or verify the actual PID;
+do not start a duplicate or issue concurrent COM3 requests. Root-only COM3:
+normal install/readback/
 launch eager then lazy, guest/render600 image, quiet20s capture, matched absolute
 completed boundaries, final coordinate8/menu/install/readback. Record live exec
 handle/PID immediately. Do not repeat old completed native run59854/PID10328.

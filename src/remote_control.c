@@ -57,7 +57,7 @@ static int reboot_menu(void) {return remote_host_menu();}
 #define transfer_buffer ((unsigned char *)0x80441420u)
 #define reply ((char *)0x80441620u)
 static volatile uint32_t *const sc=(volatile uint32_t *)0xbfff0000;
-static void transport_failure(unsigned e) {if(!transport_error)transport_error=e;}
+static void transport_failure(unsigned e);
 static unsigned char *uncached(void *p) {return (unsigned char *)((uintptr_t)p|0xa0000000u);}
 static int owner_guards_valid(void) {
     volatile uint32_t *lo=(volatile uint32_t *)0xa0440000u;
@@ -73,6 +73,33 @@ static uint32_t count(void) {
 #define RDP_COUNT() count()
 #define RDP_FENCE() __asm__ volatile("sync":::"memory")
 #include "remote_rdp_barrier.h"
+/* Preserve the existing bridge's out-of-band failure receipt. This writes only
+ * the diagnostic reservation's last64 SRAM bytes, before guest execution or
+ * after a fatal bridge error. No mailbox traffic enters a measured interval.
+ * The menu disables automatic writeback to the user's original save paths.
+ */
+static void mailbox_publish(unsigned phase) {
+    uint32_t saved,masked,start=count(),sum=0;
+    uint32_t words[16]={0x53363452,1,phase,present,transport_error,raw_identifier,
+        remote_render_frames,poll_calls,last_command,last_sc_status,last_data0,
+        RDP_READ(0xa4600010),start,0,0,0};
+    for(unsigned i=0;i<15;i++)sum+=words[i];
+    words[15]=0u-sum;
+    __asm__ volatile("mfc0 %0,$12":"=r"(saved));masked=saved&~1u;
+    __asm__ volatile("mtc0 %0,$12\n nop\n nop"::"r"(masked):"memory");
+    for(unsigned i=0;i<17;i++) {
+        while(RDP_READ(0xa4600010)&3)if((uint32_t)(count()-start)>=REMOTE_COUNT_HZ/200)goto done;
+        if((uint32_t)(count()-start)>=REMOTE_COUNT_HZ/200)goto done;
+        RDP_WRITE(0xa8007f80+(i%16)*4,i?words[i%16]:0);
+        RDP_FENCE(); /* checksum first, signature last */
+    }
+    while(RDP_READ(0xa4600010)&3)if((uint32_t)(count()-start)>=REMOTE_COUNT_HZ/200)break;
+done:
+    __asm__ volatile("mtc0 %0,$12\n nop\n nop"::"r"(saved):"memory");
+}
+static void transport_failure(unsigned e) {
+    if(!transport_error){transport_error=e;mailbox_publish(3);}
+}
 
 static int sc_io(unsigned index,uint32_t *value,int write) {
     uint32_t saved,status,start=count();
@@ -288,19 +315,16 @@ static void cancel_pause_target(void) {
 
 static void status(const char *id) {
     uint32_t now=count();if(now<count_last)count_wraps++;count_last=now;
-    prefix(id,1);append(" mode=emu protocol=1 build=master-usb-bench capabilities=pause,pause-at,step,resume,buttons,release,frame,audio,menu");
+    prefix(id,1);append(" mode=emu protocol=1 build=master-usb-bench");
     field(" count32=",now);field(" count_hz=",REMOTE_COUNT_HZ);field(" count_wraps_observed=",count_wraps);
     field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
     field(" vi=",remote_vi_count);field(" new_presentations=",remote_presentations);field(" paused=",remote_paused);
     field(" apu_clock=",apu_clock);field(" skipped_set=",skipped_set);field(" audio_set=",audio_set);field(" precision_set=",precision_set);
     field(" input_buttons=",remote_buttons);field(" input_remaining=",remote_button_frames);
     field(" pause_pending=",remote_pause_pending);field(" pause_at_render_frame_id=",remote_pause_target);
-    field(" usb_poll_calls=",poll_calls);field(" usb_poll_count_total_mod32=",poll_total);field(" usb_poll_count_max=",poll_max);
+    field(" usb_poll_calls=",poll_calls);field(" usb_poll_count_total_mod32=",poll_total);
     field(" transport_error=",transport_error);field(" menu_error=",menu_error);field(" boot_ram_bytes=",remote_boot_ram_bytes);
-#ifndef REMOTE_CONTROL_HOST
-    field(" dp_status=",RDP_READ(0xa410000c));field(" dp_current=",RDP_READ(0xa4100008));
-#endif
-    append(" metric_provenance=cp0_count,guest_boundary,rsp_retired,vi_irq,vi_origin_publish fps_claim=none");(void)finish();
+    append(" fps_claim=none");(void)finish();
 }
 void remote_process_request(const unsigned char *request,size_t bytes,uint32_t retired_framebuffer) {
     char line[REMOTE_REQUEST_MAX],*tokens[6];unsigned nt=0;
@@ -432,7 +456,7 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" ring_head_bytes=",dsp_pointer);field(" enabled=",enabled);field(" render_frame_id=",remote_render_frames);
         append(" dspregs=");static const char digits[]="0123456789abcdef";
         for(unsigned i=0;i<128;i++){char b[3]={digits[dsp_regs[i]>>4],digits[dsp_regs[i]&15],0};append(b);}
-        append(" provenance=paused_dsp_ring_not_dac no_audio_fidelity_claim=1");(void)finish();return;
+        append(" provenance=not_dac");(void)finish();return;
     }
     if(!eq(verb,"menu")){error(id,"unknown_verb");return;}
     cancel_pause_target();remote_buttons=remote_button_frames=0;remote_paused=1;joyxlh[0]=0;
@@ -448,6 +472,7 @@ void remote_control_init(void) {
 #else
     if(!sc_write(4,0)||!sc_write(4,0x5f554e4c)||!sc_write(4,0x4f434b5f)||!sc_read(3,&raw_identifier))return;
     present=raw_identifier==0x53437632;
+    if(present)mailbox_publish(1);
 #endif
 }
 void remote_control_frame(uint32_t framebuffer) {

@@ -1,7 +1,7 @@
 {
   "scope": "Integration checkpoint, not Sodium64 1.0 acceptance",
   "original_master": "7cc8facfe8643fb85888f301f79995575830521d",
-  "current_master": "8da020c3451cde7bc15483dd54b49f2bb1f77981",
+  "current_master": "7c3a7634010e079d0a2cd32e21320e412299e4e9",
   "integrated": [
     {
       "pr": 24,
@@ -64,15 +64,29 @@
       "synthetic_blocks": 7168,
       "old_incorrect_blocks": 5660,
       "negative_mutations_rejected": 4
-    }
-  ],
-  "pending_ports": [
+    },
     {
       "pr": 26,
       "component": "Full-rate startup/menu defaults",
       "head": "587d1ac9476a1e7991a07181f6fab77d36a949ba",
-      "proof": "Exactly two initialized data bytes change; every other loaded byte/instruction/extent identical.",
-      "remaining": "Exact-head CI/APU gates"
+      "merge": "7c3a7634010e079d0a2cd32e21320e412299e4e9",
+      "successful_runs": [
+        38797939600,
+        38797939482,
+        38797939962
+      ],
+      "changed_initialized_bytes": 2,
+      "all_other_loaded_bytes_instructions_extents_unchanged": true
+    }
+  ],
+  "pending_ports": [
+    {
+      "pr": 27,
+      "component": "Optional native USB retired-frame bench, diagnostic only",
+      "head": "889b7c015c0c23c5b402e0f6d57e60bc5ce8fe14",
+      "remaining": "Exact-head CI and representative commercial comparison; original-guest physical preflight passed",
+      "ordinary_loaded_image_unchanged": true,
+      "rsp_images_unchanged": true
     }
   ],
   "apu_boot_repair": {
@@ -90,9 +104,9 @@
   },
   "native": {
     "evidence": "integration-native-controls-2026-10-15.json",
-    "status": "Four bounded native captures complete; exact final-master empty ROM byte identity verified.",
+    "status": "Four bounded HW_PROFILE controls complete. Their source equals8da020c3; subsequent PR26 changes only two initialized defaults and is separately qualified. Do not claim HW_PROFILE ROM identity to7c3.",
     "commercial_regression": "User authorizes available SMW/ALttP/DKC1 on SummerCart. Original Gate-B inputs unavailable; do not relabel commercial runs as the old Gate-B corpus.",
-    "fidelity_gate": "Extract proven diagnostic capture/return separately for aligned native image/audio/scene comparisons.",
+    "fidelity_gate": "Optional clean-master bridge passes real-N64 pause/step/image/PCM/resume/autonomous-return/install-readback. Matched private SMW/ALttP/DKC1 comparisons now running.",
     "save_isolation": "Paired menu requires diagnostic_saves=1 and diagnostic_continuous=1. cart_load_emulator_path reserves separate paths and loads SRAM without automatic writeback; originals are not selected."
   }
 }

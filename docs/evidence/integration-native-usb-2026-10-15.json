@@ -1,0 +1,46 @@
+{
+  "scope": "Original-guest diagnostic hardware preflight; not game fidelity or performance acceptance",
+  "source": "889b7c015c0c23c5b402e0f6d57e60bc5ce8fe14",
+  "core_master": "7c3a7634010e079d0a2cd32e21320e412299e4e9",
+  "physical_console": true,
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8
+  },
+  "boot_detected_bytes": 8388608,
+  "retired_pause_target": 240,
+  "retired_step": 16,
+  "guest_step": 16,
+  "frame_exports": 2,
+  "pcm_ring_export_bytes": 8192,
+  "active_voices": 8,
+  "resumed": true,
+  "autonomous_menu_return_verified": true,
+  "coordinate8_install_readback_verified": true,
+  "menu_recovery": 0,
+  "failures_retained": [
+    {
+      "source": "994b9e49162b316c992c94bd37dd4dfee5aa8729",
+      "outcome": "Frame export and menu return rejected busy RDP; restored after human power cycle."
+    },
+    {
+      "source": "889b7c015c0c23c5b402e0f6d57e60bc5ce8fe14",
+      "outcome": "First host worker queried hello during bootloader transition; runtime returned to menu. Fresh session verified return and restoration; corrected worker then passed full cycle."
+    }
+  ],
+  "rdp_fix": "Diagnostic out-of-line SyncFull; wait CURRENT/pipeline/IRQ, restore XBUS and preexisting IRQ. No renderer/RSP changes.",
+  "local_gates": {
+    "parser_checks": 52,
+    "malformed_packets": 32000,
+    "client_tests": 17,
+    "linked_owner_abi_cases": 46,
+    "linked_mutations_rejected": 4,
+    "barrier_model_checks": 35,
+    "barrier_mutations_rejected": 5,
+    "rsp_banks_restart_START_END_without_pointer_reads": 2
+  },
+  "commercial_payload": false,
+  "dac_fidelity_claim": false
+}

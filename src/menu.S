@@ -26,6 +26,9 @@
 .globl precision_set
 .globl skipped_set
 .globl audio_set
+#ifdef SODIUM64_REMOTE
+.globl underclk_set
+#endif
 
 .globl update_menu
 
@@ -149,6 +152,20 @@ end_string:
 
 .align 5
 update_menu: // a0: framebuffer
+#ifdef SODIUM64_REMOTE
+    // The previous renderer has naturally halted and this buffer is CPU
+    // owned. Interrupt exclusion precedes use of k0/k1 by the O64 bridge.
+    mfc0 t0, $12
+    li t1, -2
+    and t1, t0, t1
+    mtc0 t1, $12
+    nop
+    nop
+    la k0, remote_saved_status
+    sw t0, (k0)
+    jal remote_frame_bridge
+    nop
+#endif
     // Open the settings menu if start is pressed
     jal get_pressed
     li v1, 0 // Index

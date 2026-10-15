@@ -1,4 +1,5 @@
 # Based on n64.mk from libdragon
+.DEFAULT_GOAL := all
 
 PROJ_NAME := sodium64
 BUILD_DIR := build
@@ -6,6 +7,18 @@ SRC_DIRS := src
 PROFILE ?= 0
 HW_PROFILE ?= 0
 HW_PROFILE_WARMUP ?= 2
+REMOTE ?= 0
+ifeq ($(REMOTE),1)
+ifneq ($(PROFILE)$(HW_PROFILE),00)
+$(error REMOTE is a separate retired-frame bench, not a PROFILE/HW_PROFILE build)
+endif
+ifeq ($(origin PROJ_NAME),file)
+PROJ_NAME := sodium64-usb-bench
+endif
+ifeq ($(origin BUILD_DIR),file)
+BUILD_DIR := build_usb_bench
+endif
+endif
 
 # Real-N64 M0 profiling is a specialization of the statistical PROFILE build.
 ifeq ($(HW_PROFILE),1)
@@ -15,6 +28,9 @@ endif
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
+ifeq ($(REMOTE),1)
+OFILES += $(BUILD_DIR)/src/remote_control_c.o
+endif
 
 N64_ROM_TITLE = "$(PROJ_NAME)"
 N64_ROM_SAVETYPE = sram256k
@@ -52,6 +68,10 @@ N64_MKSPRITE = $(N64_BINDIR)/mksprite
 N64_ASFLAGS = -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
 N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
 N64_LDFLAGS = -L$(N64_LIBDIR) -Tn64.ld --gc-sections
+ifeq ($(REMOTE),1)
+N64_ASFLAGS += -DSODIUM64_REMOTE=1
+N64_LDFLAGS += -Tsrc/usb_bench_memory.ld
+endif
 N64_TOOLFLAGS = --title $(N64_ROM_TITLE)
 N64_ED64ROMCONFIGFLAGS = --savetype $(N64_ROM_SAVETYPE) --regionfree
 
@@ -126,6 +146,10 @@ $(BUILD_DIR)/%.o: %.S
 		echo "    [AS] $<"; \
 		$(CC) -c $(ASFLAGS) -o $@ $<; \
 	fi
+
+$(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h Makefile
+	@mkdir -p $(dir $@)
+	$(N64_CC) -c -Os -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

@@ -1,3 +1,41 @@
+# 2026-10-15 - R63 native guard cost pair prepared; physical discriminator next
+
+RESUME HERE: sourced079407e5162c57e86a3ed992825250b9c11de13,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63.
+[Native cost plan](SPC_CODE_GUARD_R63_NATIVE.md). Guard/default1 retained;
+SPC_CODE_GUARD=0 is a deliberately incorrect cost control. Four compiler NOPs
+preserve placement: exactly two CPU text words differ, all other allocated
+sections/1623 common symbol addresses/all12 RSP banks exact. Both native
+artifacts pass six producer/132 normal controls, opcode exact only when on.
+
+Fresh build_usb_spc_guard_on_r63_v2/off_r63_v2 artifacts s64-spc-gon/goff.z64;
+same coordinate8 render flags, SPC_BUS_CLOCK1/KOFF1, native trace/signal1,
+SECTION_OBSERVER0, no audio observers/live-full-DSP probes. The first section1
+build failed static arena by1480 bytes and was never launched. Section0 fits
+unchanged arena atD15C8..D2000 with2616B gap;43 owners/194 slots and30 linked
+boot cases pass. Same854340B linked code/data/BSS. Seven default-off ASM units
+remain byte-exact R61. Guard/DBNZ semantic checkpoints8f306f99/506b8799 preserved.
+
+Private exact plan and worker are ready at private/usb-bench/2026-10-13/
+spc-code-guard-r63-native-plan.json and native_spc_code_guard_r63.py;
+output spc-code-guard-r63-native-v1/. Worker pins source/artifacts/bench/recovery,
+records its PID, uses root-only COM3, normal install/readback/launch, guest600
+image and quiet20s capture for off/on, validates complete32KiB/settings/no
+overflow, aligns shared absolute completed boundaries and always restores
+coordinate8/menu/readback. Source menu.S draws host-FPS glyphs in [20,23,44,31];
+compare remaining67008 pixels, explicitly excluding192 lab-HUD pixels. This
+does not prove complete visual/audio fidelity or presentation FPS.
+
+No worker has been launched at this checkpoint. Before resuming verify actual
+exec/OS process handles; output/status files alone do not prove a live worker.
+Next execute the prepared bounded physical discriminator, record its handle,
+then interpret/reject/refine guard architecture before expanding more runtime
+fetch work. Full resident RSP DSP still needs early native full-work proof.
+Master unchanged; full DSP/DAC/native60/50/corpus/integration remain OPEN.
+Earlier history below.
+
+---
+
 # 2026-10-15 - R63 DBNZ live displacement repairs within-instruction case
 
 RESUME HERE: source506b87998103c440c7442196bac6e6f0231cbe5e,

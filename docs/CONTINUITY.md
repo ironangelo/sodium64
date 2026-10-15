@@ -26,11 +26,14 @@ coordinate8/menu/readback. Source menu.S draws host-FPS glyphs in [20,23,44,31];
 compare remaining67008 pixels, explicitly excluding192 lab-HUD pixels. This
 does not prove complete visual/audio fidelity or presentation FPS.
 
-No worker has been launched at this checkpoint. Before resuming verify actual
-exec/OS process handles; output/status files alone do not prove a live worker.
-Next execute the prepared bounded physical discriminator, record its handle,
-then interpret/reject/refine guard architecture before expanding more runtime
-fetch work. Full resident RSP DSP still needs early native full-work proof.
+Worker launched: unified exec59854, Python PID10328, both verified live after
+the off-variant install/readback passed. Last observed phase off-installed;
+the guest600 boundary is next. Re-poll the exact handle or verify its actual OS
+process before any continuation; output/status files alone do not prove a live
+worker. Do not start a duplicate or issue concurrent COM3 requests. After terminal
+completion inspect private report/parse data and recovery receipt, then interpret
+or refine guard architecture before more fetch work. Full resident RSP DSP still
+needs early native full-work proof.
 Master unchanged; full DSP/DAC/native60/50/corpus/integration remain OPEN.
 Earlier history below.
 

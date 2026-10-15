@@ -5,7 +5,7 @@ from pathlib import Path
 from test_native_diag_continuous import CPU,signed
 from test_native_diag_arm import load_elf
 
-def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,memory_values=(),flags=0,test_pc=0x200,jit_mutation=None,dsp_address=0x2d,extra_setup=None,extra_outcome=None,stack=0x7f,expect_recompile=False):
+def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,memory_values=(),flags=0,test_pc=0x200,jit_mutation=None,dsp_address=0x2d,extra_setup=None,extra_outcome=None,stack=0x7f,expect_recompile=False,stop_guest_pcs=None):
     cpu=CPU(base.copy());s=symbols;start=1000000;events=[]
     cpu.regs[16]=test_pc;cpu.regs[19]=start;cpu.regs[7]=0
     cpu.write(s['apu_count'],test_pc,2);cpu.write(s['apu_clock'],clock,1)
@@ -31,7 +31,17 @@ def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,mem
             events.append(event)
             c.before_instruction[pc]=observe_callbacks[pc]
         observe_callbacks[pc]=observe;cpu.before_instruction[pc]=observe
-    cpu.execute(s['compile_block'],stop=s['cpu_execute'])
+    def execute(entry):
+        boundaries=[]
+        for block in range(16):
+            cpu.execute(entry,stop=s['cpu_execute'])
+            pc=cpu.read(s['apu_count'],2)
+            boundaries.append(dict(PC=pc,total_cycles=(start-signed(cpu.regs[19],32))//clock,
+                registers={n:cpu.read(s[n],1)for n in ('apu_accum','apu_reg_x','apu_reg_y','apu_stack','apu_flags')}))
+            if stop_guest_pcs is None or pc in stop_guest_pcs:return boundaries
+            entry=s['apu_execute']
+        raise AssertionError(('bounded native JIT continuation did not finish',boundaries))
+    first_boundaries=execute(s['compile_block'])
     total=(start-signed(cpu.regs[19],32))//clock
     pointer=cpu.read(s['jit_lookup']+test_pc*4);first=list(events)
     def outcome():
@@ -41,20 +51,23 @@ def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,mem
         if extra_outcome:result['extra']=extra_outcome(cpu,s)
         return result
     first_outcome=outcome()
+    for i,b in enumerate(code):cpu.write(s['apu_ram']+((test_pc+i)&0xffff),b,1)
     for addr,value in memory_values:cpu.write(s['apu_ram']+addr,value,1)
     cpu.write(s['dsp_regs']+dsp_address,0x55,1)
     for name,value in (('apu_flags',flags),('apu_accum',0x11),('apu_reg_x',4),('apu_reg_y',6),('apu_stack',stack),('apu_halt',0)):
         cpu.write(s[name],value,1)
     if extra_setup:extra_setup(cpu,s)
     cpu.write(s['apu_count'],test_pc,2);cpu.regs[19]=start;cpu.regs[7]=0;events.clear()
-    cpu.execute(s['apu_execute'],stop=s['cpu_execute'])
+    replay_boundaries=execute(s['apu_execute'])
     replay_pointer=cpu.read(s['jit_lookup']+test_pc*4)
     assert (replay_pointer!=pointer) if expect_recompile else (replay_pointer==pointer)
-    assert events==first and (start-signed(cpu.regs[19],32))//clock==total
+    assert events==first and (start-signed(cpu.regs[19],32))//clock==total,('replay bus/cycles mismatch',first,events,total,(start-signed(cpu.regs[19],32))//clock)
+    assert replay_boundaries==first_boundaries,('native boundary replay mismatch',first_boundaries,replay_boundaries)
     assert outcome()==first_outcome,('cached outcome mismatch',first_outcome,outcome())
     assert all(0x1c0000<=(at&0x1fffffff)<0x200000 for op,at in cpu.cache_ops)
     return dict(events=first,total_cycles=total,cached_replay_exact=not expect_recompile,
                 tagged_recompile_exact=expect_recompile,clock=clock,outcome=first_outcome,
+                native_boundaries=first_boundaries,
                 requested_JIT_pointer=hex(jit_pointer),published_header=hex(pointer),
                 reset_exercised=jit_pointer>0xa01c0000 and (pointer&0x1fffffff)<0x1fff80)
 

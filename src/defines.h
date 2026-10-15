@@ -117,6 +117,7 @@
 #define BNE(rt, rs, ofs) (0x14000000 | ((rt) << 16) | ((rs) << 21) | ((ofs) & 0xFFFF))
 #define DIV(rs, rt) (0x0000001A | ((rs) << 21) | ((rt) << 16))
 #define LBU(rt, rb, ofs) (0x90000000 | ((rt) << 16) | ((rb) << 21) | ((ofs) & 0xFFFF))
+#define LW(rt, rb, ofs) (0x8C000000 | ((rt) << 16) | ((rb) << 21) | ((ofs) & 0xFFFF))
 #define LUI(rt, imm) (0x3C000000 | ((rt) << 16) | ((imm) & 0xFFFF))
 #define MFHI(rd) (0x00000010 | ((rd) << 11))
 #define MFLO(rd) (0x00000012 | ((rd) << 11))

@@ -4,6 +4,48 @@ Status: IMPLEMENTED directed native-JIT timing/address correction, default-off.
 This is not a complete256-opcode bus bridge, live full DSP, native speed result
 or integrable candidate. R61's native upper-memory/window proof is preserved.
 
+## Opcode source-tag guard and architectural escape
+
+Enabled next_opcode now guards the current source page's32-bit tag after the
+first instruction. Entry validation still handles the first opcode. The guard
+makes A/X/Y/SP/PSW live, materializes queued NZ and emits any preceding fixed
+debt exactly once. A changed tag escapes through apu_code_changed, committing
+the full guest state and current PC before the next fetch has been consumed.
+The existing apu_execute/JIT compiles or enters the next block normally. No
+second SPC interpreter, borrowed host SP or new writable runtime owner.
+
+The previous opcode case is now repaired: the producer changes MOV into NOP;
+execution returns at$0105 after8 clocks, then re-decodes NOP/TCALL1 and reaches
+$0600 after18 clocks, SP$7D. Expected PSW is$20: MOV X,#5 overwrites the Z flag
+set by the earlier MOV A,#0. The preceding immediate-only evidence remains
+preserved. Six producer/immediate cases and132 ordinary immediate controls
+also pass with the guard; actual multi-block returns and repeat outcomes match.
+
+OPCODE_GUARD_CURRENT passes19 directed cases: five tag versions/three PSWs plus
+trailing-idle, queued-NZ, dirty-SP and dirty-Y returns. It checks full state at
+both scheduler boundaries. Three linked mutations (omit debt prefix, omit NZ,
+omit SP commit) are rejected. The private VM only drives bounded apu_execute
+continuations; it does not establish full SCPU/APU scheduler timing or N64 cost.
+Unsigned tag increments now use ADDIU in the enabled path to avoid a signed
+overflow trap. The repeat harness restores the complete original snippet,
+including bytes overwritten by the guest stack, before its second trial.
+
+Clock32/address25/word23/control288/branch-bit172/implied192/wrap45/KOFF30 and
+their existing mutations pass. Clock buffer resets are now16 and control128
+because the generated blocks are larger. Seven default-off ASM units, adding
+apu itself, remain allocated-section byte-exact source61505bc6. Artifact
+build_spc_bus_clock_r63_guard/s64-spc-guard.elf, clock1/KOFF1,
+linked text+data774472 bytes/BSS0. Guard throughput is unmeasured.
+
+A new real within-instruction counterexample remains OPEN: at PC$0100,
+DBNZ $02,rel with P=1 reads its own$0102 displacement$00, writes$FF there,
+then should fetch$FF and branch to$0102 in7 clocks. The JIT instead uses the
+compiled$00 and reaches$0103 in7 clocks. A next-instruction tag guard cannot
+repair this later operand fetch. Continue runtime relative/address operands;
+DSP pre-access/absolute epoch/echo publication are still unimplemented. The
+full resident RSP DSP still requires an early native full-work discriminator.
+No COM3/native FPS/full fidelity/broad CI/integration acceptance for this batch.
+
 ## First live operand-fetch correction
 
 FETCH_AUDIT uses real guest writes, not simulated DSP echo. An original SPC

@@ -62,6 +62,9 @@ def main():
             end=(c.read(s['jit_pointer'])-0x20000000)&0xffffffff
             wanted=0x34040401 if kind=='wrong_dummy_PC' else 0x00882025 # ORI A0,0,$401 / OR A0,A0,T0
             matches=[at for at in range(begin,end,4)if c.read(at)==wanted]
+            if kind=='wrong_dummy_PC':
+                read_call=0x0c000000|((s['apu_read8']>>2)&0x3ffffff)
+                matches=[at for at in matches if c.read(at-4)==read_call]
             assert len(matches)==1,(kind,matches)
             c.write(matches[0],0x34040402 if kind=='wrong_dummy_PC' else 0)
         for kind,code,sp,values in (

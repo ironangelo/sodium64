@@ -27,6 +27,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 7,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -67,6 +80,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 7,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -107,6 +133,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 7,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -147,6 +186,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 7,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -187,6 +239,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 7,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -227,6 +292,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 7,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -267,6 +345,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 7,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -307,6 +398,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 7,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -347,6 +451,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 11,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -387,6 +504,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 11,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -427,6 +557,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 11,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -467,6 +610,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 11,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -507,6 +663,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 11,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -547,6 +716,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 11,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -587,6 +769,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 11,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -627,6 +822,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 11,
+          "registers": {
+            "apu_accum": 85,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
       "published_header": "0x801c0014",
       "reset_exercised": true,
@@ -672,6 +880,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -725,8 +946,87 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
-      "published_header": "0x801fff94",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 63,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 84,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
+      "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 512
+      },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
       "reset_exercised": false,
       "name": "mov_dp_a",
       "expected_bus_end_cycles": [
@@ -778,62 +1078,22 @@
         },
         "PC": 512
       },
-      "requested_JIT_pointer": "0xa01c0000",
-      "published_header": "0x801c0014",
-      "reset_exercised": false,
-      "name": "mov_dp_a",
-      "expected_bus_end_cycles": [
-        [
-          "read",
-          3
-        ],
-        [
-          "write",
-          4
-        ]
-      ],
-      "observed_bus_end_cycles": [
-        [
-          "read",
-          3
-        ],
-        [
-          "write",
-          4
-        ]
-      ]
-    },
-    {
-      "events": [
+      "native_boundaries": [
         {
-          "kind": "read",
-          "elapsed_master_cycles": 63,
-          "data": null
-        },
-        {
-          "kind": "write",
-          "elapsed_master_cycles": 84,
-          "data": 17
+          "PC": 512,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
         }
       ],
-      "total_cycles": 8,
-      "cached_replay_exact": true,
-      "tagged_recompile_exact": false,
-      "clock": 21,
-      "outcome": {
-        "memory": {},
-        "registers": {
-          "apu_accum": 17,
-          "apu_reg_x": 4,
-          "apu_reg_y": 6,
-          "apu_stack": 127,
-          "apu_flags": 0
-        },
-        "PC": 512
-      },
       "requested_JIT_pointer": "0xa01fff80",
-      "published_header": "0x801fff94",
-      "reset_exercised": false,
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
       "name": "mov_dp_a",
       "expected_bus_end_cycles": [
         [
@@ -884,6 +1144,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -937,9 +1210,22 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
-      "published_header": "0x801fff94",
-      "reset_exercised": false,
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
       "name": "mov_dp_a",
       "expected_bus_end_cycles": [
         [
@@ -990,6 +1276,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -1043,9 +1342,22 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 8,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
-      "published_header": "0x801fff94",
-      "reset_exercised": false,
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
       "name": "mov_dp_a",
       "expected_bus_end_cycles": [
         [
@@ -1096,6 +1408,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 9,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -1149,8 +1474,87 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 9,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
-      "published_header": "0x801fff94",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 84,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 105,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
+      "clock": 21,
+      "outcome": {
+        "memory": {},
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 4,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 0
+        },
+        "PC": 512
+      },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 9,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
       "reset_exercised": false,
       "name": "mov_dp_imm",
       "expected_bus_end_cycles": [
@@ -1202,62 +1606,22 @@
         },
         "PC": 512
       },
-      "requested_JIT_pointer": "0xa01c0000",
-      "published_header": "0x801c0014",
-      "reset_exercised": false,
-      "name": "mov_dp_imm",
-      "expected_bus_end_cycles": [
-        [
-          "read",
-          4
-        ],
-        [
-          "write",
-          5
-        ]
-      ],
-      "observed_bus_end_cycles": [
-        [
-          "read",
-          4
-        ],
-        [
-          "write",
-          5
-        ]
-      ]
-    },
-    {
-      "events": [
+      "native_boundaries": [
         {
-          "kind": "read",
-          "elapsed_master_cycles": 84,
-          "data": null
-        },
-        {
-          "kind": "write",
-          "elapsed_master_cycles": 105,
-          "data": 51
+          "PC": 512,
+          "total_cycles": 9,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
         }
       ],
-      "total_cycles": 9,
-      "cached_replay_exact": true,
-      "tagged_recompile_exact": false,
-      "clock": 21,
-      "outcome": {
-        "memory": {},
-        "registers": {
-          "apu_accum": 17,
-          "apu_reg_x": 4,
-          "apu_reg_y": 6,
-          "apu_stack": 127,
-          "apu_flags": 0
-        },
-        "PC": 512
-      },
       "requested_JIT_pointer": "0xa01fff80",
-      "published_header": "0x801fff94",
-      "reset_exercised": false,
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
       "name": "mov_dp_imm",
       "expected_bus_end_cycles": [
         [
@@ -1308,6 +1672,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 9,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -1361,9 +1738,22 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 9,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
-      "published_header": "0x801fff94",
-      "reset_exercised": false,
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
       "name": "mov_dp_imm",
       "expected_bus_end_cycles": [
         [
@@ -1414,6 +1804,19 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 9,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01c0000",
       "published_header": "0x801c0014",
       "reset_exercised": false,
@@ -1467,9 +1870,22 @@
         },
         "PC": 512
       },
+      "native_boundaries": [
+        {
+          "PC": 512,
+          "total_cycles": 9,
+          "registers": {
+            "apu_accum": 17,
+            "apu_reg_x": 4,
+            "apu_reg_y": 6,
+            "apu_stack": 127,
+            "apu_flags": 0
+          }
+        }
+      ],
       "requested_JIT_pointer": "0xa01fff80",
-      "published_header": "0x801fff94",
-      "reset_exercised": false,
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
       "name": "mov_dp_imm",
       "expected_bus_end_cycles": [
         [

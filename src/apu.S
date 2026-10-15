@@ -182,7 +182,11 @@ apu_write8: // a0: address, a1: value
     srl t0, a0, 6
     sll t0, t0, 2
     lw t1, jit_tags(t0)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    addiu t1, t1, 1 // Unsigned version counter must wrap without a signed trap.
+#else
     addi t1, t1, 1
+#endif
     sw t1, jit_tags(t0)
 
     // Check if the address is an I/O port and decrease the cycle count

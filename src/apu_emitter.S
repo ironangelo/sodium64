@@ -234,6 +234,15 @@ compile_block:
     sw t1, 4(t0)
 
 next_opcode:
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    // Entry validation already covers the first opcode. Later opcodes must
+    // observe producer writes to their source page during this same block.
+    beq a0, s0, opcode_guard_done
+    nop
+    jal jit_guard_opcode
+    nop
+opcode_guard_done:
+#endif
     // Read an opcode from memory and jump to its functions
     jal jit_read8
     nop
@@ -242,6 +251,82 @@ next_opcode:
     lw gp, jit_opcodes + 4(v1)
     jr t1
     nop
+
+#ifdef SODIUM64_SPC_BUS_CLOCK
+.align 5
+.globl jit_guard_opcode
+jit_guard_opcode:
+    // These compiler helpers preserve T8; use it for our return address.
+    // The runtime escape stores all guest registers, so first make each live
+    // and materialize any queued NZ result at this instruction boundary.
+    move t8, ra
+    jal load_reg_x
+    nop
+    jal load_reg_y
+    nop
+    jal load_accum
+    nop
+    jal load_stack
+    nop
+    jal load_flags
+    nop
+    jal update_nz
+    nop
+
+    // Publish only the preceding instruction's outstanding fixed debt. This
+    // tag check is not a guest access and must not consume the next fetch.
+    beqz s2, guard_clock_ready
+    nop
+    lui t1, 0x2273 // ADDI s3,s3,imm
+    andi s2, s2, 0xFFFF
+    or t1, t1, s2
+    sw t1, (a1)
+    cache 0x10, CACHED(0)(a1)
+    cache 0x11, CACHED(0)(a1)
+    addi a1, a1, 4
+    beq a1, a2, reset_buffer
+    move s2, zero
+guard_clock_ready:
+    srl t2, a0, 6
+    sll t2, t2, 2
+    la t4, jit_tags
+    addu t4, t4, t2
+    lw t5, (t4) // Compile-time version; full_address preserves T5.
+    jal full_address
+    li t3, LW(T0, 0, 0)
+    li t0, LUI(T1, 0)
+    srl t1, t5, 16
+    jal emit_op
+    or t0, t0, t1
+    li t0, ORI(T1, T1, 0)
+    andi t1, t5, 0xFFFF
+    jal emit_op
+    or t0, t0, t1
+    EMIT_OP BEQ(T0, T1, 3)
+    li t0, ORI(A0, ZERO, 0)
+    jal emit_op
+    or t0, t0, a0 // Delay slot: PC to commit only on the escape path.
+    la t0, apu_code_changed
+    jal emit_j
+    nop
+    EMIT_OP SLL(ZERO, ZERO, 0)
+    jr t8
+    nop
+
+.align 5
+.globl apu_code_changed
+apu_code_changed:
+    // No fetch was consumed. Re-enter the existing scheduler/JIT at A0 after
+    // committing the complete live guest state, without borrowing host SP.
+    sb t7, apu_accum
+    sb t9, apu_reg_x
+    sb t8, apu_reg_y
+    sb s2, apu_stack
+    sb s1, apu_flags
+    sh a0, apu_count
+    j cpu_execute
+    nop
+#endif
 
 .align 5
 finish_opcode:

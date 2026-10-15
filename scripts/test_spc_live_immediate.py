@@ -12,6 +12,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('elf',type=Path)
     parser.add_argument('--require-immediates',action='store_true')
+    parser.add_argument('--require-opcode-guard',action='store_true')
     parser.add_argument('--baseline',type=Path)
     parser.add_argument('--output',type=Path)
     args=parser.parse_args();base,symbols=load_elf(args.elf);results=[]
@@ -25,7 +26,7 @@ def main():
         ('CMP_A',0x68,dict(apu_flags=0x23))):
         code=bytes.fromhex('e835cd06c6')+bytes((opcode,0x11,0x2f,0))
         result=run(base,symbols,code,test_pc=0x100,observe_data=True,flags=0x20,
-            memory_values=((0x106,0x11),),expect_recompile=True)
+            memory_values=((0x106,0x11),),expect_recompile=True,stop_guest_pcs=(0x109,))
         expected_registers=dict(apu_accum=0x35,apu_reg_x=6,apu_reg_y=6,apu_stack=0x7f,apu_flags=0x20)
         expected_registers.update(changed)
         events=[(event['kind'],event['address'],event['elapsed_master_cycles']//21)for event in result['events']]
@@ -33,15 +34,23 @@ def main():
             and result['outcome']['memory']['0x106']==0x35 and result['outcome']['registers']==expected_registers)
         item=dict(name=name,exact=exact,observed=events,expected=expected_events,
             total=result['total_cycles'],expected_total=14,outcome=result['outcome'],
-            expected_registers=expected_registers,tagged_recompile_exact=result['tagged_recompile_exact'])
+            expected_registers=expected_registers,tagged_recompile_exact=result['tagged_recompile_exact'],
+            native_boundaries=result['native_boundaries'])
         results.append(item)
         print(name+(' EXACT' if exact else ' OPEN '+json.dumps(item)))
         if args.require_immediates:assert exact,item
-    # Deliberate remaining limit: the producer changes a future opcode into NOP,
-    # then the following byte is TCALL1. Operand reads alone cannot re-decode it.
+        if args.require_opcode_guard:
+            assert len(result['native_boundaries'])==2,item
+            assert result['native_boundaries'][0]==dict(PC=0x105,total_cycles=8,
+                registers=dict(apu_accum=0x35,apu_reg_x=6,apu_reg_y=6,apu_stack=0x7f,apu_flags=0x20)),item
+    # A producer changes the future opcode into NOP, followed by TCALL1.
+    # Operand reads alone fail; the optional opcode guard must re-decode it.
     result=run(base,symbols,bytes.fromhex('e800cd05c6e8112f00'),test_pc=0x100,
-        observe_data=True,flags=0x20,memory_values=((0x105,0xe8),(0xffdc,0),(0xffdd,6)),expect_recompile=True)
-    opcode_exact=result['outcome']['PC']==0x600 and result['total_cycles']==18 and result['outcome']['registers']['apu_stack']==0x7d
+        observe_data=True,flags=0x20,memory_values=((0x105,0xe8),(0xffdc,0),(0xffdd,6)),
+        expect_recompile=True,stop_guest_pcs=(0x109,0x600))
+    opcode_registers=dict(apu_accum=0,apu_reg_x=5,apu_reg_y=6,apu_stack=0x7d,apu_flags=0x20)
+    opcode_exact=(result['outcome']['PC']==0x600 and result['total_cycles']==18
+        and result['outcome']['registers']==opcode_registers)
     steady=[]
     if baseline:
         for opcode in (0x08,0x28,0x48,0x68,0x88,0xa8,0xc8,0xe8,0xcd,0x8d,0xad):
@@ -62,12 +71,17 @@ def main():
         baseline_outcomes_are_regression_controls_not_exhaustive_semantic_oracle=True,
         baseline_ELF_sha256=hashlib.sha256(args.baseline.read_bytes()).hexdigest() if args.baseline else None,
         opcode_counterexample=dict(exact=opcode_exact,outcome=result['outcome'],total=result['total_cycles'],
-            expected_PC=0x600,expected_total=18,expected_stack=0x7d),
+            expected_PC=0x600,expected_total=18,expected_registers=opcode_registers,
+            native_boundaries=result['native_boundaries']),
         ELF_sha256=hashlib.sha256(args.elf.read_bytes()).hexdigest(),
         real_guest_write_and_real_native_JIT=True,simulated_DSP_echo=False,
         absolute_epoch_implemented=False,full_instruction_fetch_coherence_proved=False,
         native_performance_claim=False,commercial_data=False)
-    if args.require_immediates:assert not opcode_exact,'Opcode guard changed; requalify this directed limit'
+    if args.require_opcode_guard:
+        assert opcode_exact,proof['opcode_counterexample']
+        assert result['native_boundaries'][0]==dict(PC=0x105,total_cycles=8,
+            registers=dict(apu_accum=0,apu_reg_x=5,apu_reg_y=6,apu_stack=0x7f,apu_flags=0x20)),proof['opcode_counterexample']
+    elif args.require_immediates:assert not opcode_exact,'Opcode guard changed; requalify this directed limit'
     print('SPC_LIVE_IMMEDIATE producer_cases='+str(len(results))+' steady_cases='+str(len(steady))+' opcode_guard='+str(opcode_exact))
     if args.output:args.output.write_text(json.dumps(proof,indent=2)+'\n')
 

@@ -1,3 +1,32 @@
+# 2026-10-14 - R63 indexed/indirect data-bus order repaired and proved
+
+RESUME HERE: sourcee899b9f38df51e191c83a98c3bd8e9c7aa7e2d21,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+SPC_BUS_CLOCK remains default0. Initial data-bus audit13 cases exposed9 open:
+missing absolute/indexed write dummy reads, high-first indirect pointers,
+misplaced indirect-indexed store idle, early second operand debit in MOVdp,dp.
+Enabled native templates now follow the pinned primary low/high/order/idle
+microsequence with8-bit direct-page wrap; totals unchanged. Current25 directed
+data-bus cases all exact including X/Y, absolute, indirect, RMW, word F3/F4,
+three DP1 pointer wraps and cached replay. ADDRESS_CURRENT pins actual ELF hash;
+initial ADDRESS_AUDIT retains failed-stage evidence, not a current acceptance.
+Original32 clock/buffer cases, eight resets, two linked mutations still PASS;
+default-off allocated sections of both changed ASM units exactly match R61.
+Artifact build_spc_bus_clock_r63_v1/s64-spc-clock-r63-v1.elf:54704/718296/BSS0.
+
+Next cover word page edges, branch/bit/stack and dummy PC accesses in the same
+real-JIT data trace;25 cases do not establish all256-opcode bus accuracy. Keep
+conditional/total/halt/tag invariants. Need DSP epoch, pre-access catch-up and
+future-code echo/cache/tag behavior before a live bridge; S3 remains relative
+scheduling debt. Complete resident RSP DSP still needs its early full-work
+native discriminator; do not substitute this local correctness proof for cost.
+No COM3 use/controller or hardware/FPS/CI/promotion claim for R63. R61 upper
+memory/snapshot physical proof closed; coordinate8/menu restored. Master/prior
+candidates intact. Full DSP/DAC/native60/50/fidelity/corpus/integration OPEN.
+Earlier history below.
+
+---
+
 # 2026-10-14 - R63 native SPC bus-clock prefix implemented in isolation
 
 RESUME HERE: sourceb939e779c71a38b1ad8f466d00282fde334e5068,

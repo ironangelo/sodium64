@@ -1,0 +1,392 @@
+{
+  "passed": false,
+  "status": "directed data bus audit",
+  "cases": [
+    {
+      "name": "absolute_read",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "exact": true
+    },
+    {
+      "name": "absolute_write",
+      "observed": [
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": false
+    },
+    {
+      "name": "direct_X_read",
+      "observed": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ]
+      ],
+      "total": 8,
+      "expected_total": 8,
+      "exact": true
+    },
+    {
+      "name": "direct_X_write",
+      "observed": [
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": false
+    },
+    {
+      "name": "absolute_X_read",
+      "observed": [
+        [
+          "read",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "absolute_X_write",
+      "observed": [
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          5
+        ],
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": false
+    },
+    {
+      "name": "absolute_Y_read",
+      "observed": [
+        [
+          "read",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": true
+    },
+    {
+      "name": "absolute_Y_write",
+      "observed": [
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          243,
+          5
+        ],
+        [
+          "write",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": false
+    },
+    {
+      "name": "indexed_indirect_read",
+      "observed": [
+        [
+          "read",
+          33,
+          4
+        ],
+        [
+          "read",
+          32,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": false
+    },
+    {
+      "name": "indexed_indirect_write",
+      "observed": [
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          32,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "total": 11,
+      "expected_total": 11,
+      "exact": false
+    },
+    {
+      "name": "indirect_indexed_read",
+      "observed": [
+        [
+          "read",
+          33,
+          4
+        ],
+        [
+          "read",
+          32,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          243,
+          6
+        ]
+      ],
+      "total": 10,
+      "expected_total": 10,
+      "exact": false
+    },
+    {
+      "name": "indirect_indexed_write",
+      "observed": [
+        [
+          "read",
+          33,
+          5
+        ],
+        [
+          "read",
+          32,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          3
+        ],
+        [
+          "read",
+          33,
+          4
+        ],
+        [
+          "read",
+          243,
+          6
+        ],
+        [
+          "write",
+          243,
+          7
+        ]
+      ],
+      "total": 11,
+      "expected_total": 11,
+      "exact": false
+    },
+    {
+      "name": "direct_direct_write",
+      "observed": [
+        [
+          "read",
+          32,
+          4
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          32,
+          3
+        ],
+        [
+          "write",
+          243,
+          5
+        ]
+      ],
+      "total": 9,
+      "expected_total": 9,
+      "exact": false
+    }
+  ],
+  "exact": 4,
+  "open": 9,
+  "actual_linked_JIT_and_cached_replay": true,
+  "full_256_opcode_bus_accuracy_proved": false,
+  "native_performance_claim": false,
+  "commercial_data": false
+}

@@ -30,6 +30,7 @@ def make_capture(*, complete=1, apu_clock=21, samples=1234):
     words[20] = 0
     words[21] = 0x0D98
     words[22] = complete
+    words[23:26] = [0x448000,0x44d000,1]
 
     blob = bytearray(size)
     struct.pack_into(">32I", blob, 0, *words)
@@ -39,6 +40,23 @@ def make_capture(*, complete=1, apu_clock=21, samples=1234):
 
 
 class HardwareProfileReportTests(unittest.TestCase):
+    def test_retains_legacy_v1_without_claiming_guard_proof(self):
+        blob=bytearray(make_capture());struct.pack_into(">I",blob,4,1)
+        struct.pack_into(">3I",blob,23*4,0,0,0)
+        capture,_=hw.parse_capture(blob)
+        self.assertEqual(capture.version,1);self.assertEqual(capture.profile_guards_ok,0)
+
+    def test_rejects_failed_owner_receipt(self):
+        for index,value in ((23,0),(24,0),(25,0)):
+            blob=bytearray(make_capture());struct.pack_into(">I",blob,index*4,value)
+            with self.assertRaisesRegex(ValueError,"lease/guard"):hw.parse_capture(blob)
+
+    def test_extended_warmup_requires_exact_declared_contract(self):
+        blob=bytearray(make_capture());struct.pack_into(">I",blob,8,25)
+        with self.assertRaisesRegex(ValueError,"timing window"):hw.parse_capture(blob)
+        capture,_=hw.parse_capture(blob,expected_warmup_seconds=25)
+        self.assertEqual(capture.warmup_seconds,25)
+
     def test_parses_strict_capture_and_extracts_snapshot(self):
         capture, snapshot = hw.parse_capture(make_capture())
         self.assertEqual(capture.capture_format, "canonical big-endian")

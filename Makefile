@@ -5,6 +5,7 @@ BUILD_DIR := build
 SRC_DIRS := src
 PROFILE ?= 0
 HW_PROFILE ?= 0
+HW_PROFILE_WARMUP ?= 2
 
 # Real-N64 M0 profiling is a specialization of the statistical PROFILE build.
 ifeq ($(HW_PROFILE),1)
@@ -56,9 +57,10 @@ N64_ED64ROMCONFIGFLAGS = --savetype $(N64_ROM_SAVETYPE) --regionfree
 
 ifeq ($(PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_PROFILE=1
+N64_LDFLAGS += -Tsrc/profile_memory.ld
 endif
 ifeq ($(HW_PROFILE),1)
-N64_ASFLAGS += -DSODIUM64_HW_PROFILE=1
+N64_ASFLAGS += -DSODIUM64_HW_PROFILE=1 -DHW_PROFILE_WARMUP_SECONDS=$(HW_PROFILE_WARMUP)
 endif
 
 COMMA := ,

@@ -18,6 +18,9 @@
 */
 
 #include "defines.h"
+#ifdef SODIUM64_PROFILE
+.globl underclk_set
+#endif
 
 .globl layer_set
 .globl precision_set

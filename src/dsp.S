@@ -1314,11 +1314,13 @@ write_koff: // a1: value
     nop
     addiu t3, t3, 0x7800
 koff_timer_ready:
-    andi t7, a1, 0xFF
+    // T7 is the live SPC accumulator across this bus call. T4 is an
+    // existing write-handler scratch register (also used by KON).
+    andi t4, a1, 0xFF
     li t6, -1
 koff_next_voice:
     addiu t6, t6, 1
-    srl t0, t7, t6
+    srl t0, t4, t6
     beqz t0, koff_return
     andi t0, t0, 1
     beqz t0, koff_next_voice

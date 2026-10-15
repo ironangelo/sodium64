@@ -5,7 +5,7 @@ from pathlib import Path
 from test_native_diag_continuous import CPU,signed
 from test_native_diag_arm import load_elf
 
-def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,memory_values=(),flags=0,test_pc=0x200,jit_mutation=None):
+def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,memory_values=(),flags=0,test_pc=0x200,jit_mutation=None,dsp_address=0x2d,extra_setup=None,extra_outcome=None):
     cpu=CPU(base.copy());s=symbols;start=1000000;events=[]
     cpu.regs[16]=test_pc;cpu.regs[19]=start;cpu.regs[7]=0
     cpu.write(s['apu_count'],test_pc,2);cpu.write(s['apu_clock'],clock,1)
@@ -13,10 +13,11 @@ def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,mem
     cpu.write(s['apu_reg_x'],4,1);cpu.write(s['apu_reg_y'],6,1)
     cpu.write(s['apu_stack'],0x7f,1);cpu.write(s['apu_halt'],0,1)
     cpu.write(s['apu_map']+0x3ff,0,1)
-    cpu.write(s['dsp_addr'],0x2d,1);cpu.write(s['dsp_regs']+0x2d,0x55,1)
+    cpu.write(s['dsp_addr'],dsp_address,1);cpu.write(s['dsp_regs']+dsp_address,0x55,1)
     cpu.write(s['jit_pointer'],jit_pointer)
     for i,b in enumerate(code):cpu.write(s['apu_ram']+test_pc+i,b,1)
     for addr,value in memory_values:cpu.write(s['apu_ram']+addr,value,1)
+    if extra_setup:extra_setup(cpu,s)
     if jit_mutation:
         cpu.before_instruction[s['jit_lookup_published']]=lambda c:jit_mutation(c,s,test_pc)
     observe_callbacks={}
@@ -34,13 +35,16 @@ def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,mem
     total=(start-signed(cpu.regs[19],32))//clock
     pointer=cpu.read(s['jit_lookup']+test_pc*4);first=list(events)
     def outcome():
-        return dict(memory={hex(addr):cpu.read(s['apu_ram']+addr,1)for addr,value in memory_values},
+        result=dict(memory={hex(addr):cpu.read(s['apu_ram']+addr,1)for addr,value in memory_values},
                     registers={n:cpu.read(s[n],1)for n in ('apu_accum','apu_reg_x','apu_reg_y','apu_stack','apu_flags')})
+        if extra_outcome:result['extra']=extra_outcome(cpu,s)
+        return result
     first_outcome=outcome()
     for addr,value in memory_values:cpu.write(s['apu_ram']+addr,value,1)
-    cpu.write(s['dsp_regs']+0x2d,0x55,1)
+    cpu.write(s['dsp_regs']+dsp_address,0x55,1)
     for name,value in (('apu_flags',flags),('apu_accum',0x11),('apu_reg_x',4),('apu_reg_y',6),('apu_stack',0x7f),('apu_halt',0)):
         cpu.write(s[name],value,1)
+    if extra_setup:extra_setup(cpu,s)
     cpu.write(s['apu_count'],test_pc,2);cpu.regs[19]=start;cpu.regs[7]=0;events.clear()
     cpu.execute(s['apu_execute'],stop=s['cpu_execute'])
     assert cpu.read(s['jit_lookup']+test_pc*4)==pointer

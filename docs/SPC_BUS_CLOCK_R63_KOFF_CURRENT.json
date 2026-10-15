@@ -1,0 +1,317 @@
+{
+  "passed": true,
+  "status": "IMPLEMENTED KOFF guest preservation",
+  "cases": [
+    {
+      "A": 17,
+      "mask": 0,
+      "source": "immediate",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 0,
+      "source": "X",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 1,
+      "source": "immediate",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 1,
+      "source": "X",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 128,
+      "source": "immediate",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 128,
+      "source": "X",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 85,
+      "source": "immediate",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 85,
+      "source": "X",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 255,
+      "source": "immediate",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 17,
+      "mask": 255,
+      "source": "X",
+      "A_after": 17,
+      "stored_A": 17,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 0,
+      "source": "immediate",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 0,
+      "source": "X",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 1,
+      "source": "immediate",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 1,
+      "source": "X",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 128,
+      "source": "immediate",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 128,
+      "source": "X",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 85,
+      "source": "immediate",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 85,
+      "source": "X",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 255,
+      "source": "immediate",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 128,
+      "mask": 255,
+      "source": "X",
+      "A_after": 128,
+      "stored_A": 128,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 0,
+      "source": "immediate",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 0,
+      "source": "X",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 1,
+      "source": "immediate",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 1,
+      "source": "X",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 128,
+      "source": "immediate",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 128,
+      "source": "X",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 85,
+      "source": "immediate",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 85,
+      "source": "X",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 255,
+      "source": "immediate",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    },
+    {
+      "A": 255,
+      "mask": 255,
+      "source": "X",
+      "A_after": 255,
+      "stored_A": 255,
+      "guest_preserved": true,
+      "voice_side_effects_exact": true
+    }
+  ],
+  "case_count": 30,
+  "guest_preservation_failures": 0,
+  "real_linked_JIT_and_release_handler": true,
+  "all_voice_masks_deadlines_envelopes_exact": true,
+  "all_total_cycles_and_cached_outcomes_exact": true,
+  "ELF_sha256": "c90f7aa6268b9b4a8ff97ddde131a8ce9c4b682d6ba2fb9ffabc17f19323a34b",
+  "distinct_DSP_write_handlers": [
+    {
+      "register": 0,
+      "handler": "0x800090e0",
+      "A_X_Y_preserved": true
+    },
+    {
+      "register": 2,
+      "handler": "0x800090d4",
+      "A_X_Y_preserved": true
+    },
+    {
+      "register": 5,
+      "handler": "0x80009100",
+      "A_X_Y_preserved": true
+    },
+    {
+      "register": 76,
+      "handler": "0x80009160",
+      "A_X_Y_preserved": true
+    },
+    {
+      "register": 92,
+      "handler": "0x80009280",
+      "A_X_Y_preserved": true
+    },
+    {
+      "register": 108,
+      "handler": "0x80008b60",
+      "A_X_Y_preserved": true
+    }
+  ],
+  "changed_text_words_vs_baseline": 2,
+  "native_hardware_gameplay_DAC_acceptance": false,
+  "commercial_data": false
+}

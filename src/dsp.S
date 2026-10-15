@@ -559,10 +559,12 @@ bent_inc:
 .align 5
 gain_time: // t6: voice
     // Check whether direct or custom gain is selected
-    sll t4, t6, 4
-    lbu t0, dsp_regs + 0x7(t4) // VxGAIN
-    andi t1, t0, 0x80
-    beqz t1, direct_gain
+    // t4/t5 carry the running stereo mix across scheduled envelope calls.
+    // The same scratch contract also applies to the legacy cached mixer.
+    sll t1, t6, 4
+    lbu t0, dsp_regs + 0x7(t1) // VxGAIN
+    andi t2, t0, 0x80
+    beqz t2, direct_gain
 
     // Schedule the next step using the custom gain rate
     andi a0, t0, 0x1F
@@ -572,9 +574,9 @@ gain_time: // t6: voice
 direct_gain:
     // Set a fixed volume for direct gain
     sll t0, t0, 4
-    sh t0, envelopes(t4)
+    sh t0, envelopes(t1)
     li t0, 0xFFFF
-    sh t0, next_steps(t4)
+    sh t0, next_steps(t1)
     j update_vols
     nop
 

@@ -194,8 +194,7 @@ jit_dummy_pc: // Emit a real read at the current compile PC without fetching it.
 .align 5
 apu_nop:
     // NOP has one opcode fetch plus one dummy PC read on the SPC700.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
     j finish_opcode
     nop
 
@@ -396,8 +395,10 @@ apu_stop:
 apu_halt_common:
     // Opcode fetch is already charged by jit_read8. WAIT/STOP then perform one
     // real read of the next PC and one idle cycle before scheduler return.
+#ifndef SODIUM64_SPC_BUS_CLOCK
     jal jit_charge_cycles
     li t0, 1
+#endif
 
     // Latch distinct WAIT/STOP state before the first bus read.
     li t0, ORI(A1, ZERO, 0)
@@ -417,6 +418,10 @@ apu_halt_common:
     jal emit_jal
     nop
     EMIT_OP SLL(ZERO, ZERO, 0)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#endif
     j finish_block
     nop
 

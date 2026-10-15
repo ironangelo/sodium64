@@ -360,8 +360,15 @@ apu_cbne: // CBNE op,dest
 .align 5
 apu_dbnzy: // DBNZ Y,dest
     // DBNZ Y has a dummy PC read and one fixed idle cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Sign-extend the offset value and add it to the PC
     jal jit_read8
@@ -390,18 +397,28 @@ apu_dbnzy: // DBNZ Y,dest
 
 .align 5
 apu_dbnzm: // DBNZ op,dest
+#ifndef SODIUM64_SPC_BUS_CLOCK
     // Sign-extend the offset value and add it to the PC
     jal jit_read8
     ori s1, s1, FLAG_PC // Update the JIT register state
     sll v0, v0, 24
     sra v0, v0, 24
     add v0, v0, a0
+#endif
 
     // Emit code to decrement a memory value and branch if it's not zero.
     la t0, apu_write8
     jal emit_jal
     nop
     EMIT_OP ADDI(A1, V0, -1)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    // The decrement write precedes the displacement fetch, unlike CBNE.
+    jal jit_read8
+    ori s1, s1, FLAG_PC
+    sll v0, v0, 24
+    sra v0, v0, 24
+    add v0, v0, a0
+#endif
     EMIT_OP BEQ(A1, ZERO, 3) // zero => not taken
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
@@ -838,8 +855,7 @@ apu_brk: // BRK
 .align 5
 apu_clrp: // CLRP
     // SPC700 P-flag operation has one dummy PC read.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_flags
@@ -854,8 +870,7 @@ apu_clrp: // CLRP
 .align 5
 apu_setp: // SETP
     // SPC700 P-flag operation has one dummy PC read.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_flags
@@ -870,8 +885,7 @@ apu_setp: // SETP
 .align 5
 apu_di: // DI
     // SPC700 I-flag operation has one dummy PC read plus one idle cycle.
-    jal jit_charge_cycles
-    li t0, 2
+    JIT_PC_READ 1
 
     // Update the JIT register state
     jal load_flags
@@ -886,8 +900,7 @@ apu_di: // DI
 .align 5
 apu_ei: // EI
     // SPC700 I-flag operation has one dummy PC read plus one idle cycle.
-    jal jit_charge_cycles
-    li t0, 2
+    JIT_PC_READ 1
 
     // Update the JIT register state
     jal load_flags

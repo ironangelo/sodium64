@@ -209,9 +209,13 @@ apu_brxr:
 apu_brx:
     // (X) reads have one dummy PC cycle; pure stores also dummy-read the
     // destination before writing it.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    JIT_PC_READ
+#else
     li t0, 2
     jal jit_charge_cycles
     sub t0, t0, t8
+#endif
     // Update the JIT register state
     jal load_reg_x
     nop
@@ -222,8 +226,10 @@ apu_brx:
     EMIT_OP SLL(A0, S1, 3)
     EMIT_OP ANDI(A0, A0, 0x100)
     EMIT_OP ANDI(T9, T9, 0xFF)
+#ifndef SODIUM64_SPC_BUS_CLOCK
     beqz t8, brx_skip
     nop
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
@@ -243,8 +249,18 @@ apu_bxpr:
 apu_bxp:
     // (X)+ spends two cycles beyond the semantic data access for both
     // directions.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    JIT_PC_READ
+    // Store idles before its access; load idles after its access.
+    bnez t8, bxp_clock_pre_done
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+bxp_clock_pre_done:
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
     // Update the JIT register state
     jal load_reg_x
     ori s1, s1, FLAG_SX
@@ -263,8 +279,20 @@ apu_bxp:
     nop
 bxp_skip:
     li t0, ADDI(T9, T9, 1)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal emit_op
+    nop
+    beqz t8, bxp_clock_post_done
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+bxp_clock_post_done:
+    jr gp
+    nop
+#else
     j emit_op
     move ra, gp
+#endif
 
 .align 5
 apu_absw: // pure write to aaaa
@@ -688,8 +716,7 @@ apu_dr2: // aa,bb
 .align 5
 apu_bxy: // (X),(Y)
     // (X),(Y) forms spend one dummy PC-read cycle before the data accesses.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_reg_x

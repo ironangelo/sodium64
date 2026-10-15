@@ -50,8 +50,7 @@
 .align 5
 apu_movax: // MOV A,X
     // SPC700 register transfer has one dummy PC read.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_reg_x
@@ -66,8 +65,7 @@ apu_movax: // MOV A,X
 .align 5
 apu_movxa: // MOV X,A
     // SPC700 register transfer has one dummy PC read.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_accum
@@ -82,8 +80,7 @@ apu_movxa: // MOV X,A
 .align 5
 apu_movay: // MOV A,Y
     // SPC700 register transfer has one dummy PC read.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_reg_y
@@ -98,8 +95,7 @@ apu_movay: // MOV A,Y
 .align 5
 apu_movya: // MOV Y,A
     // SPC700 register transfer has one dummy PC read.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_accum
@@ -114,8 +110,7 @@ apu_movya: // MOV Y,A
 .align 5
 apu_movxs: // MOV X,SP
     // SPC700 register transfer has one dummy PC read.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_stack
@@ -130,8 +125,7 @@ apu_movxs: // MOV X,SP
 .align 5
 apu_movsx: // MOV SP,X
     // SPC700 register transfer has one dummy PC read.
-    jal jit_charge_cycles
-    li t0, 1
+    JIT_PC_READ
 
     // Update the JIT register state
     jal load_reg_x

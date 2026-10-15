@@ -4,6 +4,48 @@ Status: IMPLEMENTED directed native-JIT timing/address correction, default-off.
 This is not a complete256-opcode bus bridge, live full DSP, native speed result
 or integrable candidate. R61's native upper-memory/window proof is preserved.
 
+## Branch, bit and implied-access correction
+
+BRANCH_BIT_AUDIT records14 open cases in172 on the frozen control ELF:
+DBNZ dp charges its displacement fetch before the write (write5 instead of4);
+DBNZ Y has no dummy PC read; (X)/(X)+/(X),(Y) omit their dummy PC reads;
+(X) stores omit the destination dummy read; (X)+ loads place their quirk idle
+before instead of after the load; all three memory-CMP forms place their
+trailing idle before the final read. The other158 directed cases match.
+
+The enabled path now performs those accesses and positions the fetch/idles
+according to the pinned primary sequences. BRANCH_BIT_CURRENT passes all172
+cases, checking bus type/address/end clock, total cycles, PC, register/flag/
+memory outcomes and cached replay. Coverage includes all conditional branch
+flags, all8 BBC/BBS bits and both paths, CBNE direct/indexed, DBNZ wrap/zero,
+absolute bit operations, SET1/CLR1, TSET1/TCLR1 and the8 indirect/CMP cases.
+It is directed coverage at the stated operands, not all inputs or compositions.
+
+IMPLIED_AUDIT has0/192 exact bus traces:30 implied opcodes charged a PC read
+without emitting it; SLEEP/STOP performed their entry read one cycle late.
+JIT_PC_READ emits a real read plus the required remaining idle cycles while
+retaining the old two-instruction charge-only expansion when default-off.
+Enabled SLEEP/STOP place their idle after the entry read. IMPLIED_CURRENT now
+passes192 variants (32 opcodes, three incoming PSWs, with/without a queued-NZ
+prefix). All register/PSW/PC/halt outcomes and totals match the frozen control
+ELF, and cached replay is exact. The frozen outcomes are regression controls,
+not an independent exhaustive arithmetic-semantics oracle.
+
+Clock32/address25/word23/control288/KOFF30 and the existing linked/emitted
+mutations still pass after these changes. Six default-off ASM units remain
+allocated-section byte-exact source61505bc6. New artifact
+build_spc_bus_clock_r63_branch/s64-spc-branch.elf, bus clock1/KOFF1, linked
+text+data773992 bytes/BSS0. Prior control/KOFF binaries are preserved. These
+are host executions of the real native JIT, not N64 throughput measurements.
+
+Next establish the remaining16-bit address/PC edges and instruction-fetch
+contract before the live absolute DSP epoch/pre-access/echo/cache/tag bridge.
+Required real reads are now emitted for these audited families; opcode and
+operand fetches still occur through the compile-time path, which is not
+equivalent to handling DSP echo changes to future instructions. No live full
+DSP, native60/50/fidelity/corpus/CI/integration claim; full resident RSP DSP
+still needs its early native full-work cost discriminator.
+
 ## Stack and control bus correction
 
 The initial actual-JIT CONTROL_AUDIT has17 open cases: PUSH/POP lack a real

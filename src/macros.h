@@ -76,3 +76,19 @@
     EMIT_OP OR(A0, A0, T0)
 .endm
 #endif
+
+// One real implicit PC read, followed by the requested internal idle cycles.
+// The default-off expansion preserves the prior charge-only instruction pair.
+.macro JIT_PC_READ idles=0
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    .if \idles
+        jal jit_charge_cycles
+        li t0, \idles
+    .endif
+#else
+    jal jit_charge_cycles
+    li t0, \idles + 1
+#endif
+.endm

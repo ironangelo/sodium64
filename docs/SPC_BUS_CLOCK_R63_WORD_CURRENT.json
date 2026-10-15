@@ -1545,7 +1545,7 @@
     "omit_page_mask",
     "omit_low_write"
   ],
-  "ELF_sha256": "a351c204a50c1d8ff38d1f82f84154d454e8738fd3678325f22888ab1d2c8d65",
+  "ELF_sha256": "f0073c37118566d3e39974e303bd00bea6a6f2ab515687b3cb8d0f2428a131e1",
   "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
   "native_performance_claim": false,
   "full_256_opcode_bus_accuracy_proved": false,

@@ -14,6 +14,7 @@ on:
       - scripts/test_gate_c_cgram_typed_producer_clean.py
       - scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
       - scripts/check_rsp_branch_delay_slots.py
+      - scripts/test_rsp_decode_cursor.py
       - .github/workflows/gate-c-cgram-rsp-consumer-clean.yml
   pull_request:
     branches:
@@ -28,6 +29,7 @@ on:
       - scripts/test_gate_c_cgram_typed_producer_clean.py
       - scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
       - scripts/check_rsp_branch_delay_slots.py
+      - scripts/test_rsp_decode_cursor.py
       - .github/workflows/gate-c-cgram-rsp-consumer-clean.yml
   workflow_dispatch:
 
@@ -75,6 +77,9 @@ jobs:
             --nms rsp-main.nm rsp-mode7.nm
           python3 scripts/check_rsp_branch_delay_slots.py \
             build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_rsp_decode_cursor.py \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf \
+            --json-output rsp-decoder-cursor-proof.json
 
       - name: Record hashes
         run: |
@@ -88,6 +93,7 @@ jobs:
           retention-days: 30
           path: |
             consumer-build.log
+            rsp-decoder-cursor-proof.json
             consumer-hashes.txt
             rsp-main.nm
             rsp-mode7.nm

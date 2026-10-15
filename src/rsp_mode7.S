@@ -1225,7 +1225,7 @@ shared_decode4:
     beqz t7, ret_jump
     spv $v02, 0, 0, t7
     jr t4
-
+    nop // Preserve the caller's live OBJ cursor/BG state in a3 on every row.
 
 calc_color_window_segments:
     // Convert exact color-window truth into the legacy backdrop fill loop's

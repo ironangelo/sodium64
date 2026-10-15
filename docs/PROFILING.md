@@ -1,5 +1,13 @@
 # Statistical profiling
 
+## 2026-10-15 integration-baseline policy
+
+Attribute performance only to the exact combined source/settings/artifact on
+representative native work. Never sum independent-branch gains. Keep absolute
+guest interval alignment, image/PCM/reference comparisons and diagnostic overhead
+explicit. A clean-source port needs a compatible capture/recovery path; an R44
+or R45 trace cannot stand in for master's integrated baseline. See the audit.
+
 Sodium64 uses statistical R4300 PC sampling to identify where host CPU time is spent without instrumenting every opcode, scanline, or hot memory path.
 
 This document defines what the profiler measures, how CI captures it, and which conclusions are currently valid.

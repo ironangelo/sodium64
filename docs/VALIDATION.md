@@ -1,5 +1,15 @@
 # Validation strategy
 
+## 2026-10-15 integration gates
+
+Use the finite dispositions in INTEGRATION_AUDIT_2026-10-15.md. Build, relevant
+compiled semantic/negative tests and applicable execution CI qualify each clean
+component. Historical exact-source proof may be reused only with an explicit
+source/flag/scope binding. Failed/skipped/zero-test runs remain failures or gaps.
+Unresolved fidelity/performance regressions prevent promotion. Diagnostics and
+production runtime changes receive separate dispositions; native combined
+acceptance requires the actual integrated baseline and safe recovery.
+
 Sodium64 should not depend on frequent manual testing on a real Nintendo 64. Validation is layered so most failures are caught before hardware is involved.
 
 ## Automated hardware iteration - 2026-10-12

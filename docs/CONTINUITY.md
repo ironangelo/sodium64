@@ -1,3 +1,44 @@
+# 2026-10-15 - Consolidation active: clean-master PR22/23 and CI prerequisite
+
+RESUME HERE: [integration audit](INTEGRATION_AUDIT_2026-10-15.md). Current user
+direction is consolidation/integration, not the historical experiment queue.
+Master freshly fetched7cc8facf; PR21 remains draft/unmerged and must be split.
+All34 relevant branch tips/runtime deltas and current/historical CI inspected;
+R44/R45 and audio/CPU/APU/diagnostic components have explicit dispositions.
+
+Implemented clean master extractions: PR22 integrate/apu-jit-reset (complete
+65536-entry invalidation, no live-group cache); PR23 integrate/dsp-gain-owner
+(R33 scratch repair for master's legacy mixer, no dry/audio probe/renderer flags).
+Both normal/PROFILE builds and linked positive/negative gates pass locally.
+Combined local integration917b160 has both changes and both linked gates pass.
+These are CANDIDATE, not yet integrated/fully VALIDATED; no game-speed claim.
+
+New-SHA CI failed before compiling: GHCR anonymous denied, authenticated latest
+and published digest unavailable. Failures retained. PR24 integrate/ci-pinned-sdk
+afc3135114035f60b9882f0f31f7d28068ee58a9 replaces the unavailable container with
+SHA256-verified official toolchain plus fixed libdragon source. Its normal/
+PROFILE builds and CGRAM38763990359 PASS; Ares38763990499 and Build38763990140
+remain pending. PR22/23 now include this prerequisite for their own qualification;
+new heads1b790cb/93e0e0a. APU cycle/span dispatched on PR22's new exact head.
+Do not confuse initial failed CI with the corrected runs or merge prematurely.
+
+R44 BLOCKED: clean renderer prerequisites, tiny story residual and native Mode7
+against predecessor. R45 BLOCKED: aligned story80.408us cost / Mode7 residual;
+run-producer repair failed. Keep actual DKC gain and all image/PCM/negative data.
+R47/R19/R20/R22 remain finite candidate ports. Rejected thin DSP kernels stay
+rejected; R49 is an oracle candidate, not an affordable gameplay backend.
+
+Next finish CI prerequisite/gates, integrate useful small components, establish
+exact combined measurement path and native baseline. Clean master currently
+lacks remote return/capture: do not substitute experimental renderer measurements
+or load non-returnable code without recovery. Only afterwards whole resident
+DSP architectural cost proof. No new kernel/FPU/Expansion Pak campaign.
+No COM3 transaction was issued in this checkpoint; prior menu/coordinate8 state
+is historical until read back. All commercial data/hashes stay private.
+Earlier history below is preserved, not active instructions.
+
+---
+
 # 2026-10-15 - R63 lazy guard native result below useful gate; recovery verified
 
 RESUME HERE: docsac44d614192756a7370bb43e0ee6bba5106bcbfe,

@@ -1,5 +1,13 @@
 # Sodium64 fork roadmap
 
+## 2026-10-15 operating priority
+
+The [integration audit](INTEGRATION_AUDIT_2026-10-15.md) and ACTIVE_GOAL supersede
+the older immediate ordering below. Consolidate qualified components into small
+clean master PRs, resolve named gates, measure the combined native baseline,
+then test complete resident DSP architecture. R44/R45 remain blocked by the
+explicit regression/dependency gates; rejected microkernels are not new work.
+
 ## Relationship to the Road to 1.0
 
 [`ROAD_TO_1_0.md`](ROAD_TO_1_0.md) defines the stable destination and release gates. This roadmap defines the current engineering route toward those gates.

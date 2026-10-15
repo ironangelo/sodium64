@@ -1,6 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
-Material update: PR24 and PR23 are merged into master c41631e5. [Exact integration receipt](evidence/integration-master-2026-10-15.json). PR22/25 have clean ports and are finishing their exact-head gates; the native combined baseline is being captured. The original inventory below retains its 7cc8facf starting point.
+Material update: PR24/23/22/25 are independently merged into master8da020c3.
+[Integration receipt](evidence/integration-master-2026-10-15.json) and
+[four native controls](evidence/integration-native-controls-2026-10-15.json).
+The frozen measured source produces the identical empty HW_PROFILE ROM as this
+master. PR26 extracts the demonstrated full-rate defaults and is in CI.
+The original inventory retains its7cc8facf starting point.
 
 Operational authority: the user's current consolidation/integration request.
 Earlier CONTINUITY entries are evidence/history, not a queue of live requests.
@@ -29,8 +34,9 @@ Diagnostic tools are identified separately from production runtime changes.
 | Component / retained authority | Status | Integration disposition and exact remaining gate |
 | --- | --- | --- |
 | Master PR18 / integrated M1 | VALIDATED (historical scope) | Stable integration base; historical homebrew GateB is not the expanded commercial corpus. |
-| Complete unrolled APU JIT reset, f4e061c6 subset | CANDIDATE, PR22 | Clean port on integrated GAIN base f0618fef. Normal/PROFILE/HW_PROFILE coverage/owners and three mutants pass. Repaired boot-asset APU proof38765609324 passes119 directed cases plus halt/cache groups; latest-head APU/Ares gates running. All65536 entries still cleared, no native FPS claim. |
+| Complete unrolled APU JIT reset, f4e061c6 subset | VALIDATED and integrated, PR22 | Masterabaec99d. Exact f0618fef Build38768160265, Ares38768160462, CGRAM38795951402 and APU38768159112 pass. Normal/PROFILE/HW_PROFILE coverage/owners plus three mutants pass. All65536 entries are cleared;119 directed APU cases and halt/cache groups pass. Structural instruction reduction is not a measured native FPS gain. |
 | R33 GAIN accumulator owner,5b0cb2f3 subset | VALIDATED and integrated, PR23 | Master c41631e5 contains the legacy mixer repair. Normal/PROFILE handler2048 plus independent scheduled stereo2048 cases pass; old master1792 scheduled failures become0. Six instruction words change; all other loaded bytes/extents are unchanged. Build38764135169, CGRAM38764135122 and Ares38764135187 pass on exact head93e0e0af. Historical native16 handler failures become0; broader waveform qualification remains separate. |
+| Full-rate startup/menu defaults,10662795 subset | CANDIDATE, PR26 | Exact587d1ac9 changes only apu_clock42to21 and underclock menu4to0; all other loaded bytes/instructions/extents match integrated parent. Normal/PROFILE reset, GAIN and BRR gates pass. New-head CI/APU pending. Existing native controls already ran at21. |
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
@@ -48,7 +54,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | R45 run producer,c623d918 | REJECTED cost remedy | Story55.888611 vs dense55.910416; does not recover loss. Preserved on experiment/main-row-runs-r45, dense source restored on R45. No renewed micro-tuning loop. |
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
 | R19 pitch cache,84531758 | CANDIDATE | Independent bounded native image/PCM/performance proof. Port both write handlers and cache lifecycle to clean master, run linked byte/address/caller tests and new-SHA CI. It is not an audio-completeness fix. |
-| R20 BRR arithmetic,bbe46447 | CANDIDATE, PR25 | Clean port19a1fbeb on integrated GAIN base. Normal/PROFILE/HW_PROFILE pass57344 linked voice cases, four actual instruction mutants and owner guards. Original master disagrees on5660/7168 blocks. Build38768166170 passes; latest-head Ares and combined native baseline pending. Legacy mixing is separate. Old incorrect PCM is not the oracle. |
+| R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
 | R22 KOFF release,1b123980 | CANDIDATE | Native six release endpoints plus directed envelope/caller checks. Port release/ADSR/KON interactions together; full latch/KON-delay accuracy remains open. Clean-master proof/CI pending. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |
 | R32 dry-master HI/LO,0675f15a | VALIDATED within corrected dry path | Required correctness prerequisite when dry mixing is selected. Master lacks that multiply sequence; no standalone master patch exists. Preserve linked/dynamic spacing and native owner proof. |
@@ -72,23 +78,27 @@ Diagnostic tools are identified separately from production runtime changes.
 
 ## Execution queue and stop conditions
 
-1. Finish exact-head gates for PR22/25, then merge each independently. The
-   SDK prerequisite and GAIN owner repair are already integrated. CI now executes
-   the linked suites actually present and asserts a nonzero suite count.
-2. Finish combined native captures against frozen sourcefe5ce0bf, then bind the
-   runtime source/build to final master. Existing M1 SRAM capture enforces APU21,
-   fs0/audio4/precision8 without porting an experimental remote bridge. Two
-   original workloads cover frame-paced CPU/PPU and mixed graphics/8 voices;
-   they do not replace native commercial scenes or complete PCM/DAC acceptance.
-   Recovery requires power off/on: Reset left black screen in both user reports.
-3. Keep R44 blocked on the coherent clean renderer port, story residual and
-   Mode7 predecessor comparison; keep R45 blocked on its aligned story/Mode7
-   costs. R19/R22/R47 remain finite correctness/cache ports with named gates.
-4. After a useful integrated/evidenced base, resume resident full DSP with one
-   integral cost proof: full8-voice/BRR/Gaussian/envelopes/noise/PMON/echo/FIR/
-   clock/latch work, SPC-visible RAM/register barriers, preparation/cache/DMA/
-   synchronization, renderer coexistence and restoration. Compare complete
-   work against scalar. No more isolated kernels.
+1. PR24/23/22/25 are merged. Finish PR26's exact-head gates and integrate its
+   coherent full-rate startup/menu defaults. Normal startup remains42 until then;
+   the measured8da020c3 baseline uses the enforced HW_PROFILE21 contract.
+2. Four original native control captures pass, with exact measured/master ROM
+   identity. Expand combined image/audio/scene evidence using the user's available
+   commercial SMW/ALttP/DKC1 through the isolated paired-menu diagnostic route.
+   Exact historical Gothicvania/SRS-v5/Nova2 inputs are unavailable locally and
+   their ROM handoff artifacts expired; this does not reopen the old boot-asset
+   dependency in the119-case APU proof. Do not substitute corpus labels.
+3. Extract the proven capture/return tools separately on the clean integration
+   base. Apply owner/ABI/layout/disabled-identity/paired-menu recovery gates before
+   native use. Scene continuation remains a distinct scoped component; no generic
+   cross-build save-state claim. Current paired-menu source already reserves
+   diagnostic saves separately and disables automatic mutable-file writeback.
+4. Keep R44 blocked on coherent clean renderer dependencies, story residual and
+   Mode7 predecessor comparison; keep R45 blocked on aligned story/Mode7 costs.
+   R19/R22/R47 have finite correctness/cache port gates, not an experiment queue.
+5. After combined representative evidence, resume whole resident DSP via an
+   integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
+   echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,
+   renderer coexistence and restoration. No more standalone kernels.
 
 All private ROMs/SAVs/states/images/PCM/raw captures/game-derived hashes remain
 local. The classification preserves failures and prior artifacts. There is no

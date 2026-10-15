@@ -1,7 +1,7 @@
 {
   "scope": "Integration checkpoint, not Sodium64 1.0 acceptance",
   "original_master": "7cc8facfe8643fb85888f301f79995575830521d",
-  "current_master": "c41631e5f90eb38b47e61d2921b89254fdc240ac",
+  "current_master": "8da020c3451cde7bc15483dd54b49f2bb1f77981",
   "integrated": [
     {
       "pr": 24,
@@ -30,27 +30,49 @@
       "corrected_scheduled_failures": 0,
       "changed_instruction_words": 6,
       "all_other_loaded_bytes_unchanged": true
+    },
+    {
+      "pr": 22,
+      "component": "Complete APU JIT lookup reset",
+      "head": "f0618fef3499686e367e5b7c40dd0f2a6647dfc7",
+      "merge": "abaec99dc758fae0965996e0053ea260fc7a658d",
+      "successful_runs": [
+        38768160265,
+        38768160462,
+        38795951402,
+        38768159112
+      ],
+      "lookup_entries": 65536,
+      "lookup_bytes": 262144,
+      "negative_mutations_rejected": 3,
+      "structural_instruction_count_before_after": [
+        196618,
+        40970
+      ]
+    },
+    {
+      "pr": 25,
+      "component": "BRR signed integer correction",
+      "head": "19a1fbebecb93d13a7396c4beb081fad19f90311",
+      "merge": "8da020c3451cde7bc15483dd54b49f2bb1f77981",
+      "successful_runs": [
+        38768166170,
+        38768166071,
+        38795957122
+      ],
+      "linked_voice_cases": 57344,
+      "synthetic_blocks": 7168,
+      "old_incorrect_blocks": 5660,
+      "negative_mutations_rejected": 4
     }
   ],
   "pending_ports": [
     {
-      "pr": 22,
-      "head": "f0618fef3499686e367e5b7c40dd0f2a6647dfc7",
-      "component": "Full APU lookup reset, no live-group cache",
-      "build_run": 38768160265,
-      "build_result": "success",
-      "ares_run": 38768160462,
-      "apu_run": 38768159112,
-      "remaining": "Exact-head Ares/APU completion"
-    },
-    {
-      "pr": 25,
-      "head": "19a1fbebecb93d13a7396c4beb081fad19f90311",
-      "component": "BRR signed arithmetic, ranges and clamp/wrap",
-      "build_run": 38768166170,
-      "build_result": "success",
-      "ares_run": 38768166071,
-      "remaining": "Exact-head Ares completion"
+      "pr": 26,
+      "component": "Full-rate startup/menu defaults",
+      "head": "587d1ac9476a1e7991a07181f6fab77d36a949ba",
+      "proof": "Exactly two initialized data bytes change; every other loaded byte/instruction/extent identical.",
+      "remaining": "Exact-head CI/APU gates"
     }
   ],
   "apu_boot_repair": {
@@ -67,8 +89,10 @@
     "boot_asset": "Repository-original gameplay-balanced; directed assertions unchanged"
   },
   "native": {
-    "status": "Two reference captures complete, combined captures in progress",
-    "recovery": "User observed Reset leaves black screen; power off/on restores menu. This applies to both reference trials.",
-    "claims": "Bounded synthetic workload cadence/profile only; not broad image, PCM, DAC or corpus qualification"
+    "evidence": "integration-native-controls-2026-10-15.json",
+    "status": "Four bounded native captures complete; exact final-master empty ROM byte identity verified.",
+    "commercial_regression": "User authorizes available SMW/ALttP/DKC1 on SummerCart. Original Gate-B inputs unavailable; do not relabel commercial runs as the old Gate-B corpus.",
+    "fidelity_gate": "Extract proven diagnostic capture/return separately for aligned native image/audio/scene comparisons.",
+    "save_isolation": "Paired menu requires diagnostic_saves=1 and diagnostic_continuous=1. cart_load_emulator_path reserves separate paths and loads SRAM without automatic writeback; originals are not selected."
   }
 }

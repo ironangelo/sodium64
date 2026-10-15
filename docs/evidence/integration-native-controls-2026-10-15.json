@@ -1,0 +1,156 @@
+{
+  "physical_console": true,
+  "commercial_data": false,
+  "source_binding": {
+    "master": "8da020c3451cde7bc15483dd54b49f2bb1f77981",
+    "measured_source": "fe5ce0bfef5202b0baa6c426e747f4c87ebcc41f",
+    "empty_emulator_rom_bytes": 98304,
+    "rom_byte_identical": true,
+    "src_and_makefile_diff": []
+  },
+  "trials": [
+    {
+      "name": "reference-balanced-v1",
+      "source": "7cc8facfe8643fb85888f301f79995575830521d",
+      "original_fixture": "balanced",
+      "completed_frames_per_60VI": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "warmup_60VI_windows": 2,
+      "measured_60VI_windows": 5,
+      "samples": 3584,
+      "settings": {
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio": 4,
+        "precision": 8
+      },
+      "sampled_subsystems": {
+        "APU JIT generated": 134,
+        "APU/SPC700 static": 276,
+        "DMA/HDMA": 87,
+        "DSP/audio": 45,
+        "PPU/events/frame prep": 222,
+        "RSP wait": 1,
+        "RSP/VRAM semaphore wait": 6,
+        "S-CPU interpreter": 63,
+        "UI": 1,
+        "frame/VI wait": 2747,
+        "input": 2
+      }
+    },
+    {
+      "name": "reference-mixed8-v1",
+      "source": "7cc8facfe8643fb85888f301f79995575830521d",
+      "original_fixture": "mixed8",
+      "completed_frames_per_60VI": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "warmup_60VI_windows": 2,
+      "measured_60VI_windows": 5,
+      "samples": 3582,
+      "settings": {
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio": 4,
+        "precision": 8
+      },
+      "sampled_subsystems": {
+        "APU JIT generated": 108,
+        "APU/SPC700 static": 439,
+        "DMA/HDMA": 120,
+        "DSP/audio": 830,
+        "PPU/events/frame prep": 227,
+        "RSP/VRAM semaphore wait": 29,
+        "S-CPU interpreter": 192,
+        "frame/VI wait": 1633,
+        "input": 4
+      }
+    },
+    {
+      "name": "combined-mixed8-v1",
+      "source": "fe5ce0bfef5202b0baa6c426e747f4c87ebcc41f",
+      "original_fixture": "mixed8",
+      "completed_frames_per_60VI": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "warmup_60VI_windows": 2,
+      "measured_60VI_windows": 5,
+      "samples": 3583,
+      "settings": {
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio": 4,
+        "precision": 8
+      },
+      "sampled_subsystems": {
+        "APU JIT generated": 102,
+        "APU/SPC700 static": 495,
+        "DMA/HDMA": 117,
+        "DSP/audio": 861,
+        "PPU/events/frame prep": 235,
+        "RSP/VRAM semaphore wait": 22,
+        "S-CPU interpreter": 177,
+        "frame/VI wait": 1574
+      }
+    },
+    {
+      "name": "combined-balanced-v1",
+      "source": "fe5ce0bfef5202b0baa6c426e747f4c87ebcc41f",
+      "original_fixture": "balanced",
+      "completed_frames_per_60VI": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "warmup_60VI_windows": 2,
+      "measured_60VI_windows": 5,
+      "samples": 3585,
+      "settings": {
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio": 4,
+        "precision": 8
+      },
+      "sampled_subsystems": {
+        "APU JIT generated": 130,
+        "APU/SPC700 static": 281,
+        "DMA/HDMA": 79,
+        "DSP/audio": 56,
+        "PPU/events/frame prep": 218,
+        "RSP wait": 1,
+        "RSP/VRAM semaphore wait": 8,
+        "S-CPU interpreter": 60,
+        "frame/VI wait": 2751,
+        "input": 1
+      }
+    }
+  ],
+  "result": "Both original workloads retain60/60 in all five windows for reference and combined integration.",
+  "limits": [
+    "Capped throughput, no inferred FPS speedup or sum of branch percentages.",
+    "Sampling shares are not independent or exclusive subsystem costs.",
+    "No complete image/PCM/DAC/corpus acceptance follows from these captures."
+  ],
+  "recovery": {
+    "method": "Human power off/on; Reset-only caused black screen",
+    "restored_program": "coordinate8",
+    "install_readback_verified": true,
+    "responsive_menu": true,
+    "recovery_flag": 0
+  }
+}

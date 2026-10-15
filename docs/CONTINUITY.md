@@ -1,3 +1,52 @@
+# 2026-10-15 - Four PRs integrated and exact-source native controls captured
+
+RESUME HERE: [audit](INTEGRATION_AUDIT_2026-10-15.md), [merge/gate receipt](evidence/integration-master-2026-10-15.json)
+and [native controls](evidence/integration-native-controls-2026-10-15.json).
+Master8da020c3451cde7bc15483dd54b49f2bb1f77981 includes separate PR24 (SDK),
+PR23 (GAIN owner), PR22 (complete lookup reset) and PR25 (BRR arithmetic).
+Every applicable exact pre-merge gate passed, including119 directed APU cases.
+PR21 remains draft/unmerged. No renderer experiment or inaccurate audio mode landed.
+
+Four real-N64 captures, reference7cc8facf versus combinedfe5ce0bf, each pass
+five60/60VI windows on original balanced and mixed8 guests. Settings are APU21,
+fs0/audio4/precision8. Samples:3584/3582 reference and3585/3583 combined.
+Final-master8da020c3 src/Makefile match measured source; independently rebuilt
+98304-byte empty HW_PROFILE ROM is identical byte for byte. No sums of branch
+percentages or speedup claim from capped throughput. Mixed8 DSP sampling changes
+830/3582 to861/3583; this is a sampled share, not isolated or causal DSP cost.
+Full images/PCM/DAC/corpus acceptance remains open.
+
+Coordinate8 restored with successful install/readback, responsive paired menu,
+recovery0; native workers and deployer absent after restoration. Actual recovery
+for all four terminal captures required physical power off/on. Reset-only left
+black screen. Do not describe that as successful Reset recovery.
+
+PR26 exact587d1ac9476a1e7991a07181f6fab77d36a949ba extracts full-rate defaults
+from10662795. Linked comparison proves only two initialized bytes change:
+apu_clock42->21 and underclock menu4->0; all instructions/other loaded bytes/
+extents identical. Normal/PROFILE reset, GAIN and57344 BRR gates pass. Exact-head
+CI/APU proof pending; do not merge before gates. Master startup remains42 until
+this PR merges, although all measured captures forced21 before guest execution.
+
+Current user direction: use the available commercial SMW/ALttP/DKC1 on SummerCart
+for representative combined native validation. They do not retain the exact old
+Gothicvania/SRS-v5/Nova2 ROMs. Checked old Actions: ROM artifacts expired; retained
+prep10591984283 contains code/provenance, not the games. Do not ask for those
+missing ROMs again or substitute corpus labels. All commercial bytes/partidas/
+states/images/audio/hashes remain local.
+
+Save isolation was freshly checked in paired-menu source: remote launch requires
+diagnostic_saves1/diagnostic_continuous1, cart_load_emulator_path reserves new
+paths, and flashcart_load_save(NULL) disables automatic mutable writeback before
+loading the diagnostic reservation. Original SAV paths are not selected.
+Next extract proven capture/return diagnostics on clean master for aligned
+commercial scene/image/audio evidence. Keep scene-state continuation distinct;
+it is not arbitrary cross-build save support. R44/R45 blockers are unchanged.
+Only after this integrated combined evidence, integral resident DSP cost proof.
+Earlier entries below are historical, not additional requests.
+
+---
+
 # 2026-10-15 - First integrations landed: source SDK and legacy GAIN repair
 
 RESUME HERE: [integration audit](INTEGRATION_AUDIT_2026-10-15.md) and

@@ -2,11 +2,19 @@ name: Toolchain availability diagnostic
 on:
   push:
     branches: [integrate/ci-toolchain]
+permissions:
+  contents: read
+  packages: read
 jobs:
   registry:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
+      - name: Authenticate read-only package access
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
       - name: Read Docker failure directly
         run: |
           docker version

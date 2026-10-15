@@ -223,4 +223,3 @@ class CPU:
             pc = (pending if pending is not None else pc + 4) & MASK32
             pending = target & MASK32 if target is not None else None
         raise AssertionError(('compiled path did not terminate', hex(pc), max_steps))
-

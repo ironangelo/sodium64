@@ -1,6 +1,7 @@
 # R63 - deferred state on opcode-tag escape
 
-Status: IMPLEMENTED and locally qualified; native performance still unmeasured.
+Status: MEASURED, below the predeclared useful-recovery gate. Stop guard tuning.
+Runtime source441821b19c4fe17f766b87946f8210256b3c7a93.
 `SPC_BUS_CLOCK=1 SPC_CODE_GUARD=2` selects the lazy path. The default remains
 the eager guard (`SPC_CODE_GUARD=1`); the full experiment remains default-off.
 Mode0 remains an intentionally incorrect cost control, not a candidate.
@@ -35,7 +36,7 @@ Linked boot30 cases,43 arena owners and194 ROM slots pass. Allocated endD15C8
 leaves2616 bytes below unchanged arenaD2000. See PREFLIGHT.json and the directed,
 implied, immediate and default-off companion reports.
 
-Native discriminator: normal install/readback/launch for eager then lazy;
+Completed native discriminator: normal install/readback/launch for eager then lazy;
 pause at guest/render600, private image, resume and quiet20s capture. Compare
 only shared complete absolute guest boundaries and check the same start image.
 The planned host-FPS exclusion is192 pixels at [20,23,44,31]; preserve the full
@@ -45,8 +46,23 @@ establish complete image/audio fidelity, presentation FPS or corpus acceptance.
 
 Useful result: recover at least half the prior observed overhead, approximately
 0.483ms in the matched mean interval, with the start-image control passing.
-If this bounded attempt misses that gate, stop guard tuning and advance the
-broader fetch/epoch/dataflow and complete resident RSP DSP discriminator.
+The attempt missed that gate:1051 shared complete boundaries, guest603..1653,
+eager19.042996ms mean/18.379115ms median versus lazy18.696323ms/18.090517ms.
+The observed mean reduction is0.346673ms (1.820473%), recovering35.886% of the
+prior overhead; the threshold was0.483004ms. Completed cadence52.512746 versus
+53.486453Hz is not presentation FPS. Explicit RSP/VI wait composition changes
+too, so this is not exclusive CPU time. All67200 initial RGB pixels match,
+including the planned192 HUD exclusion; later image/audio fidelity is unproved.
+
+Both complete32KiB S64D v5 captures, settings, checksums and zero trace overflow
+pass. Exec25358 completed exit0; Python PID34444 and COM3 deployer are terminal/
+absent, verified using the actual handle/OS. Coordinate8/menu/install/readback
+restoration passes. Curated NATIVE.json contains only aggregate results; raw
+material stays private under spc-code-guard-lazy-r63-native-v1/.
+
+Retain the isolated implementation and semantic evidence without promotion;
+do not spend further batches micro-tuning this guard. Advance the broader
+fetch/epoch/dataflow and complete resident RSP DSP full-work discriminator.
 Absolute DSP epoch, pre-access catch-up, full fetch/echo coherence, live full
 DSP/DAC and sustained native60/50 remain OPEN. Master and prior candidates stay
 preserved; no integration, broad CI or performance acceptance in this checkpoint.

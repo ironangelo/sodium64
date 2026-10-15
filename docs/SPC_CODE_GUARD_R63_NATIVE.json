@@ -1,0 +1,73 @@
+{
+  "status": "MEASURED",
+  "runtime_source": "d079407e5162c57e86a3ed992825250b9c11de13",
+  "physical_console": true,
+  "paired_trials": 1,
+  "pair_preflight": "SPC_CODE_GUARD_R63_PREFLIGHT.json",
+  "settings": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layer": 0
+  },
+  "capture_seconds_per_variant": 20,
+  "retired_image_comparison": {
+    "guest_frame": 600,
+    "total_pixels": 67200,
+    "different_pixels": 0,
+    "excluded_host_FPS_rectangle": [
+      20,
+      23,
+      44,
+      31
+    ],
+    "excluded_pixels": 192,
+    "differing_pixels_outside_host_FPS": 0,
+    "game_work_equivalence_supported": true,
+    "complete_visual_fidelity_proved": false
+  },
+  "matched_completed_boundary_timing": {
+    "shared_guest_boundaries": 1042,
+    "first_guest": 603,
+    "last_guest": 1644,
+    "variants": {
+      "off": {
+        "matched_boundaries": 1042,
+        "completed_cadence_hz": 54.837576271988475,
+        "mean_interval_ms": 18.23567101215611,
+        "median_interval_ms": 17.469418666666666,
+        "mean_explicit_RSP_wait_ms": 0.451674349328215,
+        "mean_explicit_VI_wait_ms": 2.0574320563019834
+      },
+      "on": {
+        "matched_boundaries": 1042,
+        "completed_cadence_hz": 52.078780632764094,
+        "mean_interval_ms": 19.201678454254637,
+        "median_interval_ms": 18.447456,
+        "mean_explicit_RSP_wait_ms": 0.2715274318618042,
+        "mean_explicit_VI_wait_ms": 1.8173648010236725
+      }
+    },
+    "on_interval_change_percent": 5.297350678538648,
+    "cadence_is_presentation_FPS": false,
+    "pure_cost_interpretation_supported": true,
+    "intro_route_only": true,
+    "full_DSP_or_DAC_or_60FPS_acceptance": false
+  },
+  "mean_completed_interval_increase_ms": 0.9660074420985261,
+  "recovery": {
+    "coordinate8_install_readback_verified": true,
+    "responsive_menu_verified": true,
+    "live_worker": false
+  },
+  "disposition": "Retain isolated correctness prototype; no performance promotion. Budget the measured guard cost in the next fetch/epoch architecture.",
+  "limitations": [
+    "One paired intro route only; start image equality does not prove all later images or sound.",
+    "Completed-boundary cadence is not presentation FPS or exclusive CPU execution time.",
+    "Legacy DSP remains active; complete DSP/DAC/fidelity/corpus/60Hz/50Hz gates stay open.",
+    "Raw ROM/SRAM/captures/images/game-derived hashes remain private."
+  ],
+  "raw_commercial_data_included": false,
+  "full_goal_achieved": false
+}

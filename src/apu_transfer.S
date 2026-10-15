@@ -302,8 +302,13 @@ apu_movway: // MOVW op,YA
 .align 5
 apu_pha: // PUSH A
     // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -319,14 +324,23 @@ apu_pha: // PUSH A
     jal emit_jal
     nop
     EMIT_OP ADDI(S2, S2, -1)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#endif
     j finish_opcode
     nop
 
 .align 5
 apu_phx: // PUSH X
     // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -342,14 +356,23 @@ apu_phx: // PUSH X
     jal emit_jal
     nop
     EMIT_OP ADDI(S2, S2, -1)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#endif
     j finish_opcode
     nop
 
 .align 5
 apu_phy: // PUSH Y
     // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -365,14 +388,23 @@ apu_phy: // PUSH Y
     jal emit_jal
     nop
     EMIT_OP ADDI(S2, S2, -1)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#endif
     j finish_opcode
     nop
 
 .align 5
 apu_php: // PUSH PSW
     // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -390,14 +422,25 @@ apu_php: // PUSH PSW
     jal emit_jal
     nop
     EMIT_OP ADDI(S2, S2, -1)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#endif
     j finish_opcode
     nop
 
 .align 5
 apu_ppa: // POP A
     // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -417,8 +460,15 @@ apu_ppa: // POP A
 .align 5
 apu_ppx: // POP X
     // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -438,8 +488,15 @@ apu_ppx: // POP X
 .align 5
 apu_ppy: // POP Y
     // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -459,8 +516,15 @@ apu_ppy: // POP Y
 .align 5
 apu_ppp: // POP PSW
     // SPC700 stack operation has a dummy PC read and one additional internal cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack

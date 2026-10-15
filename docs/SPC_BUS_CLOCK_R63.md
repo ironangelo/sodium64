@@ -4,6 +4,44 @@ Status: IMPLEMENTED directed native-JIT timing/address correction, default-off.
 This is not a complete256-opcode bus bridge, live full DSP, native speed result
 or integrable candidate. R61's native upper-memory/window proof is preserved.
 
+## Stack and control bus correction
+
+The initial actual-JIT CONTROL_AUDIT has17 open cases: PUSH/POP lack a real
+dummy PC read; CALL/PCALL place their idle cycles incorrectly; TCALL/BRK read
+the vector before pushing the return state. Multi-byte stack accesses also
+cross the page boundary: CALL at SP$00 writes$00FF instead of$01FF, while
+RET/RETI pull from$0200 instead of$0100, producing the wrong return PC.
+The original numeric audit is preserved with its exact ELF hash.
+
+With SPC_BUS_CLOCK enabled, jit_dummy_pc emits a real bus read without advancing
+the compile PC; push/pull idles follow the primary sequence. CALL/PCALL move
+the post-push idles after the writes; TCALL/BRK push before fetching the vector.
+Stack addressing wraps within page one. BRK pushes the old PSW and changes I/B
+after the vector reads. RET also now loads the full apu_read8 compiler target:
+the old relocatable LI retained only its low16 bits, so the JAL worked but the
+bus classifier missed that first read. All changes remain default-off.
+
+CONTROL_CURRENT checks36 directed cases across clocks1/21/42/255 and two JIT
+buffer positions:288 variants, including96 actual resets. They cover all16
+TCALL vectors, single push/pull forms, CALL/PCALL/RET/RETI/BRK, and multi-byte
+push/pull wraps. Bus addresses/order/end clocks, aggregate totals, PC, A/X/Y/SP/
+PSW, written bytes and boundary canaries match, with exact cached replay.
+Two emitted-code mutations (wrong dummy PC; missing stack-page restoration)
+are rejected. This is directed coverage, not all-opcode/all-state acceptance.
+
+The32 clock,25 address,23 word and30 KOFF cases still pass on the control ELF;
+the existing clock/word mutations still fail as required. Default-off allocated
+sections of six ASM units, now including apu_control, remain byte-exact R61
+source61505bc6. Artifact build_spc_bus_clock_r63_control/s64-spc-control.elf,
+SPC_BUS_CLOCK=1/DSP_KOFF_RELEASE=1; total linked text+data773928 bytes, BSS0.
+The prior two-word KOFF delta proof stays pinned to its own preserved binaries.
+No COM3 use or native fidelity/DAC/FPS/CI/integration claim for this batch.
+
+Next audit branch/bit paths and the remaining dummy-PC instructions using the
+same real JIT. Absolute DSP epoch, pre-access catch-up and future-code echo/
+cache/tag integration still precede a live full-DSP bridge; full resident RSP
+DSP still needs an early native full-work cost discriminator.
+
 ## KOFF release guest-register repair
 
 The actual release-enabled binary proved a separate legacy I/O defect. With A

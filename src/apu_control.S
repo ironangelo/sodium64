@@ -456,7 +456,11 @@ apu_jmpm: // JMP [op]
 apu_call: // CALL op
     // CALL has one idle before stack pushes and two idles after them.
     jal jit_charge_cycles
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    li t0, 1
+#else
     li t0, 3
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -473,7 +477,11 @@ apu_call: // CALL op
     srl t2, a0, 8
     jal emit_op
     or t0, t0, t2
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_PREV
+#else
     EMIT_OP ADDI(A0, A0, -1)
+#endif
     la t0, apu_write8
     jal emit_jal
     nop
@@ -482,14 +490,25 @@ apu_call: // CALL op
     jal emit_op
     or t0, t0, t2
     EMIT_OP ADDI(S2, S2, -2)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 2
+#endif
     j finish_block
     nop
 
 .align 5
 apu_tcall1: // TCALL n
     // TCALL has a dummy PC read plus two internal idle cycles.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+#else
     jal jit_charge_cycles
     li t0, 3
+#endif
 
     // Create an address based on the opcode number
     srl t0, v1, 7
@@ -501,7 +520,8 @@ apu_tcall1: // TCALL n
     jal load_stack
     ori s1, s1, FLAG_SS | FLAG_PC
 
-    // Emit code to jump to an address from memory
+#ifndef SODIUM64_SPC_BUS_CLOCK
+    // Legacy order is retained only for the default-off control.
     la t0, apu_read8
     jal emit_jal
     nop
@@ -515,6 +535,7 @@ apu_tcall1: // TCALL n
     EMIT_OP ADDI(A0, A0, 1)
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(S0, S0, T0)
+#endif
 
     // Emit code to push the old program counter to the stack
     EMIT_OP ANDI(A0, S2, 0xFF)
@@ -526,7 +547,11 @@ apu_tcall1: // TCALL n
     srl t2, a0, 8
     jal emit_op
     or t0, t0, t2
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_PREV
+#else
     EMIT_OP ADDI(A0, A0, -1)
+#endif
     la t0, apu_write8
     jal emit_jal
     nop
@@ -535,6 +560,24 @@ apu_tcall1: // TCALL n
     jal emit_op
     or t0, t0, t2
     EMIT_OP ADDI(S2, S2, -2)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    // Vector reads occur after the pushes and the second idle.
+    jal jit_charge_cycles
+    li t0, 1
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    li t0, ORI(A0, ZERO, 0)
+    jal emit_op
+    or t0, t0, t7
+    EMIT_OP OR(S0, ZERO, V0)
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP SLL(T0, V0, 8)
+    EMIT_OP OR(S0, S0, T0)
+#endif
     j finish_block
     nop
 
@@ -542,7 +585,11 @@ apu_tcall1: // TCALL n
 apu_pcall: // PCALL uu
     // PCALL has one pre-push and one post-push idle cycle.
     jal jit_charge_cycles
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    li t0, 1
+#else
     li t0, 2
+#endif
 
     // Fetch the high-page parameter. Preserve it in v0 across load_stack;
     // full_address uses t2 as scratch while emitting the stack-pointer load.
@@ -569,7 +616,11 @@ apu_pcall: // PCALL uu
     srl t2, a0, 8
     jal emit_op
     or t0, t0, t2
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_PREV
+#else
     EMIT_OP ADDI(A0, A0, -1)
+#endif
     la t0, apu_write8
     jal emit_jal
     nop
@@ -578,14 +629,25 @@ apu_pcall: // PCALL uu
     jal emit_op
     or t0, t0, t2
     EMIT_OP ADDI(S2, S2, -2)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_charge_cycles
+    li t0, 1
+#endif
     j finish_block
     nop
 
 .align 5
 apu_ret: // RET
     // RET has a dummy PC read plus one internal idle cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -594,15 +656,28 @@ apu_ret: // RET
     // Emit code to pop the program counter from the stack
     EMIT_OP ADDI(A0, S2, 1)
     EMIT_OP ANDI(A0, A0, 0xFF)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    // LI with a relocatable symbol retains only its low half here; the bus
+    // classifier needs the full handler address even though JAL was usable.
+    la t0, apu_read8
+#else
     li t0, apu_read8
+#endif
     jal emit_jal
     nop
     EMIT_OP ORI(A0, A0, 0x100)
     EMIT_OP OR(S0, ZERO, V0)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_NEXT
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_OP OR(A0, ZERO, A0)
+#else
     EMIT_OP ADDI(A0, A0, 1)
+#endif
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(S0, S0, T0)
     EMIT_OP ADDI(S2, S2, 2)
@@ -612,8 +687,15 @@ apu_ret: // RET
 .align 5
 apu_ret1: // RET1
     // RET1 has a dummy PC read plus one internal idle cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+    jal jit_charge_cycles
+    li t0, 1
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -631,15 +713,29 @@ apu_ret1: // RET1
     EMIT_OP OR(S1, ZERO, V0)
 
     // Emit code to pop the program counter from the stack
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_NEXT
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_OP OR(A0, ZERO, A0)
+#else
     EMIT_OP ADDI(A0, A0, 1)
+#endif
     EMIT_OP OR(S0, ZERO, V0)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_NEXT
+#endif
     la t0, apu_read8
     jal emit_jal
     nop
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_OP OR(A0, ZERO, A0)
+#else
     EMIT_OP ADDI(A0, A0, 1)
+#endif
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(S0, S0, T0)
     EMIT_OP ADDI(S2, S2, 3)
@@ -649,8 +745,13 @@ apu_ret1: // RET1
 .align 5
 apu_brk: // BRK
     // BRK has a dummy PC read plus one internal idle cycle.
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    jal jit_dummy_pc
+    nop
+#else
     jal jit_charge_cycles
     li t0, 2
+#endif
 
     // Update the JIT register state
     jal load_stack
@@ -660,7 +761,8 @@ apu_brk: // BRK
     jal update_nz
     nop
 
-    // Emit code to jump to an address stored at 0xFFDE
+#ifndef SODIUM64_SPC_BUS_CLOCK
+    // Legacy order is retained only for the default-off control.
     la t0, apu_read8
     jal emit_jal
     nop
@@ -672,6 +774,7 @@ apu_brk: // BRK
     EMIT_OP ADDI(A0, A0, 1)
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(S0, S0, T0)
+#endif
 
     // Emit code to push the old program counter to the stack
     EMIT_OP ANDI(A0, S2, 0xFF)
@@ -683,7 +786,11 @@ apu_brk: // BRK
     srl t2, a0, 8
     jal emit_op
     or t0, t0, t2
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_PREV
+#else
     EMIT_OP ADDI(A0, A0, -1)
+#endif
     la t0, apu_write8
     jal emit_jal
     nop
@@ -693,14 +800,38 @@ apu_brk: // BRK
     or t0, t0, t2
 
     // Emit code to push the flags to the stack and modify current ones
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    EMIT_DP_PREV
+#else
     EMIT_OP ADDI(A0, A0, -1)
+#endif
     la t0, apu_write8
     jal emit_jal
     nop
     EMIT_OP OR(A1, ZERO, S1)
+#ifndef SODIUM64_SPC_BUS_CLOCK
     EMIT_OP ANDI(S1, S1, 0xFB) // Clear I
     EMIT_OP ORI(S1, S1, 0x10) // Set B
+#endif
     EMIT_OP ADDI(S2, S2, -3)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    // Push old P before changing it; only then fetch the interrupt vector.
+    jal jit_charge_cycles
+    li t0, 1
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP ORI(A0, ZERO, 0xFFDE)
+    EMIT_OP OR(S0, ZERO, V0)
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP SLL(T0, V0, 8)
+    EMIT_OP OR(S0, S0, T0)
+    EMIT_OP ANDI(S1, S1, 0xFB) // Clear I after the vector reads.
+    EMIT_OP ORI(S1, S1, 0x10) // Set B.
+#endif
     j finish_block
     nop
 

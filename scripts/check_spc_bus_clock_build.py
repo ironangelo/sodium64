@@ -10,7 +10,7 @@ def main():
     baseline='61505bc6c3a0a40b3c293bde214b0248851c0fb0';checked=[]
     with tempfile.TemporaryDirectory(prefix='s64-spc-clock-build-') as tmp:
         stage=Path(tmp)
-        for unit in ('apu_emitter','apu_address','apu_transfer','apu_alu','dsp'):
+        for unit in ('apu_emitter','apu_address','apu_transfer','apu_control','apu_alu','dsp'):
             original=stage/(unit+'.S');original.write_bytes(subprocess.check_output(['git','show',baseline+':src/'+unit+'.S'],cwd=root))
             objects=[]
             for index,source in enumerate((original,root/'src'/(unit+'.S'))):

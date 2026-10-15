@@ -5,13 +5,13 @@ from pathlib import Path
 from test_native_diag_continuous import CPU,signed
 from test_native_diag_arm import load_elf
 
-def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,memory_values=(),flags=0,test_pc=0x200,jit_mutation=None,dsp_address=0x2d,extra_setup=None,extra_outcome=None):
+def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,memory_values=(),flags=0,test_pc=0x200,jit_mutation=None,dsp_address=0x2d,extra_setup=None,extra_outcome=None,stack=0x7f):
     cpu=CPU(base.copy());s=symbols;start=1000000;events=[]
     cpu.regs[16]=test_pc;cpu.regs[19]=start;cpu.regs[7]=0
     cpu.write(s['apu_count'],test_pc,2);cpu.write(s['apu_clock'],clock,1)
     cpu.write(s['apu_flags'],flags,1);cpu.write(s['apu_accum'],0x11,1)
     cpu.write(s['apu_reg_x'],4,1);cpu.write(s['apu_reg_y'],6,1)
-    cpu.write(s['apu_stack'],0x7f,1);cpu.write(s['apu_halt'],0,1)
+    cpu.write(s['apu_stack'],stack,1);cpu.write(s['apu_halt'],0,1)
     cpu.write(s['apu_map']+0x3ff,0,1)
     cpu.write(s['dsp_addr'],dsp_address,1);cpu.write(s['dsp_regs']+dsp_address,0x55,1)
     cpu.write(s['jit_pointer'],jit_pointer)
@@ -37,12 +37,13 @@ def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,mem
     def outcome():
         result=dict(memory={hex(addr):cpu.read(s['apu_ram']+addr,1)for addr,value in memory_values},
                     registers={n:cpu.read(s[n],1)for n in ('apu_accum','apu_reg_x','apu_reg_y','apu_stack','apu_flags')})
+        result['PC']=cpu.read(s['apu_count'],2)
         if extra_outcome:result['extra']=extra_outcome(cpu,s)
         return result
     first_outcome=outcome()
     for addr,value in memory_values:cpu.write(s['apu_ram']+addr,value,1)
     cpu.write(s['dsp_regs']+dsp_address,0x55,1)
-    for name,value in (('apu_flags',flags),('apu_accum',0x11),('apu_reg_x',4),('apu_reg_y',6),('apu_stack',0x7f),('apu_halt',0)):
+    for name,value in (('apu_flags',flags),('apu_accum',0x11),('apu_reg_x',4),('apu_reg_y',6),('apu_stack',stack),('apu_halt',0)):
         cpu.write(s[name],value,1)
     if extra_setup:extra_setup(cpu,s)
     cpu.write(s['apu_count'],test_pc,2);cpu.regs[19]=start;cpu.regs[7]=0;events.clear()

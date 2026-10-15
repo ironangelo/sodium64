@@ -26,6 +26,9 @@
 .globl jit_read8
 .globl jit_charge_cycles
 .globl jit_emit_runtime_cycles
+#ifdef SODIUM64_SPC_BUS_CLOCK
+.globl jit_dummy_pc
+#endif
 .globl compile_block
 .globl finish_opcode
 .globl finish_block
@@ -171,6 +174,22 @@ jit_emit_runtime_cycles: // t0: conditional guest cycles to debit at runtime
     or t0, t0, t1
     jr t5
     nop
+
+#ifdef SODIUM64_SPC_BUS_CLOCK
+.align 5
+jit_dummy_pc: // Emit a real read at the current compile PC without fetching it.
+    // Compiler clobbers: t0/t1/t5, matching jit_emit_runtime_cycles.
+    move t5, ra
+    la t0, apu_read8
+    jal emit_jal
+    nop
+    li t0, ORI(A0, ZERO, 0)
+    andi t1, a0, 0xFFFF
+    jal emit_op
+    or t0, t0, t1 // emitted JAL delay slot
+    jr t5
+    nop
+#endif
 
 .align 5
 apu_nop:

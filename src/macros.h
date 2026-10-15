@@ -67,4 +67,12 @@
     EMIT_OP ANDI(A0, A0, 0xFF)
     EMIT_OP OR(A0, A0, T0)
 .endm
+
+// Stack pushes use the same eight-bit wrap inside page one.
+.macro EMIT_DP_PREV
+    EMIT_OP ANDI(T0, A0, 0x100)
+    EMIT_OP ADDI(A0, A0, -1)
+    EMIT_OP ANDI(A0, A0, 0xFF)
+    EMIT_OP OR(A0, A0, T0)
+.endm
 #endif

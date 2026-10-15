@@ -41,7 +41,8 @@
           "apu_reg_y": 18,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {},
       "expected_registers": {
@@ -100,7 +101,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 17,
@@ -150,7 +152,8 @@
           "apu_reg_y": 24,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {},
       "expected_registers": {
@@ -199,7 +202,8 @@
           "apu_reg_y": 243,
           "apu_stack": 127,
           "apu_flags": 168
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {},
       "expected_registers": {
@@ -248,7 +252,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 160
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {},
       "expected_registers": {
@@ -317,7 +322,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 34
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 0,
@@ -387,7 +393,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 160
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 255,
@@ -457,7 +464,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 1,
@@ -527,7 +535,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 2,
@@ -597,7 +606,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 0,
@@ -667,7 +677,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 1,
@@ -737,7 +748,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 160
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 0,
@@ -807,7 +819,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 160
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 1,
@@ -877,7 +890,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 160
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 255,
@@ -947,7 +961,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 34
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 0,
@@ -1017,7 +1032,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 160
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 255,
@@ -1087,7 +1103,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 34
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 0,
@@ -1157,7 +1174,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 254,
@@ -1227,7 +1245,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 255,
@@ -1297,7 +1316,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 254,
@@ -1367,7 +1387,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 32
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 255,
@@ -1437,7 +1458,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 160
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 253,
@@ -1507,7 +1529,8 @@
           "apu_reg_y": 6,
           "apu_stack": 127,
           "apu_flags": 160
-        }
+        },
+        "PC": 1024
       },
       "expected_memory": {
         "0x1ff": 254,
@@ -1522,7 +1545,7 @@
     "omit_page_mask",
     "omit_low_write"
   ],
-  "ELF_sha256": "d244171583b65f1f19bb9fecee636045fe25913e707f8387dbd1f52ce2f2fbf4",
+  "ELF_sha256": "a351c204a50c1d8ff38d1f82f84154d454e8738fd3678325f22888ab1d2c8d65",
   "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
   "native_performance_claim": false,
   "full_256_opcode_bus_accuracy_proved": false,

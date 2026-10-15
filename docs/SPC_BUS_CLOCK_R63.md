@@ -4,6 +4,36 @@ Status: IMPLEMENTED directed native-JIT timing/address correction, default-off.
 This is not a complete256-opcode bus bridge, live full DSP, native speed result
 or integrable candidate. R61's native upper-memory/window proof is preserved.
 
+## Live DBNZ displacement after its producer write
+
+The recorded within-instruction case is repaired. Enabled DBNZ dp now writes
+the decremented A1, performs the real displacement read at cycle5, then derives
+the signed16-bit target at runtime. apu_read8 preserves A1, so the zero test
+still uses the decremented byte. The zero path consumes5 cycles; only a taken
+branch consumes the two further idles. The default-off template stays intact.
+
+RELATIVE_CURRENT passes288 variants: eight decrement/sign boundaries, source
+PC$0100/$FFFE, three PSWs, clocks1/21/255, and normal/end-of-buffer JIT owners.
+The operand is also the data byte: read3/write4/read5 must observe the changed
+value. All addresses/clocks, totals, PC, unchanged registers/flags, data bytes,
+source-tag offsets and tagged recompilation/repeat outcomes match. At$FFFE the
+relative byte wraps to$0000, also testing invalidation through the ending tag.
+144 real buffer resets execute. Two mutations (omit runtime read; omit sign
+extension while retaining the correct total) are rejected.
+
+The19 architectural-escape cases,172 branch/bit cases and45 address/PC-wrap
+cases pass on build_spc_bus_clock_r63_relative/s64-spc-relative.elf, clock1/
+KOFF1, linked text+data774504 bytes/BSS0. Opcode-guard proof now records the
+within-instruction case as exact. Other unchanged-family regression evidence
+stays pinned to the preserved guard ELF; it is not relabelled as a new run.
+Seven default-off ASM units remain allocated-section byte-exact61505bc6.
+
+Runtime fetching is still partial: other relative/address operands, opcode
+fetch timing/I/O, DSP pre-access/absolute epoch and coherent echo publication
+remain open. The guard's native cost is still unmeasured; complete resident
+RSP DSP needs its early full-work discriminator. No COM3/native FPS/full
+fidelity/broad CI/integration acceptance. The complete objective remains OPEN.
+
 ## Opcode source-tag guard and architectural escape
 
 Enabled next_opcode now guards the current source page's32-bit tag after the

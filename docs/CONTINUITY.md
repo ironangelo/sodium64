@@ -1,3 +1,35 @@
+# 2026-10-15 - R63 DBNZ live displacement repairs within-instruction case
+
+RESUME HERE: source506b87998103c440c7442196bac6e6f0231cbe5e,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+Enabled DBNZ dp now writes decremented A1, reads the actual displacement at
+cycle5 and calculates the signed16-bit target at runtime. Zero path5 cycles,
+taken7; A1 survives the read and PSW is unchanged. The real own-displacement
+case now reaches$0102 rather than$0103 after writing$FF over$00. Default-off
+template unchanged; no new writable owner or alternate interpreter.
+
+RELATIVE_CURRENT288 cases: eight byte/sign boundaries, PC$0100/$FFFE, three
+PSWs, clocks1/21/255, normal and near-end JIT pointers. Real read3/write4/read5,
+data, target/totals/registers/flags/source-tag offsets and tagged recompilation/
+repeat all exact. At$FFFE the operand/data byte wraps to$0000 and invalidates
+through the ending source tag.144 real buffer resets; omit-read and omit-sign
+mutants rejected. Guard19/branch-bit172/wrap45 also pass on new relative ELF;
+other unchanged-family evidence remains pinned to previous guard ELF.
+
+build_spc_bus_clock_r63_relative/s64-spc-relative.elf, bus clock1/KOFF1,
+text+data774504 bytes/BSS0. Seven default-off ASM units remain allocated-section
+byte-exact R61. Previous binaries/evidence/candidates preserved. Native guard
+cost and full resident RSP DSP full-work cost still require early measurement.
+
+Next: broader runtime relative/address operands, opcode fetch timing/I/O,
+DSP pre-access/absolute epoch and coherent echo publication. Do not present
+these local bus/SMC repairs as full instruction-fetch/DSP correctness or native
+60/50 performance. No COM3/controller in batch; last recoverycoordinate8/menu.
+No broad CI/full fidelity/integration claim. Master unchanged. Full DSP/DAC/
+native60/50/corpus goal remains OPEN. Earlier history below.
+
+---
+
 # 2026-10-15 - R63 stale-opcode escape and full guest commit implemented
 
 RESUME HERE: source8f306f99f49acbded0a5b80abc75fc736fab2b28,

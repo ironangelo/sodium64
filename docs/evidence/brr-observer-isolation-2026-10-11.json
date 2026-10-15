@@ -1,0 +1,78 @@
+{
+  "checkpoint": "R24",
+  "code_commit": "1b12398077ad804874af42fcdc6be34be2793794",
+  "empty_emulator_sha256": "780186a1508f5bc814c8102f1f1cb41abef0ebf4c9bbb745786454c6b816159f",
+  "elf_sha256": "f25e0460a66500fd6ec2d86e1e7ba958a5aad735c3b97c0714974888975c1b77",
+  "flags": {
+    "AUDIO_OBSERVER": 1,
+    "SECTION_OBSERVER": 0,
+    "DSP_PITCH_CACHE": 1,
+    "DSP_BRR_ACCURATE": 1,
+    "BRR_OBSERVER": 1,
+    "DSP_KOFF_RELEASE": 0
+  },
+  "arena": "0xD4000",
+  "compiled_allocated_end": "0xD15C8",
+  "compiled_gap": "0x2A38",
+  "complete_memory_owners": 41,
+  "linked_decoder_voice_cases": 57344,
+  "decoder_negative_mutations": 4,
+  "retired_room_frame": 1980,
+  "image_comparison": {
+    "compared": 67200,
+    "differences": 0
+  },
+  "pcm_comparison": {
+    "bytes": 8192,
+    "differences": 0,
+    "dsp_state_equal": true
+  },
+  "native_decoder": {
+    "blocks": 32,
+    "half_samples": 128,
+    "differences": 0,
+    "voices_observed": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "filters_observed": [
+      2
+    ],
+    "ranges_observed": [
+      5,
+      6,
+      7
+    ],
+    "reference": "unmodified compiled Snes9x1.63 decode_brr",
+    "not_full_dac_audio_acceptance": true
+  },
+  "install_readback_verified": true,
+  "coordinate8_restored_readback_verified": true,
+  "paired_menu_responsive": true,
+  "polling_change": "20s quiet after step780; prior failed combined used 0.8s polls",
+  "timing_claim": false,
+  "root_cause_of_previous_failure": "unresolved",
+  "exact_1b12398_ci": {
+    "build_run": 38174698283,
+    "build": "success",
+    "all_required_build_jobs": "success",
+    "cgram_run": 38174701186,
+    "cgram": "success",
+    "ares_run": 38174701176,
+    "ares": "cancelled"
+  },
+  "full_audio_or_60fps_acceptance": false,
+  "commercial_data_included": false,
+  "R25_layout_correction": {
+    "CPU_arena": "0xD4000",
+    "actual_RSP_backup": "0xD2400",
+    "source_selected_owner_check_missed_compiled_writer": true,
+    "unified_layout_physically_qualified": false,
+    "native_image_pcm_decoder_comparisons_remain_valid": true
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "checkpoint": "R30",
+  "preceding_dry_production_cost": {
+    "title": {
+      "reference_retired_cadence": 54.3195895572027,
+      "dry_retired_cadence": 48.85449641968021,
+      "percent_change": -10.060998586462667,
+      "PCM_byte_differences": 7844,
+      "audio_production_fraction": 0.9098851988596007,
+      "capture_structure": "PASS",
+      "settings_match": true
+    },
+    "room": {
+      "reference_retired_cadence": 59.846049225182774,
+      "dry_retired_cadence": 54.202851877818745,
+      "percent_change": -9.429523620064483,
+      "PCM_byte_differences": 7011,
+      "audio_production_fraction": 0.9021335819523895,
+      "capture_structure": "PASS",
+      "settings_match": true
+    },
+    "rain": {
+      "reference_retired_cadence": 32.461938825891835,
+      "dry_retired_cadence": 32.22072182498886,
+      "percent_change": -0.7430763830735265,
+      "PCM_byte_differences": 7493,
+      "audio_production_fraction": 0.5348655220853752,
+      "capture_structure": "PASS",
+      "settings_match": true
+    }
+  },
+  "cache_optimization": {
+    "dry_only_unused_cache_return": true,
+    "release_max_instructions_before": 60,
+    "release_max_instructions_after": 39,
+    "direct_volume_writes": 4096,
+    "paired_execution": {
+      "passed": true,
+      "paired_real_scheduler_samples": 2048,
+      "paired_actual_APU_volume_writes": 2048,
+      "PCM_and_active_voice_register_state_equal": true,
+      "legacy_unused_cache_excluded_from_state_equality": true,
+      "physical_FPS_claim": false,
+      "reference_elf_sha256": "d9f47db97b53829b9e44e32d65e47c5f932ec95042db39f2785608b2c2831bed",
+      "optimized_elf_sha256": "4184c37dfdc7f35e7520da815be440bf45272e93297537c7f9c3ae0db1260295"
+    }
+  },
+  "native_title_room": {
+    "title": {
+      "dry_cadence": 48.85449641968021,
+      "cache_skip_cadence": 50.035869803297246,
+      "percent_change": 2.4181466808470553,
+      "PCM_bytes_compared": 8192,
+      "PCM_differences": 0,
+      "audio_fraction": 0.9187269776777663,
+      "all_settings_and_capture_structure_pass": true
+    },
+    "room": {
+      "dry_cadence": 54.202851877818745,
+      "cache_skip_cadence": 55.30680185957161,
+      "percent_change": 2.0367009179541595,
+      "PCM_bytes_compared": 8192,
+      "PCM_differences": 0,
+      "audio_fraction": 0.9201717299587331,
+      "all_settings_and_capture_structure_pass": true
+    }
+  },
+  "RGB": {
+    "checkpoints": 3,
+    "pixels": 201600,
+    "differences": 0
+  },
+  "PCM": {
+    "rings": 2,
+    "bytes": 16384,
+    "differences": 0
+  },
+  "empty_sha256": "9876e79ab2fb26bb2122703408c6daa21ef227ce3c99343f708cf09ae52a0011",
+  "elf_sha256": "4184c37dfdc7f35e7520da815be440bf45272e93297537c7f9c3ae0db1260295",
+  "rain_retested": false,
+  "rain_still_required": true,
+  "coordinate8_restored_readback_verified": true,
+  "scanner_menu_retained": true,
+  "preceding_exact_CI": {
+    "head": "4f3cadb22839fa3dd7f4a5cca0ef14fb89193211",
+    "build38184026520": "success",
+    "cgram38184029950": "success",
+    "ares38184029931": "success"
+  },
+  "full_goal_acceptance": false,
+  "commercial_data_included": false
+}

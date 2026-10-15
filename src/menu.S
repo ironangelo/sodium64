@@ -25,6 +25,9 @@
 .globl audio_set
 
 .globl update_menu
+#ifdef SODIUM64_NATIVE_DIAG
+.globl counter_set, underclk_set, draw_string, draw_char
+#endif
 
 .data
 
@@ -34,9 +37,23 @@ layer_set: .byte 0 << 2
 precision_set: .byte 2 << 2
 skipped_set: .byte 0 << 2
 audio_set: .byte 1 << 2
-underclk_set: .byte 1 << 2
+underclk_set: .byte 0 << 2
 left_str: .string "<"
 right_str: .string ">"
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.align 2
+continuous_menu_status: .word 0
+continuous_ok_text: .string "OK CAPTURE SAVED     "
+continuous_saving_text: .string "SAVING CAPTURE...    "
+continuous_failed_text: .string "SAVE FAILED          "
+continuous_full_text: .string "CAPTURE SLOTS FULL   "
+continuous_usb_text: .string "CAPTURE READY USB    "
+continuous_desc_text: .string "CAPTURE SD HANDOFF   "
+continuous_card_text: .string "CAPTURE SD INIT FAIL "
+continuous_slot_text: .string "CAPTURE SLOT FAILURE "
+continuous_io_text: .string "CAPTURE SD IO FAILED "
+continuous_verify_text: .string "CAPTURE VERIFY FAIL  "
+#endif
 
 .align 4
 title_str: .string "SODIUM64 SETTINGS"
@@ -146,12 +163,137 @@ end_string:
 
 .align 5
 update_menu: // a0: framebuffer
+#ifdef SODIUM64_REMOTE
+    // The previous renderer has naturally halted and this buffer is CPU
+    // owned. Interrupt exclusion precedes use of k0/k1 by the O64 bridge.
+    mfc0 t0, $12
+    li t1, -2
+    and t1, t0, t1
+    mtc0 t1, $12
+    nop
+    nop
+    la k0, remote_saved_status
+    sw t0, (k0)
+    jal remote_frame_bridge
+    nop
+#endif
+#ifdef SODIUM64_COLOR_DIAG
+    // This is a completed, unpublished CPU-owned buffer. The diagnostic uses
+    // only registers already clobbered by this menu path; t4/t5/t6/a0 survive.
+    j color_diag_producer
+    nop
+.globl color_diag_producer_return
+color_diag_producer_return:
+#endif
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // A completed, unpublished frame belongs to CPU here. Do not let VI use
+    // reserved k0/k1 while the service saves its caller's 64-bit context.
+    lw t0, native_diag_phase
+    addiu t0, t0, -2
+    bnez t0, continuous_menu_service_done
+    nop
+    mfc0 t0, $12
+    sw t0, continuous_menu_status
+    li t1, -2
+    and t1, t0, t1
+    mtc0 t1, $12
+    nop
+    nop
+    jal native_diag_service
+    nop
+    lw t0, continuous_menu_status
+    mtc0 t0, $12
+    nop
+    nop
+continuous_menu_service_done:
+#endif
     // Open the settings menu if start is pressed
     jal get_pressed
     li v1, 0 // Index
     andi t0, v0, 0x10 // Start
+#ifdef SODIUM64_NATIVE_DIAG
+    // N64 Start arms a 20-second measurement at the current game scene.
+    // It does not map to SNES Start (N64 A does), or open the settings menu.
+    beqz t0, native_diag_menu_ready
+    nop
+    jal native_diag_arm
+    nop
+native_diag_menu_ready:
+    move t0, zero
+#endif
     bnez t0, start_menu
     move t7, a0
+
+#ifdef SODIUM64_NATIVE_DIAG
+    // Show the capture state inside the CPU-owned UI border only.
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw t0, native_diag_continuous_mode
+    beqz t0, native_diag_menu_legacy_status
+    nop
+    lw t0, native_diag_phase
+    la a0, continuous_failed_text
+    beq t0, 4, native_diag_menu_failure
+    nop
+    la a0, continuous_usb_text
+    beq t0, 6, native_diag_menu_status
+    nop
+    la a0, continuous_full_text
+    beq t0, 5, native_diag_menu_status
+    nop
+    la a0, continuous_saving_text
+    beq t0, 2, native_diag_menu_status
+    nop
+    beq t0, 3, native_diag_menu_status
+    nop
+    la a0, native_diag_active_text
+    beq t0, 1, native_diag_menu_status
+    nop
+native_diag_menu_notice:
+    lw t0, native_diag_notice_active
+    beqz t0, native_diag_menu_legacy_status
+    nop
+    mfc0 t0, $9
+    lw t1, native_diag_ok_deadline
+    subu t0, t1, t0
+    la a0, continuous_ok_text
+    bgtz t0, native_diag_menu_status
+    nop
+    // Latch expiry: a later signed Count wrap must not resurrect this notice.
+    // Deadline zero is valid; only the separate active word marks visibility.
+    sw zero, native_diag_notice_active
+    b native_diag_menu_legacy_status
+    nop
+native_diag_menu_failure:
+    lw t1, continuous_save_error_code
+    la a0, continuous_verify_text
+    beq t1, 12, native_diag_menu_status
+    nop
+    lw t1, continuous_save_error_stage
+    la a0, continuous_desc_text
+    beq t1, 1, native_diag_menu_status
+    nop
+    la a0, continuous_card_text
+    sltiu t0, t1, 6
+    bnez t0, native_diag_menu_status
+    nop
+    la a0, continuous_slot_text
+    beq t1, 7, native_diag_menu_status
+    nop
+    la a0, continuous_io_text
+    b native_diag_menu_status
+    nop
+native_diag_menu_legacy_status:
+#endif
+    la t0, native_diag_state
+    lw t0, 112(t0)
+    la a0, native_diag_ready_text
+    beqz t0, native_diag_menu_status
+    nop
+    la a0, native_diag_active_text
+native_diag_menu_status:
+    jal draw_string
+    addi a1, t7, 8 * 2
+#endif
 
     // Draw the FPS counter if running and enabled
     lbu t0, counter_set

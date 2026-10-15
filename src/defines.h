@@ -19,6 +19,27 @@
 
 #include <regdef.h>
 
+// Opt-in hardware bank residency observer. Normal recorder builds retain BAN4.
+#ifndef SODIUM64_SIGNAL_PROFILE
+#define SODIUM64_SIGNAL_PROFILE 0
+#endif
+#ifndef SODIUM64_HCOMP_WIDE_MATH
+#define SODIUM64_HCOMP_WIDE_MATH 0
+#endif
+// Opt-in: publish Main math eligibility through two exact compressed Z tags.
+#ifndef SODIUM64_ELIGIBILITY_TAGS
+#define SODIUM64_ELIGIBILITY_TAGS 0
+#endif
+#ifndef SODIUM64_HCOMP_MASK_SCAN
+#define SODIUM64_HCOMP_MASK_SCAN 0
+#endif
+#ifndef SODIUM64_HCOMP_TLUT_SHADER
+#define SODIUM64_HCOMP_TLUT_SHADER 0
+#endif
+#ifndef SODIUM64_HCOMP_TLUT_FLAT_WINDOW
+#define SODIUM64_HCOMP_TLUT_FLAT_WINDOW 0
+#endif
+
 // Master cycle counts for CPU memory accesses
 #define RAM_CYCLE 8
 #define IO_CYCLE 6
@@ -30,6 +51,7 @@
 
 // Approximate master cycle count for DSP samples
 #define DSP_SAMPLE 672 // 21477000Hz / 32000Hz = 671.15625
+#define DSP_AI_DAC_RATE (48681812 / (60 * 262 * 341 * 4 / DSP_SAMPLE) + 1)
 
 // Maximum opcode bytes that can be compiled in an APU JIT block
 #define BLOCK_SIZE 16
@@ -112,6 +134,10 @@
 
 // Addresses of data in RDRAM that are shared between CPU and RSP
 #define ROM_BUFFER 0xA0200000
+// Full-section composition surfaces replace repeated eight-row redraws.
+// Cartridge capacity is unchanged; ROM pages still use the ordinary pager.
+#define ROM_CACHE_SLOTS 194
+#define ROM_CACHE_END (ROM_BUFFER + ROM_CACHE_SLOTS * 0x2000)
 #define JIT_BUFFER (ROM_BUFFER - 0x40000)
 #define TILE_CACHE_BG (JIT_BUFFER - 0x40000)
 #define TILE_CACHE_OBJ (TILE_CACHE_BG - 0x8000)
@@ -132,21 +158,67 @@
 #define FRAMEBUFFER2 (FRAMEBUFFER3 - 0x20D00)
 #define FRAMEBUFFER1 (FRAMEBUFFER2 - 0x20D00)
 
-// Gate-C lossless CGRAM epoch stream.  The typed event queues retain the
-// validated clean producer arena; the raw RGBA5551 shadows consume only the
+// Gate-C lossless CGRAM epoch stream. Diagnostic snapshots and USB helpers
+// require a larger static arena. Keep both CPU and RSP on the same layout.
+// Keep this boundary checked against every linked ELF; the raw shadows consume the
 // audited guard below FRAMEBUFFER1.
 #define HCOMP_RAW_PALETTE_QUEUE1 (FRAMEBUFFER1 - 0x3300)
 #define HCOMP_RAW_PALETTE_QUEUE2 (HCOMP_RAW_PALETTE_QUEUE1 + 0x800)
-#define HCOMP_CGRAM_BASE_QUEUE1 0xA00BE200
-#define HCOMP_CGRAM_BASE_QUEUE2 0xA00BE400
-#define HCOMP_CGRAM_SIDEBAND_QUEUE1 0xA00BE600
-#define HCOMP_CGRAM_SIDEBAND_QUEUE2 0xA00BEB00
-#define HCOMP_CGRAM_EVENT_QUEUE1 0xA00BF000
-#define HCOMP_CGRAM_EVENT_QUEUE2 0xA00D7000
+#if defined(SODIUM64_FULL_DSP_PROBE)
+#define HCOMP_CGRAM_ARENA 0xA00D6000
+#elif defined(SODIUM64_BRR_OBSERVER) || defined(SODIUM64_MIX_OBSERVER)
+#define HCOMP_CGRAM_ARENA 0xA00D4000
+#elif defined(SODIUM64_NATIVE_DIAG_TRACE) || defined(SODIUM64_PROFILE)
+#define HCOMP_CGRAM_ARENA 0xA00D2000
+#else
+#define HCOMP_CGRAM_ARENA 0xA00C2000
+#endif
+#define HCOMP_CGRAM_BASE_QUEUE1 HCOMP_CGRAM_ARENA
+#define HCOMP_CGRAM_BASE_QUEUE2 (HCOMP_CGRAM_ARENA + 0x200)
+#define HCOMP_CGRAM_SIDEBAND_QUEUE1 (HCOMP_CGRAM_ARENA + 0x400)
+#define HCOMP_CGRAM_SIDEBAND_QUEUE2 (HCOMP_CGRAM_ARENA + 0x900)
+#define HCOMP_CGRAM_EVENT_QUEUE1 (HCOMP_CGRAM_ARENA + 0xE00)
+#define HCOMP_CGRAM_EVENT_QUEUE2 0xA03E8000
 #define HCOMP_CGRAM_EVENT_CAPACITY 0x6000
+#define HCOMP_CGRAM_EVENT_BYTES (HCOMP_CGRAM_EVENT_CAPACITY * 4)
+
+#if HCOMP_CGRAM_EVENT_QUEUE1 + HCOMP_CGRAM_EVENT_BYTES > HCOMP_RAW_PALETTE_QUEUE1
+#error Q1 CGRAM events overlap raw palette shadows
+#endif
+
+// Three disjoint 240-row surfaces, with alignment padding and guard lines.
+// Their lifetime is one RSP-owned section; CPU writes only the row-color queues.
+#define HCOMP_SURFACE_BYTES 0x21000
+#define HCOMP_WINNER_ARENA 0xA0384000
+#define HCOMP_SUB_ARENA (HCOMP_WINNER_ARENA + HCOMP_SURFACE_BYTES)
+#define HCOMP_PRESENCE_ARENA (HCOMP_SUB_ARENA + HCOMP_SURFACE_BYTES)
+#define HCOMP_WINNER_ORIGIN (HCOMP_WINNER_ARENA + 0x80)
+#define HCOMP_SUB_ORIGIN (HCOMP_SUB_ARENA + 0x80)
+#define HCOMP_PRESENCE_ORIGIN (HCOMP_PRESENCE_ARENA + 0x80)
+#define HCOMP_ROW_FIXED_QUEUE1 0xA03E7000
+#define HCOMP_ROW_FIXED_QUEUE2 0xA03E7200
+
+#if ROM_CACHE_END != HCOMP_WINNER_ARENA
+#error ROM cache must end before the composition surfaces
+#endif
+#if HCOMP_PRESENCE_ARENA + HCOMP_SURFACE_BYTES > HCOMP_ROW_FIXED_QUEUE1
+#error Composition surfaces overlap row colors
+#endif
+#if HCOMP_ROW_FIXED_QUEUE2 + 512 > HCOMP_CGRAM_EVENT_QUEUE2
+#error Row colors overlap the Q2 event arena
+#endif
+#if HCOMP_CGRAM_EVENT_QUEUE2 + HCOMP_CGRAM_EVENT_BYTES != 0xA0400000
+#error Q2 event arena must fit within base 4 MiB RDRAM
+#endif
 
 // RSP addresses of data in DMEM; used to avoid setting the upper address
 #define TEXTURE 0x000
+#ifndef SODIUM64_TMEM_ATLAS
+#define SODIUM64_TMEM_ATLAS 0
+#endif
+#ifndef SODIUM64_TMEM_COORD_ATLAS
+#define SODIUM64_TMEM_COORD_ATLAS 0
+#endif
 #define TILE_TABLE (TEXTURE + 0x40)
 #define VRAM_TABLE (TILE_TABLE + 0x400)
 #define OAM (VRAM_TABLE + 0x400)
@@ -205,6 +277,7 @@
 #define RDP_TILE7 (RDP_TILE + 0x28)
 #define TILE_PARAMS (RDP_TILE7 + 0x78)
 #define LAYER_CHART (TILE_PARAMS + 0x20)
+#define OVERLAY_OBJECT_CACHE_SRC (LAYER_CHART + 7 * 16 + 8)
 #define OBJ_SIZES (LAYER_CHART + 0x90)
 #define FILL_JUMPS (OBJ_SIZES + 0x20)
 #define TILE_JUMPS (FILL_JUMPS + 0x10)
@@ -223,15 +296,64 @@
 // in E84..E89. Keep the count out of the byte-coordinate domain so x=255
 // remains an ordinary legal endpoint; E8B..E8F stay free before overlay ABI.
 #define WIN_COUNT (WIN_BOUNDS + 0x6)
-// Renderer overlay source pointers live in the audited scratch gap.
+// Mode7 consumes these exact spans through a separate small slot image.
+#define MODE7_WINDOW_INDEX (WIN_COUNT + 0x1)
+// Three fixed-slot renderer/H-COMP source pointers. E8C..E8F is the
+// already-audited free word; PR #18 replay state remains at E98 and above.
+#define OVERLAY_MODE7_SRC 0xE8C
 #define OVERLAY_MAIN_SRC 0xE90
-#define OVERLAY_MODE7_SRC 0xE94
+#define OVERLAY_HCOMP_SRC 0xE94
 #define HCOMP_RAW_PALETTE_PTRS 0xE98
 // Typed CGRAM event cursor published by the CPU while the RSP is halted.
 // EA0 lies in the audited retired DMEM interval below fixed VEC_DATA.
 #define HCOMP_CGRAM_EVENT_CURSOR 0xEA0
+#define OVERLAY_MODE7_DRAW_SRC 0xEA4
 #define HCOMP_CGRAM_PAIR_SCRATCH 0xEA8
 #define HCOMP_CGRAM_WRITE_SCRATCH 0xEB0
+// Full-height band phase state in the previously retired DMEM tail.
+#define OVERLAY_HCOMP_MATH_SRC 0xEB8
+#define HCOMP_SECTION_END 0xEBC
+#define HCOMP_BAND_Y 0xEC0
+#define HCOMP_BAND_ROWS 0xEC4
+#define HCOMP_SCREEN 0xEC8
+// Per-epoch Sub mask; fixed-operand direct composition does not render TS.
+#define HCOMP_EFFECTIVE_TS 0xEC9
+// Diagnostic-only 16-bit seqlock: epoch[15:4], loading[3], bank[2:0].
+#define NATIVE_DIAG_RSP_BANK 0xECA
+#define NATIVE_DIAG_SIGNAL_MASKS 0xEFC // Eight immutable halfwords; retired eligibility LUT tail.
+#define HCOMP_DIAG_COMPOSE_LIMIT 0xECC
+#define HCOMP_FIXED_COLOR 0xED0
+#define HCOMP_ROW_FIXED_SRC HCOMP_FIXED_COLOR
+// Per-band compact pixel origins, including the 12-pixel left border.
+// RDP image bases are 64-byte aligned even for scanline-sized sections.
+#define HCOMP_BAND_BASES 0xED4
+#define HCOMP_ELIGIBILITY_TABLE 0xEF8
+#define HCOMP_TAG_ENABLE_LUT 0xF0C // Seven class bits; does not overlap SIG1 masks.
+#define HCOMP_TLUT_CLASS 0xF13 // Active bit80, then base1/BG2/mixedOBJ3.
+#define OVERLAY_HCOMP_TLUT_SRC 0xF14
+#define HCOMP_TLUT_BASE HCOMP_WINNER_ARENA
+#define HCOMP_TLUT_BG (HCOMP_TLUT_BASE + 0x800)
+#define HCOMP_TLUT_OBJ (HCOMP_TLUT_BASE + 0x1000)
+// The former scalar lookup table is unused by the vector compositor.
+#define OVERLAY_HCOMP_SETUP_SRC HCOMP_ELIGIBILITY_TABLE
+#define HCOMP_OBJ_DEPTH_CMDS 0xEE0
+#define HCOMP_BAND_RAW 0xEF0
+// Geometry of the last normalized OBJ cache, plus the current safe span.
+// These words occupy existing zero padding; no resident ABI moves.
+#define HCOMP_OBJ_GEOMETRY_KEY 0xEF4
+#define HCOMP_FAST_END 0xF18
+#define HCOMP_OBJ_ADAPTIVE 0xF1C
+// Gate-C proof-only immutable RDP commands in the audited retired DMEM gap.
+// Eight commands occupy F30..F6F; VEC_DATA remains frozen at F70.
+// PipeSync is required before changing OtherModes while prior RDP work may
+// still be in flight; the BG depth table therefore begins one command later.
+#define HCOMP_TEXTURE_FENCE 0xF20
+#define OVERLAY_HCOMP_FAST_SRC 0xF28
+// Independent first-copy state. F28 remains the fast-bank source pointer;
+// this last retired word is zero in the initial Main DMEM image.
+#define HCOMP_VRAM_SNAPSHOT_READY 0xF2C
+#define HCOMP_PROOF_RDP_CMDS 0xF30
+#define HCOMP_PROOF_BG_DEPTH_CMDS (HCOMP_PROOF_RDP_CMDS + 0x20)
 #define VEC_DATA 0xF70
 
 // Macros that convert addresses between cached and uncached
@@ -240,3 +362,4 @@
 
 // Macro that converts an RSP DMEM address to a CPU address
 #define DMEM(addr) (0xA4000000 + (addr))
+

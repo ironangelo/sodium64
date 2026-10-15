@@ -88,6 +88,9 @@
 .globl write_nmitimen
 .globl write_vtimel
 .globl write_vtimeh
+#ifdef SODIUM64_NATIVE_DIAG
+.globl cgram, section_ptr, cur_line, queue_id
+#endif
 
 .data
 
@@ -96,6 +99,9 @@ vram: .hword 0:0x8000
 cgram: .hword 0:0x100
 oam: .byte 0:0x220
 vram_table: .byte 0:0x400
+vram_publish_full: .byte 1 // Boot zeroes must reach RDRAM before the first DMA.
+dpal_dirty: .byte 3 // Independent validity of the two alternating palette queues.
+dpal_brightness: .byte 255, 255
 
 .align 4
 section_ptr: .word SECTION_QUEUE1
@@ -183,9 +189,12 @@ hcomp_cgram_sideband_queues: .word HCOMP_CGRAM_SIDEBAND_QUEUE1, HCOMP_CGRAM_SIDE
 hcomp_cgram_event_queues: .word HCOMP_CGRAM_EVENT_QUEUE1, HCOMP_CGRAM_EVENT_QUEUE2
 hcomp_cgram_event_ptr: .word HCOMP_CGRAM_EVENT_QUEUE1
 hcomp_cgram_sideband_ptr: .word HCOMP_CGRAM_SIDEBAND_QUEUE1
+hcomp_row_fixed_ptr: .word HCOMP_ROW_FIXED_QUEUE1
+hcomp_row_fixed_queues: .word HCOMP_ROW_FIXED_QUEUE1, HCOMP_ROW_FIXED_QUEUE2
+hcomp_last_section_count: .hword 0
 hcomp_cgram_event_count: .hword 0
 hcomp_cgram_event_overflow: .byte 0
-.byte 0
+hcomp_last_section_brightness: .byte 0
 
 .align 4
 // Values that control the cooldown between frame sections (shift, minimum, increment)
@@ -196,6 +205,10 @@ vram_funcs: .word 0, vram_trans8, vram_trans9, vram_trans10 // VRAM address tran
 vram_incrs: .byte 1, 32, 128, 128 // VRAM access address increments
 
 .text
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_ppu_start
+native_diag_ppu_start:
+#endif
 .set noreorder
 
 .align 5
@@ -227,6 +240,20 @@ run_line:
     andi t0, t0, 0x80
     bnez t0, next_line
     nop
+
+    // Own the exact fixed operand for every displayed guest row. HDMA below
+    // changes the following row; row N-1 uses the state sampled at line N.
+hcomp_record_row_input:
+    lhu t1, cur_line
+    addi t1, t1, -1
+    sltiu t0, t1, 240
+    beqz t0, hcomp_row_fixed_recorded
+    sll t1, t1, 1
+    lhu t0, sub_color
+    lw t2, hcomp_row_fixed_ptr
+    add t2, t2, t1
+    sh t0, 0(t2)
+hcomp_row_fixed_recorded:
 
     // Decrement the section cooldown if non-zero
     lhu t0, sect_status
@@ -372,6 +399,86 @@ make_section: // a0: line
     sb a0, (t1)
 
 section_init:
+    // Merge only fixed-operand HALF epochs with uniform COLOR masks. Every
+    // source byte must match, with no new CGRAM event or dirty OAM. Row colors
+    // retain the operand at each line, so no palette/window/geometry is lost.
+    lbu t0, stat_flags
+    andi t0, t0, 0x40
+    bnez t0, hcomp_new_section
+    nop
+    lbu t0, cgwsel
+    andi t0, t0, 0xF2
+    bnez t0, hcomp_new_section
+    nop
+    lbu t0, cgadsub
+    andi t0, t0, 0x40
+    beqz t0, hcomp_new_section
+    nop
+    lbu t0, brightness
+    lbu t1, hcomp_last_section_brightness
+    bne t0, t1, hcomp_new_section
+    nop
+    lhu t0, hcomp_cgram_event_count
+    lhu t1, hcomp_last_section_count
+    bne t0, t1, hcomp_new_section
+    nop
+    lbu t0, queue_id
+    lw t1, sect_queues(t0)
+    lw t0, section_ptr
+    beq t0, t1, hcomp_new_section
+    addi t0, t0, -SECTION_SIZE
+    la t1, bghofs
+    ld t2, 0(t0)
+    ld t3, 0(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 8(t0)
+    ld t3, 8(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 16(t0)
+    ld t3, 16(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 24(t0)
+    ld t3, 24(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 40(t0)
+    ld t3, 40(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 48(t0)
+    ld t3, 48(t1)
+    bne t2, t3, hcomp_new_section
+    nop
+    ld t2, 32(t0)
+    ld t3, 32(t1)
+    xor t2, t2, t3
+    li t3, -65536 // Exclude only SUB_COLOR, bytes38..39.
+    and t2, t2, t3
+    bnez t2, hcomp_new_section
+    nop
+    ld t2, 56(t0)
+    ld t3, 56(t1)
+    xor t2, t2, t3
+    li t3, -16640 // Exclude SPLIT_LINE and historical OAM dirty bit40.
+    and t2, t2, t3
+    bnez t2, hcomp_new_section
+    nop
+    jr ra
+    nop
+hcomp_new_section:
+#ifdef SODIUM64_NATIVE_DIAG
+    la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_section_count_done
+    nop
+    lw t1, 56(t0)
+    addiu t1, t1, 1
+    sw t1, 56(t0)
+native_diag_section_count_done:
+#endif
     // Check if OAM should be updated
     lbu t0, stat_flags
     andi t1, t0, 0x40
@@ -439,6 +546,9 @@ section_loop:
     sw t1, hcomp_cgram_event_ptr
     addi t0, t0, 1
     sh t0, hcomp_cgram_event_count
+    sh t0, hcomp_last_section_count
+    lbu t0, brightness
+    sb t0, hcomp_last_section_brightness
     b hcomp_cgram_marker_done
     nop
 
@@ -460,6 +570,9 @@ hcomp_cgram_begin_frame:
     // The raw shadow is now the handed frame's historical-base workspace,
     // not a frame-final diagnostic snapshot.
     lbu t0, queue_id
+    lw t1, hcomp_row_fixed_queues(t0)
+    sw t1, hcomp_row_fixed_ptr
+    sh zero, hcomp_last_section_count
     lw t1, hcomp_cgram_base_queues(t0)
     lw t2, hcomp_cgram_event_queues(t0)
     lw t3, hcomp_cgram_sideband_queues(t0)
@@ -569,6 +682,23 @@ end_fill:
 
 .align 5
 rsp_frame:
+#ifdef SODIUM64_REMOTE
+    // Count an actual guest boundary before optional renderer skipping.
+    // Remote durations expire here, not at VI or rendered frame cadence.
+    lw t0, remote_guest_frames
+    addiu t0, t0, 1
+    sw t0, remote_guest_frames
+    lw t0, remote_button_frames
+    beqz t0, remote_guest_count_done
+    nop
+    addiu t0, t0, -1
+    sw t0, remote_button_frames
+    bnez t0, remote_guest_count_done
+    nop
+    sw zero, remote_buttons
+    sh zero, joyxlh
+remote_guest_count_done:
+#endif
     // Make a final frame section and get alternating queue indices
     lbu t5, queue_id // Next
     lhu a0, cur_line
@@ -595,8 +725,25 @@ skip_reset:
     sw t0, section_ptr
     sw t1, oam_ptr
 
-    // Set initial values for palette conversion
+    // Reuse a queue only when both its CGRAM and brightness remain current.
+    // Raster CGRAM epoch capture is independent and always remains active.
+dpal_update_begin:
     lbu t0, brightness
+    srl t2, t5, 2
+    lbu t1, dpal_dirty
+    li t3, 1
+    sllv t3, t3, t2
+    and t6, t1, t3
+    bnez t6, dpal_update_needed
+    nop
+    lbu t6, dpal_brightness(t2)
+    beq t0, t6, dpal_update_end
+    nop
+dpal_update_needed:
+    sb t0, dpal_brightness(t2)
+    nor t3, t3, zero
+    and t1, t1, t3
+    sb t1, dpal_dirty
     lw v1, pal_queues(t5)
     addi v1, v1, 0x7F8
     li t6, 0x1FE
@@ -634,8 +781,14 @@ update_dpal:
     addi t6, t6, -2
     bnez t6, update_dpal
     addi v1, v1, -8
+dpal_update_end:
 
-    // Reset and copy the VRAM dirty table to the queue for the next frame
+    // Hand off the unchanged dirty table and publish only changed 512-byte
+    // VRAM groups. Every guest VRAM writer marks its 64-byte block. The first
+    // handoff additionally publishes initialized zeroes, even for clean groups.
+vram_flush_begin:
+    lbu t6, vram_publish_full
+    la v1, vram
     la t0, vram_table
     lw t1, dirty_queues(t5)
     li t2, 0x400
@@ -645,24 +798,119 @@ dirty_loop:
     sd zero, (t0)
     addi t0, t0, 8
     sd t3, (t1)
+    or t3, t3, t6
+    beqz t3, vram_group_advance
+    nop
+vram_loop:
+    cache 0x19, 0x000(v1)
+    cache 0x19, 0x010(v1)
+    cache 0x19, 0x020(v1)
+    cache 0x19, 0x030(v1)
+    cache 0x19, 0x040(v1)
+    cache 0x19, 0x050(v1)
+    cache 0x19, 0x060(v1)
+    cache 0x19, 0x070(v1)
+    cache 0x19, 0x080(v1)
+    cache 0x19, 0x090(v1)
+    cache 0x19, 0x0A0(v1)
+    cache 0x19, 0x0B0(v1)
+    cache 0x19, 0x0C0(v1)
+    cache 0x19, 0x0D0(v1)
+    cache 0x19, 0x0E0(v1)
+    cache 0x19, 0x0F0(v1)
+    cache 0x19, 0x100(v1)
+    cache 0x19, 0x110(v1)
+    cache 0x19, 0x120(v1)
+    cache 0x19, 0x130(v1)
+    cache 0x19, 0x140(v1)
+    cache 0x19, 0x150(v1)
+    cache 0x19, 0x160(v1)
+    cache 0x19, 0x170(v1)
+    cache 0x19, 0x180(v1)
+    cache 0x19, 0x190(v1)
+    cache 0x19, 0x1A0(v1)
+    cache 0x19, 0x1B0(v1)
+    cache 0x19, 0x1C0(v1)
+    cache 0x19, 0x1D0(v1)
+    cache 0x19, 0x1E0(v1)
+    cache 0x19, 0x1F0(v1)
+vram_group_advance:
+    addi v1, v1, 512
     bnez t2, dirty_loop
     addi t1, t1, 8
+    sb zero, vram_publish_full
+vram_flush_end:
 
-    // Ensure cached VRAM is written back to memory
-    la t0, vram
-    add t1, t0, 0xFFE0
-vram_loop:
-    cache 0x19, 0x00(t0)
-    cache 0x19, 0x10(t0)
-    bne t0, t1, vram_loop
-    addi t0, t0, 0x20
-
+#ifdef SODIUM64_NATIVE_DIAG
+    // Timer/VI interrupts cannot run inside an outer TLB exception (EXL=1).
+    // Keep an independent Count deadline for this particular blocking wait.
+    la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_rsp_wait_start_done
+    nop
+    mfc0 t1, $9
+    sw t1, 116(t0)
+native_diag_rsp_wait_start_done:
+#endif
 rsp_wait:
+#ifdef SODIUM64_NATIVE_DIAG
+.globl native_diag_rsp_wait, native_diag_rsp_wait_end
+native_diag_rsp_wait:
+    la t1, native_diag_state
+    lw t0, 112(t1)
+    bnez t0, native_diag_rsp_watchdog_active
+    nop
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw t0, native_diag_phase
+    addiu t0, t0, -2
+    bnez t0, native_diag_rsp_watchdog_end
+    nop
+    mfc0 t0, $9
+    la t1, UNCACHED(sram + 0x204C)
+    lw t1, (t1)
+    subu t0, t0, t1
+    li t1, 93750000
+    sltu t0, t0, t1
+    bnez t0, native_diag_rsp_watchdog_end
+    nop
+    la a0, native_diag_rsp_wait
+    b native_diag_sealed_wait_stall
+    nop
+#else
+    b native_diag_rsp_watchdog_end
+    nop
+#endif
+native_diag_rsp_watchdog_active:
+    mfc0 t0, $9
+    lw t1, 116(t1)
+    subu t0, t0, t1
+    li t1, 93750000
+    sltu t0, t0, t1
+    beqz t0, native_diag_wait_stall_rsp
+    nop
+native_diag_rsp_watchdog_end:
+#endif
     // Wait until the RSP is finished rendering
     lw t0, 0xA4040010 // SP_STATUS
     andi t0, t0, 0x1 // Halt
     beqz t0, rsp_wait
     xori t6, t5, 0x4
+#ifdef SODIUM64_NATIVE_DIAG
+native_diag_rsp_wait_end:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_rsp_wait_metric_done
+    nop
+    mfc0 t1, $9
+    lw t2, 116(t0)
+    subu t1, t1, t2
+    sw t1, 204(t0)
+native_diag_rsp_wait_metric_done:
+#endif
+.globl native_diag_rsp_wait_size
+.equ native_diag_rsp_wait_size, native_diag_rsp_wait_end - native_diag_rsp_wait
+#endif
 
     // Update the software-rendered UI
     lw a0, DMEM(FRAMEBUFFER)(t6)
@@ -670,6 +918,15 @@ rsp_wait:
     nop
 
 menu_return:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    jal native_diag_frame_complete
+    nop
+#elif defined(SODIUM64_NATIVE_DIAG)
+    la t0, native_diag_state
+    lw t1, 24(t0)
+    addiu t1, t1, 1
+    sw t1, 24(t0)
+#endif
     // Increment the frame counters with VI interrupts disabled
     li t0, 0x40 // Clear VI mask
     sw t0, 0xA430000C // MI_MASK
@@ -715,16 +972,94 @@ set_buffer:
     // halted. The future consumer will advance its private EA0 cursor.
     lw t0, hcomp_cgram_event_queues(t5)
     sw t0, DMEM(HCOMP_CGRAM_EVENT_CURSOR)
+    lw t0, hcomp_row_fixed_queues(t5)
+    sw t0, DMEM(HCOMP_ROW_FIXED_SRC)
 
     // Provide an address and set the semaphore for copying VRAM
     la t0, UNCACHED(vram)
     sw t0, DMEM(VRAM_ADDRS + 4)
     lw t0, 0xA404001C
 
+#ifdef SODIUM64_NATIVE_DIAG
+    la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_frame_wait_start_done
+    nop
+    mfc0 t1, $9
+    sw t1, 116(t0)
+native_diag_frame_wait_start_done:
+#endif
 frame_wait:
+#ifdef SODIUM64_NATIVE_DIAG
+.globl native_diag_frame_wait, native_diag_frame_wait_end
+native_diag_frame_wait:
+    la t1, native_diag_state
+    lw t0, 112(t1)
+    bnez t0, native_diag_frame_watchdog_active
+    nop
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    lw t0, native_diag_phase
+    addiu t0, t0, -2
+    bnez t0, native_diag_frame_watchdog_end
+    nop
+    mfc0 t0, $9
+    la t1, UNCACHED(sram + 0x204C)
+    lw t1, (t1)
+    subu t0, t0, t1
+    li t1, 93750000
+    sltu t0, t0, t1
+    bnez t0, native_diag_frame_watchdog_end
+    nop
+    la a0, native_diag_frame_wait
+    b native_diag_sealed_wait_stall
+    nop
+#else
+    b native_diag_frame_watchdog_end
+    nop
+#endif
+native_diag_frame_watchdog_active:
+    mfc0 t0, $9
+    lw t1, 116(t1)
+    subu t0, t0, t1
+    li t1, 93750000
+    sltu t0, t0, t1
+    beqz t0, native_diag_wait_stall_frame
+    nop
+native_diag_frame_watchdog_end:
+#endif
     // Wait for a framebuffer to be available
     lbu t0, frame_count
     beq t0, 2, frame_wait
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    nop // Keep the conditional trace metric's LA outside the delay slot.
+#endif
+
+#ifdef SODIUM64_NATIVE_DIAG
+native_diag_frame_wait_end:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_frame_wait_metric_done
+    nop
+    mfc0 t1, $9
+    lw t2, 116(t0)
+    subu t1, t1, t2
+    sw t1, 208(t0)
+native_diag_frame_wait_metric_done:
+#endif
+.globl native_diag_frame_wait_size
+.equ native_diag_frame_wait_size, native_diag_frame_wait_end - native_diag_frame_wait
+    // The branch's historical delay instruction (li t0,1) remains below.
+    li t0, 1
+    la t0, native_diag_state
+    lw t1, 112(t0)
+    beqz t1, native_diag_submit_count_done
+    nop
+    lw t1, 28(t0)
+    addiu t1, t1, 1
+    sw t1, 28(t0)
+native_diag_submit_count_done:
+#endif
 
     // Unhalt the RSP so it can render the next frame
     li t0, 0x1 // Clear halt
@@ -1351,6 +1686,10 @@ write_vmdatal: // a1: value
     lw t0, 0x001C(t1)
     bnez t0, write_vmdatal
     nop
+#ifdef SODIUM64_NATIVE_DIAG
+.globl native_diag_vram_low_end
+native_diag_vram_low_end:
+#endif
     sw zero, 0x001C(t1)
 
     // Write to the low VRAM byte at the current address
@@ -1387,6 +1726,10 @@ write_vmdatah: // a1: value
     lw t0, 0x001C(t1)
     bnez t0, write_vmdatah
     nop
+#ifdef SODIUM64_NATIVE_DIAG
+.globl native_diag_vram_high_end
+native_diag_vram_high_end:
+#endif
     sw zero, 0x001C(t1)
 
     // Write to the high VRAM byte at the current address
@@ -1539,7 +1882,14 @@ cg_high:
     lbu t1, cg_lsb
     sll t2, a1, 8
     or t1, t1, t2
+    lhu t2, cgram(t0)
     sh t1, cgram(t0)
+    // The bus write/latch/address advance still happened. An identical color
+    // changes no palette epoch and must not split or invalidate the renderer.
+    beq t2, t1, cg_same_color_return
+    nop
+    li t2, 3
+    sb t2, dpal_dirty
 
     // VBlank writes fold into the next frame's base snapshot. During the
     // active frame, append every complete color commit before sectioning.
@@ -1598,6 +1948,10 @@ cg_epoch_overflow:
 cg_epoch_done:
     beqz t0, update_fill
     nop
+    jr ra
+    nop
+
+cg_same_color_return:
     jr ra
     nop
 
@@ -1818,3 +2172,9 @@ write_vtimeh: // a1: value
     sb t0, vtime
     jr ra
     nop
+
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+.globl native_diag_ppu_end
+native_diag_ppu_end:
+#endif

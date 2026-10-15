@@ -28,6 +28,7 @@
 .globl read_joyxl
 .globl read_joyxh
 .globl write_joywr
+.globl joyxlh
 
 .data
 
@@ -132,6 +133,14 @@ flush_next:
     b flush_loop
     nop
 flush_end:
+#ifdef SODIUM64_REMOTE
+    lw t0, remote_button_frames
+    beqz t0, remote_flush_physical
+    nop
+    lw t0, remote_buttons
+    sh t0, joyxlh
+remote_flush_physical:
+#endif
     jr ra
     nop
 

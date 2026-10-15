@@ -20,6 +20,16 @@
 #include <rsp.inc>
 #include "defines.h"
 
+#ifndef SODIUM64_SPARSE_VRAM
+#define SODIUM64_SPARSE_VRAM 1
+#endif
+#if SODIUM64_ELIGIBILITY_TAGS && !SODIUM64_SPARSE_VRAM
+#error "ELIGIBILITY_TAGS requires the sparse VRAM resident helper hole"
+#endif
+#if SODIUM64_HCOMP_TLUT_SHADER && !SODIUM64_ELIGIBILITY_TAGS
+#error "HCOMP_TLUT_SHADER requires ELIGIBILITY_TAGS"
+#endif
+
 .data
 
 // Empty values that are defined as macros
@@ -45,14 +55,16 @@ rdp_init:
     .dword 0x320000000307F07F // Set Tile Size (mode 7)
 
 rdp_frame:
-    // RDP commands that run at the start of a frame
+    // RDP commands that run at the start of a frame. Keep this fixed at
+    // three commands: the following retired fill slot carries palette LoadBlock.
     .dword 0x3F10011700000000 // Set Color Image
     .dword 0x3D10000000000000 // Set Texture Image (palette)
-    .dword 0x3300000000400000 // Load Block (palette)
+    .dword 0x2600000000000000 // Sync Load
 
 rdp_fill:
-    // RDP commands that run when filling the backdrop
-    .dword 0x2800000000000000 // Sync Tile
+    // The first slot is consumed only by the frame-start palette load. Fill/
+    // scissor submissions begin at RDP_FILL+8, preserving the fixed DMEM map.
+    .dword 0x3300000000400000 // Load Block (palette)
     .dword 0x2D030020004303A0 // Set Scissor
     .dword 0x3A00000000000000 // Set Primitive Color
     .dword 0x3C080E10001D86C3 // Set Combine (primitive)
@@ -68,7 +80,7 @@ rdp_window:
 rdp_tile:
     // RDP commands that run when a regular tile is drawn
     .dword 0x3D50000300000000 // Set Texture Image (texture)
-    .dword 0x2800000000000000 // Sync Tile
+    .dword 0x2600000000000000 // Sync Load: retire prior texture load before LoadBlock
     .dword 0x330000000101F800 // Load Block (texture)
     .dword 0x2400000002000000 // Texture Rectangle 1
     .dword 0x0000000004000400 // Texture Rectangle 2
@@ -76,7 +88,7 @@ rdp_tile:
 rdp_tile7:
     // RDP commands that run when a mode 7 tile is drawn
     .dword 0x3D50000300000000 // Set Texture Image (texture)
-    .dword 0x2800000000000000 // Sync Tile
+    .dword 0x2600000000000000 // Sync Load: retire prior texture load before LoadBlock
     .dword 0x330000000101F800 // Load Block (texture)
     .dword 0x0A83000000000000 // Texture Triangle 1
     .dword 0x0100000000000000 // Texture Triangle 2
@@ -131,12 +143,56 @@ fillrec_mask: .word 0xFF000FFF
 ldblk_bits: .word 0x01000200
 mode7_mask: .word 0x0003FFFF
 
-// Reserve renderer overlay source pointers without moving vector data.
-.byte 0:(OVERLAY_MAIN_SRC - PRIO_CHECKS)
-overlay_main_src: .word 0
+// Reserve three fixed-slot source pointers without moving PR #18 scratch
+// or the fixed vector ABI.
+.byte 0:(OVERLAY_MODE7_SRC - PRIO_CHECKS)
 overlay_mode7_src: .word 0
-.byte 0:(VEC_DATA - (OVERLAY_MODE7_SRC + 4))
-
+overlay_main_src: .word 0
+overlay_hcomp_src: .word 0
+hcomp_raw_palette_ptrs: .word 0, 0
+.byte 0:(HCOMP_OBJ_DEPTH_CMDS - (HCOMP_RAW_PALETTE_PTRS + 8))
+hcomp_obj_depth_cmds:
+    .dword 0x2E00000058000000
+    .dword 0x2E00000068000000
+.byte 0:(HCOMP_ELIGIBILITY_TABLE - (HCOMP_OBJ_DEPTH_CMDS + 16))
+// RDP Z is compressed, not linear primitive-depth / 2 at larger depths.
+// Actual stored tags:0400,0C00,1400,1C00,2800,3800,5000. Index by >>10.
+hcomp_eligibility_table:
+    .byte 0,0x20,0,1 // EF8..EFB is later owned by OVERLAY_HCOMP_SETUP_SRC.
+#if SODIUM64_SIGNAL_PROFILE
+native_diag_signal_masks:
+    .hword 0x002A,0x002C,0x0032,0x0034,0x004A,0x004C,0x0052,0x0054
+#else
+    .byte 0,2,0,4,0,0,8,0,0,0,0,0,0,0,0,0
+#endif
+#if SODIUM64_ELIGIBILITY_TAGS
+hcomp_tag_enable_lut:
+    .byte 0x20,1,2,4,8,0,0x10 // Backdrop, BG1..4, OBJ low/high palette.
+    .byte 0,0,0,0,0
+#else
+    .byte 0x10,0,0,0,0,0,0,0,0,0,0,0 // Preserve F0C..F17 exactly.
+#endif
+// Keep PR #18 CGRAM scratch untouched, then place the proof-only RDP command
+// table at the audited retired DMEM tail. The table is immutable:
+//   +00 PipeSync before the proof-time OtherModes attribute change
+//   +08 OtherModes: alpha test + primitive depth + Z update, no Z compare
+//   +10 Set Z Image: compact E2000 strip aligned to global y=16
+//   +18 backdrop/absence primitive-depth tag 0x0800 -> stored Z 0x0400
+//   +20..+38 BG1..BG4 winner tags
+.byte 0:(HCOMP_TEXTURE_FENCE - (HCOMP_ELIGIBILITY_TABLE + 32))
+hcomp_texture_fence:
+    .dword 0x2900000000000000
+.byte 0:(HCOMP_PROOF_RDP_CMDS - (HCOMP_TEXTURE_FENCE + 8))
+hcomp_proof_rdp_cmds:
+    .dword 0x2700000000000000
+    .dword 0x2F0088FF00040025
+    .dword 0x3E000000000DFD00
+    .dword 0x2E00000008000000
+    .dword 0x2E00000018000000
+    .dword 0x2E00000028000000
+    .dword 0x2E00000038000000
+    .dword 0x2E00000048000000
+// Eight proof commands fill F30..F6F exactly; VEC_DATA starts at F70.
 vec_data:
     // Constants that are always kept in vector registers
     .hword 0x0002, 0x0000, 0x0002, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 // Tile increment
@@ -172,15 +228,14 @@ main:
     li sp, 0 // Frame index
 
 draw_frame:
-    // Set initial values for copying VRAM
+#if !SODIUM64_SPARSE_VRAM
+    // Matched control: the original complete snapshot and dirty-table body.
     li a0, TILE_TABLE
     li a2, 0x3FF
     lw t4, VRAM_ADDRS + 4
     lw t3, VRAM_ADDRS
     li t1, 0xFC00
-
 vram_loop:
-    // Copy VRAM for the current frame using RSP DMA for speed
     jal dma_read
     add a1, t4, t1
     jal dma_write
@@ -188,13 +243,9 @@ vram_loop:
     bnez t1, vram_loop
     addi t1, t1, -0x400
     mtc0 zero, COP0_SEMAPHORE
-
-    // Load the VRAM dirty table for the current frame
     li a0, TILE_TABLE
     jal dma_read
     lw a1, DIRTY_PTR(sp)
-
-    // Combine new dirty bits with the previous table
     li t1, VRAM_TABLE
     addi t2, t1, 0x400
 table_loop:
@@ -205,18 +256,73 @@ table_loop:
     sqv $v00, 0, 0, t1
     bne t1, t2, table_loop
     addi t1, t1, 16
+#else
+    // Preserve every resident entry: the owned SETUP padding performs the
+    // sparse VRAM snapshot, combines dirty bits and releases the semaphore.
+    // Demand loading is two 1000-byte slot transfers per completed frame.
+    lw a1, OVERLAY_HCOMP_SETUP_SRC
+    j overlay_load_slot
+    li t9, 0x1628
+#endif
 
-    // Update the RDP framebuffer and palette addresses
+#if SODIUM64_ELIGIBILITY_TAGS
+// Retired full-copy instructions leave this identical helper in both full
+// resident prefixes. RDP painter order resolves priority with Z_COMPARE off.
+.org 0x048
+hcomp_eligibility_depth_send:
+    lbu t0, HCOMP_SCREEN
+    beqz t0, hcomp_eligibility_depth_submit
+#if SODIUM64_HCOMP_TLUT_SHADER
+    lw t0, 4(a0)
+#else
+    nop
+    lw t0, 4(a0)
+#endif
+    srl t0, t0, 28
+    lbu t0, HCOMP_TAG_ENABLE_LUT(t0)
+    lbu a1, CGADSUB
+    and t0, t0, a1
+    sltu t0, zero, t0
+#if SODIUM64_HCOMP_TLUT_SHADER
+    lbu a1, HCOMP_TLUT_CLASS
+    andi a1, a1, 0x80
+    bnez a1, main // Bootstrap000 contains the admitted shader dispatcher.
+    lui a1, 0x0800
+    sll t0, t0, 28
+#else
+    sll t0, t0, 28
+    lui a1, 0x0800
+#endif
+    or t0, t0, a1
+    lui a1, 0x2E00
+    sw a1, SCRN_DATA
+    sw t0, SCRN_DATA + 4
+    li a0, SCRN_DATA
+    li a1, SCRN_DATA + 8
+hcomp_eligibility_depth_submit:
+    j rdp_send
+    nop
+#endif
+
+.org 0x09C
+vram_snapshot_return:
+
+    // Begin on owned Main. The HCOMP phase bank admits and rebases every
+    // compact band after the real section has been loaded, before drawing.
     lw t0, FRAMEBUFFER(sp)
+    addi t0, t0, 280 * -16
     lw t1, PALETTE_PTR(sp)
-    addi t0, t0, 280 * -16 // Underflow offset
     sw t0, RDP_FRAME + 4
     sw t1, RDP_FRAME + 12
 
-    // Run the RDP to start the frame
+    // Run the RDP to start the frame.
     li a0, RDP_FRAME
     jal rdp_send
-    li a1, RDP_FILL
+    li a1, RDP_FILL + 8
+
+    // Section0 proof state is armed only after section state proves this is
+    // not a force-blank section. This prevents proof OtherModes/Z_UPDATE from
+    // surviving a startup blank frame into the next frame's palette load.
     li k1, 0 // Section bound
 
 next_section:
@@ -243,6 +349,18 @@ hcomp_cgram_return:
     andi t0, t0, 0x40
     beqz t0, oam_skip
 
+#if SODIUM64_TMEM_ATLAS
+    nop
+    lw a1, OVERLAY_OBJECT_CACHE_SRC
+    j overlay_load_slot
+    li t9, 0x13A8
+#if SODIUM64_TMEM_COORD_ATLAS
+#include "rsp_tmem_coord.inc"
+#else
+#include "rsp_tmem_atlas.inc"
+#endif
+.org 0x21C
+#else
     // Update OAM for the following sections
     li a0, OAM
     lw a1, OAM_PTR(sp)
@@ -353,56 +471,57 @@ finish_cache:
     // Move to the next priority until finished
     bnez t7, next_priority
     addi t7, t7, -0x1000
+#endif
 
 oam_skip:
-    // Update the RDP scissor and fill bounds for the section
-    lw t0, FB_OFFSET(sp)
-    add t1, t0, k0
-    sll t1, t1, 2
-    sh t1, RDP_FILL + 10
-    sh t1, RDP_FILL + 38
-    add t2, t0, k1
-    sll t2, t2, 2
-    sh t2, RDP_FILL + 14
-    sh t2, RDP_FILL + 34
-
-    // Set some values for filling the backdrop
-    lw t0, FILLREC_MASK
-    lw t5, RDP_FILL + 36
-    lw t6, RDP_FILL + 32
-    and t5, t5, t0
-    and t6, t6, t0
-    li t7, 0 // Left bound
-    li t8, 255 // Right bound
-    li t9, 0 // Segment ordinal; zero means first segment
-
-    // Clear the backdrop if force blank is enabled
-    lbu t4, STAT_FLAGS
-    andi t4, t4, 0x80
-    beqz t4, not_blank
-    lhu s0, SUB_COLOR
-    b fill_backdrop
-    li s0, 0
-
-not_blank:
-    // Check if the sub screen color should be applied to backdrop pixels
-    lbu t0, CGADSUB
-    beqz s0, fill_main
-    andi t0, t0, 0x20 // Backdrop math
-    sll t0, t0, 26 // Move CGADSUB backdrop bit 5 into the sign bit
-
-    // Call only when backdrop math is enabled; use a non-control delay slot.
-    // The helper sets s0/s1 and alternating segment ends on the taken path.
-    bltzal t0, calc_color_window_segments
-    lhu s0, MAIN_COLOR // Non-taken path uses Main; helper overwrites this
-    b fill_backdrop
+    // Admit/rebase a <=8-line virtual band before any section RDP write.
+    lw a1, OVERLAY_HCOMP_SRC
+    li t9, 0x1780
+    b overlay_load_slot
     nop
+// The former backdrop prologue is unreachable after the HCOMP dispatch.
+// Reuse its resident extent without moving the prefix, slot or suffix ABI.
+hcomp_resident_backdrop_admit:
+    // Exact common Sub-backdrop case; every other epoch uses the full admitter.
+    // Dirty OAM must still visit it to certify geometry for later OBJ math.
+    lbu t0, STAT_FLAGS
+    andi t0, t0, 0xC0
+    bnez t0, hcomp_resident_admit_fallback
+    lbu t0, CGADSUB
+    addi t0, t0, -0x20
+    bnez t0, hcomp_resident_admit_fallback
+    lbu t0, CGWSEL
+    addi t0, t0, -0x12
+    bnez t0, hcomp_resident_admit_fallback
+    lhu t0, MAIN_COLOR
+    bnez t0, hcomp_resident_admit_fallback
+    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
+    bnez t0, hcomp_resident_admit_fallback
+    lhu t0, SUB_COLOR
+    andi t0, t0, 0xFFFE
+    bnez t0, hcomp_resident_admit_direct
+    lbu t0, TS
+    andi t1, t0, 0x1F
+    beqz t1, hcomp_resident_admit_fallback
+    nop
+hcomp_resident_admit_direct:
+    sb t0, HCOMP_EFFECTIVE_TS
+    sw zero, HCOMP_OBJ_ADAPTIVE
+    sw k1, HCOMP_FAST_END
+    li t0, 2
+    sw t0, HCOMP_BAND_RAW
+    j 0xA400140C // Existing HCOMP band-start entry; no bank round trip.
+    nop
+hcomp_resident_admit_fallback:
+    lw a1, OVERLAY_HCOMP_FAST_SRC
+    j overlay_load_slot
+    li t9, 0x13B0
 
+.org 0x2A4 // Retain the backdrop jump-table target at its original address.
 fill_main:
-    // No backdrop math: use Main across the whole section.
     b fill_backdrop
     lhu s0, MAIN_COLOR
-
+.org 0x2AC // Preserve the following shared CGRAM entry exactly.
 hcomp_cgram_consume:
 fill_win:
     // Reclaim the legacy 8-instruction padding without moving the fixed
@@ -419,49 +538,67 @@ use_window:
     b hcomp_cgram_pair_ready
 
 fill_backdrop:
-    // Update the RDP fill bounds for a window segment
-    sltu t0, zero, t9
-    addi t1, t7, 12
-    add t1, t1, t0
-    sll t1, t1, 14
-    or t0, t5, t1
-    sw t0, RDP_FILL + 36
-    addi t1, t8, 13
-    sll t1, t1, 14
-    or t0, t6, t1
-    sw t0, RDP_FILL + 32
+    // Former backdrop-fill code is unreachable after oam_skip dispatches
+    // every band to HCOMP. Retain its extent and use a common resident helper.
+    .org 0x2CC
+rdp_emit_owned:
+    // The preceding CGRAM pair branch executes this instruction as its
+    // delay slot. It must never submit a START using the pair's DMA pointer.
+    nop
+    // Every preceding sender retired its complete list; no pending START
+    // remains. Do not serialize this submission against primitive execution.
+    mtc0 a0, COP0_DP_START
+    mtc0 a1, COP0_DP_END
+rdp_fetch_wait:
+    // DMA_BUSY can be clear between reads. A cleared pending-pointer latch
+    // and CURRENT == END together establish ownership of the entire list.
+    // Test the latch first so a repeated END cannot match the previous list.
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x600
+    bnez t0, rdp_fetch_wait
+    mfc0 t0, COP0_DP_CURRENT
+    bne t0, a1, rdp_fetch_wait
+#ifdef SODIUM64_RDP_FETCH_SIGNAL
+    li t0, 0x200 // Clear SIG0 only after CURRENT==END and latch retirement.
+    jr ra
+    mtc0 t0, COP0_SP_STATUS
+#else
+    nop
+    jr ra
+    nop
+#endif
 
-    // Update the RDP primitive color for the segment
-    andi t0, s0, 0x3E // B
-    sll t0, t0, 10
-    andi t1, s0, 0x7C0 // G
-    sll t1, t1, 13
-    or t0, t0, t1
-    andi t1, s0, 0xF800 // R
-    sll t1, t1, 16
-    or t0, t0, t1
-    ori t0, t0, 0xFF
-    sw t0, RDP_FILL + 20
-
-    // Run the RDP to fill the segment
-    li a0, RDP_FILL
-    jal rdp_send
-    li a1, RDP_WINDOW
-
-    // Swap the main and sub colors
-    move t0, s0
-    move s0, s1
-    move s1, t0
-
-    // Move to the next segment until the section is done
-    addi t9, t9, 1
-    move t7, t8
-    bne t7, 255, fill_backdrop
-    lbu t8, WIN_BOUNDS(t9)
+rdp_texture_retire:
+    // Generic writes to stats/VRAM/presence/output are not texture updates.
+    // Their phase owns any RDP destination dependencies. Decoded textures
+    // use TEXTURE == 0; raw palette updates enter the fence explicitly.
+    bnez a0, dma_write_owned
+rdp_source_retire:
+    // Retire outstanding texture readers before overwriting cached RDRAM.
+    // SyncFull is required: busy flags can remain latched until it executes.
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x70
+    beqz t0, dma_write_owned
+    nop
+    li t0, HCOMP_TEXTURE_FENCE
+    mtc0 t0, COP0_DP_START
+    addi t0, t0, 8
+    mtc0 t0, COP0_DP_END
+rdp_texture_wait:
+    mfc0 t0, COP0_DP_STATUS
+    andi t0, t0, 0x770
+    bnez t0, rdp_texture_wait
+    nop
+dma_write_owned:
+    mtc0 a0, COP0_DMA_SPADDR
+    mtc0 a1, COP0_DMA_RAMADDR
+    b dma_wait
+    mtc0 a2, COP0_DMA_WRITE
+    .org 0x348
 
     // Skip layers for force blank, or set the initial lookup offset
     lbu s3, BG_MODE
-    bnez t4, next_section
+    bltz t4, next_section
     andi s3, s3, 0xF
     sll s3, s3, 4
 
@@ -469,14 +606,11 @@ fill_backdrop:
     sw zero, PRIO_CHECKS + 0
     sw zero, PRIO_CHECKS + 4
 
-    // Create a layer mask based on main and sub masks, with shared layers on top
-    // As a workaround for lack of blending, the order of the screens can be swapped
-    lw t0, MASK_SEL(sp)
-    lbu s7, TS(t0)
-    xori t0, t0, 0x1
-    lbu t0, TS(t0)
-    and t1, t0, s7 // Shared
-    sub s7, s7, t1
+    // Gate-C Main/Sub ownership proof: screen order is semantic, not a
+    // presentation preference. Low byte always owns TS; high byte always owns TM.
+    // Shared layers deliberately remain present in both traversals.
+    lbu s7, TS
+    lbu t0, TM
     sll t0, t0, 8
     or s7, s7, t0
 
@@ -493,11 +627,20 @@ next_layer:
     bnez t0, draw_bg
     andi t3, t0, 0x3 // Index
 
-    // Move to the next screen's layers until the section is finished
+    // End the current semantic screen through H-COMP unconditionally.
+    // After TS, s7 shifts to the pending TM mask and the fixed wrapper performs
+    // the validated Color-Image/provenance switch. After TM, s7 becomes zero;
+    // the same wrapper disables proof Z_UPDATE before any next-section RDP work.
     srl s7, s7, 8
-    beqz s7, next_section
     andi s3, s3, 0xF0
-    b next_layer
+    lw a1, OVERLAY_HCOMP_SRC
+    b overlay_load_slot
+    li t9, 0x1760
+
+    // Filling the safe branch delay slot above plus consuming the former 8 B
+    // inert pad keeps draw_bg and the public overlay/suffix entries frozen.
+    // The internal next_layer bridge advances by the three current-frame setup
+    // instructions and H-COMP/contracts pair to that exact 0x1370 return.
 
     // Fixed renderer overlay begins on a 64-bit DMA boundary.
     .align 3
@@ -515,11 +658,20 @@ draw_bg:
     xor t1, t1, gp
     bnez t1, next_layer
 
-    // Set parameters based on the BG type
-    srl t2, t0, 2
-    andi s4, t2, 0x3
-    sll t9, s4, 2 // Jump index
+    // Set parameters based on the BG type. LAYER_CHART already stores the
+    // decoder jump index in bits3-2, so keep that encoded value directly.
+    andi t9, t0, 0xC // Jump index
+    srl s4, t9, 2
     addi s4, s4, 3 // Character shift
+
+    // Gate-C bounded winner/presence proof: select an immutable Set Primitive
+    // Depth command from the actual regular-BG index t3. During section0 TS,
+    // any real layer overwrites the backdrop/absence tag; during TM the same
+    // commands preserve per-BG winner identity in the reused compact Z arena.
+    sll a0, t3, 3
+    addi a0, a0, HCOMP_PROOF_BG_DEPTH_CMDS
+    jal bg_window_depth
+    addi a1, a0, 8
 
     // Check if the BG type or character base changed
     lhu t0, BGNBA
@@ -569,7 +721,8 @@ draw_row:
     andi t0, s6, 0x7
     sub s0, zero, t0
 
-    // Get the base screen address for the BG
+    // Recover the BG index on every row: tile/cache and window paths use t3
+    // as scratch before finish_row loops here. s2 retains BG index * 2.
     srl t3, s2, 1
     lbu t2, BGXSC(t3)
     li a0, SCRN_DATA
@@ -623,11 +776,12 @@ load_screen:
 
     // Check if windows are enabled for the layer. The current renderer still
     // combines Main/Sub enables; exact screen separation belongs to H-COMP.
-    lbu t0, TMW
-    lbu t1, TSW
-    srl t2, s2, 1
-    lbu t2, SHIFT_TABLE(t2)
-    or t0, t0, t1
+    lbu t1, HCOMP_SCREEN
+    addi t1, t1, TSW
+    // Row setup and dma_read preserve the recovered t3 up to this lookup.
+    // Reuse it so recovery adds no instructions to the fixed renderer slot.
+    lbu t2, SHIFT_TABLE(t3)
+    lbu t0, 0(t1)
     and t0, t0, t2
     bnez t0, bg_windows
     li t8, 0 // Span-byte index
@@ -638,15 +792,19 @@ load_screen:
     sb t0, WIN_BOUNDS + 1
 
 bg_windows:
-    // All selector/logic work lives in resident common code so this fixed-slot
-    // call site keeps the exact instruction footprint of the old W1 helper.
-    jal calc_bg_window_spans
+    // All selector/logic work lives in resident common code. Fold the existing
+    // span-index initialization into the call delay slot and drop obsolete
+    // fixed-slot padding so the four provenance-dispatch instructions above
+    // do not move draw_mode7_entry or any resident suffix ABI.
+    // The per-layer setup already owns exact spans for this entire epoch.
+    // Cache/map/texture work does not overwrite WIN_BOUNDS or WIN_COUNT.
     nop
+    li t8, 0
     lbu t0, WIN_COUNT
     beqz t0, finish_row
+    // The span helper uses t8 through its final edge (256). Restore the
+    // renderer's byte index after it returns, including the empty-span path.
     li t8, 0
-    nop
-    nop
 
 next_segment:
     // Set some values for updating segment bounds
@@ -659,9 +817,11 @@ next_segment:
     lbu t3, WIN_BOUNDS + 1(t8)
 
     // Update the RDP scissor bounds for a window segment
-    sltu t0, zero, t2
+    // Inclusive layer spans use the border offset directly at both edges.
+    // Keep padding in the fixed renderer slot; x=255 may be a singleton.
+    jal bg_span_seek
     addi t2, t2, 12
-    add t2, t2, t0
+    nop
     sll t2, t2, 14
     or t0, t6, t2
     sw t0, RDP_WINDOW + 8
@@ -745,8 +905,15 @@ check_cache:
 
     // Skip uploading if the last tile's number and palette were the same
     andi t0, t6, 0x1FFF
+#if SODIUM64_TMEM_ATLAS
+    // Confirm the RDRAM cache's palette/version before considering TMEM.
+    // v1 owns the atlas's last admitted character, after this cache check.
+    nop
+    nop
+#else
     beq t0, v1, skip_upload
     move v1, t0
+#endif
 
     // Skip decoding if the tile is already cached with the same palette
     srl t2, t6, 5
@@ -809,11 +976,19 @@ not_empty:
     li a2, 0x3F
 
 draw_tile:
+#if SODIUM64_TMEM_ATLAS
+    // Any decode changes the cached RDRAM snapshot, forcing a group reload.
+    li v1, 0xFFFF
+    b tmem_atlas_draw
+    nop
+    nop
+#else
     // Update texture address and run the RDP to draw a tile
     sw a1, RDP_TILE + 4
     li a0, RDP_TILE
     jal rdp_send
     li a1, RDP_TILE7
+#endif
 
 finish_tile:
     // Move to the next tile until the current inclusive span ends.
@@ -839,9 +1014,17 @@ finish_row:
     blt s1, k1, draw_row
 
     // Run the RDP to restore scissor bounds for other layers
-    li a0, RDP_FILL
+bg_restore_scissor:
+#if SODIUM64_TMEM_ATLAS && (!SODIUM64_TMEM_COORD_ATLAS || SODIUM64_TMEM_ATLAS_BITS == 3)
+    nop
+    jal tmem_atlas_restore
+    nop
+#else
+    li a0, RDP_FILL + 8
     jal rdp_send
     li a1, RDP_FILL + 16
+#endif
+bg_restore_scissor_end:
 
     // Update the BG's tile cache status when finished
     li a0, TILE_TABLE
@@ -858,7 +1041,11 @@ skip_decode:
     sll t0, s2, 15
     add a1, a1, t0
     sll t0, s8, 6
+#if SODIUM64_TMEM_ATLAS
+    b tmem_atlas_draw
+#else
     b draw_tile
+#endif
     add a1, a1, t0
 
 skip_priority:
@@ -877,8 +1064,8 @@ skip_upload:
     // Keep the inactive Mode 7 entry at an invariant, DMA-aligned offset.
     .align 3
 draw_mode7_entry:
-    // Fault stub: request the real Mode7 renderer only when dispatch needs it.
-    b overlay_load_mode7
+    // Fault stub: request true Mode7 at its fixed external entry.
+    b hcomp_mode7_dispatch
     nop
 
 
@@ -921,9 +1108,9 @@ start_objects:
 
     // Preserve the current combined Main/Sub screen-enable contract, but use
     // exact W1/W2 selection and OBJ OR/AND/XOR/XNOR logic when enabled.
-    lbu t0, TMW
-    lbu t1, TSW
-    or t0, t0, t1
+    lbu t1, HCOMP_SCREEN
+    addi t1, t1, TSW
+    lbu t0, 0(t1)
     andi t0, t0, 0x10
     beqz t0, obj_no_windows
     lbu a0, WOBJSEL
@@ -998,7 +1185,7 @@ check_object:
     lw t1, OAM(t9)
 
     // Update mirroring using the shared function
-    jal shared_mirror
+    jal hcomp_obj_mirror
     move t6, t1
 
     // Set initial values for drawing the object
@@ -1029,9 +1216,9 @@ object_ymir:
     addi gp, zero, -8
 
 next_objy:
-    // Build a base value for the draw command with the row's Y-coordinate
-    lw t7, FB_OFFSET(sp)
-    lui t6, 0x0200 // Tile index
+    // Cull tile rows that the exact section scissor cannot display.
+    jal hcomp_obj_row_clip
+    slt t0, s8, k1
     add t7, t7, s8
     andi t7, t7, 0x1FF
     sll t7, t7, 2
@@ -1111,11 +1298,17 @@ draw_objtile:
     bnez s0, next_objx
     andi s5, s5, 0x1FF
 
-    // Loop through object tiles in the Y-direction
+hcomp_obj_row_done:
+    // A drawn row has consumed s0 to zero and advanced X/character columns.
+    // A culled row arrives with s0 still equal to s4 and must not undo work
+    // that never happened. Normalize s0 for the next row in the delay slot,
+    // but backtrack X/character columns only for an actually drawn row.
+    bnez s0, hcomp_obj_row_advance
     move s0, s4
     sub s2, s2, v0
     srl t7, s0, 3
     sub s5, s5, t7
+hcomp_obj_row_advance:
     addi s5, s5, 16
     andi s5, s5, 0x1FF
     addi s1, s1, -8
@@ -1145,7 +1338,7 @@ next_object:
 
 obj_windows_done:
     // Restore this section's full scissor bounds before later layers render.
-    li a0, RDP_FILL
+    li a0, RDP_FILL + 8
     jal rdp_send
     li a1, RDP_FILL + 16
 
@@ -1166,12 +1359,12 @@ skip_objdecode:
 
 
 next_frame:
-    // Halt until the next frame can be drawn. Renderer payload now persists
-    // until a fixed-entry fault stub requests the opposite overlay.
-    li t0, 0x2 // Set halt
-    mtc0 t0, COP0_SP_STATUS
-    b draw_frame
-    xori sp, sp, 4
+    // Load proof-only H-COMP while the just-rendered queue slot is still
+    // selected. H-COMP toggles sp only after consuming that slot, before HALT.
+    lw a1, OVERLAY_HCOMP_SRC
+    li t9, 0x13B0
+    b overlay_load_slot
+    nop
 
 
 clear_cache:
@@ -1259,116 +1452,156 @@ shared_decode4:
 
 
 calc_color_window_segments:
-    // Convert exact color-window truth into the legacy backdrop fill loop's
-    // alternating inclusive segment-end list at WIN_BOUNDS+0..+6.
-    // Preserve the live RDP fill word in t6 and the nested-call return in t9.
-    move a3, t6
-    move t9, ra
+hcomp_obj_mirror:
+    // Palette groups 0..3 are opaque OBJ with math forbidden; 4..7 eligible.
+    move v1, ra
+    andi a0, t1, 0x0800
+    srl a0, a0, 8
+    addi a0, a0, HCOMP_OBJ_DEPTH_CMDS
+    jal hcomp_depth_send
+    addi a1, a0, 8
+    j shared_mirror
+    move ra, v1
 
-    lbu t0, CGWSEL
-    srl t1, t0, 4
-    andi t1, t1, 0x3
-    beqz t1, color_window_all
-    li t2, 3
-    beq t1, t2, color_window_none
-    lbu t0, WOBJSEL
+hcomp_mode7_dispatch:
+    // Mode7's one BG is BG1; avoid inheriting a previous layer's depth tag.
+    li a0, HCOMP_PROOF_BG_DEPTH_CMDS
+    jal hcomp_depth_send
+    addi a1, a0, 8
+    b overlay_load_mode7
+    li t9, 0x1788
 
-    // Modes 1/2 are selected/complement of the OBJ color-window selector.
-    srl a0, t0, 4
-    lbu t0, WOBJLOG
-    srl t0, t0, 2
-    andi a1, t0, 0x3
-    sltiu a2, t1, 2 // mode1=selected, mode2=complement
-    jal calc_window_spans
+hcomp_cgram_store_marker:
+    nop // The former unused raw-color slot now holds the row-color queue.
+    b hcomp_cgram_return
     nop
 
-    lbu t8, WIN_COUNT
-    beqz t8, color_window_none
-    lbu t0, WIN_BOUNDS + 0 // L1
-
-    // Snapshot all possible span endpoints before overwriting E85 onward.
-    lbu t1, WIN_BOUNDS + 1 // U1
-    lbu t2, WIN_BOUNDS + 2 // L2
-    lbu t3, WIN_BOUNDS + 3 // U2
-    lbu t4, WIN_BOUNDS + 4 // L3
-    lbu t7, WIN_BOUNDS + 5 // U3
-
-    // The first segment uses Sub where math is enabled, Main otherwise.
-    lhu s0, MAIN_COLOR
-    lhu s1, SUB_COLOR
-    bnez t0, color_window_initial_ready
-    move a1, s0
-    move s0, s1
-    move s1, a1
-
-color_window_initial_ready:
-    li a0, WIN_BOUNDS
-
-    // Every true span contributes its upper end; a nonzero lower bound first
-    // contributes the preceding false segment end.
-    beqz t0, color_window_first_upper
-    addi a1, t0, -1
-    sb a1, 0(a0)
-    addi a0, a0, 1
-color_window_first_upper:
-    sb t1, 0(a0)
-    addi a0, a0, 1
-    li a1, 1
-    beq t8, a1, color_window_tail
-    addi a1, t2, -1
-    sb a1, 0(a0)
-    sb t3, 1(a0)
-    addi a0, a0, 2
-    li a1, 2
-    beq t8, a1, color_window_tail
-    addi a1, t4, -1
-    sb a1, 0(a0)
-    sb t7, 1(a0)
-    addi a0, a0, 2
-    move t1, t7
-
-color_window_tail:
-    // t1 is the final true upper bound for count1/2; select U2 when needed.
-    li a1, 1
-    beq t8, a1, color_window_tail_ready
-    nop
-    li a1, 2
-    bne t8, a1, color_window_tail_ready
-    nop
-    move t1, t3
-color_window_tail_ready:
-    li a1, 255
-    beq t1, a1, color_window_finish
-    nop
-    sb a1, 0(a0)
-    b color_window_finish
-    nop
-
-color_window_all:
-    lhu s0, SUB_COLOR
-    lhu s1, MAIN_COLOR
-    li t0, 255
-    sb t0, WIN_BOUNDS + 0
-    b color_window_finish
-    nop
-
-color_window_none:
-    lhu s0, MAIN_COLOR
-    lhu s1, SUB_COLOR
-    li t0, 255
-    sb t0, WIN_BOUNDS + 0
-
-color_window_finish:
-    // not_blank guarantees t4==0; restore the fill loop's live scalar state.
-    move t6, a3
-    li t4, 0
-    li t7, 0
-    lbu t8, WIN_BOUNDS + 0
-    move ra, t9
+bg_span_seek:
+    // Start at the first 8-pixel tile intersecting this inclusive span.
+    // Recompute from scroll for EVERY span: a later span may share a tile
+    // with the preceding one and must draw that tile again under its scissor.
+    // Keep the pending rectangle in v15 in step with s0. Skipped tiles do not
+    // alter cache/dirty/priority state or v1 (the last uploaded texture).
+    lbu t0, WIN_BOUNDS(t8)
+    add t1, t0, s6
+    andi t1, t1, 7
+    sub t0, t0, t1
+    sub t1, t0, s0
+    beqz t1, bg_span_seek_return
+    move s0, t0
+    sll t1, t1, 14
+    sdv $v15, 0, 0, v0
+    lw t0, RDP_TILE + 24
+    add t0, t0, t1
+    sw t0, RDP_TILE + 24
+    lw t0, RDP_TILE + 28
+    add t0, t0, t1
+    sw t0, RDP_TILE + 28
+    ldv $v15, 0, 0, v0
+bg_span_seek_return:
     jr ra
-    li t9, 0
+    nop
 
+bg_window_depth:
+    // Fully masked BGs have no pixels/winner tags. Test before cache and map
+    // DMAs; defer dirty/base handling until the layer next becomes visible.
+    // The same owned spans are reused by every row of this section.
+    lbu t0, HCOMP_SCREEN
+    addi t0, t0, TSW
+    lbu t0, 0(t0)
+    and t0, t0, a3
+    beqz t0, bg_window_depth_send
+    move v1, ra
+    jal calc_bg_window_spans
+    nop
+    lbu t0, WIN_COUNT
+    beqz t0, next_layer
+    nop
+    sll a0, s2, 2
+    addi a0, a0, HCOMP_PROOF_BG_DEPTH_CMDS
+    addi a1, a0, 8
+bg_window_depth_send:
+    j hcomp_depth_send
+    move ra, v1
 
+// Raw/direct bands disable Z; only the general compositor uses depth tags.
+hcomp_depth_send:
+#if SODIUM64_HCOMP_TLUT_SHADER
+    // Raw1/2 can submit ignored depth with Z disabled. Shader3 resolves its
+    // palette class in the helper; every general command remains unchanged.
+    j hcomp_eligibility_depth_send
+    nop
+    .space 12
+#else
+    lw t0, HCOMP_BAND_RAW
+    bnez t0, ret_jump
+    nop
+#if SODIUM64_ELIGIBILITY_TAGS
+    j hcomp_eligibility_depth_send
+#else
+    j rdp_send
+#endif
+    nop
+#endif
+
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+// Resident hole: leave every historical bank entry / DMA / window PC fixed.
+// Tagged source addresses are stripped before DMA. Pending is published before
+// IMEM writes; completion advances the epoch so a PC read can be bookended.
+.org 0xC60
+native_diag_overlay_load:
+#if SODIUM64_SIGNAL_PROFILE
+    // One status write atomically marks the slot unavailable before DMA.
+    // Only SIG4..6 change; HALT, IRQ and the other signals are preserved.
+    lui t0, 0x002A
+    mtc0 t0, COP0_SP_STATUS
+    andi a0, a1, 7
+    sll a0, a0, 1
+    lhu t0, NATIVE_DIAG_SIGNAL_MASKS(a0)
+    sh t0, NATIVE_DIAG_RSP_BANK // Loader-private desired mask, not live CPU DMEM.
+    li a0, -8
+    and a1, a1, a0
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    lhu t0, NATIVE_DIAG_RSP_BANK
+    sll t0, t0, 16
+    jr t9
+    mtc0 t0, COP0_SP_STATUS // Publish only after synchronous DMA completion.
+#else
+    lhu t0, NATIVE_DIAG_RSP_BANK
+    andi t0, t0, 0xFFF0
+    andi a0, a1, 7
+    or t0, t0, a0
+    ori t0, t0, 8
+    sh t0, NATIVE_DIAG_RSP_BANK
+    li a0, -8
+    and a1, a1, a0
+    li a0, 0x13A8
+    jal dma_read
+    li a2, 0x3E7
+    lhu t0, NATIVE_DIAG_RSP_BANK
+    addi t0, t0, 8
+    jr t9
+    sh t0, NATIVE_DIAG_RSP_BANK // t0 is scratch; Main restores its saved layer.
+#endif
+native_diag_overlay_main_return:
+    b draw_bg
+    move t0, v0
+#endif
+
+.org 0xCA4
+hcomp_obj_row_clip:
+    beqz t0, hcomp_obj_row_done
+    addi t7, s8, 8
+    slt t0, k0, t7
+    beqz t0, hcomp_obj_row_done
+    lw t7, FB_OFFSET(sp)
+    jr ra
+    lui t6, 0x0200
+
+    // Shared window helper and retained suffix remain at their audited ABI.
+.org 0xCC0
 calc_bg_window_spans:
     // Regular-BG wrapper kept in both RSP variants so resident suffix layout
     // remains byte-for-byte symmetric across overlay swaps.
@@ -1579,11 +1812,11 @@ set_max:
 
 
 dma_write: // a0: RSP address, a1: DRAM address, a2: size
-    // Transfer data from the RSP via DMA
-    mtc0 a0, COP0_DMA_SPADDR
-    mtc0 a1, COP0_DMA_RAMADDR
-    b dma_wait
-    mtc0 a2, COP0_DMA_WRITE
+    // Fixed entry: only shared texture sources need the retirement fence.
+    b rdp_texture_retire
+    nop
+    nop
+    nop
 
 mode7_out:
     // Fill outside of bounds with tile 0, or wrap around if enabled
@@ -1616,12 +1849,22 @@ dma_wait:
 
 
 rdp_send: // a0: start address, a1: end address
-    // Wait for the RDP to be ready and then send commands
-    mfc0 t0, COP0_DP_STATUS
-    andi t0, t0, 0x40 // Command busy
-    bnez t0, rdp_send
-    mtc0 a0, COP0_DP_START
-    mtc0 a1, COP0_DP_END
+    // Keep the public 1F5C entry and ret_jump fixed. Submit/retire DMEM in
+    // the shared resident prefix before a caller may mutate the next list.
+    // dma_wait's JR uses 1F5C as its delay slot.
+    nop
+#ifdef SODIUM64_RDP_FETCH_SIGNAL
+    // Optional scoped diagnostic marker. It is distinct from SIG4..6 bank
+    // ownership; the existing raw event status retains it without new reads.
+    li t0, 0x400 // Set SIG0, preserving HALT/IRQ and every other signal.
+    b rdp_emit_owned
+    mtc0 t0, COP0_SP_STATUS
+    .space 4
+#else
+    b rdp_emit_owned
+    nop
+    .space 8
+#endif
 ret_jump:
     jr ra
     nop
@@ -1629,19 +1872,33 @@ ret_jump:
 // Demand-load the missing renderer slot from resident suffix code.
 overlay_load_mode7:
     lw a1, OVERLAY_MODE7_SRC
+overlay_load_slot:
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    j native_diag_overlay_load
+    nop
+    .space 12
+#else
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
-    b draw_mode7_entry
+    jr t9
     nop
+#endif
 
 overlay_load_main:
     lw a1, OVERLAY_MAIN_SRC
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    li t9, %lo(native_diag_overlay_main_return)
+    j native_diag_overlay_load
+    nop
+    .space 8
+#else
     li a0, 0x13A8
     jal dma_read
     li a2, 0x3E7
     b draw_bg
     move t0, v0
+#endif
 
 
 hcomp_cgram_pair_ready:
@@ -1667,11 +1924,13 @@ hcomp_cgram_pair_ready:
     lw a1, HCOMP_RAW_PALETTE_PTRS(sp)
     add a1, a1, t0
     li a0, HCOMP_CGRAM_WRITE_SCRATCH
-    jal dma_write
+    jal rdp_source_retire
     li a2, 0x7
     b hcomp_cgram_consume
     nop
 
 hcomp_cgram_marker:
-    b hcomp_cgram_return
+    b hcomp_cgram_store_marker
     lbu k1, SPLIT_LINE
+
+

@@ -1,0 +1,215 @@
+{
+  "checkpoint": "R32",
+  "linked_proofs": {
+    "unsafe_reference": {
+      "passed": true,
+      "unsafe_reference_rejected": true,
+      "violations": [
+        {
+          "writer_pc": "0x800089c4",
+          "reader_pc": "0x800089bc",
+          "intervening_instructions": 1
+        }
+      ],
+      "does_not_prove_observed_corruption": true,
+      "elf_sha256": "e490994538ec8e4e7a89156e1867c283d4768e6a2d3ead7d03cbb679c0bc1280",
+      "primary_manual": "NEC U10504EJ7V0UM00 p479; entire-pipeline multiply stall p76"
+    },
+    "spacing": {
+      "passed": true,
+      "linked_DSP_product_writers": 6,
+      "straight_line_predecessors_checked": 2,
+      "violations": 0,
+      "unsafe_master_mutation_rejected": true,
+      "same_functional_arithmetic_does_not_prove_hardware_spacing": true,
+      "dynamic_delay_slot_guard_enabled_in_dry_and_paired_tests": true,
+      "interrupts_or_DAC_waveform_verified": false,
+      "commercial_data": false,
+      "elf_sha256": "f93a2011ae2c7f36dbeda0dd6f961a2c483f87fd251e82dd6ed39fe65c08ac3d",
+      "primary_manual": "NEC U10504EJ7V0UM00 p479; entire-pipeline multiply stall p76"
+    },
+    "dry": {
+      "passed": true,
+      "voice_cases": 16384,
+      "output_cases": 32768,
+      "actual_scheduler_samples": 128,
+      "negative_mutations_rejected": [
+        "envelope_scale",
+        "even_envelope_output",
+        "signed_channel_volume",
+        "voice_saturation",
+        "signed_master_volume",
+        "master_scale",
+        "mute"
+      ],
+      "actual_uncached_volume_writes": 4096,
+      "maximum_voice_instructions": 30,
+      "maximum_output_instructions": 21,
+      "maximum_scheduler_sample_instructions": 545,
+      "memory_and_unrelated_registers_preserved_by_arithmetic": true,
+      "reference": "Snes9x1.63 envelope/voice_output and zero-echo master contribution",
+      "compiled_primary_method_executed_here": false,
+      "full_DSP_or_DAC_fidelity_claim": false,
+      "commercial_data": false,
+      "elf_sha256": "f93a2011ae2c7f36dbeda0dd6f961a2c483f87fd251e82dd6ed39fe65c08ac3d"
+    },
+    "paired_execution": {
+      "passed": true,
+      "paired_actual_scheduler_samples": 2048,
+      "enabled_masks": 256,
+      "envelope_rate_calls": true,
+      "noise_steps": true,
+      "all_BRR_filters_and_ranges": true,
+      "block_loop_end_flags": 4,
+      "both_AI_half_submissions": true,
+      "PCM_active_state_equal": true,
+      "unused_cache_preserved": true,
+      "guest_cycle_debit": 672,
+      "actual_decoded_range_filter_pairs": 64,
+      "linked_field_offsets_checked": 9,
+      "negative_mutations_rejected": [
+        "dsp_voice_base",
+        "dsp_voice_envelope_index",
+        "dsp_voice_restore_base"
+      ],
+      "instructions_total_reference_optimized": [
+        2215794,
+        2095550
+      ],
+      "maximum_sample_instructions_reference_optimized": [
+        2377,
+        2259
+      ],
+      "timing_or_native_fidelity_claim": false,
+      "commercial_data": false,
+      "reference_elf_sha256": "4184c37dfdc7f35e7520da815be440bf45272e93297537c7f9c3ae0db1260295",
+      "optimized_elf_sha256": "f93a2011ae2c7f36dbeda0dd6f961a2c483f87fd251e82dd6ed39fe65c08ac3d"
+    },
+    "disabled": {
+      "passed": true,
+      "all_allocated_bytes_identical": 855212
+    },
+    "observed_spacing": {
+      "passed": true,
+      "linked_DSP_product_writers": 6,
+      "straight_line_predecessors_checked": 2,
+      "violations": 0,
+      "unsafe_master_mutation_rejected": true,
+      "same_functional_arithmetic_does_not_prove_hardware_spacing": true,
+      "dynamic_delay_slot_guard_enabled_in_dry_and_paired_tests": true,
+      "interrupts_or_DAC_waveform_verified": false,
+      "commercial_data": false,
+      "elf_sha256": "f315939336eca2c3f75246b9d50f086b46c6d6591d4c4ed50d6e90616b700246",
+      "primary_manual": "NEC U10504EJ7V0UM00 p479; entire-pipeline multiply stall p76"
+    },
+    "observed_hooks": {
+      "passed": true,
+      "hook_cases": 84,
+      "selected_sample_hook_instructions": 193,
+      "ordinary_eight_voice_sample_hook_instructions": 58,
+      "counter_wrap_and_both_ring_halves": true,
+      "only_observer_owned_writes": true,
+      "unrelated_gprs_HI_LO_CP0_preserved": true,
+      "physical_acceptance": false,
+      "elf_sha256": "f315939336eca2c3f75246b9d50f086b46c6d6591d4c4ed50d6e90616b700246"
+    },
+    "observed_dry": {
+      "passed": true,
+      "voice_cases": 16384,
+      "output_cases": 32768,
+      "actual_scheduler_samples": 128,
+      "negative_mutations_rejected": [
+        "envelope_scale",
+        "even_envelope_output",
+        "signed_channel_volume",
+        "voice_saturation",
+        "signed_master_volume",
+        "master_scale",
+        "mute"
+      ],
+      "actual_uncached_volume_writes": 4096,
+      "maximum_voice_instructions": 36,
+      "maximum_output_instructions": 21,
+      "maximum_scheduler_sample_instructions": 597,
+      "memory_and_unrelated_registers_preserved_by_arithmetic": true,
+      "reference": "Snes9x1.63 envelope/voice_output and zero-echo master contribution",
+      "compiled_primary_method_executed_here": false,
+      "full_DSP_or_DAC_fidelity_claim": false,
+      "commercial_data": false,
+      "elf_sha256": "f315939336eca2c3f75246b9d50f086b46c6d6591d4c4ed50d6e90616b700246"
+    },
+    "actual_dma": {
+      "passed": true,
+      "cpu_queue_words": 6,
+      "embedded_banks": 2,
+      "actual_dma_sites": [
+        {
+          "pc": "a40014c4",
+          "direction": "write",
+          "rdram_start": "a00d4400",
+          "bytes": 1024
+        },
+        {
+          "pc": "a4001748",
+          "direction": "read",
+          "rdram_start": "a00d4400",
+          "bytes": 1024
+        },
+        {
+          "pc": "a40013f8",
+          "direction": "write",
+          "rdram_start": "a00d4400",
+          "bytes": 1024
+        },
+        {
+          "pc": "a4001580",
+          "direction": "read",
+          "rdram_start": "a00d4400",
+          "bytes": 1024
+        }
+      ],
+      "linked_elf_sha256": "f315939336eca2c3f75246b9d50f086b46c6d6591d4c4ed50d6e90616b700246",
+      "negative_mutations_rejected": [
+        "CPU_queue_disagreement",
+        "stale_RSP_backup",
+        "embedded_bank_disagreement"
+      ],
+      "physical_acceptance": false
+    }
+  },
+  "native": {
+    "scene": "room1980",
+    "RGB_pixels": 67200,
+    "RGB_differences": 0,
+    "PCM_bytes": 8192,
+    "PCM_differences": 0,
+    "eight_voice_primary_stereo_values": 2,
+    "primary_differences": 0,
+    "PCM_word_matches_primary_trace": true,
+    "quiet_capture": {
+      "seconds": 20.100691946666668,
+      "boundary_records": 1121,
+      "payload_full_trace_settings": true
+    },
+    "coordinate8_restored_readback_menu": true,
+    "sample_observer_enabled": true,
+    "production_speed_or_DAC_claim": false
+  },
+  "native_observed_code": {
+    "empty_bytes": 147456,
+    "empty_sha256": "a1cb3282b04018a8086ac166027454555743f15b2f864d7fc8e4edaa24eb5036",
+    "elf_sha256": "f315939336eca2c3f75246b9d50f086b46c6d6591d4c4ed50d6e90616b700246",
+    "sample_observer": "MIX1; BRR0; AUDIO1",
+    "DSP_VOICE_BASE": 1,
+    "production_timing_comparison": false,
+    "gates": "6 HI/LO writers/bad mutation;2048 production samples;84 hooks;12/5 boot;41 owners;4 actualD4400 DMA sites/3 mutations"
+  },
+  "preceding_exact_CI": {
+    "sha": "de3d147800036db49e7d1000fb98e0816271fd46",
+    "Build38187082086": "success",
+    "CGRAM38187084256": "success",
+    "Ares38187084224": "success"
+  },
+  "full_goal_qualified": false,
+  "commercial_data": false
+}

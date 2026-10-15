@@ -1,0 +1,356 @@
+name: Gate C Stage 2 Publication Repair
+on:
+  push:
+    branches: [phase4/gate-c-stage1-visible, phase4/gate-c-stage2-hw-repair]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: sodium64-stage1-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  visible-band:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+      - name: Build bounded output and verify dispatch ABI
+        shell: bash
+        run: |
+          set -euo pipefail
+          libdragon init
+          libdragon make -j"$(nproc)" 2>&1 | tee sodium64-build.log
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
+          readelf -sW build/src/rsp_main.elf > rsp-main.syms
+          readelf -sW build/src/rsp_mode7.elf > rsp-mode7.syms
+          readelf -sW build/src/rsp_hcomp.elf > rsp-hcomp.syms
+          python3 scripts/test_gate_c_stage1_exec.py \
+            --maps build/rsp_main.map build/rsp_mode7.map build/rsp_hcomp.map \
+            --symbols rsp-main.syms rsp-mode7.syms rsp-hcomp.syms | tee executable-contract.txt
+          python3 scripts/check_rsp_branch_delay_slots.py \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf | tee delay-slots.txt
+          sha256sum sodium64.z64 build/sodium64.elf | tee runtime.sha256
+          nm -n build/sodium64.elf > runtime.syms
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          rows = [line.split() for line in Path('runtime.syms').read_text().splitlines()]
+          wanted = ['apu_clock', 'audio_set', 'precision_set', 'skipped_set',
+                    'dsp_pointer', 'apu_outputs', 'apu_control', 'dsp_buffer', 'dsp_regs']
+          result = {}
+          for name in wanted + ['enabled']:
+              found = [r[0] for r in rows if len(r) == 3 and r[2] == name]
+              assert len(found) == 1, (name, found)
+              result['dsp_enabled' if name == 'enabled' else name] = '0x' + found[0]
+          Path('runtime-symbols.json').write_text(json.dumps(result, indent=2)+'\n')
+          PYCODE
+          mkdir -p diagnostic hardware
+          for mode in fixed absent control clip prevent both visual mixed; do
+            python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode.smc"
+            python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode-replay.smc"
+            cmp "diagnostic/$mode.smc" "diagnostic/$mode-replay.smc"
+            wrap="wrap-$mode"
+            mkdir -p "$wrap"
+            cp sodium64.z64 rom-converter.py "$wrap/"
+            cp "diagnostic/$mode.smc" "$wrap/guest.smc"
+            (cd "$wrap"; python3 rom-converter.py </dev/null)
+            cp "$wrap/out/guest.z64" "hardware/$mode.z64"
+            dd if="hardware/$mode.z64" of="diagnostic/embedded.smc" \
+              bs=1 skip=$((0x104000)) count=32768 status=none
+            cmp "diagnostic/$mode.smc" diagnostic/embedded.smc
+          done
+          sha256sum diagnostic/*.smc hardware/*.z64 | tee guest-hashes.sha256
+      - name: Locate fenced runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          elf=build/sodium64.elf
+          symbol() { nm -n "$elf" | awk -v name="$1" '$3 == name { print $1; exit }'; }
+          wram=$(symbol wram)
+          frame_wait=$(symbol frame_wait)
+          test -n "$wram"
+          test -n "$frame_wait"
+          test "$frame_wait" = "8000ae1c"
+          readelf -x .text "$elf" > cpu-text.hex
+          grep -qi '^  0x8000ae20 910886a9 24010002 1101fffc 24080001' cpu-text.hex
+          grep -qi '^  0x8000ae30 3c09a404 01800008 ad280010 3c08800b' cpu-text.hex
+          prelaunch=$(printf '%08x' "$((16#$frame_wait + 0x14))")
+          test "$prelaunch" = "8000ae30"
+          {
+            echo "GUEST_COUNTER_ADDR=0x$wram"
+            echo "PRELAUNCH_ADDR=0x$prelaunch"
+          } | tee -a "$GITHUB_ENV"
+
+      - name: Build hardware capture variant with the existing profiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qualified/normal qualified/hw-profile
+          cp -a build qualified/normal/
+          cp sodium64.z64 qualified/normal/
+          libdragon make clean
+          libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee hw-profile-build.log
+          python3 scripts/check_rsp_branch_delay_slots.py \
+            build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --profile
+          cp -a build qualified/hw-profile/
+          cp sodium64.z64 qualified/hw-profile/
+          for mode in visual mixed; do
+            wrap="wrap-hw-$mode"
+            mkdir -p "$wrap"
+            cp sodium64.z64 rom-converter.py "$wrap/"
+            cp "diagnostic/$mode.smc" "$wrap/guest.smc"
+            (cd "$wrap"; python3 rom-converter.py </dev/null)
+            cp "$wrap/out/guest.z64" "hardware/$mode-hw-profile.z64"
+          done
+          sha256sum qualified/normal/sodium64.z64 qualified/normal/build/sodium64.elf \
+            qualified/hw-profile/sodium64.z64 qualified/hw-profile/build/sodium64.elf \
+            hardware/*.z64 | tee qualified-hashes.sha256
+          cp qualified/normal/sodium64.z64 sodium64.z64
+          rm -rf build
+          cp -a qualified/normal/build build
+      - name: Build exact stable-master hardware comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          baseline=7cc8facfe8643fb85888f301f79995575830521d
+          git fetch --depth=1 origin "$baseline"
+          git worktree add --detach baseline-source "$baseline"
+          (
+            cd baseline-source
+            libdragon init
+            libdragon make HW_PROFILE=1 -j"$(nproc)" 2>&1 | tee ../baseline-build.log
+            python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          )
+          mkdir -p qualified/baseline-hw-profile
+          cp -a baseline-source/build qualified/baseline-hw-profile/
+          cp baseline-source/sodium64.z64 qualified/baseline-hw-profile/
+          for mode in visual mixed; do
+            wrap="wrap-baseline-$mode"
+            mkdir -p "$wrap"
+            cp baseline-source/sodium64.z64 rom-converter.py "$wrap/"
+            cp "diagnostic/$mode.smc" "$wrap/guest.smc"
+            (cd "$wrap"; python3 rom-converter.py </dev/null)
+            cp "$wrap/out/guest.z64" "hardware/baseline-$mode-hw-profile.z64"
+            dd if="hardware/baseline-$mode-hw-profile.z64" of=diagnostic/embedded.smc bs=1 skip=$((0x104000)) count=32768 status=none
+            cmp "diagnostic/$mode.smc" diagnostic/embedded.smc
+          done
+          sha256sum qualified/baseline-hw-profile/sodium64.z64 qualified/baseline-hw-profile/build/sodium64.elf hardware/baseline-*.z64 >> qualified-hashes.sha256
+      - name: Install pinned ares dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - uses: actions/cache/restore@v4
+        id: ares-cache
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Build pinned N64-only ares in established valid lab mode
+        id: ares-build
+        if: steps.ares-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - uses: actions/cache/save@v4
+        if: steps.ares-build.outcome == 'success'
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Restore cached SDL3 runtime into this runner
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The ares cache owns SDL build outputs, not /usr/local installs.
+          # Reinstall exactly those cached outputs; do not fetch a newer SDL.
+          sudo cmake --install "$RUNNER_TEMP/ares-src/SDL/build" --prefix=/usr/local
+          sudo ldconfig
+      - name: Locate pinned ares after build or cache restore
+        shell: bash
+        run: |
+          ares_bin=$(find "$RUNNER_TEMP/ares-src/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee ares-version.txt
+      - name: Capture complete displayed output and provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p captures
+          pid=""
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+
+          run_case() {
+            label="$1"
+            port="$2"
+            rom="$3"
+            frames="${4:-1}"
+            out="captures/$label"
+            home="$RUNNER_TEMP/ares-home-transparent-sub-$label"
+            settings="$RUNNER_TEMP/ares-transparent-sub-$label.bml"
+            mkdir -p "$out" "$home"
+
+            setsid env HOME="$home" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" \
+                --no-file-prompt \
+                --system "Nintendo 64" \
+                --settings-file "$settings" \
+                --setting "Developer/DebugServerEnabled=true" \
+                --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" \
+                --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" \
+                --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" \
+                "$rom" > "$out/ares-n64.log" 2>&1 &
+            pid=$!
+
+            rc=0
+            python3 scripts/capture_gate_c_stage1_ares.py \
+              --port "$port" \
+              --frames "$frames" \
+              --runtime-symbols runtime-symbols.json \
+              --guest-counter-address "$GUEST_COUNTER_ADDR" \
+              --prelaunch-address "$PRELAUNCH_ADDR" \
+              --output-dir "$out" | tee "$out/capture.log" || rc=$?
+
+            # xvfb-run's PID is a wrapper; killing it alone leaves ares alive.
+            # Each case owns a new session/process group, including Xvfb and
+            # ares. Release the entire group before starting the next case.
+            kill -TERM -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            for attempt in 1 2 3 4 5; do
+              if ! kill -0 -- "-$pid" 2>/dev/null; then break; fi
+              sleep 0.2
+            done
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            pid=""
+            return "$rc"
+          }
+
+          port=9161
+          for mode in fixed absent control clip prevent both; do
+            run_case "$mode" "$port" "hardware/$mode.z64"
+            port=$((port + 1))
+          done
+          python3 scripts/check_gate_c_stage1_ares.py --captures captures --output captures/result.json
+          run_case visual 9171 hardware/visual.z64 8
+          run_case mixed 9172 hardware/mixed.z64 8
+          python3 scripts/check_gate_c_stage1_motion.py --captures captures --output captures/motion-result.json
+      - name: Observe actual VI publication without seeded buffers or frame stops
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api repos/${{ github.repository }}/actions/artifacts/11072720070/zip > old-candidate.zip
+          mkdir -p old-candidate
+          unzip -q old-candidate.zip -d old-candidate
+          echo "ba9ad36751879c40cc68fb54270ecafae6abda6e5b3dc9cdafda55b7e3249459  old-candidate/qualified/hw-profile/sodium64.z64" | sha256sum -c -
+          if python3 scripts/check_runtime_arena.py old-candidate/qualified/hw-profile/build/sodium64.elf --arena-start 0xbe200; then
+            echo "Old HW_PROFILE overlap unexpectedly accepted" >&2
+            exit 1
+          fi
+          port=9181
+          for build in old-candidate current; do
+            for mode in visual mixed; do
+              out="publication/$build-$mode"
+              mkdir -p "$out" "$RUNNER_TEMP/publication-$build-$mode"
+              if [ "$build" = old-candidate ]; then
+                elf=old-candidate/qualified/hw-profile/build/sodium64.elf
+                rom="old-candidate/hardware/$mode-hw-profile.z64"
+              else
+                elf=qualified/hw-profile/build/sodium64.elf
+                rom="hardware/$mode-hw-profile.z64"
+              fi
+              setsid env HOME="$RUNNER_TEMP/publication-$build-$mode" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+                xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+                --settings-file "$RUNNER_TEMP/publication-$build-$mode.bml" \
+                --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" "$rom" > "$out/ares.log" 2>&1 &
+              pid=$!
+              rc=0
+              python3 scripts/capture_stage2_publication.py --port "$port" --elf "$elf" --output "$out" || rc=$?
+              kill -KILL -- "-$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              test "$rc" = 0
+              port=$((port + 1))
+            done
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for mode in ['visual', 'mixed']:
+              old = json.loads(Path(f'publication/old-candidate-{mode}/result.json').read_text())
+              new = json.loads(Path(f'publication/current-{mode}/result.json').read_text())
+              assert not old['mode7_source_intact'], old
+              assert new['mode7_source_intact'], new
+              assert new['band']['passed'], new
+          PY
+      - name: Package qualified builds and milestone procedure
+        shell: bash
+        run: |
+          python3 scripts/package_gate_c_stage1.py
+          (cd stage1-package; sha256sum -c SHA256SUMS)
+          sha256sum gate-c-stage1-hardware.zip | tee hardware-package.sha256
+      - name: Preserve exact runtime and first-hand evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-c-stage1-visible
+          retention-days: 30
+          path: |
+            hardware/
+            qualified/**/*.elf
+            qualified/**/*.map
+            qualified/**/sodium64.z64
+            qualified-hashes.sha256
+            runtime-symbols.json
+            runtime.syms
+            hw-profile-build.log
+            diagnostic/*.smc
+            guest-hashes.sha256
+            captures/
+            publication/
+            sodium64.z64
+            sodium64-build.log
+            executable-contract.txt
+            delay-slots.txt
+            runtime.sha256
+            build/**/*.elf
+            build/*.map
+            rsp-*.syms
+            ares-version.txt
+            baseline-build.log
+            gate-c-stage1-hardware.zip
+            hardware-package.sha256

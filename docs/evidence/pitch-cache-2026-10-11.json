@@ -1,0 +1,226 @@
+{
+  "schema": "sodium64-pitch-cache-aggregate-v1",
+  "date": "2026-10-11",
+  "physical_console": true,
+  "candidate_empty_emulator_sha256": "a940f6f8d47c115705f80ee62df8c0454d9b6a992c1860b8889c35d9f78db811",
+  "candidate_elf_sha256": "0467aaea80bc314844215cd5a17fd31557b083d5d7dee3abf94ef287c0b53d86",
+  "candidate_bytes": 131072,
+  "retained_default_emulator_sha256": "a58d70518ae44b4998764f2866b8eb1997d40d173056f43bb224696d0d5c25e2",
+  "candidate_flags": [
+    "NATIVE_DIAG=1",
+    "NATIVE_DIAG_TRACE=1",
+    "REMOTE=1",
+    "SIGNAL_PROFILE=1",
+    "WIDE_MATH=1",
+    "ELIGIBILITY_TAGS=1",
+    "MASK_SCAN=1",
+    "TLUT_SHADER=1",
+    "FULL_ROW_MATH=1",
+    "RDP_HALF_MATH=1",
+    "FIXED_WINDOW_MATH=1",
+    "RDP_FIXED_MATH=1",
+    "TMEM_ATLAS=1",
+    "TMEM_ATLAS_BITS=3",
+    "TMEM_COORD_ATLAS=1",
+    "AUDIO_OBSERVER=1",
+    "DSP_PITCH_CACHE=1",
+    "SECTION_OBSERVER=0"
+  ],
+  "settings": {
+    "precision": 20,
+    "frameskip": 0,
+    "apu_clock": 21,
+    "audio": 4,
+    "layers": 0
+  },
+  "pixel_comparison": {
+    "frames": 4,
+    "pixels": 268800,
+    "differences": 0
+  },
+  "pcm_comparison": {
+    "rings": 3,
+    "bytes": 24576,
+    "differences": 0,
+    "matching_ring_heads": true,
+    "matching_dsp_registers": true,
+    "scope": "preservation_of_previous_emulator_pcm_not_snes_fidelity"
+  },
+  "scenes": {
+    "title": {
+      "completed_boundary_cadence": 56.84548486166961,
+      "boundary_ms": {
+        "mean": 17.591546671357374,
+        "median": 17.551530666666668,
+        "p95": 19.8439552,
+        "p99": 21.081221973333335,
+        "max": 39.18613333333333
+      },
+      "cpu_rsp_wait_ms": {
+        "mean": 1.756079939020815,
+        "median": 0.0025173333333333332,
+        "p95": 5.538474666666667,
+        "p99": 6.607664640000006,
+        "max": 7.235690666666667
+      },
+      "cpu_module_percent": {
+        "s_cpu": 14.655414908579466,
+        "apu_static_or_jit": 26.568213783403657,
+        "dsp": 17.41209563994374,
+        "dma": 5.49929676511955,
+        "ppu": 12.827004219409282,
+        "rsp_wait": 10.253164556962025,
+        "vi_wait": 10.520393811533053,
+        "other": 2.2644163150492265
+      },
+      "pcm_comparison": {
+        "bytes": 8192,
+        "differences": 0,
+        "ring_head_matches": true,
+        "registers_match": true
+      },
+      "audio": {
+        "duration_s": 21.616859584,
+        "generated_stereo_frames": 650921,
+        "generated_per_second": 30111.728184689124,
+        "nominal_ai_rate_ntsc": 31880.68893254748,
+        "production_fraction_of_ai": 0.9445130953223411,
+        "submissions": 635,
+        "ai_idle_observations": 387,
+        "ai_full_observations": 0,
+        "max_submit_gap_ms": 52.959936,
+        "sd_commit_excluded": true
+      },
+      "capture_checksum_structure": "PASS",
+      "settings_match": true,
+      "trace_overflow": 0,
+      "sealed_ready": true,
+      "usb_only": true,
+      "physical_audio_fidelity_claim": false,
+      "first300_boundary_cadence": 55.009214791602915
+    },
+    "room": {
+      "completed_boundary_cadence": 59.85449442120259,
+      "boundary_ms": {
+        "mean": 16.707183139212425,
+        "median": 16.732010666666667,
+        "p95": 17.483105066666667,
+        "p99": 17.997881386666666,
+        "max": 19.319424
+      },
+      "cpu_rsp_wait_ms": {
+        "mean": 0.00244438824181919,
+        "median": 0.002389333333333333,
+        "p95": 0.0026666666666666666,
+        "p99": 0.003284906666666667,
+        "max": 0.0035413333333333334
+      },
+      "cpu_module_percent": {
+        "s_cpu": 6.932215234102027,
+        "apu_static_or_jit": 25.70230607966457,
+        "dsp": 33.6408106219427,
+        "dma": 9.86722571628232,
+        "ppu": 19.28721174004193,
+        "rsp_wait": 0.0,
+        "vi_wait": 2.613556953179595,
+        "other": 1.9566736547868624
+      },
+      "pcm_comparison": {
+        "bytes": 8192,
+        "differences": 0,
+        "ring_head_matches": true,
+        "registers_match": true
+      },
+      "audio": {
+        "duration_s": 21.633930218666666,
+        "generated_stereo_frames": 686550,
+        "generated_per_second": 31734.87170664976,
+        "nominal_ai_rate_ntsc": 31880.68893254748,
+        "production_fraction_of_ai": 0.9954261582550415,
+        "submissions": 670,
+        "ai_idle_observations": 71,
+        "ai_full_observations": 0,
+        "max_submit_gap_ms": 38.46916266666667,
+        "sd_commit_excluded": true
+      },
+      "capture_checksum_structure": "PASS",
+      "settings_match": true,
+      "trace_overflow": 0,
+      "sealed_ready": true,
+      "usb_only": true,
+      "physical_audio_fidelity_claim": false
+    },
+    "rain": {
+      "completed_boundary_cadence": 32.23381518650275,
+      "boundary_ms": {
+        "mean": 31.023321136950905,
+        "median": 30.618261333333333,
+        "p95": 35.95401813333333,
+        "p99": 36.654254079999994,
+        "max": 36.907541333333334
+      },
+      "cpu_rsp_wait_ms": {
+        "mean": 11.89351931369509,
+        "median": 11.221781333333332,
+        "p95": 15.79550293333333,
+        "p99": 18.388559359999995,
+        "max": 20.797077333333334
+      },
+      "cpu_module_percent": {
+        "s_cpu": 8.635724331926864,
+        "apu_static_or_jit": 17.229254571026722,
+        "dsp": 15.654008438818565,
+        "dma": 7.0886075949367084,
+        "ppu": 11.603375527426161,
+        "rsp_wait": 38.621659634317865,
+        "vi_wait": 0.0,
+        "other": 1.1673699015471168
+      },
+      "pcm_comparison": {
+        "bytes": 8192,
+        "differences": 0,
+        "ring_head_matches": true,
+        "registers_match": true
+      },
+      "audio": {
+        "duration_s": 21.662695893333332,
+        "generated_stereo_frames": 369599,
+        "generated_per_second": 17061.5421930815,
+        "nominal_ai_rate_ntsc": 31880.68893254748,
+        "production_fraction_of_ai": 0.5351685538910393,
+        "submissions": 361,
+        "ai_idle_observations": 361,
+        "ai_full_observations": 0,
+        "max_submit_gap_ms": 73.58472533333334,
+        "sd_commit_excluded": true
+      },
+      "capture_checksum_structure": "PASS",
+      "settings_match": true,
+      "trace_overflow": 0,
+      "sealed_ready": true,
+      "usb_only": true,
+      "physical_audio_fidelity_claim": false
+    }
+  },
+  "reference": {
+    "title_first300_boundary_cadence": 53.645933679045726,
+    "room_quiet_boundary_cadence": 59.51570007129272,
+    "room_quiet_audio_production_fraction": 0.9901427752918108,
+    "rain_boundary_cadence": 32.185453685504775,
+    "title_and_rain_reference_cadence_exclude_later_sd_commit": true,
+    "old_dac_read_derived_fractions_discarded": true
+  },
+  "restoration": {
+    "menu_responsive": true,
+    "emulator_readback_verified": true
+  },
+  "limits": [
+    "single_window_per_scene",
+    "completed_boundaries_not_tv_fps",
+    "paused_ring_not_dac_waveform",
+    "no_full_audio_fidelity_claim",
+    "no_universal_speedup_claim",
+    "rain_difference_below_one_percent_not_claimed_as_win"
+  ],
+  "commercial_game_material_included": false
+}

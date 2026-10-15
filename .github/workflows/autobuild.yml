@@ -26,6 +26,8 @@ jobs:
         run: |
           python3 scripts/test_profile_report.py
           python3 scripts/check_rsp_branch_delay_slots.py --self-test
+          python3 scripts/test_rdp_loadsync_contract.py
+          python3 tools/sc64-diagnostic-save/test_save.py --json-output pool-directory-proof.json
 
       - name: Compile
         shell: bash
@@ -35,7 +37,26 @@ jobs:
           make -j$(nproc) 2>&1 | tee build.log
 
       - name: Check RSP branch delay slots
-        run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+        run: |
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
+          python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
+          python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
+          python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
+          python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
+          python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
+
+      - name: Check normal runtime arena
+        run: |
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf
+          python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
+          python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-compiled.json
+          python3 scripts/test_hcomp_packed_math.py build/src/rsp_hcomp_math.elf --output packed-math-compiled.json
+          python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
+          python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
 
       - name: Record build metrics
         run: |
@@ -55,8 +76,155 @@ jobs:
             rom-converter.py
             build/sodium64.elf
             build/*.map
+            build/src/rsp*.elf
+            direct-compiled.json
+            mode7-compiled.json
+            resident-admit-compiled.json
+            depth-policy-compiled.json
+            vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sub-presence-compiled.json
+            packed-math-compiled.json
+            sparse-reset-compiled.json
             build.log
             build-metrics.txt
+
+  native-diag-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - name: Install libdragon
+        run: npm install -g libdragon
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate original diagnostic save fixtures
+        run: python3 scripts/test_native_diag_report.py
+      - name: Compile empty native diagnostic template
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon init
+          libdragon make NATIVE_DIAG=1 -j$(nproc) 2>&1 | tee native-diag-build.log
+      - name: Check resident RSP ABI and runtime arena
+        run: |
+          python3 scripts/test_native_diag_arm.py build/sodium64.elf
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
+          python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
+          python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
+          python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
+          python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
+          python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
+          python3 scripts/check_runtime_arena.py build/sodium64.elf
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf
+          python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
+          python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-compiled.json
+          python3 scripts/test_hcomp_packed_math.py build/src/rsp_hcomp_math.elf --output packed-math-compiled.json
+          python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
+          python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
+      - name: Upload empty diagnostic template and decoder
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-native-diag-build
+          retention-days: 14
+          path: |
+            sodium64.z64
+            build/sodium64.elf
+            build/*.map
+            build/src/rsp*.elf
+            direct-compiled.json
+            mode7-compiled.json
+            resident-admit-compiled.json
+            depth-policy-compiled.json
+            vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sub-presence-compiled.json
+            packed-math-compiled.json
+            sparse-reset-compiled.json
+            native-diag-build.log
+            scripts/native_diag_report.py
+            scripts/native_diag_v4.py
+            scripts/profile_report.py
+
+  native-trace-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - name: Install libdragon
+        run: npm install -g libdragon
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate original diagnostic save fixtures
+        run: |
+          python3 scripts/test_native_diag_report.py
+          python3 scripts/test_native_diag_trace_report.py
+          python3 scripts/test_native_diag_v4_report.py
+          python3 scripts/test_native_diag_v5_report.py
+          python3 scripts/test_continuous_save_sink.py --json-output continuous-sink-proof.json
+      - name: Compile empty native diagnostic template
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon init
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 -j$(nproc) 2>&1 | tee native-trace-build.log
+      - name: Check resident RSP ABI and runtime arena
+        run: |
+          python3 scripts/test_native_diag_arm.py build/sodium64.elf
+          python3 scripts/test_native_diag_v4.py build/sodium64.elf --rsp-main build/src/rsp_main.elf --rsp-mode7 build/src/rsp_mode7.elf --rsp-hcomp build/src/rsp_hcomp.elf --json-output native-trace-compiled.json
+          python3 scripts/test_native_diag_continuous.py build/sodium64.elf --json-output continuous-compiled.json
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
+          python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
+          python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
+          python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
+          python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
+          python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf --diagnostic-trace
+          python3 scripts/test_renderer_batching.py build/sodium64.elf build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_obj_rows.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output obj-rows-compiled.json
+          python3 scripts/test_hcomp_redundant_work.py build/sodium64.elf build/src/rsp_hcomp_math.elf --output redundant-work-compiled.json
+          python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-compiled.json
+          python3 scripts/test_hcomp_packed_math.py build/src/rsp_hcomp_math.elf --output packed-math-compiled.json
+          python3 scripts/test_apu_sparse_reset.py build/sodium64.elf --output sparse-reset-compiled.json
+          python3 scripts/test_vram_flush.py build/sodium64.elf --output vram-flush-compiled.json
+      - name: Upload empty diagnostic template and decoder
+        uses: actions/upload-artifact@v4
+        with:
+          name: sodium64-native-trace-build
+          retention-days: 14
+          path: |
+            sodium64.z64
+            build/sodium64.elf
+            build/*.map
+            build/src/rsp*.elf
+            direct-compiled.json
+            mode7-compiled.json
+            resident-admit-compiled.json
+            depth-policy-compiled.json
+            vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sub-presence-compiled.json
+            packed-math-compiled.json
+            sparse-reset-compiled.json
+            native-trace-build.log
+            native-trace-compiled.json
+            continuous-compiled.json
+            continuous-sink-proof.json
+            scripts/native_diag_report.py
+            scripts/native_diag_v4.py
+            scripts/profile_report.py
 
   profile-build:
     runs-on: ubuntu-latest
@@ -72,8 +240,22 @@ jobs:
           source scripts/setup_n64_ci.sh
           make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
 
+      - name: Check the sampler runtime arena
+        run: |
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --profile
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf --profile
+
       - name: Check profiling RSP branch delay slots
-        run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+        run: |
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf build/src/rsp_hcomp_fast.elf build/src/rsp_mode7_window.elf
+          python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_hcomp_aligned_targets.py build/src/rsp_hcomp.elf build/src/rsp_hcomp_math.elf build/src/rsp_hcomp_setup.elf
+          python3 scripts/test_hcomp_depth_policy.py build/src/rsp_main.elf --output depth-policy-compiled.json
+          python3 scripts/test_hcomp_resident_admit.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output resident-admit-compiled.json
+          python3 scripts/test_mode7_windows.py build/src/rsp_main.elf build/src/rsp_mode7_window.elf --output mode7-compiled.json
+          python3 docs/gate-c-a3/test_hcomp_direct_backdrop.py build/src/rsp_main.elf build/src/rsp_hcomp.elf build/src/rsp_hcomp_fast.elf --output direct-compiled.json
+          python3 scripts/test_hcomp_sub_presence.py build/src/rsp_main.elf build/src/rsp_hcomp.elf --output sub-presence-compiled.json
+          python3 scripts/test_hcomp_packed_math.py build/src/rsp_hcomp_math.elf --output packed-math-compiled.json
 
       - name: Record profiling build metrics
         run: |
@@ -93,6 +275,17 @@ jobs:
             rom-converter.py
             build/sodium64.elf
             build/*.map
+            build/src/rsp*.elf
+            direct-compiled.json
+            mode7-compiled.json
+            resident-admit-compiled.json
+            depth-policy-compiled.json
+            vram-flush-compiled.json
+            obj-rows-compiled.json
+            redundant-work-compiled.json
+            sub-presence-compiled.json
+            packed-math-compiled.json
+            sparse-reset-compiled.json
             profile-build.log
             profile-build-metrics.txt
 
@@ -297,6 +490,104 @@ jobs:
             profile-snapshot.bin
             profile-report.txt
 
+  usb-audio-observer-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+      - name: Compile and exercise production parsers and optional observers
+        run: |
+          python3 scripts/test_remote_control.py
+          python3 scripts/test_remote_control.py --audio-observer --json-output audio-parser.json
+          python3 scripts/test_remote_control.py --brr-observer --json-output audio-brr-parser.json
+          python3 scripts/test_remote_control.py --koff-release --json-output audio-release-parser.json
+          python3 scripts/test_remote_control.py --brr-observer --koff-release --json-output audio-combined-parser.json
+          python3 scripts/test_remote_control.py --mix-observer --koff-release --json-output audio-mix-parser.json
+          python3 scripts/test_remote_control.py --mix-observer --brr-observer --koff-release --json-output audio-all-parser.json
+          python3 scripts/test_remote_control.py --gain-probe --koff-release --json-output audio-gain-parser.json
+          python3 scripts/test_remote_control.py --full-dsp-probe --koff-release --json-output audio-full-parser.json
+          python3 scripts/test_full_dsp_probe.py --json-output audio-full-host.json
+      - name: Compile audio reference and faithful-BRR trace candidate
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon init
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+            WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+            FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 \
+            BUILD_DIR=build_audio_reference PROJ_NAME=sodium64-audio-reference \
+            -j$(nproc) 2>&1 | tee audio-reference-build.log
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+            WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+            FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 BRR_OBSERVER=1 DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 MIX_OBSERVER=1 DSP_VOICE_BASE=1 DSP_GAIN_PROBE=1 \
+            -j$(nproc) 2>&1 | tee audio-observer-build.log
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+            WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+            FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 \
+            DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 BRR_OBSERVER=1 \
+            DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 MIX_OBSERVER=1 \
+            BUILD_DIR=build_audio_voice_reference PROJ_NAME=sodium64-voice-reference \
+            -j$(nproc) 2>&1 | tee audio-voice-reference-build.log
+      - name: Execute linked observer, caller, transport and arena gates
+        run: |
+          python3 scripts/test_audio_observer.py build/sodium64.elf --json-output audio-hook.json
+          python3 scripts/test_dsp_pitch_cache.py build/sodium64.elf --reference-elf build_audio_reference/sodium64-audio-reference.elf --json-output audio-pitch-cache.json
+          python3 scripts/test_dsp_brr_accuracy.py build/sodium64.elf --legacy-elf build_audio_reference/sodium64-audio-reference.elf --json-output audio-brr.json
+          python3 scripts/test_brr_observer.py build/sodium64.elf --json-output audio-brr-hook.json
+          python3 scripts/test_dsp_koff_release.py build/sodium64.elf --legacy-elf build_audio_reference/sodium64-audio-reference.elf --json-output audio-release.json
+          python3 scripts/test_dsp_dry_mix.py build/sodium64.elf --json-output audio-dry-mix.json
+          python3 scripts/check_dsp_hilo_spacing.py build/sodium64.elf --json-output audio-hilo-spacing.json
+          python3 scripts/test_mix_observer.py build/sodium64.elf --json-output audio-mix-hook.json
+          python3 scripts/test_dsp_voice_base.py build/sodium64.elf --reference-elf build_audio_voice_reference/sodium64-voice-reference.elf --json-output audio-voice-base.json
+          python3 scripts/test_dsp_gain_probe.py build/sodium64.elf --json-output audio-gain-probe.json
+          python3 scripts/test_dsp_gain_mix.py build/sodium64.elf --json-output audio-gain-mix.json
+          python3 scripts/check_remote_boot.py --elf build/sodium64.elf --json-output audio-boot.json
+          python3 scripts/test_native_diag_continuous.py build/sodium64.elf --json-output audio-recorder.json
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --diagnostic-trace --brr-observer --mix-observer
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf --diagnostic-trace --brr-observer --mix-observer --output audio-arena.json
+          python3 scripts/check_brr_observer_arena.py build/sodium64.elf --json-output audio-compiled-arena.json
+          python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_*.elf
+          python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_rsp_window_spans_compiled.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output audio-windows.json
+      - name: Build and check the isolated complete DSP probe
+        shell: bash
+        run: |
+          set -o pipefail
+          libdragon make NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 REMOTE=1 SIGNAL_PROFILE=1 \
+            WIDE_MATH=1 ELIGIBILITY_TAGS=1 MASK_SCAN=1 TLUT_SHADER=1 \
+            FULL_ROW_MATH=1 RDP_HALF_MATH=1 FIXED_WINDOW_MATH=1 RDP_FIXED_MATH=1 \
+            TMEM_ATLAS=1 TMEM_ATLAS_BITS=3 TMEM_COORD_ATLAS=1 AUDIO_OBSERVER=1 \
+            DSP_PITCH_CACHE=1 DSP_BRR_ACCURATE=1 DSP_KOFF_RELEASE=1 DSP_DRY_MIX=1 DSP_VOICE_BASE=1 FULL_DSP_PROBE=1 \
+            BUILD_DIR=build_full_dsp_probe PROJ_NAME=sodium64-full-dsp-probe \
+            -j$(nproc) 2>&1 | tee audio-full-build.log
+          python3 scripts/check_runtime_arena.py build_full_dsp_probe/sodium64-full-dsp-probe.elf --diagnostic-trace --full-dsp-probe
+          python3 scripts/check_event_arena.py --elf build_full_dsp_probe/sodium64-full-dsp-probe.elf --diagnostic-trace --full-dsp-probe --output audio-full-arena.json
+          python3 scripts/check_brr_observer_arena.py build_full_dsp_probe/sodium64-full-dsp-probe.elf --json-output audio-full-dma.json
+          python3 scripts/check_full_dsp_core.py build_full_dsp_probe/sodium64-full-dsp-probe.elf --json-output audio-full-linked.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sodium64-usb-audio-observer
+          retention-days: 14
+          path: |
+            audio-*.json
+            audio-observer-build.log
+            audio-reference-build.log
+            audio-voice-reference-build.log
+            build_audio_voice_reference/sodium64-voice-reference.elf
+            build_audio_reference/sodium64-audio-reference.elf
+            build/sodium64.elf
+            build/*.map
+            build/src/rsp_*.elf
+            sodium64.z64
+
   update-release:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
@@ -333,3 +624,7 @@ jobs:
           artifacts: sodium64.zip
           tag: release
           token: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+

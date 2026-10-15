@@ -55,7 +55,9 @@ jobs:
         run: python3 scripts/test_gate_c_cgram_typed_producer_clean.py
 
       - name: Prove DMA8 consumer semantics
-        run: python3 scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
+        run: |
+          python3 scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
+          python3 -m unittest discover -s scripts -p test_cgram_publication_order.py -v
 
       - name: Build exact candidate
         shell: bash
@@ -75,6 +77,8 @@ jobs:
             --nms rsp-main.nm rsp-mode7.nm
           python3 scripts/check_rsp_branch_delay_slots.py \
             build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_rsp_rdp_dmem_lifetime.py build/src/rsp_main.elf build/src/rsp_mode7.elf
+          python3 scripts/test_rsp_window_spans_compiled.py build/src/rsp_main.elf build/src/rsp_mode7.elf --output window-spans-compiled.json
 
       - name: Record hashes
         run: |
@@ -89,6 +93,7 @@ jobs:
           path: |
             consumer-build.log
             consumer-hashes.txt
+            window-spans-compiled.json
             rsp-main.nm
             rsp-mode7.nm
             build/rsp_main.map

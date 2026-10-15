@@ -1,0 +1,79 @@
+{
+  "checkpoint": "R25",
+  "previous_code_commit": "1b12398077ad804874af42fcdc6be34be2793794",
+  "quiet_combined_retry": {
+    "install_readback_verified": true,
+    "pause600_acknowledged": true,
+    "quiet_seconds_after_step780": 20,
+    "usb_status_and_return": "timeout",
+    "restoration_verified": false,
+    "firmware_info_responsive": true
+  },
+  "binary_fault": {
+    "CPU_arena": "0xD4000",
+    "actual_RSP_backup": "0xD2400",
+    "dma_bytes": 1024,
+    "static_end": "0xD25C8",
+    "usb_request_buffer": "0xD2490",
+    "overlap_demonstrated": true,
+    "precise_frozen_instruction_observed": false,
+    "R24_static_end": "0xD15C8",
+    "R24_unified_layout_claim_corrected": true
+  },
+  "correction": {
+    "flags_initialized_before_append": true,
+    "new_actual_RSP_backup": "0xD4400",
+    "exactly_four_loaded_bytes_changed": true,
+    "cpu_and_other_loaded_bytes_unchanged": true,
+    "empty_bytes": 147456,
+    "empty_sha256": "18db14833af29d0c664ff43abe94cbd01b7f9cf828bda9c999ff84863357941a",
+    "elf_sha256": "78095cbe990ca747e75a08ff9107cd5f061d3d608359facadc22664fbefb4999",
+    "guard": {
+      "passed": true,
+      "cpu_queue_words": 6,
+      "embedded_banks": 2,
+      "actual_dma_sites": [
+        {
+          "pc": "a40014c4",
+          "direction": "write",
+          "rdram_start": "a00d4400",
+          "bytes": 1024
+        },
+        {
+          "pc": "a4001748",
+          "direction": "read",
+          "rdram_start": "a00d4400",
+          "bytes": 1024
+        },
+        {
+          "pc": "a40013f8",
+          "direction": "write",
+          "rdram_start": "a00d4400",
+          "bytes": 1024
+        },
+        {
+          "pc": "a4001580",
+          "direction": "read",
+          "rdram_start": "a00d4400",
+          "bytes": 1024
+        }
+      ],
+      "linked_elf_sha256": "78095cbe990ca747e75a08ff9107cd5f061d3d608359facadc22664fbefb4999",
+      "negative_mutations_rejected": [
+        "CPU_queue_disagreement",
+        "stale_RSP_backup",
+        "embedded_bank_disagreement"
+      ],
+      "physical_acceptance": false
+    },
+    "rejected_old_binary": true,
+    "complete_memory_owners": 41,
+    "release_cases": 16384,
+    "release_mutations": 2,
+    "window_cases": 1792,
+    "window_mutations": 2
+  },
+  "physical_corrected_trial": "pending responsive menu",
+  "commercial_data_included": false,
+  "full_goal_acceptance": false
+}

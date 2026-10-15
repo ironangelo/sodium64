@@ -18,6 +18,11 @@
 */
 
 #include "defines.h"
+#ifdef SODIUM64_COLOR_DIAG
+#define FRAME_INPUT_RETURN color_diag_vi_entry
+#else
+#define FRAME_INPUT_RETURN input_update
+#endif
 
 .globl framebuffer
 .globl fps_native
@@ -59,6 +64,21 @@ exception_vector:
 main:
     // Disable interrupts and do the magic hardware init
     mtc0 zero, $12 // Status
+#ifdef SODIUM64_REMOTE
+    // The paired modern IPL3 leaves TV type in DMEM boot-info byte9.
+    // Preserve it before replacing DMEM with the renderer's RSP data.
+    // Legacy RDRAM 0x300 is not maintained by this IPL3 and cold boot clears it.
+    lui t0, 0xA400
+    lbu t1, 9(t0)
+    sltiu t2, t1, 3
+    bnez t2, remote_boot_tv_valid
+    nop
+    li t1, 1 // Safe NTSC fallback for an invalid boot-info value.
+remote_boot_tv_valid:
+    sw t1, remote_boot_tv_type
+.globl remote_boot_tv_captured
+remote_boot_tv_captured:
+#endif
     li t0, 8
     sw t0, 0xBFC007FC
 
@@ -70,6 +90,14 @@ main:
 clear_vram:
     sd zero, (t0)
     bne t0, t1, clear_vram
+    addi t0, t0, 8
+
+    // Clear the new renderer owners and their guards, excluding ROM pages.
+    li t0, HCOMP_WINNER_ARENA
+    li t1, HCOMP_CGRAM_EVENT_QUEUE2 - 8
+clear_hcomp_surfaces:
+    sd zero, (t0)
+    bne t0, t1, clear_hcomp_surfaces
     addi t0, t0, 8
 
     // Initialize the VI to display a 16-bit 256x224 framebuffer
@@ -104,13 +132,20 @@ clear_vram:
     sw t1, 0x0034(t0) // VI_Y_SCALE
 
     // Initialize the AI to output 16-bit samples at the DSP rate
+#ifdef SODIUM64_AUDIO_OBSERVER
+.globl dsp_audio_ai_init_begin, dsp_audio_ai_init_end
+dsp_audio_ai_init_begin:
+#endif
     lui t0, 0xA450 // AI register upper address
     li t1, 0x00000001 // DMA enable
     sw t1, 0x0008(t0) // AI_CONTROL
-    li t1, 48681812 / (60 * 262 * 341 * 4 / DSP_SAMPLE) + 1
+    li t1, DSP_AI_DAC_RATE
     sw t1, 0x0010(t0) // AI_DAC_RATE
     li t1, 0x0000000F // 16-bit - 1
     sw t1, 0x0014(t0) // AI_BIT_RATE
+#ifdef SODIUM64_AUDIO_OBSERVER
+dsp_audio_ai_init_end:
+#endif
 
     // Update the exception vectors
     lui t0, 0xA000
@@ -160,14 +195,119 @@ pi_wait1:
     jal rsp_upload
     li a0, 0x0000 // DMEM address
 
-    // Publish the fixed renderer-slot sources for demand-driven RSP overlays.
-    // Referencing both embedded blobs also keeps them resident in the final ROM.
-    la t0, rsp_main_text_start
-    addi t0, t0, 0x3A8
-    sw t0, DMEM(OVERLAY_MAIN_SRC)
+    // Main stays at E90. Mode7 window entry owns E8C; its affine draw bank
+    // uses audited EA4. The H-COMP bridge keeps E94 and all resident entries.
+#if SODIUM64_TMEM_ATLAS
+.globl tmem_atlas_cpu_bind, tmem_atlas_cpu_bind_end
+tmem_atlas_cpu_bind:
+    la t0, rsp_object_cache_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 1 // Object construction remains Main residency, not an instruction PC.
+#endif
+    sw t0, DMEM(OVERLAY_OBJECT_CACHE_SRC)
+tmem_atlas_cpu_bind_end:
+#endif
+    la t0, rsp_mode7_window_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 6 // aligned source pointer carries the diagnostic bank ID
+#endif
+    sw t0, DMEM(OVERLAY_MODE7_SRC)
     la t0, rsp_mode7_text_start
     addi t0, t0, 0x3A8
-    sw t0, DMEM(OVERLAY_MODE7_SRC)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 2 // aligned source pointer carries the diagnostic bank ID
+#endif
+    sw t0, DMEM(OVERLAY_MODE7_DRAW_SRC)
+    la t0, rsp_main_text_start
+    addi t0, t0, 0x3A8
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 1 // aligned source pointer carries the diagnostic bank ID
+#endif
+    sw t0, DMEM(OVERLAY_MAIN_SRC)
+    la t0, rsp_hcomp_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 3 // aligned source pointer carries the diagnostic bank ID
+#endif
+    sw t0, DMEM(OVERLAY_HCOMP_SRC)
+    la t0, rsp_hcomp_math_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5 // aligned source pointer carries the diagnostic bank ID
+#endif
+#if SODIUM64_HCOMP_FIXED_WINDOW_MATH
+hcomp_fixed_window_cpu_bind:
+    // The inner fixed-window bank falls back to the original Math image.
+    la t1, rsp_hcomp_fixed_window_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_fixed_window_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5
+#endif
+hcomp_fixed_window_cpu_bind_end:
+#endif
+#if SODIUM64_HCOMP_RDP_FIXED_MATH
+hcomp_rdp_fixed_cpu_bind:
+    la t1, rsp_hcomp_rdp_fixed_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_rdp_fixed_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5
+#endif
+hcomp_rdp_fixed_cpu_bind_end:
+#endif
+#if SODIUM64_HCOMP_RDP_HALF_MATH
+hcomp_rdp_cpu_bind:
+    // The outer bank keeps the current Math fallback in owned RDRAM.
+    // No free DMEM word is borrowed; descriptor publication is uncached.
+    la t1, rsp_hcomp_rdp_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_rdp_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5
+#endif
+#endif
+    sw t0, DMEM(OVERLAY_HCOMP_MATH_SRC)
+#if SODIUM64_HCOMP_RDP_HALF_MATH
+hcomp_rdp_cpu_bind_end:
+#endif
+    la t0, rsp_hcomp_setup_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 7
+#endif
+    sw t0, DMEM(OVERLAY_HCOMP_SETUP_SRC)
+    la t0, rsp_hcomp_fast_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 4 // aligned source pointer carries the diagnostic bank ID
+#endif
+    sw t0, DMEM(OVERLAY_HCOMP_FAST_SRC)
+#if SODIUM64_HCOMP_TLUT_SHADER
+    la t0, rsp_hcomp_tlut_text_start
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    ori t0, t0, 5 // Arithmetic residency also owns palette generation/binding.
+#endif
+    sw t0, DMEM(OVERLAY_HCOMP_TLUT_SRC)
+#endif
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+#if SODIUM64_SIGNAL_PROFILE
+native_diag_signal_main_initial:
+    lui t0, 0x002C // Initial Main bank is resident; atomically publish SIG4..6 = 1.
+    sw t0, 0xA4040010
+native_diag_signal_main_initial_done:
+#else
+    li t0, 1 // the initial full Main upload is complete
+    sh t0, DMEM(NATIVE_DIAG_RSP_BANK)
+#endif
+#endif
+#ifdef SODIUM64_COLOR_DIAG
+    // Preserve the existing raw reference region below the composed band.
+    li t0, 8
+    sw t0, DMEM(HCOMP_DIAG_COMPOSE_LIMIT)
+#endif
 
     // Publish the raw historical-palette workspaces used by the DMA8 CGRAM
     // replay consumer. sp remains 0/4, matching queue ownership.
@@ -178,16 +318,39 @@ pi_wait1:
 
     sw zero, 0xA4080000 // SP_PC
 
+#ifdef SODIUM64_NATIVE_DIAG
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    // Metadata remains in cart SDRAM across boot. The paired menu has already
+    // disabled automatic writeback and closed its reserved diagnostic files.
+    jal continuous_save_init_bridge
+    nop
+    sw v0, continuous_save_available
+#endif
+    jal native_diag_init
+    nop
+#endif
+
 #ifdef SODIUM64_PROFILE
     // Arm CP0 Compare before enabling the timer interrupt mask.
+#ifdef SODIUM64_COLOR_DIAG
+    jal color_diag_init
+    nop
+#endif
     jal profile_init
+    nop
+#endif
+
+#ifdef SODIUM64_REMOTE
+    jal remote_init_bridge
     nop
 #endif
 
     // Enable VI interrupts and start execution
     li t0, 0x00000595 // Set VI mask
     sw t0, 0xA430000C // MI_MASK
-#ifdef SODIUM64_PROFILE
+#if defined(SODIUM64_NATIVE_DIAG)
+    li t0, 0x00000401 // Compare stays masked until native_diag_arm
+#elif defined(SODIUM64_PROFILE)
     li t0, 0x00008401 // Enable interrupts, VI (IP2), and CP0 timer (IP7)
 #else
     li t0, 0x00000401 // Enable interrupts
@@ -241,6 +404,15 @@ exception_handler:
 
     // Jump to the appropriate handler for supported interrupts
     mfc0 k0, $13 // Cause
+#ifdef SODIUM64_NATIVE_DIAG
+    // Finalization masks the timer but keeps PRE-NMI/reset enabled. A pending
+    // masked Compare must not steal a later reset interrupt.
+    mfc0 k1, $12
+    and k1, k0, k1
+    andi k1, k1, 0x8000
+    bnez k1, native_diag_interrupt
+    nop
+#endif
 #ifdef SODIUM64_PROFILE
     // CP0 Compare raises IP7. profile_interrupt only clobbers k0/k1 and erets.
     andi k1, k0, 0x8000
@@ -260,6 +432,35 @@ vi_interrupt:
     // Acknowledge the VI interrupt
     lui k0, 0xA440
     sw zero, 0x0010(k0) // VI_CURRENT
+
+#ifdef SODIUM64_REMOTE
+    la k0, remote_vi_count
+    lw k1, (k0)
+    addiu k1, k1, 1
+    sw k1, (k0)
+#endif
+
+#ifdef SODIUM64_NATIVE_DIAG
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+    la k0, native_diag_continuous_mode
+    lw k1, (k0)
+    beqz k1, native_diag_vi_count
+    nop
+    la k0, native_diag_phase
+    lw k1, (k0)
+    addiu k1, k1, -1
+    bnez k1, native_diag_vi_count_done
+    nop
+native_diag_vi_count:
+#endif
+    la k0, native_diag_state
+    lw k1, 52(k0)
+    addiu k1, k1, 1
+    sw k1, 52(k0)
+#ifdef SODIUM64_NATIVE_DIAG_TRACE
+native_diag_vi_count_done:
+#endif
+#endif
 
     // Wait one second by counting 60 frames at 60Hz
     la k0, fps_native
@@ -281,6 +482,12 @@ update_fps:
     sb k1, (k0)
 
     // Check if SRAM is dirty
+#ifdef SODIUM64_NATIVE_DIAG
+    // Only finalization writes the diagnostic cart save. Ordinary guest writes
+    // still update its private first 8 KiB in local SRAM.
+    b check_frame
+    nop
+#endif
     la k0, sram_dirty
     lbu k1, (k0)
     beqz k1, check_frame
@@ -315,13 +522,13 @@ check_frame:
     addi k0, k1, 1
 skip_reset:
     la k1, skip_native
-    bnez k0, input_update
+    bnez k0, FRAME_INPUT_RETURN
     sb k0, (k1)
 
     // Continue if the next frame is ready; otherwise just update input
     la k0, frame_count
     lbu k1, (k0)
-    beqz k1, input_update
+    beqz k1, FRAME_INPUT_RETURN
     nop
 
     // Get the address of the next of three framebuffers
@@ -341,11 +548,20 @@ set_buffer:
     la k1, framebuffer
     sw k0, (k1)
 
+#ifdef SODIUM64_REMOTE
+    // A new completed buffer was really published to VI_ORIGIN, not just
+    // another retrace of the same image. Counter is never called FPS.
+    la k0, remote_presentations
+    lw k1, (k0)
+    addiu k1, k1, 1
+    sw k1, (k0)
+#endif
+
     // Decrement the frame counter and update input
     la k0, frame_count
     lbu k1, (k0)
     addi k1, k1, -1
-    j input_update
+    j FRAME_INPUT_RETURN
     sb k1, (k0)
 
 .align 5
@@ -360,3 +576,4 @@ loop:
     // Wait until the system resets
     b loop
     nop
+

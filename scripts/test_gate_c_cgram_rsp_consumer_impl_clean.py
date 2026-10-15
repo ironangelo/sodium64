@@ -118,27 +118,45 @@ def prove_inherited_typed_producer() -> None:
             raise AssertionError(f"inherited EA0 handoff drift: {required!r}")
 
 
-def prove_main_publication() -> None:
-    src = (ROOT / "src/main.S").read_text()
+def prove_main_publication(src: str | None = None) -> None:
+    if src is None:src = (ROOT / "src/main.S").read_text()
     block = extract(
         src,
-        "// Publish the fixed renderer-slot sources",
+        "la a1, rsp_main_text_start",
         "sw zero, 0xA4080000 // SP_PC",
     )
+    # Main and Mode7 pointers occupy independent slots. Their relative order
+    # is immaterial while RSP is halted; both must follow the initial DMEM
+    # upload, precede raw-shadow publication and be bound before SP_PC reset.
+    uploaded=block.index("li a0, 0x0000 // DMEM address")
+    bindings=(('rsp_main_text_start','OVERLAY_MAIN_SRC',True),
+              ('rsp_mode7_window_text_start','OVERLAY_MODE7_SRC',False),
+              ('rsp_mode7_text_start','OVERLAY_MODE7_DRAW_SRC',True))
+    publications=[]
+    for source,slot,offset in bindings:
+        anchor=f"sw t0, DMEM({slot})"
+        if block.count(anchor)!=1:raise AssertionError(f"missing/duplicate renderer publication {slot}")
+        position=block.index(anchor);publications.append(position)
+        load=block.rfind('la t0, ',0,position)
+        if load<uploaded or not block[load:].startswith(f'la t0, {source}\n'):
+            raise AssertionError(f"renderer source binding drift: {slot}")
+        arithmetic='addi t0, t0, 0x3A8'
+        if (arithmetic in block[load:position])!=offset:
+            raise AssertionError(f"renderer source offset drift: {slot}")
     anchors = (
-        "sw t0, DMEM(OVERLAY_MAIN_SRC)",
-        "sw t0, DMEM(OVERLAY_MODE7_SRC)",
         "li t0, HCOMP_RAW_PALETTE_QUEUE1",
         "sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS)",
         "li t0, HCOMP_RAW_PALETTE_QUEUE2",
         "sw t0, DMEM(HCOMP_RAW_PALETTE_PTRS + 4)",
     )
     for anchor in anchors:
-        if anchor not in block:
+        if block.count(anchor)!=1:
             raise AssertionError(f"raw-shadow publication drift: {anchor!r}")
     positions = [block.index(anchor) for anchor in anchors]
     if positions != sorted(positions):
         raise AssertionError("raw-shadow publication ordering drift")
+    if max(publications)>=positions[0]:
+        raise AssertionError("renderer sources must precede raw-shadow publication")
 
 
 def prove_rsp_source(path: Path) -> None:
@@ -199,31 +217,34 @@ def prove_rsp_source(path: Path) -> None:
         "lw a1, HCOMP_RAW_PALETTE_PTRS(sp)",
         "add a1, a1, t0",
         "li a0, HCOMP_CGRAM_WRITE_SCRATCH",
-        "jal dma_write\n    li a2, 0x7",
+        "jal rdp_source_retire\n    li a2, 0x7",
         "b hcomp_cgram_consume\n    nop",
         "hcomp_cgram_marker:",
-        "b hcomp_cgram_return\n    lbu k1, SPLIT_LINE",
+        "b hcomp_cgram_store_marker\n    lbu k1, SPLIT_LINE",
     )
     for anchor in expected_tail:
         if anchor not in tail:
             raise AssertionError(f"{name}: tail missing {anchor!r}")
 
-    # Exactly seven pre-audited suffix NOPs are consumed. Keep the memory-read
-    # peephole deliberately untouched as the one-instruction spare.
-    optimized = (
-        "beqz t0, obj_no_windows\n    lbu a0, WOBJSEL",
-        "bltz t8, obj_finish_objects\n    lbu t2, WIN_COUNT",
-        "beq t1, t2, color_window_none\n    lbu t0, WOBJSEL",
-        "beqz t8, color_window_none\n    lbu t0, WIN_BOUNDS + 0",
-        "bnez t0, color_window_initial_ready\n    move a1, s0",
-        "beq t8, a1, color_window_tail\n    addi a1, t2, -1",
-        "beq t8, a1, color_window_tail\n    addi a1, t4, -1",
-    )
-    for anchor in optimized:
-        if anchor not in src:
-            raise AssertionError(f"{name}: missing approved peephole {anchor!r}")
-    if "beqz t7, window_new_span\n    nop\n    lbu t2, -1(t6)" not in src:
-        raise AssertionError(f"{name}: reserved eighth peephole was unexpectedly consumed")
+    marker = extract(src, 'hcomp_cgram_store_marker:', '\n\n')
+    if instruction_count(marker)!=3 or 'b hcomp_cgram_return\n    nop' not in marker:
+        raise AssertionError(f'{name}: marker bridge must preserve raw payload and return')
+    source_fence=extract(src,'rdp_source_retire:','dma_write_owned:')
+    for anchor in ('li t0, HCOMP_TEXTURE_FENCE','mtc0 t0, COP0_DP_START',
+                   'mtc0 t0, COP0_DP_END','andi t0, t0, 0x770',
+                   'bnez t0, rdp_texture_wait'):
+        if anchor not in source_fence:raise AssertionError(f'{name}: raw palette source fence drift')
+
+    # The legacy color_window_none/tail implementation was replaced by the
+    # common exact span helper. Do not claim seven historical peepholes still
+    # exist: compiled size/entries prove the slot footprint, and the workflow
+    # executes both current helpers against independent pixel truth, including
+    # preserved registers/memory and a negative selector mutation.
+    helper=extract(src,'calc_window_spans:','multiply:')
+    other='rsp_mode7.S' if name=='rsp_main.S' else 'rsp_main.S'
+    peer=extract((ROOT/'src'/other).read_text(),'calc_window_spans:','multiply:')
+    normalized=lambda text:[line.split('//',1)[0].strip() for line in text.splitlines() if line.split('//',1)[0].strip()]
+    if normalized(helper)!=normalized(peer):raise AssertionError('shared window helper drift across RSP banks')
 
     if instruction_count(prefix) + instruction_count(tail) != 29:
         raise AssertionError(f"{name}: consumer instruction total drift")
@@ -290,13 +311,14 @@ def main() -> int:
     print("consumer_instructions=29")
     print("consumer_prefix_instructions=8")
     print("consumer_tail_instructions=21")
-    print("suffix_peepholes_consumed=7")
-    print("suffix_peephole_spare=1")
+    print("marker_bridge_instructions=3")
+    print("raw_palette_source_fence=SyncFull_before_DMA")
+    print("current_window_helper=common_source_and_compiled_truth_gate")
     print("event_dma=8byte_aligned_pair")
     print("logical_record=4byte_cached_half")
     print("raw_palette_write=8byte_aligned")
     print("marker_payload=t7_live_on_return")
-    print("hcomp_arithmetic=frozen")
+    print("hcomp_arithmetic=outside_cgram_replay_proof")
     if args.maps:
         print("rsp_text_bytes=4096")
         print("fixed_renderer_slot=A40013A8..A400178F")

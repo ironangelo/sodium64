@@ -4,6 +4,15 @@ Sodium64 uses statistical R4300 PC sampling to identify where host CPU time is s
 
 This document defines what the profiler measures, how CI captures it, and which conclusions are currently valid.
 
+## 2026-10-12 decision policy
+
+Use the [active goal](ACTIVE_GOAL.md) and newest continuity checkpoint to rank
+current native blockers. Historical homebrew/laboratory profiles do not replace
+the measured commercial routes. Existing Count intervals, explicit waits,
+frame/VI/presentation counters and decoded samples come before new probes.
+CPU/RSP overlap; sample shares are not additive costs. Live-DMEM stage/bank
+fields remain candidates unless their publication/ownership is qualified.
+
 ## Build mode
 
 Normal release/runtime behavior remains unchanged:

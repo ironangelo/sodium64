@@ -1,10 +1,161 @@
 # Based on n64.mk from libdragon
+.DEFAULT_GOAL := all
 
 PROJ_NAME := sodium64
 BUILD_DIR := build
 SRC_DIRS := src
 PROFILE ?= 0
 HW_PROFILE ?= 0
+COLOR_DIAG ?= 0
+NATIVE_DIAG ?= 0
+NATIVE_DIAG_TRACE ?= 0
+REMOTE ?= 0
+SIGNAL_PROFILE ?= 0
+WIDE_MATH ?= 0
+ELIGIBILITY_TAGS ?= 0
+MASK_SCAN ?= 0
+SECTION_OBSERVER ?= 0
+AUDIO_OBSERVER ?= 0
+DSP_PITCH_CACHE ?= 0
+DSP_BRR_ACCURATE ?= 0
+DSP_KOFF_RELEASE ?= 0
+DSP_DRY_MIX ?= 0
+DSP_VOICE_BASE ?= 0
+DSP_GAIN_PROBE ?= 0
+FULL_DSP_PROBE ?= 0
+ifeq ($(FULL_DSP_PROBE),1)
+ifneq ($(REMOTE)$(AUDIO_OBSERVER),11)
+$(error FULL_DSP_PROBE requires REMOTE=1 AUDIO_OBSERVER=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_FULL_DSP_PROBE=1
+endif
+ifeq ($(DSP_GAIN_PROBE),1)
+ifneq ($(REMOTE)$(DSP_DRY_MIX)$(MIX_OBSERVER),111)
+$(error DSP_GAIN_PROBE requires REMOTE=1 DSP_DRY_MIX=1 MIX_OBSERVER=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_DSP_GAIN_PROBE=1
+endif
+ifeq ($(DSP_VOICE_BASE),1)
+ifneq ($(DSP_DRY_MIX),1)
+$(error DSP_VOICE_BASE requires DSP_DRY_MIX=1)
+endif
+endif
+MIX_OBSERVER ?= 0
+BRR_OBSERVER ?= 0
+TLUT_SHADER ?= 0
+TLUT_FLAT_WINDOW ?= 0
+ifeq ($(TLUT_FLAT_WINDOW),1)
+ifneq ($(TLUT_SHADER),1)
+$(error TLUT_FLAT_WINDOW requires TLUT_SHADER=1)
+endif
+endif
+FULL_ROW_MATH ?= 0
+RDP_HALF_MATH ?= 0
+FIXED_WINDOW_MATH ?= 0
+RDP_FIXED_MATH ?= 0
+FETCH_SIGNAL ?= 0
+TMEM_ATLAS ?= 0
+TMEM_ATLAS_BITS ?= 5
+TMEM_COORD_ATLAS ?= 0
+ifeq ($(TMEM_COORD_ATLAS),1)
+ifeq ($(filter $(TMEM_ATLAS)$(TMEM_ATLAS_BITS),12 13),)
+$(error TMEM_COORD_ATLAS requires TMEM_ATLAS=1 TMEM_ATLAS_BITS=2 or 3)
+endif
+endif
+ifeq ($(TMEM_ATLAS),1)
+ifeq ($(filter $(TMEM_ATLAS_BITS),0 1 2 3 4 5),)
+$(error TMEM_ATLAS_BITS must be between 0 and 5)
+endif
+endif
+ifeq ($(FETCH_SIGNAL),1)
+ifneq ($(SIGNAL_PROFILE),1)
+$(error FETCH_SIGNAL requires SIGNAL_PROFILE=1)
+endif
+endif
+RDP_MATH_PROBE ?= 0
+RDP_FIXED_PROBE_ONLY ?= 0
+ifeq ($(RDP_FIXED_PROBE_ONLY),1)
+ifneq ($(RDP_MATH_PROBE),1)
+$(error RDP_FIXED_PROBE_ONLY requires RDP_MATH_PROBE=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_RDP_FIXED_ONLY_PROBE=1
+endif
+ifeq ($(FIXED_WINDOW_MATH),1)
+ifneq ($(ELIGIBILITY_TAGS),1)
+$(error FIXED_WINDOW_MATH requires ELIGIBILITY_TAGS=1)
+endif
+endif
+ifeq ($(RDP_FIXED_MATH),1)
+ifneq ($(ELIGIBILITY_TAGS),1)
+$(error RDP_FIXED_MATH requires ELIGIBILITY_TAGS=1)
+endif
+endif
+ifeq ($(RDP_HALF_MATH),1)
+ifneq ($(ELIGIBILITY_TAGS),1)
+$(error RDP_HALF_MATH requires ELIGIBILITY_TAGS=1)
+endif
+endif
+ifeq ($(RDP_MATH_PROBE),1)
+ifneq ($(REMOTE),1)
+$(error RDP_MATH_PROBE requires REMOTE=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_RDP_MATH_PROBE=1
+endif
+ifeq ($(SECTION_OBSERVER),1)
+ifneq ($(REMOTE),1)
+$(error SECTION_OBSERVER requires REMOTE=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_REMOTE_SECTION_OBSERVER=1 -DSODIUM64_NATIVE_DIAG=1 -DSODIUM64_NATIVE_DIAG_TRACE=1
+endif
+ifeq ($(AUDIO_OBSERVER),1)
+ifneq ($(REMOTE),1)
+$(error AUDIO_OBSERVER requires REMOTE=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_AUDIO_OBSERVER=1
+endif
+ifeq ($(MIX_OBSERVER),1)
+ifneq ($(AUDIO_OBSERVER)$(DSP_DRY_MIX),11)
+$(error MIX_OBSERVER requires AUDIO_OBSERVER=1 DSP_DRY_MIX=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_MIX_OBSERVER=1
+endif
+ifeq ($(DSP_KOFF_RELEASE),1)
+N64_CFLAGS_REMOTE += -DSODIUM64_DSP_KOFF_RELEASE=1
+endif
+ifeq ($(BRR_OBSERVER),1)
+ifneq ($(AUDIO_OBSERVER),1)
+$(error BRR_OBSERVER requires AUDIO_OBSERVER=1)
+endif
+N64_CFLAGS_REMOTE += -DSODIUM64_BRR_OBSERVER=1
+endif
+ifeq ($(MASK_SCAN),1)
+ifneq ($(WIDE_MATH),1)
+$(error MASK_SCAN requires WIDE_MATH=1)
+endif
+endif
+ifeq ($(SIGNAL_PROFILE),1)
+ifneq ($(NATIVE_DIAG)$(NATIVE_DIAG_TRACE),11)
+$(error SIGNAL_PROFILE requires NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1)
+endif
+endif
+ifeq ($(REMOTE),1)
+ifneq ($(NATIVE_DIAG)$(NATIVE_DIAG_TRACE),11)
+$(error REMOTE requires the isolated A14 NATIVE_DIAG=1 NATIVE_DIAG_TRACE=1 build)
+endif
+endif
+ifeq ($(NATIVE_DIAG_TRACE),1)
+ifneq ($(NATIVE_DIAG),1)
+$(error NATIVE_DIAG_TRACE requires NATIVE_DIAG=1)
+endif
+endif
+ifeq ($(NATIVE_DIAG),1)
+ifneq ($(filter 1,$(PROFILE) $(HW_PROFILE) $(COLOR_DIAG)),)
+$(error NATIVE_DIAG uses its own timer and SRAM format; other profilers must be off)
+endif
+endif
+ifeq ($(COLOR_DIAG),1)
+HW_PROFILE := 1
+endif
 
 # Real-N64 M0 profiling is a specialization of the statistical PROFILE build.
 ifeq ($(HW_PROFILE),1)
@@ -12,8 +163,34 @@ PROFILE := 1
 endif
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
+ifneq ($(TMEM_ATLAS),1)
+SFILES := $(filter-out src/rsp_object_cache.S,$(SFILES))
+endif
+ifneq ($(TLUT_SHADER),1)
+SFILES := $(filter-out src/rsp_hcomp_tlut.S,$(SFILES))
+endif
+ifneq ($(RDP_HALF_MATH),1)
+SFILES := $(filter-out src/rsp_hcomp_rdp.S,$(SFILES))
+endif
+ifneq ($(FIXED_WINDOW_MATH),1)
+SFILES := $(filter-out src/rsp_hcomp_fixed_window.S,$(SFILES))
+endif
+ifneq ($(RDP_FIXED_MATH),1)
+SFILES := $(filter-out src/rsp_hcomp_rdp_fixed.S,$(SFILES))
+endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
+HFILES += $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.inc))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
+ifeq ($(FULL_DSP_PROBE),1)
+OFILES += $(BUILD_DIR)/src/full_dsp_probe.o $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o
+endif
+ifeq ($(NATIVE_DIAG_TRACE),1)
+OFILES += $(BUILD_DIR)/src/continuous_save_c.o
+endif
+ifeq ($(REMOTE),1)
+OFILES += $(BUILD_DIR)/src/remote_control_c.o
+N64_ASFLAGS_REMOTE = -DSODIUM64_REMOTE=1
+endif
 
 N64_ROM_TITLE = "$(PROJ_NAME)"
 N64_ROM_SAVETYPE = sram256k
@@ -50,15 +227,114 @@ N64_MKSPRITE = $(N64_BINDIR)/mksprite
 
 N64_ASFLAGS = -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
 N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
+N64_ASFLAGS += $(N64_ASFLAGS_REMOTE)
+ifeq ($(FULL_DSP_PROBE),1)
+N64_ASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
+N64_RSPASFLAGS += -DSODIUM64_FULL_DSP_PROBE=1
+endif
+ifeq ($(AUDIO_OBSERVER),1)
+N64_ASFLAGS += -DSODIUM64_AUDIO_OBSERVER=1
+endif
+ifeq ($(DSP_PITCH_CACHE),1)
+N64_ASFLAGS += -DSODIUM64_DSP_PITCH_CACHE=1
+endif
+ifeq ($(DSP_BRR_ACCURATE),1)
+N64_ASFLAGS += -DSODIUM64_DSP_BRR_ACCURATE=1
+endif
+ifeq ($(DSP_KOFF_RELEASE),1)
+N64_ASFLAGS += -DSODIUM64_DSP_KOFF_RELEASE=1
+endif
+ifeq ($(DSP_DRY_MIX),1)
+N64_ASFLAGS += -DSODIUM64_DSP_DRY_MIX=1
+endif
+ifeq ($(DSP_VOICE_BASE),1)
+N64_ASFLAGS += -DSODIUM64_DSP_VOICE_BASE=1
+endif
+ifeq ($(DSP_GAIN_PROBE),1)
+N64_ASFLAGS += -DSODIUM64_DSP_GAIN_PROBE=1
+endif
+ifeq ($(MIX_OBSERVER),1)
+N64_ASFLAGS += -DSODIUM64_MIX_OBSERVER=1
+N64_RSPASFLAGS += -DSODIUM64_MIX_OBSERVER=1
+endif
+ifeq ($(BRR_OBSERVER),1)
+N64_ASFLAGS += -DSODIUM64_BRR_OBSERVER=1
+N64_RSPASFLAGS += -DSODIUM64_BRR_OBSERVER=1
+endif
+ifeq ($(TMEM_ATLAS),1)
+N64_ASFLAGS += -DSODIUM64_TMEM_ATLAS=1
+N64_RSPASFLAGS += -DSODIUM64_TMEM_ATLAS=1
+N64_RSPASFLAGS += -DSODIUM64_TMEM_ATLAS_BITS=$(TMEM_ATLAS_BITS)
+endif
+ifeq ($(TMEM_COORD_ATLAS),1)
+N64_RSPASFLAGS += -DSODIUM64_TMEM_COORD_ATLAS=1
+endif
+ifeq ($(FETCH_SIGNAL),1)
+N64_RSPASFLAGS += -DSODIUM64_RDP_FETCH_SIGNAL=1
+endif
+ifeq ($(WIDE_MATH),1)
+N64_RSPASFLAGS += -DSODIUM64_HCOMP_WIDE_MATH=1
+endif
+ifeq ($(ELIGIBILITY_TAGS),1)
+N64_RSPASFLAGS += -DSODIUM64_ELIGIBILITY_TAGS=1
+endif
+ifeq ($(MASK_SCAN),1)
+N64_RSPASFLAGS += -DSODIUM64_HCOMP_MASK_SCAN=1
+endif
+ifeq ($(TLUT_SHADER),1)
+N64_ASFLAGS += -DSODIUM64_HCOMP_TLUT_SHADER=1
+N64_RSPASFLAGS += -DSODIUM64_HCOMP_TLUT_SHADER=1
+endif
+ifeq ($(TLUT_FLAT_WINDOW),1)
+N64_RSPASFLAGS += -DSODIUM64_HCOMP_TLUT_FLAT_WINDOW=1
+endif
+ifeq ($(FULL_ROW_MATH),1)
+N64_RSPASFLAGS += -DSODIUM64_HCOMP_FULL_ROW_MATH=1
+endif
+ifeq ($(RDP_HALF_MATH),1)
+N64_ASFLAGS += -DSODIUM64_HCOMP_RDP_HALF_MATH=1
+N64_RSPASFLAGS += -DSODIUM64_HCOMP_RDP_HALF_MATH=1
+endif
+ifeq ($(FIXED_WINDOW_MATH),1)
+N64_ASFLAGS += -DSODIUM64_HCOMP_FIXED_WINDOW_MATH=1
+N64_RSPASFLAGS += -DSODIUM64_HCOMP_FIXED_WINDOW_MATH=1
+endif
+ifeq ($(RDP_FIXED_MATH),1)
+N64_ASFLAGS += -DSODIUM64_HCOMP_RDP_FIXED_MATH=1
+N64_RSPASFLAGS += -DSODIUM64_HCOMP_RDP_FIXED_MATH=1
+endif
 N64_LDFLAGS = -L$(N64_LIBDIR) -Tn64.ld --gc-sections
 N64_TOOLFLAGS = --title $(N64_ROM_TITLE)
 N64_ED64ROMCONFIGFLAGS = --savetype $(N64_ROM_SAVETYPE) --regionfree
 
+ifeq ($(NATIVE_DIAG),1)
+N64_ASFLAGS += -DSODIUM64_NATIVE_DIAG=1
+ifeq ($(NATIVE_DIAG_TRACE),1)
+N64_ASFLAGS += -DSODIUM64_NATIVE_DIAG_TRACE=1
+N64_RSPASFLAGS += -DSODIUM64_NATIVE_DIAG_TRACE=1
+ifeq ($(SIGNAL_PROFILE),1)
+N64_ASFLAGS += -DSODIUM64_SIGNAL_PROFILE=1
+N64_RSPASFLAGS += -DSODIUM64_SIGNAL_PROFILE=1
+endif
+ifeq ($(FULL_DSP_PROBE),1)
+N64_LDFLAGS += -Tsrc/full_dsp_probe_memory.ld
+else ifneq ($(filter 1,$(BRR_OBSERVER) $(MIX_OBSERVER)),)
+N64_LDFLAGS += -Tsrc/brr_observer_memory.ld
+else
+N64_LDFLAGS += -Tsrc/diagnostic_memory.ld
+endif
+endif
+endif
+
 ifeq ($(PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_PROFILE=1
+N64_RSPASFLAGS += -DSODIUM64_PROFILE=1
 endif
 ifeq ($(HW_PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_HW_PROFILE=1
+ifeq ($(COLOR_DIAG),1)
+N64_ASFLAGS += -DSODIUM64_COLOR_DIAG=1
+endif
 endif
 
 COMMA := ,
@@ -100,8 +376,10 @@ $(BUILD_DIR)/%.o: %.S
 		TEXTSECTION="$(basename $@).text"; \
 		DATASECTION="$(basename $@).data"; \
 		BINARY="$(basename $@).elf"; \
+		RSPLINK=rsp.ld; \
+		case "$$FILENAME" in rsp_object_cache|rsp_hcomp|rsp_hcomp_math|rsp_hcomp_fast|rsp_hcomp_setup|rsp_hcomp_tlut|rsp_hcomp_rdp|rsp_hcomp_fixed_window|rsp_hcomp_rdp_fixed|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
 		echo "    [RSP] $<"; \
-		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-Trsp.ld -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
+		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-T$$RSPLINK -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
 		mv "$@" $$BINARY; \
 		$(N64_OBJCOPY) -O binary -j .text $$BINARY $$TEXTSECTION.bin; \
 		$(N64_OBJCOPY) -O binary -j .data $$BINARY $$DATASECTION.bin; \
@@ -125,6 +403,24 @@ $(BUILD_DIR)/%.o: %.S
 		$(CC) -c $(ASFLAGS) -o $@ $<; \
 	fi
 
+# Only the trace recorder links this SD sink. Sodium uses sp as a queue index;
+# its assembly bridge supplies a private O64 stack and preserves guest GPR64.
+$(BUILD_DIR)/src/continuous_save_c.o: src/continuous_save.c tools/sc64-diagnostic-save/continuous_save_abi.h
+	@mkdir -p $(dir $@)
+	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
+
+$(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h src/defines.h tools/sc64-diagnostic-save/recorder_runtime_abi.h
+	@mkdir -p $(dir $@)
+	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_CFLAGS_REMOTE) -o $@ $<
+
+$(BUILD_DIR)/src/full_dsp_probe.o: src/full_dsp_probe.cpp src/full_dsp_probe.h $(wildcard third_party/snes_spc/*.h)
+	@mkdir -p $(dir $@)
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wall -Wextra -Werror -o $@ $<
+
+$(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o: third_party/snes_spc/SPC_DSP.cpp $(wildcard third_party/snes_spc/*.h)
+	@mkdir -p $(dir $@)
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-builtin -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -Wno-implicit-fallthrough -o $@ $<
+
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)
 	@echo "    [LD] $@"
@@ -139,7 +435,16 @@ $(BUILD_DIR)/$(PROJ_NAME).elf: $(OFILES)
 
 $(OFILES): $(HFILES)
 
+$(BUILD_DIR)/src/rsp_hcomp.o $(BUILD_DIR)/src/rsp_hcomp_math.o $(BUILD_DIR)/src/rsp_hcomp_fast.o $(BUILD_DIR)/src/rsp_hcomp_setup.o $(BUILD_DIR)/src/rsp_mode7_window.o: src/rsp_hcomp.ld
+$(BUILD_DIR)/src/rsp_hcomp_tlut.o: src/rsp_hcomp.ld
+$(BUILD_DIR)/src/rsp_hcomp_rdp.o: src/rsp_hcomp.ld
+$(BUILD_DIR)/src/rsp_hcomp_fixed_window.o: src/rsp_hcomp.ld
+$(BUILD_DIR)/src/rsp_hcomp_rdp_fixed.o: src/rsp_hcomp.ld
+$(BUILD_DIR)/src/rsp_object_cache.o: src/rsp_hcomp.ld
+
 clean:
 	rm -rf $(BUILD_DIR) $(PROJ_NAME).z64
 
 .PHONY: all clean
+
+

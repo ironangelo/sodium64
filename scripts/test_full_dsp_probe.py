@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""Run the original synthetic full-core/backup transaction on the host."""
+import argparse,json,os,re,subprocess,tempfile
+from pathlib import Path
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--cxx',default=os.environ.get('CXX','g++'))
+    p.add_argument('--json-output',type=Path)
+    a=p.parse_args();root=Path(__file__).resolve().parents[1]
+    with tempfile.TemporaryDirectory(prefix='s64-full-dsp-') as tmp:
+        exe=Path(tmp)/('probe.exe' if os.name=='nt' else 'probe')
+        cmd=[a.cxx,'-std=c++98','-O2','-DNDEBUG','-fno-exceptions','-fno-rtti',
+             str(root/'src/full_dsp_probe.cpp'),str(root/'third_party/snes_spc/SPC_DSP.cpp'),
+             str(root/'scripts/fixtures/full_dsp_probe_host.cpp'),'-o',str(exe)]
+        subprocess.run(cmd,check=True)
+        result=subprocess.run([str(exe)],check=True,capture_output=True,text=True)
+    print(result.stdout,end='')
+    scenarios=[dict(zip(('case','frames','checksum','nonzero'),map(int,m))) for m in
+               re.findall(r'case(\d+) frames=(\d+) checksum=(\d+) nonzero=(\d+)',result.stdout)]
+    assert len(scenarios)==3 and 'FULL_DSP_PROBE PASS' in result.stdout
+    assert [x['checksum'] for x in scenarios]==[10420156,4185267178,422544410]
+    assert [x['nonzero'] for x in scenarios]==[4056,4080,4096]
+    proof=dict(passed=True,synthetic_scenarios=scenarios,unmodified_complete_core=True,
+               memory_restoration_bytes=65536,backup_readback_blocks=128,
+               restore_blocks=128,backup_fault_positions=16,restore_fault_positions=2,
+               backup_corruption_rejected=True,invalid_inputs=5,
+               native_performance_or_game_audio_claim=False,commercial_data=False)
+    if a.json_output:a.json_output.write_text(json.dumps(proof,indent=2)+'\n')
+
+if __name__=='__main__':main()

@@ -50,12 +50,12 @@ MARKER_META = 0x8000
 DEST_OFFSET_MASK = 0x07F8
 
 EXPECTED_LAYOUT = {
-    "HCOMP_CGRAM_BASE_QUEUE1": 0xA00BE200,
-    "HCOMP_CGRAM_BASE_QUEUE2": 0xA00BE400,
-    "HCOMP_CGRAM_SIDEBAND_QUEUE1": 0xA00BE600,
-    "HCOMP_CGRAM_SIDEBAND_QUEUE2": 0xA00BEB00,
-    "HCOMP_CGRAM_EVENT_QUEUE1": 0xA00BF000,
-    "HCOMP_CGRAM_EVENT_QUEUE2": 0xA00D7000,
+    "HCOMP_CGRAM_BASE_QUEUE1": 0xA00C2000,
+    "HCOMP_CGRAM_BASE_QUEUE2": 0xA00C2200,
+    "HCOMP_CGRAM_SIDEBAND_QUEUE1": 0xA00C2400,
+    "HCOMP_CGRAM_SIDEBAND_QUEUE2": 0xA00C2900,
+    "HCOMP_CGRAM_EVENT_QUEUE1": 0xA00C2E00,
+    "HCOMP_CGRAM_EVENT_QUEUE2": 0xA03E8000,
     "HCOMP_CGRAM_EVENT_CAPACITY": 0x6000,
 }
 RAW_Q1 = 0xA00EF000
@@ -363,7 +363,7 @@ def prove_capacity_and_layout(producer_root: Path) -> tuple[int, int, int]:
     event_q1 = ev.name("HCOMP_CGRAM_EVENT_QUEUE1")
     event_q2 = ev.name("HCOMP_CGRAM_EVENT_QUEUE2")
     capacity = ev.name("HCOMP_CGRAM_EVENT_CAPACITY")
-    event_bytes = event_q2 - event_q1
+    event_bytes = capacity * LOGICAL_RECORD_BYTES
     if capacity != 0x6000 or event_bytes != 0x18000:
         raise AssertionError("validated event-slot geometry drift")
 
@@ -386,8 +386,8 @@ def prove_capacity_and_layout(producer_root: Path) -> tuple[int, int, int]:
     framebuffer1 = master_ev.name("FRAMEBUFFER1")
     if framebuffer1 != EXPECTED_FRAMEBUFFER1:
         raise AssertionError(f"current FRAMEBUFFER1 drift: 0x{framebuffer1:X}")
-    if RAW_Q1 != EXPECTED_LAYOUT["HCOMP_CGRAM_EVENT_QUEUE2"] + event_bytes:
-        raise AssertionError("raw Q1 is not adjacent to Q2 event high-water")
+    from check_event_arena import layout, prove_disjoint
+    prove_disjoint(layout(producer_root / "src/defines.h"))
     if RAW_Q1 & 7 or RAW_Q2 & 7 or RAW_END & 7:
         raise AssertionError("raw-shadow queues lost 8-byte alignment")
     if RAW_END > framebuffer1:

@@ -1,4 +1,10 @@
 /build
+/build*/
 /out
-/sodium64.z64
+/*.z64
 /*.sfc
+/*.smc
+/*.sav
+__pycache__/
+*.pyc
+/private/

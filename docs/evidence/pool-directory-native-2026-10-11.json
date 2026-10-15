@@ -1,0 +1,62 @@
+{
+  "checkpoint": "R28",
+  "menu_executable_code_commit": "7d8388661ae30f55e625e1462c98766a7328a8af",
+  "menu_install_readback_verified": true,
+  "prior_SD_menu_retained": true,
+  "prior_menu_host_download_claim": false,
+  "warm_menu_boot_without_reset": true,
+  "menu_sha256": "1e5fd76febfe2405fbea0f855dad63514960502631af1a1cd081d1f907c2c6f5",
+  "menu_bytes": 1736704,
+  "old_launch_seconds": [
+    203.703,
+    209.703
+  ],
+  "new_launch_seconds": 31.92199999999866,
+  "new_launch_windows": 1,
+  "RGB": {
+    "compared": 67200,
+    "differences": 0
+  },
+  "SD_captures": [
+    {
+      "sealed_id": 1,
+      "recorder_result": 1,
+      "recorder_phase": 0,
+      "decoder": {
+        "version": 5,
+        "complete": 1,
+        "data_payload_checksum_valid": true,
+        "header_signature_and_layout_valid": true,
+        "header_has_separate_checksum": false,
+        "trace_covers_whole_interval": true,
+        "trace_overflow_flags": 0
+      },
+      "native_error_code": 0
+    },
+    {
+      "sealed_id": 2,
+      "recorder_result": 1,
+      "recorder_phase": 0,
+      "decoder": {
+        "version": 5,
+        "complete": 1,
+        "data_payload_checksum_valid": true,
+        "header_signature_and_layout_valid": true,
+        "header_has_separate_checksum": false,
+        "trace_covers_whole_interval": true,
+        "trace_overflow_flags": 0
+      },
+      "native_error_code": 0
+    }
+  ],
+  "first_capture_repeated_after_host_error": false,
+  "host_parse_API_error_repaired": true,
+  "gameplay_resumed": true,
+  "final_menu_responsive": true,
+  "selected_coordinate8_readback_verified_before_trial": true,
+  "firmware_changed": false,
+  "capture_qualification": "USB trigger, emulator sector readback, sealed export and strict decoder; not independent menu file download or physical Start/TV OK",
+  "gameplay_FPS_claim": false,
+  "full_goal_acceptance": false,
+  "commercial_data_included": false
+}

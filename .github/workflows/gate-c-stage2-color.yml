@@ -1,0 +1,320 @@
+name: Gate C Event Arena and Color Diagnostic
+on:
+  push:
+    branches: [phase4/gate-c-stage2-color-diag, phase4/gate-c-smw-exploration]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: sodium64-stage2-color-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm install -g libdragon
+      - uses: actions/checkout@v4
+      - name: Host decoder negatives
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s scripts -p test_event_arena.py -v
+          python3 -m unittest discover -s scripts -p test_stage2_color.py -v
+          python3 -m unittest discover -s scripts -p test_stage2_probe.py -v
+      - name: Build and qualify full arena extents and fixed RSP scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repos/${{ github.repository }}/actions/artifacts/11137726435/zip > parent.zip
+          echo "bb935cba090076b45fb8258740566a4184570f4fd110f6d7719b9f8e729a0558  parent.zip" | sha256sum -c -
+          unzip -q parent.zip -d parent
+          libdragon init
+          for variant in normal hw-profile color; do
+            libdragon make clean
+            flags=()
+            if [ "$variant" = hw-profile ]; then flags=(HW_PROFILE=1); fi
+            if [ "$variant" = color ]; then flags=(COLOR_DIAG=1); fi
+            arena_flags=()
+            if [ "$variant" != normal ]; then arena_flags=(--profile); fi
+            libdragon make "${flags[@]}" -j"$(nproc)" 2>&1 | tee "$variant-build.log"
+            python3 scripts/check_runtime_arena.py build/sodium64.elf "${arena_flags[@]}"
+            python3 scripts/check_event_arena.py --elf build/sodium64.elf "${arena_flags[@]}" --output "$variant-arena.json"
+            python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_*.elf
+            mkdir -p "qualified/$variant"
+            cp -a build "qualified/$variant/"
+            cp sodium64.z64 "qualified/$variant/"
+          done
+          python3 scripts/check_hcomp_band_scope.py --qualified qualified
+          mkdir -p diagnostic hardware
+          for mode in visual mixed; do
+            python3 scripts/make_gate_c_stage1.py --mode "$mode" "diagnostic/$mode.smc"
+            cmp "diagnostic/$mode.smc" "parent/diagnostic/$mode.smc"
+            mkdir -p "wrap-$mode"
+            cp qualified/color/sodium64.z64 rom-converter.py "wrap-$mode/"
+            cp "diagnostic/$mode.smc" "wrap-$mode/guest.smc"
+            (cd "wrap-$mode"; python3 rom-converter.py </dev/null)
+            cp "wrap-$mode/out/guest.z64" "hardware/sodium64-stage2-color-$mode.z64"
+            dd if="hardware/sodium64-stage2-color-$mode.z64" of=diagnostic/embedded.smc bs=1 skip=$((0x104000)) count=32768 status=none
+            cmp "diagnostic/$mode.smc" diagnostic/embedded.smc
+          done
+          for kind in paging pressure; do
+            python3 "scripts/make_event_arena_$kind.py" "diagnostic/$kind.smc"
+            mkdir -p "wrap-$kind"
+            cp qualified/normal/sodium64.z64 rom-converter.py "wrap-$kind/"
+            cp "diagnostic/$kind.smc" "wrap-$kind/guest.smc"
+            (cd "wrap-$kind"; python3 rom-converter.py </dev/null)
+            cp "wrap-$kind/out/guest.z64" "hardware/sodium64-arena-$kind.z64"
+          done
+          for kind in half add sub sub-half bg2 bg3 bg4 window short blank obj-low obj-high sram; do
+            python3 scripts/make_hcomp_fullheight.py --case "$kind" "diagnostic/full-$kind.smc"
+            mkdir -p "wrap-full-$kind"
+            cp qualified/normal/sodium64.z64 rom-converter.py "wrap-full-$kind/"
+            cp "diagnostic/full-$kind.smc" "wrap-full-$kind/guest.smc"
+            (cd "wrap-full-$kind"; python3 rom-converter.py </dev/null)
+            cp "wrap-full-$kind/out/guest.z64" "hardware/sodium64-full-$kind.z64"
+          done
+          python3 - <<'PYRAM'
+          from pathlib import Path
+          b=bytearray(32768);b[16]=0xa7
+          Path('hardware/sodium64-full-sram.ram').write_bytes(b)
+          PYRAM
+          sha256sum hardware/*.z64 qualified/*/sodium64.z64 qualified/*/build/sodium64.elf diagnostic/*.smc > SHA256SUMS
+      - uses: actions/cache/restore@v4
+        id: ares-cache
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Install cached ares runtime libraries
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        timeout-minutes: 4
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          set -euo pipefail
+          # The cached executable needs OpenGL and a virtual X display, but
+          # none of the Qt/GTK/compiler development packages used to build it.
+          for source in /etc/apt/apt-mirrors*.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+            if [ -f "$source" ]; then
+              sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' "$source"
+            fi
+          done
+          timeout 180s sudo -E apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends libopengl0 libgl1 libglx-mesa0 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers xauth xvfb
+      - name: Install pinned ares dependencies
+        if: steps.ares-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 8
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # The first runner repeatedly stalled 30s per package on the Azure
+          # Ubuntu mirror. Keep signed Ubuntu packages, use the official archive.
+          for source in /etc/apt/apt-mirrors*.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+            if [ -f "$source" ]; then
+              sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' "$source"
+            fi
+          done
+          cat /etc/apt/apt-mirrors*.txt
+          timeout 180s sudo -E apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update
+          timeout 300s sudo -E apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y \
+            ccache cmake git libgtk-3-dev libgl1-mesa-dri libsdl2-dev \
+            libvulkan1 mesa-vulkan-drivers ninja-build qt6-base-dev unzip xauth xvfb
+
+      - name: Build pinned N64-only ares in established valid lab mode
+        id: ares-build
+        if: steps.ares-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/ares-src"
+          git clone --filter=blob:none https://github.com/ares-emulator/ares.git "$root"
+          git -C "$root" checkout 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
+          cd "$root"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ares/n64/system/system.cpp')
+          s = p.read_text()
+          old = 'rsp.recompiler.enabled = value.boolean();'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, 'rsp.recompiler.enabled = false;', 1))
+          PY
+          .github/scripts/build_sdl.sh
+          cmake --preset ubuntu-ci -DARES_CORES=n64
+          cmake --build build --parallel "$(nproc)"
+          ares_bin=$(find "$root/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
+
+      - uses: actions/cache/save@v4
+        if: steps.ares-build.outcome == 'success'
+        with:
+          path: ${{ runner.temp }}/ares-src
+          key: sodium64-ares-17813a3-n64-rsp-interpreter-v1
+      - name: Restore cached SDL3 runtime into this runner
+        if: steps.ares-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The ares cache owns SDL build outputs, not /usr/local installs.
+          # Reinstall exactly those cached outputs; do not fetch a newer SDL.
+          sudo cmake --install "$RUNNER_TEMP/ares-src/SDL/build" --prefix=/usr/local
+          sudo ldconfig
+      - name: Locate pinned ares after build or cache restore
+        shell: bash
+        run: |
+          ares_bin=$(find "$RUNNER_TEMP/ares-src/build" -type f -name ares -perm -111 | head -n1)
+          test -x "$ares_bin"
+          echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
+          ldd "$ares_bin"
+          "$ares_bin" --version | tee ares-version.txt
+      - name: Read-only stalled-renderer diagnosis
+        run: |
+          set -euo pipefail
+          port=9320
+          for kind in full-half stage2-color-visual; do
+            out="captures/stall-$kind"
+            mkdir -p "$out" "$RUNNER_TEMP/stall-$kind"
+            setsid env HOME="$RUNNER_TEMP/stall-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/stall-$kind.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-$kind.z64" > "$out/ares.log" 2>&1 &
+            pid=$!
+            python3 scripts/capture_hcomp_stall.py --port "$port" --output "$out" > "$out/capture.log"
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            port=$((port+1))
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hcomp-stall-readonly
+          path: captures/stall-*/
+          retention-days: 7
+      - name: Full-height normal profile, short sections, blank, OBJ and ordinary SRAM
+        run: |
+          set -euo pipefail
+          port=9340
+          pid=""
+          failed=0
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+          for kind in half add sub sub-half bg2 bg3 bg4 window short blank obj-low obj-high sram; do
+            out="captures/full-$kind"
+            mkdir -p "$out" "$RUNNER_TEMP/full-$kind"
+            setsid env HOME="$RUNNER_TEMP/full-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/full-$kind.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-full-$kind.z64" > "$out/ares.log" 2>&1 &
+            pid=$!
+            if ! timeout 120s python3 scripts/capture_hcomp_fullheight.py --case "$kind" --port "$port" \
+              --elf qualified/normal/build/sodium64.elf --output "$out" > "$out/capture.log" 2>&1; then
+              cat "$out/capture.log"
+              failed=1
+            fi
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            pid=""
+            port=$((port+1))
+          done
+          test "$failed" = 0
+          python3 scripts/check_smw_probe_admission.py --qualified qualified --captures captures --output smw-probe-admission.json
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && env.ARES_BIN != '' }}
+        with:
+          name: hcomp-fullheight-normal-results
+          path: |
+            captures/full-*/
+            smw-probe-admission.json
+          retention-days: 30
+      - name: Uninterrupted PI trace and separate frozen-frame semantics
+        if: ${{ !cancelled() && env.ARES_BIN != '' }}
+        run: |
+          set -euo pipefail
+          port=9290
+          pid=""
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+          for mode in visual mixed; do
+            for kind in continuous frozen-a frozen-b; do
+              out="captures/$mode/$kind"
+              mkdir -p "$out" "$RUNNER_TEMP/color-$mode-$kind"
+              setsid env HOME="$RUNNER_TEMP/color-$mode-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+                xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+                --settings-file "$RUNNER_TEMP/color-$mode-$kind.bml" \
+                --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+                --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+                --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+                --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-stage2-color-$mode.z64" > "$out/ares.log" 2>&1 &
+              pid=$!
+              flags=()
+              if [ "$mode" = mixed ]; then flags+=(--mixed); fi
+              if [ "$kind" = frozen-a ]; then flags+=(--frozen-phase a); fi
+              if [ "$kind" = frozen-b ]; then flags+=(--frozen-phase b); fi
+              python3 scripts/capture_stage2_color.py --port "$port" --elf qualified/color/build/sodium64.elf --output "$out" "${flags[@]}" > "$out/capture.log"
+              kill -KILL -- "-$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              pid=""
+              port=$((port+1))
+            done
+          done
+          python3 scripts/check_stage2_color_frozen.py --captures captures
+      - name: Actual ROM paging and high-palette-pressure streams
+        if: ${{ !cancelled() && env.ARES_BIN != '' }}
+        run: |
+          set -euo pipefail
+          port=9300
+          pid=""
+          trap 'if [ -n "$pid" ]; then kill -KILL -- "-$pid" 2>/dev/null || true; fi' EXIT
+          for kind in paging pressure; do
+            out="captures/$kind"
+            mkdir -p "$out" "$RUNNER_TEMP/arena-$kind"
+            setsid env HOME="$RUNNER_TEMP/arena-$kind" SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a stdbuf -oL -eL "$ARES_BIN" --no-file-prompt --system "Nintendo 64" \
+              --settings-file "$RUNNER_TEMP/arena-$kind.bml" \
+              --setting "Developer/DebugServerEnabled=true" --setting "Developer/DebugServerUseIPv4=true" \
+              --setting "Developer/DebugServerPort=$port" --setting "Developer/HomebrewMode=true" \
+              --setting "Developer/DeterministicEntropy=true" --setting "Developer/ForceInterpreter=false" \
+              --setting "Boot/AwaitGDBClient=true" "hardware/sodium64-arena-$kind.z64" > "$out/ares.log" 2>&1 &
+            pid=$!
+            flags=()
+            if [ "$kind" = pressure ]; then flags+=(--guest diagnostic/pressure.smc); fi
+            python3 "scripts/capture_event_arena_$kind.py" --port "$port" \
+              --elf qualified/normal/build/sodium64.elf --output "$out" "${flags[@]}" | tee "$out/capture.log"
+            kill -KILL -- "-$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            pid=""
+            port=$((port+1))
+          done
+      - name: Print emulator diagnostics on failure
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for path in Path('captures').rglob('ares.log'):
+              print(str(path), flush=True)
+              print(path.read_text(errors='replace')[-16000:], flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gate-c-stage2-color-diagnostic
+          retention-days: 30
+          path: |
+            hardware/
+            diagnostic/*.smc
+            qualified/**/*.elf
+            qualified/**/*.map
+            qualified/**/sodium64.z64
+            SHA256SUMS
+            captures/
+            *-build.log
+            ares-version.txt
+            *-arena.json
+            smw-probe-admission.json

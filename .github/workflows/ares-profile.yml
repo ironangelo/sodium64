@@ -32,6 +32,11 @@ jobs:
           source scripts/setup_n64_ci.sh
           make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
 
+      - name: Check the sampler runtime arena
+        run: |
+          python3 scripts/check_runtime_arena.py build/sodium64.elf --profile
+          python3 scripts/check_event_arena.py --elf build/sodium64.elf --profile
+
       - name: Record profiling build metrics
         run: |
           python3 scripts/build_metrics.py \

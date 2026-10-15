@@ -1,3 +1,34 @@
+# 2026-10-14 - R63 branch/bit/implied and indirect bus corrections
+
+RESUME HERE: sourcef0351f24f8c66e8a394b0b49d4ef105510190226,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+Frozen control audit14/172 open: DBNZ dp write one cycle late, DBNZ Y missing
+dummy read, missing PC/destination reads in (X)/(X)+/(X),(Y), wrong-side idle
+in (X)+ load and memory-CMP forms. Enabled templates now match all172 directed
+bus/total/PC/register/flag/memory cases with exact cached replay. Implied audit
+0/192 exact:30 opcodes only charged the PC read; SLEEP/STOP entry read was late.
+JIT_PC_READ now emits it with remaining idles, and halt entry idles after read.
+All192 variants exact across32 opcodes/three PSWs/queued-NZ prefix/no prefix;
+all outcomes/totals match the frozen control, as regression controls rather
+than an independent arithmetic oracle. AUDIT/CURRENT files pin actual ELFs.
+
+Clock32/address25/word23/control288/KOFF30 and existing prefix/word/control
+mutations pass on new build_spc_bus_clock_r63_branch/s64-spc-branch.elf,
+SPC_BUS_CLOCK1/KOFF1, linked text+data773992 bytes/BSS0. Six default-off ASM
+units remain allocated-section byte-exact R61. Previous binaries/candidates
+preserved. No COM3 or native throughput/fidelity/DAC/CI/integration claim.
+
+Next establish remaining16-bit effective-address/PC edges and the instruction-
+fetch contract, then live absolute DSP epoch/pre-access catch-up plus future-
+code echo/cache/tag behavior. Real data/dummy reads in audited families do not
+make compile-time opcode/operand reads safe against future DSP echo changes.
+Full resident RSP DSP still requires an early native full-work discriminator;
+semantic proof is no speed result. Last physical recovery coordinate8/menu,
+no COM3 controller live. Master/prior candidates unchanged. Full DSP/DAC/
+native60/50/fidelity/corpus/integration remain OPEN. Earlier history below.
+
+---
+
 # 2026-10-14 - R63 stack page and control bus sequences repaired
 
 RESUME HERE: sourcedfcd67224194ed789e14117f0ace30ccbc8e7b90,

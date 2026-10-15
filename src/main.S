@@ -59,6 +59,75 @@ exception_vector:
 main:
     // Disable interrupts and do the magic hardware init
     mtc0 zero, $12 // Status
+#ifdef SODIUM64_REMOTE
+    // The paired modern IPL3 leaves TV type in DMEM boot-info byte9.
+    // Preserve it before replacing DMEM with the renderer's RSP data.
+    // Legacy RDRAM 0x300 is not maintained by this IPL3 and cold boot clears it.
+    lui t0, 0xA400
+    lbu t1, 9(t0)
+    sltiu t2, t1, 3
+    bnez t2, remote_boot_tv_valid
+    nop
+    li t1, 1 // Safe NTSC fallback for an invalid boot-info value.
+remote_boot_tv_valid:
+    sw t1, remote_boot_tv_type
+.globl remote_boot_tv_captured
+remote_boot_tv_captured:
+    lw t1, 0(t0)
+    li t2, 0x800000
+    beq t1, t2, remote_boot_ram_valid
+    nop
+    move t1, zero
+remote_boot_ram_valid:
+    sw t1, remote_boot_ram_bytes
+.globl remote_boot_ram_captured
+remote_boot_ram_captured:
+    bnez t1, remote_upper_admitted
+    nop
+    // A diagnostic requires the paired8MiB route. Reject before touching upper
+    // memory or enabling VI; ordinary REMOTE=0 builds are unchanged.
+.globl remote_boot_ram_rejected
+remote_boot_ram_rejected:
+    b remote_boot_ram_rejected
+    nop
+remote_upper_admitted:
+    li t0, 0x80440000
+    li t1, 0x80442000
+remote_upper_clear:
+    // Retire any prior cached owner, then initialize through KSEG1.
+    cache 0x15, 0(t0)
+    sync
+    lui t2, 0x2000
+    or t2, t2, t0
+    sd zero, 0(t2)
+    sd zero, 8(t2)
+    addiu t0, t0, 16
+    bne t0, t1, remote_upper_clear
+    nop
+    sync
+    li t0, 0xA0440000
+    li t1, 0x55363447
+    sw t1, 0(t0)
+    sw t1, 4(t0)
+    sw t1, 8(t0)
+    sw t1, 12(t0)
+    sw t1, 16(t0)
+    sw t1, 20(t0)
+    sw t1, 24(t0)
+    sw t1, 28(t0)
+    li t0, 0xA0441fe0
+    sw t1, 0(t0)
+    sw t1, 4(t0)
+    sw t1, 8(t0)
+    sw t1, 12(t0)
+    sw t1, 16(t0)
+    sw t1, 20(t0)
+    sw t1, 24(t0)
+    sw t1, 28(t0)
+.globl remote_upper_initialized
+remote_upper_initialized:
+    sync
+#endif
     li t0, 8
     sw t0, 0xBFC007FC
 
@@ -184,6 +253,11 @@ pi_wait1:
     nop
 #endif
 
+#ifdef SODIUM64_REMOTE
+    jal remote_init_bridge
+    nop
+#endif
+
     // Enable VI interrupts and start execution
     li t0, 0x00000595 // Set VI mask
     sw t0, 0xA430000C // MI_MASK
@@ -260,6 +334,12 @@ vi_interrupt:
     // Acknowledge the VI interrupt
     lui k0, 0xA440
     sw zero, 0x0010(k0) // VI_CURRENT
+#ifdef SODIUM64_REMOTE
+    la k0, remote_vi_count
+    lw k1, (k0)
+    addiu k1, k1, 1
+    sw k1, (k0)
+#endif
 
     // Wait one second by counting 60 frames at 60Hz
     la k0, fps_native
@@ -281,6 +361,14 @@ update_fps:
     sb k1, (k0)
 
     // Check if SRAM is dirty
+#ifdef SODIUM64_REMOTE
+    // A paused bridge permits VI but owns PI for USB. Keep dirty pending
+    // through the whole command, including a resume ACK, until it returns.
+    la k0, remote_bridge_active
+    lw k1, (k0)
+    bnez k1, check_frame
+    nop
+#endif
     la k0, sram_dirty
     lbu k1, (k0)
     beqz k1, check_frame
@@ -340,6 +428,13 @@ set_buffer:
     sw k0, 0x0004(k1) // VI_ORIGIN
     la k1, framebuffer
     sw k0, (k1)
+
+#ifdef SODIUM64_REMOTE
+    la k0, remote_presentations
+    lw k1, (k0)
+    addiu k1, k1, 1
+    sw k1, (k0)
+#endif
 
     // Decrement the frame counter and update input
     la k0, frame_count

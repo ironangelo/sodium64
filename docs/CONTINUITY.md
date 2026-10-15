@@ -1,3 +1,41 @@
+# 2026-10-15 - R63 stale-opcode escape and full guest commit implemented
+
+RESUME HERE: source8f306f99f49acbded0a5b80abc75fc736fab2b28,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+Enabled next_opcode now guards the next source-page version. On change,
+all live A/X/Y/SP/PSW/queued-NZ and preceding fixed debt are committed before
+another fetch is consumed, then ordinary apu_execute/JIT re-entry re-decodes.
+No second SPC interpreter, borrowed host SP or new writable owner. Tag advance
+uses ADDIU to avoid signed-version overflow traps. Default-off is unchanged.
+
+The former opcode case now returns$0105/8 clocks then NOP+TCALL1 reaches
+$0600/18 clocks/SP$7D. Correct PSW$20: MOV X,#5 overwrites the earlier Z.
+Six immediate producer and132 normal controls pass. OPCODE_GUARD_CURRENT19
+cases cover five tag versions/three PSWs, trailing idle, queued NZ, dirty SP/Y;
+full state is checked at both native block returns and repeat execution. Three
+linked mutants omitted debt/NZ/SP and fail. Test runner now restores all source
+bytes, including guest-stack overwrites, before replay. This is bounded real
+JIT/APU re-entry, not full SCPU/APU scheduling or physical timing evidence.
+
+Prior clock32/address25/word23/control288/branch-bit172/implied192/wrap45/
+KOFF30 and mutations pass. Clock resets16/control128 reflect larger generated
+blocks. Seven default-off ASM units now including apu are allocated-section
+byte-exact R61. build_spc_bus_clock_r63_guard/s64-spc-guard.elf, clock1/KOFF1,
+text+data774472 bytes/BSS0. Earlier artifacts preserved. Throughput unmeasured.
+
+Next real OPEN operand case is recorded: PC$0100 DBNZ $02,rel/P=1 reads its
+own$0102=$00, decrements/writes$FF, then must fetch$FF and branch to$0102 in7
+clocks. Current compiled displacement instead reaches$0103 in7 clocks. A next-
+instruction guard cannot repair it. Implement the runtime displacement while
+preserving the decremented A1 and taken/not-taken cycle/PC contract, then
+broaden other runtime operand/address fetches and DSP pre-access/absolute epoch.
+Full resident RSP DSP still needs an early native full-work cost discriminator.
+No COM3/controller in batch; last recoverycoordinate8/menu. No native FPS/
+full fidelity/broad CI/integration claim; master and prior candidates unchanged.
+Full DSP/DAC/native60/50/corpus goal remains OPEN. Earlier history below.
+
+---
+
 # 2026-10-15 - R63 first live immediate-fetch repair and opcode limit proved
 
 RESUME HERE: source103280bf2774cab718fc04a6613aed0be0364f34,

@@ -4,6 +4,51 @@ Status: IMPLEMENTED directed native-JIT timing/address correction, default-off.
 This is not a complete256-opcode bus bridge, live full DSP, native speed result
 or integrable candidate. R61's native upper-memory/window proof is preserved.
 
+## First live operand-fetch correction
+
+FETCH_AUDIT uses real guest writes, not simulated DSP echo. An original SPC
+snippet writes$35 over the immediate byte of a following instruction in the
+same JIT block. RAM contains$35, but MOV A/X/Y, AND/EOR and CMP still execute
+with the compiler's old$11. Entry tags correctly force recompilation on the
+next invocation; that does not repair the already-running block.
+
+Enabled apu_imm now emits the real read at the current source PC and advances
+its16-bit compile cursor, rather than embedding the operand as ORI V0,#old.
+The normal ALU templates consume the fetched V0. Guest cycles are unchanged:
+the real operand access replaces the prior fixed fetch debit. This uses the
+existing read helper/emitter with no new writable runtime owner.
+
+FETCH_CURRENT passes six same-block producer cases, including the exact read/
+write clock sequence and correct flags/registers/data. Tagged recompilation
+and repeat outcomes are checked. A further132 ordinary immediate cases cover
+all11 apu_imm operations, four operands and three PSWs; bus clocks/totals and
+all outcomes match the preserved wrap ELF as regression controls. The helper
+now distinguishes unchanged cached replay from expected tagged recompilation.
+
+The opcode counterexample deliberately remains OPEN: changing the following
+opcode to NOP should lead through TCALL1 to$0600 in18 clocks, SP$7D; the JIT
+still runs its old decoded MOV/BRA,14 clocks/$0109. This is explicit evidence
+that immediate fetching alone is not full instruction-fetch coherence. Other
+operand/address families also still use compile-time fetches. No DSP echo or
+absolute-epoch/pre-access bridge is asserted by these producer cases.
+
+Existing clock32/address25/word23/control288/branch-bit172/implied192/wrap45/
+KOFF30 and their mutations pass on build_spc_bus_clock_r63_fetch/s64-spc-fetch.elf,
+clock1/KOFF1, linked text+data774120 bytes/BSS0. Implied queued-NZ prefixes and
+immediate wrap cases now expect the additional real operand reads. Six
+default-off ASM units remain allocated-section byte-exact source61505bc6.
+Earlier binaries and the original failing FETCH_AUDIT remain preserved.
+
+Next concrete hypothesis: guard the next opcode's source tag at an instruction
+boundary and return through a correct architectural commit if it changed,
+before consuming that opcode fetch. Use the existing JIT after re-entry; do not
+execute another SPC interpreter. Prove fixed-debt debit exactly once and all
+live guest/NZ state on the early return with actual multi-block apu_execute.
+This is a proposal, not implemented; later operand fetches within an instruction
+and DSP pre-access/absolute epoch still need their own correct runtime path.
+Full resident RSP DSP still needs its early native full-work cost discriminator.
+No COM3/native FPS/full fidelity/CI/integration acceptance for this batch.
+
 ## 16-bit PC and pointer wrap correction
 
 WRAP_AUDIT records10 open cases in the initial13 on the frozen branch ELF.

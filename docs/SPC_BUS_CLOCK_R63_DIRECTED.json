@@ -14,6 +14,7 @@
       ],
       "total_cycles": 7,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 1,
       "outcome": {
         "memory": {},
@@ -53,6 +54,7 @@
       ],
       "total_cycles": 7,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 1,
       "outcome": {
         "memory": {},
@@ -92,6 +94,7 @@
       ],
       "total_cycles": 7,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 21,
       "outcome": {
         "memory": {},
@@ -131,6 +134,7 @@
       ],
       "total_cycles": 7,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 21,
       "outcome": {
         "memory": {},
@@ -170,6 +174,7 @@
       ],
       "total_cycles": 7,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 42,
       "outcome": {
         "memory": {},
@@ -209,6 +214,7 @@
       ],
       "total_cycles": 7,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 42,
       "outcome": {
         "memory": {},
@@ -248,6 +254,7 @@
       ],
       "total_cycles": 7,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 255,
       "outcome": {
         "memory": {},
@@ -287,6 +294,7 @@
       ],
       "total_cycles": 7,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 255,
       "outcome": {
         "memory": {},
@@ -326,6 +334,7 @@
       ],
       "total_cycles": 11,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 1,
       "outcome": {
         "memory": {},
@@ -365,6 +374,7 @@
       ],
       "total_cycles": 11,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 1,
       "outcome": {
         "memory": {},
@@ -404,6 +414,7 @@
       ],
       "total_cycles": 11,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 21,
       "outcome": {
         "memory": {},
@@ -443,6 +454,7 @@
       ],
       "total_cycles": 11,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 21,
       "outcome": {
         "memory": {},
@@ -482,6 +494,7 @@
       ],
       "total_cycles": 11,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 42,
       "outcome": {
         "memory": {},
@@ -521,6 +534,7 @@
       ],
       "total_cycles": 11,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 42,
       "outcome": {
         "memory": {},
@@ -560,6 +574,7 @@
       ],
       "total_cycles": 11,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 255,
       "outcome": {
         "memory": {},
@@ -599,6 +614,7 @@
       ],
       "total_cycles": 11,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 255,
       "outcome": {
         "memory": {},
@@ -643,6 +659,7 @@
       ],
       "total_cycles": 8,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 1,
       "outcome": {
         "memory": {},
@@ -695,6 +712,7 @@
       ],
       "total_cycles": 8,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 1,
       "outcome": {
         "memory": {},
@@ -747,6 +765,7 @@
       ],
       "total_cycles": 8,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 21,
       "outcome": {
         "memory": {},
@@ -799,6 +818,7 @@
       ],
       "total_cycles": 8,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 21,
       "outcome": {
         "memory": {},
@@ -851,6 +871,7 @@
       ],
       "total_cycles": 8,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 42,
       "outcome": {
         "memory": {},
@@ -903,6 +924,7 @@
       ],
       "total_cycles": 8,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 42,
       "outcome": {
         "memory": {},
@@ -955,6 +977,7 @@
       ],
       "total_cycles": 8,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 255,
       "outcome": {
         "memory": {},
@@ -1007,6 +1030,7 @@
       ],
       "total_cycles": 8,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 255,
       "outcome": {
         "memory": {},
@@ -1059,6 +1083,7 @@
       ],
       "total_cycles": 9,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 1,
       "outcome": {
         "memory": {},
@@ -1111,6 +1136,7 @@
       ],
       "total_cycles": 9,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 1,
       "outcome": {
         "memory": {},
@@ -1163,6 +1189,7 @@
       ],
       "total_cycles": 9,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 21,
       "outcome": {
         "memory": {},
@@ -1215,6 +1242,7 @@
       ],
       "total_cycles": 9,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 21,
       "outcome": {
         "memory": {},
@@ -1267,6 +1295,7 @@
       ],
       "total_cycles": 9,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 42,
       "outcome": {
         "memory": {},
@@ -1319,6 +1348,7 @@
       ],
       "total_cycles": 9,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 42,
       "outcome": {
         "memory": {},
@@ -1371,6 +1401,7 @@
       ],
       "total_cycles": 9,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 255,
       "outcome": {
         "memory": {},
@@ -1423,6 +1454,7 @@
       ],
       "total_cycles": 9,
       "cached_replay_exact": true,
+      "tagged_recompile_exact": false,
       "clock": 255,
       "outcome": {
         "memory": {},

@@ -1,0 +1,490 @@
+{
+  "passed_directed_immediate_cases": false,
+  "cases": [
+    {
+      "name": "MOV_A",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          257,
+          2
+        ],
+        [
+          "read",
+          259,
+          4
+        ],
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ],
+        [
+          "read",
+          262,
+          10
+        ]
+      ],
+      "total": 14,
+      "expected_total": 14,
+      "outcome": {
+        "memory": {
+          "0x106": 53
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 6,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        },
+        "PC": 265
+      },
+      "expected_registers": {
+        "apu_accum": 53,
+        "apu_reg_x": 6,
+        "apu_reg_y": 6,
+        "apu_stack": 127,
+        "apu_flags": 32
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "MOV_X",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          257,
+          2
+        ],
+        [
+          "read",
+          259,
+          4
+        ],
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ],
+        [
+          "read",
+          262,
+          10
+        ]
+      ],
+      "total": 14,
+      "expected_total": 14,
+      "outcome": {
+        "memory": {
+          "0x106": 53
+        },
+        "registers": {
+          "apu_accum": 53,
+          "apu_reg_x": 17,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        },
+        "PC": 265
+      },
+      "expected_registers": {
+        "apu_accum": 53,
+        "apu_reg_x": 53,
+        "apu_reg_y": 6,
+        "apu_stack": 127,
+        "apu_flags": 32
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "MOV_Y",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          257,
+          2
+        ],
+        [
+          "read",
+          259,
+          4
+        ],
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ],
+        [
+          "read",
+          262,
+          10
+        ]
+      ],
+      "total": 14,
+      "expected_total": 14,
+      "outcome": {
+        "memory": {
+          "0x106": 53
+        },
+        "registers": {
+          "apu_accum": 53,
+          "apu_reg_x": 6,
+          "apu_reg_y": 17,
+          "apu_stack": 127,
+          "apu_flags": 32
+        },
+        "PC": 265
+      },
+      "expected_registers": {
+        "apu_accum": 53,
+        "apu_reg_x": 6,
+        "apu_reg_y": 53,
+        "apu_stack": 127,
+        "apu_flags": 32
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "AND_A",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          257,
+          2
+        ],
+        [
+          "read",
+          259,
+          4
+        ],
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ],
+        [
+          "read",
+          262,
+          10
+        ]
+      ],
+      "total": 14,
+      "expected_total": 14,
+      "outcome": {
+        "memory": {
+          "0x106": 53
+        },
+        "registers": {
+          "apu_accum": 17,
+          "apu_reg_x": 6,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        },
+        "PC": 265
+      },
+      "expected_registers": {
+        "apu_accum": 53,
+        "apu_reg_x": 6,
+        "apu_reg_y": 6,
+        "apu_stack": 127,
+        "apu_flags": 32
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "EOR_A",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          257,
+          2
+        ],
+        [
+          "read",
+          259,
+          4
+        ],
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ],
+        [
+          "read",
+          262,
+          10
+        ]
+      ],
+      "total": 14,
+      "expected_total": 14,
+      "outcome": {
+        "memory": {
+          "0x106": 53
+        },
+        "registers": {
+          "apu_accum": 36,
+          "apu_reg_x": 6,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 32
+        },
+        "PC": 265
+      },
+      "expected_registers": {
+        "apu_accum": 0,
+        "apu_reg_x": 6,
+        "apu_reg_y": 6,
+        "apu_stack": 127,
+        "apu_flags": 34
+      },
+      "tagged_recompile_exact": true
+    },
+    {
+      "name": "CMP_A",
+      "exact": false,
+      "observed": [
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ]
+      ],
+      "expected": [
+        [
+          "read",
+          257,
+          2
+        ],
+        [
+          "read",
+          259,
+          4
+        ],
+        [
+          "read",
+          261,
+          6
+        ],
+        [
+          "read",
+          262,
+          7
+        ],
+        [
+          "write",
+          262,
+          8
+        ],
+        [
+          "read",
+          262,
+          10
+        ]
+      ],
+      "total": 14,
+      "expected_total": 14,
+      "outcome": {
+        "memory": {
+          "0x106": 53
+        },
+        "registers": {
+          "apu_accum": 53,
+          "apu_reg_x": 6,
+          "apu_reg_y": 6,
+          "apu_stack": 127,
+          "apu_flags": 33
+        },
+        "PC": 265
+      },
+      "expected_registers": {
+        "apu_accum": 53,
+        "apu_reg_x": 6,
+        "apu_reg_y": 6,
+        "apu_stack": 127,
+        "apu_flags": 35
+      },
+      "tagged_recompile_exact": true
+    }
+  ],
+  "opcode_counterexample": {
+    "exact": false,
+    "outcome": {
+      "memory": {
+        "0x105": 0,
+        "0xffdc": 0,
+        "0xffdd": 6
+      },
+      "registers": {
+        "apu_accum": 17,
+        "apu_reg_x": 5,
+        "apu_reg_y": 6,
+        "apu_stack": 127,
+        "apu_flags": 32
+      },
+      "PC": 265
+    },
+    "total": 14,
+    "expected_PC": 1536,
+    "expected_total": 18,
+    "expected_stack": 125
+  },
+  "ELF_sha256": "61cbf15fddcd026b305db4fa05b2e9b6a5abc9e756a0c1ee9dffc99ad34d30ee",
+  "real_guest_write_and_real_native_JIT": true,
+  "simulated_DSP_echo": false,
+  "absolute_epoch_implemented": false,
+  "full_instruction_fetch_coherence_proved": false,
+  "native_performance_claim": false,
+  "commercial_data": false
+}

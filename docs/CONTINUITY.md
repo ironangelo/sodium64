@@ -1,3 +1,39 @@
+# 2026-10-15 - R63 first live immediate-fetch repair and opcode limit proved
+
+RESUME HERE: source103280bf2774cab718fc04a6613aed0be0364f34,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+Actual guest MOV (X),A writes$35 over a following immediate in the same block;
+six frozen JIT cases still used old$11 despite correct RAM and next-entry tag
+invalidation. Enabled apu_imm now emits a real read at its source PC, feeding
+the existing ALU with runtime V0 instead of an embedded constant. Cycles match;
+no new writable owner. Six producer cases now exact, plus132 ordinary cases
+across all11 apu_imm operations/four operands/three PSWs preserve frozen
+outcomes and exact bus clocks. Tagged recompilation is explicitly checked,
+separately from unchanged cached replay. Curated FETCH_AUDIT/CURRENT preserved.
+
+Opcode case remains a proved OPEN limit: changing the following opcode to NOP
+should execute NOP/TCALL1 ->PC$0600,18 clocks,SP$7D; it still executes old
+MOV/BRA ->PC$0109,14 clocks. Other operand/address families remain compile-time
+fetches. These are real producer cases, not a simulated or native DSP-echo proof.
+No absolute DSP epoch/pre-access integration is implemented yet.
+
+Existing clock32/address25/word23/control288/branch-bit172/implied192/wrap45/
+KOFF30 and their mutants pass on build_spc_bus_clock_r63_fetch/s64-spc-fetch.elf,
+bus clock1/KOFF1,text+data774120 bytes/BSS0. Six default-off ASM units still
+allocated-section byte-exact R61. Previous artifacts/candidates preserved.
+
+Next hypothesis recorded in R63: source-tag guard at next-opcode boundary,
+correct architectural early commit on mismatch before consuming a new fetch,
+then existing apu_execute/JIT re-entry. Prove all live registers/queued NZ and
+fixed-debt debit exactly once using real multi-block execution. Not implemented.
+Later within-instruction operand fetches and DSP pre-access/epoch/cache/tag
+contract remain necessary. Full resident RSP DSP still needs early native
+full-work cost proof. No COM3/controller in this batch, last recoverymenu
+coordinate8. No broad CI/native FPS/full fidelity/integration claim; master
+unchanged. Full DSP/DAC/native60/50/corpus goal remains OPEN. History below.
+
+---
+
 # 2026-10-15 - R63 16-bit PC and indirect-pointer wrap repaired
 
 RESUME HERE: sourceb2f293242a62227e27209ee0dfa37513fbe9cb4f,

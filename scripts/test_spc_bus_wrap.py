@@ -57,6 +57,8 @@ def main():
         cases.append((name,0,code,total,0xff83 if len(bytes.fromhex(code))==3 else 0xff82,events,values,0,changed))
     results=[]
     for name,pc,code,total,next_pc,expected,values,flags,changed in cases:
+        if name in ('MOV_imm_operand_wrap','MOV_imm_end_wrap') and 'apu_imm_runtime_fetch' in symbols:
+            expected=[('read',(pc+1)&65535,2)]
         registers=dict(apu_accum=0x11,apu_reg_x=4,apu_reg_y=6,apu_stack=0x7f,apu_flags=flags)
         registers.update(changed)
         try:

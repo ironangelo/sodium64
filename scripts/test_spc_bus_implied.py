@@ -35,6 +35,8 @@ def main():
                     extra_outcome=lambda cpu,s:dict(halt=cpu.read(s['apu_halt'],1)))
                 result=run(base,symbols,code,**kwargs)
                 expected=[('read',0x401+len(prefix),2+(2 if prefix else 0))]
+                if prefix and 'apu_imm_runtime_fetch' in symbols:
+                    expected.insert(0,('read',0x401,2))
                 observed=[(event['kind'],event['address'],event['elapsed_master_cycles']//21)for event in result['events']]
                 expected_total=cycles+(2 if prefix else 0)+(0 if halted else 4)
                 same_outcome=None

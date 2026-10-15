@@ -51,6 +51,17 @@
 
 .align 5
 apu_imm: // #nn
+#ifdef SODIUM64_SPC_BUS_CLOCK
+.globl apu_imm_runtime_fetch
+apu_imm_runtime_fetch:
+    // Fetch the operand at execution time. A preceding guest/DSP RAM write
+    // can change it after this block was compiled. V0 feeds the normal ALU.
+    jal jit_dummy_pc
+    nop
+    addi a0, a0, 1
+    jr gp
+    andi a0, a0, 0xFFFF
+#else
     // Get the 8-bit immediate value
     jal jit_read8
     nop
@@ -60,6 +71,7 @@ apu_imm: // #nn
     or t0, t0, v0
     j emit_op
     move ra, gp
+#endif
 
 .align 5
 apu_dira: // aa

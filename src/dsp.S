@@ -18,6 +18,9 @@
 */
 
 #include "defines.h"
+#ifdef SODIUM64_REMOTE
+.globl dsp_buffer, dsp_regs, dsp_pointer, enabled
+#endif
 
 .globl dsp_sample
 .globl read_dspaddr

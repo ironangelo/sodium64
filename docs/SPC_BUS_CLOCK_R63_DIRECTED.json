@@ -1,0 +1,1122 @@
+{
+  "passed": true,
+  "status": "IMPLEMENTED directed bus-clock prefix",
+  "actual_linked_JIT_compiler_and_emitted_code": true,
+  "existing_MIPS_VM_used": true,
+  "cases": [
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 3,
+          "data": null
+        }
+      ],
+      "total_cycles": 7,
+      "cached_replay_exact": true,
+      "clock": 1,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 3,
+          "data": null
+        }
+      ],
+      "total_cycles": 7,
+      "cached_replay_exact": true,
+      "clock": 1,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 63,
+          "data": null
+        }
+      ],
+      "total_cycles": 7,
+      "cached_replay_exact": true,
+      "clock": 21,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 63,
+          "data": null
+        }
+      ],
+      "total_cycles": 7,
+      "cached_replay_exact": true,
+      "clock": 21,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 126,
+          "data": null
+        }
+      ],
+      "total_cycles": 7,
+      "cached_replay_exact": true,
+      "clock": 42,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 126,
+          "data": null
+        }
+      ],
+      "total_cycles": 7,
+      "cached_replay_exact": true,
+      "clock": 42,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 765,
+          "data": null
+        }
+      ],
+      "total_cycles": 7,
+      "cached_replay_exact": true,
+      "clock": 255,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 765,
+          "data": null
+        }
+      ],
+      "total_cycles": 7,
+      "cached_replay_exact": true,
+      "clock": 255,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 7,
+          "data": null
+        }
+      ],
+      "total_cycles": 11,
+      "cached_replay_exact": true,
+      "clock": 1,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "nop_nop_mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 7,
+          "data": null
+        }
+      ],
+      "total_cycles": 11,
+      "cached_replay_exact": true,
+      "clock": 1,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "nop_nop_mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 147,
+          "data": null
+        }
+      ],
+      "total_cycles": 11,
+      "cached_replay_exact": true,
+      "clock": 21,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "nop_nop_mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 147,
+          "data": null
+        }
+      ],
+      "total_cycles": 11,
+      "cached_replay_exact": true,
+      "clock": 21,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "nop_nop_mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 294,
+          "data": null
+        }
+      ],
+      "total_cycles": 11,
+      "cached_replay_exact": true,
+      "clock": 42,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "nop_nop_mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 294,
+          "data": null
+        }
+      ],
+      "total_cycles": 11,
+      "cached_replay_exact": true,
+      "clock": 42,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "nop_nop_mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 1785,
+          "data": null
+        }
+      ],
+      "total_cycles": 11,
+      "cached_replay_exact": true,
+      "clock": 255,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "nop_nop_mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 1785,
+          "data": null
+        }
+      ],
+      "total_cycles": 11,
+      "cached_replay_exact": true,
+      "clock": 255,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801c0014",
+      "reset_exercised": true,
+      "name": "nop_nop_mov_a_dp",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          7
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 3,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 4,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "clock": 1,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 3,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 4,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "clock": 1,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801fff94",
+      "reset_exercised": false,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 63,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 84,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "clock": 21,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 63,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 84,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "clock": 21,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801fff94",
+      "reset_exercised": false,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 126,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 168,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "clock": 42,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 126,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 168,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "clock": 42,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801fff94",
+      "reset_exercised": false,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 765,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 1020,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "clock": 255,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 765,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 1020,
+          "data": 17
+        }
+      ],
+      "total_cycles": 8,
+      "cached_replay_exact": true,
+      "clock": 255,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801fff94",
+      "reset_exercised": false,
+      "name": "mov_dp_a",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          3
+        ],
+        [
+          "write",
+          4
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 4,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 5,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "clock": 1,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 4,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 5,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "clock": 1,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801fff94",
+      "reset_exercised": false,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 84,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 105,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "clock": 21,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 84,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 105,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "clock": 21,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801fff94",
+      "reset_exercised": false,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 168,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 210,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "clock": 42,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 168,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 210,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "clock": 42,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801fff94",
+      "reset_exercised": false,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 1020,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 1275,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "clock": 255,
+      "requested_JIT_pointer": "0xa01c0000",
+      "published_header": "0x801c0014",
+      "reset_exercised": false,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    },
+    {
+      "events": [
+        {
+          "kind": "read",
+          "elapsed_master_cycles": 1020,
+          "data": null
+        },
+        {
+          "kind": "write",
+          "elapsed_master_cycles": 1275,
+          "data": 51
+        }
+      ],
+      "total_cycles": 9,
+      "cached_replay_exact": true,
+      "clock": 255,
+      "requested_JIT_pointer": "0xa01fff80",
+      "published_header": "0x801fff94",
+      "reset_exercised": false,
+      "name": "mov_dp_imm",
+      "expected_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ],
+      "observed_bus_end_cycles": [
+        [
+          "read",
+          4
+        ],
+        [
+          "write",
+          5
+        ]
+      ]
+    }
+  ],
+  "aggregate_cycle_totals_and_cached_replay_preserved": true,
+  "rejected_linked_instruction_mutations": [
+    "omit_prefix",
+    "retain_debited_prefix"
+  ],
+  "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
+  "runtime_timing_bridge_implemented": false,
+  "full_256_opcode_bus_accuracy_proved": false,
+  "native_performance_claim": false,
+  "commercial_data": false
+}

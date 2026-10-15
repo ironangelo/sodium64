@@ -1,3 +1,27 @@
+# 2026-10-14 - R63 native SPC bus-clock prefix implemented in isolation
+
+RESUME HERE: sourceb939e779c71a38b1ad8f466d00282fde334e5068,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63. [R63](SPC_BUS_CLOCK_R63.md).
+Actual linked JIT/compiler/handlers show F3 read clocks1 vs required3, or1vs7
+after two NOPs; direct store omitted dummy read. Aggregate totals were correct.
+Default-off SPC_BUS_CLOCK publishes fixed S2 prefix before each real bus call
+and emits direct-store dummy read.32 directed clock1/21/42/255 + normal/near-end
+buffer cases, cached replay, eight real resets and two linked mutations PASS.
+Default-off allocated sections of both changed ASM units exactly match R61.
+Ordered artifact build_spc_bus_clock_r63_v1; initial non-v1 is an off/control
+build (fixed Make placement issue). No hardware/CI/live full DSP or speed claim.
+
+Next extend data-bus recording to absolute/indexed/indirect/word/branch/stack
+and repair demonstrated internal-order/dummy-access mismatches; the generic
+prefix alone cannot do that. Preserve aggregate/conditional/halt/tag behavior.
+Then exact DSP epoch + pre-access catch-up and echo future-code/tag/cache gates
+before a live bridge. Do not mistake directed cases for all256-opcode fidelity.
+R61 upper memory/snapshot native proof remains closed; no COM3 controller live,
+console coordinate8/menu recovered. Master7cc8facf/prior candidates preserved.
+Full resident RSP DSP/native60/50/fidelity/corpus/integration OPEN. History below.
+
+---
+
 # 2026-10-14 - R61 upper-memory window and relocated snapshot physically proved
 
 RESUME HERE: [R61 memory](FULL_DSP_WINDOW_R61_MEMORY.md), curated MEMORY_NATIVE.json.

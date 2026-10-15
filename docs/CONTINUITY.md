@@ -31,6 +31,12 @@ are isolated by paired-menu diagnostic reservations. No commercial bytes, raw
 results or hashes are published. Do not request expired historical Gate-B ROMs
 again. Earlier conversations below are history, not new requests.
 
+Commercial status correction: the first combined SMW run exported aligned
+frames720/736 and PCM, but the post-quiet20s status failed. A fresh deployer
+session also cannot obtain status. No cadence PASS, no causal attribution and no
+PR27 merge follows. Physical power cycle requested; original-master reference
+with the identical overlay is built and locally qualified for the same test.
+
 Next close these actual PR27/combined-evidence gates, verify restoration, then
 perform the whole-resident-DSP integral architectural cost test. R44/R45 retain
 explicit dependency/regression blockers. No new isolated kernel campaign.

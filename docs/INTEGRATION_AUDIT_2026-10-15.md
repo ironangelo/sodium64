@@ -1,11 +1,16 @@
 # Consolidation and integration audit - 2026-10-15
 
-Material update: PR24/23/22/25 are independently merged into master8da020c3.
-[Integration receipt](evidence/integration-master-2026-10-15.json) and
-[four native controls](evidence/integration-native-controls-2026-10-15.json).
-The frozen measured source produces the identical empty HW_PROFILE ROM as this
-master. PR26 extracts the demonstrated full-rate defaults and is in CI.
-The original inventory retains its7cc8facf starting point.
+Material update: PR24/23/22/25/26 are independently merged into master7c3a7634.
+[Integration receipt](evidence/integration-master-2026-10-15.json),
+[four native controls](evidence/integration-native-controls-2026-10-15.json) and
+[optional bridge preflight](evidence/integration-native-usb-2026-10-15.json).
+Older measured source matches8da's HW_PROFILE ROM; PR26 separately changes two
+full-rate default bytes. PR27 is pending exact-head CI and commercial stability.
+Native original-fixture control now passes. Initial SMW captures at720/736 pass,
+but status after the quiet20s window and a fresh session both timeout. No valid
+throughput result follows. The requested physical power cycle is pending; next
+repeat this exact tranche on original7cc plus the same diagnostic overlay.
+All failed outputs remain private. The original inventory retains7cc8facf.
 
 Operational authority: the user's current consolidation/integration request.
 Earlier CONTINUITY entries are evidence/history, not a queue of live requests.
@@ -78,9 +83,9 @@ Diagnostic tools are identified separately from production runtime changes.
 
 ## Execution queue and stop conditions
 
-1. PR24/23/22/25 are merged. Finish PR26's exact-head gates and integrate its
-   coherent full-rate startup/menu defaults. Normal startup remains42 until then;
-   the measured8da020c3 baseline uses the enforced HW_PROFILE21 contract.
+1. PR24/23/22/25/26 are merged into7c3a7634 after applicable exact-head gates.
+   Startup now selects21. Older HW_PROFILE controls bind to8da before the
+   separately qualified two-byte full-rate default change.
 2. Four original native control captures pass, with exact measured/master ROM
    identity. Expand combined image/audio/scene evidence using the user's available
    commercial SMW/ALttP/DKC1 through the isolated paired-menu diagnostic route.

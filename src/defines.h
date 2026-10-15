@@ -130,6 +130,7 @@
 #define SLT(rd, rs, rt) (0x0000002A | ((rd) << 11) | ((rs) << 21) | ((rt) << 16))
 #define SLTU(rd, rs, rt) (0x0000002B | ((rd) << 11) | ((rs) << 21) | ((rt) << 16))
 #define SRL(rd, rt, sa) (0x00000002 | ((rd) << 11) | ((rt) << 16) | ((sa) << 6))
+#define SRA(rd, rt, sa) (0x00000003 | ((rd) << 11) | ((rt) << 16) | ((sa) << 6))
 #define SUB(rd, rs, rt) (0x00000022 | ((rd) << 11) | ((rs) << 21) | ((rt) << 16))
 #define XOR(rd, rs, rt) (0x00000026 | ((rd) << 11) | ((rs) << 21) | ((rt) << 16))
 #define XORI(rt, rs, imm) (0x38000000 | ((rt) << 16) | ((rs) << 21) | ((imm) & 0xFFFF))

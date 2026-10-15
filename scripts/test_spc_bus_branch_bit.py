@@ -8,7 +8,7 @@ from test_native_diag_arm import load_elf
 from test_spc_bus_clock import run
 
 
-def cases():
+def cases(live_relative=False):
     result=[]
     def add(name,code,total,events,flags=0x24,values=(),memory=None,registers=None,pc=None,y=6):
         expected_registers=dict(apu_accum=0x11,apu_reg_x=4,apu_reg_y=y,apu_stack=0x7f,apu_flags=flags)
@@ -47,7 +47,7 @@ def cases():
     for value in (0,1,2):
         changed=(value-1)&255;taken=changed!=0
         add('DBNZ_dp_'+str(value),bytes((0x6e,0x40,5)),7 if taken else 5,
-            [('read',0x140,3),('write',0x140,4)],values=((0x140,value),),
+            [('read',0x140,3),('write',0x140,4)]+([('read',0x402,5)] if live_relative else []),values=((0x140,value),),
             memory={0x140:changed},pc=0x408 if taken else 0x403)
         add('DBNZ_Y_'+str(value),bytes((0xfe,5)),6 if taken else 4,[('read',0x401,2)],
             registers=dict(apu_reg_y=changed),pc=0x407 if taken else 0x402,y=value)
@@ -116,7 +116,7 @@ def main():
     parser.add_argument('--output',type=Path)
     parser.add_argument('--require-exact',action='store_true')
     args=parser.parse_args();base,symbols=load_elf(args.elf);results=[]
-    for case in cases():
+    for case in cases('apu_dbnz_runtime_relative' in symbols):
         y=case['y']
         result=run(base,symbols,bytes.fromhex(case['code']),observe_data=True,
             memory_values=case['values'],flags=case['flags'],test_pc=0x400,

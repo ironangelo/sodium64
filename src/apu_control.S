@@ -433,41 +433,55 @@ apu_dbnzy: // DBNZ Y,dest
 
 .align 5
 apu_dbnzm: // DBNZ op,dest
-#ifndef SODIUM64_SPC_BUS_CLOCK
+#ifdef SODIUM64_SPC_BUS_CLOCK
+.globl apu_dbnz_runtime_relative
+apu_dbnz_runtime_relative:
+    // DBNZ can overwrite its own later displacement. A1 retains the byte
+    // decrement across apu_read8; fetch the real displacement only after write.
+    la t0, apu_write8
+    jal emit_jal
+    ori s1, s1, FLAG_PC
+    EMIT_OP ADDI(A1, V0, -1)
+    jal jit_dummy_pc
+    nop
+    addi a0, a0, 1
+    andi a0, a0, 0xFFFF
+    EMIT_OP BEQ(A1, ZERO, 6)
+    li t0, ORI(S0, ZERO, 0)
+    jal emit_op
+    or t0, t0, a0 // Fallthrough PC on both paths.
+    jal jit_emit_runtime_cycles
+    li t0, 2
+    EMIT_OP SLL(V0, V0, 24)
+    EMIT_OP SRA(V0, V0, 24)
+    EMIT_OP ADD(S0, S0, V0)
+    EMIT_OP ANDI(S0, S0, 0xFFFF)
+    j finish_block
+    nop
+#else
     // Sign-extend the offset value and add it to the PC
     jal jit_read8
     ori s1, s1, FLAG_PC // Update the JIT register state
     sll v0, v0, 24
     sra v0, v0, 24
     add v0, v0, a0
-#endif
 
     // Emit code to decrement a memory value and branch if it's not zero.
     la t0, apu_write8
     jal emit_jal
     nop
     EMIT_OP ADDI(A1, V0, -1)
-#ifdef SODIUM64_SPC_BUS_CLOCK
-    // The decrement write precedes the displacement fetch, unlike CBNE.
-    jal jit_read8
-    ori s1, s1, FLAG_PC
-    sll v0, v0, 24
-    sra v0, v0, 24
-    add v0, v0, a0
-#endif
     EMIT_OP BEQ(A1, ZERO, 3) // zero => not taken
     li t0, ORI(S0, ZERO, 0)
     jal emit_op
     or t0, t0, a0
     jal jit_emit_runtime_cycles
     li t0, 2
-#ifdef SODIUM64_SPC_BUS_CLOCK
-    andi v0, v0, 0xFFFF // Encode a16-bit PC even for a negative displacement.
-#endif
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
     or t0, t0, v0
+#endif
 
 .align 5
 apu_bra: // BRA dest

@@ -13,6 +13,7 @@ def main():
     parser.add_argument('elf',type=Path)
     parser.add_argument('--output',type=Path)
     parser.add_argument('--mutations',action='store_true')
+    parser.add_argument('--require-live-relative',action='store_true')
     args=parser.parse_args();base,symbols=load_elf(args.elf);results=[]
     def registers(a=0x11,x=4,y=6,sp=0x7f,p=0x20):
         return dict(apu_accum=a,apu_reg_x=x,apu_reg_y=y,apu_stack=sp,apu_flags=p)
@@ -80,7 +81,8 @@ def main():
     within=run(base,symbols,bytes.fromhex('6e0200'),test_pc=0x100,observe_data=True,
         flags=0x20,memory_values=((0x102,0),),expect_recompile=True)
     within_exact=within['outcome']['PC']==0x102 and within['total_cycles']==7
-    assert not within_exact,'Within-instruction fetch changed; qualify the new path'
+    if args.require_live_relative:assert within_exact,within
+    else:assert not within_exact,'Within-instruction fetch changed; qualify the new path'
     proof=dict(passed=True,cases=results,rejected_linked_instruction_mutations=rejected,
         within_instruction_counterexample=dict(exact=within_exact,outcome=within['outcome'],
             total=within['total_cycles'],expected_PC=0x102,expected_total=7),

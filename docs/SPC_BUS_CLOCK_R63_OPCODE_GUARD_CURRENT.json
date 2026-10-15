@@ -641,7 +641,7 @@
     "omit_guard_SP_commit"
   ],
   "within_instruction_counterexample": {
-    "exact": false,
+    "exact": true,
     "outcome": {
       "memory": {
         "0x102": 255
@@ -653,13 +653,13 @@
         "apu_stack": 127,
         "apu_flags": 32
       },
-      "PC": 259
+      "PC": 258
     },
     "total": 7,
     "expected_PC": 258,
     "expected_total": 7
   },
-  "ELF_sha256": "1f83524f58bc71e847fb6bc98c575d7c8bb95eda25e3e7df0ec2d8ac74b01532",
+  "ELF_sha256": "cbb24ce8535183873f8d95bb99c9069d2714b48b015d188376bc86bcf6c7bc1e",
   "real_native_JIT_and_APU_reentry": true,
   "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
   "full_SCPU_scheduler_timing_proved": false,

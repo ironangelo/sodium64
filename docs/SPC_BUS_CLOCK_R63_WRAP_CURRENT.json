@@ -1985,6 +1985,11 @@
           "write",
           64,
           4
+        ],
+        [
+          "read",
+          2,
+          5
         ]
       ],
       "expected": [
@@ -1997,6 +2002,11 @@
           "write",
           64,
           4
+        ],
+        [
+          "read",
+          2,
+          5
         ]
       ],
       "total": 7,
@@ -2090,7 +2100,7 @@
     "omit_wrap_block_boundary",
     "omit_pointer_byte_wrap"
   ],
-  "ELF_sha256": "1f83524f58bc71e847fb6bc98c575d7c8bb95eda25e3e7df0ec2d8ac74b01532",
+  "ELF_sha256": "cbb24ce8535183873f8d95bb99c9069d2714b48b015d188376bc86bcf6c7bc1e",
   "primary_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/component/processor/spc700/instructions.cpp",
   "full_256_opcode_bus_accuracy_proved": false,
   "native_performance_claim": false,

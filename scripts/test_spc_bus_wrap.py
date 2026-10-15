@@ -59,6 +59,8 @@ def main():
     for name,pc,code,total,next_pc,expected,values,flags,changed in cases:
         if name in ('MOV_imm_operand_wrap','MOV_imm_end_wrap') and 'apu_imm_runtime_fetch' in symbols:
             expected=[('read',(pc+1)&65535,2)]
+        if name=='DBNZ_dp_negative' and 'apu_dbnz_runtime_relative' in symbols:
+            expected=expected+[('read',2,5)]
         registers=dict(apu_accum=0x11,apu_reg_x=4,apu_reg_y=6,apu_stack=0x7f,apu_flags=flags)
         registers.update(changed)
         try:

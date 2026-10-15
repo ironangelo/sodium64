@@ -23,9 +23,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GOTHICVANIA_SOURCE_RUN: 35145447113
-  GOTHICVANIA_ARTIFACT_ID: 10466504920
-  GOTHICVANIA_ROM_SHA256: 5519d51ff9c803c1653add5eca0585f37fe8bd96e2b1a758b1d5c7f3ee2ee519
   ARES_PIN: 17813a3ccda21ab9bd45f09bfc2f91196dbf50ff
 
 jobs:
@@ -132,32 +129,20 @@ jobs:
           echo "ARES_BIN=$ares_bin" >> "$GITHUB_ENV"
           "$ares_bin" --version | tee "$GITHUB_WORKSPACE/ares-version.txt"
 
-      - name: Download exact validated Gothicvania survivability artifact
+      - name: Generate original boot fixture for directed SPC700 proof
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          mkdir -p workload/source workloads/ares
-          zip="$RUNNER_TEMP/gothicvania-source-build.zip"
-          curl --fail --location --retry 3 \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$GOTHICVANIA_ARTIFACT_ID/zip" \
-            -o "$zip"
-          unzip -q "$zip" -d workload/source
-
-          test -s workload/source/gothicvania-benchmark.sfc
-          echo "$GOTHICVANIA_ROM_SHA256  workload/source/gothicvania-benchmark.sfc" | sha256sum --check
+          mkdir -p workloads/ares
           cp artifacts/profile/sodium64.z64 workloads/ares/sodium64.z64
           cp artifacts/profile/rom-converter.py workloads/ares/rom-converter.py
-          cp workload/source/gothicvania-benchmark.sfc workloads/ares/profile-gothicvania.smc
+          python3 scripts/make_profile_workloads.py workloads/ares --only gameplay-balanced
+          sha256sum workloads/ares/profile-gameplay-balanced.smc | tee apu-boot-fixture.sha256
           (
             cd workloads/ares
             python3 rom-converter.py </dev/null
           )
-          test -s workloads/ares/out/profile-gothicvania.z64
+          test -s workloads/ares/out/profile-gameplay-balanced.z64
 
       - name: Resolve exact runtime symbols
         shell: bash
@@ -218,7 +203,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p diagnostics
-          rom="workloads/ares/out/profile-gothicvania.z64"
+          rom="workloads/ares/out/profile-gameplay-balanced.z64"
           home="$RUNNER_TEMP/ares-home-apu-cycle-proof"
           settings="$RUNNER_TEMP/ares-settings-apu-cycle-proof.bml"
           emulator_log="diagnostics/ares-emulator.log"
@@ -337,5 +322,6 @@ jobs:
           if-no-files-found: ignore
           path: |
             ares-version.txt
+            apu-boot-fixture.sha256
             diagnostics/
             artifacts/profile/profile-build.log

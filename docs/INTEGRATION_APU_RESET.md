@@ -20,3 +20,12 @@ integration baseline. The later live-group optimization remains pending its own
 publication/reset proof on clean master.
 
 Rollback: revert this PR; it introduces no persistent state or format change.
+
+The first repaired-SDK cycle-proof run38764141249 failed before any SPC case:
+its historical Gothicvania build artifact had expired. The proof now boots the
+repository's original deterministic gameplay-balanced ROM, then takes over APU
+state exactly as before. All119 directed cases, halted groups, expected values,
+cycle/tag/span/cache contracts and required assertions remain unchanged. This
+does not substitute a synthetic workload for the historical Gothicvania native
+performance gate; it removes an irrelevant expiring boot-asset dependency from
+the directed processor proof. The generated fixture hash is retained in CI.

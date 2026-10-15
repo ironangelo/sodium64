@@ -1,3 +1,44 @@
+# 2026-10-15 - R63 physical guard cost measured; recovery verified
+
+RESUME HERE: docsbcea5436dd1d104e34d9391bd4e146995320100a,
+runtime sourced079407e5162c57e86a3ed992825250b9c11de13,
+experiment/spc-bus-clock-r63, sodium64-spc-bus-clock-r63.
+[Native result](SPC_CODE_GUARD_R63_NATIVE.md) and curated NATIVE.json.
+Exec59854 completed exit0; Python PID10328 and COM3 deployer are terminal/absent,
+verified from the actual handles/OS process inventory. Do not restart that run.
+
+Both installs/readbacks, guest/render600 images and quiet20s captures pass:
+complete32KiB S64D v5, checksums, precision20/fs0/APU21/audio4/layer0, zero trace
+overflow. All67200 initial RGB pixels are exactly equal (even the192 planned
+host-FPS pixels).1042 shared full boundaries, absolute guest603..1644:
+off18.235671ms mean /17.469419ms median /54.837576 completed Hz;
+on19.201678ms mean /18.447456ms median /52.078781 completed Hz.
+Observed mean interval increase0.966007ms /5.297351%. Wait composition also
+changes; this is not exclusive CPU execution time or presentation FPS. One
+paired intro route and one initial image do not prove later image/audio/corpus
+fidelity. Legacy DSP was active, not the complete full-DSP backend.
+
+Coordinate8 installation/readback and responsive menu were restored and verified.
+Raw report/parsed captures/images/game-derived hashes stay under private/
+usb-bench/2026-10-13/spc-code-guard-r63-native-v1/. Only curated numbers public.
+Keep the eager guard isolated as a correctness prototype; no speed promotion.
+
+Next bounded hypothesis: keep normal register/NZ deferral on matching tags,
+materialize only dirty guest state on mismatch. Pass the compile liveness/dirty
+mask as escape metadata, use queued A2 NZ and current S1 only if loaded, preserve
+the already-flushed fixed debt. No lazy guard is implemented yet. Keep eager
+code as a layout-matched physical control; prove all dirty/load masks including
+SF-only and queued-NZ cases before a new native pair. A useful next native gate
+is recovery of at least half the observed overhead (about0.483ms) in a matched
+pair. If that bounded attempt fails, stop guard tuning and advance the broader
+fetch/epoch/dataflow and complete resident RSP DSP full-work discriminator.
+
+SPC/DBNZ/guard semantic evidence8f306f99/506b8799 preserved; seven default-off
+ASM units exact R61. Master unchanged. No broad CI/integration/full-fidelity/
+native60/50/corpus acceptance; full goal remains OPEN. Earlier history below.
+
+---
+
 # 2026-10-15 - R63 native guard cost pair prepared; physical discriminator next
 
 RESUME HERE: sourced079407e5162c57e86a3ed992825250b9c11de13,

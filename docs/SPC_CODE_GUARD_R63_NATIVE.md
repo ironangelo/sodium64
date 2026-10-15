@@ -1,7 +1,40 @@
 # R63 - native opcode-guard cost discriminator
 
-Status: IMPLEMENTED paired artifacts/preflight; physical cost measurement pending.
+Status: MEASURED paired native cost; no performance promotion.
 This is a bounded cost experiment, not a full-DSP or Road-to-1.0 acceptance.
+
+Exec59854 completed exit0, worker PID10328 terminal. Both physical installs/
+readbacks, guest/render600 boundaries and quiet20s captures passed. Complete
+32KiB S64D v5 data validates precision20/frameskip0/APU21/audio4/layer0 with
+checksums and no trace overflow. All67200 RGB pixels at frame600 are equal,
+including the planned192-pixel host-FPS rectangle; this is one initial image,
+not a visual/audio proof for the complete interval. Raw evidence stays local.
+
+1042 shared full completed-boundary intervals, absolute guest603..1644:
+
+| Guard | Mean interval | Median interval | Completed cadence |
+| --- | ---: | ---: | ---: |
+| Off control |18.235671 ms|17.469419 ms|54.837576 Hz|
+| On |19.201678 ms|18.447456 ms|52.078781 Hz|
+
+Observed mean interval increase0.966007 ms/+5.297351%. Explicit RSP/VI waits
+also changed, so this is not an exclusive CPU instruction-cost measurement.
+Completed-boundary cadence is not presentation FPS. A single matched intro
+pair neither establishes sustained corpus behavior nor full DSP/DAC fidelity.
+Coordinate8 install/readback and a responsive menu were restored and verified;
+the worker and its COM3 deployer are no longer running. Curated metrics are in
+[NATIVE.json](SPC_CODE_GUARD_R63_NATIVE.json); no private images/raw dumps/hashes.
+
+Disposition: preserve the guard as an isolated correctness prototype, with
+its measured cost as a budget constraint. Do not promote this implementation
+as a speed improvement. One next bounded architectural hypothesis is a lazy
+escape: keep ordinary register/NZ deferral on the common matching-tag path,
+and materialize only dirty state on the rare mismatch. Retain the eager guard
+as a layout-matched control, prove dirty/load masks and queued NZ first, then
+measure before widening the campaign. A useful native gate would recover at
+least half this observed overhead; otherwise stop that tuning and return to
+the full fetch/epoch/dataflow and complete resident RSP DSP cost gate. Neither
+this hypothesis nor a lazy guard is implemented by this checkpoint.
 
 SPC_CODE_GUARD defaults1 within the default-off SPC_BUS_CLOCK experiment.
 SPC_CODE_GUARD=0 suppresses only the next-opcode guard call and remains an

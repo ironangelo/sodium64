@@ -4,6 +4,43 @@ Status: IMPLEMENTED directed native-JIT timing/address correction, default-off.
 This is not a complete256-opcode bus bridge, live full DSP, native speed result
 or integrable candidate. R61's native upper-memory/window proof is preserved.
 
+## 16-bit PC and pointer wrap correction
+
+WRAP_AUDIT records10 open cases in the initial13 on the frozen branch ELF.
+BRA/BNE at$FFFE retain the old PC instead of reaching$0000; negative relative
+targets can corrupt the emitted ORI instead of encoding the16-bit PC. The
+compiler fetch cursor crosses$FFFF into non-SPC data, allowing NOP to decode
+unrelated bytes and changing registers/stack. An operand crossing the boundary
+can therefore read the wrong byte. CALL's return bytes were already right,
+but its final source-tag offset was$1000, outside the valid$0000..$0FFC range.
+JMP[$FFFB+X] reads its second pointer byte from$10000 rather than$0000.
+
+The enabled compile fetch now wraps after every byte; a completed instruction
+that wraps the source PC ends its block, retaining the independent source-span
+bound. Conditional and unconditional relative targets are masked before JIT
+encoding. The indirect jump wraps its second pointer-byte address before its
+real read. Default-off paths are unchanged. The original snippet loader now
+also wraps its source bytes, so operand-crossing tests exercise the real case.
+
+WRAP_CURRENT passes45 directed cases: all flag-branch conditions at the upper
+boundary and negative targets, BBC/BBS/CBNE/DBNZ negative targets, NOP/MOV source
+wrap, CALL/PCALL return/operand edges, indirect pointer wrap, and read/write
+effective-address wraps through X/Y and indirect-Y. It checks all bus addresses/
+end clocks, totals, PC/register/flag/memory results, exact first/last source-tag
+offsets and cached replay. Three actual linked/emitted mutations (omit fetch
+wrap, omit wrap block boundary, omit second pointer-byte wrap) are rejected.
+
+Clock32/address25/word23/control288/branch-bit172/implied192/KOFF30 still pass
+on build_spc_bus_clock_r63_wrap/s64-spc-wrap.elf, bus clock1/KOFF1, linked
+text+data774120 bytes/BSS0. Six default-off ASM units still match allocated
+sections of R61 source61505bc6 byte for byte. Previous artifacts preserved.
+No COM3/native speed, full fidelity, broad CI or integration claim.
+
+Next implement the instruction-fetch/pre-access/absolute DSP epoch contract;
+wrap correctness does not solve compile-time reads of future echo-modified
+code or I/O fetches. Full resident RSP DSP still needs an early native full-work
+cost discriminator. All full DSP/DAC/native60/50/corpus/integration gates OPEN.
+
 ## Branch, bit and implied-access correction
 
 BRANCH_BIT_AUDIT records14 open cases in172 on the frozen control ELF:

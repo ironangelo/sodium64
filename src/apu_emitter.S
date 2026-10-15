@@ -140,8 +140,14 @@ jit_read8: // a0: address - v0: value
     sub s2, s2, v0
     add t0, a0, t1
     lbu v0, apu_ram(t0)
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    addi a0, a0, 1
+    jr ra
+    andi a0, a0, 0xFFFF
+#else
     jr ra
     addi a0, a0, 1
+#endif
 
 .align 5
 jit_charge_cycles: // t0: additional guest cycles missing from fetch/data accounting
@@ -239,6 +245,11 @@ next_opcode:
 
 .align 5
 finish_opcode:
+#ifdef SODIUM64_SPC_BUS_CLOCK
+    // End at a source-PC wrap instead of decoding beyond the source limit.
+    bltu a0, s0, finish_block
+    nop
+#endif
     // Retain the 16-byte source-span bound. Also stop once the completed block
     // exceeds 20 worst-case SPC cycles: the pinned reference's most expensive
     // finite instruction is DIV at 12 cycles, so the next instruction can bring

@@ -15,7 +15,7 @@ def run(base,symbols,code,clock=21,jit_pointer=0xa01c0000,observe_data=False,mem
     cpu.write(s['apu_map']+0x3ff,0,1)
     cpu.write(s['dsp_addr'],dsp_address,1);cpu.write(s['dsp_regs']+dsp_address,0x55,1)
     cpu.write(s['jit_pointer'],jit_pointer)
-    for i,b in enumerate(code):cpu.write(s['apu_ram']+test_pc+i,b,1)
+    for i,b in enumerate(code):cpu.write(s['apu_ram']+((test_pc+i)&0xffff),b,1)
     for addr,value in memory_values:cpu.write(s['apu_ram']+addr,value,1)
     if extra_setup:extra_setup(cpu,s)
     if jit_mutation:

@@ -111,5 +111,13 @@
   "fidelity_limit": "PCM preservation across this repair only; 285 changed pixels per endpoint have no complete primary SNES pixel oracle or human acceptance yet.",
   "retained_negative": "First ALttP host access interruption remains failed/incomplete; successful v2 is separate.",
   "terminal_recovery": "Physical power cycle and final menu/install/readback still pending after the independent capture.",
-  "full_DSP_integral_native_cost": "Not measured. R61 window/owner proofs do not implement the complete live SPC bridge or complete resident backend."
+  "full_DSP_integral_native_cost": "Not measured. R61 window/owner proofs do not implement the complete live SPC bridge or complete resident backend.",
+  "earlier_USB_binding": {
+    "earlier_USB_head": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+    "merged_measured_head": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+    "normal_loaded_bytes_identical": true,
+    "USB_loaded_bytes_identical": true,
+    "complete_tree_of_merged_measured_head_equals_master": true,
+    "note": "Earlier USB trials bind through rebuilt loaded-image equality; their historical source trees are not claimed identical to current master."
+  }
 }

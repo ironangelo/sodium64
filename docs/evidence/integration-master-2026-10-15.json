@@ -183,11 +183,19 @@
   },
   "native": {
     "evidence": "integration-native-controls-2026-10-15.json",
-    "status": "Four bounded commercial quiet controls and independent no-USB SMW measurement bind to the identical entire source tree of master9cb13d43.",
+    "status": "Independent HW head48b01127 has the identical complete tree of master9cb13d43. Earlier b2e6cb4a USB trials bind to48 through exact rebuilt normal/USB loaded-image equality; later USB trials are on48 directly.",
     "commercial_regression": "User authorizes available SMW/ALttP/DKC1 on SummerCart. Original Gate-B inputs unavailable; do not relabel commercial runs as the old Gate-B corpus.",
     "fidelity_gate": "Aligned SMW PCM/head/registers preserved; images change285 pixels per endpoint. Full SNES visual/DAC/title acceptance remains open.",
     "save_isolation": "Paired menu requires diagnostic_saves=1 and diagnostic_continuous=1. cart_load_emulator_path reserves separate paths and loads SRAM without automatic writeback; originals are not selected.",
     "combined_evidence": "integration-combined-baseline-2026-10-18.json",
-    "terminal_recovery": "Independent capture saved; physical power cycle and final verified restoration pending."
+    "terminal_recovery": "Independent capture saved; physical power cycle and final verified restoration pending.",
+    "earlier_USB_binding": {
+      "earlier_USB_head": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+      "merged_measured_head": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+      "normal_loaded_bytes_identical": true,
+      "USB_loaded_bytes_identical": true,
+      "complete_tree_of_merged_measured_head_equals_master": true,
+      "note": "Earlier USB trials bind through rebuilt loaded-image equality; their historical source trees are not claimed identical to current master."
+    }
   }
 }

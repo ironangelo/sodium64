@@ -30,6 +30,7 @@ jobs:
           python3 scripts/test_hw_profile_report.py
           python3 scripts/test_profile_owners.py build_profile/sodium64-profile.elf build_hw/sodium64-hw.elf --normal-elf build/sodium64.elf --json-output profile-owner-proof.json
           python3 scripts/check_rsp_branch_delay_slots.py build_hw/src/rsp_main.elf build_hw/src/rsp_mode7.elf
+          python3 scripts/test_rsp_decode_cursor.py build_hw/src/rsp_main.elf build_hw/src/rsp_mode7.elf --json-output hw-decoder-cursor-proof.json
           python3 scripts/test_apu_lookup_reset.py build_hw/sodium64-hw.elf
           python3 scripts/test_dsp_gain_owner.py build_hw/sodium64-hw.elf
           python3 scripts/test_dsp_brr_accuracy.py build_hw/sodium64-hw.elf
@@ -40,6 +41,7 @@ jobs:
           retention-days: 14
           path: |
             profile-owner-proof.json
+            hw-decoder-cursor-proof.json
             sodium64-hw.z64
             build_hw/sodium64-hw.elf
             build_hw/sodium64-hw.map

@@ -34,6 +34,7 @@ jobs:
           python3 scripts/test_remote_mailbox.py build_usb_bench/sodium64-usb-bench.elf --json-output usb-mailbox-proof.json
           python3 scripts/test_remote_rdp_barrier.py --rsp-elf build_usb_bench/src/rsp_main.elf build_usb_bench/src/rsp_mode7.elf --json-output usb-rdp-proof.json
           python3 scripts/check_rsp_branch_delay_slots.py build_usb_bench/src/rsp_main.elf build_usb_bench/src/rsp_mode7.elf
+          python3 scripts/test_rsp_decode_cursor.py build_usb_bench/src/rsp_main.elf build_usb_bench/src/rsp_mode7.elf --json-output usb-decoder-cursor-proof.json
           python3 scripts/test_dsp_gain_owner.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_apu_lookup_reset.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_dsp_brr_accuracy.py build_usb_bench/sodium64-usb-bench.elf
@@ -48,6 +49,7 @@ jobs:
             usb-rdp-proof.json
             usb-bridge-proof.json
             usb-mailbox-proof.json
+            usb-decoder-cursor-proof.json
             sodium64-usb-bench.z64
             build_usb_bench/sodium64-usb-bench.elf
             build_usb_bench/sodium64-usb-bench.map

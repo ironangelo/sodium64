@@ -1,0 +1,12 @@
+{
+  "format": "S64DARC1",
+  "frames": 512,
+  "upstream_commit": "ec8ee2bbe30451614c1d02a83f7af1c97d497d45",
+  "purpose": "Canonical original reference inputs/results, not native timing.",
+  "sha256": {
+    "scenario-0.s64darc": "47c0e7205eed818db7ddb333ba46cc6c442702da7b3868be1d618afce3b3cc1a",
+    "scenario-1.s64darc": "fa10b8285ae5268240cc7c2ee501ad50add389ce031d3264c8f7d3ffbfb66984",
+    "scenario-2.s64darc": "218de0287d66765cd71c3baeeee7f69add1ffdecc1458b91449afcef21e3448e",
+    "scenario-3.s64darc": "b064c7867f9e090dda5a177b4e71151710b9b8d652067ec6caa2d5e14b6f7617"
+  }
+}

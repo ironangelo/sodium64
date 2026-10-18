@@ -1,3 +1,6 @@
+#ifdef SODIUM64_FAITHFUL_RENDERER
+#include "renderer/ppu.inc"
+#else
 /*
     Copyright 2021-2025 Hydr8gon
 
@@ -1835,3 +1838,5 @@ write_vtimeh: // a1: value
     sb t0, vtime
     jr ra
     nop
+
+#endif

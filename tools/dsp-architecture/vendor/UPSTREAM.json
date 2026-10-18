@@ -1,0 +1,16 @@
+{
+  "upstream": "https://github.com/blarggs-audio-libraries/snes_spc",
+  "upstream_commit": "ec8ee2bbe30451614c1d02a83f7af1c97d497d45",
+  "retained_import_commit": "4715b8055c2e5a1201acd22959368d57852cafce",
+  "license": "LGPL-2.1-or-later",
+  "unmodified_source_files": {
+    "SPC_DSP.cpp": "42a48152675eaa772f3bd534122fa71c3d6adec9566d9f5f63e53a556849ac22",
+    "SPC_DSP.h": "fc8a028699c9fb22983d4368fabd152d8396443ff021c2e6918ecefd2982a598",
+    "blargg_source.h": "bd6b376d6d9b1bccce3b89e915b1ad9a6fede7d43b273258bfa13c3855fb1a6a",
+    "blargg_endian.h": "97062e15b46e1347a4fc2e95fd131bcb89c1b8947b28d20a27c1f342a387d637",
+    "blargg_config.h": "b318cfcd2828719d8e3435e4972bc75ba82697c2cc6b8d291130d66d7b6904b8",
+    "blargg_common.h": "4bc17a19fe46de2860868d3f88c037aee718b4dedc61450a28de3d1336053dba",
+    "COPYING.LESSER": "20c17d8b8c48a600800dfd14f95d5cb9ff47066a9641ddeab48dc54aec96e331"
+  },
+  "linked_into_emulator_runtime": false
+}

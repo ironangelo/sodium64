@@ -1,0 +1,39 @@
+name: DSP Architectural Reference Fixtures
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - tools/dsp-architecture/**
+      - .github/workflows/dsp-architecture-reference.yml
+  push:
+    branches: [master, proof/dsp-integral-cost]
+    paths:
+      - tools/dsp-architecture/**
+      - .github/workflows/dsp-architecture-reference.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sodium64-dsp-architecture-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  reference-corpus:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Complete-DSP canonical corpus, replay and negative controls
+        run: python3 tools/dsp-architecture/generate_trace.py --output dsp-fixtures --mutations
+      - name: Validate supported minimum and full output-buffer boundary
+        run: |
+          python3 tools/dsp-architecture/generate_trace.py --frames 32 --output dsp-minimum --mutations
+          python3 tools/dsp-architecture/generate_trace.py --frames 2048 --output dsp-maximum
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sodium64-dsp-architectural-reference
+          retention-days: 14
+          path: |
+            dsp-fixtures/
+            dsp-minimum/receipt.json
+            dsp-maximum/receipt.json

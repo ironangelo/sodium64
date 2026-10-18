@@ -51,6 +51,12 @@ jobs:
       - name: Check RSP branch delay slots
         run: python3 scripts/check_rsp_branch_delay_slots.py build/src/rsp_main.elf build/src/rsp_mode7.elf
 
+      - name: Check production build isolation
+        run: |
+          python3 scripts/check_release_package.py \
+            --elf build/sodium64.elf --rom sodium64.z64 \
+            --converter rom-converter.py --output release-isolation.json
+
       - name: Record build metrics
         run: |
           python3 scripts/build_metrics.py \
@@ -71,6 +77,7 @@ jobs:
             build/*.map
             build.log
             build-metrics.txt
+            release-isolation.json
 
   profile-build:
     runs-on: ubuntu-latest
@@ -123,6 +130,36 @@ jobs:
             build/*.map
             profile-build.log
             profile-build-metrics.txt
+
+  release-isolation:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - profile-build
+
+    steps:
+      - name: Checkout release checks
+        uses: actions/checkout@v4
+
+      - name: Download normal build
+        uses: actions/download-artifact@v4
+        with:
+          name: sodium64-build
+          path: artifacts/normal
+
+      - name: Download laboratory build
+        uses: actions/download-artifact@v4
+        with:
+          name: sodium64-profile-build
+          path: artifacts/profile
+
+      - name: Check release packaging rejects laboratory builds
+        run: |
+          python3 scripts/test_release_package.py \
+            --normal-elf artifacts/normal/build/sodium64.elf \
+            --laboratory-elf artifacts/profile/build/sodium64.elf \
+            --rom artifacts/normal/sodium64.z64 \
+            --converter artifacts/normal/rom-converter.py
 
   emulator-smoke:
     runs-on: ubuntu-latest
@@ -328,18 +365,15 @@ jobs:
   update-release:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - build
+      - release-isolation
     permissions:
       contents: write
 
     steps:
-      - name: Delete old release
-        uses: dev-drprasad/delete-tag-and-release@v0.2.1
-        with:
-          delete_release: true
-          tag_name: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout release checks
+        uses: actions/checkout@v4
 
       - name: Get build artifact
         uses: actions/download-artifact@v4
@@ -347,11 +381,21 @@ jobs:
           name: sodium64-build
           path: sodium64
 
-      - name: Package artifacts
+      - name: Validate and package only the production payload
         run: |
-          cp sodium64/sodium64.z64 .
-          cp sodium64/rom-converter.py .
-          zip -r sodium64.zip sodium64.z64 rom-converter.py
+          python3 scripts/check_release_package.py \
+            --elf sodium64/build/sodium64.elf \
+            --rom sodium64/sodium64.z64 \
+            --converter sodium64/rom-converter.py \
+            --package sodium64.zip
+
+      - name: Delete old release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.1
+        with:
+          delete_release: true
+          tag_name: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create new release
         uses: ncipollo/release-action@v1

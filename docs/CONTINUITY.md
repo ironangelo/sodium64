@@ -31,13 +31,23 @@ the repair. Each image changes285 pixels; complete primary pixel/human visual
 acceptance is still absent. First interrupted ALttP run is preserved separately.
 [Combined measurement](evidence/integration-combined-baseline-2026-10-18.json).
 
-CURRENT HARDWARE: the last independent terminal profile is safely saved; console
-needs physical OFF/ON. The user was asked to confirm the menu. Do not run another
-COM3 controller until recovery, then restore/read back coordinate8 and verify
-paired-menu recovery0. No active deployer remains. This final recovery is PENDING,
-not assumed from earlier successful returns. Commercial raw assets remain local.
+CURRENT HARDWARE: the user confirmed physical OFF/ON after the terminal capture.
+A fresh session verified menu/recovery0, installed and read back the habitual
+coordinate8 executable (131072 bytes), then verified menu/recovery0 again. No
+deployer remains. Final recovery is VERIFIED; menu/firmware were not changed.
+Commercial raw assets remain local. All six current-master CI runs also pass.
 
-Next real work: finish that recovery and resume the complete resident-DSP integral
+PR30 head31ba6429 prepares a reusable complete-DSP reference corpus, with no
+runtime linkage. Four original cases run the full core against an unchanged
+independent build, then replay full state/RAM/PCM and chronological bus operations.
+65544 full-state checks over65536 DSP clocks pass;32 malformed fixtures, five
+semantic trace corruptions and five real omitted-core mutants are rejected.
+Canonical bytes reproduce on Windows and Linux;32/2048-frame boundaries pass.
+Exact fixture/Build/USB/owner CI pass; Ares is still pending. This is a validated
+HOST prerequisite only, not a resident backend or native cost measurement.
+[Reference-corpus receipt](evidence/integration-dsp-architecture-reference-2026-10-18.json).
+
+Next real work: close the qualified PR30 component and resume the complete resident-DSP integral
 architectural cost discriminator on this measured baseline. R61 proves bounded
 state/event/echo semantics and owners; R63 is still a partial live bridge with
 rejected eager/lazy guard cost. Neither is a complete resident backend/cost result.

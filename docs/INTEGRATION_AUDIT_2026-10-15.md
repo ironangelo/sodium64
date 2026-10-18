@@ -81,6 +81,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Existing PROFILE/HW_PROFILE static storage | REJECTED diagnostic layout | Old actual boot destroys1156 Mode7 code and395 data bytes inside the CGRAM clear. Ordinary M1 counts do not qualify these overwritten banks. |
 | PR28 profiler upper-owner repair,939aed0e | VALIDATED diagnostic integration, merged | Master d876ea29; normal bytes unchanged, all five exact CI gates pass. Linked27 owner cases/nine reader checks and native guarded capture qualify storage integrity; stalled SMW is not gameplay acceptance. |
 | Decoder cursor repair, PR29 48b01127 | VALIDATED targeted repair and integrated | Master9cb13d43. Linked9984 cases/zero failures, four mutants, unchanged37 vector words and4KiB banks. All five exact CI gates pass. Native independent SMW57/58/58/60/60 replaces five0/60 windows; four commercial progress/menu/readback controls pass. Aligned PCM/head/registers exact;285 image pixels change and full fidelity remains open. |
+| Complete-DSP reference corpus, PR30 31ba6429 | VALIDATED host prerequisite; integration pending exact Ares | Four regenerable original full-core fixtures, full-state/RAM/PCM replay and mutation controls pass locally and in Linux CI. No runtime linkage, live SPC bridge, complete resident backend or native cost result. |
 
 ## Execution queue and stop conditions
 
@@ -96,7 +97,7 @@ Diagnostic tools are identified separately from production runtime changes.
    dependency in the119-case APU proof. Do not substitute corpus labels.
 3. PR27/28 tools and PR29 minimal runtime repair are integrated. Four commercial
    controls and an independent no-USB SMW measurement bind to the identical
-   master tree. Finish terminal physical recovery and retain open fidelity gates.
+   master tree. Terminal physical recovery and final readback are VERIFIED; retain open fidelity gates.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.

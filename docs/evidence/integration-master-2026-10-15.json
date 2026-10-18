@@ -188,7 +188,16 @@
     "fidelity_gate": "Aligned SMW PCM/head/registers preserved; images change285 pixels per endpoint. Full SNES visual/DAC/title acceptance remains open.",
     "save_isolation": "Paired menu requires diagnostic_saves=1 and diagnostic_continuous=1. cart_load_emulator_path reserves separate paths and loads SRAM without automatic writeback; originals are not selected.",
     "combined_evidence": "integration-combined-baseline-2026-10-18.json",
-    "terminal_recovery": "Independent capture saved; physical power cycle and final verified restoration pending.",
+    "terminal_recovery": {
+      "status": "VERIFIED",
+      "physical_powercycle_confirmed_by_user": true,
+      "menu_before_and_after": true,
+      "habitual_coordinate8_install_and_readback": true,
+      "installed_bytes": 131072,
+      "menu_recovery": 0,
+      "firmware_or_menu_changes": false,
+      "commercial_data_in_receipt": false
+    },
     "earlier_USB_binding": {
       "earlier_USB_head": "b2e6cb4aae779b137b1e96059383d943830df9e9",
       "merged_measured_head": "48b011278acdb72cf1e73536fb5baec55415b5d7",

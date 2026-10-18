@@ -23,8 +23,8 @@
       "id": 39145075645,
       "name": "Ares Profile Validation",
       "head_sha": "9cb13d43710e5274ef68879b92f04355a6fec474",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "html_url": "https://github.com/ironangelo/sodium64/actions/runs/39145075645"
     },
     {
@@ -52,5 +52,15 @@
       "html_url": "https://github.com/ironangelo/sodium64/actions/runs/39145075642"
     }
   ],
-  "terminal_restoration": "PENDING human power cycle"
+  "terminal_restoration": {
+    "status": "VERIFIED",
+    "physical_powercycle_confirmed_by_user": true,
+    "menu_before_and_after": true,
+    "habitual_coordinate8_install_and_readback": true,
+    "installed_bytes": 131072,
+    "menu_recovery": 0,
+    "firmware_or_menu_changes": false,
+    "commercial_data_in_receipt": false
+  },
+  "all_six_current_master_runs_pass": true
 }

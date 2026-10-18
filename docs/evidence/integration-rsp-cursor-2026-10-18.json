@@ -53,10 +53,18 @@
     "scope": "Progress/recovery pass; software retired cadence, not presentation FPS or complete fidelity."
   },
   "alttp_retained_interruption": "Captured frames1862/1878 and progressed to1999; PC transport logged OS access denied, host Invalid argument, no final interval. Not a native throughput PASS or proven renderer freeze.",
-  "current_recovery": "2026-10-18 fresh paired-menu response and coordinate8 install/readback verified.",
+  "current_recovery": {
+    "status": "VERIFIED",
+    "physical_powercycle_confirmed_by_user": true,
+    "menu_before_and_after": true,
+    "habitual_coordinate8_install_and_readback": true,
+    "installed_bytes": 131072,
+    "menu_recovery": 0,
+    "firmware_or_menu_changes": false,
+    "commercial_data_in_receipt": false
+  },
   "remaining": [
-    "Complete visual/audio title acceptance",
-    "Terminal capture recovery; power cycle requested"
+    "Complete visual/audio title acceptance"
   ],
   "private_assets": "All ROM/SAV/state/image/PCM/raw registers/captures/game-derived hashes remain local.",
   "merge": "9cb13d43710e5274ef68879b92f04355a6fec474",

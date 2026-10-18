@@ -27,7 +27,9 @@ Current checkpoint: eight clean PRs24/23/22/25/26/27/28/29 are integrated into
 master9cb13d43. Entire source tree equals measured48b01127. Four commercial
 quiet controls and a guarded independent no-USB SMW capture are complete; the
 cursor stall is repaired, while cadence/fidelity deficits stay explicit.
-The terminal capture still needs physical OFF/ON and verified final restoration.
-Then execute the complete resident-DSP integral cost discriminator. R61/R63 are
+Terminal OFF/ON and habitual-executable install/readback are now VERIFIED;
+paired menu responds recovery0. PR30 adds a complete-core reference corpus only;
+exact Ares remains pending before integration. Native integral cost is not measured.
+Execute the complete resident-DSP integral cost discriminator. R61/R63 are
 prerequisites/partial bridge, not that result. Keep the full objective ACTIVE;
 do not claim1.0, full fidelity or chip/corpus acceptance from this checkpoint.

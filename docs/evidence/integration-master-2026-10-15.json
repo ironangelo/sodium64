@@ -1,7 +1,7 @@
 {
   "scope": "Integration checkpoint, not Sodium64 1.0 acceptance",
   "original_master": "7cc8facfe8643fb85888f301f79995575830521d",
-  "current_master": "d876ea2972275557f0e3046e19a7ef9efad0a66a",
+  "current_master": "9cb13d43710e5274ef68879b92f04355a6fec474",
   "integrated": [
     {
       "pr": 24,
@@ -110,16 +110,62 @@
       "guarded_lease": "physical 0x448000..0x44d000",
       "native_diagnostic_integrity_pass": true,
       "gameplay_acceptance": false
+    },
+    {
+      "pr": 29,
+      "component": "RSP decoder live OBJ cursor/BG register repair",
+      "head": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+      "merge": "9cb13d43710e5274ef68879b92f04355a6fec474",
+      "successful_runs": [
+        39144010520,
+        39144010613,
+        39144010522,
+        39144010548,
+        39144010529
+      ],
+      "linked_cases": 9984,
+      "original_linked_ownership_failures": 9978,
+      "corrected_failures": 0,
+      "emitted_mutants_rejected": 4,
+      "vector_instruction_words_unchanged": 37,
+      "independent_native_frames_per_60VI": [
+        57,
+        58,
+        58,
+        60,
+        60
+      ],
+      "prior_independent_native_frames_per_60VI": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "native_quiet_controls": 4,
+      "full_title_fidelity_acceptance": false
     }
   ],
   "pending_ports": [
     {
-      "pr": 29,
-      "component": "RSP decoder live-register delay slot repair",
-      "head": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+      "component": "R19 pitch cache / R22 KOFF release / R47 BRR recurrence",
       "status": "CANDIDATE",
-      "remaining": "Broader commercial native controls and combined baseline/fidelity evidence",
-      "evidence": "integration-rsp-cursor-2026-10-18.json"
+      "gate": "Clean coherent source/cache/ADSR-KON port, emitted regression proof, new exact CI and matched full-rate native gates; separate from integrated GAIN/BRR fixes."
+    },
+    {
+      "component": "R44",
+      "status": "BLOCKED",
+      "gate": "Clean renderer dependency chain, resolved 0.106735% story residual and appropriate native Mode7 predecessor comparison."
+    },
+    {
+      "component": "R45",
+      "status": "BLOCKED",
+      "gate": "Resolve measured story -0.449566% / Mode7 -0.135081% costs while preserving repaired scissor and exact pixels/PCM."
+    },
+    {
+      "component": "Complete resident DSP",
+      "status": "BLOCKED full backend/cost; semantic prerequisites retained",
+      "gate": "Complete SPC pre-access/fetch/echo/cache/JIT bridge and a representative integral cost discriminator; no isolated-kernel promotion."
     }
   ],
   "apu_boot_repair": {
@@ -137,9 +183,11 @@
   },
   "native": {
     "evidence": "integration-native-controls-2026-10-15.json",
-    "status": "Four bounded HW_PROFILE controls complete. Their source equals8da020c3; subsequent PR26 changes only two initialized defaults and is separately qualified. Do not claim HW_PROFILE ROM identity to7c3.",
+    "status": "Four bounded commercial quiet controls and independent no-USB SMW measurement bind to the identical entire source tree of master9cb13d43.",
     "commercial_regression": "User authorizes available SMW/ALttP/DKC1 on SummerCart. Original Gate-B inputs unavailable; do not relabel commercial runs as the old Gate-B corpus.",
-    "fidelity_gate": "SMW renderer stall reproduced independently, exact terminal RSP IMEM matched source. PR29 fixes corrupting delay slot and passes bounded native progress/menu recovery; broad visual/audio acceptance remains open.",
-    "save_isolation": "Paired menu requires diagnostic_saves=1 and diagnostic_continuous=1. cart_load_emulator_path reserves separate paths and loads SRAM without automatic writeback; originals are not selected."
+    "fidelity_gate": "Aligned SMW PCM/head/registers preserved; images change285 pixels per endpoint. Full SNES visual/DAC/title acceptance remains open.",
+    "save_isolation": "Paired menu requires diagnostic_saves=1 and diagnostic_continuous=1. cart_load_emulator_path reserves separate paths and loads SRAM without automatic writeback; originals are not selected.",
+    "combined_evidence": "integration-combined-baseline-2026-10-18.json",
+    "terminal_recovery": "Independent capture saved; physical power cycle and final verified restoration pending."
   }
 }

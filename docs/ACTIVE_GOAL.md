@@ -23,10 +23,11 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint: seven clean PRs24/23/22/25/26/27/28 are integrated into
-master d876ea29. PR29 b2e6cb4a repairs the proven RSP decoder cursor corruption;
-all applicable exact-head CI and a bounded native SMW progress/recovery control
-pass. Broader native controls and combined visual/audio/profile evidence remain
-open; ALttP's first quiet interval was interrupted on the PC and is not a PASS.
-Finish these finite gates, integrate qualified work, then execute the integral
-resident-DSP cost proof. Details and retained negatives are in newest CONTINUITY.
+Current checkpoint: eight clean PRs24/23/22/25/26/27/28/29 are integrated into
+master9cb13d43. Entire source tree equals measured48b01127. Four commercial
+quiet controls and a guarded independent no-USB SMW capture are complete; the
+cursor stall is repaired, while cadence/fidelity deficits stay explicit.
+The terminal capture still needs physical OFF/ON and verified final restoration.
+Then execute the complete resident-DSP integral cost discriminator. R61/R63 are
+prerequisites/partial bridge, not that result. Keep the full objective ACTIVE;
+do not claim1.0, full fidelity or chip/corpus acceptance from this checkpoint.

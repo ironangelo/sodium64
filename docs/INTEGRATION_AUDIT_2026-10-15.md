@@ -1,13 +1,14 @@
 # Consolidation and integration audit - 2026-10-15
 
-Material update2026-10-18: PR24/23/22/25/26/27/28 are independently merged into
-master d876ea29. [Integration receipt](evidence/integration-master-2026-10-15.json),
+Material update2026-10-18: PR24/23/22/25/26/27/28/29 are independently merged into
+master9cb13d43. [Integration receipt](evidence/integration-master-2026-10-15.json),
 [scoped native controls](evidence/integration-native-controls-2026-10-15.json),
 [bridge qualification](evidence/integration-native-usb-2026-10-15.json) and
 [minimal renderer repair](evidence/integration-rsp-cursor-2026-10-18.json).
-PR29 passes exact-head CI and native SMW progress/recovery; broader combined
-fidelity remains open. Old profiler controls never qualify overwritten Mode7/
-DSP-1 banks. Retain original failures and PC interruptions as separate outcomes.
+PR29 is integrated after all five exact-head gates and independent native SMW
+measurement; four commercial controls pass. Broader fidelity remains open.
+Old profiler controls never qualify overwritten Mode7/DSP-1 banks. Retain
+original failures and PC interruptions as separate outcomes.
 
 Operational authority: the user's current consolidation/integration request.
 Earlier CONTINUITY entries are evidence/history, not a queue of live requests.
@@ -79,22 +80,24 @@ Diagnostic tools are identified separately from production runtime changes.
 | Pinned SDK CI repair,PR24 | VALIDATED and integrated infrastructure | Master104639bb contains the source-based SDK setup. Exact afc31351 Build38763990140, CGRAM38763990359 and Ares38763990499 pass. Compared with local reference toolchain: all executable instructions and loaded data identical except one unused empty TLS alignment metadata byte. No runtime source or performance claim. |
 | Existing PROFILE/HW_PROFILE static storage | REJECTED diagnostic layout | Old actual boot destroys1156 Mode7 code and395 data bytes inside the CGRAM clear. Ordinary M1 counts do not qualify these overwritten banks. |
 | PR28 profiler upper-owner repair,939aed0e | VALIDATED diagnostic integration, merged | Master d876ea29; normal bytes unchanged, all five exact CI gates pass. Linked27 owner cases/nine reader checks and native guarded capture qualify storage integrity; stalled SMW is not gameplay acceptance. |
-| Decoder cursor repair, PR29 b2e6cb4a | CANDIDATE; native progress/recovery passes | Explicit NOP in both JR t4 delay slots preserves live a3. Original9978 failures become0/9984; four mutants rejected, vectors unchanged, IMEM4KiB. Exact Build/Ares/CGRAM/USB CI pass. Native SMW1149 frames/20.009273s and autonomous menu/restore pass; broader combined no-USB profile and fidelity remain. |
+| Decoder cursor repair, PR29 48b01127 | VALIDATED targeted repair and integrated | Master9cb13d43. Linked9984 cases/zero failures, four mutants, unchanged37 vector words and4KiB banks. All five exact CI gates pass. Native independent SMW57/58/58/60/60 replaces five0/60 windows; four commercial progress/menu/readback controls pass. Aligned PCM/head/registers exact;285 image pixels change and full fidelity remains open. |
 
 ## Execution queue and stop conditions
 
-1. PR24/23/22/25/26/27/28 are merged into d876ea29 after applicable exact-head gates.
+1. PR24/23/22/25/26/27/28/29 are merged into9cb13d43 after applicable exact-head gates.
    Startup now selects21. Older HW_PROFILE controls bind to8da before the
    separately qualified two-byte full-rate default change.
-2. Four original native control captures pass, with exact measured/master ROM
-   identity. Expand combined image/audio/scene evidence using the user's available
-   commercial SMW/ALttP/DKC1 through the isolated paired-menu diagnostic route.
+2. Four historical original-guest controls retain their scoped measured-ROM
+   binding and owner limitations. Four new commercial controls plus an independent
+   no-USB SMW capture bind to the identical current master tree; complete visual/
+   audio acceptance remains separate from those completed cadence measurements.
    Exact historical Gothicvania/SRS-v5/Nova2 inputs are unavailable locally and
    their ROM handoff artifacts expired; this does not reopen the old boot-asset
    dependency in the119-case APU proof. Do not substitute corpus labels.
-3. Capture/return and profiler-owner tools are integrated as separate PR27/28.
-   Finish native combined controls for the minimal PR29 renderer repair, preserving
-   owner/ABI/layout/paired-menu recovery gates. Scene continuation remains a distinct scoped component; no generic
+3. PR27/28 tools and PR29 minimal runtime repair are integrated. Four commercial
+   controls and an independent no-USB SMW measurement bind to the identical
+   master tree. Finish terminal physical recovery and retain open fidelity gates.
+   Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
 4. Keep R44 blocked on coherent clean renderer dependencies, story residual and

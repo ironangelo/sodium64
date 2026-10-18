@@ -1,0 +1,115 @@
+{
+  "scope": "Combined integrated baseline, original-boot bounded workloads",
+  "master": "9cb13d43710e5274ef68879b92f04355a6fec474",
+  "measured_head": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+  "entire_tracked_source_tree_identical": true,
+  "source_tree": "721f20e63da45c82d7a41447f5c6727c886a5f51",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8
+  },
+  "quiet_controls": [
+    {
+      "case": "SMW",
+      "source": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+      "duration_seconds": 20.009272661333334,
+      "completed_frames": 1149,
+      "completed_frames_per_second": 57.42337662379755,
+      "VI": 1197,
+      "autonomous_menu_return": true,
+      "coordinate8_install_readback": true,
+      "zero_input": true
+    },
+    {
+      "case": "ALttP",
+      "source": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+      "duration_seconds": 20.025411690666665,
+      "completed_frames": 1198,
+      "completed_frames_per_second": 59.82398856540649,
+      "VI": 1198,
+      "autonomous_menu_return": true,
+      "coordinate8_install_readback": true,
+      "zero_input": true
+    },
+    {
+      "case": "DKC1",
+      "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+      "duration_seconds": 20.037234112,
+      "completed_frames": 1199,
+      "completed_frames_per_second": 59.83859814673408,
+      "VI": 1199,
+      "autonomous_menu_return": true,
+      "coordinate8_install_readback": true,
+      "zero_input": true
+    },
+    {
+      "case": "Super Mario Kart",
+      "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+      "duration_seconds": 20.030536832,
+      "completed_frames": 778,
+      "completed_frames_per_second": 38.840696408949846,
+      "VI": 1199,
+      "autonomous_menu_return": true,
+      "coordinate8_install_readback": true,
+      "zero_input": true
+    }
+  ],
+  "independent_SMW": {
+    "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+    "per_frame_USB_bridge": false,
+    "warmup_VI_seconds": 25,
+    "measured_VI_seconds": 5,
+    "frames_per_60_VI": [
+      57,
+      58,
+      58,
+      60,
+      60
+    ],
+    "decoded_samples": 3575,
+    "all_samples_valid": true,
+    "both_owner_guards_intact": true,
+    "sampled_subsystems": {
+      "APU JIT generated": 374,
+      "APU/SPC700 static": 682,
+      "DMA/HDMA": 297,
+      "DSP/audio": 858,
+      "PPU/events/frame prep": 355,
+      "RSP/VRAM semaphore wait": 77,
+      "S-CPU interpreter": 874,
+      "frame/VI wait": 55,
+      "input": 3
+    },
+    "scope": "Native completed cadence and CPU sampling; not presentation FPS, RSP spare capacity or complete fidelity."
+  },
+  "aligned_SMW_fidelity": [
+    {
+      "absolute_frame": 720,
+      "pixels": 67200,
+      "changed_pixels": 285,
+      "PCM_ring_bytes": 8192,
+      "PCM_head_equal": true,
+      "PCM_raw_equal": true,
+      "PCM_head_normalized_equal": true,
+      "DSP_registers_equal": true,
+      "enabled_equal": true
+    },
+    {
+      "absolute_frame": 736,
+      "pixels": 67200,
+      "changed_pixels": 285,
+      "PCM_ring_bytes": 8192,
+      "PCM_head_equal": true,
+      "PCM_raw_equal": true,
+      "PCM_head_normalized_equal": true,
+      "DSP_registers_equal": true,
+      "enabled_equal": true
+    }
+  ],
+  "fidelity_limit": "PCM preservation across this repair only; 285 changed pixels per endpoint have no complete primary SNES pixel oracle or human acceptance yet.",
+  "retained_negative": "First ALttP host access interruption remains failed/incomplete; successful v2 is separate.",
+  "terminal_recovery": "Physical power cycle and final menu/install/readback still pending after the independent capture.",
+  "full_DSP_integral_native_cost": "Not measured. R61 window/owner proofs do not implement the complete live SPC bridge or complete resident backend."
+}

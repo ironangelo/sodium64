@@ -1,3 +1,55 @@
+# 2026-10-18 - Eight clean PRs integrated; combined baseline measured on real N64
+
+Master9cb13d43710e5274ef68879b92f04355a6fec474 includes PR24/23/22/25/26/27/28/29.
+Five runtime corrections/default changes and three build/diagnostic components
+are separate and reviewed by their gates. PR21 stays draft/unmerged. The entire
+tracked tree of final master is identical to measured head48b01127 (tree721f20e6),
+verified with Git; this is not an inferred sum of independent branch results.
+[Integration receipt](evidence/integration-master-2026-10-15.json).
+
+PR29 adds one explicit NOP after decoder JR t4 in both RSP banks. It stops the
+next helper's move a3,t6 from corrupting the live OBJ cursor/BG state. Linked
+9984 cases pass versus9978 original ownership failures; four mutants fail,
+all37 vector instructions remain unchanged and each IMEM bank remains4KiB.
+Exact48b01127 Build39144010520/Ares39144010613/CGRAM39144010522/nativeUSB39144010548/
+profileOwners39144010529 all pass. Both old probe/source and failures are retained.
+
+Independent real-N64 SMW25+5VI-second profile, without per-frame USB:57/58/58/60/60
+completed frames per60VI,3575 valid samples and both guards intact. The same
+protocol before repair gave0/0/0/0/0 and3585/3585 samples in rsp_wait. Current
+DSP/audio is858/3575 samples(24.00%); static+generated SPC is1056/3575(29.54%),
+RSP/VRAM semaphore wait77/3575(2.15%). These are CPU sample shares, not causal
+speedups or a measure of spare RSP capacity.
+
+Combined APU21/fs0/audio4/precision8 quiet20s controls, original boot/zero input:
+SMW57.423377, ALttP59.823989, DKC159.838598, SuperMarioKart38.840696 completed
+frames/s. Each completed autonomous menu return and coordinate8 install/readback.
+They are retired software observations, not presentation FPS/full title or chip
+acceptance. No game-specific shortcut or reduced audio work is enabled.
+At SMW720/736 the8192-byte PCM rings/heads/all DSP registers are exact across
+the repair. Each image changes285 pixels; complete primary pixel/human visual
+acceptance is still absent. First interrupted ALttP run is preserved separately.
+[Combined measurement](evidence/integration-combined-baseline-2026-10-18.json).
+
+CURRENT HARDWARE: the last independent terminal profile is safely saved; console
+needs physical OFF/ON. The user was asked to confirm the menu. Do not run another
+COM3 controller until recovery, then restore/read back coordinate8 and verify
+paired-menu recovery0. No active deployer remains. This final recovery is PENDING,
+not assumed from earlier successful returns. Commercial raw assets remain local.
+
+Next real work: finish that recovery and resume the complete resident-DSP integral
+architectural cost discriminator on this measured baseline. R61 proves bounded
+state/event/echo semantics and owners; R63 is still a partial live bridge with
+rejected eager/lazy guard cost. Neither is a complete resident backend/cost result.
+The discriminator must include all8 voices, BRR/Gaussian/envelopes/PMON/noise/
+echo/FIR, SPC-visible RAM/register/fetch barriers, cache/JIT publication, preparation/
+DMA/synchronization and renderer coexistence/restoration. No more isolated kernels.
+R44/R45 stay BLOCKED on their exact recorded dependency/residual/regression gates.
+Full fidelity/corpus/DSP-1/SuperFX/SA-1 and1.0 acceptance remain open. The overall
+goal is ACTIVE; this checkpoint records actual integration and measured deficits.
+
+---
+
 # 2026-10-18 - Seven clean PRs integrated; minimal renderer repair passes native SMW
 
 Master d876ea29 now includes separate PR24/23/22/25/26/27/28. PR21 remains draft

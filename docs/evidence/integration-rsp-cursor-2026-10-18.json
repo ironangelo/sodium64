@@ -1,7 +1,7 @@
 {
-  "status": "CANDIDATE",
+  "status": "VALIDATED targeted correction and integrated",
   "pr": 29,
-  "head": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+  "head": "48b011278acdb72cf1e73536fb5baec55415b5d7",
   "change": "Explicit NOP after decoder JR t4 in both renderer banks; preserve live a3 OBJ cursor/BG state.",
   "linked_cases": 9984,
   "original_linked_ownership_failures": 9978,
@@ -11,10 +11,11 @@
   "imem_bytes_per_bank": 4096,
   "local_model_scope": "Scalar flow, row count and live GPR ownership; no vector arithmetic, pixel or timing claim.",
   "successful_runs": [
-    38812988249,
-    38812988222,
-    38812988525,
-    38812988331
+    39144010520,
+    39144010613,
+    39144010522,
+    39144010548,
+    39144010529
   ],
   "native_original_failure": {
     "independent_no_usb": true,
@@ -54,9 +55,107 @@
   "alttp_retained_interruption": "Captured frames1862/1878 and progressed to1999; PC transport logged OS access denied, host Invalid argument, no final interval. Not a native throughput PASS or proven renderer freeze.",
   "current_recovery": "2026-10-18 fresh paired-menu response and coordinate8 install/readback verified.",
   "remaining": [
-    "Broader native controls",
-    "Independent combined no-USB profile",
-    "Visual/audio acceptance"
+    "Complete visual/audio title acceptance",
+    "Terminal capture recovery; power cycle requested"
   ],
-  "private_assets": "All ROM/SAV/state/image/PCM/raw registers/captures/game-derived hashes remain local."
+  "private_assets": "All ROM/SAV/state/image/PCM/raw registers/captures/game-derived hashes remain local.",
+  "merge": "9cb13d43710e5274ef68879b92f04355a6fec474",
+  "independent_native_capture": {
+    "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+    "per_frame_USB_bridge": false,
+    "warmup_VI_seconds": 25,
+    "measured_VI_seconds": 5,
+    "frames_per_60_VI": [
+      57,
+      58,
+      58,
+      60,
+      60
+    ],
+    "decoded_samples": 3575,
+    "all_samples_valid": true,
+    "both_owner_guards_intact": true,
+    "sampled_subsystems": {
+      "APU JIT generated": 374,
+      "APU/SPC700 static": 682,
+      "DMA/HDMA": 297,
+      "DSP/audio": 858,
+      "PPU/events/frame prep": 355,
+      "RSP/VRAM semaphore wait": 77,
+      "S-CPU interpreter": 874,
+      "frame/VI wait": 55,
+      "input": 3
+    },
+    "scope": "Native completed cadence and CPU sampling; not presentation FPS, RSP spare capacity or complete fidelity."
+  },
+  "quiet_controls": [
+    {
+      "case": "SMW",
+      "source": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+      "duration_seconds": 20.009272661333334,
+      "completed_frames": 1149,
+      "completed_frames_per_second": 57.42337662379755,
+      "VI": 1197,
+      "autonomous_menu_return": true,
+      "coordinate8_install_readback": true,
+      "zero_input": true
+    },
+    {
+      "case": "ALttP",
+      "source": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+      "duration_seconds": 20.025411690666665,
+      "completed_frames": 1198,
+      "completed_frames_per_second": 59.82398856540649,
+      "VI": 1198,
+      "autonomous_menu_return": true,
+      "coordinate8_install_readback": true,
+      "zero_input": true
+    },
+    {
+      "case": "DKC1",
+      "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+      "duration_seconds": 20.037234112,
+      "completed_frames": 1199,
+      "completed_frames_per_second": 59.83859814673408,
+      "VI": 1199,
+      "autonomous_menu_return": true,
+      "coordinate8_install_readback": true,
+      "zero_input": true
+    },
+    {
+      "case": "Super Mario Kart",
+      "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+      "duration_seconds": 20.030536832,
+      "completed_frames": 778,
+      "completed_frames_per_second": 38.840696408949846,
+      "VI": 1199,
+      "autonomous_menu_return": true,
+      "coordinate8_install_readback": true,
+      "zero_input": true
+    }
+  ],
+  "aligned_audio_preservation": [
+    {
+      "absolute_frame": 720,
+      "pixels": 67200,
+      "changed_pixels": 285,
+      "PCM_ring_bytes": 8192,
+      "PCM_head_equal": true,
+      "PCM_raw_equal": true,
+      "PCM_head_normalized_equal": true,
+      "DSP_registers_equal": true,
+      "enabled_equal": true
+    },
+    {
+      "absolute_frame": 736,
+      "pixels": 67200,
+      "changed_pixels": 285,
+      "PCM_ring_bytes": 8192,
+      "PCM_head_equal": true,
+      "PCM_raw_equal": true,
+      "PCM_head_normalized_equal": true,
+      "DSP_registers_equal": true,
+      "enabled_equal": true
+    }
+  ]
 }

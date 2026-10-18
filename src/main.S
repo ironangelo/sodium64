@@ -59,6 +59,24 @@ exception_vector:
 main:
     // Disable interrupts and do the magic hardware init
     mtc0 zero, $12 // Status
+#ifdef SODIUM64_PROFILE
+    // Modern IPL3 boot-info is still in DMEM here. Profiling needs its own
+    // upper lease; reject unknown/base4MiB before touching that lease or VI.
+    lui t0, 0xA400
+    lw t1, (t0)
+    li t2, 0x800000
+    beq t1, t2, profile_boot_ram_admitted
+    nop
+.globl profile_boot_ram_rejected
+profile_boot_ram_rejected:
+    b profile_boot_ram_rejected
+    nop
+profile_boot_ram_admitted:
+    jal profile_boot_prepare
+    nop
+.globl profile_upper_initialized
+profile_upper_initialized:
+#endif
 #ifdef SODIUM64_REMOTE
     // The paired modern IPL3 leaves TV type in DMEM boot-info byte9.
     // Preserve it before replacing DMEM with the renderer's RSP data.

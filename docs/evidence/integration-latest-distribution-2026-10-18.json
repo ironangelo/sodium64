@@ -1,0 +1,22 @@
+{
+  "tag": "release",
+  "master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+  "files": [
+    "sodium64.z64",
+    "rom-converter.py"
+  ],
+  "exact_normal_CI_payload_match": {
+    "sodium64.z64": true,
+    "rom-converter.py": true
+  },
+  "normal_CI_artifact": 12144741754,
+  "normal_CI_run": 39149924938,
+  "debugging_symbols_in_release_ELF": [],
+  "ROM_title": "sodium64",
+  "ROM_bytes": 98304,
+  "zip_bytes": 44353,
+  "zip_sha256": "c0baf3fe2d60e7be21176e67991d58b523e98cf2537dc44bc78428d81fa72300",
+  "scope": "Published original emulator code only. No USB build, modified menu or image-test tools in the archive.",
+  "latest_api_verified": true,
+  "release_url": "https://github.com/ironangelo/sodium64/releases/tag/release"
+}

@@ -1,3 +1,44 @@
+# 2026-10-18 - Faithful renderer port active; Latest distribution verified
+
+User clarification: the habitual restored R17/coordinate8 includes the A11/A13
+visual compositor for ALttP dark-house and rain/layer scenes. Current master
+9915df5e does NOT yet include that complete compositor. R44/R45 are later cost
+optimizations, not the original visual repairs. Do not conflate these states.
+
+Active clean integration port: local branch integrate/faithful-compositor,
+worktree C:/Users/irona/Documents/Codex/2026-10-15/quiero-corregir-la-direcci-n-operativa/work/sodium64-renderer-clean.
+Changes are UNCOMMITTED and not yet a PR. FAITHFUL_RENDERER1 selects the frozen
+R17 renderer subset from238170ab; default0 preserves measured normal loaded bytes.
+APU/CPU-interpreter/DSP implementations are retained; ROM cache paging changes
+are required by the original194-slot lower-memory surface plan and still need
+their full publication/compatibility gate. No R44/R45 or old diagnostic core is
+copied. Both current decoder ownership repairs remain.
+
+Normal/PROFILE/HW25/USB enabled builds pass. Ten slot banks and all resident
+DMEM bytes equal a fresh frozen-source compile; resident instruction relocation
+is separately qualified by9984 scalar owner cases/four mutants. New boot/ISR/
+snapshot proof67 cases checks all24 embedded sections after actual clear;
+legacy27 cases still pass. Full lower owner plans40/41 plus guarded upper
+leases are disjoint, with three owner faults rejected; USB ABI46 cases/four
+mutants,65536-entry APU reset,2048+2048 GAIN and57344 BRR cases pass.
+These are local emitted/static/semantic scopes, NOT new native acceptance.
+First old-bound USB/HW links failed; actual new Q1D2000 owner and its linker
+binding replace the mismatched BE200 guard. No bound is bypassed. Next finish
+reviewable source/proof checkpoint and explicit enabled CI, then producer/
+consumer and native house/rain/SMW/DKC/Mode7 gates before promotion. Resume full
+resident-DSP integral cost after this faithful combined baseline is qualified.
+No COM3 access or new physical claim in this port batch.
+
+The user approved production/laboratory build separation as the desired policy.
+Menu modification remains an external laboratory dependency. Current Latest at
+9915df5e was downloaded and checked against exact normal-CI artifact12144741754:
+only sodium64.z64 and rom-converter.py, both byte-identical. The normal ELF has
+no remote/profile/HW-profile symbols. This verifies the current distribution;
+mandatory future release-isolation CI is still pending, not assumed implemented.
+[Published archive receipt](evidence/integration-latest-distribution-2026-10-18.json).
+
+---
+
 # 2026-10-18 - Nine clean PRs integrated; native baseline and final restoration verified
 
 Master 9915df5e833e31747a106eeff3b7aeb0c1876b0c adds PR30 to the eight integrated PRs24/23/22/25/26/27/28/29.

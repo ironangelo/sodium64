@@ -1,0 +1,32 @@
+{
+  "linked_symbols": 1230,
+  "allocated_bytes": 767064,
+  "laboratory_symbols": [],
+  "allocated_diagnostic_leases": [],
+  "archive_members": [
+    "sodium64.z64",
+    "rom-converter.py"
+  ],
+  "sha256": {
+    "sodium64.z64": "a75991c9438e540587396512704a65c0e6ecb0dbd86c2f212d39c7252602d8b9",
+    "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+  },
+  "elf_sha256": "0029a7bfa59e48d77e5339f3d53be35a554dda3fb5dc5ce5ea9f7e275b625ef1",
+  "status": "PASS",
+  "candidate_head": "7ee13d15232d06f5cbfdb503c3753121ae17f2e0",
+  "PR": 31,
+  "PR_url": "https://github.com/ironangelo/sodium64/pull/31",
+  "PR_status": "DRAFT; exact-head CI pending",
+  "current_master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+  "local_validation": {
+    "normal_linked_builds": 1,
+    "actual_laboratory_builds_rejected": 3,
+    "linked_owner_symbol_mutants": 3,
+    "package_cases": 8,
+    "ROM_symbol_mutants": 3,
+    "workflow_YAML_and_dependencies": "PASS"
+  },
+  "runtime_source_changes": false,
+  "new_hardware_run": false,
+  "scope": "Distribution isolation only; currently published Latest already contains the two normal payloads."
+}

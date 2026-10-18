@@ -1,3 +1,66 @@
+# 2026-10-18 - Faithful compositor extracted into reviewable draft PR32
+
+PR32 https://github.com/ironangelo/sodium64/pull/32 is now DRAFT at
+f1ac663daed7cf49b485fab25e352fdfacb60b34 on integrate/faithful-compositor.
+This supersedes the uncommitted-port state below. It is the selected R17 visual
+path from238170ab, not R44/R45 and not the complete experimental PR21. Default
+production remains unchanged during qualification. All intended sources,
+portable linked proofs, explicit enabled CI and original-program receipt are
+committed; build outputs and private commercial material are excluded.
+
+All twelve linked RSP banks equal frozen source plus the two decoder NOPs.
+New emitted CPU publication checks16 register cases,12 writes each, all uncached
+fallback descriptors and sixteen emitted fault rejections across four builds.
+The194-page cursor passes3104 cases/sixteen emitted faults;67 owner/boot cases,
+legacy27, decoder9984, USB46 and integrated APU/GAIN/BRR scopes remain intact.
+Final disabled rebuild equals all767064 measured integrated loaded bytes and
+addresses. These are local contracts, not native/fidelity acceptance.
+[Scoped receipt](evidence/integration-faithful-compositor-2026-10-18.json).
+
+Promotion remains blocked on compiled PPU producer/consumer, palette/window/math
+and delayed-DMA contracts, full PI/TLB replacement qualification, enabled
+exact-head CI, then aligned native house/rain/SMW/DKC/Mode7 image and integrated
+APU/PCM controls with combined cadence and verified restoration. No new hardware
+run or performance claim. Next close those gates on this bounded source before
+default promotion; afterward resume complete resident-DSP integral cost.
+
+PR31 production/laboratory isolation has passed exact-head Build39153477144
+(including release-isolation and actual profiling rejection), USB39153477210
+and Owners39153477351. Ares39153477564 remains in progress at its workload
+matrix. Keep PR31 draft/unmerged until that applicable gate finishes. Current
+Latest remains master9915df5e and already excludes laboratory executables.
+
+---
+
+# 2026-10-18 - Production release isolation prepared as separate PR31
+
+The user approved keeping USB remote reset, frame/PCM capture and profiler
+builds separate from production. Current Latest at master9915df5e was freshly
+checked: only sodium64.z64 and rom-converter.py, exact normal CI payloads;
+no laboratory symbols or allocated diagnostic leases. Source may retain the
+opt-in tools without linking them into the downloaded emulator.
+
+PR31 https://github.com/ironangelo/sodium64/pull/31 is DRAFT at
+7ee13d15232d06f5cbfdb503c3753121ae17f2e0; exact-head CI is running.
+It adds host/CI checks and documentation only. The normal artifact is admitted,
+actual USB/PROFILE/HW_PROFILE images are rejected, three linked owner/symbol
+mutants and eight package cases plus three ROM-text mutants pass. ZIP creation
+uses the two exact normal payloads, checked before replacing the prior release.
+The negative checks are a required job independent of emulator smoke. No source
+runtime/Makefile edits, new hardware action or emulator-space cost. Do not call
+the future mandatory gate integrated before CI/review/merge.
+[Receipt](evidence/integration-release-isolation-2026-10-18.json).
+
+The faithful R17 compositor port remains active and UNCOMMITTED in the separate
+worktree below. Its latest local proof now compares every allocated byte of
+all twelve RSP banks to the frozen reference plus decoder NOPs. Prepare that
+bounded PR next; CPU producer/consumer, delayed-DMA and native visual/cadence
+gates remain open. Do not promote it on reference-byte equivalence alone.
+Resume the complete resident-DSP integral cost gate after the faithful combined
+baseline is qualified. Hardware remains restored; no COM3 action in this batch.
+
+---
+
 # 2026-10-18 - Faithful renderer port active; Latest distribution verified
 
 User clarification: the habitual restored R17/coordinate8 includes the A11/A13

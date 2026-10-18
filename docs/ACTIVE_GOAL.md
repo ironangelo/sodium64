@@ -36,3 +36,13 @@ and the complete backend/live SPC bridge are BLOCKED for promotion. PR30
 provides original reproducible full-core inputs/results, not that missing cost
 proof. Continue through the named complete-execution/ordering/publication gate;
 do not build more isolated kernels or claim1.0/full fidelity/chip acceptance.
+
+Current user steering2026-10-18: first port the habitual R17 faithful compositor
+(A11/A13 dark-house/rain path) to integrated master, separately from R44/R45.
+Draft PR32 atf1ac663d has linked/reference/owner/CPU publication proofs;
+new full producer/consumer/CI/native gates remain open. Qualify it before default promotion and
+measure that combined baseline; then resume the full resident-DSP cost above.
+PR31 adds the user-approved production/laboratory distribution boundary and is
+DRAFT pending CI. Current Latest is already normal-only; no modified menu or
+USB/reset/image tools are distributed. Keep this tooling gate independent of
+renderer/runtime qualification. The full objective remains ACTIVE.

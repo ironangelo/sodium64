@@ -1,0 +1,62 @@
+{
+  "status": "CANDIDATE",
+  "pr": 29,
+  "head": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+  "change": "Explicit NOP after decoder JR t4 in both renderer banks; preserve live a3 OBJ cursor/BG state.",
+  "linked_cases": 9984,
+  "original_linked_ownership_failures": 9978,
+  "corrected_ownership_failures": 0,
+  "emitted_mutants_rejected": 4,
+  "vector_instruction_words_identical_to_original": true,
+  "imem_bytes_per_bank": 4096,
+  "local_model_scope": "Scalar flow, row count and live GPR ownership; no vector arithmetic, pixel or timing claim.",
+  "successful_runs": [
+    38812988249,
+    38812988222,
+    38812988525,
+    38812988331
+  ],
+  "native_original_failure": {
+    "independent_no_usb": true,
+    "frames_per_60_VI": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "cpu_samples_in_rsp_wait": 3585,
+    "total_samples": 3585,
+    "guards_intact": true,
+    "terminal_HALT_verified": true,
+    "complete_IMEM_matches": "rsp_main",
+    "stopped_source_PC": "shared_decode4+0x44",
+    "SP_DMA_busy": 0,
+    "SP_DMA_full": 0
+  },
+  "native_corrected_smw": {
+    "source": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8,
+    "absolute_checkpoints": [
+      720,
+      736
+    ],
+    "quiet_seconds": 20.009272661333334,
+    "completed_frames": 1149,
+    "completed_frames_per_second": 57.42337662379755,
+    "autonomous_menu_return": true,
+    "restoration_verified": true,
+    "scope": "Progress/recovery pass; software retired cadence, not presentation FPS or complete fidelity."
+  },
+  "alttp_retained_interruption": "Captured frames1862/1878 and progressed to1999; PC transport logged OS access denied, host Invalid argument, no final interval. Not a native throughput PASS or proven renderer freeze.",
+  "current_recovery": "2026-10-18 fresh paired-menu response and coordinate8 install/readback verified.",
+  "remaining": [
+    "Broader native controls",
+    "Independent combined no-USB profile",
+    "Visual/audio acceptance"
+  ],
+  "private_assets": "All ROM/SAV/state/image/PCM/raw registers/captures/game-derived hashes remain local."
+}

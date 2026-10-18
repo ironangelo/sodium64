@@ -152,5 +152,6 @@
     "install_readback_verified": true,
     "responsive_menu": true,
     "recovery_flag": 0
-  }
+  },
+  "subsequent_owner_limitation": "Old HW_PROFILE static data crossed the fixed CGRAM clear. Ordinary-main-RSP controls retain their scoped counts; Mode7 and DSP-1 banks were not preserved, so these captures cannot qualify those paths or general fidelity. PR28 repairs the ownership defect."
 }

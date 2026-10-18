@@ -1,3 +1,43 @@
+# 2026-10-18 - Seven clean PRs integrated; minimal renderer repair passes native SMW
+
+Master d876ea29 now includes separate PR24/23/22/25/26/27/28. PR21 remains draft
+and unmerged. PR27 exact99008adf passes all four applicable CI gates and a real
+N64 mixed8 pause/step/frame/PCM/resume/quiet20s/menu/readback cycle. It changes
+no ordinary loaded bytes or RSP banks. PR28 exact939aed0e passes all five CI
+gates and isolates profiler storage from the CGRAM boot clear. Its guarded
+native capture is sound; it does not make stalled SMW a gameplay PASS.
+[Updated integration receipt](evidence/integration-master-2026-10-15.json).
+
+The retained independent SMW failure is now localized: after verified terminal
+HALT, all4096 IMEM bytes match rsp_main, PC is shared_decode4+0x44, DMA is idle.
+Decoder JR t4 was borrowing the next function's move a3,t6 as its delay slot,
+overwriting the live OBJ-list cursor/BG state on seven of each tile's eight rows.
+PR29 b2e6cb4a adds one explicit NOP to each bank. All37 vector words are unchanged;
+both banks remain4KiB. Linked scalar regression passes9984 cases; actual original
+binaries fail9978, and four emitted ownership mutants are rejected. Build/Ares/
+CGRAM/native-USB CI all pass on exact head. Vector math is outside this test.
+
+Real N64 corrected SMW, original boot APU21/fs0/audio4/precision8: aligned720/736
+frame/PCM captures, then1149 completed frames in20.009273s (57.423377 completed
+frames/s), autonomous menu return and coordinate8 install/readback all pass.
+This removes the observed progress blocker; it does not prove60Hz presentation,
+DAC fidelity or disappearance of every visual glitch. Human visual response is
+still absent. ALttP captured1862/1878 and progressed to1999, then the PC transport
+logged OS access denied/Invalid argument. No completed cadence interval exists;
+retain it as interrupted, not a speed PASS or a proven renderer freeze.
+On2026-10-18 a fresh session found the paired menu healthy and restored/read back
+coordinate8. No pending COM3 worker. [Renderer receipt](evidence/integration-rsp-cursor-2026-10-18.json).
+
+Next finish the bounded broader native controls and independent combined
+profile, then integrate the qualified minimal repair. R44/R45 remain blocked by
+their documented renderer dependency/fidelity/regression gates. Full resident
+DSP still needs the representative integral architectural-cost proof, including
+all CPU/RSP boundary/cache/echo/renderer coexistence costs. No isolated kernels,
+historical questions or speculative FPU/Expansion Pak campaign are reopened.
+All commercial assets and raw derived evidence remain private.
+
+---
+
 # 2026-10-15 - Native SMW renderer stall isolated; profiler owner repair prepared
 
 Five clean PRs24/23/22/25/26 remain integrated in master7c3a7634. All applicable

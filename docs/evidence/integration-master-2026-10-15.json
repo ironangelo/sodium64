@@ -1,7 +1,7 @@
 {
   "scope": "Integration checkpoint, not Sodium64 1.0 acceptance",
   "original_master": "7cc8facfe8643fb85888f301f79995575830521d",
-  "current_master": "7c3a7634010e079d0a2cd32e21320e412299e4e9",
+  "current_master": "d876ea2972275557f0e3046e19a7ef9efad0a66a",
   "integrated": [
     {
       "pr": 24,
@@ -77,16 +77,49 @@
       ],
       "changed_initialized_bytes": 2,
       "all_other_loaded_bytes_instructions_extents_unchanged": true
+    },
+    {
+      "pr": 27,
+      "component": "Optional native USB bench; diagnostic only",
+      "head": "99008adfab56df181f127de2f0fe54d3342c4a69",
+      "merge": "b40d47cad958a04364ecaac12b3549a20b2e17a4",
+      "successful_runs": [
+        38808214726,
+        38808214679,
+        38808214656,
+        38808214578
+      ],
+      "ordinary_loaded_image_and_rsp_banks_unchanged": true,
+      "native_original_guest_quiet_seconds": 20.0224677973,
+      "native_original_guest_completed_renders": 1198,
+      "autonomous_menu_return_and_restoration_verified": true
+    },
+    {
+      "pr": 28,
+      "component": "Profiling memory owner repair; diagnostic only",
+      "head": "939aed0e28d923279828d11bca319ff9e1d98023",
+      "merge": "d876ea2972275557f0e3046e19a7ef9efad0a66a",
+      "successful_runs": [
+        38811685915,
+        38811685892,
+        38811685968,
+        38811685896,
+        38811685898
+      ],
+      "normal_loaded_image_unchanged": true,
+      "guarded_lease": "physical 0x448000..0x44d000",
+      "native_diagnostic_integrity_pass": true,
+      "gameplay_acceptance": false
     }
   ],
   "pending_ports": [
     {
-      "pr": 27,
-      "component": "Optional native USB retired-frame bench, diagnostic only",
-      "head": "889b7c015c0c23c5b402e0f6d57e60bc5ce8fe14",
-      "remaining": "Exact-head CI and representative commercial comparison; original-guest physical preflight passed",
-      "ordinary_loaded_image_unchanged": true,
-      "rsp_images_unchanged": true
+      "pr": 29,
+      "component": "RSP decoder live-register delay slot repair",
+      "head": "b2e6cb4aae779b137b1e96059383d943830df9e9",
+      "status": "CANDIDATE",
+      "remaining": "Broader commercial native controls and combined baseline/fidelity evidence",
+      "evidence": "integration-rsp-cursor-2026-10-18.json"
     }
   ],
   "apu_boot_repair": {
@@ -106,7 +139,7 @@
     "evidence": "integration-native-controls-2026-10-15.json",
     "status": "Four bounded HW_PROFILE controls complete. Their source equals8da020c3; subsequent PR26 changes only two initialized defaults and is separately qualified. Do not claim HW_PROFILE ROM identity to7c3.",
     "commercial_regression": "User authorizes available SMW/ALttP/DKC1 on SummerCart. Original Gate-B inputs unavailable; do not relabel commercial runs as the old Gate-B corpus.",
-    "fidelity_gate": "Optional clean-master bridge passes real-N64 pause/step/image/PCM/resume/autonomous-return/install-readback. Matched private SMW/ALttP/DKC1 comparisons now running.",
+    "fidelity_gate": "SMW renderer stall reproduced independently, exact terminal RSP IMEM matched source. PR29 fixes corrupting delay slot and passes bounded native progress/menu recovery; broad visual/audio acceptance remains open.",
     "save_isolation": "Paired menu requires diagnostic_saves=1 and diagnostic_continuous=1. cart_load_emulator_path reserves separate paths and loads SRAM without automatic writeback; originals are not selected."
   }
 }

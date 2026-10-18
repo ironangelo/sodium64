@@ -23,8 +23,10 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint: five clean PRs are integrated into7c3a7634. Optional PR27
-passes original-fixture capture/step/resume/autonomous-return/readback, but the
-first commercial SMW quiet window lost USB response. Keep it unmerged and test
-the same original-master reference after physical recovery before attributing
-the failure. Details and retained outcomes are in newest CONTINUITY.
+Current checkpoint: seven clean PRs24/23/22/25/26/27/28 are integrated into
+master d876ea29. PR29 b2e6cb4a repairs the proven RSP decoder cursor corruption;
+all applicable exact-head CI and a bounded native SMW progress/recovery control
+pass. Broader native controls and combined visual/audio/profile evidence remain
+open; ALttP's first quiet interval was interrupted on the PC and is not a PASS.
+Finish these finite gates, integrate qualified work, then execute the integral
+resident-DSP cost proof. Details and retained negatives are in newest CONTINUITY.

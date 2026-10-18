@@ -1,3 +1,46 @@
+# 2026-10-18 - Nine clean PRs integrated; native baseline and final restoration verified
+
+Master 9915df5e833e31747a106eeff3b7aeb0c1876b0c adds PR30 to the eight integrated PRs24/23/22/25/26/27/28/29.
+Five changes repair runtime/default behavior; four are build or diagnostic tools.
+PR21 remains draft and unmerged. [Integration receipt](evidence/integration-master-2026-10-15.json).
+
+PR30 head31ba6429 passes all five applicable exact-head CI gates. Its four
+original complete-DSP fixtures compare state,64KiB RAM and PCM at every clock,
+then replay from serialized seeds.65544 comparisons/65536 clocks, canonical
+Windows/Linux bytes,32 malformed files, five semantic trace mutants and five
+actual omitted-core mutants pass their stated gates.32/2048-frame bounds pass.
+No runtime source is changed. Every allocated byte/address of normal, USB and
+HW_PROFILE-warmup25 builds equals the frozen measured48b01127 images. Current
+master has the identical entire tree of31ba6429; its tree differs from48/9cb
+because of the new host files. [Corpus/binding receipt](evidence/integration-dsp-architecture-reference-2026-10-18.json).
+
+The combined real-N64 APU21/fs0 baseline remains SMW57.423377, ALttP59.823989,
+DKC159.838598 and Kart38.840696 completed frames/s in bounded20s quiet controls.
+Independent no-USB SMW gives57/58/58/60/60 per60VI,3575 valid samples and intact
+guards, replacing the original five zero-progress windows. Four controls
+returned autonomously. The final terminal capture was recovered by user OFF/ON;
+habitual coordinate8 installation/readback and paired-menu recovery0 were then
+verified. No active deployer, menu/firmware change or pending physical recovery.
+
+At aligned SMW endpoints, PCM/head/registers remain exact;285 pixels change per
+image and full visual/DAC acceptance is open. Do not claim all user-observed
+glitches resolved. Preserve all failed/interrupted runs and private raw evidence.
+[Combined baseline](evidence/integration-combined-baseline-2026-10-18.json).
+
+Complete resident DSP is BLOCKED for integration: there is no complete resident
+backend or256-opcode live pre-access/fetch/echo/cache/JIT bridge. Native integral
+cost is NOT_MEASURED. PR30 closes the reproducible reference-input gate only;
+R61/R63 retain their bounded prerequisites. The next actual implementation gate
+is complete execution of the same producer inputs with exact state/RAM/PCM,
+including publication/barriers, preparation/DMA/sync, renderer coexistence and
+restoration. Do not substitute a transport-only floor or isolated kernel timing.
+R44/R45 retain their named dependency/residual/regression gates; R19/R22/R47
+remain finite clean-port candidates. Full cadence/fidelity/corpus/chip/1.0
+acceptance and the full objective remain open. This is an integration/evidence
+checkpoint, not a complete-DSP performance or1.0 success claim.
+
+---
+
 # 2026-10-18 - Eight clean PRs integrated; combined baseline measured on real N64
 
 Master9cb13d43710e5274ef68879b92f04355a6fec474 includes PR24/23/22/25/26/27/28/29.

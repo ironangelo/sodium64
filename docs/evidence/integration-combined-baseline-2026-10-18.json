@@ -128,5 +128,32 @@
     "USB_loaded_bytes_identical": true,
     "complete_tree_of_merged_measured_head_equals_master": true,
     "note": "Earlier USB trials bind through rebuilt loaded-image equality; their historical source trees are not claimed identical to current master."
-  }
+  },
+  "latest_master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+  "post_fixture_tool_binding": {
+    "fixture_head": "31ba642909cf85026e43e8d8c9f6fff35afd10aa",
+    "measured_head": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+    "runtime_source_changes": false,
+    "host_fixture_files_changed": 17,
+    "full_source_trees_identical": false,
+    "scope": "Every allocated CPU/RSP instruction/data/BSS byte and address; no native rerun inferred.",
+    "modes": {
+      "normal": {
+        "loaded_image_identical": true,
+        "allocated_bytes": 767064
+      },
+      "USB": {
+        "loaded_image_identical": true,
+        "allocated_bytes": 777668
+      },
+      "HW_profile_warmup25": {
+        "loaded_image_identical": true,
+        "allocated_bytes": 768892
+      }
+    },
+    "master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+    "master_tree_identical_to_fixture_head": true,
+    "master_tree": "ce2931bac2b9406bb287784c0caa0e367f3bab98"
+  },
+  "source_scope": "master field identifies the measured runtime checkpoint; latest_master adds host tooling only. Entire tree equality applies to 48b01127/9cb13d43, not to latest_master. Rebuilt loaded images bind the latter."
 }

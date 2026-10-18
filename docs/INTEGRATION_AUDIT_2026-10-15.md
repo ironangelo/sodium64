@@ -1,7 +1,7 @@
 # Consolidation and integration audit - 2026-10-15
 
-Material update2026-10-18: PR24/23/22/25/26/27/28/29 are independently merged into
-master9cb13d43. [Integration receipt](evidence/integration-master-2026-10-15.json),
+Material update2026-10-18: nine separate PRs24/23/22/25/26/27/28/29/30 are merged
+into master9915df5e. PR30 is a host reference prerequisite only; loaded runtime images match measured48b01127. [Integration receipt](evidence/integration-master-2026-10-15.json),
 [scoped native controls](evidence/integration-native-controls-2026-10-15.json),
 [bridge qualification](evidence/integration-native-usb-2026-10-15.json) and
 [minimal renderer repair](evidence/integration-rsp-cursor-2026-10-18.json).
@@ -81,11 +81,12 @@ Diagnostic tools are identified separately from production runtime changes.
 | Existing PROFILE/HW_PROFILE static storage | REJECTED diagnostic layout | Old actual boot destroys1156 Mode7 code and395 data bytes inside the CGRAM clear. Ordinary M1 counts do not qualify these overwritten banks. |
 | PR28 profiler upper-owner repair,939aed0e | VALIDATED diagnostic integration, merged | Master d876ea29; normal bytes unchanged, all five exact CI gates pass. Linked27 owner cases/nine reader checks and native guarded capture qualify storage integrity; stalled SMW is not gameplay acceptance. |
 | Decoder cursor repair, PR29 48b01127 | VALIDATED targeted repair and integrated | Master9cb13d43. Linked9984 cases/zero failures, four mutants, unchanged37 vector words and4KiB banks. All five exact CI gates pass. Native independent SMW57/58/58/60/60 replaces five0/60 windows; four commercial progress/menu/readback controls pass. Aligned PCM/head/registers exact;285 image pixels change and full fidelity remains open. |
-| Complete-DSP reference corpus, PR30 31ba6429 | VALIDATED host prerequisite; integration pending exact Ares | Four regenerable original full-core fixtures, full-state/RAM/PCM replay and mutation controls pass locally and in Linux CI. No runtime linkage, live SPC bridge, complete resident backend or native cost result. |
+| Complete-DSP reference corpus, PR30 31ba6429 | VALIDATED host prerequisite and integrated | Four regenerable original full-core fixtures, full-state/RAM/PCM replay and mutation controls pass locally and in Linux CI. No runtime linkage, live SPC bridge, complete resident backend or native cost result. |
 
 ## Execution queue and stop conditions
 
-1. PR24/23/22/25/26/27/28/29 are merged into9cb13d43 after applicable exact-head gates.
+1. PR24/23/22/25/26/27/28/29/30 are merged into9915df5e after applicable exact-head gates.
+   PR30 changes only host tooling; normal/USB/HW loaded images remain identical.
    Startup now selects21. Older HW_PROFILE controls bind to8da before the
    separately qualified two-byte full-rate default change.
 2. Four historical original-guest controls retain their scoped measured-ROM

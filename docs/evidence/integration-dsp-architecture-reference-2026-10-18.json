@@ -361,21 +361,13 @@
   },
   "pr": 30,
   "head": "31ba642909cf85026e43e8d8c9f6fff35afd10aa",
-  "integration_status": "OPEN; exact Ares pending",
+  "integration_status": "VALIDATED host prerequisite and merged",
   "local_supported_boundaries": {
     "minimum_frames": 32,
     "maximum_frames": 2048,
     "both_pass": true
   },
   "current_CI": [
-    {
-      "id": 39148958349,
-      "name": "Ares Profile Validation",
-      "head_sha": "31ba642909cf85026e43e8d8c9f6fff35afd10aa",
-      "status": "in_progress",
-      "conclusion": null,
-      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/39148958349"
-    },
     {
       "id": 39148958294,
       "name": "DSP Architectural Reference Fixtures",
@@ -407,6 +399,40 @@
       "status": "completed",
       "conclusion": "success",
       "html_url": "https://github.com/ironangelo/sodium64/actions/runs/39148958254"
+    },
+    {
+      "id": 39148958349,
+      "name": "Ares Profile Validation",
+      "head_sha": "31ba642909cf85026e43e8d8c9f6fff35afd10aa",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/39148958349"
     }
-  ]
+  ],
+  "merge": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+  "runtime_binding": {
+    "fixture_head": "31ba642909cf85026e43e8d8c9f6fff35afd10aa",
+    "measured_head": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+    "runtime_source_changes": false,
+    "host_fixture_files_changed": 17,
+    "full_source_trees_identical": false,
+    "scope": "Every allocated CPU/RSP instruction/data/BSS byte and address; no native rerun inferred.",
+    "modes": {
+      "normal": {
+        "loaded_image_identical": true,
+        "allocated_bytes": 767064
+      },
+      "USB": {
+        "loaded_image_identical": true,
+        "allocated_bytes": 777668
+      },
+      "HW_profile_warmup25": {
+        "loaded_image_identical": true,
+        "allocated_bytes": 768892
+      }
+    },
+    "master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+    "master_tree_identical_to_fixture_head": true,
+    "master_tree": "ce2931bac2b9406bb287784c0caa0e367f3bab98"
+  }
 }

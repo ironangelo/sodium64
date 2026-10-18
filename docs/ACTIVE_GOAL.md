@@ -23,13 +23,16 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint: eight clean PRs24/23/22/25/26/27/28/29 are integrated into
-master9cb13d43. Entire source tree equals measured48b01127. Four commercial
-quiet controls and a guarded independent no-USB SMW capture are complete; the
-cursor stall is repaired, while cadence/fidelity deficits stay explicit.
-Terminal OFF/ON and habitual-executable install/readback are now VERIFIED;
-paired menu responds recovery0. PR30 adds a complete-core reference corpus only;
-exact Ares remains pending before integration. Native integral cost is not measured.
-Execute the complete resident-DSP integral cost discriminator. R61/R63 are
-prerequisites/partial bridge, not that result. Keep the full objective ACTIVE;
-do not claim1.0, full fidelity or chip/corpus acceptance from this checkpoint.
+Current checkpoint: nine separate PRs24/23/22/25/26/27/28/29/30 are integrated
+in master 9915df5e833e31747a106eeff3b7aeb0c1876b0c. PR30 is host tooling only; rebuilt normal/USB/HW images
+are byte/address-identical to measured48b01127. The current source tree differs
+because of host files, with no runtime change. Four commercial quiet controls
+and independent SMW capture are complete. Terminal OFF/ON and habitual install/
+readback are VERIFIED; paired menu responds recovery0 and no deployer remains.
+
+The consolidation checkpoint is achieved with real integrations and evidence.
+The full objective remains ACTIVE: native integral DSP cost is NOT_MEASURED,
+and the complete backend/live SPC bridge are BLOCKED for promotion. PR30
+provides original reproducible full-core inputs/results, not that missing cost
+proof. Continue through the named complete-execution/ordering/publication gate;
+do not build more isolated kernels or claim1.0/full fidelity/chip acceptance.

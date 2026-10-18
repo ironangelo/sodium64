@@ -143,5 +143,59 @@
     "sha256": "6c1ee24daa618cdca631dbc57bcb32f982a6c2c30bfa42f5d03ba81355c57cc5",
     "all_12_RSP_allocated_images_match_with_pinned_header": true
   },
-  "legacy_source_check": "Exact temporary wrapper is selected explicitly; enabled renderer is a separate gate, never inferred from legacy PASS."
+  "legacy_source_check": "Exact temporary wrapper is selected explicitly; enabled renderer is a separate gate, never inferred from legacy PASS.",
+  "PPU_reference_by_configuration": {
+    "normal": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7168,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 688,
+      "USB_callsite_selected": false
+    },
+    "profile": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7168,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 688,
+      "USB_callsite_selected": false
+    },
+    "hw": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7168,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 688,
+      "USB_callsite_selected": false
+    },
+    "usb": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7232,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 700,
+      "USB_callsite_selected": true
+    }
+  },
+  "repaired_CI_head_e4d078d8": {
+    "enabled_port_contracts": 39154212558,
+    "legacy_CGRAM": 39154212457,
+    "normal_build": 39154212515,
+    "owners": 39154212529,
+    "USB": 39154212438,
+    "status": "All listed PASS; Ares39154212460 still running. New PPU reference extension needs new-head CI."
+  }
 }

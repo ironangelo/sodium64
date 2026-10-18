@@ -44,12 +44,15 @@ jobs:
           python3 scripts/test_apu_lookup_reset.py build_faithful_hw/sodium64-faithful-hw.elf
           python3 scripts/test_dsp_gain_owner.py build_faithful_hw/sodium64-faithful-hw.elf
           python3 scripts/test_dsp_brr_accuracy.py build_faithful_hw/sodium64-faithful-hw.elf
-      - name: Compare every RSP byte to frozen faithful renderer plus decoder repair
+      - name: Compare complete RSP and PPU producer images to frozen source
         shell: bash
         run: |
           set -euo pipefail
           git fetch --no-tags --depth=1 origin 238170abf956da705806f979f9cc256fbc565ac0
-          python3 scripts/check_faithful_reference.py build_faithful --json-output faithful-reference.json
+          python3 scripts/check_faithful_reference.py build_faithful --json-output faithful-reference-normal.json
+          python3 scripts/check_faithful_reference.py build_faithful_profile --json-output faithful-reference-profile.json
+          python3 scripts/check_faithful_reference.py build_faithful_hw --json-output faithful-reference-hw.json
+          python3 scripts/check_faithful_reference.py build_faithful_usb --json-output faithful-reference-usb.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

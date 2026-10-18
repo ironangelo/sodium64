@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import struct
 import subprocess
 import tempfile
 
@@ -28,6 +29,49 @@ def original(name):
     return subprocess.check_output(['git', '-C', str(ROOT), 'show', SOURCE+':src/'+name])
 
 
+def relocatable_image(path):
+    """Retain section identity and normalize relocation symbol indexes.
+
+    CPU object sections share address zero, so load_elf's final-image memory
+    dictionary cannot compare this producer safely. Include all ALLOC sections
+    and relocation targets/addends rather than comparing only instruction text.
+    """
+    data = path.read_bytes()
+    assert data[:6] == b'\x7fELF\x01\x02', 'expected big-endian ELF32 object'
+    header = struct.unpack_from('>16sHHIIIIIHHHHHH', data)
+    sections = [struct.unpack_from('>IIIIIIIIII', data, header[6]+i*header[11])
+                for i in range(header[12])]
+    strings = sections[header[13]]
+    names = data[strings[4]:strings[4]+strings[5]]
+    labels = [names[s[0]:].split(b'\0', 1)[0].decode() for s in sections]
+    allocated = {labels[i]: (s[1], s[3], bytes(s[5]) if s[1] == 8
+                            else data[s[4]:s[4]+s[5]])
+                 for i, s in enumerate(sections) if s[2] & 2}
+    tables = {}
+    for i, s in enumerate(sections):
+        if s[1] != 2:
+            continue
+        strings = sections[s[6]]
+        names = data[strings[4]:strings[4]+strings[5]]
+        table = []
+        for at in range(s[4], s[4]+s[5], s[9]):
+            name, value, _, info, _, index = struct.unpack_from('>IIIBBH', data, at)
+            label = names[name:].split(b'\0', 1)[0].decode() if name else (
+                '@'+labels[index] if index < len(labels) else '')
+            table.append((label, value, info))
+        tables[i] = table
+    relocations = []
+    for s in sections:
+        if s[1] not in (4, 9):
+            continue
+        for at in range(s[4], s[4]+s[5], s[9]):
+            offset, info = struct.unpack_from('>II', data, at)
+            addend = struct.unpack_from('>i', data, at+8)[0] if s[1] == 4 else None
+            relocations.append((labels[s[7]], offset, info & 255,
+                                tables[s[6]][info >> 8], addend))
+    return allocated, relocations
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('build', type=Path)
@@ -46,12 +90,12 @@ def main():
     env['PATH'] = str(prefix/'bin')+os.pathsep+env['PATH']
     report = {'passed': True, 'source': SOURCE,
               'reference_patches': 'Explicit NOP after shared_decode4 JR t4 in each resident bank.',
-              'scope': 'Complete linked RSP text/data/extents; CPU producer, RDP rasterization and native timing are separate gates.',
+              'scope': 'Complete linked RSP text/data/extents and PPU object sections/relocations; execution, RDP rasterization and native timing are separate gates.',
               'physical_acceptance': False, 'banks': {}}
     with tempfile.TemporaryDirectory(prefix='s64-faithful-reference-') as directory:
         stage = Path(directory)
         source_names = [name+'.S' for name in BANKS]
-        source_names += ['defines.h', 'rsp_hcomp.ld', 'rsp_hcomp_packed_math.inc',
+        source_names += ['ppu.S', 'defines.h', 'rsp_hcomp.ld', 'rsp_hcomp_packed_math.inc',
                          'rsp_tmem_atlas.inc', 'rsp_tmem_coord.inc']
         for name in source_names:
             text = original(name).decode()
@@ -79,6 +123,23 @@ def main():
             report['banks'][name] = {'all_allocated_bytes_and_addresses_identical': True,
                 'allocated_bytes': len(candidate_bytes), 'text_bytes': len(text),
                 'text_sha256': hashlib.sha256(text).hexdigest()}
+        candidate_sections, candidate_relocations = relocatable_image(args.build/'src/ppu.o')
+        ppu_flags = list(flags)
+        if any(relocation[3][0].startswith('remote_') for relocation in candidate_relocations):
+            ppu_flags.append('-DSODIUM64_REMOTE=1')
+        producer = stage/'ppu.o'
+        result = subprocess.run([compiler, '-c', '-mtune=vr4300', '-march=vr4300',
+            '-Wa,--fatal-warnings', *ppu_flags, '-o', str(producer), str(stage/'ppu.S')],
+            check=False, capture_output=True, text=True, env=env)
+        if result.returncode:
+            raise RuntimeError(result.stdout+result.stderr)
+        reference_sections, reference_relocations = relocatable_image(producer)
+        assert reference_sections == candidate_sections, 'complete PPU allocated-section drift'
+        assert reference_relocations == candidate_relocations, 'PPU relocation target/addend drift'
+        report['PPU_producer'] = {'all_allocated_sections_and_relocations_identical': True,
+            'sections': {name: len(value[2]) for name, value in candidate_sections.items()},
+            'normalized_relocations': len(candidate_relocations),
+            'USB_callsite_selected': '-DSODIUM64_REMOTE=1' in ppu_flags}
     if args.json_output:
         args.json_output.write_text(json.dumps(report, indent=2)+'\n')
     print(json.dumps({key: value for key, value in report.items() if key != 'banks'} |

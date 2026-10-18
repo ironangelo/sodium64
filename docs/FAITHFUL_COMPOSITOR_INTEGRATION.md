@@ -84,3 +84,13 @@ The legacy CGRAM source checker also counted the wrapper's final directive as
 an instruction. It now selects that exact legacy wrapper explicitly and labels
 its scope; this does not qualify the enabled compositor. Original failed run
 IDs and causes remain in the receipt; the repaired CI still needs to run.
+
+The reference verifier now also compiles the entire frozen PPU producer and
+compares every allocated object section plus normalized relocation targets and
+addends. Normal/PROFILE/HW objects match 7168 text bytes,67924 data bytes and688
+relocations each; USB matches7232 text bytes and700 relocations, selecting the
+existing guest-boundary counter callsites. All four configurations pass locally.
+This binds the extracted producer as well as the twelve consumers to the frozen
+source; dynamic DMA/cache/PPU execution and native image/cadence gates remain.
+The repaired e4d078d8 enabled contracts and legacy CGRAM CI pass; their first
+failed run receipts remain preserved. The extended proof requires new-head CI.

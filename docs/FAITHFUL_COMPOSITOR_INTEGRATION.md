@@ -74,3 +74,13 @@ source object (`git fetch --depth=1 origin 238170abf956da705806f979f9cc256fbc565
 The emulator build itself has no historical Git or modified-menu dependency.
 
 [Scoped local proof receipt](evidence/faithful-compositor-local.json).
+
+Initial CI exposed a missing SDK header (`rdpq_macros.h`) in enabled builds.
+The setup now installs it from the same immutable libdragon source pin as the
+other SDK definitions. Recompiling the reference with that exact header still
+matches all twelve RSP allocated images; the local SDK header had different
+non-emitted contents. The first Ares job never reached emulator execution.
+The legacy CGRAM source checker also counted the wrapper's final directive as
+an instruction. It now selects that exact legacy wrapper explicitly and labels
+its scope; this does not qualify the enabled compositor. Original failed run
+IDs and causes remain in the receipt; the repaired CI still needs to run.

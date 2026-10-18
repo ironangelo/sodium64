@@ -120,5 +120,28 @@
     "native aligned faithful house/rain/SMW/DKC/Mode7 images and integrated-core APU/PCM behavior",
     "combined full-rate cadence, return and habitual restoration"
   ],
-  "production_default": "unchanged; temporary build-only flag defaults to zero"
+  "production_default": "unchanged; temporary build-only flag defaults to zero",
+  "initial_CI_failures": [
+    {
+      "run": 39153876148,
+      "gate": "enabled compilation",
+      "cause": "missing pinned SDK rdpq_macros.h"
+    },
+    {
+      "run": 39153876157,
+      "gate": "Ares enabled compilation",
+      "cause": "same missing header; Ares execution did not run"
+    },
+    {
+      "run": 39153876155,
+      "gate": "legacy source consumer",
+      "cause": "temporary wrapper endif counted as an instruction"
+    }
+  ],
+  "pinned_SDK_header": {
+    "source": "DragonMinded/libdragon@e356bf3f56f7afbf7e5246329562f145965cfdfc/include/rdpq_macros.h",
+    "sha256": "6c1ee24daa618cdca631dbc57bcb32f982a6c2c30bfa42f5d03ba81355c57cc5",
+    "all_12_RSP_allocated_images_match_with_pinned_header": true
+  },
+  "legacy_source_check": "Exact temporary wrapper is selected explicitly; enabled renderer is a separate gate, never inferred from legacy PASS."
 }

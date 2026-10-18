@@ -18,6 +18,24 @@ FIXED_SLOT_START = 0xA40013A8
 FIXED_SLOT_END_NEXT = 0xA4001790
 
 
+def legacy_source(path: Path) -> str:
+    """Select only the exact temporary legacy wrapper, without preprocessing.
+
+    This regression qualifies the default legacy build. The separate enabled
+    compositor workflow owns faithful-source qualification. Reject unfamiliar
+    wrappers rather than counting directives or silently selecting other code.
+    """
+    text = path.read_text()
+    if not text.startswith('#ifdef SODIUM64_FAITHFUL_RENDERER\n'):
+        return text
+    included = 'defines.h' if path.name == 'defines.h' else path.stem + '.inc'
+    prefix = '#ifdef SODIUM64_FAITHFUL_RENDERER\n#include "renderer/' + included + '"\n#else\n'
+    suffix = '\n#endif\n'
+    if not text.startswith(prefix) or not text.endswith(suffix):
+        raise AssertionError('unknown legacy renderer wrapper: ' + str(path))
+    return text[len(prefix):-len(suffix)]
+
+
 def extract(src: str, start: str, end: str) -> str:
     i = src.find(start)
     if i < 0:
@@ -53,7 +71,7 @@ def prove_model() -> None:
 
 
 def prove_defines() -> None:
-    text = (ROOT / "src/defines.h").read_text()
+    text = legacy_source(ROOT / "src/defines.h")
     expected = {
         "HCOMP_CGRAM_EVENT_CURSOR": 0xEA0,
         "HCOMP_CGRAM_PAIR_SCRATCH": 0xEA8,
@@ -70,7 +88,7 @@ def prove_defines() -> None:
 
 
 def prove_inherited_typed_producer() -> None:
-    ppu = (ROOT / "src/ppu.S").read_text()
+    ppu = legacy_source(ROOT / "src/ppu.S")
 
     begin = extract(ppu, "hcomp_cgram_begin_frame:", ".align 5\nupdate_frame:")
     for required in (
@@ -142,7 +160,7 @@ def prove_main_publication() -> None:
 
 
 def prove_rsp_source(path: Path) -> None:
-    src = path.read_text()
+    src = legacy_source(path)
     name = path.name
 
     hook = extract(src, "next_section:", "// Check if this section has an OAM update")
@@ -287,6 +305,7 @@ def main() -> int:
         prove_binary(args.maps, args.nms)
 
     print("CGRAM_RSP_DMA8_CONSUMER_IMPLEMENTATION_VALIDATED")
+    print("source_scope=default_legacy_renderer_only")
     print("consumer_instructions=29")
     print("consumer_prefix_instructions=8")
     print("consumer_tail_instructions=21")

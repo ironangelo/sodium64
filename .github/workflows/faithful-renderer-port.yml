@@ -1,0 +1,62 @@
+name: Faithful Renderer Port Contracts
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [integrate/faithful-compositor]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sodium64-faithful-renderer-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linked-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile enabled renderer in all runtime configurations
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/setup_n64_ci.sh
+          make FAITHFUL_RENDERER=1 BUILD_DIR=build_faithful PROJ_NAME=sodium64-faithful -j$(nproc)
+          make FAITHFUL_RENDERER=1 PROFILE=1 BUILD_DIR=build_faithful_profile PROJ_NAME=sodium64-faithful-profile -j$(nproc)
+          make FAITHFUL_RENDERER=1 HW_PROFILE=1 HW_PROFILE_WARMUP=25 BUILD_DIR=build_faithful_hw PROJ_NAME=sodium64-faithful-hw -j$(nproc)
+          make FAITHFUL_RENDERER=1 REMOTE=1 BUILD_DIR=build_faithful_usb PROJ_NAME=sodium64-faithful-usb -j$(nproc)
+      - name: Check emitted owners, boot, ISR and snapshot guards
+        run: |
+          python3 scripts/check_faithful_renderer_owners.py build_faithful/sodium64-faithful.elf --json-output faithful-owners-normal.json
+          python3 scripts/check_faithful_renderer_owners.py build_faithful_profile/sodium64-faithful-profile.elf --json-output faithful-owners-profile.json
+          python3 scripts/check_faithful_renderer_owners.py build_faithful_hw/sodium64-faithful-hw.elf --json-output faithful-owners-hw.json
+          python3 scripts/check_faithful_renderer_owners.py build_faithful_usb/sodium64-faithful-usb.elf --json-output faithful-owners-usb.json
+          python3 scripts/test_profile_owners.py build_faithful_profile/sodium64-faithful-profile.elf build_faithful_hw/sodium64-faithful-hw.elf --normal-elf build_faithful/sodium64-faithful.elf --json-output faithful-boot-owners.json
+          python3 scripts/test_remote_bridge.py build_faithful_usb/sodium64-faithful-usb.elf --json-output faithful-usb-bridge.json
+          python3 scripts/test_faithful_rom_cache.py build_faithful/sodium64-faithful.elf build_faithful_profile/sodium64-faithful-profile.elf build_faithful_hw/sodium64-faithful-hw.elf build_faithful_usb/sodium64-faithful-usb.elf --json-output faithful-ROM-pager.json
+          python3 scripts/test_faithful_bindings.py build_faithful/sodium64-faithful.elf build_faithful_profile/sodium64-faithful-profile.elf build_faithful_hw/sodium64-faithful-hw.elf build_faithful_usb/sodium64-faithful-usb.elf --json-output faithful-CPU-bindings.json
+      - name: Preserve decoder, branch and integrated audio contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/test_rsp_decode_cursor.py build_faithful/src/rsp_main.elf build_faithful/src/rsp_mode7.elf --json-output faithful-decoder.json
+          python3 scripts/check_rsp_branch_delay_slots.py build_faithful/src/rsp*.elf
+          python3 scripts/test_apu_lookup_reset.py build_faithful_hw/sodium64-faithful-hw.elf
+          python3 scripts/test_dsp_gain_owner.py build_faithful_hw/sodium64-faithful-hw.elf
+          python3 scripts/test_dsp_brr_accuracy.py build_faithful_hw/sodium64-faithful-hw.elf
+      - name: Compare every RSP byte to frozen faithful renderer plus decoder repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin 238170abf956da705806f979f9cc256fbc565ac0
+          python3 scripts/check_faithful_reference.py build_faithful --json-output faithful-reference.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sodium64-faithful-renderer-port-contracts
+          retention-days: 14
+          path: |
+            faithful-*.json
+            build_faithful*/src/*.elf
+            build_faithful*/*.elf
+            build_faithful*/*.map

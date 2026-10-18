@@ -1,3 +1,6 @@
+#ifdef SODIUM64_FAITHFUL_RENDERER
+#include "renderer/defines.h"
+#else
 /*
     Copyright 2021-2025 Hydr8gon
 
@@ -240,3 +243,5 @@
 
 // Macro that converts an RSP DMEM address to a CPU address
 #define DMEM(addr) (0xA4000000 + (addr))
+
+#endif

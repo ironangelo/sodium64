@@ -1,0 +1,124 @@
+{
+  "status": "CANDIDATE",
+  "source_master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+  "frozen_renderer_source": "238170abf956da705806f979f9cc256fbc565ac0",
+  "R44_R45_included": false,
+  "complete_rsp_reference": {
+    "passed": true,
+    "source": "238170abf956da705806f979f9cc256fbc565ac0",
+    "reference_patches": "Explicit NOP after shared_decode4 JR t4 in each resident bank.",
+    "scope": "Complete linked RSP text/data/extents; CPU producer, RDP rasterization and native timing are separate gates.",
+    "physical_acceptance": false,
+    "banks": {
+      "rsp_main": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 8192,
+        "text_bytes": 4096,
+        "text_sha256": "66b24afba5319da647dcffdc0b695f63f78341677782454d78c09e7e5aa543f4"
+      },
+      "rsp_mode7": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 8192,
+        "text_bytes": 4096,
+        "text_sha256": "ea68d1f02033a0384db34a06033b0c1634c1672ccb74a2de63b3de911eb355be"
+      },
+      "rsp_hcomp": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "0b7d533f2cd6ab9d09f9b5208b89ddc213582d3910c6c160bc50685552a75a71"
+      },
+      "rsp_hcomp_math": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "3f7847f16a234669813b365ca96bfb03911aaee4b0b7deec806a460c4fefa87c"
+      },
+      "rsp_hcomp_fast": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "18c79b2f57f9e18e3b91b7e0dc08a38e21af8424dd2df3e3e13b7dc990d42f4a"
+      },
+      "rsp_hcomp_setup": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "81871b070b3b450d55a79c91a3f56465f257b45b6e90006ba2e35ed765657421"
+      },
+      "rsp_hcomp_tlut": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "e65de79846af57f2d9f37eeed1a4938553c07c4531106ec451ea94b16ef7b857"
+      },
+      "rsp_hcomp_rdp": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1232,
+        "text_bytes": 1000,
+        "text_sha256": "d040ecf1bdaed509947a1326eb9a5ddc5bd0164da5ba9b71de6e8d0416cdbb12"
+      },
+      "rsp_hcomp_fixed_window": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1008,
+        "text_bytes": 1000,
+        "text_sha256": "76eb65188c6ee28ff58c0ebc3511fb069b4d53804d524a60ed11af03ed43ebd9"
+      },
+      "rsp_hcomp_rdp_fixed": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1168,
+        "text_bytes": 1000,
+        "text_sha256": "b92dc0f3d2c60f3881bd6239fa649ced2e278a72f519712bd2c44fb7dbba9580"
+      },
+      "rsp_mode7_window": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "b0c4a7e8e801c3366bca7a6230c2a0c6d6c67ce19f6b5e6a3c54e7c700596888"
+      },
+      "rsp_object_cache": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "ddf9bfb90b05ce0d6c2a13c19f10d251330c11494b4d40f5c317a19e56ef8e08"
+      }
+    }
+  },
+  "local_compiled_variants": [
+    "normal",
+    "PROFILE",
+    "HW_PROFILE warmup25",
+    "USB"
+  ],
+  "CPU_publication": {
+    "cases": 16,
+    "writes_per_case": 12,
+    "faults_rejected_per_variant": [
+      "missing_Mode7_source",
+      "missing_fallback_descriptor",
+      "wrong_fallback_source",
+      "cached_fallback_descriptor"
+    ],
+    "scope": "CPU source/uncached descriptor publication and register ownership only; no RSP DMA, rasterization or timing model."
+  },
+  "ROM_cursor": {
+    "cases": 3104,
+    "faults_rejected_per_variant": [
+      "late_wrap",
+      "early_wrap",
+      "missing_wrap",
+      "writable_ROM_entry"
+    ],
+    "scope": "Actual 194-slot cursor and readonly EntryLo0 construction; no PI, TLB replacement, title or native performance claim."
+  },
+  "physical_acceptance": false,
+  "enabled_CI": "PENDING",
+  "pending": [
+    "compiled PPU producer/consumer, palette/window/math and delayed-DMA contracts",
+    "full PI/TLB pager replacement qualification",
+    "exact-head enabled CI",
+    "native aligned faithful house/rain/SMW/DKC/Mode7 images and integrated-core APU/PCM behavior",
+    "combined full-rate cadence, return and habitual restoration"
+  ],
+  "production_default": "unchanged; temporary build-only flag defaults to zero"
+}

@@ -9,7 +9,9 @@ def main():
     p.add_argument('--disabled-elf',type=Path);p.add_argument('--parent-elf',type=Path)
     p.add_argument('--json-output',type=Path);a=p.parse_args()
     memory,s=load_elf(a.elf)
-    assert max(memory)<0xbe200 and s['__bss_end']<=0x800be200
+    arena=s.get('renderer_cgram_owner_begin',0xbe200)
+    assert arena in (0xbe200,0xd2000), 'unqualified renderer owner'
+    assert max(memory)<arena and s['__bss_end']<=0x80000000+arena
     assert not any(0x400000<=address<0x800000 for address in memory)
     cases=0
     def cpu():
@@ -114,7 +116,7 @@ def main():
            'unknown_and_base4MiB_rejected_before_upper_access':True,'upper_lease':[0x440000,0x442000],
            'no_loaded_upper_section':True,'static_end':hex(s['__bss_end']),
            'VI_defers_dirty_SRAM_during_entire_PI_bridge':True,
-           'first_fixed_owner':'0x800be200','disabled_loaded_image_identical':identity,
+           'first_fixed_owner':hex(0x80000000+arena),'disabled_loaded_image_identical':identity,
            'emitted_faults_rejected':rejected,'physical_acceptance':False,'commercial_data':False}
     print(json.dumps(proof,indent=2))
     if a.json_output:a.json_output.write_text(json.dumps(proof,indent=2)+'\n')

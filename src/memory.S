@@ -538,13 +538,30 @@ tlbl_rom:
     li k1, 0x00001FFF // 8KB
     sw k1, 0x000C(k0) // PI_WR_LEN
 
-    // Create an EntryLo0 value and increment the ROM pointer
+    // Create an EntryLo0 value and increment the ROM pointer.
+#ifdef SODIUM64_FAITHFUL_RENDERER
+faithful_rom_cursor_begin:
+.equ faithful_rom_cache_slots, ROM_CACHE_SLOTS
+.equ faithful_rom_cache_buffer, ROM_BUFFER & 0x1FFFFFFF
+#endif
     lbu k0, rom_pointer
+#ifdef SODIUM64_FAITHFUL_RENDERER
+    // Page from cart before entering the compositor's explicit surface owners.
+    li k1, ROM_CACHE_SLOTS - 1
+    bne k0, k1, rom_cache_advance
     addi k1, k0, 1
+    move k1, zero
+rom_cache_advance:
+#else
+    addi k1, k0, 1
+#endif
     sb k1, rom_pointer
     addi k1, k0, (ROM_BUFFER >> 13) & 0x7FF
     sll k1, k1, 7
     ori k1, k1, 0x1B // Cache, Valid, Global
+#ifdef SODIUM64_FAITHFUL_RENDERER
+faithful_rom_entry_ready:
+#endif
 
     // Restore the ROM entry that will be overwritten, if any
     sll k0, k0, 2 // Word offset

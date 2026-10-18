@@ -1,7 +1,7 @@
 {
   "scope": "Integration checkpoint, not Sodium64 1.0 acceptance",
   "original_master": "7cc8facfe8643fb85888f301f79995575830521d",
-  "current_master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+  "current_master": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
   "integrated": [
     {
       "pr": 24,
@@ -185,6 +185,19 @@
         "master_tree": "ce2931bac2b9406bb287784c0caa0e367f3bab98"
       },
       "native_integral_cost": "NOT_MEASURED"
+    },
+    {
+      "pr": 31,
+      "component": "Production-only rolling release admission; host/CI only",
+      "head": "7ee13d15232d06f5cbfdb503c3753121ae17f2e0",
+      "merge": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
+      "successful_runs": [
+        39153477144,
+        39153477210,
+        39153477351,
+        39153477564
+      ],
+      "runtime_changes": false
     }
   ],
   "pending_ports": [
@@ -272,5 +285,11 @@
       "master_tree_identical_to_fixture_head": true,
       "master_tree": "ce2931bac2b9406bb287784c0caa0e367f3bab98"
     }
-  }
+  },
+  "master_post_merge_successful_runs": [
+    39154647163,
+    39154647154,
+    39154647152,
+    39154647156
+  ]
 }

@@ -16,8 +16,8 @@
   "candidate_head": "7ee13d15232d06f5cbfdb503c3753121ae17f2e0",
   "PR": 31,
   "PR_url": "https://github.com/ironangelo/sodium64/pull/31",
-  "PR_status": "DRAFT; exact-head CI pending",
-  "current_master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+  "PR_status": "MERGED",
+  "current_master": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
   "local_validation": {
     "normal_linked_builds": 1,
     "actual_laboratory_builds_rejected": 3,
@@ -28,5 +28,28 @@
   },
   "runtime_source_changes": false,
   "new_hardware_run": false,
-  "scope": "Distribution isolation only; currently published Latest already contains the two normal payloads."
+  "scope": "Distribution isolation only; currently published Latest already contains the two normal payloads.",
+  "merge_commit": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
+  "exact_head_successful_runs": [
+    39153477144,
+    39153477210,
+    39153477351,
+    39153477564
+  ],
+  "published_release": {
+    "master": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
+    "release_published": "2026-10-18T18:34:16Z",
+    "members": [
+      "sodium64.z64",
+      "rom-converter.py"
+    ],
+    "payload_byte_identity_to_measured_runtime_release": {
+      "sodium64.z64": true,
+      "rom-converter.py": true
+    },
+    "archive_bytes": 44370,
+    "archive_sha256": "5fb7b5b19e23f44edde69ecdbd92329b540c2f6a84cd4ed1155873532a954bc5",
+    "production_isolation_gate_integrated": true,
+    "release_url": "https://github.com/ironangelo/sodium64/releases/tag/release"
+  }
 }

@@ -1,7 +1,7 @@
 # Consolidation and integration audit - 2026-10-15
 
-Material update2026-10-18: nine separate PRs24/23/22/25/26/27/28/29/30 are merged
-into master9915df5e. PR30 is a host reference prerequisite only; loaded runtime images match measured48b01127. [Integration receipt](evidence/integration-master-2026-10-15.json),
+Material update2026-10-18: ten separate PRs24/23/22/25/26/27/28/29/30/31 are merged
+into masterbac1a4df. PR30 is a host reference prerequisite only; loaded runtime images match measured48b01127. [Integration receipt](evidence/integration-master-2026-10-15.json),
 [scoped native controls](evidence/integration-native-controls-2026-10-15.json),
 [bridge qualification](evidence/integration-native-usb-2026-10-15.json) and
 [minimal renderer repair](evidence/integration-rsp-cursor-2026-10-18.json).
@@ -43,7 +43,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work,b4206144 | CANDIDATE; active clean R17 extraction | Draft PR32 f1ac663d is the clean integrate/faithful-compositor port; complete12-bank reference equality, all owners/boot and194-slot cursor proofs pass. Split source/consumer/geometry/ownership components; exact producer/consumer/delayed-DMA, enabled CI and native dark-house/rain/SMW/DKC/Mode7 gates remain. Preserve fixed .org slots, DMA retirement and primary/reference pixels. Existing native scene evidence remains scoped; no bulk275-commit merge. |
+| A1..A13 exact compositor/window/epoch work,b4206144 | CANDIDATE; active clean R17 extraction | Draft PR32 f91244b5 is the clean integrate/faithful-compositor port; complete12-bank reference equality, all owners/boot and194-slot cursor proofs pass. Split source/consumer/geometry/ownership components; exact producer/consumer/delayed-DMA, enabled CI and native dark-house/rain/SMW/DKC/Mode7 gates remain. Preserve fixed .org slots, DMA retirement and primary/reference pixels. Existing native scene evidence remains scoped; no bulk275-commit merge. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |
@@ -82,7 +82,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | PR28 profiler upper-owner repair,939aed0e | VALIDATED diagnostic integration, merged | Master d876ea29; normal bytes unchanged, all five exact CI gates pass. Linked27 owner cases/nine reader checks and native guarded capture qualify storage integrity; stalled SMW is not gameplay acceptance. |
 | Decoder cursor repair, PR29 48b01127 | VALIDATED targeted repair and integrated | Master9cb13d43. Linked9984 cases/zero failures, four mutants, unchanged37 vector words and4KiB banks. All five exact CI gates pass. Native independent SMW57/58/58/60/60 replaces five0/60 windows; four commercial progress/menu/readback controls pass. Aligned PCM/head/registers exact;285 image pixels change and full fidelity remains open. |
 | Complete-DSP reference corpus, PR30 31ba6429 | VALIDATED host prerequisite and integrated | Four regenerable original full-core fixtures, full-state/RAM/PCM replay and mutation controls pass locally and in Linux CI. No runtime linkage, live SPC bridge, complete resident backend or native cost result. |
-| Production/laboratory release isolation, PR31 7ee13d15 | CANDIDATE tooling; exact-head CI pending | Current Latest two-file normal payload is verified. New mandatory ELF/ROM/ZIP admission and actual-laboratory negative checks are prepared in a separate draft PR; no runtime source change. No native timing/fidelity claim. |
+| Production/laboratory release isolation, PR31 7ee13d15 | VALIDATED and integrated tooling | Masterbac1a4df. Four exact-head and four post-merge CI workflows pass. Mandatory ELF/ROM/ZIP admission and actual-laboratory rejection are integrated. Republished Latest contains exactly the two unchanged normal payloads; no runtime change or native performance claim. |
 
 ## Execution queue and stop conditions
 

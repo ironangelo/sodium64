@@ -23,8 +23,8 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint: nine separate PRs24/23/22/25/26/27/28/29/30 are integrated
-in master 9915df5e833e31747a106eeff3b7aeb0c1876b0c. PR30 is host tooling only; rebuilt normal/USB/HW images
+Current checkpoint: ten separate PRs24/23/22/25/26/27/28/29/30/31 are integrated
+in master bac1a4df51bd706e778730b488a50be8c5fc6f47. PR30 is host tooling only; rebuilt normal/USB/HW images
 are byte/address-identical to measured48b01127. The current source tree differs
 because of host files, with no runtime change. Four commercial quiet controls
 and independent SMW capture are complete. Terminal OFF/ON and habitual install/
@@ -39,10 +39,11 @@ do not build more isolated kernels or claim1.0/full fidelity/chip acceptance.
 
 Current user steering2026-10-18: first port the habitual R17 faithful compositor
 (A11/A13 dark-house/rain path) to integrated master, separately from R44/R45.
-Draft PR32 atf1ac663d has linked/reference/owner/CPU publication proofs;
-new full producer/consumer/CI/native gates remain open. Qualify it before default promotion and
+Draft PR32 atf91244b5 has full RSP/PPU reference, owner and CPU publication
+proofs plus all six exact-head CI workflows PASS; full functional PI/TLB,
+compiled math/window/delayed-DMA and native gates remain open. Qualify it before default promotion and
 measure that combined baseline; then resume the full resident-DSP cost above.
-PR31 adds the user-approved production/laboratory distribution boundary and is
-DRAFT pending CI. Current Latest is already normal-only; no modified menu or
+PR31 integrates the user-approved production/laboratory distribution boundary
+after all applicable exact-head gates pass. Current Latest is already normal-only; no modified menu or
 USB/reset/image tools are distributed. Keep this tooling gate independent of
 renderer/runtime qualification. The full objective remains ACTIVE.

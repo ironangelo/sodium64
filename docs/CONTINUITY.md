@@ -1,3 +1,36 @@
+# 2026-10-18 - PR31 integrated; faithful PR32 exact-head CI passes
+
+Master bac1a4df51bd706e778730b488a50be8c5fc6f47 contains ten separate PRs:
+24/23/22/25/26/27/28/29/30/31. PR31 head7ee13d15 passed all four applicable
+exact-head workflows before merge. All four post-merge master workflows pass.
+Its required production ELF/ROM/ZIP gate is now integrated. Latest was freshly
+downloaded after publication18:34:16UTC: exactly sodium64.z64 and rom-converter.py,
+both byte-identical to the preceding measured-runtime release. No diagnostic
+code, modified menu or runtime-source change is added by this PR.
+[Release receipt](evidence/integration-release-isolation-2026-10-18.json).
+
+Faithful compositor PR32 is DRAFT atf91244b52e6b195e6dde3664f8d7dbab5d25188a,
+including current master. All six exact-head workflows PASS: enabled contracts
+39154711290, Ares39154711214 (enabled renderer), legacy CGRAM39154711213,
+Build39154711237, USB39154711254 and Owners39154711269. Earlier missing-header
+and wrapper-parser failures are preserved and resolved; no gates were skipped.
+The pinned SDK header emits the same twelve RSP images. Complete PPU ALLOC
+sections and688 normalized relocations (700 in USB) also match frozen source
+across all four configurations. These are code/proof scopes, not native images,
+DMA/cache timing or presentation-FPS acceptance.
+[Port receipt](evidence/integration-faithful-compositor-2026-10-18.json).
+
+The remaining finite promotion gates are functional full PI/TLB replacement,
+compiled palette/window/math and delayed-DMA execution, then aligned native
+house/rain/SMW/DKC/Mode7 image/APU/PCM controls and combined cadence/restoration.
+Next close the actual194-page replacement/retirement contract, not another
+optimization experiment. No new COM3 run; habitual R17 restoration remains
+previously verified. Master still has the legacy compositor until PR32 earns
+promotion. Complete resident-DSP integral native cost remains NOT_MEASURED and
+must follow the faithful combined baseline; the full objective remains ACTIVE.
+
+---
+
 # 2026-10-18 - Faithful compositor extracted into reviewable draft PR32
 
 PR32 https://github.com/ironangelo/sodium64/pull/32 is now DRAFT at

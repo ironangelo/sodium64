@@ -54,3 +54,9 @@ ownership:800bf1f0 exceeds800be200 by4080 bytes; strict assertion retained. One
 isolated-Oz control saves0 bytes and is rejected. Resolve the qualified layout
 dependency and clean-port native controls; do not leave an unclassified branch
 or claim the failed/skipped USB gate as passing. See the integration audit.
+
+The selected PR33 dependency is now locally verified: PR32's unchanged faithful
+layout plus only the coherent KOFF source patch admits USB with66832-byte CGRAM
+margin, passing owners/KOFF and12 unchanged RSP images. Qualify/promote PR32,
+then rebase PR33 and rerun actual exact-head/native gates. This source-pair
+control is not current-head CI or native acceptance; no separate size campaign.

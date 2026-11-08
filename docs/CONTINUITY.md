@@ -1,3 +1,25 @@
+# 2026-11-08 - PR33 memory dependency verified on unchanged faithful layout
+
+A bounded LOCAL composition of PR32 head1e96c40c plus ONLY PR33's src/dsp.S patch
+links FAITHFUL_RENDERER=1/REMOTE=1 without changing flags, owner constants or
+assertions. Actual__bss_end800c1af0 remains below CGRAM800d2000 by66832 bytes.
+The41-lower-owner/42-total-owner contract and all three ownership faults pass;
+the complete KOFF contract passes with three emitted faults. All12 resident/
+demand-loaded RSP images remain identical to PR32. No native action occurred.
+[Conditional evidence](evidence/integration-koff-release-2026-11-08.json).
+
+This is a source-pair local layout/control result, not exact-head combination
+CI, native acceptance, whole-DSP accuracy or performance. It narrows the real
+PR33 action: qualify/promote PR32's faithful layout, then rebase and rerun the
+required gates. No new laboratory size-tuning campaign or relaxed boundary is
+needed for that selected route. Standalone PR33 still fails the legacy USB
+owner assertion and remains DRAFT/BLOCKED; do not substitute this local control
+for its missing current-head gate. PR32 native startup/fidelity/cadence gates
+and second physical OFF/ON/verified restoration remain PENDING. Ares42526113042
+was confirmed live and compiling its dependency; it has not been restarted.
+
+---
+
 # 2026-11-08 - R22 extracted as draft PR33; exact USB ownership block identified
 
 Physical recovery after PR32's SECOND failed hello remains PENDING. Do not start

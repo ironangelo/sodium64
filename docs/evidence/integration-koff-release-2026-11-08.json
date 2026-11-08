@@ -208,7 +208,7 @@
   "native_acceptance": false,
   "historical_native_limits": "R22 endpoints included12 observer instructions per release step; no clean-port cost claim",
   "remaining_gates": [
-    "Resolve actual standalone USB/CGRAM ownership failure through a qualified layout/default promotion or separately proven laboratory layout repair",
+    "Qualify/promote PR32 faithful layout, then rebase and rerun exact-head gates: unchanged faithful layout already admits the coherent KOFF patch locally",
     "All applicable exact-head CI; do not skip failed/skipped USB gate",
     "Applicable native note-tail/cadence controls with an appropriate reference and combined baseline"
   ],
@@ -219,5 +219,64 @@
     "echo/Gaussian",
     "DAC"
   ],
-  "commercial_data": false
+  "commercial_data": false,
+  "conditional_faithful_layout_control": {
+    "status": "PASS_LOCAL_CONDITIONAL_LAYOUT_CONTROL",
+    "faithful_base": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+    "KOFF_patch_head": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
+    "only_changed_tracked_file": "src/dsp.S",
+    "patch_sha256": "9be9b38ef520da2d7f84f4d5046870fb741f9029187633943c476f1e88914aea",
+    "combined_DSP_source_sha256": "e47f734a5b4de40cdf5dff87b8536f99b0443433f1e8b7ac090281727a43055d",
+    "configuration": "FAITHFUL_RENDERER=1 REMOTE=1; local GCC14.2",
+    "compiler_or_owner_flags_changed": false,
+    "extents": {
+      "bss_end": "0x800c1af0",
+      "first_CGRAM_owner": "0x800d2000",
+      "margin_bytes": 66832,
+      "all12_RSP_images_unchanged": true,
+      "physical_acceptance": false
+    },
+    "owner_contract": {
+      "passed": true,
+      "lower_owners_including_ELF": 41,
+      "total_owners_including_diagnostic_lease": 42,
+      "first_CGRAM_owner": 860160,
+      "faults_rejected": [
+        "old_static_clear",
+        "ROM_cache_into_surfaces",
+        "Q2_DMA_overrun"
+      ],
+      "physical_acceptance": false,
+      "scope": "Preprocessed owner plan, real ELF extents and DMA bounds; boot and ISR execution are separate."
+    },
+    "KOFF_contract": {
+      "passed": true,
+      "koff_masks": 256,
+      "release_voice_cases": 16384,
+      "actual_dsp_sample_calls": 2064,
+      "protected_adsr_writes": 32,
+      "actual_kon_restarts": 16,
+      "latched_KOFF_GAIN_ADSR2_writes": 32,
+      "actual_apu_port_callers": 10,
+      "invalid_addresses": 128,
+      "maximum_release_handler_instructions": 48,
+      "complete_legacy_KON_rate_scheduler_executed": true,
+      "negative_mutations_rejected": [
+        "release_decrement",
+        "release_timer_wrap",
+        "ADSR_release_guard_bypassed"
+      ],
+      "no_immediate_koff_voice_disable": true,
+      "per_sample_release_and_timer_wrap": true,
+      "arithmetic_reference": "Snes9x1.63 SPC_DSP::run_envelope release branch",
+      "kon_delay_and_every_other_sample_latching_qualified": false,
+      "full_envelope_mixing_or_dac_fidelity_claim": false,
+      "commercial_data": false,
+      "legacy_immediate_disable_counterexample": false,
+      "elf_sha256": "52645c5b2c2be347f319721bb0c45658cdf655a9e158d038bfc0197da3c73d29"
+    },
+    "physical_acceptance": false,
+    "exact_head_CI_for_combination": false,
+    "next_action": "Qualify/promote faithful layout, then rebase PR33 and rerun its required gates; do not repeat unrelated laboratory size tuning"
+  }
 }

@@ -1,3 +1,43 @@
+# 2026-11-08 - PR32 software gates closed; first native preflight failed
+
+Master remains bac1a4df51bd706e778730b488a50be8c5fc6f47, with ten separate integrations.
+PR32 remains DRAFT at 1e96c40c8c98038fd506109e8dd89155eeea8948; it is not merged or physically
+qualified. All six exact-head workflows pass: Ares42520739323, GateC42520739100,
+Owners42520739193, USB42520739028, Build42520739074, port42520738996.
+All16 original-program CI reports were downloaded, digest-verified and checked.
+The complete194-page PI/TLB refill, compiled windows/OBJ/full-row Math and delayed
+DMA functional contracts now pass. Seven inherited unguarded laboratory limit
+controls were removed with explicit ordinary-state equivalence and poisoned-word
+checks. These software scopes do not qualify physical RDP/cache/bus behavior.
+[Current scoped receipt](evidence/integration-faithful-compositor-2026-11-08.json).
+
+The first real-N64 control used the original mixed8 fixture and the exact CI
+GCC16.2 USB ELF, compressed/packaged locally. Menu recovery0 and114688-byte
+install/readback passed. Launch was acknowledged after33.171s, but the first
+emulator hello failed with `Debug data write dropped due to timeout`. No frame,
+PCM or quiet timing window was captured. Root cause is unresolved. The helper
+terminated; no live raw dump, reset command, firmware or menu modification was
+performed. PR32 is BLOCKED on this finite native startup gate, not VALIDATED.
+
+CURRENT HARDWARE STATE: candidate remains installed. Exact habitual restoration
+is PENDING physical OFF/ON confirmation, menu recovery0 and backup install/readback.
+The fresh Nov8 read-only backup exists and equals the prior habitual R17 program.
+October restoration claims below are historical and do not describe this run.
+An offline same-ELF control found different installed-tool/CI IPL3 and payload
+bytes. Rebuilding the ROM tools from the pinned CI source makes the entire
+boot/stub/compressed-ELF prefix (49656 bytes) identical to canonical CI; remaining
+differences follow the executable. A same-CI-ELF USB container using those pinned
+tools is prepared, not launched or accepted. This is no native causal proof.
+Next restore the backup, resolve the failure with that bounded control, then continue the
+named aligned image/APU/PCM and combined native cadence gates. Do not rerun the
+same failed control without a discriminating change or promote on CI alone.
+
+R44/R45 remain separate and blocked by their existing gates. Complete resident
+DSP integral native cost remains NOT_MEASURED, after the qualified faithful
+baseline; no new isolated kernels or resource campaign. Full objective ACTIVE.
+
+---
+
 # 2026-10-18 - PR31 integrated; faithful PR32 exact-head CI passes
 
 Master bac1a4df51bd706e778730b488a50be8c5fc6f47 contains ten separate PRs:

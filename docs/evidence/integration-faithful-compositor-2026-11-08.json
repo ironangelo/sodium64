@@ -1,0 +1,149 @@
+{
+  "date": "2026-11-08",
+  "status": "BLOCKED",
+  "scope": "Faithful compositor promotion",
+  "master": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
+  "pull_request": "https://github.com/ironangelo/sodium64/pull/32",
+  "candidate_head": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+  "draft": true,
+  "R44_R45_included": false,
+  "exact_head_CI": {
+    "Ares_Profile": 42520739323,
+    "Gate_C": 42520739100,
+    "Owners": 42520739193,
+    "USB": 42520739028,
+    "Build": 42520739074,
+    "Faithful_port_contracts": 42520738996,
+    "all_six_passed": true
+  },
+  "CI_original_program_artifact": 13632867897,
+  "CI_reports": {
+    "faithful-boot-owners.json": "PASS",
+    "faithful-CPU-bindings.json": "PASS",
+    "faithful-decoder.json": "PASS",
+    "faithful-execution-contracts.json": "PASS",
+    "faithful-owners-hw.json": "PASS",
+    "faithful-owners-normal.json": "PASS",
+    "faithful-owners-profile.json": "PASS",
+    "faithful-owners-usb.json": "PASS",
+    "faithful-reference-hw.json": "PASS",
+    "faithful-reference-normal.json": "PASS",
+    "faithful-reference-profile.json": "PASS",
+    "faithful-reference-usb.json": "PASS",
+    "faithful-release-isolation.json": "PASS",
+    "faithful-ROM-pager.json": "PASS",
+    "faithful-ROM-replacement.json": "PASS",
+    "faithful-usb-bridge.json": "PASS"
+  },
+  "new_closed_software_gates": [
+    "Complete linked 194-page PI/TLB replacement, 646 refills per configuration and 20 emitted faults",
+    "Compiled windows: 1792 cases and two mutants",
+    "OBJ progression: 28672 geometries, 19328 drawn and 88192 culled rows",
+    "Full-row Math: 12 cases, 70912 independent numeric pixels and three DMA/owner faults",
+    "Seven inherited composition-limit reads/branches removed; 112 scalar cases per configuration"
+  ],
+  "proof_limits": [
+    "Functional models do not qualify RDP rasterization, CPU cache/bus timing or CP0 hazards",
+    "CI and local GCC differ; all twelve RSP banks match, whole CPU images are not claimed identical",
+    "No native visual, waveform, DAC or cadence acceptance for this head"
+  ],
+  "native_preflight": {
+    "original_mixed_eight_voice_fixture": true,
+    "commercial_input": false,
+    "menu_before_mode": "menu",
+    "menu_before_recovery": "0",
+    "program_install_readback_verified": true,
+    "program_bytes": 114688,
+    "program_sha256": "e3df9f0fedcce502f15dd93dbd5d5dcf7dd68d53ab34c61cb7c1b632148434bb",
+    "launch_acknowledged": true,
+    "launch_seconds": 33.17099999999982,
+    "first_emulator_hello": "FAILED",
+    "error": "Error: Debug data write dropped due to timeout",
+    "frame_exports": 0,
+    "audio_exports": 0,
+    "quiet_timing_windows": 0,
+    "root_cause": "UNRESOLVED",
+    "restoration": "PENDING physical OFF/ON confirmation and verified backup install",
+    "session_terminated": true,
+    "live_raw_dump_performed": false
+  },
+  "offline_packaging_discriminator": {
+    "head": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+    "artifact": 13632209946,
+    "scope": "Same exact CI profile ELF repackaged offline; no hardware action",
+    "identical": false,
+    "CI_bytes": 98304,
+    "local_bytes": 98304,
+    "CI_sha256": "2f85c841962bb27ceed8505e204d163c52f8cf76a306343ca5ec5f39a8bccb58",
+    "local_sha256": "926d1834791d4375d8fd6751afa96586d1539e823064eb3be7b745c96256c095",
+    "regions": {
+      "header": {
+        "changed_bytes": 0,
+        "first_offset": null,
+        "last_offset": null,
+        "identical": true
+      },
+      "IPL3": {
+        "changed_bytes": 2228,
+        "first_offset": 99,
+        "last_offset": 4095,
+        "identical": false
+      },
+      "payload": {
+        "changed_bytes": 62152,
+        "first_offset": 4160,
+        "last_offset": 96809,
+        "identical": false
+      }
+    },
+    "compressed_ELF_bytes": 42232,
+    "physical_acceptance": false
+  },
+  "remaining_gates": [
+    "Recover menu and restore exact freshly backed-up habitual program, with readback",
+    "Resolve first native USB hello failure using bounded packaging/boot and runtime discriminators",
+    "Aligned native house/rain/SMW/DKC/Mode7 images and APU/PCM/guest progression controls",
+    "Combined quiet native cadence and verified final restoration before default promotion"
+  ],
+  "resident_DSP_integral_native_cost": "NOT_MEASURED; follows the qualified combined faithful baseline",
+  "master_changed_in_this_checkpoint": false,
+  "pinned_tools_packaging_control": {
+    "head": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+    "artifact": 13632209946,
+    "scope": "Same exact CI profile ELF repackaged offline; no hardware action",
+    "identical": false,
+    "CI_bytes": 98304,
+    "local_bytes": 98304,
+    "CI_sha256": "2f85c841962bb27ceed8505e204d163c52f8cf76a306343ca5ec5f39a8bccb58",
+    "local_sha256": "43e1927f52b304a5551e98ed080b1ad4048d699be3e28db79c2ea88d0bdf350b",
+    "regions": {
+      "header": {
+        "changed_bytes": 0,
+        "first_offset": null,
+        "last_offset": null,
+        "identical": true
+      },
+      "IPL3": {
+        "changed_bytes": 0,
+        "first_offset": null,
+        "last_offset": null,
+        "identical": true
+      },
+      "payload": {
+        "changed_bytes": 12207,
+        "first_offset": 57338,
+        "last_offset": 96548,
+        "identical": false
+      }
+    },
+    "compressed_ELF_bytes": 42232,
+    "physical_acceptance": false,
+    "tool_source": "e356bf3f56f7afbf7e5246329562f145965cfdfc",
+    "CI_boot_and_compressed_ELF_prefix_identical": true,
+    "identical_prefix_bytes": 49656,
+    "compressed_ELF_offset": 7424,
+    "compressed_ELF_end": 49656,
+    "remaining_difference_scope": "After the complete compressed executable; no native causal claim"
+  },
+  "next_native_candidate_prepared": "Same CI ELF repackaged with pinned CI-source ROM tools; not launched or accepted"
+}

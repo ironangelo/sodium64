@@ -1,5 +1,14 @@
 # Consolidation and integration audit - 2026-10-15
 
+Material update2026-11-08: PR32 head1e96c40c passes all six exact-head
+workflows and the full functional PI/TLB/window/OBJ/Math/DMA gates. First native
+preflight FAILED before emulator hello after verified install and acknowledged
+launch; no native image/audio/timing result. Promotion is BLOCKED on this startup
+gate and subsequent aligned native fidelity/cadence controls. Root cause remains
+unresolved. Candidate is installed; habitual restoration PENDING physical OFF/ON
+and verified readback. October restoration entries below are historical.
+[Nov8 evidence](evidence/integration-faithful-compositor-2026-11-08.json).
+
 Material update2026-10-18: ten separate PRs24/23/22/25/26/27/28/29/30/31 are merged
 into masterbac1a4df. PR30 is a host reference prerequisite only; loaded runtime images match measured48b01127. [Integration receipt](evidence/integration-master-2026-10-15.json),
 [scoped native controls](evidence/integration-native-controls-2026-10-15.json),
@@ -43,7 +52,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work,b4206144 | CANDIDATE; active clean R17 extraction | Draft PR32 f91244b5 is the clean integrate/faithful-compositor port; complete12-bank reference equality, all owners/boot and194-slot cursor proofs pass. Split source/consumer/geometry/ownership components; exact producer/consumer/delayed-DMA, enabled CI and native dark-house/rain/SMW/DKC/Mode7 gates remain. Preserve fixed .org slots, DMA retirement and primary/reference pixels. Existing native scene evidence remains scoped; no bulk275-commit merge. |
+| A1..A13 exact compositor/window/epoch work,b4206144 | BLOCKED on native promotion; software CANDIDATE | Draft PR32 head1e96c40c has complete RSP/PPU reference, owners, CPU publication,194-page PI/TLB replacement and compiled window/OBJ/full-row Math/delayed-DMA proofs. All six exact-head CI workflows pass. First native mixed8 control fails before USB hello after verified install/launch; root cause unresolved. Restore exact backup first, resolve startup with a bounded discriminator, then aligned house/rain/SMW/DKC/Mode7 image/APU/PCM and combined native cadence gates. R44/R45 excluded; no bulk PR21 merge. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |

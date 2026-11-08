@@ -23,27 +23,24 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint: ten separate PRs24/23/22/25/26/27/28/29/30/31 are integrated
-in master bac1a4df51bd706e778730b488a50be8c5fc6f47. PR30 is host tooling only; rebuilt normal/USB/HW images
-are byte/address-identical to measured48b01127. The current source tree differs
-because of host files, with no runtime change. Four commercial quiet controls
-and independent SMW capture are complete. Terminal OFF/ON and habitual install/
-readback are VERIFIED; paired menu responds recovery0 and no deployer remains.
+Current checkpoint2026-11-08: ten separate PRs24/23/22/25/26/27/28/29/30/31
+are integrated in master bac1a4df51bd706e778730b488a50be8c5fc6f47. Historical October commercial
+quiet controls and independent SMW capture retain their original measured scope.
+PR31 enforces the approved normal-only release boundary. No USB/reset/capture,
+profiler or modified menu is distributed in Latest.
 
-The consolidation checkpoint is achieved with real integrations and evidence.
-The full objective remains ACTIVE: native integral DSP cost is NOT_MEASURED,
-and the complete backend/live SPC bridge are BLOCKED for promotion. PR30
-provides original reproducible full-core inputs/results, not that missing cost
-proof. Continue through the named complete-execution/ordering/publication gate;
-do not build more isolated kernels or claim1.0/full fidelity/chip acceptance.
+PR32 is DRAFT at 1e96c40c8c98038fd506109e8dd89155eeea8948. All six exact-head CI workflows and the
+full functional PI/TLB, window/OBJ/Math/delayed-DMA contracts pass. First native
+original-mixed8 preflight FAILED before emulator hello, after verified install
+and acknowledged launch. No new images, PCM or quiet timing exist. Root cause is
+unresolved; compare canonical packaging/boot and runtime in a bounded control.
+Candidate remains installed; exact habitual restoration is PENDING physical
+OFF/ON confirmation and menu install/readback. Historical restored state is not
+current. See [the Nov8 receipt](evidence/integration-faithful-compositor-2026-11-08.json).
 
-Current user steering2026-10-18: first port the habitual R17 faithful compositor
-(A11/A13 dark-house/rain path) to integrated master, separately from R44/R45.
-Draft PR32 atf91244b5 has full RSP/PPU reference, owner and CPU publication
-proofs plus all six exact-head CI workflows PASS; full functional PI/TLB,
-compiled math/window/delayed-DMA and native gates remain open. Qualify it before default promotion and
-measure that combined baseline; then resume the full resident-DSP cost above.
-PR31 integrates the user-approved production/laboratory distribution boundary
-after all applicable exact-head gates pass. Current Latest is already normal-only; no modified menu or
-USB/reset/image tools are distributed. Keep this tooling gate independent of
-renderer/runtime qualification. The full objective remains ACTIVE.
+Continue the faithful R17 compositor qualification separately from R44/R45.
+Restore first, resolve startup, then aligned native house/rain/SMW/DKC/Mode7
+image/APU/PCM and combined cadence controls before default promotion. Complete
+resident-DSP integral native cost remains NOT_MEASURED and follows that baseline.
+The consolidation milestone has real integrated changes, but the full objective
+remains ACTIVE; no1.0/full fidelity/chip/DAC acceptance is claimed.

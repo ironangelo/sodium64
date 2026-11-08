@@ -660,6 +660,32 @@ update_vols: // t6: voice
     jr ra
     nop
 
+.globl release_mode
+.align 5
+release_mode: // t6: voice, t8: stride, gp: current DSP timer
+    // Release decreases by8 on every generated sample, independently of rates.
+    lhu t0, envelopes(t8)
+    addiu t0, t0, -8
+    bgtz t0, release_store
+    nop
+    li t0, 1
+    sll t0, t0, t6
+    xori t0, t0, 0xFF
+    and sp, sp, t0
+    sb sp, enabled
+    move t0, zero
+release_store:
+    sh t0, envelopes(t8)
+    // Schedule the following sample, including the0x7800 timer wrap.
+    addiu t0, gp, -1
+    bgez t0, release_timer_ready
+    nop
+    addiu t0, t0, 0x7800
+release_timer_ready:
+    sh t0, next_steps(t8)
+    j update_vols
+    nop
+
 .align 5
 read_dspaddr: // v0: value
     // Read the DSP register address
@@ -710,6 +736,15 @@ write_vol: // t0: address
 
 .align 5
 write_adsr: // t0: address
+    // ADSR writes cannot leave latched release. KON explicitly restarts it.
+    andi t4, t0, 0xF0
+    lw t1, mode_funcs(t4)
+    la t2, release_mode
+    bne t1, t2, adsr_not_releasing
+    nop
+    jr ra
+    nop
+adsr_not_releasing:
     // Switch a voice's envelope to gain if selected
     lbu t1, dsp_regs(t0) // VxADSR1
     andi t4, t0, 0xF0
@@ -784,10 +819,27 @@ kon_end:
 
 .align 5
 write_koff: // a1: value
-    // Set voices to disabled
-    lbu t0, enabled
-    xori t1, a1, 0xFF
-    and t0, t0, t1
-    sb t0, enabled
+    // Latch release without changing the current envelope or enabled mask.
+    la t2, release_mode
+    lhu t3, dsp_timer
+    addiu t3, t3, -1
+    bgez t3, koff_timer_ready
+    nop
+    addiu t3, t3, 0x7800
+koff_timer_ready:
+    andi t7, a1, 0xFF
+    li t6, -1
+koff_next_voice:
+    addiu t6, t6, 1
+    srl t0, t7, t6
+    beqz t0, koff_return
+    andi t0, t0, 1
+    beqz t0, koff_next_voice
+    sll t1, t6, 4
+    sw t2, mode_funcs(t1)
+    sh t3, next_steps(t1)
+    b koff_next_voice
+    nop
+koff_return:
     jr ra
     nop

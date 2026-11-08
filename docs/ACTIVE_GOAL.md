@@ -45,7 +45,8 @@ Restore first, resolve startup, then aligned native house/rain/SMW/DKC/Mode7
 image/APU/PCM and combined cadence controls before default promotion. Complete
 resident-DSP integral native cost remains NOT_MEASURED and follows that baseline.
 The consolidation milestone has real integrated changes, but the full objective
-remains ACTIVE; no1.0/full fidelity/chip/DAC acceptance is claimed.
+remains incomplete. Physical recovery currently blocks execution; no1.0/full
+fidelity/chip/DAC acceptance is claimed.
 
 Independent R22 extraction is draft PR33 head1f34d1e on clean master. Release and
 complete existing KON/rate-scheduler proofs pass in normal/PROFILE/HW, with CI
@@ -60,3 +61,9 @@ layout plus only the coherent KOFF source patch admits USB with66832-byte CGRAM
 margin, passing owners/KOFF and12 unchanged RSP images. Qualify/promote PR32,
 then rebase PR33 and rerun actual exact-head/native gates. This source-pair
 control is not current-head CI or native acceptance; no separate size campaign.
+
+Terminal PR33 CI: Build/Owners/Ares PASS, USB FAIL. All8 Ares profiles were
+checked, with>=800 samples in each of6 CPU-JIT cases; virtual low-budget cases
+remain explicit and are not native acceptance. No CI or local worker remains
+pending. The repeated physical OFF/ON/menu confirmation and exact restoration
+are now the execution blocker; do not start another campaign to fill the wait.

@@ -181,8 +181,8 @@
       "id": 42526113042,
       "name": "Ares Profile Validation",
       "head_sha": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42526113042"
     }
   ],
@@ -209,7 +209,7 @@
   "historical_native_limits": "R22 endpoints included12 observer instructions per release step; no clean-port cost claim",
   "remaining_gates": [
     "Qualify/promote PR32 faithful layout, then rebase and rerun exact-head gates: unchanged faithful layout already admits the coherent KOFF patch locally",
-    "All applicable exact-head CI; do not skip failed/skipped USB gate",
+    "After faithful promotion/rebase, pass all applicable exact-head CI including USB; current standalone snapshot remains failed",
     "Applicable native note-tail/cadence controls with an appropriate reference and combined baseline"
   ],
   "unqualified_full_DSP_scope": [
@@ -278,5 +278,88 @@
     "physical_acceptance": false,
     "exact_head_CI_for_combination": false,
     "next_action": "Qualify/promote faithful layout, then rebase PR33 and rerun its required gates; do not repeat unrelated laboratory size tuning"
-  }
+  },
+  "Ares_original_workload_receipt": {
+    "status": "PASS_IN_STATED_CI_SCOPE",
+    "run": 42526113042,
+    "artifact": 13636321112,
+    "exact_head": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
+    "download_archive_digest_verified": true,
+    "original_profiles_checked": 8,
+    "CPU_JIT_profiles_with_at_least800_samples": 6,
+    "profiles": {
+      "interpreter-idle": {
+        "sample_count": 628,
+        "last_complete_virtual_VI_window_frames": 255,
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio_set": 4,
+        "precision": 8
+      },
+      "interpreter-gameplay": {
+        "sample_count": 737,
+        "last_complete_virtual_VI_window_frames": 60,
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio_set": 4,
+        "precision": 8
+      },
+      "recompiler-idle": {
+        "sample_count": 1043,
+        "last_complete_virtual_VI_window_frames": 59,
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio_set": 4,
+        "precision": 8
+      },
+      "recompiler-cpu-alu": {
+        "sample_count": 885,
+        "last_complete_virtual_VI_window_frames": 60,
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio_set": 4,
+        "precision": 8
+      },
+      "recompiler-wram": {
+        "sample_count": 1300,
+        "last_complete_virtual_VI_window_frames": 60,
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio_set": 4,
+        "precision": 8
+      },
+      "recompiler-ppu-registers": {
+        "sample_count": 828,
+        "last_complete_virtual_VI_window_frames": 57,
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio_set": 4,
+        "precision": 8
+      },
+      "recompiler-dma-vram": {
+        "sample_count": 910,
+        "last_complete_virtual_VI_window_frames": 17,
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio_set": 4,
+        "precision": 8
+      },
+      "recompiler-gameplay-balanced": {
+        "sample_count": 1007,
+        "last_complete_virtual_VI_window_frames": 60,
+        "apu_clock": 21,
+        "frameskip": 0,
+        "audio_set": 4,
+        "precision": 8
+      }
+    },
+    "physical_acceptance": false,
+    "scope": "Original-input Ares smoke/profile visibility; no requirement that every virtual workload reaches60/60",
+    "limits": [
+      "Not native cadence or presentation FPS",
+      "Not a whole-audio or release-waveform reference",
+      "PPU-registers and DMA-VRAM virtual windows remain below target; preserve their observed values"
+    ]
+  },
+  "overall_CI": "BLOCKED: Build/Owners/Ares PASS; USB FAIL"
 }

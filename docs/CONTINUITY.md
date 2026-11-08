@@ -1,3 +1,39 @@
+# 2026-11-08 - PR33 CI terminal; physical recovery is the remaining execution blocker
+
+Exact PR33 head1f34d1e is now terminal across all four applicable workflows:
+Build42526113012 PASS, Owners42526113166 PASS, Ares42526113042 PASS,
+USB42526113144 FAIL at the unchanged strict CGRAM owner assertion. No worker
+was restarted. The Ares artifact13636321112 was downloaded/digest-verified;
+all8 original profiles have nonzero valid samples and all6 CPU-JIT profiles
+have>=800. APU21/audio4/precision8/frameskip0 remain selected in each state.
+Virtual complete windows are59/60,60/60,60/60,57/60,17/60,60/60 across the six
+CPU-JIT workloads. This is CI smoke/profile evidence, not a60/60/native/DAC claim.
+[Complete scoped receipt](evidence/integration-koff-release-2026-11-08.json).
+
+Master was freshly verified atbac1a4df. PR32 head1e96c40c and PR33 head1f34d1e
+remain DRAFT/open/unmerged. The conditional faithful+KOFF local owner proof
+remains valid only in its stated source-pair scope. PR33's next route is the
+qualified PR32 layout/default promotion, followed by rebase and real gates.
+
+CURRENT HARDWARE: second PR32 USB candidate is the last verified installation.
+The second OFF/ON/menu confirmation and exact-backup restoration remain PENDING;
+no restoration receipt exists and no deployer/controller remains active. The
+user has been asked. After that confirmation: run the prepared exact-backup
+restoration, verify menu recovery0/readback, then the same original mixed8
+no-USB HW_PROFILE discriminator. Require terminal red screen or confirmed
+console OFF before SRAM read; never dump a potentially live stalled game.
+
+This same physical requirement has persisted through three consecutive goal
+turns since the second failure. Independent bounded work is now closed: PR33
+clean extraction/proofs, the actual memory blocker, conditional dependency and
+terminal CI. Do not open another candidate/size/kernel campaign to fill the
+wait. The full objective is incomplete: faithful native startup, aligned image/
+APU/PCM and combined cadence gates remain, followed by the complete resident-DSP
+integral native cost (NOT_MEASURED). Remaining merge/completion gates are not
+met by this checkpoint's software-only evidence.
+
+---
+
 # 2026-11-08 - PR33 memory dependency verified on unchanged faithful layout
 
 A bounded LOCAL composition of PR32 head1e96c40c plus ONLY PR33's src/dsp.S patch

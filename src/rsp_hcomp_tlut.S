@@ -26,8 +26,8 @@ hcomp_tlut_probe:
     bnez t0, hcomp_tlut_reject
     lb t0, STAT_FLAGS
     bltz t0, hcomp_tlut_reject
-    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
-    bnez t0, hcomp_tlut_reject
+    move t0, zero // No laboratory composition limit in production.
+    nop
     slt t0, k0, k1
     beqz t0, hcomp_tlut_reject
     sltiu t0, k0, 256

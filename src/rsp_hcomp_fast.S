@@ -65,9 +65,9 @@ hcomp_fast_cache_ready:
     nop
 hcomp_fast_probe:
     // Exact identity operations need neither a Sub pass nor pixel arithmetic.
-    // Keep clipping and the diagnostic composed/raw split on the general path.
-    lw t2, HCOMP_DIAG_COMPOSE_LIMIT
-    bnez t2, hcomp_fast_return
+    // Keep clipping on the general path; production has no composed/raw split.
+    move t2, zero
+    nop
     andi t2, t1, 0xC0
     bnez t2, hcomp_fast_return
     andi t2, t1, 0x30

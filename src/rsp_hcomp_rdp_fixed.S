@@ -50,8 +50,8 @@ hcomp_entry:
     bnez t0, hcomp_rdp_fixed_fallback
     nop
 hcomp_rdp_fixed_operand:
-    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
-    bnez t0, hcomp_rdp_fixed_fallback
+    move t0, zero // No laboratory composition limit in production.
+    nop
     lhu gp, SUB_COLOR
     srl t0, gp, 11
     sltiu t0, t0, 17

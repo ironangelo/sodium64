@@ -1,96 +1,68 @@
-# Faithful compositor extraction on integrated master
+# Faithful compositor integration
 
-Status: CANDIDATE. This port is not enabled by default, not merged, and has no
-new native acceptance or timing claim. `FAITHFUL_RENDERER=1` selects the coherent
-R17 renderer derived from the A11/A13 compositor. This is the visual path used
-for the dark ALttP house and rain/layer scenes; R44/R45 are later optimizations
-and are outside this extraction.
+Status: CANDIDATE / draft PR32. Production defaults remain unchanged pending
+qualification. `FAITHFUL_RENDERER=1` temporarily selects the extracted compositor
+for comparison; this is not a second user-facing mode. Promotion must retire
+that temporary legacy path after the physical gates pass.
 
-The source is pinned to `238170abf956da705806f979f9cc256fbc565ac0`, with the selected R17 feature combination
-documented in that tree's `docs/USB_HARDWARE_LOOP.md`. Diagnostic branches and
-unselected renderer experiments are removed. APU, CPU, DSP, profiler and USB
-implementations remain the integrated master versions. The existing decoder
-return ownership repair is retained in both resident banks.
+The coherent source is R17 at
+`238170abf956da705806f979f9cc256fbc565ac0`, derived from the A11/A13 visual work
+for the dark ALttP house and rain/layer scenes. R44/R45 remain separate. Current
+master CPU interpreter, APU, DSP, USB and profiler implementations are retained.
+The original renderer's necessary ROM paging and CPU source bindings are explicit.
 
-The temporary legacy/faithful switch supports a controlled comparison while
-qualifying this port. It is not a second user-facing rendering mode. Promotion
-still requires the integration gates below; a successful default build alone
-does not execute the new renderer.
+There are two bounded RSP differences from the frozen source: the integrated
+PR29 decoder-return NOPs, and removal of seven old laboratory composition-limit
+reads/branches. The latter folds their ordinary zero-limit behavior while
+preserving fixed offsets and register effects. Only18 instruction words change
+relative to the pre-cleanup port; every other loaded byte/address, all RSP data
+and all CPU/APU/DSP/PPU bytes remain identical. Poisoned retired words cannot
+reactivate that control. Historical macro names retained for fixture guards
+allocate no storage and have no production reads.
 
-Current local evidence:
+The selected lower-memory plan reserves composition surfaces at384000..3e7000,
+row queues at3e7000/3e7200 and Q2 events at3e8000..400000. Its194 ROM-cache pages
+end exactly at384000; cartridge bytes still page from cart, with no ROM-size
+truncation. Q1 begins atD2000 and the linker checks its actual CPU/RSP owner.
+Existing upper diagnostic leases remain independently gated and excluded from
+normal builds. Fixed residents are4KiB; demand-loaded slots are1000bytes.
 
-- Normal, PROFILE, USB and independent HW_PROFILE-warmup25 variants compile with the new
-  renderer. All resident banks stay at 4 KiB; each slot remains 1000 bytes.
-- All twelve RSP banks, including data and extents, are byte-exact against a
-  fresh compile of the frozen selected source plus the two explicit decoder
-  return NOPs. `scripts/check_faithful_reference.py` regenerates this proof.
-- The decoder passes all 9984 linked scalar ownership cases and four emitted
-  mutations. This does not model vector arithmetic or pixels.
-- Disabled normal build is identical at all 767064 loaded bytes/addresses to
-  measured integrated master. APU/CPU-interpreter/DSP sources remain unchanged.
-- Emitted boot/ISR/snapshot tests pass 67 cases and check all 24 embedded RSP
-  sections after actual clearing. The legacy 27-case proof still passes.
-  Lower owner plans and diagnostic upper leases are disjoint; three owner
-  corruptions are rejected. The USB bridge retains its 46 cases/four mutants.
-- Actual CPU source publication passes four register patterns in each of four
-  builds: all twelve writes, uncached fallback descriptors and preserved
-  register/HI/LO/CP0 owners. Four emitted faults per build are rejected. This
-  does not model RSP consumption or DMA/cache timing.
-- APU lookup reset, scheduled GAIN and all 57344 BRR cases pass in the extended
-  build. These are structural/arithmetic contracts, not waveform acceptance.
+Local proof, rechecked2026-11-08:
 
-The original R17 plan uses 194 ROM-cache pages, reserving the remaining lower
-RDRAM for composition surfaces. ROM bytes still page from cart; this does not
-truncate ROM support. The cursor and readonly EntryLo0 construction pass 776
-cases/four actual instruction mutants per variant. PI/TLB replacement and
-representative native cache cost remain separate gates.
+| Contract | Evidence and limit |
+| --- | --- |
+| Reference binding | All12 RSP text/data/extents equal a fresh frozen compile plus the declared repairs. Complete PPU object sections and688 normalized relocations (700 USB) match in all four configurations. |
+| Removed laboratory limit | Seven sites,112 scalar state/read cases per configuration with poisoned retired words; no production limit load remains. Fixed bank extents and all ordinary register effects are preserved. |
+| CPU publication and owners | Twelve actual writes under16 register cases; uncached descriptors and sixteen emitted fault rejections. Boot/ISR/snapshot67 cases, legacy27, full lower owner plan and independent upper admission. |
+| ROM replacement |646 complete linked refills per build:194 cold,226 victim-present and226 victim-absent;20 actual instruction faults rejected across four builds. Ten TLBP model controls. Delayed PI, alias/map/register owners and composition sentinels pass. No CPU cache, bus-cycle or hazard model. |
+| Window and OBJ execution |1792 compiled window cases/two mutants;28672 objects spanning19328 drawn and88192 culled rows. Independent geometry truth and caller/memory ownership. |
+| Full-row Math/DMA |Twelve cases/70912 original numeric pixels match the independent arithmetic oracle and ordinary-row reference. VRAM backup/restore retires before Phase; OAM and other owners stay intact. Skip-restore, short-backup and overlap faults are rejected. Setup is seeded; RDP rasterization is not modeled. |
+| Existing core and release |9984 decoder cases/four mutants, all12 delay-slot checks, integrated audio contracts and release admission remain applicable. Disabled normal rebuild equals all767064 measured integrated bytes/addresses. |
 
-The first USB/HW links correctly rejected growth beyond the legacy BE200
-CGRAM bound. The new renderer actually moves Q1 to D2000, as in its selected
-native configuration; its linker now checks that explicit owner in every
-variant. Q2 and composition surfaces remain in the original proven 4 MiB plan.
-No bound was suppressed, and the existing profiler/USB upper leases are kept.
+`scripts/replay_faithful_contracts.py` stages immutable original test interpreters
+from the same source pin. One input adaptation removes the historical observer
+bank tag from the synthetic Phase pointer, matching actual aligned production
+CPU publications. No VM alignment/ownership assertion or pixel oracle is
+weakened. The original failed control and its cause are retained in the receipt.
+The first CI missing-header and legacy-wrapper failures are also preserved.
+The pinned libdragon RDP header produces the same reference images.
 
-Gates before promotion:
+The emulator build has no historical Git or modified-menu dependency. Only the
+optional proof needs the immutable source object:
+`git fetch --depth=1 origin 238170abf956da705806f979f9cc256fbc565ac0`.
+Production release admission checks the actual normal ELF/ROM and two-file ZIP;
+USB/reset/capture/profiler implementations are compiled only in laboratory builds.
 
-1. Execute CPU boot clears, every emitted source binding and all simultaneous
-   memory owners against the new layout, including rejection mutants.
-2. Run full compiled producer/consumer, palette/window/math and delayed-DMA
-   contracts against this exact port, preserving existing runtime proofs.
-3. Add explicit CI coverage for the enabled renderer and check its exact SHA.
-   The dedicated port workflow exercises all four configurations; Ares also
-   compiles the enabled compositor rather than testing the legacy default.
-4. On real N64, compare aligned house/rain/SMW/DKC/Mode7 controls to the faithful
-   reference for images and integrated core for guest/APU/PCM behavior. Include
-   full-rate cadence, quiet windows, return and verified habitual restoration.
-5. Resolve any differences before default promotion. Keep R44/R45 and the
-   complete resident-DSP cost test as distinct subsequent gates.
+Remaining promotion gates:
 
-No commercial inputs, captures, states, audio or game-derived hashes belong in
-this branch. The emitted-parity manifest contains only original program bytes.
+1. Complete exact-head CI for the cleaned runtime and new functional contracts.
+2. On real N64, qualify RDP output and pager/cache behavior, then aligned faithful
+   house/rain/SMW/DKC/Mode7 images against the proper visual reference. Compare
+   APU/PCM and guest progression to the integrated core, preserving full rate.
+3. Measure the combined native baseline with quiet windows, return and verified
+   habitual restoration. Resolve differences before default promotion. Then
+   resume the complete resident-DSP integral cost gate, independently of R44/R45.
 
-For a fresh checkout, the optional reference-byte proof needs the immutable
-source object (`git fetch --depth=1 origin 238170abf956da705806f979f9cc256fbc565ac0`).
-The emulator build itself has no historical Git or modified-menu dependency.
-
-[Scoped local proof receipt](evidence/faithful-compositor-local.json).
-
-Initial CI exposed a missing SDK header (`rdpq_macros.h`) in enabled builds.
-The setup now installs it from the same immutable libdragon source pin as the
-other SDK definitions. Recompiling the reference with that exact header still
-matches all twelve RSP allocated images; the local SDK header had different
-non-emitted contents. The first Ares job never reached emulator execution.
-The legacy CGRAM source checker also counted the wrapper's final directive as
-an instruction. It now selects that exact legacy wrapper explicitly and labels
-its scope; this does not qualify the enabled compositor. Original failed run
-IDs and causes remain in the receipt; the repaired CI still needs to run.
-
-The reference verifier now also compiles the entire frozen PPU producer and
-compares every allocated object section plus normalized relocation targets and
-addends. Normal/PROFILE/HW objects match 7168 text bytes,67924 data bytes and688
-relocations each; USB matches7232 text bytes and700 relocations, selecting the
-existing guest-boundary counter callsites. All four configurations pass locally.
-This binds the extracted producer as well as the twelve consumers to the frozen
-source; dynamic DMA/cache/PPU execution and native image/cadence gates remain.
-The repaired e4d078d8 enabled contracts and legacy CGRAM CI pass; their first
-failed run receipts remain preserved. The extended proof requires new-head CI.
+No new native acceptance, presentation FPS or DAC claim is made here. Commercial
+ROMs, saves, states, captures, audio and game-derived hashes stay local.
+[Scoped original-program receipt](evidence/faithful-compositor-local.json).

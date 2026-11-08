@@ -113,13 +113,14 @@ hcomp_band_bounds_ready:
     sw t2, HCOMP_BAND_BASES + 8
 hcomp_band_targets_ready:
     sb zero, HCOMP_SCREEN
-    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
-    beqz t0, hcomp_dispatch_policy
-    sltu t1, k0, t0
-    bnez t1, hcomp_dispatch_policy
+    // Production always composes the complete section. Keep fixed slot offsets.
+    move t0, zero
+    b hcomp_dispatch_policy
+    move t1, zero
     nop
-    li t0, 1
-    sw t0, HCOMP_BAND_RAW
+    nop
+    nop
+    nop
 hcomp_dispatch_policy:
     lw t0, HCOMP_BAND_RAW
     beqz t0, hcomp_compact_band

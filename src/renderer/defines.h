@@ -300,7 +300,8 @@
 #define HCOMP_SCREEN 0xEC8
 // Per-epoch Sub mask; fixed-operand direct composition does not render TS.
 #define HCOMP_EFFECTIVE_TS 0xEC9
-// Diagnostic-only 16-bit seqlock: epoch[15:4], loading[3], bank[2:0].
+// Historical fixture addresses only. Production has no observer or limit reads;
+// immutable replay tests retain these names to guard the unused DMEM words.
 #define NATIVE_DIAG_RSP_BANK 0xECA
 #define NATIVE_DIAG_SIGNAL_MASKS 0xEFC // Eight immutable halfwords; retired eligibility LUT tail.
 #define HCOMP_DIAG_COMPOSE_LIMIT 0xECC

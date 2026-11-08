@@ -354,8 +354,8 @@ hcomp_resident_backdrop_admit:
     bnez t0, hcomp_resident_admit_fallback
     lhu t0, MAIN_COLOR
     bnez t0, hcomp_resident_admit_fallback
-    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
-    bnez t0, hcomp_resident_admit_fallback
+    move t0, zero // Fold the removed laboratory limit to normal full composition.
+    nop
     lhu t0, SUB_COLOR
     andi t0, t0, 0xFFFE
     bnez t0, hcomp_resident_admit_direct

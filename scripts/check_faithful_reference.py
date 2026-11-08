@@ -10,7 +10,7 @@ import struct
 import subprocess
 import tempfile
 
-from linked_cpu_regression import load_elf
+from linked_cpu_regression import CPU, load_elf
 from check_rsp_branch_delay_slots import read_text
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +27,84 @@ BANKS = ('rsp_main', 'rsp_mode7', 'rsp_hcomp', 'rsp_hcomp_math',
 
 def original(name):
     return subprocess.check_output(['git', '-C', str(ROOT), 'show', SOURCE+':src/'+name])
+
+
+def fold_laboratory_limit(name, text):
+    """Explicit reference delta: the retained ordinary path always used zero.
+
+    Fold seven old diagnostic reads/branches, preserving register effects and
+    instruction counts so fixed IMEM slots and caller entry points stay put.
+    Execution contracts independently check the resulting production behavior.
+    """
+    branches = {'rsp_main.S': ('t0', 'hcomp_resident_admit_fallback'),
+        'rsp_hcomp_fixed_window.S': ('t0', 'hcomp_fixed_window_fallback'),
+        'rsp_hcomp_fast.S': ('t2', 'hcomp_fast_return'),
+        'rsp_hcomp_rdp.S': ('t0', 'hcomp_rdp_fallback'),
+        'rsp_hcomp_rdp_fixed.S': ('t0', 'hcomp_rdp_fixed_fallback'),
+        'rsp_hcomp_tlut.S': ('t0', 'hcomp_tlut_reject')}
+    if name == 'rsp_hcomp.S':
+        old = ('    lw t0, HCOMP_DIAG_COMPOSE_LIMIT\n    beqz t0, hcomp_dispatch_policy\n'
+               '    sltu t1, k0, t0\n    bnez t1, hcomp_dispatch_policy\n'
+               '    nop\n    li t0, 1\n    sw t0, HCOMP_BAND_RAW\n')
+        new = ('    move t0, zero\n    b hcomp_dispatch_policy\n    move t1, zero\n'
+               '    nop\n    nop\n    nop\n    nop\n')
+    elif name in branches:
+        register, target = branches[name]
+        old = f'    lw {register}, HCOMP_DIAG_COMPOSE_LIMIT\n    bnez {register}, {target}\n'
+        new = f'    move {register}, zero\n    nop\n'
+    else:
+        return text
+    assert text.count(old) == 1, (name, 'frozen laboratory-limit anchor drifted')
+    return text.replace(old, new)
+
+
+def prove_limit_elision(before, after):
+    """Execute only the changed scalar span; compare ordinary zero-limit state.
+
+    Poison the retired word in the new code to prove it is never read. This is
+    scalar state/read ownership, not RSP pipeline, vector or native timing proof.
+    """
+    base, old = read_text(before)
+    new_base, new = read_text(after)
+    assert base == new_base and len(old) == len(new)
+    _, symbols = load_elf(before)
+    words = struct.unpack('>'+str(len(old)//4)+'I', old)
+    reads = [i for i, word in enumerate(words) if word >> 26 == 35
+             and word >> 21 & 31 == 0 and word & 65535 == 0xecc]
+    assert len(reads) == 1, 'expected exactly one frozen limit read per folded bank'
+    entry = base+4*reads[0]
+    phase = before.name.startswith('rsp_hcomp-before')
+    end = symbols['hcomp_dispatch_policy'] if phase else entry+12
+
+    class TraceCPU(CPU):
+        def __init__(self, memory):
+            super().__init__(memory)
+            self.limit_reads = 0
+
+        def read(self, address, size=4):
+            if address & 0x1fffffff == 0xecc:
+                self.limit_reads += 1
+            return super().read(address, size)
+
+    cases = 0
+    for pattern in range(4):
+        results = []
+        for code, poison in [(old, 0), *((new, value) for value in (0, 1, 0xdeadbeef, 0xffffffff))]:
+            memory = {i: (i*37+pattern*11) & 255 for i in range(4096)}
+            memory.update(((base+i) & 0x1fffffff, value) for i, value in enumerate(code))
+            memory.update((0xecc+i, value) for i, value in enumerate(poison.to_bytes(4, 'big')))
+            cpu = TraceCPU(memory)
+            cpu.pattern(pattern)
+            cpu.execute(entry, stop=end, max_steps=12)
+            assert not cpu.memory_writes, 'fold changed DMEM ownership'
+            results.append((cpu.regs, cpu.hi, cpu.lo, cpu.cp))
+            assert cpu.limit_reads == (1 if code is old else 0), 'retired laboratory word accessed'
+        assert all(result == results[0] for result in results[1:]), 'fold changed ordinary scalar state'
+        cases += 4
+    changed = sum(a != b for a, b in zip(words, struct.unpack('>'+str(len(new)//4)+'I', new)))
+    assert changed == (6 if phase else 2), 'unexpected executable change outside limit fold'
+    return {'scalar_cases': cases, 'poison_values': 4, 'changed_instruction_words': changed,
+            'ordinary_register_state_identical': True, 'production_limit_reads': 0}
 
 
 def relocatable_image(path):
@@ -89,20 +167,23 @@ def main():
     env = os.environ.copy()
     env['PATH'] = str(prefix/'bin')+os.pathsep+env['PATH']
     report = {'passed': True, 'source': SOURCE,
-              'reference_patches': 'Explicit NOP after shared_decode4 JR t4 in each resident bank.',
+              'reference_patches': 'Decoder JR return NOPs; seven laboratory limit sites folded to ordinary zero-limit behavior with fixed instruction counts.',
               'scope': 'Complete linked RSP text/data/extents and PPU object sections/relocations; execution, RDP rasterization and native timing are separate gates.',
-              'physical_acceptance': False, 'banks': {}}
+              'physical_acceptance': False, 'banks': {}, 'laboratory_limit_elision': {}}
     with tempfile.TemporaryDirectory(prefix='s64-faithful-reference-') as directory:
         stage = Path(directory)
         source_names = [name+'.S' for name in BANKS]
         source_names += ['ppu.S', 'defines.h', 'rsp_hcomp.ld', 'rsp_hcomp_packed_math.inc',
                          'rsp_tmem_atlas.inc', 'rsp_tmem_coord.inc']
+        before_sources = {}
         for name in source_names:
             text = original(name).decode()
             if name in ('rsp_main.S', 'rsp_mode7.S'):
                 start = text.index('shared_decode4:')
                 end = text.index('jr t4', start)+len('jr t4')
                 text = text[:end]+'\n    nop\n'+text[end:]
+            before_sources[name] = text
+            text = fold_laboratory_limit(name, text)
             (stage/name).write_text(text)
         for name in BANKS:
             resident = name in ('rsp_main', 'rsp_mode7')
@@ -120,9 +201,25 @@ def main():
             assert reference_bytes == candidate_bytes, (name, 'complete reference text/data drift')
             text = read_text(candidate)[1]
             assert len(text) == (4096 if resident else 1000), (name, 'fixed bank size')
+            words = struct.unpack('>'+str(len(text)//4)+'I', text)
+            assert not any(word >> 26 == 35 and word >> 21 & 31 == 0
+                           and word & 65535 == 0xecc for word in words), (name, 'laboratory limit read retained')
             report['banks'][name] = {'all_allocated_bytes_and_addresses_identical': True,
                 'allocated_bytes': len(candidate_bytes), 'text_bytes': len(text),
                 'text_sha256': hashlib.sha256(text).hexdigest()}
+            source_name = name+'.S'
+            if fold_laboratory_limit(source_name, before_sources[source_name]) != before_sources[source_name]:
+                before_source = stage/(name+'-before.S')
+                before_source.write_text(before_sources[source_name])
+                before_binary = stage/(name+'-before.elf')
+                result = subprocess.run([compiler, '-march=mips1', '-mabi=32', '-Wa,--fatal-warnings',
+                    *flags, '-L'+str(prefix/'mips64-elf/lib'), '-nostartfiles', '-Wl,-T'+script,
+                    '-Wl,--gc-sections', '-o', str(before_binary), str(before_source)],
+                    check=False, capture_output=True, text=True, env=env)
+                if result.returncode:
+                    raise RuntimeError(result.stdout+result.stderr)
+                report['laboratory_limit_elision'][name] = prove_limit_elision(before_binary, candidate)
+        assert len(report['laboratory_limit_elision']) == 7
         candidate_sections, candidate_relocations = relocatable_image(args.build/'src/ppu.o')
         ppu_flags = list(flags)
         if any(relocation[3][0].startswith('remote_') for relocation in candidate_relocations):

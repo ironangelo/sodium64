@@ -61,8 +61,8 @@ hcomp_entry:
     lbu t0, HCOMP_EFFECTIVE_TS
     addi t0, t0, -1 // BG1 presence is exactly 0400/0C00; other tags differ.
     bnez t0, hcomp_rdp_fallback
-    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
-    bnez t0, hcomp_rdp_fallback
+    move t0, zero // No laboratory composition limit in production.
+    nop
     lw s4, OVERLAY_HCOMP_MATH_SRC
     li t0, -8
     and s4, s4, t0

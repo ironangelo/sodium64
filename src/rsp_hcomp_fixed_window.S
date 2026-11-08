@@ -32,8 +32,8 @@ hcomp_entry:
     bnez t0, hcomp_fixed_window_fallback
     nop
 hcomp_fixed_window_operand_ready:
-    lw t0, HCOMP_DIAG_COMPOSE_LIMIT
-    bnez t0, hcomp_fixed_window_fallback
+    move t0, zero // No laboratory composition limit in production.
+    nop
     nop
     // This sideband is retired and reserved exclusively for Math scratch.
     li a0, VRAM_TABLE

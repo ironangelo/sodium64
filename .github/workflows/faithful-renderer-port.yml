@@ -34,7 +34,9 @@ jobs:
           python3 scripts/test_profile_owners.py build_faithful_profile/sodium64-faithful-profile.elf build_faithful_hw/sodium64-faithful-hw.elf --normal-elf build_faithful/sodium64-faithful.elf --json-output faithful-boot-owners.json
           python3 scripts/test_remote_bridge.py build_faithful_usb/sodium64-faithful-usb.elf --json-output faithful-usb-bridge.json
           python3 scripts/test_faithful_rom_cache.py build_faithful/sodium64-faithful.elf build_faithful_profile/sodium64-faithful-profile.elf build_faithful_hw/sodium64-faithful-hw.elf build_faithful_usb/sodium64-faithful-usb.elf --json-output faithful-ROM-pager.json
+          python3 scripts/test_faithful_rom_replacement.py build_faithful/sodium64-faithful.elf build_faithful_profile/sodium64-faithful-profile.elf build_faithful_hw/sodium64-faithful-hw.elf build_faithful_usb/sodium64-faithful-usb.elf --json-output faithful-ROM-replacement.json
           python3 scripts/test_faithful_bindings.py build_faithful/sodium64-faithful.elf build_faithful_profile/sodium64-faithful-profile.elf build_faithful_hw/sodium64-faithful-hw.elf build_faithful_usb/sodium64-faithful-usb.elf --json-output faithful-CPU-bindings.json
+          python3 scripts/check_release_package.py --elf build_faithful/sodium64-faithful.elf --rom sodium64-faithful.z64 --converter rom-converter.py --output faithful-release-isolation.json
       - name: Preserve decoder, branch and integrated audio contracts
         shell: bash
         run: |
@@ -53,6 +55,9 @@ jobs:
           python3 scripts/check_faithful_reference.py build_faithful_profile --json-output faithful-reference-profile.json
           python3 scripts/check_faithful_reference.py build_faithful_hw --json-output faithful-reference-hw.json
           python3 scripts/check_faithful_reference.py build_faithful_usb --json-output faithful-reference-usb.json
+      - name: Replay pinned window, OBJ and delayed Math DMA contracts
+        run: |
+          python3 scripts/replay_faithful_contracts.py build_faithful --json-output faithful-execution-contracts.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

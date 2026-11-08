@@ -100,8 +100,8 @@
     "physical_acceptance": false
   },
   "remaining_gates": [
-    "Recover menu and restore exact backup after second failed control",
-    "Bounded no-USB existing profiler discriminator: verify terminal red screen or console OFF before SRAM read; localize startup/first-frame stall",
+    "Confirm terminal red screen or console OFF, then read/validate exact-source SRAM capture and restore habitual backup",
+    "Use that evidence to localize the initial USB hello failure; no third unchanged USB preflight",
     "Aligned native house/rain/SMW/DKC/Mode7 images and APU/PCM/guest progression controls",
     "Combined quiet native cadence and verified final restoration before default promotion"
   ],
@@ -145,7 +145,7 @@
     "compressed_ELF_end": 49656,
     "remaining_difference_scope": "After the complete compressed executable; no native causal claim"
   },
-  "next_native_candidate_prepared": "Exact CI no-USB HW_PROFILE program, original mixed8,25+5VI; not launched",
+  "next_native_candidate_prepared": "No-USB discriminator launched; awaiting safe capture read, no further program queued",
   "restoration_between_controls": {
     "status": "VERIFIED",
     "physical_OFF_ON_confirmed_by_user": true,
@@ -170,7 +170,8 @@
     "audio_exports": 0,
     "quiet_timing_windows": 0,
     "session_terminated": true,
-    "live_raw_dump_performed": false
+    "live_raw_dump_performed": false,
+    "restoration": "VERIFIED before the no-USB discriminator"
   },
   "packaging_hypothesis_disposition": {
     "pinned_CI_source_tools_do_not_resolve_native_hello_failure": true,
@@ -178,8 +179,9 @@
     "conclusion": "Simple packaging mismatch is insufficient; root cause remains unresolved"
   },
   "current_hardware": {
-    "installed": "Second faithful USB candidate, same CI ELF with pinned packaging",
-    "restoration": "PENDING second physical OFF/ON and exact backup install/readback",
+    "last_verified_installation": "Exact CI no-USB HW_PROFILE program,98304 bytes",
+    "awaiting": "User terminal-red-screen or console-OFF confirmation before SRAM read",
+    "restoration": "PENDING after capture read; fresh backup already verified",
     "active_deployer": false
   },
   "next_discriminator_admission": {
@@ -195,5 +197,33 @@
     "physical_acceptance": false,
     "failed_IPL3_equals_previously_passing_master_IPL3": true,
     "limit": "Boot-code equality does not qualify the new renderer or whole CPU image"
+  },
+  "second_USB_failure_restoration": {
+    "status": "VERIFIED",
+    "physical_OFF_ON_confirmed_by_user": true,
+    "exact_fresh_backup_bytes": 131072,
+    "install_readback_verified": true,
+    "menu_before_and_after_recovery": 0
+  },
+  "no_USB_discriminator": {
+    "phase": "awaiting-terminal-red-screen-or-console-off-confirmation",
+    "source": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+    "original_mixed8_fixture": true,
+    "commercial_data": false,
+    "per_frame_USB_bridge": false,
+    "program_source": "Exact CI GCC16.2 no-USB HW_PROFILE ELF; pinned CI-source ROM tools",
+    "program_bytes": 98304,
+    "program_sha256": "854be33fe2910c6c7fad38097aacc6a685cd70def5149cc91fcc772a81036b56",
+    "menu_before_recovery": 0,
+    "install_readback_verified": true,
+    "launch_acknowledged": true,
+    "launch_seconds": 34.01500000000033,
+    "configured_warmup_VI_seconds": 25,
+    "configured_measure_VI_seconds": 5,
+    "controller_exit_code": 0,
+    "SRAM_read_performed": false,
+    "terminal_screen_confirmed": false,
+    "capture_parsed": false,
+    "cadence_or_fidelity_accepted": false
   }
 }

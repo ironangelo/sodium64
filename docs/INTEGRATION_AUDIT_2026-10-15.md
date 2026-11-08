@@ -1,5 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
+Current hardware update2026-11-08: second OFF/ON and exact backup restoration
+verified. Same-fixture exact-CI no-USB HW_PROFILE control installed/launched;
+worker terminal0 without SRAM read. Terminal red-screen or console-OFF
+confirmation is pending before safe read, then final recovery/restoration.
+This supersedes the old recovery blocker; no cadence/fidelity result exists yet.
+
 Second native control2026-11-08: exact habitual restoration passed between
 runs, but the same CI USB ELF with pinned CI-source packaging repeats first-hello
 failure. Packaging alone is insufficient. Second restoration PENDING; next use
@@ -58,7 +64,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work,b4206144 | BLOCKED on native promotion; software CANDIDATE | Draft PR32 head1e96c40c has complete RSP/PPU reference, owners, CPU publication,194-page PI/TLB replacement and compiled window/OBJ/full-row Math/delayed-DMA proofs. All six exact-head CI workflows pass. First native mixed8 control fails before USB hello after verified install/launch; root cause unresolved. Restore exact backup first, resolve startup with a bounded discriminator, then aligned house/rain/SMW/DKC/Mode7 image/APU/PCM and combined native cadence gates. R44/R45 excluded; no bulk PR21 merge. |
+| A1..A13 exact compositor/window/epoch work,b4206144 | BLOCKED on native promotion; software CANDIDATE | Draft PR32 head1e96c40c has complete RSP/PPU reference, owners, CPU publication,194-page PI/TLB replacement and compiled window/OBJ/full-row Math/delayed-DMA proofs. All six exact-head CI workflows pass. Two native USB preflights fail before hello after verified install/launch; packaging alone does not resolve it. Second backup restoration verified; same-source no-USB control launched, awaiting terminal red/OFF confirmation before SRAM read and subsequent restoration. Use that evidence to resolve startup, then aligned house/rain/SMW/DKC/Mode7 image/APU/PCM and combined native cadence gates. R44/R45 excluded; no bulk PR21 merge. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |

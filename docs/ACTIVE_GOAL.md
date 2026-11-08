@@ -24,46 +24,48 @@ independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
 Current checkpoint2026-11-08: ten separate PRs24/23/22/25/26/27/28/29/30/31
-are integrated in master bac1a4df51bd706e778730b488a50be8c5fc6f47. Historical October commercial
-quiet controls and independent SMW capture retain their original measured scope.
-PR31 enforces the approved normal-only release boundary. No USB/reset/capture,
-profiler or modified menu is distributed in Latest.
+are integrated in masterbac1a4df51bd706e778730b488a50be8c5fc6f47. Historical
+October commercial quiet controls and independent SMW capture retain their
+measured scope. PR31 enforces the normal-only release boundary; no modified
+menu, USB/reset/capture or profiler executable is distributed in Latest.
 
-PR32 is DRAFT at 1e96c40c8c98038fd506109e8dd89155eeea8948. All six exact-head CI workflows and the
-full functional PI/TLB, window/OBJ/Math/delayed-DMA contracts pass. First native
-original-mixed8 preflight FAILED before emulator hello. Habitual restoration
-then passed, but the same exact CI ELF repackaged with pinned CI-source tools
-repeated the failure. No new images, PCM or quiet timing exist. Packaging alone
-does not resolve it. Second candidate remains installed; restoration is PENDING
-physical OFF/ON and exact backup readback. After restoration use the existing
-no-USB HW_PROFILE control (same fixture,25+5VI) to locate startup/first-frame
-execution; require terminal red screen or console OFF before any SRAM dump.
-See [the Nov8 receipt](evidence/integration-faithful-compositor-2026-11-08.json).
+PR32 is DRAFT at1e96c40c8c98038fd506109e8dd89155eeea8948. All six exact-head
+workflows and functional PI/TLB/window/OBJ/Math/delayed-DMA contracts pass.
+Two native original-mixed8 USB preflights using the same exact CI GCC16.2 ELF
+fail before emulator hello; changing to pinned CI-source ROM tools does not
+resolve it. No images, PCM or quiet timing came from those failed USB runs.
 
-Continue the faithful R17 compositor qualification separately from R44/R45.
-Restore first, resolve startup, then aligned native house/rain/SMW/DKC/Mode7
-image/APU/PCM and combined cadence controls before default promotion. Complete
-resident-DSP integral native cost remains NOT_MEASURED and follows that baseline.
-The consolidation milestone has real integrated changes, but the full objective
-remains incomplete. Physical recovery currently blocks execution; no1.0/full
-fidelity/chip/DAC acceptance is claimed.
+CURRENT HARDWARE supersedes earlier recovery waits: the user confirmed the
+second physical OFF/ON; exact fresh backup restoration passed with131072-byte
+install/readback and menu recovery0. Then the exact-CI no-USB HW_PROFILE control
+was installed/launched on the SAME original mixed8 fixture,25+5VI configured.
+Its worker exited0 after38s without SRAM read. Await user confirmation of solid
+terminal red screen or console OFF before the guarded reader; then recover the
+menu and restore/read back the exact habitual backup. That program is NOT yet
+restored after this new control. No deployer/controller remains active.
 
-Independent R22 extraction is draft PR33 head1f34d1e on clean master. Release and
-complete existing KON/rate-scheduler proofs pass in normal/PROFILE/HW, with CI
-normal/PROFILE reports verified. Integration is BLOCKED on actual USB/CGRAM
-ownership:800bf1f0 exceeds800be200 by4080 bytes; strict assertion retained. One
-isolated-Oz control saves0 bytes and is rejected. Resolve the qualified layout
-dependency and clean-port native controls; do not leave an unclassified branch
-or claim the failed/skipped USB gate as passing. See the integration audit.
+Do not infer terminal capture, cadence or fidelity from elapsed time. Use the
+actual SRAM header/guards/settings/windows and matching-ELF CPU samples to
+localize first-frame execution versus the USB-enabled failure. Never dump a
+potentially live stalled game or query this absent gameplay bridge. After the
+startup gate, qualify aligned native house/rain/SMW/DKC/Mode7 image/APU/PCM and
+combined quiet cadence before default promotion. R44/R45 remain separate.
+[Current compositor evidence](evidence/integration-faithful-compositor-2026-11-08.json).
 
-The selected PR33 dependency is now locally verified: PR32's unchanged faithful
-layout plus only the coherent KOFF source patch admits USB with66832-byte CGRAM
-margin, passing owners/KOFF and12 unchanged RSP images. Qualify/promote PR32,
-then rebase PR33 and rerun actual exact-head/native gates. This source-pair
-control is not current-head CI or native acceptance; no separate size campaign.
+PR33 is DRAFT at1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be: clean KOFF release
+correction, no observer/flag/extra DSP state. Build/Owners/Ares pass; actual USB
+link FAILS its unchanged CGRAM assertion by4080 bytes. Local normal/PROFILE/HW
+and CI normal/PROFILE release/KON/caller proofs pass. All8 Ares profiles were
+checked, six CPU-JIT>=800 samples; low virtual budgets remain explicit. These
+are software scopes, not native waveform/cadence/DAC acceptance.
 
-Terminal PR33 CI: Build/Owners/Ares PASS, USB FAIL. All8 Ares profiles were
-checked, with>=800 samples in each of6 CPU-JIT cases; virtual low-budget cases
-remain explicit and are not native acceptance. No CI or local worker remains
-pending. The repeated physical OFF/ON/menu confirmation and exact restoration
-are now the execution blocker; do not start another campaign to fill the wait.
+A bounded local pair of PR32 plus only PR33's DSP patch admits faithful USB
+without owner/flag/assertion changes:66832-byte margin, owners/KOFF pass and12
+unchanged RSP images. Qualify/promote PR32's layout, then rebase PR33 and rerun
+its actual exact-head/native gates. This pair is not current-head combination
+CI or native acceptance. Do not open another size campaign to fill the wait.
+[Current KOFF evidence](evidence/integration-koff-release-2026-11-08.json).
+
+The full objective remains ACTIVE and incomplete. Complete resident-DSP
+integral native cost is NOT_MEASURED and follows the qualified faithful combined
+baseline, before more isolated kernels. No1.0/full fidelity/chip/DAC acceptance.

@@ -1,3 +1,33 @@
+# 2026-11-08 - Second restoration verified; exact no-USB control launched
+
+The user confirmed OFF/ON and menu after the second USB failure. Fresh exact
+habitual backup restoration passed:131072 bytes, install/readback verified,
+menu recovery0 before/after. The physical blocker from the previous checkpoint
+is resolved and the user resumed the full goal; the blocked audit starts fresh.
+
+The prepared bounded no-USB control then ran on the SAME original mixed8 fixture:
+exact CI GCC16.2 HW_PROFILE ELF from PR32 head1e96c40c, pinned CI-source ROM tools,
+25 warmup +5 measurement VI seconds. Its98304-byte install/readback passed,
+launch acknowledged after34.015s. The helper waited38s without gameplay USB
+commands and exited0. It did NOT dump SRAM or infer capture completion from
+elapsed time. No image, PCM, cadence or native fidelity result is claimed yet.
+[Current evidence](evidence/integration-faithful-compositor-2026-11-08.json).
+
+CURRENT HARDWARE: the no-USB HW_PROFILE program is the last verified installation.
+Await user confirmation that the screen became solid red, or console OFF,
+before invoking the prepared bounded SRAM reader. That question is pending;
+do not query an absent gameplay bridge or dump a potentially live stalled game.
+After reading/validating, recover the menu and restore/read back the exact fresh
+habitual backup again. No deployer/controller remains active.
+
+Next real action is that safe read, then use its actual frame windows/CPU samples
+to distinguish first-frame execution from the USB-enabled failure. It is not
+another optimization campaign. PR32/PR33 remain draft/unmerged and their previous
+software scopes/conditional memory proof are unchanged. Complete resident-DSP
+integral native cost follows the qualified faithful baseline and is NOT_MEASURED.
+
+---
+
 # 2026-11-08 - PR33 CI terminal; physical recovery is the remaining execution blocker
 
 Exact PR33 head1f34d1e is now terminal across all four applicable workflows:

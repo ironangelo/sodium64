@@ -46,3 +46,11 @@ image/APU/PCM and combined cadence controls before default promotion. Complete
 resident-DSP integral native cost remains NOT_MEASURED and follows that baseline.
 The consolidation milestone has real integrated changes, but the full objective
 remains ACTIVE; no1.0/full fidelity/chip/DAC acceptance is claimed.
+
+Independent R22 extraction is draft PR33 head1f34d1e on clean master. Release and
+complete existing KON/rate-scheduler proofs pass in normal/PROFILE/HW, with CI
+normal/PROFILE reports verified. Integration is BLOCKED on actual USB/CGRAM
+ownership:800bf1f0 exceeds800be200 by4080 bytes; strict assertion retained. One
+isolated-Oz control saves0 bytes and is rejected. Resolve the qualified layout
+dependency and clean-port native controls; do not leave an unclassified branch
+or claim the failed/skipped USB gate as passing. See the integration audit.

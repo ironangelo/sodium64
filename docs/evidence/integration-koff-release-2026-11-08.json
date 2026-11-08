@@ -1,0 +1,223 @@
+{
+  "date": "2026-11-08",
+  "status": "BLOCKED",
+  "scope": "Small coherent KOFF release-tail correction, not complete DSP accuracy",
+  "pull_request": "https://github.com/ironangelo/sodium64/pull/33",
+  "draft": true,
+  "head": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
+  "base_master": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
+  "extraction_source": "1b12398077ad804874af42fcdc6be34be2793794",
+  "production_change": "Latch KOFF release, subtract8/clamp per generated sample, retain voice until zero, protect ADSR release, existing KON restarts",
+  "observer_or_runtime_flag_added": false,
+  "extra_DSP_state_added": false,
+  "changed_runtime_files": [
+    "src/dsp.S"
+  ],
+  "proofs": {
+    "local_normal": {
+      "passed": true,
+      "koff_masks": 256,
+      "release_voice_cases": 16384,
+      "actual_dsp_sample_calls": 2064,
+      "protected_adsr_writes": 32,
+      "actual_kon_restarts": 16,
+      "latched_KOFF_GAIN_ADSR2_writes": 32,
+      "actual_apu_port_callers": 10,
+      "invalid_addresses": 128,
+      "maximum_release_handler_instructions": 48,
+      "complete_legacy_KON_rate_scheduler_executed": true,
+      "negative_mutations_rejected": [
+        "release_decrement",
+        "release_timer_wrap",
+        "ADSR_release_guard_bypassed"
+      ],
+      "no_immediate_koff_voice_disable": true,
+      "per_sample_release_and_timer_wrap": true,
+      "arithmetic_reference": "Snes9x1.63 SPC_DSP::run_envelope release branch",
+      "kon_delay_and_every_other_sample_latching_qualified": false,
+      "full_envelope_mixing_or_dac_fidelity_claim": false,
+      "commercial_data": false,
+      "legacy_immediate_disable_counterexample": true,
+      "elf_sha256": "7f38a9ed6d8dfc74959d0852fce37a54603ee29eea2eef0a5cd1b59ea3a74a8f"
+    },
+    "local_PROFILE": {
+      "passed": true,
+      "koff_masks": 256,
+      "release_voice_cases": 16384,
+      "actual_dsp_sample_calls": 2064,
+      "protected_adsr_writes": 32,
+      "actual_kon_restarts": 16,
+      "latched_KOFF_GAIN_ADSR2_writes": 32,
+      "actual_apu_port_callers": 10,
+      "invalid_addresses": 128,
+      "maximum_release_handler_instructions": 48,
+      "complete_legacy_KON_rate_scheduler_executed": true,
+      "negative_mutations_rejected": [
+        "release_decrement",
+        "release_timer_wrap",
+        "ADSR_release_guard_bypassed"
+      ],
+      "no_immediate_koff_voice_disable": true,
+      "per_sample_release_and_timer_wrap": true,
+      "arithmetic_reference": "Snes9x1.63 SPC_DSP::run_envelope release branch",
+      "kon_delay_and_every_other_sample_latching_qualified": false,
+      "full_envelope_mixing_or_dac_fidelity_claim": false,
+      "commercial_data": false,
+      "legacy_immediate_disable_counterexample": false,
+      "elf_sha256": "18313b854fbe43fbe2b805e2a168d6a7fa20ea5da65cf8292f8474bbf203ab19"
+    },
+    "local_HW_PROFILE": {
+      "passed": true,
+      "koff_masks": 256,
+      "release_voice_cases": 16384,
+      "actual_dsp_sample_calls": 2064,
+      "protected_adsr_writes": 32,
+      "actual_kon_restarts": 16,
+      "latched_KOFF_GAIN_ADSR2_writes": 32,
+      "actual_apu_port_callers": 10,
+      "invalid_addresses": 128,
+      "maximum_release_handler_instructions": 48,
+      "complete_legacy_KON_rate_scheduler_executed": true,
+      "negative_mutations_rejected": [
+        "release_decrement",
+        "release_timer_wrap",
+        "ADSR_release_guard_bypassed"
+      ],
+      "no_immediate_koff_voice_disable": true,
+      "per_sample_release_and_timer_wrap": true,
+      "arithmetic_reference": "Snes9x1.63 SPC_DSP::run_envelope release branch",
+      "kon_delay_and_every_other_sample_latching_qualified": false,
+      "full_envelope_mixing_or_dac_fidelity_claim": false,
+      "commercial_data": false,
+      "legacy_immediate_disable_counterexample": false,
+      "elf_sha256": "934de67b2328b04b889ae8746fbb898875d8a7ecbb4daad63323ecdeccaf485f"
+    },
+    "CI_normal": {
+      "passed": true,
+      "koff_masks": 256,
+      "release_voice_cases": 16384,
+      "actual_dsp_sample_calls": 2064,
+      "protected_adsr_writes": 32,
+      "actual_kon_restarts": 16,
+      "latched_KOFF_GAIN_ADSR2_writes": 32,
+      "actual_apu_port_callers": 10,
+      "invalid_addresses": 128,
+      "maximum_release_handler_instructions": 48,
+      "complete_legacy_KON_rate_scheduler_executed": true,
+      "negative_mutations_rejected": [
+        "release_decrement",
+        "release_timer_wrap",
+        "ADSR_release_guard_bypassed"
+      ],
+      "no_immediate_koff_voice_disable": true,
+      "per_sample_release_and_timer_wrap": true,
+      "arithmetic_reference": "Snes9x1.63 SPC_DSP::run_envelope release branch",
+      "kon_delay_and_every_other_sample_latching_qualified": false,
+      "full_envelope_mixing_or_dac_fidelity_claim": false,
+      "commercial_data": false,
+      "legacy_immediate_disable_counterexample": false,
+      "elf_sha256": "024da7189ad447946677b551f065e5855e81ed86d429a1bd5afdb985a282f46f"
+    },
+    "CI_PROFILE": {
+      "passed": true,
+      "koff_masks": 256,
+      "release_voice_cases": 16384,
+      "actual_dsp_sample_calls": 2064,
+      "protected_adsr_writes": 32,
+      "actual_kon_restarts": 16,
+      "latched_KOFF_GAIN_ADSR2_writes": 32,
+      "actual_apu_port_callers": 10,
+      "invalid_addresses": 128,
+      "maximum_release_handler_instructions": 48,
+      "complete_legacy_KON_rate_scheduler_executed": true,
+      "negative_mutations_rejected": [
+        "release_decrement",
+        "release_timer_wrap",
+        "ADSR_release_guard_bypassed"
+      ],
+      "no_immediate_koff_voice_disable": true,
+      "per_sample_release_and_timer_wrap": true,
+      "arithmetic_reference": "Snes9x1.63 SPC_DSP::run_envelope release branch",
+      "kon_delay_and_every_other_sample_latching_qualified": false,
+      "full_envelope_mixing_or_dac_fidelity_claim": false,
+      "commercial_data": false,
+      "legacy_immediate_disable_counterexample": false,
+      "elf_sha256": "90186bcb6185e12712bb57ca8d9ab15b9749e3c0b9b4f8414995a3ed455e12a6"
+    }
+  },
+  "other_local_normal_gates": {
+    "GAIN_handler": 2048,
+    "GAIN_scheduled_stereo": 2048,
+    "BRR_voice_cases": 57344,
+    "APU_lookup_entries": 65536,
+    "both_resident_RSP_images_unchanged": true
+  },
+  "exact_head_CI": [
+    {
+      "id": 42526113012,
+      "name": "Build and Validate",
+      "head_sha": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42526113012"
+    },
+    {
+      "id": 42526113144,
+      "name": "Native USB Bench Contracts",
+      "head_sha": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42526113144"
+    },
+    {
+      "id": 42526113166,
+      "name": "Profiling Memory Owners",
+      "head_sha": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42526113166"
+    },
+    {
+      "id": 42526113042,
+      "name": "Ares Profile Validation",
+      "head_sha": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
+      "status": "in_progress",
+      "conclusion": null,
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42526113042"
+    }
+  ],
+  "actual_CI_USB_link_gate": {
+    "status": "FAILED",
+    "compiler": "GCC16.2.0",
+    "job": 128869981498,
+    "artifact": 13635835005,
+    "bss_end": "0x800bf1f0",
+    "first_CGRAM_owner": "0x800be200",
+    "overrun_bytes": 4080,
+    "cause": "256-byte text growth crosses a4KiB data alignment",
+    "assertion_unchanged": true,
+    "linked_USB_contracts": "SKIPPED after failed link; not PASS"
+  },
+  "negative_cost_control": {
+    "scope": "One offline laboratory C-bridge -Oz compile, not emulator runtime tuning",
+    "old_object_text_bytes": 9232,
+    "new_object_text_bytes": 9232,
+    "bytes_saved": 0,
+    "disposition": "REJECTED; no compile flag change adopted"
+  },
+  "native_acceptance": false,
+  "historical_native_limits": "R22 endpoints included12 observer instructions per release step; no clean-port cost claim",
+  "remaining_gates": [
+    "Resolve actual standalone USB/CGRAM ownership failure through a qualified layout/default promotion or separately proven laboratory layout repair",
+    "All applicable exact-head CI; do not skip failed/skipped USB gate",
+    "Applicable native note-tail/cadence controls with an appropriate reference and combined baseline"
+  ],
+  "unqualified_full_DSP_scope": [
+    "KON delay",
+    "every-other-sample register latching",
+    "complete envelope/mixer",
+    "echo/Gaussian",
+    "DAC"
+  ],
+  "commercial_data": false
+}

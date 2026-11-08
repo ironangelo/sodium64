@@ -1,3 +1,37 @@
+# 2026-11-08 - R22 extracted as draft PR33; exact USB ownership block identified
+
+Physical recovery after PR32's SECOND failed hello remains PENDING. Do not start
+another COM3 controller until the user's OFF/ON/menu confirmation, then restore
+the exact fresh backup. The prepared same-fixture no-USB profiler remains the
+next physical discriminator; no additional native run occurred in this batch.
+
+Independent integration work produced draft PR33 at1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be,
+https://github.com/ironangelo/sodium64/pull/33, cleanly based on masterbac1a4df.
+It extracts R22's coherent KOFF release/ADSR protection while preserving existing
+KON, without observers, flags or extra DSP state. Normal/PROFILE/HW linked proof
+passes256 masks,16384 voice/envelope cases,2064 actual scheduler calls,32 ADSR1
+protections,32 KOFF/GAIN/ADSR2 writes,16 complete KON/rate-scheduler calls,10 APU
+callers and128 invalid addresses. Three emitted faults are rejected. GAIN4096,
+BRR57344 and APU65536 remain passing; both resident RSP images are unchanged.
+
+PR33 is BLOCKED on a concrete memory gate, not ready to merge:256 bytes of text
+cross a4KiB data alignment, giving__bss_end800bf1f0 above CGRAM800be200 by4080 bytes.
+The unchanged strict assertion fails both locally and in exact-head GCC16.2 CI
+42526113144; its linked USB checks are SKIPPED after the failed link, not PASS.
+A single isolated-Oz laboratory-C control saves0 bytes and is REJECTED; no flags
+or owner bounds were changed. CI normal/PROFILE KOFF reports pass and were
+downloaded/digest-verified; Owners42526113166 passes. Build42526113012 and
+Ares42526113042 still run at this checkpoint; do not claim overall CI PASS.
+[Exact evidence](evidence/integration-koff-release-2026-11-08.json).
+
+Resolve the layout through a qualified faithful/default promotion or a separate
+proven laboratory layout repair; do not reduce correctness or relax admission.
+The original native R22 endpoints included observer overhead, so clean-port
+native note-tail/cadence gates remain. No full envelope/KON-latch/DAC claim.
+Master remainsbac1a4df; PR21/R44/R45 and full resident-DSP scope are unchanged.
+
+---
+
 # 2026-11-08 - Pinned packaging repeats native failure; no-USB discriminator ready
 
 After the user confirmed physical OFF/ON, the exact fresh habitual backup was

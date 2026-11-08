@@ -20,8 +20,8 @@ The unchanged strict assertion fails both locally and in exact-head GCC16.2 CI
 42526113144; its linked USB checks are SKIPPED after the failed link, not PASS.
 A single isolated-Oz laboratory-C control saves0 bytes and is REJECTED; no flags
 or owner bounds were changed. CI normal/PROFILE KOFF reports pass and were
-downloaded/digest-verified; Owners42526113166 passes. Build42526113012 and
-Ares42526113042 still run at this checkpoint; do not claim overall CI PASS.
+downloaded/digest-verified; Owners42526113166 and Build42526113012 pass.
+Ares42526113042 still runs at this checkpoint; do not claim overall CI PASS.
 [Exact evidence](evidence/integration-koff-release-2026-11-08.json).
 
 Resolve the layout through a qualified faithful/default promotion or a separate

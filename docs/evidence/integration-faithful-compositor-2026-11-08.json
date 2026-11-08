@@ -63,7 +63,7 @@
     "audio_exports": 0,
     "quiet_timing_windows": 0,
     "root_cause": "UNRESOLVED",
-    "restoration": "PENDING physical OFF/ON confirmation and verified backup install",
+    "restoration": "VERIFIED before the second bounded control",
     "session_terminated": true,
     "live_raw_dump_performed": false
   },
@@ -100,8 +100,8 @@
     "physical_acceptance": false
   },
   "remaining_gates": [
-    "Recover menu and restore exact freshly backed-up habitual program, with readback",
-    "Resolve first native USB hello failure using bounded packaging/boot and runtime discriminators",
+    "Recover menu and restore exact backup after second failed control",
+    "Bounded no-USB existing profiler discriminator: verify terminal red screen or console OFF before SRAM read; localize startup/first-frame stall",
     "Aligned native house/rain/SMW/DKC/Mode7 images and APU/PCM/guest progression controls",
     "Combined quiet native cadence and verified final restoration before default promotion"
   ],
@@ -145,5 +145,55 @@
     "compressed_ELF_end": 49656,
     "remaining_difference_scope": "After the complete compressed executable; no native causal claim"
   },
-  "next_native_candidate_prepared": "Same CI ELF repackaged with pinned CI-source ROM tools; not launched or accepted"
+  "next_native_candidate_prepared": "Exact CI no-USB HW_PROFILE program, original mixed8,25+5VI; not launched",
+  "restoration_between_controls": {
+    "status": "VERIFIED",
+    "physical_OFF_ON_confirmed_by_user": true,
+    "exact_fresh_backup_bytes": 131072,
+    "install_readback_verified": true,
+    "menu_before_and_after_recovery": 0
+  },
+  "native_pinned_packaging_control": {
+    "status": "FAILED",
+    "source": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+    "same_CI_ELF_as_first_control": true,
+    "packaging": "Pinned CI-source ROM tools e356bf3f; same ELF as failed v1",
+    "menu_before_recovery": 0,
+    "install_readback_verified": true,
+    "program_bytes": 114688,
+    "program_sha256": "769beb8a62c44d208fbf29e57436696f9e02d82fc257502129850a319c2ce2f6",
+    "launch_acknowledged": true,
+    "launch_seconds": 33.641000000000076,
+    "first_emulator_hello": "FAILED",
+    "error": "Error: Debug data write dropped due to timeout",
+    "frame_exports": 0,
+    "audio_exports": 0,
+    "quiet_timing_windows": 0,
+    "session_terminated": true,
+    "live_raw_dump_performed": false
+  },
+  "packaging_hypothesis_disposition": {
+    "pinned_CI_source_tools_do_not_resolve_native_hello_failure": true,
+    "first_variant_IPL3_identical_to_previously_passing_master_program": true,
+    "conclusion": "Simple packaging mismatch is insufficient; root cause remains unresolved"
+  },
+  "current_hardware": {
+    "installed": "Second faithful USB candidate, same CI ELF with pinned packaging",
+    "restoration": "PENDING second physical OFF/ON and exact backup install/readback",
+    "active_deployer": false
+  },
+  "next_discriminator_admission": {
+    "source": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+    "CI_HW_template": [
+      1396061256,
+      2,
+      25,
+      5
+    ],
+    "per_frame_USB_bridge_linked": false,
+    "code_changed": false,
+    "physical_acceptance": false,
+    "failed_IPL3_equals_previously_passing_master_IPL3": true,
+    "limit": "Boot-code equality does not qualify the new renderer or whole CPU image"
+  }
 }

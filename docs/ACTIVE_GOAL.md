@@ -31,12 +31,14 @@ profiler or modified menu is distributed in Latest.
 
 PR32 is DRAFT at 1e96c40c8c98038fd506109e8dd89155eeea8948. All six exact-head CI workflows and the
 full functional PI/TLB, window/OBJ/Math/delayed-DMA contracts pass. First native
-original-mixed8 preflight FAILED before emulator hello, after verified install
-and acknowledged launch. No new images, PCM or quiet timing exist. Root cause is
-unresolved; compare canonical packaging/boot and runtime in a bounded control.
-Candidate remains installed; exact habitual restoration is PENDING physical
-OFF/ON confirmation and menu install/readback. Historical restored state is not
-current. See [the Nov8 receipt](evidence/integration-faithful-compositor-2026-11-08.json).
+original-mixed8 preflight FAILED before emulator hello. Habitual restoration
+then passed, but the same exact CI ELF repackaged with pinned CI-source tools
+repeated the failure. No new images, PCM or quiet timing exist. Packaging alone
+does not resolve it. Second candidate remains installed; restoration is PENDING
+physical OFF/ON and exact backup readback. After restoration use the existing
+no-USB HW_PROFILE control (same fixture,25+5VI) to locate startup/first-frame
+execution; require terminal red screen or console OFF before any SRAM dump.
+See [the Nov8 receipt](evidence/integration-faithful-compositor-2026-11-08.json).
 
 Continue the faithful R17 compositor qualification separately from R44/R45.
 Restore first, resolve startup, then aligned native house/rain/SMW/DKC/Mode7

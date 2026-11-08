@@ -1,3 +1,31 @@
+# 2026-11-08 - Pinned packaging repeats native failure; no-USB discriminator ready
+
+After the user confirmed physical OFF/ON, the exact fresh habitual backup was
+restored:131072 bytes, install/readback verified, menu recovery0 before/after.
+Only then a second bounded original-mixed8 control ran. It used the SAME CI
+GCC16.2 USB ELF at PR32 head1e96c40c, now packaged with ROM tools built from the
+pinned CI source. Install/readback passed and launch acknowledged after33.641s;
+first emulator hello FAILED again with debug-write timeout. Zero image, PCM or
+quiet timing exports. The controller is terminal, with no live raw dump.
+
+This negative result rejects packaging alone as a sufficient remedy. The first
+variant's IPL3 also equals the previously passing master program's IPL3; this
+does not prove the new renderer or CPU image correct. Root cause is unresolved.
+Do not spend another console run repeating either packaging variant unchanged.
+[Updated evidence](evidence/integration-faithful-compositor-2026-11-08.json).
+
+CURRENT HARDWARE: second candidate installed, restoration again PENDING physical
+OFF/ON confirmation and exact backup install/readback. Next restore, then use
+the existing exact-CI no-USB HW_PROFILE build on the SAME original fixture to
+separate gameplay transport from startup/first-frame execution. Its emitted
+template is checked:version2,25 warmup +5 measurement VI seconds; no USB bridge
+linked and no new emulator code. This control is prepared, NOT launched.
+Never dump a possibly live stalled game: require terminal red-screen evidence
+or confirmed console OFF before reading SRAM. All six exact-head software gates
+retain their scopes; PR32 stays DRAFT/BLOCKED and master remainsbac1a4df.
+
+---
+
 # 2026-11-08 - PR32 software gates closed; first native preflight failed
 
 Master remains bac1a4df51bd706e778730b488a50be8c5fc6f47, with ten separate integrations.

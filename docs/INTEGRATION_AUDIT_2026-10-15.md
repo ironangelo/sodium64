@@ -1,5 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
+Second native control2026-11-08: exact habitual restoration passed between
+runs, but the same CI USB ELF with pinned CI-source packaging repeats first-hello
+failure. Packaging alone is insufficient. Second restoration PENDING; next use
+the existing exact-CI no-USB profiler on the same original fixture, with terminal
+confirmation before any SRAM read. No image/audio/timing acceptance or merge.
+
 Material update2026-11-08: PR32 head1e96c40c passes all six exact-head
 workflows and the full functional PI/TLB/window/OBJ/Math/DMA gates. First native
 preflight FAILED before emulator hello after verified install and acknowledged

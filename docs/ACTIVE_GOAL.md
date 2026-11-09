@@ -31,23 +31,18 @@ contains the same production ROM and converter as before. October's
 commercial quiet controls and independent SMW capture retain their measured
 scope. [PR34 evidence](evidence/integration-bench-eof-2026-11-09.json).
 
-PR32 is draft at `1e96c40c8c98038fd506109e8dd89155eeea8948`. All six
-exact-head CI workflows passed. Native R17 and master reference launch and
-autonomous return are requalified. A fresh faithful build with the working
-local GCC 14.2.0 repeats the prior exact-CI failure after acknowledged menu
-launch, before first emulator response. The SC64 USB device remained present
-and firmware info responded. Both
-native probe pairs now pass through the first guest boundary and frame
-bridge. That first bridge runs before any RSP task. Bound the first actual
-task submission/retirement and capture SP/DP state if it stalls, with a
-qualified recovery route before the next hardware launch. Then qualify
-aligned native image/audio and quiet combined cadence. R44/R45 retain
-separate gates.
-[First-boundary evidence](evidence/integration-faithful-first-boundary-2026-11-09.json).
+PR32 is draft at `3e1c9a99869063254dbc1c84453fd6cf06f78762`. The real-N64
+first-task stall led to a two-word Main RSP fix for the shared C4C depth
+sender entry. The matched fixed task halted normally. The ordinary local
+USB build answered and advanced at APU 21 and frameskip 0, then returned
+by software. Exact-head CI is still in progress. Next qualify aligned
+house/rain, SMW/DKC/Mode 7 visuals, audio and quiet cadence before promotion.
+R44 and R45 retain separate gates.
+[Depth-entry and native startup evidence](evidence/integration-faithful-depth-entry-2026-11-09.json).
 
 The latest verified installation is habitual R17, restored and read back
-remotely after both first-boundary probes. Exact 131,072-byte readback and
-menu recovery 0 passed. No physical action is outstanding. R47's clean local port passes linked arithmetic and stereo
+remotely after the fixed ordinary startup check. Exact 131,072-byte readback
+and menu recovery 0 passed. No physical action is outstanding. R47's clean local port passes linked arithmetic and stereo
 checks, but the standalone USB link exceeds the CGRAM owner by 4,080 bytes.
 PR32 plus only the R47 DSP change fits locally with 66,832 bytes margin.
 [Current traced startup and R47 evidence](evidence/integration-traced-native-startup-2026-11-09.json).

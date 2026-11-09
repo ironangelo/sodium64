@@ -1,11 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
-Latest native gate, 2026-11-09. Both matched probes reached the first guest
-boundary, passed the initial SP HALT wait and serviced USB before the first
-RSP render task. Both returned by software and exact R17 readback passed.
-Ordinary PR32 still lacks its first host-request response. Bound actual first
-RSP task submission and retirement before aligned visual/audio and cadence.
-[First-boundary evidence](evidence/integration-faithful-first-boundary-2026-11-09.json).
+Latest native gate, 2026-11-09. The first actual task captured a Main
+RSP call to the C4C window delay instruction that clobbered its return.
+PR32 at 3e1c9a99 fixes the shared entry in two Main words. The fixed
+task naturally halts and the ordinary local build starts, progresses and
+returns by software. R17 readback passed. Exact-head CI and broader native
+fidelity/cadence remain pending.
+[Depth-entry evidence](evidence/integration-faithful-depth-entry-2026-11-09.json).
 
 First checkpoint, 2026-11-09. PR34 is merged at master `c232af87`. Its host
 EOF shutdown and real-cart session close are qualified. The published Latest
@@ -87,7 +88,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work, b4206144 | BLOCKED on native promotion, software CANDIDATE | PR32 exact head 1e96c40c passed all six workflows and compiled owner/PI/TLB/window/OBJ/Math/DMA contracts. The master reference now passes traced native launch/return. PR32 repeats the first-hello failure with the local GCC 14.2.0 while the USB device and firmware remain reachable. The earlier no-USB SRAM header was invalid after recovery. Exact R17 restoration passed. Matched probes pass first guest boundary and USB service before RSP starts, plus autonomous return. Bound the first actual RSP task, then qualify native visuals/audio and combined cadence. R44/R45 remain separate. |
+| A1..A13 exact compositor/window/epoch work, b4206144 | CANDIDATE with native promotion gates pending | PR32 head 3e1c9a99 fixes the Main C4C depth entry in two words. Matched fixed RSP task and ordinary local USB startup/return pass on N64. Old failure and exact R17 restoration are preserved. Exact-head CI, aligned house/rain/SMW/DKC/Mode 7 images/audio and combined quiet cadence remain. R44/R45 stay separate. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |
@@ -148,8 +149,8 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. The reference launch and autonomous return passed. Isolate PR32's missing
-   first response, then close native acceptance. PR33 and R47 need the qualified
+4. PR32 ordinary local startup and autonomous return passed after the depth
+   entry repair. Complete exact-head CI and aligned native acceptance. PR33 and R47 need the qualified
    PR32 layout for their USB gates. R44 needs the coherent renderer dependencies, story residual
    and Mode 7 predecessor comparison. R45 needs aligned story and Mode 7 costs.
    R19 and R47 retain their port and validation gates.

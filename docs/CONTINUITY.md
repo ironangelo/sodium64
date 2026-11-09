@@ -1,3 +1,40 @@
+# 2026-11-09 — Depth-sender repair advances PR32 through native startup
+
+The matched legacy renderer's first actual RSP task halted normally. The
+faithful task at `1e96c40c` still ran at the 500 ms limit. Its CPU was held
+after task submission, and the pre-recovery snapshot showed SP DMA busy and
+DP CURRENT equal to END. After DMA cleared, controlled SP halt captured
+IMEM PC C4C and instruction `0060f825`. The guarded RDP drain and software
+return worked. Both runs restored the exact 131,072-byte R17 by readback.
+
+The H-COMP overlay called C4C, which is the intended Mode 7 depth sender
+entry. Main put `move ra, v1` there as a local window-path delay instruction.
+The overlay call therefore lost its own return address. The fix moves the
+local Main RA restore to C48 and leaves a NOP at the shared C4C entry.
+It changes exactly two Main instruction words. Both resident banks share
+the named entry, other loaded RSP banks are unchanged, and normal/PROFILE/
+HW_PROFILE/USB linked comparisons pass six actual overlay call cases per
+build. Restoring the old Main words in the test reproduces the lost RA.
+
+PR32 now points to `3e1c9a99`. The matched local fixed task naturally reached
+HALT, with the same twelve RSP banks as the ordinary fixed build. The
+ordinary local GCC 14.2.0 USB build answered its first hello at the previous
+failure's launch timing and advanced from frame-service count 71 to 113 at
+APU 21 and frameskip 0. Both fixed controls returned and restored R17 from
+the PC. No user intervention or controller remains. This closes the
+scoped first-task and ordinary local startup gates. The short count is
+progress evidence.
+
+At this checkpoint the new head's Build, USB, Owners, Faithful Contracts and
+Gate C workflows pass. Ares is live under its existing run ID. PR32
+stays draft pending exact-head CI, aligned ALttP house/rain, SMW/DKC/Mode 7
+image and APU/PCM evidence, and quiet combined cadence. Master and Latest
+stay at `c232af87`. PR33 and R47 still depend on a qualified faithful layout.
+R44/R45 and complete resident DSP retain their existing gates.
+[Depth-entry repair and physical controls](evidence/integration-faithful-depth-entry-2026-11-09.json).
+
+---
+
 # 2026-11-09 — First guest boundary and pre-task bridge reached on N64
 
 Both matched local probes on the original mixed-eight-voice fixture sent

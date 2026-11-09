@@ -1,0 +1,129 @@
+{
+  "date": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "PR32": 32,
+  "old_head": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+  "head": "3e1c9a99869063254dbc1c84453fd6cf06f78762",
+  "scope": "First actual RSP task and local-GCC14 ordinary USB startup on original mixed8 guest.",
+  "controlled_task": {
+    "guest_CPU_held_after_submission": true,
+    "halt_budget_ms": 500,
+    "legacy": {
+      "task": {
+        "retired": 1,
+        "sp_initial": 4,
+        "sp_status": 1,
+        "sp_dma_full": 0,
+        "sp_dma_busy": 0,
+        "dp_status": 233,
+        "dp_current": 3224,
+        "dp_end": 3224,
+        "halted_pc": 2708
+      },
+      "stop": null,
+      "software_menu": true,
+      "habitual_readback_bytes": 131072,
+      "physical_intervention": false
+    },
+    "faithful_old": {
+      "task": {
+        "retired": 0,
+        "sp_initial": 0,
+        "sp_status": 0,
+        "sp_dma_full": 0,
+        "sp_dma_busy": 1,
+        "dp_status": 169,
+        "dp_current": 2664,
+        "dp_end": 2664
+      },
+      "stop": {
+        "safe_sp_halt": 1,
+        "halted_pc": 3148,
+        "pc_word": 6354981,
+        "slot_word": 150996964
+      },
+      "software_menu": true,
+      "habitual_readback_bytes": 131072,
+      "physical_intervention": false
+    },
+    "faithful_fixed": {
+      "task": {
+        "retired": 1,
+        "sp_initial": 0,
+        "sp_status": 1,
+        "sp_dma_full": 0,
+        "sp_dma_busy": 0,
+        "dp_status": 129,
+        "dp_current": 2664,
+        "dp_end": 2664,
+        "halted_pc": 968
+      },
+      "stop": null,
+      "software_menu": true,
+      "habitual_readback_bytes": 131072,
+      "physical_intervention": false
+    }
+  },
+  "repair": {
+    "shared_IMEM_entry": "0xc4c",
+    "old_Main_instruction": "0x0060f825",
+    "root_cause": "H-COMP JAL entered a Main delay-slot instruction that replaced its return address with v1. Mode 7 already exposed the intended entry.",
+    "changed_Main_words": [
+      "0xc48",
+      "0xc4c"
+    ],
+    "other_loaded_RSP_banks_changed": 0,
+    "patched_probe_and_ordinary_RSP_banks_identical": 12,
+    "local_configurations_passed": 4,
+    "linked_overlay_cases_per_configuration": 6,
+    "old_Main_tail_mutant_rejected": true,
+    "decoder_cases": 9984,
+    "decoder_mutants_rejected": 4,
+    "branch_delay_banks_checked": 12
+  },
+  "ordinary_fixed_USB": {
+    "emulator_hello": true,
+    "progress": {
+      "first": 71,
+      "second": 113,
+      "apu_clock": 21,
+      "frameskip": 0
+    },
+    "software_menu": true,
+    "habitual_readback_bytes": 131072,
+    "physical_intervention": false
+  },
+  "head_CI_at_checkpoint": {
+    "native_USB": {
+      "run": 42682346912,
+      "state": "PASS"
+    },
+    "owners": {
+      "run": 42682347262,
+      "state": "PASS"
+    },
+    "faithful_contracts": {
+      "run": 42682346924,
+      "state": "PASS"
+    },
+    "gate_C": {
+      "run": 42682347269,
+      "state": "PASS"
+    },
+    "build": {
+      "run": 42682346880,
+      "state": "PASS"
+    },
+    "ares": {
+      "run": 42682347035,
+      "state": "IN_PROGRESS"
+    }
+  },
+  "current_hardware": {
+    "habitual_R17_verified": true,
+    "menu_recovery": 0,
+    "active_controller": false,
+    "physical_action_pending": false
+  },
+  "native_visual_audio_sustained_cadence": "PENDING"
+}

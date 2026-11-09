@@ -2,7 +2,6 @@
   "date": "2026-11-08",
   "status": "BLOCKED",
   "scope": "Faithful compositor promotion",
-  "master": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
   "pull_request": "https://github.com/ironangelo/sodium64/pull/32",
   "candidate_head": "1e96c40c8c98038fd506109e8dd89155eeea8948",
   "draft": true,
@@ -145,7 +144,6 @@
     "compressed_ELF_end": 49656,
     "remaining_difference_scope": "After the complete compressed executable; no native causal claim"
   },
-  "next_native_candidate_prepared": "No-USB discriminator launched; awaiting safe capture read, no further program queued",
   "restoration_between_controls": {
     "status": "VERIFIED",
     "physical_OFF_ON_confirmed_by_user": true,
@@ -179,10 +177,16 @@
     "conclusion": "Simple packaging mismatch is insufficient; root cause remains unresolved"
   },
   "current_hardware": {
-    "last_verified_installation": "Exact CI no-USB HW_PROFILE program,98304 bytes",
-    "awaiting": "User terminal-red-screen or console-OFF confirmation before SRAM read",
-    "restoration": "PENDING after capture read; fresh backup already verified",
-    "active_deployer": false
+    "last_verified_installation": "Habitual R17 from exact fresh backup",
+    "restored_remotely": true,
+    "backup_bytes": 131072,
+    "install_readback_verified": true,
+    "menu_recovery_before": 0,
+    "menu_recovery_after": 0,
+    "deployer_exit": 0,
+    "game_launch_sent": false,
+    "active_deployer": false,
+    "physical_user_action_pending": false
   },
   "next_discriminator_admission": {
     "source": "1e96c40c8c98038fd506109e8dd89155eeea8948",
@@ -206,7 +210,7 @@
     "menu_before_and_after_recovery": 0
   },
   "no_USB_discriminator": {
-    "phase": "awaiting-terminal-red-screen-or-console-off-confirmation",
+    "phase": "TERMINAL_READ_INVALID_HEADER",
     "source": "1e96c40c8c98038fd506109e8dd89155eeea8948",
     "original_mixed8_fixture": true,
     "commercial_data": false,
@@ -221,9 +225,32 @@
     "configured_warmup_VI_seconds": 25,
     "configured_measure_VI_seconds": 5,
     "controller_exit_code": 0,
-    "SRAM_read_performed": false,
-    "terminal_screen_confirmed": false,
+    "SRAM_read_performed": true,
+    "terminal_screen_confirmed": true,
     "capture_parsed": false,
-    "cadence_or_fidelity_accepted": false
-  }
+    "cadence_or_fidelity_accepted": false,
+    "terminal_screen_observation": "User reported solid red. In profile.S the terminal red paint follows PI waits and parks the runtime. The later invalid header provides no usable capture.",
+    "usb_device_lost_before_read": true,
+    "first_SRAM_read_could_not_open_device": true,
+    "physical_cold_USB_recovery_confirmed": true,
+    "CIC_off_verified_before_raw_read": true,
+    "SRAM_bytes_read": 32768,
+    "observed_header_magic": "0xF00FF00F",
+    "expected_header_magic": "0x53363448",
+    "raw_capture_kept_private": true
+  },
+  "last_updated": "2026-11-09",
+  "master_at_port": "bac1a4df51bd706e778730b488a50be8c5fc6f47",
+  "current_master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "known_master_launch_control": {
+    "scope": "Paired menu launch with the previously qualified reference runtime",
+    "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+    "runtime_source_matches_current_master": true,
+    "install_readback_verified": true,
+    "launch_acknowledgement_received": false,
+    "device_removed_from_bus_in_Windows_log": true,
+    "root_cause": "UNRESOLVED",
+    "rule": "Use autonomous return-to-menu while the game bridge responds. Require a bounded discriminator for the common bus loss before another launch."
+  },
+  "next_native_gate": "Establish reliable reference launch and autonomous return, then repeat faithful startup with matched captures."
 }

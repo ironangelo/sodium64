@@ -1,5 +1,17 @@
 # Consolidation and integration audit - 2026-10-15
 
+Current update, 2026-11-09. PR34 is merged at master `c232af87`. Its host
+EOF shutdown and real-cart session close are qualified. The published Latest
+still contains the same two production payloads. The exact habitual R17 backup
+is restored and verified from the PC. PR32 remains blocked at native startup.
+Its no-USB capture header failed validation after recovery, and the previously
+qualified master reference also lost USB during paired-menu launch. No further
+launch is queued while this common failure is unresolved.
+[PR34 and restoration evidence](evidence/integration-bench-eof-2026-11-09.json).
+[PR32 physical evidence](evidence/integration-faithful-compositor-2026-11-08.json).
+
+The November 8 preflight paragraphs below retain their historical scope.
+
 Current hardware update2026-11-08: second OFF/ON and exact backup restoration
 verified. Same-fixture exact-CI no-USB HW_PROFILE control installed/launched;
 worker terminal0 without SRAM read. Terminal red-screen or console-OFF
@@ -64,7 +76,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work,b4206144 | BLOCKED on native promotion; software CANDIDATE | Draft PR32 head1e96c40c has complete RSP/PPU reference, owners, CPU publication,194-page PI/TLB replacement and compiled window/OBJ/full-row Math/delayed-DMA proofs. All six exact-head CI workflows pass. Two native USB preflights fail before hello after verified install/launch; packaging alone does not resolve it. Second backup restoration verified; same-source no-USB control launched, awaiting terminal red/OFF confirmation before SRAM read and subsequent restoration. Use that evidence to resolve startup, then aligned house/rain/SMW/DKC/Mode7 image/APU/PCM and combined native cadence gates. R44/R45 excluded; no bulk PR21 merge. |
+| A1..A13 exact compositor/window/epoch work, b4206144 | BLOCKED on native promotion, software CANDIDATE | Draft PR32 head 1e96c40c has complete RSP/PPU reference, owners, CPU publication, 194-page PI/TLB replacement and compiled window/OBJ/full-row Math/delayed-DMA proofs. All six exact-head CI workflows passed. Two USB preflights failed at first hello. A subsequent no-USB capture had an invalid SRAM header after recovery. A known master reference also lost the USB device before launch acknowledgement. Exact habitual restore/readback passed. Establish reliable reference launch and autonomous return, then qualify native house/rain/SMW/DKC/Mode 7 image/APU/PCM and combined cadence. R44 and R45 remain separate. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |
@@ -104,13 +116,14 @@ Diagnostic tools are identified separately from production runtime changes.
 | Decoder cursor repair, PR29 48b01127 | VALIDATED targeted repair and integrated | Master9cb13d43. Linked9984 cases/zero failures, four mutants, unchanged37 vector words and4KiB banks. All five exact CI gates pass. Native independent SMW57/58/58/60/60 replaces five0/60 windows; four commercial progress/menu/readback controls pass. Aligned PCM/head/registers exact;285 image pixels change and full fidelity remains open. |
 | Complete-DSP reference corpus, PR30 31ba6429 | VALIDATED host prerequisite and integrated | Four regenerable original full-core fixtures, full-state/RAM/PCM replay and mutation controls pass locally and in Linux CI. No runtime linkage, live SPC bridge, complete resident backend or native cost result. |
 | Production/laboratory release isolation, PR31 7ee13d15 | VALIDATED and integrated tooling | Masterbac1a4df. Four exact-head and four post-merge CI workflows pass. Mandatory ELF/ROM/ZIP admission and actual-laboratory rejection are integrated. Republished Latest contains exactly the two unchanged normal payloads; no runtime change or native performance claim. |
+| Host USB bench EOF shutdown, PR34 87b06233 | VALIDATED diagnostic tooling and integrated | Master c232af87. All four head workflows passed, including 19 client tests on Windows and Linux. Real cart closes a debug session with CIC off and in menu. Normal loaded bytes/addresses and released payloads match. The common USB disappearance during launch remains open. |
 
 ## Execution queue and stop conditions
 
-1. PR24/23/22/25/26/27/28/29/30 are merged into9915df5e after applicable exact-head gates.
-   PR30 changes only host tooling; normal/USB/HW loaded images remain identical.
-   Startup now selects21. Older HW_PROFILE controls bind to8da before the
-   separately qualified two-byte full-rate default change.
+1. PR24/23/22/25/26/27/28/29/30/31/34 are merged. Startup selects APU 21.
+   PR30 and PR34 are host tooling. PR31 enforces the normal-only release.
+   Older HW_PROFILE controls bind to 8da before the separately qualified
+   two-byte full-rate default change.
 2. Four historical original-guest controls retain their scoped measured-ROM
    binding and owner limitations. Four new commercial controls plus an independent
    no-USB SMW capture bind to the identical current master tree; complete visual/
@@ -124,9 +137,11 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. Keep R44 blocked on coherent clean renderer dependencies, story residual and
-   Mode7 predecessor comparison; keep R45 blocked on aligned story/Mode7 costs.
-   R19/R22/R47 have finite correctness/cache port gates, not an experiment queue.
+4. Restore reliable paired-menu launch and autonomous return on the reference,
+   then close PR32's native acceptance. PR33 needs the qualified PR32 layout
+   for its USB gate. R44 needs the coherent renderer dependencies, story residual
+   and Mode 7 predecessor comparison. R45 needs aligned story and Mode 7 costs.
+   R19 and R47 retain their port and validation gates.
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
    echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,

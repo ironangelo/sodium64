@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-09",
+  "scope": "Host debug session shutdown, release isolation, and verified habitual restoration. No new gameplay acceptance.",
+  "status": "VALIDATED_DIAGNOSTIC_INTEGRATION",
+  "pull_request": "https://github.com/ironangelo/sodium64/pull/34",
+  "head": "87b06233b213d386f980b573d0db43a06f664395",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "runtime_changed": false,
+  "normal_loaded_image": {
+    "allocated_bytes": 767064,
+    "all_loaded_bytes_and_addresses_unchanged": true,
+    "scope": "Same-toolchain local comparison"
+  },
+  "exact_head_CI": {
+    "build": 42531899146,
+    "owners": 42531899120,
+    "USB": 42531899123,
+    "Ares": 42531899129,
+    "all_passed": true
+  },
+  "post_merge_CI": {
+    "build": {
+      "run": 42673778715,
+      "attempt": 2,
+      "result": "PASS",
+      "release_isolation": "PASS",
+      "update_release": "PASS"
+    },
+    "owners": {
+      "run": 42673779181,
+      "attempt": 2,
+      "result": "PASS"
+    },
+    "USB": {
+      "run": 42673778699,
+      "attempt": 1,
+      "result": "PASS"
+    },
+    "Ares": {
+      "run": 42673778639,
+      "attempt": 2,
+      "result": "IN_PROGRESS_AT_CHECKPOINT"
+    },
+    "first_attempts": {
+      "build": "FAIL with build/profile-build passed and smoke/release isolation absent",
+      "owners": "FAIL without jobs",
+      "Ares": "FAIL without jobs"
+    }
+  },
+  "host_validation": {
+    "win_linux_client_cases": 19,
+    "real_pipe_regression_cases": 2,
+    "deployer_version": "2.20.2",
+    "real_cart_console_off": {
+      "gameplay_commands": 0,
+      "ROM_or_SD_write": false,
+      "CIC_off_before_and_after": true,
+      "deployer_exit": 0
+    },
+    "real_cart_menu": {
+      "mode": "menu",
+      "recovery": 0,
+      "deployer_exit": 0
+    },
+    "scope": "Closing stdin permits the deployer to close debug mode. It does not reset the N64."
+  },
+  "published_latest": {
+    "url": "https://github.com/ironangelo/sodium64/releases/tag/release",
+    "release_id": 439488930,
+    "asset_id": 728512193,
+    "archive_bytes": 44370,
+    "archive_sha256": "a64f27ed421ef6e0af2e6d194ed0afcb8fd42ebf9519139294a73fd97190e8df",
+    "verified_normal_CI_artifact": 13699382707,
+    "members": [
+      "sodium64.z64",
+      "rom-converter.py"
+    ],
+    "byte_identical_to_exact_master_CI_and_previous_release": true
+  },
+  "current_hardware": {
+    "last_verified_installation": "Habitual R17 from exact fresh backup",
+    "restored_remotely": true,
+    "backup_bytes": 131072,
+    "install_readback_verified": true,
+    "menu_recovery_before": 0,
+    "menu_recovery_after": 0,
+    "deployer_exit": 0,
+    "game_launch_sent": false,
+    "active_deployer": false,
+    "physical_user_action_pending": false
+  },
+  "open_autonomy_gate": {
+    "scope": "Paired menu launch with the previously qualified reference runtime",
+    "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+    "runtime_source_matches_current_master": true,
+    "install_readback_verified": true,
+    "launch_acknowledgement_received": false,
+    "device_removed_from_bus_in_Windows_log": true,
+    "root_cause": "UNRESOLVED",
+    "rule": "Use autonomous return-to-menu while the game bridge responds. Require a bounded discriminator for the common bus loss before another launch."
+  }
+}

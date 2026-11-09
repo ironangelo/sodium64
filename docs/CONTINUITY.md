@@ -1,3 +1,63 @@
+# 2026-11-09 — PR34 merged and habitual installation verified
+
+Master is `c232af87e046d41a468e3f2f1083fcf30f606385` after eleven separate
+integrations. PR34 changes the host USB client only. It closes deployer stdin
+so the deployed SC64 2.20.2 can stop its debug session cleanly at EOF. The
+previous blank line was ignored. The native USB contracts passed on Windows
+and Linux, the normal emulator's 767,064 allocated bytes and addresses matched,
+and the real cart accepted clean session close with the console off and in
+the paired menu. All four pre-merge workflows passed. On master, Build and
+Validate (including release isolation and publishing), Owners and USB passed.
+Ares was in progress on its second attempt at this checkpoint. The first
+attempts of Build, Owners and Ares omitted required jobs. A single rerun of
+each was enough to re-enter those gates. Latest is tagged at this master and
+its two payloads, `sodium64.z64` and `rom-converter.py`, match both the exact
+master CI artifact and the previous published payloads byte for byte.
+[PR34 and scoped receipt](evidence/integration-bench-eof-2026-11-09.json).
+
+PR32 stays draft. The no-USB HW_PROFILE control reached a red screen observed
+by the user. The profiler paints red after waiting for its PI writes, then
+parks instead of returning to the menu. Windows lost the SC64 USB device
+near the end of the quiet interval. After physical recovery the guarded
+SRAM read with CIC off found
+`0xF00FF00F` instead of the expected capture header `0x53363448`. That read
+produced no usable timing, image or audio evidence. A separate attempt with
+the previously qualified `48b01127` master runtime lost the same USB device
+during paired-menu launch, before the host received its launch acknowledgement.
+The failure stage is known and its cause remains open. The Windows log
+records two bus removals and cannot determine what caused them.
+[PR32 physical evidence](evidence/integration-faithful-compositor-2026-11-08.json).
+
+The latest verified installation is the habitual R17 program. With the link
+available, the exact 131,072-byte backup was restored and read back entirely
+from the PC, with menu recovery 0 before and after and deployer exit 0. The
+restoration sent no launch command. No controller remains active and there is
+no outstanding physical action for the user.
+
+Use the established return-to-menu command whenever the gameplay bridge
+responds. The EOF fix closes a host session; autonomous console recovery
+still depends on a reachable cart and responding software. The SC64 CLI reset
+resets cart state. The deployed paired menu lacks the AUX Halt acknowledgement
+that the CLI reboot-upload path expects, so that path is outside the tested
+recovery procedure. The user's current direction is to carry as much hardware
+operation as possible from the PC and keep working toward integration.
+
+The next physical gate is a reliable launch and autonomous return using the
+known reference. Check idle menu and device state first. Admit another launch
+only with a host-side trace that distinguishes PnP removal from a missing menu
+receipt, plus a verified restoration path. Then qualify PR32 startup, aligned
+ALttP house/rain,
+SMW/DKC/Mode 7 visual and audio checks, and the combined quiet native baseline.
+PR33 still needs the qualified faithful layout to pass the USB memory-owner
+gate. R44 and R45 retain their renderer and native regression gates. The
+complete resident DSP cost remains unmeasured and follows the faithful
+baseline. The October cadence controls retain their historical measured scope.
+
+Earlier entries below record historical results and the instructions in force
+when each checkpoint was written.
+
+---
+
 # 2026-11-08 - Second restoration verified; exact no-USB control launched
 
 The user confirmed OFF/ON and menu after the second USB failure. Fresh exact

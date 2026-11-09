@@ -4,6 +4,8 @@ import binascii
 import io
 import json
 import queue
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -214,6 +216,65 @@ class BenchTests(unittest.TestCase):
             p.write_bytes(bytes.fromhex('80371240') + bytes(4092))
             with self.assertRaises(bench.BenchError):
                 s.install(p, '/SNES/game.sav')
+
+class SessionShutdownTests(unittest.TestCase):
+    def close_real_child(self, ignore_eof=False):
+        # Match deployer2.20.2: blank lines are ignored; EOF exits the debug loop.
+        # A real pipe catches the old newline/wait/kill behavior without USB.
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name)
+        child = root / 'eof_deployer.py'
+        child.write_text(
+            'import json, sys, time\n'
+            'from pathlib import Path\n'
+            'lines = []\n'
+            'for line in sys.stdin:\n'
+            '    lines.append(line)\n'
+            '    if line.strip():\n'
+            '        words = line.split()\n'
+            '        print("S64 " + words[1] + " OK mode=menu", flush=True)\n'
+            'Path("eof.json").write_text(json.dumps({"lines": lines}))\n'
+            + ('time.sleep(60)\n' if ignore_eof else ''), encoding='utf-8')
+        real_popen = subprocess.Popen
+
+        def launch(command, **kwargs):
+            self.assertEqual(command[1:], ['-p', 'serial://COM3', 'debug', '--no-writeback'])
+            return real_popen([sys.executable, '-u', str(child)], **kwargs)
+
+        session = bench.Session('unused', 'serial://COM3', root, timeout=5)
+        try:
+            with patch.object(bench.subprocess, 'Popen', side_effect=launch):
+                with session:
+                    self.assertEqual(session.state()['mode'], 'menu')
+            return session, root / 'eof.json'
+        finally:
+            if session.process:
+                if session.process.poll() is None:
+                    session.process.kill()
+                    session.process.wait(timeout=3)
+                for stream in (session.process.stdin, session.process.stdout):
+                    try:
+                        stream.close()
+                    except OSError:
+                        pass
+
+    def test_cooperative_deployer_exits_on_eof_without_extra_input(self):
+        session, eof = self.close_real_child()
+        self.assertEqual(session.process.returncode, 0)
+        lines = json.loads(eof.read_text(encoding='utf-8'))['lines']
+        self.assertEqual(len(lines), 1)
+        self.assertRegex(lines[0], r'^s64 [0-9a-f]{8} status\n$')
+        self.assertFalse(session.reader.is_alive())
+        self.assertTrue(session.log.closed)
+
+    def test_uncooperative_deployer_keeps_bounded_kill_fallback(self):
+        session, eof = self.close_real_child(ignore_eof=True)
+        self.assertNotEqual(session.process.returncode, 0)
+        self.assertEqual(len(json.loads(eof.read_text(encoding='utf-8'))['lines']), 1)
+        self.assertFalse(session.reader.is_alive())
+        self.assertTrue(session.log.closed)
+
 
 if __name__ == '__main__':
     unittest.main()

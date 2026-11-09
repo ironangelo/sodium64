@@ -6,11 +6,10 @@ so the deployed SC64 2.20.2 can stop its debug session cleanly at EOF. The
 previous blank line was ignored. The native USB contracts passed on Windows
 and Linux, the normal emulator's 767,064 allocated bytes and addresses matched,
 and the real cart accepted clean session close with the console off and in
-the paired menu. All four pre-merge workflows passed. On master, Build and
-Validate (including release isolation and publishing), Owners and USB passed.
-Ares was in progress on its second attempt at this checkpoint. The first
-attempts of Build, Owners and Ares omitted required jobs. A single rerun of
-each was enough to re-enter those gates. Latest is tagged at this master and
+the paired menu. All four pre-merge and post-merge workflows passed, including
+Build and Validate with release isolation and publishing. The first attempts
+of Build, Owners and Ares omitted required jobs. Each passed on a single
+rerun. Latest is tagged at this master and
 its two payloads, `sodium64.z64` and `rom-converter.py`, match both the exact
 master CI artifact and the previous published payloads byte for byte.
 [PR34 and scoped receipt](evidence/integration-bench-eof-2026-11-09.json).

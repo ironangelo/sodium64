@@ -39,13 +39,18 @@
     "Ares": {
       "run": 42673778639,
       "attempt": 2,
-      "result": "IN_PROGRESS_AT_CHECKPOINT"
+      "result": "PASS",
+      "jobs": {
+        "profile-build": "PASS",
+        "ares-smoke": "PASS"
+      }
     },
     "first_attempts": {
       "build": "FAIL with build/profile-build passed and smoke/release isolation absent",
       "owners": "FAIL without jobs",
       "Ares": "FAIL without jobs"
-    }
+    },
+    "all_passed": true
   },
   "host_validation": {
     "win_linux_client_cases": 19,

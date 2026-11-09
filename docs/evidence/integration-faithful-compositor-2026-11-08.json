@@ -177,16 +177,14 @@
     "conclusion": "Simple packaging mismatch is insufficient; root cause remains unresolved"
   },
   "current_hardware": {
-    "last_verified_installation": "Habitual R17 from exact fresh backup",
-    "restored_remotely": true,
+    "physical_OFF_ON_confirmed": true,
+    "last_verified_installation": "Habitual R17",
     "backup_bytes": 131072,
-    "install_readback_verified": true,
-    "menu_recovery_before": 0,
-    "menu_recovery_after": 0,
+    "readback_verified": true,
+    "menu_recovery": 0,
     "deployer_exit": 0,
-    "game_launch_sent": false,
     "active_deployer": false,
-    "physical_user_action_pending": false
+    "further_physical_action_pending": false
   },
   "next_discriminator_admission": {
     "source": "1e96c40c8c98038fd506109e8dd89155eeea8948",
@@ -252,5 +250,6 @@
     "root_cause": "UNRESOLVED",
     "rule": "Use autonomous return-to-menu while the game bridge responds. Require a bounded discriminator for the common bus loss before another launch."
   },
-  "next_native_gate": "Establish reliable reference launch and autonomous return, then repeat faithful startup with matched captures."
+  "next_native_gate": "Known reference launch and return requalified. Distinguish faithful boot bridge initialization from first retirement with bounded lab-only evidence. Qualify aligned native fidelity and combined cadence afterward.",
+  "followup_traced_control": "integration-traced-native-startup-2026-11-09.json"
 }

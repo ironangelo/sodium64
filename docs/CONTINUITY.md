@@ -1,3 +1,52 @@
+# 2026-11-09 — Autonomous reference verified and faithful startup isolated
+
+The habitual R17 and the archived master runtime both completed a real-N64
+launch of the same original mixed-eight-voice fixture and returned to the
+paired menu by USB. The known reference progressed from retired frame 103
+to 164 at APU 21 and frameskip 0, then exact R17 installation/readback
+passed without physical intervention. This short progression check does not
+provide a cadence or fidelity measurement. Windows retained the SC64 USB node
+through both launches at 120 ms observation intervals.
+
+A fresh PR32 build at `1e96c40c` used the same local GCC 14.2.0 as the reference.
+With the faithful renderer disabled, all 777,668 loaded bytes and their
+addresses matched the working reference. With the faithful renderer enabled,
+install/readback and paired-menu launch acknowledgement passed after
+35.766 s. The first emulator debug delivery timed out, and a fresh recovery
+session timed out as well. The USB node remained present and SC64 firmware
+info still responded. The two prior exact-CI GCC 16.2 builds failed at the
+same application boundary. This rules out requiring a Windows bus removal
+or the CI compiler to reproduce this failure. The cause within the faithful
+boot/first-retirement path remains unresolved.
+
+The user confirmed menu after a physical OFF/ON. The exact habitual R17
+131,072-byte backup is again restored and read back from the PC, menu
+recovery 0 and clean deployer exit. No controller or physical request remains
+active. Preserve the older bus-loss result separately.
+
+A clean local R47 BRR port at current master passes 57,344 linked voice cases,
+six emitted faults and 2,048 scheduled stereo cases. The unchanged standalone
+USB owner assertion rejects the 160-byte text growth after page alignment:
+`0x800bf1f0` exceeds `0x800be200` by 4,080 bytes. PR32 plus only that DSP patch
+passes the faithful USB owner check with a 66,832-byte margin and all 12
+loaded RSP banks unchanged. R47 stays blocked for standalone promotion.
+The local port is retained at `6c9dd2cb`. No remote branch or PR was opened.
+
+The next gate is to separate faithful boot bridge initialization from first
+retirement. The existing bridge mailbox publishes phase 1 at successful
+SC64 initialization and phase 3 on transport failure. Use that evidence only
+through a qualified recovery/read path, or expose a bounded lab-only startup
+receipt before the renderer runs. Require a discriminator before another
+native launch. Then qualify aligned house/rain, SMW/DKC/Mode 7 visuals and
+audio, quiet combined cadence and restoration. PR33 and R47 need the qualified
+layout. R44/R45 and whole-resident-DSP gates retain their earlier scopes.
+Master and Latest remain at `c232af87`.
+[Traced startup and R47 evidence](evidence/integration-traced-native-startup-2026-11-09.json).
+
+The earlier entries below record historical results.
+
+---
+
 # 2026-11-09 — PR34 merged and habitual installation verified
 
 Master is `c232af87e046d41a468e3f2f1083fcf30f606385` after eleven separate

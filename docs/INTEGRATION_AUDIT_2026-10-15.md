@@ -1,16 +1,20 @@
 # Consolidation and integration audit - 2026-10-15
 
-Current update, 2026-11-09. PR34 is merged at master `c232af87`. Its host
+First checkpoint, 2026-11-09. PR34 is merged at master `c232af87`. Its host
 EOF shutdown and real-cart session close are qualified. The published Latest
 still contains the same two production payloads. The exact habitual R17 backup
 is restored and verified from the PC. PR32 remains blocked at native startup.
 Its no-USB capture header failed validation after recovery, and the previously
-qualified master reference also lost USB during paired-menu launch. No further
-launch is queued while this common failure is unresolved.
+qualified master reference also lost USB during paired-menu launch. The USB bus loss was pending a traced reference control.
 [PR34 and restoration evidence](evidence/integration-bench-eof-2026-11-09.json).
 [PR32 physical evidence](evidence/integration-faithful-compositor-2026-11-08.json).
 
-The November 8 preflight paragraphs below retain their historical scope.
+Follow-up, 2026-11-09. R17 and the master reference requalified autonomous
+launch and menu return. A faithful build with the working local GCC 14.2.0
+repeated the first-hello failure after launch acknowledgement, while Windows
+and SC64 firmware stayed responsive. The exact habitual R17 was restored
+after physical OFF/ON. The older preflight paragraphs retain their
+historical scope. [Traced evidence](evidence/integration-traced-native-startup-2026-11-09.json).
 
 Current hardware update2026-11-08: second OFF/ON and exact backup restoration
 verified. Same-fixture exact-CI no-USB HW_PROFILE control installed/launched;
@@ -76,7 +80,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work, b4206144 | BLOCKED on native promotion, software CANDIDATE | Draft PR32 head 1e96c40c has complete RSP/PPU reference, owners, CPU publication, 194-page PI/TLB replacement and compiled window/OBJ/full-row Math/delayed-DMA proofs. All six exact-head CI workflows passed. Two USB preflights failed at first hello. A subsequent no-USB capture had an invalid SRAM header after recovery. A known master reference also lost the USB device before launch acknowledgement. Exact habitual restore/readback passed. Establish reliable reference launch and autonomous return, then qualify native house/rain/SMW/DKC/Mode 7 image/APU/PCM and combined cadence. R44 and R45 remain separate. |
+| A1..A13 exact compositor/window/epoch work, b4206144 | BLOCKED on native promotion, software CANDIDATE | PR32 exact head 1e96c40c passed all six workflows and compiled owner/PI/TLB/window/OBJ/Math/DMA contracts. The master reference now passes traced native launch/return. PR32 repeats the first-hello failure with the local GCC 14.2.0 while the USB device and firmware remain reachable. The earlier no-USB SRAM header was invalid after recovery. Exact R17 restoration passed. Isolate faithful boot bridge initialization versus first retirement, then qualify native visuals/audio and combined cadence. R44/R45 remain separate. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |
@@ -96,7 +100,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | R32 dry-master HI/LO,0675f15a | VALIDATED within corrected dry path | Required correctness prerequisite when dry mixing is selected. Master lacks that multiply sequence; no standalone master patch exists. Preserve linked/dynamic spacing and native owner proof. |
 | R34 complete C++ DSP direct gameplay replacement | REJECTED; VALIDATED bounded behavior oracle | Native106.56/144.15/151.16% standalone audio budget and9 checksum matches. Keep primary reference and source/license; it cannot become a gameplay default. |
 | R35 timer experiment,677c9d21 | SUPERSEDED priority / CANDIDATE unmeasured code | No physical result. Do not treat fewer DIV instructions as an integration gain. |
-| R47 BRR history recurrence,849412ee | CANDIDATE | Two physical pairs reproduce title~3%/room~4% gains with exact image/PCM. Needs BRR-accurate base, rain/DKC and changed-DSP CI on clean extraction. Limited value does not invalidate its finite integration queue entry. |
+| R47 BRR history recurrence, 849412ee | BLOCKED on standalone USB owner | Prior native title/room results retain their scope. Clean master port passes 57,344 voice cases, six faults and 2,048 scheduled stereo cases. USB fails the unchanged CGRAM owner by 4,080 bytes. Local PR32 plus only the DSP patch passes with 66,832 bytes margin and 12 unchanged loaded RSP banks. Qualify the faithful layout, then adapt linked BRR CI and validate exact-head audio/cadence. |
 | R48 non-alias annotation | REJECTED | All18 emitted executable sections identical. No work removed; no runtime patch or native rerun. |
 | R49 signal elision,68667b74 | CANDIDATE oracle optimization; BLOCKED gameplay | One-voice17.29% cost saving; eight voices small0.317% loss within declared guard, echo1.076% saving. Active standalone budget still144/149%. Retain oracle optimization separately from gameplay backend, pending changed-core CI. |
 | R50 counter; R52 full-BRR regroup; R53 sample dispatch; R54 cache placement; R55 Gaussian CPU batch | REJECTED retained cost directions | Their physical cost gates fail; semantic/codegen/cache findings remain. R51 function residency is a diagnostic, not additive execution cost. No broadCI or kernel tuning for rejected implementations. |
@@ -137,9 +141,9 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. Restore reliable paired-menu launch and autonomous return on the reference,
-   then close PR32's native acceptance. PR33 needs the qualified PR32 layout
-   for its USB gate. R44 needs the coherent renderer dependencies, story residual
+4. The reference launch and autonomous return passed. Isolate PR32's missing
+   first response, then close native acceptance. PR33 and R47 need the qualified
+   PR32 layout for their USB gates. R44 needs the coherent renderer dependencies, story residual
    and Mode 7 predecessor comparison. R45 needs aligned story and Mode 7 costs.
    R19 and R47 retain their port and validation gates.
 5. After combined representative evidence, resume whole resident DSP via an

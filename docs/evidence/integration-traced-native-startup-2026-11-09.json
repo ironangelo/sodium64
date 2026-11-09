@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "scope": "Original mixed-eight-voice fixture. Native startup and autonomous menu control only.",
+  "hardware": {
+    "habitual_R17": {
+      "result": "PASS",
+      "loader_seconds": 34.906,
+      "emulator_hello": true,
+      "menu_return": true,
+      "program_replaced": false,
+      "Windows_USB_present_at_120ms_observation": true
+    },
+    "archived_master_reference": {
+      "result": "PASS",
+      "source": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+      "source_equal_to_master_runtime": true,
+      "loader_seconds": 35.328,
+      "short_progress_control": {
+        "first": 103,
+        "second": 164,
+        "apu_clock": 21,
+        "frameskip": 0
+      },
+      "menu_return": true,
+      "habitual_restore_readback": true,
+      "physical_intervention": false,
+      "Windows_USB_present_at_120ms_observation": true
+    },
+    "PR32_GCC14": {
+      "result": "FAILED_BEFORE_FIRST_HELLO",
+      "source": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+      "local_GCC": "14.2.0",
+      "program_bytes": 114688,
+      "disabled_variant_identical_loaded_bytes_and_addresses_to_working_reference": 777668,
+      "install_readback": true,
+      "loader_acknowledged": true,
+      "loader_seconds": 35.766,
+      "emulator_debug_delivery_timeout": true,
+      "fresh_session_recovery_delivery_timeout": true,
+      "Windows_USB_present_at_120ms_observation": true,
+      "firmware_info_after_failure": true,
+      "image_audio_cadence_accepted": false,
+      "root_cause": "UNRESOLVED"
+    },
+    "current_hardware": {
+      "physical_OFF_ON_confirmed": true,
+      "last_verified_installation": "Habitual R17",
+      "backup_bytes": 131072,
+      "readback_verified": true,
+      "menu_recovery": 0,
+      "deployer_exit": 0,
+      "active_deployer": false,
+      "further_physical_action_pending": false
+    }
+  },
+  "R47": {
+    "status": "BLOCKED_ON_STANDALONE_USB_OWNER",
+    "original_source": "849412ee911c27850a22af45866a4439e99e380b",
+    "normal_build": "PASS",
+    "normal_extra_text_bytes": 160,
+    "differential_linked_voice_cases": 57344,
+    "negative_mutants": [
+      "signed_filter_floor",
+      "invalid_range_mask",
+      "saturation",
+      "signed15_storage",
+      "history_recurrence",
+      "four_store_extent"
+    ],
+    "total_decoder_instructions_reference_then_candidate": [
+      8669240,
+      7300296
+    ],
+    "gain_scheduled_stereo_cases": 2048,
+    "legacy_USB": {
+      "result": "FAIL",
+      "bss_end": "0x800bf1f0",
+      "first_CGRAM_owner": "0x800be200",
+      "overlap_bytes": 4080
+    },
+    "conditional_faithful_USB": {
+      "result": "PASS",
+      "pair_source": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+      "bss_end": "0x800c1af0",
+      "first_CGRAM_owner": "0x800d2000",
+      "margin_bytes": 66832,
+      "owner_faults_rejected": [
+        "old_static_clear",
+        "ROM_cache_into_surfaces",
+        "Q2_DMA_overrun"
+      ],
+      "identical_loaded_RSP_banks": 12
+    },
+    "candidate_native_run": false,
+    "merged": false,
+    "next_gate": "Qualify the faithful layout, then adapt linked BRR CI to the grouped implementation and run exact-head CI plus native PCM and cadence."
+  }
+}

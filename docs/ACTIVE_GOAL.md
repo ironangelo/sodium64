@@ -31,25 +31,21 @@ contains the same production ROM and converter as before. October's
 commercial quiet controls and independent SMW capture retain their measured
 scope. [PR34 evidence](evidence/integration-bench-eof-2026-11-09.json).
 
-PR32 is draft at `1e96c40c8c98038fd506109e8dd89155eeea8948`. All six exact-head
-workflows and the PI/TLB/window/OBJ/Math/delayed-DMA contracts passed. Both
-exact-CI USB builds failed at first hello. The no-USB profiler reached a red
-screen, then a guarded SRAM read after recovery could not validate the capture
-header. A launch of the previously qualified master runtime also lost the USB
-device before the host received a launch acknowledgement. Native acceptance
-remains blocked and the common transport failure is unresolved.
+PR32 is draft at `1e96c40c8c98038fd506109e8dd89155eeea8948`. All six
+exact-head CI workflows passed. Native R17 and master reference launch and
+autonomous return are requalified. A fresh faithful build with the working
+local GCC 14.2.0 repeats the prior exact-CI failure after acknowledged menu
+launch, before first emulator response. The SC64 USB device remained present
+and firmware info responded. Isolate bridge initialization from first
+retirement before another hardware launch. Then qualify aligned visual and
+audio controls and quiet combined cadence. R44 and R45 retain separate gates.
 
-The latest verified installation is the habitual R17, restored from the exact
-131,072-byte backup with readback and menu recovery 0 verified remotely. No
-controller or physical request remains active. Use the existing autonomous
-return-to-menu path when the game bridge responds. Use passive checks first
-when the USB link is absent. The user wants PC-side control whenever possible.
-
-Before another launch, bound the common failure that also occurred on the
-known reference. Use that reference to verify launch, bridge and autonomous
-return before repeating the faithful candidate. Then qualify native house/rain,
-SMW/DKC/Mode 7, aligned APU/PCM and combined quiet cadence. R44/R45 retain
-separate gates. [Current compositor evidence](evidence/integration-faithful-compositor-2026-11-08.json).
+The latest verified installation is the habitual R17 after the user's physical
+OFF/ON. Exact 131,072-byte readback and recovery 0 passed. No physical action
+is outstanding. R47's clean local port passes linked arithmetic and stereo
+checks, but the standalone USB link exceeds the CGRAM owner by 4,080 bytes.
+PR32 plus only the R47 DSP change fits locally with 66,832 bytes margin.
+[Current traced startup and R47 evidence](evidence/integration-traced-native-startup-2026-11-09.json).
 
 PR33 is DRAFT at1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be: clean KOFF release
 correction, no observer/flag/extra DSP state. Build/Owners/Ares pass; actual USB

@@ -1,3 +1,37 @@
+# 2026-11-09 — Matched pre-guest controls pass on the N64
+
+Both local GCC 14.2.0 startup probes, with the legacy and faithful renderer,
+installed and read back on the same original mixed-eight-voice fixture.
+Each sent `S64BOOT` after identifying the SC64 and before SNES guest entry.
+The legacy marker followed the menu's launch acknowledgement by 0.313 s
+and the faithful marker by 0.328 s. Both returned to the paired menu by
+software, with recovery 0. The exact 131,072-byte habitual R17 was restored
+and read back after each run. There was no manual reset, USB removal at the
+observation interval or pending physical action.
+
+The isolated local probe is `9b52f09a`. It passed six linked SC64/MMIO cases,
+46 bridge ABI/owner cases and four emitted faults. The ordinary production
+image and ordinary faithful USB image retain all 767,064 and 789,028 loaded
+bytes and addresses respectively. The 12 faithful RSP banks are byte-identical.
+Release admission accepts the normal image and rejects the actual probe.
+The initial additive legacy probe exceeded the unchanged CGRAM owner; the
+final boot-only configuration omits the unreachable retired-frame idle body
+and fits under the same assertion.
+
+The first-reply failure of the ordinary PR32 image remains open. The two
+probe builds demonstrate a working pre-guest SC64 handshake and menu return.
+They stop before guest/RSP execution and change the linked image, so they do
+not prove that ordinary PR32 has completed a frame. The next gate is to trace
+the first guest boundary and the renderer wait into the first USB service,
+keeping any diagnostic local and providing a recovery route before a new
+hardware launch. Then qualify aligned native visuals/audio and quiet cadence.
+PR33 and R47 still need the qualified faithful layout. R44/R45 and the integral
+resident DSP cost retain their earlier scopes. PR32 is draft at `1e96c40c`;
+master and Latest are still `c232af87`.
+[Pre-guest control and isolation evidence](evidence/integration-faithful-pre-guest-2026-11-09.json).
+
+---
+
 # 2026-11-09 — Autonomous reference verified and faithful startup isolated
 
 The habitual R17 and the archived master runtime both completed a real-N64

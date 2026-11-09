@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "candidate_head": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+  "local_probe_commit": "9b52f09acd691abf206459cdee65a7f02978d961",
+  "compiler": "Local GCC 14.2.0",
+  "scope": "Matched pre-guest boot/SC64 transport controls. The diagnostic returns to the menu before guest or RSP execution.",
+  "original_mixed8_fixture": true,
+  "software": {
+    "linked_cases": 6,
+    "simulated_SC64_identity_and_text_payload": true,
+    "reboot_called_after_packet": true,
+    "reboot_effects_mocked": true,
+    "guest_unreachable": true,
+    "normal_loaded_identity_bytes": 767064,
+    "ordinary_faithful_USB_loaded_identity_bytes": 789028,
+    "faithful_loaded_RSP_banks_unchanged": 12,
+    "bridge_linked_cases": 46,
+    "bridge_faults_rejected": 4,
+    "normal_release_admitted": true,
+    "actual_probe_release_rejected": true,
+    "probe_requires_REMOTE": true,
+    "legacy_owner_assertion_retained": true
+  },
+  "physical": {
+    "legacy": {
+      "install_readback_verified": true,
+      "launch_acknowledged": true,
+      "startup_marker": "S64BOOT",
+      "seconds_from_launch_ack_to_marker": 0.313,
+      "autonomous_return_recovery": 0,
+      "habitual_restore_readback_bytes": 131072,
+      "Windows_USB_present_at_120ms_observation": true,
+      "physical_intervention": false,
+      "deployer_exit": 0
+    },
+    "faithful": {
+      "install_readback_verified": true,
+      "launch_acknowledged": true,
+      "startup_marker": "S64BOOT",
+      "seconds_from_launch_ack_to_marker": 0.328,
+      "autonomous_return_recovery": 0,
+      "habitual_restore_readback_bytes": 131072,
+      "Windows_USB_present_at_120ms_observation": true,
+      "physical_intervention": false,
+      "deployer_exit": 0
+    }
+  },
+  "current_hardware": {
+    "last_verified_installation": "Habitual R17",
+    "exact_readback_verified": true,
+    "menu_recovery": 0,
+    "pending_physical_action": false,
+    "active_controller": false
+  },
+  "ordinary_PR32_startup": "BLOCKED before first retired-frame USB response",
+  "aligned_visual_audio_combined_cadence": "PENDING",
+  "inference": "The instrumented faithful build reaches SC64 identification, emits a real text packet and reboots safely before guest entry. This narrows the follow-up to the post-init path through first frame service. The probe is a distinct linked artifact, so it does not independently qualify the ordinary executable or identify an exact failing instruction."
+}

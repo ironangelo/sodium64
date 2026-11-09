@@ -37,16 +37,17 @@ autonomous return are requalified. A fresh faithful build with the working
 local GCC 14.2.0 repeats the prior exact-CI failure after acknowledged menu
 launch, before first emulator response. The SC64 USB device remained present
 and firmware info responded. Both
-local pre-guest probes now pass SC64 identification, USB marker and autonomous
-return on the real N64. Bound the post-init path from the first guest boundary
-through renderer wait and first frame service before another launch. Then
-qualify aligned visual/audio controls and quiet combined cadence. R44/R45
-retain separate gates.
-[Pre-guest evidence](evidence/integration-faithful-pre-guest-2026-11-09.json).
+native probe pairs now pass through the first guest boundary and frame
+bridge. That first bridge runs before any RSP task. Bound the first actual
+task submission/retirement and capture SP/DP state if it stalls, with a
+qualified recovery route before the next hardware launch. Then qualify
+aligned native image/audio and quiet combined cadence. R44/R45 retain
+separate gates.
+[First-boundary evidence](evidence/integration-faithful-first-boundary-2026-11-09.json).
 
 The latest verified installation is habitual R17, restored and read back
-remotely after both pre-guest controls. Exact 131,072-byte readback and menu
-recovery 0 passed. No physical action is outstanding. R47's clean local port passes linked arithmetic and stereo
+remotely after both first-boundary probes. Exact 131,072-byte readback and
+menu recovery 0 passed. No physical action is outstanding. R47's clean local port passes linked arithmetic and stereo
 checks, but the standalone USB link exceeds the CGRAM owner by 4,080 bytes.
 PR32 plus only the R47 DSP change fits locally with 66,832 bytes margin.
 [Current traced startup and R47 evidence](evidence/integration-traced-native-startup-2026-11-09.json).

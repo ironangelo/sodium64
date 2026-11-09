@@ -1,3 +1,37 @@
+# 2026-11-09 — First guest boundary and pre-task bridge reached on N64
+
+Both matched local probes on the original mixed-eight-voice fixture sent
+`S64BOOT`, `S64WAIT`, and `S64FIRST` in order. The faithful markers arrived
+0.333, 0.358, and 0.359 s after menu launch acknowledgement. `S64WAIT`
+is emitted after entering the first guest frame boundary and publishing
+VRAM, immediately before the CPU reads SP HALT. `S64FIRST` is emitted in
+the first frame bridge after that wait. This first service occurs before
+`menu_return` starts the first RSP render task. Neither probe measured an
+actual rendered frame, fidelity, or native cadence.
+
+Both probes returned to the paired menu automatically. Exact 131,072-byte
+habitual R17 restore/readback passed twice, recovery 0, with no manual reset.
+No physical request or controller remains active.
+
+The local diagnostic source is `4375340d`. Four linked halt/stall controls,
+46 bridge ABI/owner cases and four emitted faults passed. The production and
+ordinary faithful USB images retain their 767,064 and 789,028 loaded bytes
+and addresses. The 12 faithful RSP loaded banks match. Release admission
+rejects the actual diagnostic. No runtime or diagnostic source was pushed
+to PR32 or master.
+
+The ordinary PR32 first-hello failure remains open. The instrumented path
+reaches guest boundary and early frame service with the RSP still halted.
+The next physical discriminator must let one actual RSP task run, distinguish
+first task submission from the next CPU wait and capture SP/DP state if it
+does not retire. Bound the wait and verify the recovery route before launch.
+Then qualify aligned native house/rain, SMW/DKC/Mode 7 visual/audio and
+combined cadence. PR33 and R47 still depend on the qualified faithful layout.
+R44/R45 and the complete resident-DSP cost retain their existing gates.
+[First-boundary evidence](evidence/integration-faithful-first-boundary-2026-11-09.json).
+
+---
+
 # 2026-11-09 — Matched pre-guest controls pass on the N64
 
 Both local GCC 14.2.0 startup probes, with the legacy and faithful renderer,

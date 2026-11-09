@@ -1,11 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
-Latest native gate, 2026-11-09. Both matched pre-guest probes reached
-SC64 initialization, emitted a USB marker and returned by software. Exact
-habitual R17 restoration passed after each run. Ordinary PR32 still fails
-before the first retired-frame response. The next discriminator spans guest
-entry, renderer wait and first frame service.
-[Pre-guest evidence](evidence/integration-faithful-pre-guest-2026-11-09.json).
+Latest native gate, 2026-11-09. Both matched probes reached the first guest
+boundary, passed the initial SP HALT wait and serviced USB before the first
+RSP render task. Both returned by software and exact R17 readback passed.
+Ordinary PR32 still lacks its first host-request response. Bound actual first
+RSP task submission and retirement before aligned visual/audio and cadence.
+[First-boundary evidence](evidence/integration-faithful-first-boundary-2026-11-09.json).
 
 First checkpoint, 2026-11-09. PR34 is merged at master `c232af87`. Its host
 EOF shutdown and real-cart session close are qualified. The published Latest
@@ -87,7 +87,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work, b4206144 | BLOCKED on native promotion, software CANDIDATE | PR32 exact head 1e96c40c passed all six workflows and compiled owner/PI/TLB/window/OBJ/Math/DMA contracts. The master reference now passes traced native launch/return. PR32 repeats the first-hello failure with the local GCC 14.2.0 while the USB device and firmware remain reachable. The earlier no-USB SRAM header was invalid after recovery. Exact R17 restoration passed. Matched pre-guest probes pass SC64 handshake and autonomous return. Bound first guest/RSP retirement and USB service, then qualify native visuals/audio and combined cadence. R44/R45 remain separate. |
+| A1..A13 exact compositor/window/epoch work, b4206144 | BLOCKED on native promotion, software CANDIDATE | PR32 exact head 1e96c40c passed all six workflows and compiled owner/PI/TLB/window/OBJ/Math/DMA contracts. The master reference now passes traced native launch/return. PR32 repeats the first-hello failure with the local GCC 14.2.0 while the USB device and firmware remain reachable. The earlier no-USB SRAM header was invalid after recovery. Exact R17 restoration passed. Matched probes pass first guest boundary and USB service before RSP starts, plus autonomous return. Bound the first actual RSP task, then qualify native visuals/audio and combined cadence. R44/R45 remain separate. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |

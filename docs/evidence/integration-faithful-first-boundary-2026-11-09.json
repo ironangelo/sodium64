@@ -1,0 +1,70 @@
+{
+  "date": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "draft_PR32": "1e96c40c8c98038fd506109e8dd89155eeea8948",
+  "local_probe_commit": "4375340d60619a1daf8eab1840ac0e75d4ae0942",
+  "original_fixture": "Original mixed-eight-voice program",
+  "cut_points": {
+    "S64BOOT": "SC64 initialized",
+    "S64WAIT": "First guest frame boundary reached CPU RSP wait after publication",
+    "S64FIRST": "First frame bridge service reached, before menu_return starts first RSP task"
+  },
+  "software": {
+    "linked_cases": 4,
+    "legacy_and_faithful_halt_and_stall_modeled": true,
+    "ordered_SC64_text_markers": true,
+    "reboot_called_before_RSP_start": true,
+    "reboot_effects_mocked": true,
+    "ordinary_production_loaded_bytes_identical": 767064,
+    "ordinary_faithful_USB_loaded_bytes_identical": 789028,
+    "faithful_loaded_RSP_banks_unchanged": 12,
+    "bridge_ABI_owner_cases": 46,
+    "bridge_faults_rejected": 4,
+    "release_probe_rejected": true
+  },
+  "physical": {
+    "legacy": {
+      "launch_acknowledged": true,
+      "markers_in_order": [
+        "S64BOOT",
+        "S64WAIT",
+        "S64FIRST"
+      ],
+      "host_seconds_after_ack": {
+        "S64BOOT": 0.313,
+        "S64WAIT": 0.337,
+        "S64FIRST": 0.339
+      },
+      "habitual_readback_bytes": 131072,
+      "menu_recovery": 0,
+      "physical_intervention": false,
+      "USB_present_at_120ms_observation": true
+    },
+    "faithful": {
+      "launch_acknowledged": true,
+      "markers_in_order": [
+        "S64BOOT",
+        "S64WAIT",
+        "S64FIRST"
+      ],
+      "host_seconds_after_ack": {
+        "S64BOOT": 0.333,
+        "S64WAIT": 0.358,
+        "S64FIRST": 0.359
+      },
+      "habitual_readback_bytes": 131072,
+      "menu_recovery": 0,
+      "physical_intervention": false,
+      "USB_present_at_120ms_observation": true
+    }
+  },
+  "first_actual_RSP_render_task_executed_by_probe": false,
+  "ordinary_PR32": "BLOCKED on post-launch USB delivery, aligned image/audio and quiet native cadence",
+  "current_hardware": {
+    "last_verified_installation": "Habitual R17",
+    "exact_readback_verified": true,
+    "menu_recovery": 0,
+    "physical_action_pending": false,
+    "active_controller": false
+  }
+}

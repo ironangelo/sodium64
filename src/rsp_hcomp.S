@@ -176,7 +176,7 @@ hcomp_fill_target:
     move s0, zero
 hcomp_backdrop_color:
     li a0, HCOMP_PROOF_RDP_CMDS + 24
-    jal 0xA4001C4C
+    jal (0xA4001000 + HCOMP_DEPTH_SEND_IMEM)
     li a1, HCOMP_PROOF_BG_DEPTH_CMDS
     andi t0, s0, 0x3E
     sll t0, t0, 10

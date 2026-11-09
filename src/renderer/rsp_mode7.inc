@@ -1292,7 +1292,8 @@ hcomp_cgram_store_marker:
     b hcomp_cgram_return
     nop
 
-.org 0xC4C
+.org HCOMP_DEPTH_SEND_IMEM
+hcomp_depth_send_entry:
 hcomp_depth_send:
     j hcomp_eligibility_depth_send
     nop

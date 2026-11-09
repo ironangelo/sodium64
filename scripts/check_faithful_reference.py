@@ -58,6 +58,65 @@ def fold_laboratory_limit(name, text):
     return text.replace(old, new)
 
 
+def repair_depth_sender(name, text):
+    if name != 'rsp_main.S':
+        return text
+    old = ('bg_window_depth_send:\n    j hcomp_depth_send\n    move ra, v1\n')
+    new = ('bg_window_depth_send:\n    move ra, v1\n    .org 0xC4C\n    nop\n')
+    assert text.count(old) == 1, 'frozen depth-sender anchor drifted'
+    return text.replace(old, new)
+
+
+def prove_depth_sender(build):
+    """Run the emitted overlay call with each resident bank and a poisoned v1."""
+    overlay = build/'src/rsp_hcomp.elf'
+    base, text = read_text(overlay)
+    fixed_entry = 0xa4001c4c
+    jal = 0x0c000000 | ((fixed_entry >> 2) & 0x03ffffff)
+    calls = [base+i for i in range(0, len(text), 4)
+             if int.from_bytes(text[i:i+4], 'big') == jal]
+    assert len(calls) == 1, 'expected one overlay depth call'
+    call = calls[0]
+    slot, _ = load_elf(overlay)
+
+    def run(memory, helper, poison):
+        cpu = CPU(memory)
+        cpu.pattern()
+        cpu.regs[3] = poison
+        cpu.regs[4] = 0xf48
+
+        def check_return(machine):
+            assert machine.regs[31] & 0xffffffff == call+8, 'depth sender lost overlay ra'
+            assert machine.regs[4:6] == [0xf48, 0xf50], 'depth arguments changed'
+
+        cpu.hooks[helper] = check_return
+        cpu.execute(call, stop=call+8, max_steps=12)
+
+    cases = 0
+    for name in ('rsp_main', 'rsp_mode7'):
+        resident, symbols = load_elf(build/'src'/(name+'.elf'))
+        assert symbols['hcomp_depth_send_entry'] == fixed_entry, (name, 'depth entry shifted')
+        helper = symbols['hcomp_eligibility_depth_send']
+        memory = resident | slot
+        for poison in (0, 0xa4001c10, 0xdeadbeef):
+            run(memory, helper, poison)
+            cases += 1
+        if name == 'rsp_main':
+            # Restore the original Main tail whose window delay slot was called
+            # as an entry. The real overlay call must catch its clobbered ra.
+            old_tail = bytes.fromhex('0060f8250900041200000000')
+            first = fixed_entry & 0x1fffffff
+            mutant = memory | {first+i: value for i, value in enumerate(old_tail)}
+            try:
+                run(mutant, helper, 0xa4001c10)
+            except AssertionError as error:
+                assert str(error) == 'depth sender lost overlay ra', error
+            else:
+                raise AssertionError('original Main overlay return fault escaped')
+    return {'linked_overlay_cases': cases, 'original_Main_return_fault_rejected': True,
+            'common_IMEM_entry': hex(fixed_entry & 0xfff)}
+
+
 def prove_limit_elision(before, after):
     """Execute only the changed scalar span; compare ordinary zero-limit state.
 
@@ -167,7 +226,7 @@ def main():
     env = os.environ.copy()
     env['PATH'] = str(prefix/'bin')+os.pathsep+env['PATH']
     report = {'passed': True, 'source': SOURCE,
-              'reference_patches': 'Decoder JR return NOPs; seven laboratory limit sites folded to ordinary zero-limit behavior with fixed instruction counts.',
+              'reference_patches': 'Decoder JR return NOPs; seven laboratory limit folds; fixed Main/Mode 7 depth sender entry at C4C.',
               'scope': 'Complete linked RSP text/data/extents and PPU object sections/relocations; execution, RDP rasterization and native timing are separate gates.',
               'physical_acceptance': False, 'banks': {}, 'laboratory_limit_elision': {}}
     with tempfile.TemporaryDirectory(prefix='s64-faithful-reference-') as directory:
@@ -182,6 +241,7 @@ def main():
                 start = text.index('shared_decode4:')
                 end = text.index('jr t4', start)+len('jr t4')
                 text = text[:end]+'\n    nop\n'+text[end:]
+            text = repair_depth_sender(name, text)
             before_sources[name] = text
             text = fold_laboratory_limit(name, text)
             (stage/name).write_text(text)
@@ -220,6 +280,7 @@ def main():
                     raise RuntimeError(result.stdout+result.stderr)
                 report['laboratory_limit_elision'][name] = prove_limit_elision(before_binary, candidate)
         assert len(report['laboratory_limit_elision']) == 7
+        report['depth_sender'] = prove_depth_sender(args.build)
         candidate_sections, candidate_relocations = relocatable_image(args.build/'src/ppu.o')
         ppu_flags = list(flags)
         if any(relocation[3][0].startswith('remote_') for relocation in candidate_relocations):

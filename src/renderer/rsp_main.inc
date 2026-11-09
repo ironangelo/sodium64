@@ -1350,10 +1350,12 @@ bg_window_depth:
     addi a0, a0, HCOMP_PROOF_BG_DEPTH_CMDS
     addi a1, a0, 8
 bg_window_depth_send:
-    j hcomp_depth_send
     move ra, v1
 
-// Raw/direct bands disable Z; only the general compositor uses depth tags.
+// Overlay callers enter here with their own ra, past the window return restore.
+.org HCOMP_DEPTH_SEND_IMEM
+hcomp_depth_send_entry:
+    nop
 hcomp_depth_send:
     // Raw1/2 can submit ignored depth with Z disabled. Shader3 resolves its
     // palette class in the helper; every general command remains unchanged.

@@ -260,6 +260,9 @@
 #define TILE_PARAMS (RDP_TILE7 + 0x78)
 #define LAYER_CHART (TILE_PARAMS + 0x20)
 #define OVERLAY_OBJECT_CACHE_SRC (LAYER_CHART + 7 * 16 + 8)
+
+// Fixed depth sender entry shared by the Main and Mode 7 resident banks.
+#define HCOMP_DEPTH_SEND_IMEM 0xC4C
 #define OBJ_SIZES (LAYER_CHART + 0x90)
 #define FILL_JUMPS (OBJ_SIZES + 0x20)
 #define TILE_JUMPS (FILL_JUMPS + 0x10)

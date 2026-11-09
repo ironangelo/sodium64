@@ -116,7 +116,7 @@
     },
     "ares": {
       "run": 42682347035,
-      "state": "IN_PROGRESS"
+      "state": "PASS"
     }
   },
   "current_hardware": {
@@ -125,5 +125,70 @@
     "active_controller": false,
     "physical_action_pending": false
   },
-  "native_visual_audio_sustained_cadence": "PENDING"
+  "native_visual_audio_sustained_cadence": "PENDING",
+  "Ares_original_guest_matrix": {
+    "run": 42682347035,
+    "artifact": 13702904318,
+    "archive_digest_verified": true,
+    "scope": "Virtual-N64 profile smoke only",
+    "workloads": {
+      "interpreter-gameplay": {
+        "last_complete_VI_window": 59,
+        "valid_samples": 1010
+      },
+      "interpreter-idle": {
+        "last_complete_VI_window": 60,
+        "valid_samples": 812
+      },
+      "recompiler-cpu-alu": {
+        "last_complete_VI_window": 60,
+        "valid_samples": 932
+      },
+      "recompiler-dma-vram": {
+        "last_complete_VI_window": 17,
+        "valid_samples": 1246
+      },
+      "recompiler-gameplay-balanced": {
+        "last_complete_VI_window": 60,
+        "valid_samples": 1207
+      },
+      "recompiler-idle": {
+        "last_complete_VI_window": 60,
+        "valid_samples": 1253
+      },
+      "recompiler-ppu-registers": {
+        "last_complete_VI_window": 48,
+        "valid_samples": 1049
+      },
+      "recompiler-wram": {
+        "last_complete_VI_window": 60,
+        "valid_samples": 1502
+      }
+    }
+  },
+  "ALttP_native_validation_20261109": {
+    "phase": "LOADER_TRANSPORT_INTERRUPTED",
+    "install_readback_verified": true,
+    "menu_launch_ack_observed": false,
+    "Windows_PnP_event_1010": true,
+    "USB_node_absent": true,
+    "physical_renderer_outcome": "UNOBSERVED",
+    "image_or_audio_capture": false,
+    "cadence_interval": false,
+    "habitual_readback_bytes": 131072,
+    "menu_recovery_after_restore": 0,
+    "physical_reconnect_needed": true,
+    "hardware_root_cause": "UNRESOLVED"
+  },
+  "matched_precision_local_control": {
+    "historical_R17_precision": 20,
+    "ordinary_bench_precision": 8,
+    "compilation_passed": true,
+    "faithful_loaded_bytes": 789028,
+    "master_loaded_bytes": 777668,
+    "changed_loaded_bytes_per_build": 1,
+    "changed_word": "remote_control_init immediate 8 to 20",
+    "physical_run": false,
+    "candidate_production_default_changed": false
+  }
 }

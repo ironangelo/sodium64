@@ -35,13 +35,15 @@ PR32 is draft at `3e1c9a99869063254dbc1c84453fd6cf06f78762`. The real-N64
 first-task stall led to a two-word Main RSP fix for the shared C4C depth
 sender entry. The matched fixed task halted normally. The ordinary local
 USB build answered and advanced at APU 21 and frameskip 0, then returned
-by software. Exact-head CI is still in progress. Next qualify aligned
-house/rain, SMW/DKC/Mode 7 visuals, audio and quiet cadence before promotion.
+by software. All six exact-head CI workflows passed. The first ALttP load
+lost the SC64 USB function before host acknowledgement. Exact habitual
+restoration passed after recovery. Matched precision-20 controls are ready.
+Qualify aligned house/rain, SMW/DKC/Mode 7 visuals, audio and quiet cadence.
 R44 and R45 retain separate gates.
 [Depth-entry and native startup evidence](evidence/integration-faithful-depth-entry-2026-11-09.json).
 
 The latest verified installation is habitual R17, restored and read back
-remotely after the fixed ordinary startup check. Exact 131,072-byte readback
+remotely after the interrupted ALttP load. Exact 131,072-byte readback
 and menu recovery 0 passed. No physical action is outstanding. R47's clean local port passes linked arithmetic and stereo
 checks, but the standalone USB link exceeds the CGRAM owner by 4,080 bytes.
 PR32 plus only the R47 DSP change fits locally with 66,832 bytes margin.

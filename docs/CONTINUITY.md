@@ -1,3 +1,45 @@
+# 2026-11-09 — PR32 exact-head CI closes; ALttP transport failure isolated
+
+All six PR workflows on `3e1c9a99` completed successfully. Ares
+42682347035 artifact 13702904318 was downloaded and digest-verified. All
+eight original workload profiles have valid samples and APU 21, frameskip
+0, audio 4, precision 8. The CPU-JIT PPU-register and DMA-VRAM workloads
+recorded virtual windows of 48/60 and 17/60. These are emulator smoke
+results. The prior real-N64 startup/return PASS remains scoped to mixed8.
+
+The first ALttP fidelity run passed exact candidate install/readback and
+lost SC64 USB during the paired-menu launch. The host received no launch
+acknowledgement or guest response. Windows recorded PnP 1010 and the USB
+function was absent. No image, PCM or cadence interval was recovered.
+The initial menu confirmation did not restore the USB function. After
+the cold reconnect COM3 reappeared and exact habitual R17 install/readback
+passed, 131,072 bytes and menu recovery 0. No active controller remains.
+
+The historical October ALttP trials used the same paired-menu build. One
+launched and captured correctly before a later PC I/O error; another
+completed. Prior Windows removal records establish that this class of
+event also occurred in October. Their cause and relation to individual
+physical reconnects are unknown. PR34 changed only deployer shutdown
+on stdin EOF; the interrupted command was still awaiting its launch reply.
+
+Historical R17 house/rain images were captured at precision 20. Both
+local faithful/master controls now match that setting, with just one
+loaded byte different from their respective ordinary USB images. The
+archived route has 25 absolute input events after room frame 1980. The
+matched runner can stop at the room or reach rain frame 12944. These
+controls were compiled and checked, with no physical run yet.
+
+Next, keep the restored configuration until a bounded comparison can
+distinguish recurring paired-menu load/USB loss from a successful
+commercial launch. The archived DKC1 control loads faster than ALttP
+and is available for an independent visual/PCM comparison. The exact
+ALttP route remains pending. PR32 remains a candidate pending native
+fidelity/cadence; PR33/R47 depend on the qualified layout. Master remains
+`c232af87`. No physical action is currently outstanding.
+[Exact-head CI, interrupted native run and control preparation](evidence/integration-faithful-depth-entry-2026-11-09.json).
+
+---
+
 # 2026-11-09 — Depth-sender repair advances PR32 through native startup
 
 The matched legacy renderer's first actual RSP task halted normally. The

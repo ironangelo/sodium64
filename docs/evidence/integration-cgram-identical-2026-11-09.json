@@ -1,0 +1,96 @@
+{
+  "date_local": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "PR": 38,
+  "head": "86a1b5b6500acd69654202c4c2f370ad42b0e381",
+  "renderer_provenance": "ca3f6f59a66bf9d7c15bfac7e4577fa0c6e06e65, narrow CGRAM behavior ported onto current writer",
+  "scope": "Exact raw word comparison preserves low/high bus write, address advancement, raw store and entry-zero fill update. An identical word needs no typed epoch event or section request.",
+  "local": {
+    "configurations": [
+      "normal",
+      "REMOTE",
+      "HW_PROFILE"
+    ],
+    "linked_cases_each": 6146,
+    "emitted_faults_rejected_each": 2,
+    "typed_producer_roundtrip_cases": 4624,
+    "DMA8_consumer_passed": true,
+    "REMOTE_RSP_banks_identical_to_master": 2
+  },
+  "CI": [
+    {
+      "id": 42738781717,
+      "name": "Build and Validate",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42738781717"
+    },
+    {
+      "id": 42738781317,
+      "name": "Ares Profile Validation",
+      "status": "in_progress",
+      "conclusion": null,
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42738781317"
+    },
+    {
+      "id": 42738781022,
+      "name": "Gate C CGRAM Epoch Replay Regression",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42738781022"
+    },
+    {
+      "id": 42738781258,
+      "name": "Profiling Memory Owners",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42738781258"
+    },
+    {
+      "id": 42738781089,
+      "name": "Native USB Bench Contracts",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42738781089"
+    }
+  ],
+  "CI_observed_at_UTC": "2026-11-10T01:57:01.084910+00:00",
+  "CI_artifacts": {
+    "archives_digest_verified": true,
+    "Gate_C": 13727319066,
+    "USB": 13727463804,
+    "USB_static_end": "0x800be1f0",
+    "first_CGRAM_owner": "0x800be200",
+    "USB_margin_bytes": 16
+  },
+  "queue_combination": {
+    "heads": {
+      "bench": "87d16156d3eb529d7ecb53c34c6ba75feefb0fbc",
+      "KOFF": "e975c7a77cb8be62bc0b422c9479e2160631945a",
+      "R47": "2109eb4800cfdfb73eb19cd328451ceff40e16c8",
+      "R19": "f21f211f98a8ec80141acd3f8ecde0a450c5fe6a",
+      "CGRAM": "86a1b5b6500acd69654202c4c2f370ad42b0e381"
+    },
+    "scope": "Local runtime-delta combination, normal and USB. The integrated representative baseline remains pending.",
+    "USB_static_end": "0x800be008",
+    "USB_margin_bytes": 504,
+    "bridge_cases": 50,
+    "CGRAM_cases": 6146,
+    "KOFF_release_cases": 16384,
+    "BRR_cases": 57344,
+    "pitch_writes": 131072,
+    "pitch_loads": 524288,
+    "scheduled_stereo_cases": 2048,
+    "ordinary_release_admission": "PASS"
+  },
+  "R19_Ares": {
+    "run": 42737511959,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "native": {
+    "SC64_present": false,
+    "R17_restore_pending": true,
+    "new_installs_or_trials": false
+  }
+}

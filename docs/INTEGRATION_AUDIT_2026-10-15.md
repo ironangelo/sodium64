@@ -1,5 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
+Latest renderer extraction, 2026-11-09. PR38 has exact-head Gate C
+replay, linked identical-write tests and USB admission. The local queued
+combination fits and passes its linked software checks. Restore R17
+before additional native launches.
+[CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
+
 Latest R19 gate, 2026-11-09. Draft PR37 ports the pitch cache directly
 to master and passes linked arithmetic and exact CI USB admission. The
 native attempt lost the cart on the master reference before launch
@@ -110,7 +116,8 @@ Diagnostic tools are identified separately from production runtime changes.
 | R33 GAIN accumulator owner,5b0cb2f3 subset | VALIDATED and integrated, PR23 | Master c41631e5 contains the legacy mixer repair. Normal/PROFILE handler2048 plus independent scheduled stereo2048 cases pass; old master1792 scheduled failures become0. Six instruction words change; all other loaded bytes/extents are unchanged. Build38764135169, CGRAM38764135122 and Ares38764135187 pass on exact head93e0e0af. Historical native16 handler failures become0; broader waveform qualification remains separate. |
 | Full-rate startup/menu defaults,10662795 subset | VALIDATED and integrated, PR26 | Exact587d1ac9 Build38797939600/Ares38797939482/APU38797939962 pass; merged7c3a7634. Only apu_clock42to21 and menu4to0 change; all other loaded bytes/instructions/extents match. Existing native controls ran at21. |
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
-| CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
+| A13 identical CGRAM write, ca3f6f59 subset | CANDIDATE, independent draft PR38 | Exact raw comparison preserves bus/latch/store and backdrop behavior. Linked normal/HW/USB, exact Gate C and USB pass. Native images, PCM and cadence remain open. |
+| Faithful ROM cache and S-CPU scope | Layout prerequisite; existing probe integrated | The TLB probe is already in master. PR32 adds the 194-slot cursor wrap for its compositor memory. Its S-CPU core file matches master. Keep the capacity change with its owners. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
 | A1..A13 exact compositor/window/epoch work, b4206144 | CANDIDATE for fidelity; BLOCKED for production | PR32 head 3e1c9a99 fixes native RSP startup and passes exact-head CI. Native DKC1 passes two exact aligned RGB/PCM checkpoints. Polled intro boundary rate falls from 48.56/58.48/59.41 to 38.72/44.84/41.33 across approximately matched bands. USB loss interrupted the paired quiet interval. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain. R44/R45 stay separate. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |

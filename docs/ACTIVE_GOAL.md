@@ -73,6 +73,14 @@ candidate comparison and R17 restoration are pending. Restore and verify
 R17 on return of the cart before resuming physical measurements.
 [R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
+PR38 86a1b5b6 is a standalone CGRAM epoch port. Its linked exact-color
+cases and Gate C replay pass. Native paired image/PCM/cadence is pending.
+A local PR35/KOFF/R47/R19/CGRAM combination retains 504 bytes before
+CGRAM and passes linked audio, CGRAM, bench and release admission.
+Review and integrate candidates separately before measuring the
+representative combined baseline.
+[CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
+
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined
 baseline, before more isolated kernels. No1.0/full fidelity/chip/DAC acceptance.

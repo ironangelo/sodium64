@@ -1,3 +1,40 @@
+# 2026-11-09 — Separate CGRAM port passes Gate C; queued changes fit together
+
+PR38 86a1b5b6 extracts the A13 identical-color epoch behavior directly
+onto master c232af87. Low/high access, address advancement and the
+raw 16-bit CGRAM store remain. Entry zero still uses the legacy backdrop
+update. An identical raw word skips the redundant palette event and
+section request. Changed words retain the active/VBlank/closed/overflow
+paths. This separates the CPU-side change from the larger renderer.
+
+Normal, HW_PROFILE and REMOTE each pass 6,146 linked cases and reject
+two emitted branch faults. Existing typed producer and DMA8 replay
+tests pass. Both REMOTE RSP banks are identical to master. Exact-head
+Gate C, build, memory ownership and USB workflows passed. The Gate C
+and USB archives were digest-verified. The standalone CI USB image
+retains 16 bytes below the CGRAM owner. The native paired comparison
+and the remaining CI are open.
+
+A local combination of PR35, KOFF, R47, R19 and CGRAM links in ordinary
+and USB configurations. USB retains 504 bytes before CGRAM and passes
+the bridge, CGRAM, KOFF, BRR, pitch and stereo proofs. The ordinary
+release admission passes. The integrated representative baseline
+remains pending.
+
+The ROM refill TLB probe is already in master. PR32's 194-slot cursor
+limit belongs to its compositor layout. Its S-CPU core file is
+identical to master. R44's adaptive-span dependency and R45's story
+and Mode 7 costs remain open. The identical-color port leaves these
+pending native comparisons separate.
+
+Windows still does not enumerate the SummerCart. R17 restore remains
+pending from the interrupted reference. Restore and verify it before
+another launch. PR35 remains the independent prerequisite ready for
+review.
+[CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
+
+---
+
 # 2026-11-09 — R19 port reaches an independent PR; USB recovery pending
 
 PR37 f21f211f ports the measured R19 pitch cache directly onto master

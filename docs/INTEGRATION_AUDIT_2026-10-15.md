@@ -1,5 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
+Latest R19 gate, 2026-11-09. Draft PR37 ports the pitch cache directly
+to master and passes linked arithmetic and exact CI USB admission. The
+native attempt lost the cart on the master reference before launch
+acknowledgement. R17 restoration and R19 native comparison are pending.
+[R19 evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
+
 Latest audio gate, 2026-11-09. PR35 is ready for review. Both audio
 drafts pass their four exact-head CI workflows and scoped native audio
 comparisons. PR33 matches 252 release samples per event at two aligned
@@ -119,7 +125,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | First R45 missing-scissor implementation,9e1194f | SUPERSEDED (incorrect) | Native27-pixel failure preserved; repaired1fcc940 and scalar/metadata lineage replace it. Never integrate the defective artifact. |
 | R45 run producer,c623d918 | REJECTED cost remedy | Story55.888611 vs dense55.910416; does not recover loss. Preserved on experiment/main-row-runs-r45, dense source restored on R45. No renewed micro-tuning loop. |
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
-| R19 pitch cache,84531758 | CANDIDATE | Independent bounded native image/PCM/performance proof. Port both write handlers and cache lifecycle to clean master, run linked byte/address/caller tests and new-SHA CI. It is not an audio-completeness fix. |
+| R19 pitch cache, 84531758 | CANDIDATE, independent draft PR37 | Direct master port. Normal, HW_PROFILE and REMOTE linked arithmetic and caller checks pass. Exact CI USB map has 16 bytes before CGRAM. Prior native gains belong to the original runtime. Current N64 test was interrupted on the master reference before the R19 launch. Restore R17, then rerun aligned native comparison. |
 | R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
 | R22 KOFF release, 1b123980 | CANDIDATE, native note-tail scope passes | PR33 exact CI and USB KOFF gate pass. Real-N64 comparison validates two aligned 252-sample release tails and all 16,384 compared right-channel bytes. R17 restore passes. Integrate PR35 separately and rerun exact-head audio-only checks. Sustained cadence, KON delay and DAC remain open. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |
@@ -173,7 +179,7 @@ Diagnostic tools are identified separately from production runtime changes.
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. R44 needs the
    renderer dependencies, story residual and Mode 7 predecessor comparison.
-   R45 needs aligned story and Mode 7 costs. R19 retains its port gates.
+   R45 needs aligned story and Mode 7 costs. PR37 R19 has exact CI USB admission and needs the restored hardware link for native comparison.
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
    echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,

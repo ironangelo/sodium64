@@ -62,9 +62,16 @@ windows are about four seconds. The local R47/KOFF pair fits with 504
 bytes before CGRAM and passes linked audio. It is not the integrated
 baseline. Keep both audio PRs draft until PR35 is integrated separately.
 
-Each native audio trial returned by software and restored the 131,072-byte
-habitual R17 image with recovery 0. The menu remains ready.
-[Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).
+The earlier KOFF and R47 native trials restored habitual R17 with
+recovery 0. [Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).
+
+PR37 f21f211f is the independent R19 pitch cache port. Its linked normal,
+HW_PROFILE and USB proofs pass. CI USB admission leaves 16 bytes below
+the original CGRAM owner. The exact-master native reference installed,
+then lost the Windows USB device before launch acknowledgement. The
+candidate comparison and R17 restoration are pending. Restore and verify
+R17 on return of the cart before resuming physical measurements.
+[R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined

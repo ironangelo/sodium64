@@ -1,3 +1,44 @@
+# 2026-11-09 — R19 port reaches an independent PR; USB recovery pending
+
+PR37 f21f211f ports the measured R19 pitch cache directly onto master
+c232af87. Each VxPITCH byte write updates the same 14-bit conversion
+that the old mixer performed per voice and sample. Raw and mirrored
+register reads are preserved. Normal, HW_PROFILE and REMOTE all link
+locally and each passes 131,072 writes, 524,288 cached loads, 16 APU-port
+calls and a real emitted mask fault. The normal and USB proofs also
+match 65,536 linked uncached conversions. The hot conversion is three
+emitted instructions in place of seven. The write path is 26.
+These are instruction counts. The prior R19 native result belongs to
+its original renderer and build.
+
+The exact CI USB artifact is digest-verified. Its pre-data end is
+0x80010000 and static end is 0x800be1f0, leaving 16 bytes before the
+unchanged CGRAM owner. Build, profiling ownership and USB workflows
+passed. PR37 remains draft pending its full exact-head results and
+the physical comparison. It has neither a renderer nor a bench PR
+dependency.
+
+The native reference installed and verified 114,688 bytes. Windows
+lost the SummerCart about 43.032 seconds into the session, before
+the menu launch acknowledgement. The original ROM was the synthetic
+four-filter guest. R19 boot and new PCM/cadence acquisition remain
+pending. The USB parent reports problem 45 and a targeted PnP scan
+was denied by Windows. The cart did not reappear during the bounded
+automatic recovery observation. The current master USB reference is
+the last verified install and R17 restore is pending. The exact R17
+backup is preserved. Restore and verify it before further launches.
+
+R44 and R45 remain blocked. Their later DKC1 gameplay windows at
+precision 20 do not cover PR32's intro loss at precision 8. R44 has
+the adaptive span/no-Sub dependency, an ALttP residual and a pending
+native Mode 7 comparison. R45 still has the independently observed
+story and Mode 7 costs. The R19 port is separate from those renderer
+gates. PR35 awaits review and both qualified audio scopes retain their
+separate PRs.
+[R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
+
+---
+
 # 2026-11-09 — KOFF note tails match the native release reference
 
 PR33 e975c7a7 passes all four exact-head CI workflows. Its Ares archive

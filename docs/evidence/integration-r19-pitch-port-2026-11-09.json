@@ -1,0 +1,104 @@
+{
+  "date_local": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "PR": 37,
+  "head": "f21f211f98a8ec80141acd3f8ecde0a450c5fe6a",
+  "port_source": "84531758f4c70d7958d5267b740d4517f4a4c4f3",
+  "production_scope": "Direct master DSP port. Raw pitch bytes and mirrors preserved, both byte writes refresh 14-bit pitch. Zero-initialized pitch and register storage.",
+  "bench_dependency": false,
+  "renderer_dependency": false,
+  "linked_proofs": {
+    "normal": {
+      "passed": true,
+      "compiled_write_cases": 131072,
+      "compiled_load_cases": 524288,
+      "reference_cases": 65536,
+      "apu_port_cases": 16,
+      "invalid_write_cases": 128,
+      "ordinary_write_cases": 32,
+      "mirrored_read_cases": 8,
+      "emitted_mask_faults_rejected": 1,
+      "pitch_load_instructions": 3,
+      "maximum_pitch_write_instructions": 26
+    },
+    "usb": {
+      "passed": true,
+      "compiled_write_cases": 131072,
+      "compiled_load_cases": 524288,
+      "reference_cases": 65536,
+      "apu_port_cases": 16,
+      "invalid_write_cases": 128,
+      "ordinary_write_cases": 32,
+      "mirrored_read_cases": 8,
+      "emitted_mask_faults_rejected": 1,
+      "pitch_load_instructions": 3,
+      "maximum_pitch_write_instructions": 26
+    },
+    "hw": {
+      "passed": true,
+      "compiled_write_cases": 131072,
+      "compiled_load_cases": 524288,
+      "reference_cases": 0,
+      "apu_port_cases": 16,
+      "invalid_write_cases": 128,
+      "ordinary_write_cases": 32,
+      "mirrored_read_cases": 8,
+      "emitted_mask_faults_rejected": 1,
+      "pitch_load_instructions": 3,
+      "maximum_pitch_write_instructions": 26
+    }
+  },
+  "CI": [
+    {
+      "id": 42737511959,
+      "name": "Ares Profile Validation",
+      "status": "in_progress",
+      "conclusion": null,
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42737511959"
+    },
+    {
+      "id": 42737511871,
+      "name": "Native USB Bench Contracts",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42737511871"
+    },
+    {
+      "id": 42737511936,
+      "name": "Build and Validate",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42737511936"
+    },
+    {
+      "id": 42737512003,
+      "name": "Profiling Memory Owners",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42737512003"
+    }
+  ],
+  "CI_observed_at_UTC": "2026-11-10T01:45:57.133284+00:00",
+  "USB_artifact": {
+    "id": 13728186188,
+    "archive_digest_verified": true,
+    "predata_end": "0x80010000",
+    "static_end": "0x800be1f0",
+    "first_fixed_CGRAM_owner": "0x800be200",
+    "static_margin_bytes": 16
+  },
+  "native": {
+    "scope": "Original four-filter guest, ordinary exact-master reference first.",
+    "reference_install_readback_bytes": 114688,
+    "launcher_acknowledged": false,
+    "R19_launched": false,
+    "PCM_or_cadence_acquired": false,
+    "loss_seconds_after_session_started": 43.032,
+    "Windows_USB_parent_problem": 45,
+    "scoped_PnP_scan_exit": 5,
+    "automatic_recovery_observation_seconds": 45,
+    "recovery_device_seen": false,
+    "R17_restore_pending": true,
+    "cause": "Unknown. The loss occurred during the reference trial."
+  }
+}

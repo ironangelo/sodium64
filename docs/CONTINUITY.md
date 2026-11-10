@@ -1,3 +1,34 @@
+# 2026-11-09 — Correct stale SPC700 blocks after menu clock changes
+
+PR39 a4c8a2f2 is a clean correction on master c232af87. The previous
+menu code changed apu_clock and pointed the JIT allocator at its limit.
+A matching old lookup remained callable before the next compile. Actual
+linked execution of the first cached block after 42 to 21 on master
+debits 924 master cycles instead of 462. The reverse transition debits
+462 instead of 924. The fixed code gives 462 and 924 respectively.
+
+The menu calls the existing 65,536-entry full clear before resuming.
+Compiler recycling uses the same clear. Unchanged-clock menu closes
+retain their cached blocks and both clock changes retain memory tags.
+Normal, HW_PROFILE and USB pass six real rebuilds plus the full clear
+and four emitted fault checks. Exact-head CI USB and memory owners
+pass. Its digest-verified USB map retains 16 bytes before CGRAM. The
+dedicated APU cycle workflow is running on this exact head.
+
+Adding the correction to the local bench/KOFF/R47/R19/CGRAM combination
+retains 504 bytes before CGRAM, passes the clock/bridge checks and
+passes ordinary release admission. The sparse live-group optimization
+remains a separate candidate. The R19 Ares archive now passes and was
+checked on all eight original profiles, closing its exact CI.
+
+PR39 is a draft pending exact CI completion and the native menu gate.
+Restore and verify R17 after the SummerCart USB link returns, then
+resume native comparisons. R44/R45 retain their existing renderer
+gates and the integrated representative baseline remains pending.
+[Clock transition and linked evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
+
+---
+
 # 2026-11-09 — Separate CGRAM port passes Gate C; queued changes fit together
 
 PR38 86a1b5b6 extracts the A13 identical-color epoch behavior directly

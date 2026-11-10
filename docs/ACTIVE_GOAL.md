@@ -81,6 +81,12 @@ Review and integrate candidates separately before measuring the
 representative combined baseline.
 [CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
 
+PR39 a4c8a2f2 corrects stale compiled SPC700 cycle debits on a menu
+clock change. Its linked clock transitions, full reset, CI USB and
+ownership checks pass. Dedicated APU-cycle CI and the native menu check
+remain open. The correction fits the local queued combination.
+[Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
+
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined
 baseline, before more isolated kernels. No1.0/full fidelity/chip/DAC acceptance.

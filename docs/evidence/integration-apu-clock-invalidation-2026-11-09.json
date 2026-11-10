@@ -1,0 +1,101 @@
+{
+  "date_local": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "PR": 39,
+  "head": "a4c8a2f23d86a3836d123aa75ee4db2ac42c0805",
+  "scope": "Menu clock change invalidates cached SPC700 lookup before resume, by reusing the existing full clear.",
+  "local_linked": {
+    "configurations": [
+      "normal",
+      "REMOTE",
+      "HW_PROFILE"
+    ],
+    "entries": 65536,
+    "lookup_bytes": 262144,
+    "clock_rebuilds_per_configuration": 6,
+    "emitted_faults_rejected": 4,
+    "same_clock_retains_cache": true,
+    "no_new_static_lease": true
+  },
+  "counterexample": [
+    {
+      "from_clock": 42,
+      "to_clock": 21,
+      "stale_entry_on_master": true,
+      "master_first_block_debit": 924,
+      "fixed_first_block_debit": 462,
+      "expected": 462
+    },
+    {
+      "from_clock": 21,
+      "to_clock": 42,
+      "stale_entry_on_master": true,
+      "master_first_block_debit": 462,
+      "fixed_first_block_debit": 924,
+      "expected": 924
+    }
+  ],
+  "CI": [
+    {
+      "id": 42739834463,
+      "name": "Build and Validate",
+      "event": "pull_request",
+      "status": "in_progress",
+      "conclusion": null,
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42739834463"
+    },
+    {
+      "id": 42739832872,
+      "name": "Ares Profile Validation",
+      "event": "pull_request",
+      "status": "in_progress",
+      "conclusion": null,
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42739832872"
+    },
+    {
+      "id": 42739832960,
+      "name": "Profiling Memory Owners",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42739832960"
+    },
+    {
+      "id": 42739832835,
+      "name": "Native USB Bench Contracts",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42739832835"
+    },
+    {
+      "id": 42739825131,
+      "name": "APU Cycle And Span Proof",
+      "event": "workflow_dispatch",
+      "status": "in_progress",
+      "conclusion": null,
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42739825131"
+    }
+  ],
+  "CI_observed_at_UTC": "2026-11-10T02:04:01.036437+00:00",
+  "CI_USB": {
+    "artifact": 13729215223,
+    "archive_digest_verified": true,
+    "static_end": "0x800be1f0",
+    "first_CGRAM_owner": "0x800be200",
+    "margin_bytes": 16
+  },
+  "queued_combination": {
+    "previous_recipe": "integration-cgram-identical-2026-11-09.json",
+    "added_head": "a4c8a2f23d86a3836d123aa75ee4db2ac42c0805",
+    "USB_static_end": "0x800be008",
+    "USB_margin_bytes": 504,
+    "combined_clock_test": "PASS",
+    "combined_bridge_cases": 50,
+    "combined_normal_release_admission": "PASS"
+  },
+  "native": {
+    "R17_restore_pending": true,
+    "menu_transition_on_hardware_pending": true
+  }
+}

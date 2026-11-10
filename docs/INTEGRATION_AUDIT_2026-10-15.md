@@ -1,5 +1,10 @@
 # Consolidation and integration audit - 2026-10-15
 
+Latest APU gate, 2026-11-09. PR39 corrects the actual stale lookup and
+old cycle debit after changing the APU clock in the menu. Full linked
+reset and both clock directions pass, with exact CI USB admission.
+[Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
+
 Latest renderer extraction, 2026-11-09. PR38 has exact-head Gate C
 replay, linked identical-write tests and USB admission. The local queued
 combination fits and passes its linked software checks. Restore R17
@@ -115,6 +120,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Complete unrolled APU JIT reset, f4e061c6 subset | VALIDATED and integrated, PR22 | Masterabaec99d. Exact f0618fef Build38768160265, Ares38768160462, CGRAM38795951402 and APU38768159112 pass. Normal/PROFILE/HW_PROFILE coverage/owners plus three mutants pass. All65536 entries are cleared;119 directed APU cases and halt/cache groups pass. Structural instruction reduction is not a measured native FPS gain. |
 | R33 GAIN accumulator owner,5b0cb2f3 subset | VALIDATED and integrated, PR23 | Master c41631e5 contains the legacy mixer repair. Normal/PROFILE handler2048 plus independent scheduled stereo2048 cases pass; old master1792 scheduled failures become0. Six instruction words change; all other loaded bytes/extents are unchanged. Build38764135169, CGRAM38764135122 and Ares38764135187 pass on exact head93e0e0af. Historical native16 handler failures become0; broader waveform qualification remains separate. |
 | Full-rate startup/menu defaults,10662795 subset | VALIDATED and integrated, PR26 | Exact587d1ac9 Build38797939600/Ares38797939482/APU38797939962 pass; merged7c3a7634. Only apu_clock42to21 and menu4to0 change; all other loaded bytes/instructions/extents match. Existing native controls ran at21. |
+| APU clock change and live JIT entries | CANDIDATE, independent draft PR39 | Reproduced both stale first-block debits on master. Shared full clear fixes both transitions before menu resume and retains unchanged-clock cache hits. Exact CI USB passes. Dedicated APU CI and native menu behavior remain open. |
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | A13 identical CGRAM write, ca3f6f59 subset | CANDIDATE, independent draft PR38 | Exact raw comparison preserves bus/latch/store and backdrop behavior. Linked normal/HW/USB, exact Gate C and USB pass. Native images, PCM and cadence remain open. |
 | Faithful ROM cache and S-CPU scope | Layout prerequisite; existing probe integrated | The TLB probe is already in master. PR32 adds the 194-slot cursor wrap for its compositor memory. Its S-CPU core file matches master. Keep the capacity change with its owners. |
@@ -132,7 +138,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | First R45 missing-scissor implementation,9e1194f | SUPERSEDED (incorrect) | Native27-pixel failure preserved; repaired1fcc940 and scalar/metadata lineage replace it. Never integrate the defective artifact. |
 | R45 run producer,c623d918 | REJECTED cost remedy | Story55.888611 vs dense55.910416; does not recover loss. Preserved on experiment/main-row-runs-r45, dense source restored on R45. No renewed micro-tuning loop. |
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
-| R19 pitch cache, 84531758 | CANDIDATE, independent draft PR37 | Direct master port. Normal, HW_PROFILE and REMOTE linked arithmetic and caller checks pass. Exact CI USB map has 16 bytes before CGRAM. Prior native gains belong to the original runtime. Current N64 test was interrupted on the master reference before the R19 launch. Restore R17, then rerun aligned native comparison. |
+| R19 pitch cache, 84531758 | CANDIDATE, independent draft PR37 | Direct master port. Normal, HW_PROFILE and REMOTE linked arithmetic and caller checks pass. All four exact-head CI workflows pass. USB has 16 bytes before CGRAM. Prior native gains belong to the original runtime. Current N64 test was interrupted on the master reference before the R19 launch. Restore R17, then rerun aligned native comparison. |
 | R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
 | R22 KOFF release, 1b123980 | CANDIDATE, native note-tail scope passes | PR33 exact CI and USB KOFF gate pass. Real-N64 comparison validates two aligned 252-sample release tails and all 16,384 compared right-channel bytes. R17 restore passes. Integrate PR35 separately and rerun exact-head audio-only checks. Sustained cadence, KON delay and DAC remain open. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |

@@ -52,8 +52,8 @@
     {
       "id": 42737511959,
       "name": "Ares Profile Validation",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42737511959"
     },
     {
@@ -78,7 +78,7 @@
       "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42737512003"
     }
   ],
-  "CI_observed_at_UTC": "2026-11-10T01:45:57.133284+00:00",
+  "CI_observed_at_UTC": "2026-11-10T02:04:01.974703+00:00",
   "USB_artifact": {
     "id": 13728186188,
     "archive_digest_verified": true,
@@ -100,5 +100,11 @@
     "recovery_device_seen": false,
     "R17_restore_pending": true,
     "cause": "Unknown. The loss occurred during the reference trial."
+  },
+  "Ares_artifact": {
+    "id": 13728033828,
+    "archive_digest_verified": true,
+    "valid_original_profiles": 8,
+    "CPU_JIT_at_least_800_samples": 6
   }
 }

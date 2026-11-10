@@ -1,8 +1,8 @@
 # KOFF release integration
 
-Status: BLOCKED on the standalone USB layout gate. This clean extraction starts
-at master `bac1a4df51bd706e778730b488a50be8c5fc6f47`; it does not include PR21,
-the faithful compositor, observers or another DSP backend.
+The R22 extraction remains a draft. Its USB build now links locally with the
+isolated bench layout from PR35. The production correction has no dependency
+on the faithful compositor, observers or another DSP backend.
 
 The current master KOFF handler immediately disables selected voices. The
 extracted R22 correction from `1b12398077ad804874af42fcdc6be34be2793794` latches
@@ -31,16 +31,14 @@ run included12 observer instructions per release step; it does not measure this
 clean production port's cost. Changed note-tail PCM is expected and needs an
 appropriate release reference, rather than equality to the truncated old output.
 
-The standalone USB build fails its unchanged strict linker assertion:
-`__bss_end=0x800bf1f0 > first CGRAM owner0x800be200`, an overrun of4080 bytes.
-The256-byte text growth pushes the pre-data boundary across a4KiB alignment.
-An isolated `-Oz` compile of the laboratory C bridge saves zero bytes; that
-negative control is retained and does not change the build flags. Do not relax
-the CGRAM owner assertion or remove release correctness to force a green build.
+The original standalone USB build exceeded the strict CGRAM boundary by
+4,080 bytes after a 4 KiB alignment jump. A local C bridge build with -Oz
+saved zero bytes. The separate bench prerequisite keeps zero-initialized
+SRAM, WRAM and the empty TLB pages in aligned BSS in REMOTE builds. KOFF now
+ends at 0x800be008, 504 bytes below the unchanged 0x800be200 owner. Its
+linked KOFF test also runs in USB CI.
 
-The selected faithful compositor has its own explicit larger lower-memory plan,
-but PR32 is still blocked on native qualification. This extraction must wait
-for a qualified layout/default promotion, or a separately proven laboratory
-layout repair. All required CI, applicable native note-tail/cadence controls and
-combined baseline checks must pass before this draft is integrated. No speed
-gain, whole-audio fidelity or current native acceptance is claimed.
+The local R47 and KOFF combination fits at the same boundary and passes
+the KOFF, BRR and scheduled stereo proofs. That build provides a software
+control for the combined audio changes. Exact-head CI and native note-tail,
+PCM and cadence evidence remain required before promotion.

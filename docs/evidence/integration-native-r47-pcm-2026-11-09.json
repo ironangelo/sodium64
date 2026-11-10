@@ -1,0 +1,201 @@
+{
+  "date_local": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "bench_head": "87d16156d3eb529d7ecb53c34c6ba75feefb0fbc",
+  "R47_head": "2109eb4800cfdfb73eb19cd328451ceff40e16c8",
+  "KOFF_head": "e975c7a77cb8be62bc0b422c9479e2160631945a",
+  "console": "Physical N64 and SummerCart, ordinary local GCC 14.2 REMOTE images",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8
+  },
+  "hardware_scope": "Original no-input guests and short Count intervals. PCM is the emulator ring. VI and retired boundaries are software observations.",
+  "pairs": {
+    "eight_filter0": {
+      "guest_and_retired_frame": 200,
+      "PCM_bytes_each": 8192,
+      "different_PCM_bytes": 0,
+      "same_ring_head": true,
+      "same_DSP_registers": true,
+      "same_voice_mask": true,
+      "active_voices": 8,
+      "trial": {
+        "bench": {
+          "duration_s": 2.011875072,
+          "guest_delta": 121,
+          "render_delta": 121,
+          "vi_delta": 120,
+          "guest_per_second": 60.14289936984716,
+          "software_return": true,
+          "recovery": 0,
+          "restored_bytes": 131072
+        },
+        "R47": {
+          "duration_s": 2.020593216,
+          "guest_delta": 121,
+          "render_delta": 121,
+          "vi_delta": 121,
+          "guest_per_second": 59.88340406266117,
+          "software_return": true,
+          "recovery": 0,
+          "restored_bytes": 131072
+        }
+      }
+    },
+    "eight_four_filters": {
+      "guest_and_retired_frame": 200,
+      "PCM_bytes_each": 8192,
+      "different_PCM_bytes": 0,
+      "same_ring_head": true,
+      "same_DSP_registers": true,
+      "same_voice_mask": true,
+      "active_voices": 8,
+      "trial": {
+        "bench": {
+          "duration_s": 4.008104661333333,
+          "guest_delta": 240,
+          "render_delta": 240,
+          "vi_delta": 240,
+          "guest_per_second": 59.87867590268009,
+          "software_return": true,
+          "recovery": 0,
+          "restored_bytes": 131072
+        },
+        "R47": {
+          "duration_s": 4.033802752,
+          "guest_delta": 242,
+          "render_delta": 242,
+          "vi_delta": 241,
+          "guest_per_second": 59.99301772502733,
+          "software_return": true,
+          "recovery": 0,
+          "restored_bytes": 131072
+        }
+      },
+      "voice_BRR_filters": [
+        0,
+        1,
+        2,
+        3,
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "CI": {
+    "PR35": {
+      "draft": false,
+      "runs": [
+        {
+          "id": 42734341320,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341320"
+        },
+        {
+          "id": 42734341728,
+          "name": "Ares Profile Validation",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341728"
+        },
+        {
+          "id": 42734341602,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341602"
+        },
+        {
+          "id": 42734341367,
+          "name": "Build and Validate",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341367"
+        }
+      ],
+      "verified_Ares_artifact": 13725679912
+    },
+    "PR36": {
+      "draft": true,
+      "runs": [
+        {
+          "id": 42734390995,
+          "name": "Build and Validate",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390995"
+        },
+        {
+          "id": 42734391046,
+          "name": "Ares Profile Validation",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734391046"
+        },
+        {
+          "id": 42734390769,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390769"
+        },
+        {
+          "id": 42734390921,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390921"
+        }
+      ],
+      "verified_Ares_artifact": 13727450449
+    },
+    "PR33": {
+      "draft": true,
+      "runs": [
+        {
+          "id": 42734503019,
+          "name": "Ares Profile Validation",
+          "status": "in_progress",
+          "conclusion": null,
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734503019"
+        },
+        {
+          "id": 42734502930,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734502930"
+        },
+        {
+          "id": 42734502829,
+          "name": "Build and Validate",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734502829"
+        },
+        {
+          "id": 42734503099,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734503099"
+        }
+      ],
+      "verified_Ares_artifact": null
+    }
+  },
+  "observed_at_UTC": "2026-11-10T01:29:46.911986+00:00",
+  "disposition": {
+    "PR35": "Ready for review. Physical boot/return and exact CI passed.",
+    "PR36": "Scoped physical PCM parity and short progress passed. Draft pending separate PR35 integration and audio-only exact-head checks.",
+    "PR33": "USB KOFF proof passed. Native release reference and cadence remain pending.",
+    "physical_final": "Habitual R17 restored/read back after all four trials. Paired menu recovery 0.",
+    "remaining": "Representative combined fidelity/cadence, compositor throughput, and the full 1.0 objective remain open."
+  }
+}

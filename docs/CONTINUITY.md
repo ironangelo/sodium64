@@ -1,3 +1,35 @@
+# 2026-11-09 — Bench ready for review; R47 matches native four-filter PCM
+
+PR35 87d16156 is ready for review after all four exact-head CI workflows
+passed and the real N64 booted, produced audio and returned to the paired
+menu by software. Its Ares archive was digest-verified and all eight
+original profiles checked. The ordinary production ROM is byte-identical
+to master, as recorded at the previous checkpoint.
+
+PR36 2109eb48 passes all four exact-head CI workflows. It matches all
+8,192 PCM bytes, DSP registers, ring head and voice mask at exact guest
+and retired boundary 200 on each of two original guests. The historical
+mixed-eight fixture uses filter 0. The second assigns two voices to each
+of BRR filters 0 through 3, with all eight active and the SRCN assignments
+verified in the DSP register export. Short four-filter windows complete
+240 frames in 4.008 s on the reference and 242 in 4.034 s on R47, with
+240 and 241 VI respectively. These windows establish local progress
+and do not measure a speedup, presentation cadence or DAC fidelity.
+
+All four trials returned by software and verified the 131,072-byte R17
+restore with menu recovery 0. One new original filter test fixture was
+added to the SD under a fresh path. Private PCM and transport receipts
+stay local. No commercial ROM was used for this gate.
+
+Integrate the bench PR separately after review. Then retarget R47 to
+the bench-qualified master, review the audio-only diff and rerun exact-head
+checks. KOFF's native gate is its note-tail reference and cadence. PR32
+remains blocked by the DKC1 intro throughput regression. The full
+combined baseline remains pending. Master remains c232af87.
+[Native R47 and bench evidence](evidence/integration-native-r47-pcm-2026-11-09.json).
+
+---
+
 # 2026-11-09 — KOFF and R47 fit together in the isolated USB bench
 
 The KOFF USB layout blocker now clears locally without the compositor.

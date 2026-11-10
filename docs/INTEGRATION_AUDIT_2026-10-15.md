@@ -1,11 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
-Latest audio gate, 2026-11-09. PR35 admits both clean audio candidates
-and their local pair with 504 bytes before CGRAM. Aligned zero-filled
-guest RAM remains in the existing static bound. Previous PR35/36 CI passed.
-The new exact-head CI, physical bench boot/return, PCM and cadence are
-separate remaining gates.
-[Audio and ownership evidence](evidence/integration-remote-guest-ram-2026-11-09.json).
+Latest audio gate, 2026-11-09. PR35 is ready for review after exact CI
+and native boot/return. PR36 passes exact CI and scoped native aligned PCM
+on all four filters. Its short windows are not broad cadence acceptance.
+PR33 KOFF still needs the native release reference and cadence. The
+standalone and local paired images retain 504 bytes before CGRAM.
+[Native audio evidence](evidence/integration-native-r47-pcm-2026-11-09.json).
 
 Latest DKC1 gate, 2026-11-09. PR32 exact aligned native RGB and PCM pass at
 two checkpoints. DKC1 intro polled boundary throughput is lower across three
@@ -125,7 +125,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | R32 dry-master HI/LO,0675f15a | VALIDATED within corrected dry path | Required correctness prerequisite when dry mixing is selected. Master lacks that multiply sequence; no standalone master patch exists. Preserve linked/dynamic spacing and native owner proof. |
 | R34 complete C++ DSP direct gameplay replacement | REJECTED; VALIDATED bounded behavior oracle | Native106.56/144.15/151.16% standalone audio budget and9 checksum matches. Keep primary reference and source/license; it cannot become a gameplay default. |
 | R35 timer experiment,677c9d21 | SUPERSEDED priority / CANDIDATE unmeasured code | No physical result. Do not treat fewer DIV instructions as an integration gain. |
-| R47 BRR history recurrence, 849412ee | CANDIDATE, draft PR36 with PR35 prerequisite | The prior R47 head passed all four CI workflows. The current local REMOTE build passes 57,344 linked voice cases and six faults. The combined audio build passes scheduled stereo and has 504 bytes below CGRAM. Exact-head CI and paired native PCM/cadence remain open. |
+| R47 BRR history recurrence, 849412ee | CANDIDATE, native PCM scope passes | PR36 exact CI and linked audio pass. Real-N64 PCM/register parity at the same boundary on original filter-0 and four-filter guests. Short progress and clean R17 restore pass. Integrate PR35 separately, then check the audio-only diff and rerun exact-head gates. |
 | R48 non-alias annotation | REJECTED | All18 emitted executable sections identical. No work removed; no runtime patch or native rerun. |
 | R49 signal elision,68667b74 | CANDIDATE oracle optimization; BLOCKED gameplay | One-voice17.29% cost saving; eight voices small0.317% loss within declared guard, echo1.076% saving. Active standalone budget still144/149%. Retain oracle optimization separately from gameplay backend, pending changed-core CI. |
 | R50 counter; R52 full-BRR regroup; R53 sample dispatch; R54 cache placement; R55 Gaussian CPU batch | REJECTED retained cost directions | Their physical cost gates fail; semantic/codegen/cache findings remain. R51 function residency is a diagnostic, not additive execution cost. No broadCI or kernel tuning for rejected implementations. |
@@ -166,9 +166,9 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. PR35, PR33 and PR36 are separately reviewable. Complete exact-head CI
-   and qualify the isolated bench before native R47 PCM/cadence and KOFF
-   release-reference/cadence tests. PR32 exact-head CI and two
+4. PR35 is ready for review. Integrate it separately before the audio-only
+   PR36 review and checks. PR33 needs a native release-reference/cadence
+   test. PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. R44 needs the
    renderer dependencies, story residual and Mode 7 predecessor comparison.

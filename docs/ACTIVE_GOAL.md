@@ -41,25 +41,27 @@ sample. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain open.
 PR32 is blocked for default promotion. R44 and R45 retain separate gates.
 [DKC1 parity and throughput evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
 
-Habitual R17 was restored and verified with 131,072-byte readback and recovery
-0. A 95-second idle menu USB check and a later read-only status both passed.
-No physical action is outstanding. Keep R17 available and avoid unattended
-candidate launches that can strand the console after a USB removal.
+PR35 87d16156 is ready for review. All four exact-head CI workflows
+and the real-N64 short boot/software-return gate passed. REMOTE places
+three guest RAM owners in aligned BSS. The ordinary production ROM is
+byte-identical. Review and integrate this prerequisite separately.
 
-PR35 87d16156 is the isolated USB bench prerequisite. Its REMOTE build
-places the three zero-initialized guest RAM owners in aligned BSS. The
-ordinary production ROM stays byte-identical. PR33 e975c7a7 and PR36
-2109eb48 link independently with PR35, and their local pair leaves 504
-bytes below the existing CGRAM owner. The previous PR35/PR36 heads passed
-all four workflows. New exact-head CI is tracked in the evidence.
+PR36 2109eb48 remains draft behind PR35. All four exact-head workflows
+passed. Native PCM is byte-identical at boundary 200 on original eight-voice
+filter-0 and four-filter fixtures. Short filtered windows complete 240
+and 242 guest boundaries in about four seconds. The remaining promotion
+work is the audio-only branch against the integrated prerequisite and
+its exact-head checks. Combined representative cadence/fidelity and DAC
+remain open.
 
-The linked KOFF release proof now runs in USB CI. Local combined results
-pass the bridge, KOFF, BRR and scheduled stereo gates. Both audio PRs
-remain draft. First qualify native boot and software return on the new
-bench layout. Then measure aligned PCM and cadence on R47 and the release
-reference on KOFF. The R22 six native endpoints used observers. Full
-KON delay/latching and DAC fidelity remain separate.
-[Combined audio and bench memory evidence](evidence/integration-remote-guest-ram-2026-11-09.json).
+PR33 e975c7a7 passes the linked KOFF USB proof and the unchanged CGRAM
+gate. The note-tail reference and clean-port cadence remain open. The
+local R47/KOFF pair fits with 504 bytes before CGRAM and passes linked
+audio. It is not the integrated baseline.
+
+Each of the four physical trials returned by software and restored the
+131,072-byte habitual R17 image with recovery 0. The menu remains ready.
+[Native R47 and bench evidence](evidence/integration-native-r47-pcm-2026-11-09.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined

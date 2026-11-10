@@ -49,7 +49,18 @@
         "conclusion": "success",
         "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732567702"
       }
-    ]
+    ],
+    "CI_USB_artifact": {
+      "id": 13726140151,
+      "archive_digest_verified": true,
+      "predata_end": "0x8000ff28",
+      "static_end": "0x800be1f0",
+      "first_fixed_CGRAM_owner": "0x800be200",
+      "static_margin_bytes": 16,
+      "linked_bridge_cases": 46,
+      "parser_cases": 51,
+      "parser_fuzz_packets": 32000
+    }
   },
   "R47": {
     "PR": 36,
@@ -105,7 +116,18 @@
         "conclusion": "success",
         "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732880441"
       }
-    ]
+    ],
+    "CI_USB_artifact": {
+      "id": 13726270273,
+      "archive_digest_verified": true,
+      "predata_end": "0x8000ffc8",
+      "static_end": "0x800be1f0",
+      "first_fixed_CGRAM_owner": "0x800be200",
+      "static_margin_bytes": 16,
+      "linked_bridge_cases": 46,
+      "parser_cases": 51,
+      "parser_fuzz_packets": 32000
+    }
   },
   "KOFF": {
     "PR": 33,
@@ -134,5 +156,5 @@
     "candidate_launch_or_install": false,
     "limit": "A Windows USB removal takes the existing remote reset and restore paths offline."
   },
-  "CI_observed_at_UTC": "2026-11-10T01:05:49.954427+00:00"
+  "CI_observed_at_UTC": "2026-11-10T01:08:55.895786+00:00"
 }

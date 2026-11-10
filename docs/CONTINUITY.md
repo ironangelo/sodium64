@@ -10,7 +10,8 @@ TLB-backed data in memory.S. No owner or linker assertion is relaxed.
 PR36 539ca2ca carries PR35 as a separate prerequisite commit so master
 targeted CI can test the pair. The audio commit is just the R47 decoder and
 its linked proof. Normal, HW_PROFILE and REMOTE link locally. REMOTE ends at
-0x800be1f0, 16 bytes below the original CGRAM owner. The exact local decoder
+0x800be1f0, 16 bytes below the original CGRAM owner, in both the local
+and digest-verified CI USB artifacts. The exact local decoder
 passes 57,344 cases across eight voices and rejects six emitted faults in
 each build. The existing USB scheduled stereo gate passes 2,048 cases.
 Native matched PCM and cadence remain open.

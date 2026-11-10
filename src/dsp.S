@@ -35,6 +35,11 @@ dsp_buffer: .word 0:0x800
 dsp_regs: .byte 0:0x80
 
 .align 4
+// Match the existing 16-byte voice stride. Store raw 14-bit pitch values
+// and initialize them alongside the zeroed DSP registers at ROM launch.
+dsp_pitches: .word 0:0x20
+
+.align 4
 noise_sample: .hword 0x4000
 noise_step: .hword 0x8000
 dsp_timer: .hword 0
@@ -60,31 +65,31 @@ gain_jumps: .word linear_dec, expon_dec, linear_inc, bent_inc
 
 .align 4
 write_iomap:
-    .word write_vol, write_vol, write_reg, write_reg // 0x00-0x03
+    .word write_vol, write_vol, write_pitch, write_pitch // 0x00-0x03
     .word write_reg, write_adsr, write_reg, write_reg // 0x04-0x07
     .word write_reg:(0x0F - 0x07) // 0x08-0x0F
-    .word write_vol, write_vol, write_reg, write_reg // 0x10-0x13
+    .word write_vol, write_vol, write_pitch, write_pitch // 0x10-0x13
     .word write_reg, write_adsr, write_reg, write_reg // 0x14-0x17
     .word write_reg:(0x1F - 0x17) // 0x18-0x1F
-    .word write_vol, write_vol, write_reg, write_reg // 0x20-0x23
+    .word write_vol, write_vol, write_pitch, write_pitch // 0x20-0x23
     .word write_reg, write_adsr, write_reg, write_reg // 0x24-0x27
     .word write_reg:(0x2F - 0x27) // 0x28-0x2F
-    .word write_vol, write_vol, write_reg, write_reg // 0x30-0x33
+    .word write_vol, write_vol, write_pitch, write_pitch // 0x30-0x33
     .word write_reg, write_adsr, write_reg, write_reg // 0x34-0x37
     .word write_reg:(0x3F - 0x37) // 0x38-0x3F
-    .word write_vol, write_vol, write_reg, write_reg // 0x40-0x43
+    .word write_vol, write_vol, write_pitch, write_pitch // 0x40-0x43
     .word write_reg, write_adsr, write_reg, write_reg // 0x44-0x47
     .word write_reg:(0x4B - 0x47) // 0x48-0x4B
     .word write_kon, write_reg, write_reg, write_reg // 0x4C-0x4F
-    .word write_vol, write_vol, write_reg, write_reg // 0x50-0x53
+    .word write_vol, write_vol, write_pitch, write_pitch // 0x50-0x53
     .word write_reg, write_adsr, write_reg, write_reg // 0x54-0x57
     .word write_reg:(0x5B - 0x57) // 0x58-0x5B
     .word write_koff, write_reg, write_reg, write_reg // 0x5C-0x5F
-    .word write_vol, write_vol, write_reg, write_reg // 0x60-0x63
+    .word write_vol, write_vol, write_pitch, write_pitch // 0x60-0x63
     .word write_reg, write_adsr, write_reg, write_reg // 0x64-0x67
     .word write_reg:(0x6B - 0x67) // 0x68-0x6B
     .word time_noise, write_reg, write_reg, write_reg // 0x6C-0x6F
-    .word write_vol, write_vol, write_reg, write_reg // 0x70-0x73
+    .word write_vol, write_vol, write_pitch, write_pitch // 0x70-0x73
     .word write_reg, write_adsr, write_reg, write_reg // 0x74-0x77
     .word write_reg:(0x7F - 0x77) // 0x78-0x7F
 
@@ -152,12 +157,8 @@ next_voice:
     nop
 
 get_pitch:
-    // Get the pitch scaler for the current voice
-    lhu t0, dsp_regs + 0x2(t8) // VxPITCH(L/H)
-    sll t1, t0, 8
-    srl t0, t0, 8
-    or t0, t0, t1
-    andi t0, t0, 0x3FFF
+    // Get the cached pitch scaler for the current voice
+    lhu t0, dsp_pitches(t8)
 
     // Increase the voice's position counter by the scaler
     lhu t9, counters(t8)
@@ -699,6 +700,18 @@ write_dspdata: // a1: value
 
 write_reg:
     // Do nothing extra for regular register writes
+    jr ra
+    nop
+
+.align 5
+write_pitch: // t0: address; write_dspdata has stored the raw byte
+    andi t0, t0, 0x70
+    lhu t1, dsp_regs + 0x2(t0)
+    sll t2, t1, 8
+    srl t1, t1, 8
+    or t1, t1, t2
+    andi t1, t1, 0x3FFF
+    sh t1, dsp_pitches(t0)
     jr ra
     nop
 

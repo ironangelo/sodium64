@@ -260,6 +260,18 @@
 #define TILE_PARAMS (RDP_TILE7 + 0x78)
 #define LAYER_CHART (TILE_PARAMS + 0x20)
 #define OVERLAY_OBJECT_CACHE_SRC (LAYER_CHART + 7 * 16 + 8)
+#define OVERLAY_DECODER_ORIGINAL_SRC (LAYER_CHART + 7 * 16 + 12)
+#define OVERLAY_MAIN_MODE_SOURCES (LAYER_CHART + 6 * 16 + 8)
+
+// Fixed entries shared between the resident renderer and the decoder overlays.
+#define RSP_BANK_DECODE_START 0x15A8
+#define RSP_BANK_DECODE256 0x15BC
+#define RSP_BANK_DECODE16 0x15F4
+#define RSP_BANK_DECODE4 0x1610
+#define RSP_BANK_DECODE_RETURN 0x1AE8
+#define RSP_CONTEXT_SWITCH_ENTRY 0x15B0
+#define RSP_CONTEXT_PHASE_RETURN 0x142C
+#define RSP_BG_SPAN_CALL_PC 0x163C
 
 // Fixed depth sender entry shared by the Main and Mode 7 resident banks.
 #define HCOMP_DEPTH_SEND_IMEM 0xC4C

@@ -44,6 +44,14 @@ skip_native: .byte 0
 skip_emulate: .byte 0
 frame_count: .byte 0
 
+#if SODIUM64_BG_SPANS
+.section .bss
+.balign 16
+.globl adaptive_main_nospan_text
+adaptive_main_nospan_text: .space 1008 // Owns complete 16-byte cache lines.
+.data
+#endif
+
 .section .boot
 .set noreorder
 
@@ -271,6 +279,38 @@ tmem_atlas_cpu_bind:
     la t0, rsp_object_cache_text_start
     sw t0, DMEM(OVERLAY_OBJECT_CACHE_SRC)
 tmem_atlas_cpu_bind_end:
+#if SODIUM64_BG_SPANS
+.globl adaptive_decoder_cpu_bind, adaptive_decoder_cpu_bind_end
+adaptive_decoder_cpu_bind:
+    // Build the immutable no-Sub Main bank by replacing only the span call.
+    la t0, rsp_main_text_start + 0x3A8
+    la t1, adaptive_main_nospan_text
+    addiu t2, t0, 1000
+adaptive_main_copy:
+    lw t3, (t0)
+    sw t3, (t1)
+    addiu t0, t0, 4
+    bne t0, t2, adaptive_main_copy
+    addiu t1, t1, 4
+    la t0, adaptive_main_nospan_text
+    sw zero, (RSP_BG_SPAN_CALL_PC - 0x13A8)(t0)
+    addiu t1, t0, 1008
+adaptive_main_flush:
+    cache 0x15, (t0) // Write back and invalidate before RSP DMA.
+    addiu t0, t0, 16
+    bne t0, t1, adaptive_main_flush
+    nop
+    sync
+    la t0, adaptive_main_nospan_text
+    sw t0, DMEM(OVERLAY_MAIN_MODE_SOURCES)
+    la t0, rsp_main_text_start + 0x3A8
+    sw t0, DMEM(OVERLAY_MAIN_MODE_SOURCES + 4)
+    // Main starts with the span decoder. Bit 0 records the current mode.
+    la t0, rsp_decoder_original_text_start
+    ori t0, t0, 1
+    sw t0, DMEM(OVERLAY_DECODER_ORIGINAL_SRC)
+adaptive_decoder_cpu_bind_end:
+#endif
     la t0, rsp_mode7_window_text_start
     sw t0, DMEM(OVERLAY_MODE7_SRC)
     la t0, rsp_mode7_text_start

@@ -147,6 +147,38 @@ hcomp_vector_constants:
     j 0xA4001F7C
     li t9, 0x13B0
 hcomp_setup_copy:
+#if SODIUM64_BG_SPANS
+    lbu t2, HCOMP_EFFECTIVE_TS
+    sltu t2, zero, t2
+    sub t4, zero, t2
+    andi t4, t4, 0x52C // Original and worker decoders have identical spacing.
+    lui t0, 0xA400
+    ori t1, t0, 0x1B3C
+    sub t1, t1, t4
+    sw t1, SHARED_JUMPS
+    addi t1, t1, -0x1C
+    sw t1, SHARED_JUMPS + 4
+    addi t1, t1, -0x38
+    sw t1, SHARED_JUMPS + 8
+    lw t3, OVERLAY_DECODER_ORIGINAL_SRC
+    andi t0, t3, 1
+    xor t3, t3, t0
+    sll t0, t2, 2
+    lw a1, OVERLAY_MAIN_MODE_SOURCES(t0)
+    sw a1, OVERLAY_MAIN_SRC
+    bnez t2, hcomp_context_dma
+    addi a1, a1, 0x728
+    move a1, t3
+hcomp_context_dma:
+    li a0, 0x1AD0
+    jal 0xA4001F40
+    li a2, 183 // AD0..B88 includes immutable boundary delay-slot words.
+    or t3, t3, t2
+    sw t3, OVERLAY_DECODER_ORIGINAL_SRC
+    lw a1, OVERLAY_HCOMP_SRC
+    j 0xA4001F7C
+    li t9, RSP_CONTEXT_PHASE_RETURN
+#else
     lw t6, HCOMP_BAND_BASES + 4
     addi t6, t6, -24
     lw t7, HCOMP_BAND_BASES + 8
@@ -181,6 +213,7 @@ hcomp_copy_chunk:
     lw a1, OVERLAY_HCOMP_SRC
     j 0xA4001F7C
     li t9, 0x1770
+#endif
 
 .org (0x628 - 0x3A8)
 hcomp_vram_snapshot:
@@ -247,6 +280,22 @@ hcomp_vram_group_done:
     sw t0, HCOMP_VRAM_SNAPSHOT_READY
     // The R4300 may write guest VRAM only after every selected copy retired.
     mtc0 zero, COP0_SEMAPHORE
+#if SODIUM64_BG_SPANS
+    // No cache/map lifetime is live yet. Initialize the dedicated wrapping
+    // render tile once per frame, without an extra overlay round trip.
+bg_span_initialize:
+    li t0, 0x35480200
+    sw t0, TEXTURE
+    li t0, 0x04058030 // Tile4: T mask6/mirror; S mask3 without mirror.
+    sw t0, TEXTURE + 4
+    lui t0, 0x3200
+    sw t0, TEXTURE + 8
+    li t0, 0x0401F01F
+    sw t0, TEXTURE + 12
+    li a0, TEXTURE
+    jal 0xA4001F5C
+    li a1, TEXTURE + 16
+#endif
     lw a1, OVERLAY_MAIN_SRC
     j 0xA4001F7C
     li t9, 0x109C

@@ -128,7 +128,11 @@ obj_sizes:
 
 fill_jumps: .word fill_backdrop, fill_win, fill_notwin, fill_main // Backdrop fill functions
 tile_jumps: .word decode_tile4, decode_tile16, decode_tile256 // Tile decoding functions
+#if SODIUM64_BG_SPANS
+shared_jumps: .word RSP_BANK_DECODE4, RSP_BANK_DECODE16, RSP_BANK_DECODE256
+#else
 shared_jumps: .word shared_decode4, shared_decode16, shared_decode256 // Shared decoding functions
+#endif
 cache_rets: .word get_offsets, start_objects // Return addresses after clearing cache
 cache_ptrs: .word TILE_CACHE_BG, TILE_CACHE_OBJ, TILE_STATS_BG, TILE_STATS_OBJ, OBJECT_CACHE // RDRAM cache pointers
 scrn_ofsv: .hword 0x0000, 0x0000, 0x0800, 0x1000 // Vertical screen address offsets
@@ -330,6 +334,14 @@ hcomp_cgram_return:
     j overlay_load_slot
     li t9, 0x13A8
 #include "../rsp_tmem_coord.inc"
+#if SODIUM64_BG_SPANS
+bg_span_gate:
+    lbu t0, HCOMP_EFFECTIVE_TS
+    beqz t0, ret_jump
+    nop
+    j bg_span_merge
+    nop
+#endif
 .org 0x21C
 
 oam_skip:
@@ -756,12 +768,19 @@ check_cache:
     lbu t1, TILE_TABLE(s8)
     beq t1, 0xFF, finish_tile
 
-    // Skip uploading if the last tile's number and palette were the same
+#if SODIUM64_BG_SPANS
+    nop // Empty-tile branch delay slot must remain a scalar instruction.
+.globl bg_span_call
+bg_span_call:
+    jal bg_span_gate
+    nop
+#else
     andi t0, t6, 0x1FFF
     // Confirm the RDRAM cache's palette/version before considering TMEM.
     // v1 owns the atlas's last admitted character, after this cache check.
     nop
     nop
+#endif
 
     // Skip decoding if the tile is already cached with the same palette
     srl t2, t6, 5
@@ -1221,6 +1240,22 @@ shared_mirror: // t6: parameter
 
 
 shared_decode: // t4: decode jump
+#if SODIUM64_BG_SPANS
+    mtc2 ra, $v19, 2
+    mtc2 t9, $v19, 0
+    lw a1, OVERLAY_OBJECT_CACHE_SRC
+    j overlay_load_slot
+    li t9, RSP_BANK_DECODE_START
+shared_decode_return:
+    mfc2 t9, $v19, 0
+    mfc2 ra, $v19, 2
+    nop // Preserve the caller's atlas state in v1, as in the resident decoder.
+    li t0, 0xC // Both original callers establish this empty-check offset.
+    jr ra
+    nop
+#include "../rsp_bg_spans.inc"
+.org 0xB88 // Keep OBJ entry outside the 184-byte decoder DMA island.
+#else
     // Set initial values for decoding a tile
     li t7, 0x40 // Texture offset
     li t1, CHAR_DATA + 0xE // Character offset
@@ -1280,6 +1315,7 @@ shared_decode4:
     spv $v02, 0, 0, t7
     jr t4
     nop // Preserve the integrated PR29 decoder return ownership.
+#endif
 calc_color_window_segments:
 hcomp_obj_mirror:
     // Palette groups 0..3 are opaque OBJ with math forbidden; 4..7 eligible.

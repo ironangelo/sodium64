@@ -1,6 +1,15 @@
 # Consolidation and integration audit - 2026-10-15
 
-Latest native gate, 2026-11-09. The first actual task captured a Main
+Latest DKC1 gate, 2026-11-09. PR32 exact aligned native RGB and PCM pass at
+two checkpoints. DKC1 intro polled boundary throughput is lower across three
+approximately matched bands. The separate quiet 20-second interval stopped
+without a closing sample after Windows removed the USB function. Exact R17
+restoration and 95 seconds of idle menu USB passed. PR32 stays draft and
+blocked for default promotion. House/rain, SMW, Mode 7 and paired quiet
+timing remain open.
+[DKC1 evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
+
+Previous native gate, 2026-11-09. The first actual task captured a Main
 RSP call to the C4C window delay instruction that clobbered its return.
 PR32 at 3e1c9a99 fixes the shared entry in two Main words. The fixed
 task naturally halts and the ordinary local build starts, progresses and
@@ -89,7 +98,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | CPU branch/ROM-cache maintenance and section coalescing in A13 | CANDIDATE | Port with exact bank/event/branch-delay guards, then representative combined baseline. Dependencies are not already in master. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work, b4206144 | CANDIDATE with native promotion gates pending | PR32 head 3e1c9a99 fixes the Main C4C depth entry in two words. Matched fixed RSP task and ordinary local USB startup/return pass on N64. Old failure and exact R17 restoration are preserved. Exact-head CI passed. ALttP load was interrupted before acknowledgement; aligned house/rain/SMW/DKC/Mode 7 images/audio and combined quiet cadence remain. R44/R45 stay separate. |
+| A1..A13 exact compositor/window/epoch work, b4206144 | CANDIDATE for fidelity; BLOCKED for production | PR32 head 3e1c9a99 fixes native RSP startup and passes exact-head CI. Native DKC1 passes two exact aligned RGB/PCM checkpoints. Polled intro boundary rate falls from 48.56/58.48/59.41 to 38.72/44.84/41.33 across approximately matched bands. USB loss interrupted the paired quiet interval. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain. R44/R45 stay separate. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |

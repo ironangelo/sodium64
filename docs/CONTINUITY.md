@@ -1,3 +1,37 @@
+# 2026-11-09 — DKC1 image and PCM parity; compositor throughput gate fails
+
+PR32 `3e1c9a99` on real N64 matches the archived current-master
+runtime at exact guest and retired boundaries 4330 and 4346, with APU 21,
+frameskip 0, audio 4 and precision 8. Both full 280x240 RGB images and both
+8,192-byte PCM buffers match exactly. Audio ring head, DSP registers and
+enabled voice mask also match. This scope is two no-input DKC1 checkpoints.
+
+The DKC1 intro advances more slowly in all three approximately matched
+polled bands. PR32 records 38.72, 44.84 and 41.33 completed boundaries/s
+against 48.56, 58.48 and 59.41 on the archived reference. Count is unwrapped
+with the recorded wraps. Endpoints and polling frequency differ, so this
+comparison establishes an intro throughput concern, with paired quiet
+cadence and presentation still unqualified. The planned candidate quiet
+20-second interval stopped after about 6.3 seconds when Windows removed
+the SC64 USB function. The closing sample is missing. The cause of bus loss
+remains unknown. No ALttP house/rain, SMW or Mode 7 evidence was added.
+
+Exact habitual R17 was restored and verified by 131,072-byte readback after
+the cart returned. Menu recovery was 0 and deployer exited cleanly. A separate
+95-second idle menu test with an open debug session passed without an install
+or launch. This establishes a working idle link, while a bus removal can
+still prevent autonomous return during a game. Keep R17 available while
+working independently. No physical action is outstanding.
+
+PR32 remains draft and blocked for default promotion. Resolve the intro
+throughput deficit before reopening broad compositor hardware runs. Check
+whether the named legacy USB memory gate can be removed independently for
+PR33 and R47 with preserved ownership, normal packaging and runtime behavior.
+R44/R45 retain their own gates. Master remains `c232af87`.
+[DKC1 native evidence and restoration](evidence/integration-faithful-dkc1-2026-11-09.json).
+
+---
+
 # 2026-11-09 — PR32 exact-head CI closes; ALttP transport failure isolated
 
 All six PR workflows on `3e1c9a99` completed successfully. Ares

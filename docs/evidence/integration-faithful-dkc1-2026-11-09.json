@@ -1,0 +1,169 @@
+{
+  "date_local": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "PR32": 32,
+  "candidate": "3e1c9a99869063254dbc1c84453fd6cf06f78762",
+  "native_reference": "48b011278acdb72cf1e73536fb5baec55415b5d7",
+  "reference_scope": "Archived physical reference with src and Makefile identical to current master.",
+  "configuration": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8,
+    "input": "None after original boot"
+  },
+  "DKC1": {
+    "fidelity": {
+      "status": "PASS_SCOPED",
+      "guest_and_retired_checkpoints": [
+        4330,
+        4346
+      ],
+      "image_format": "RGB",
+      "image_dimensions": [
+        280,
+        240
+      ],
+      "image_count": 2,
+      "pixels_per_image": 67200,
+      "different_pixels": 0,
+      "PCM_bytes_per_checkpoint": 8192,
+      "different_PCM_bytes": 0,
+      "ring_head_equal": true,
+      "DSP_registers_equal": true,
+      "voice_mask_equal": true
+    },
+    "polled": {
+      "scope": "Completed guest boundaries measured with console Count, using observed wraps. Approximate matched bands, non-identical endpoints, different status-poll frequency and no input. Not presentation cadence.",
+      "candidate": {
+        "boot_poll": {
+          "first": 34,
+          "last": 4316,
+          "seconds": 100.69866,
+          "boundaries_per_s": 42.52291,
+          "VI_per_s": 59.82205,
+          "recorded_bridge_poll_pct": 0.89535,
+          "status_samples": 123
+        },
+        "bands": {
+          "500-1500": {
+            "first": 503,
+            "last": 1500,
+            "seconds": 25.7471,
+            "boundaries_per_s": 38.7228,
+            "VI_per_s": 59.81255,
+            "recorded_bridge_poll_pct": 0.84202,
+            "status_samples": 32
+          },
+          "1800-2800": {
+            "first": 1816,
+            "last": 2774,
+            "seconds": 21.36332,
+            "boundaries_per_s": 44.84322,
+            "VI_per_s": 59.82217,
+            "recorded_bridge_poll_pct": 0.92592,
+            "status_samples": 27
+          },
+          "3200-4200": {
+            "first": 3210,
+            "last": 4198,
+            "seconds": 23.906,
+            "boundaries_per_s": 41.32854,
+            "VI_per_s": 59.81763,
+            "recorded_bridge_poll_pct": 0.87343,
+            "status_samples": 30
+          }
+        },
+        "later_poll": {
+          "first": 4347,
+          "last": 4446,
+          "seconds": 1.65013,
+          "boundaries_per_s": 59.99525,
+          "VI_per_s": 59.38924,
+          "recorded_bridge_poll_pct": 1.13194,
+          "status_samples": 3
+        }
+      },
+      "archived_reference": {
+        "boot_poll": {
+          "first": 4,
+          "last": 4275,
+          "seconds": 78.73317,
+          "boundaries_per_s": 54.24651,
+          "VI_per_s": 59.82231,
+          "recorded_bridge_poll_pct": 1.03686,
+          "status_samples": 78
+        },
+        "bands": {
+          "500-1500": {
+            "first": 506,
+            "last": 1498,
+            "seconds": 20.42708,
+            "boundaries_per_s": 48.56299,
+            "VI_per_s": 59.82255,
+            "recorded_bridge_poll_pct": 0.9469,
+            "status_samples": 21
+          },
+          "1800-2800": {
+            "first": 1859,
+            "last": 2755,
+            "seconds": 15.32249,
+            "boundaries_per_s": 58.47612,
+            "VI_per_s": 59.84666,
+            "recorded_bridge_poll_pct": 1.09836,
+            "status_samples": 16
+          },
+          "3200-4200": {
+            "first": 3244,
+            "last": 4154,
+            "seconds": 15.31685,
+            "boundaries_per_s": 59.4117,
+            "VI_per_s": 59.80343,
+            "recorded_bridge_poll_pct": 1.11937,
+            "status_samples": 16
+          }
+        }
+      }
+    },
+    "quiet20": {
+      "status": "INTERRUPTED",
+      "install_and_readback_verified": true,
+      "launch_acknowledged": true,
+      "opening_guest_boundary": 4468,
+      "opening_menu_error": 0,
+      "opening_transport_error": 0,
+      "usb_loss_after_approx_seconds": 6.3,
+      "PnP_event": 1010,
+      "timestamp_local": "2026-11-09T16:39:11-03:00",
+      "host_os_error": 5,
+      "closing_sample": false,
+      "cause": "Unknown"
+    }
+  },
+  "restoration": {
+    "status": "RESTORED_VERIFIED",
+    "habitual": "R17",
+    "readback_bytes": 131072,
+    "equal_to_exact_original_backup": true,
+    "recovery_before": 0,
+    "recovery_after": 0,
+    "required_physical_power_or_USB_recovery": true,
+    "deployer_exit": 0,
+    "game_launch_sent": false
+  },
+  "idle_menu": {
+    "status": "PASS",
+    "observed_seconds": 95,
+    "usb_present_at_end": true,
+    "session_deployer_exit": 0,
+    "menu_recovery_before": 0,
+    "menu_recovery_after": 0,
+    "launch_or_install": false,
+    "scope": "Read-only idle menu and an open debug session, no guarantee during gameplay."
+  },
+  "disposition": {
+    "fidelity": "Candidate, two DKC1 checkpoints qualified. ALttP room/rain, SMW and Mode 7 physical fidelity remain open.",
+    "production": "BLOCKED by DKC1 intro boundary throughput regression and missing comparable quiet intervals.",
+    "operations": "Habitual R17 installed. No hardware action outstanding. Avoid unattended candidate launches that can strand the console until a recovery path is qualified."
+  }
+}

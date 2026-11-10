@@ -31,22 +31,23 @@ contains the same production ROM and converter as before. October's
 commercial quiet controls and independent SMW capture retain their measured
 scope. [PR34 evidence](evidence/integration-bench-eof-2026-11-09.json).
 
-PR32 is draft at `3e1c9a99869063254dbc1c84453fd6cf06f78762`. The real-N64
-first-task stall led to a two-word Main RSP fix for the shared C4C depth
-sender entry. The matched fixed task halted normally. The ordinary local
-USB build answered and advanced at APU 21 and frameskip 0, then returned
-by software. All six exact-head CI workflows passed. The first ALttP load
-lost the SC64 USB function before host acknowledgement. Exact habitual
-restoration passed after recovery. Matched precision-20 controls are ready.
-Qualify aligned house/rain, SMW/DKC/Mode 7 visuals, audio and quiet cadence.
-R44 and R45 retain separate gates.
-[Depth-entry and native startup evidence](evidence/integration-faithful-depth-entry-2026-11-09.json).
+PR32 is draft at `3e1c9a99869063254dbc1c84453fd6cf06f78762`. The real-N64 startup stall was
+fixed by repairing the shared C4C depth sender entry in two Main RSP words.
+Ordinary startup/return and all six exact-head workflows pass. On N64, DKC1
+matches exact RGB and PCM at two aligned checkpoints. All three approximately
+matched polled DKC1 intro bands regress in completed guest boundary rate.
+Windows removed the USB function during the quiet interval, before a closing
+sample. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain open.
+PR32 is blocked for default promotion. R44 and R45 retain separate gates.
+[DKC1 parity and throughput evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
 
-The latest verified installation is habitual R17, restored and read back
-remotely after the interrupted ALttP load. Exact 131,072-byte readback
-and menu recovery 0 passed. No physical action is outstanding. R47's clean local port passes linked arithmetic and stereo
-checks, but the standalone USB link exceeds the CGRAM owner by 4,080 bytes.
-PR32 plus only the R47 DSP change fits locally with 66,832 bytes margin.
+Habitual R17 was restored and verified with 131,072-byte readback and recovery
+0. A subsequent 95-second idle menu USB check passed. No physical action is
+outstanding. Pursue autonomous work with R17 available and avoid unattended
+candidate launches that can strand the console. R47's clean local port passes
+linked arithmetic and stereo checks. Its standalone USB link exceeds the CGRAM
+owner by 4,080 bytes. PR32 plus the R47 DSP change fits locally with 66,832
+bytes margin.
 [Current traced startup and R47 evidence](evidence/integration-traced-native-startup-2026-11-09.json).
 
 PR33 is DRAFT at1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be: clean KOFF release
@@ -58,9 +59,10 @@ are software scopes, not native waveform/cadence/DAC acceptance.
 
 A bounded local pair of PR32 plus only PR33's DSP patch admits faithful USB
 without owner/flag/assertion changes:66832-byte margin, owners/KOFF pass and12
-unchanged RSP images. Qualify/promote PR32's layout, then rebase PR33 and rerun
-its actual exact-head/native gates. This pair is not current-head combination
-CI or native acceptance. Do not open another size campaign to fill the wait.
+unchanged RSP images. This pair lacks exact-head combination CI and native acceptance. With PR32
+blocked, inspect the independent legacy alignment and memory gate. Any
+prerequisite must preserve physical owners and runtime behavior before PR33
+can rerun exact-head and native gates.
 [Current KOFF evidence](evidence/integration-koff-release-2026-11-08.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP

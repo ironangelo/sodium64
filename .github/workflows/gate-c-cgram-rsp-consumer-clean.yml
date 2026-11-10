@@ -12,6 +12,7 @@ on:
       - src/rsp_mode7.S
       - scripts/test_gate_c_cgram_rsp_consumer_clean_contract.py
       - scripts/test_gate_c_cgram_typed_producer_clean.py
+      - scripts/test_cgram_identical_write.py
       - scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
       - scripts/check_rsp_branch_delay_slots.py
       - scripts/test_rsp_decode_cursor.py
@@ -27,6 +28,7 @@ on:
       - src/rsp_mode7.S
       - scripts/test_gate_c_cgram_rsp_consumer_clean_contract.py
       - scripts/test_gate_c_cgram_typed_producer_clean.py
+      - scripts/test_cgram_identical_write.py
       - scripts/test_gate_c_cgram_rsp_consumer_impl_clean.py
       - scripts/check_rsp_branch_delay_slots.py
       - scripts/test_rsp_decode_cursor.py
@@ -69,6 +71,9 @@ jobs:
           readelf -sW build/src/rsp_mode7.elf | awk '$8=="draw_bg" || $8=="draw_obj" {print $2, $8}' > rsp-mode7.nm
           test "$(wc -l < rsp-main.nm)" -eq 2
           test "$(wc -l < rsp-mode7.nm)" -eq 2
+
+      - name: Prove linked CGRAM write and epoch semantics
+        run: python3 scripts/test_cgram_identical_write.py build/sodium64.elf
 
       - name: Prove binary layout and delay slots
         run: |

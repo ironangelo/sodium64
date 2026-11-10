@@ -1,0 +1,179 @@
+{
+  "date_local": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "bench_head": "87d16156d3eb529d7ecb53c34c6ba75feefb0fbc",
+  "KOFF_head": "e975c7a77cb8be62bc0b422c9479e2160631945a",
+  "fixture": {
+    "source": "Original Stage 1 mixed guest with dedicated KOFF/KON SPC program",
+    "active_voices_before_KOFF": 8,
+    "test_voice": 0,
+    "reference_channel": "right",
+    "frame_command_modulus": 8,
+    "KOFF_command": 4,
+    "KON_command": 0,
+    "test_voice_BRR_filter": 0,
+    "constant_decoded_sample": 2048,
+    "left_volume": 64,
+    "direct_gain": 127,
+    "new_SD_fixture_verified_by_directory_and_size": true
+  },
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8
+  },
+  "comparison": {
+    "exact_guest_and_retired_boundaries": [
+      200,
+      202,
+      204,
+      206
+    ],
+    "ring_bytes_each": 8192,
+    "distinct_aligned_left_edges": 2,
+    "control": "Immediate drop from stable left PCM to zero",
+    "KOFF": "All 252 nonzero samples at each edge match the release envelope projected through the existing integer mixer.",
+    "expected_envelope_initial": 2032,
+    "decrement_per_generated_sample": 8,
+    "PCM_plateau": 1016,
+    "PCM_first_tail_sample": 1008,
+    "PCM_last_nonzero_tail_sample": 8,
+    "independent_tail_model": "max(2032 - 8*n, 0) before truncating to volume and mixing, n starts at 1",
+    "right_channel_bytes_compared_across_captures": 16384,
+    "right_channel_different_bytes": 0,
+    "ring_positions_equal": true,
+    "DSP_register_snapshots_equal": true
+  },
+  "short_progress": {
+    "bench": {
+      "duration_s": 4.030145621333333,
+      "guest_delta": 242,
+      "render_delta": 242,
+      "vi_delta": 241,
+      "guest_per_second": 60.04745801714647,
+      "software_return": true,
+      "recovery": 0,
+      "restored_bytes": 131072
+    },
+    "KOFF": {
+      "duration_s": 4.018936384,
+      "guest_delta": 241,
+      "render_delta": 241,
+      "vi_delta": 240,
+      "guest_per_second": 59.96611465646927,
+      "software_return": true,
+      "recovery": 0,
+      "restored_bytes": 131072
+    }
+  },
+  "exact_head_CI": {
+    "PR33": {
+      "head": "e975c7a77cb8be62bc0b422c9479e2160631945a",
+      "draft": true,
+      "checks": [
+        {
+          "id": 42734502930,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734502930"
+        },
+        {
+          "id": 42734502829,
+          "name": "Build and Validate",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734502829"
+        },
+        {
+          "id": 42734503099,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734503099"
+        },
+        {
+          "id": 42734503019,
+          "name": "Ares Profile Validation",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734503019"
+        }
+      ],
+      "verified_Ares_artifact": 13727525806
+    },
+    "PR35": {
+      "head": "87d16156d3eb529d7ecb53c34c6ba75feefb0fbc",
+      "draft": false,
+      "checks": [
+        {
+          "id": 42734341320,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341320"
+        },
+        {
+          "id": 42734341728,
+          "name": "Ares Profile Validation",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341728"
+        },
+        {
+          "id": 42734341602,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341602"
+        },
+        {
+          "id": 42734341367,
+          "name": "Build and Validate",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341367"
+        }
+      ],
+      "verified_Ares_artifact": 13725679912
+    },
+    "PR36": {
+      "head": "2109eb4800cfdfb73eb19cd328451ceff40e16c8",
+      "draft": true,
+      "checks": [
+        {
+          "id": 42734390995,
+          "name": "Build and Validate",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390995"
+        },
+        {
+          "id": 42734391046,
+          "name": "Ares Profile Validation",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734391046"
+        },
+        {
+          "id": 42734390769,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390769"
+        },
+        {
+          "id": 42734390921,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390921"
+        }
+      ],
+      "verified_Ares_artifact": 13727450449
+    }
+  },
+  "scope_limit": "Synthetic note-tail release, existing mixer, and short Count windows. KON delay, every-other-sample latching, DAC, sustained cadence and combined acceptance remain open.",
+  "observed_at_UTC": "2026-11-10T01:36:20.516832+00:00"
+}

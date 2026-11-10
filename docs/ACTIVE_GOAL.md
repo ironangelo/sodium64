@@ -54,14 +54,17 @@ work is the audio-only branch against the integrated prerequisite and
 its exact-head checks. Combined representative cadence/fidelity and DAC
 remain open.
 
-PR33 e975c7a7 passes the linked KOFF USB proof and the unchanged CGRAM
-gate. The note-tail reference and clean-port cadence remain open. The
-local R47/KOFF pair fits with 504 bytes before CGRAM and passes linked
-audio. It is not the integrated baseline.
+PR33 e975c7a7 passes all four exact-head CI workflows and the scoped
+real-N64 KOFF note-tail gate. Two aligned events each reproduce 252
+nonzero PCM samples predicted by the independent envelope rule and the
+existing mixer. The other channel remains byte-identical. Short cadence
+windows are about four seconds. The local R47/KOFF pair fits with 504
+bytes before CGRAM and passes linked audio. It is not the integrated
+baseline. Keep both audio PRs draft until PR35 is integrated separately.
 
-Each of the four physical trials returned by software and restored the
-131,072-byte habitual R17 image with recovery 0. The menu remains ready.
-[Native R47 and bench evidence](evidence/integration-native-r47-pcm-2026-11-09.json).
+Each native audio trial returned by software and restored the 131,072-byte
+habitual R17 image with recovery 0. The menu remains ready.
+[Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined

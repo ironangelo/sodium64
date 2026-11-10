@@ -1,3 +1,37 @@
+# 2026-11-09 — KOFF note tails match the native release reference
+
+PR33 e975c7a7 passes all four exact-head CI workflows. Its Ares archive
+was digest-verified and all eight original profiles checked. On physical
+N64, the current KOFF head and the PR35 control ran the same original
+eight-voice guest at APU 21, frameskip 0, audio 4 and precision 8. The
+guest alternates KOFF and KON for one constant left-channel BRR voice.
+The other seven voices continue on the right.
+
+PCM at guest and retired boundaries 200, 202, 204 and 206 shows two
+distinct cuts to zero on the control. At the same two sample positions,
+KOFF reproduces all 252 nonzero tail samples per event, from the
+subtract-eight envelope model projected through the unchanged mixer.
+All 16,384 compared right-channel bytes match, as do ring positions and
+DSP register snapshots. The overlapping captures are not independent
+events beyond those two. The short windows complete 242 frames in
+4.030 s on the control and 241 in 4.019 s on KOFF. This is synthetic
+note-tail and progress evidence. DAC, sustained representative cadence,
+KON delay and other register latching remain separate.
+
+Both runs returned to the paired menu by software and verified the
+131,072-byte habitual R17 restore with recovery 0. The new original
+KOFF test guest remains on SD under a fresh path. No commercial data
+or PCM were published.
+
+PR35 remains ready for review as a separate prerequisite. PR33 and PR36
+stay draft so the bench stays independently reviewable. Once it is in
+master, verify each audio-only diff and rerun exact-head checks. The
+combined representative baseline and compositor throughput gates remain
+open. Master remains c232af87.
+[Native note-tail and exact-head CI evidence](evidence/integration-native-koff-tail-2026-11-09.json).
+
+---
+
 # 2026-11-09 — Bench ready for review; R47 matches native four-filter PCM
 
 PR35 87d16156 is ready for review after all four exact-head CI workflows

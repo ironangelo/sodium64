@@ -1,11 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
-Latest audio gate, 2026-11-09. PR35 is ready for review after exact CI
-and native boot/return. PR36 passes exact CI and scoped native aligned PCM
-on all four filters. Its short windows are not broad cadence acceptance.
-PR33 KOFF still needs the native release reference and cadence. The
-standalone and local paired images retain 504 bytes before CGRAM.
-[Native audio evidence](evidence/integration-native-r47-pcm-2026-11-09.json).
+Latest audio gate, 2026-11-09. PR35 is ready for review. Both audio
+drafts pass their four exact-head CI workflows and scoped native audio
+comparisons. PR33 matches 252 release samples per event at two aligned
+cuts with the other channel identical. PR36 matches aligned PCM across
+all four BRR filters. Separate bench integration and audio-only review
+precede sustained representative combined measurements.
+[Native KOFF evidence](evidence/integration-native-koff-tail-2026-11-09.json).
 
 Latest DKC1 gate, 2026-11-09. PR32 exact aligned native RGB and PCM pass at
 two checkpoints. DKC1 intro polled boundary throughput is lower across three
@@ -120,7 +121,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
 | R19 pitch cache,84531758 | CANDIDATE | Independent bounded native image/PCM/performance proof. Port both write handlers and cache lifecycle to clean master, run linked byte/address/caller tests and new-SHA CI. It is not an audio-completeness fix. |
 | R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
-| R22 KOFF release, 1b123980 | CANDIDATE, draft PR33 with PR35 prerequisite | Local USB now links with 504 bytes before CGRAM and passes the actual linked KOFF proof. The original 4,080-byte overflow remains recorded. PR33 adds that proof to USB CI. Combined KOFF/R47 linked tests pass locally. Exact-head CI and native note-tail/cadence remain open. Historical R22 endpoints included observer overhead. |
+| R22 KOFF release, 1b123980 | CANDIDATE, native note-tail scope passes | PR33 exact CI and USB KOFF gate pass. Real-N64 comparison validates two aligned 252-sample release tails and all 16,384 compared right-channel bytes. R17 restore passes. Integrate PR35 separately and rerun exact-head audio-only checks. Sustained cadence, KON delay and DAC remain open. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |
 | R32 dry-master HI/LO,0675f15a | VALIDATED within corrected dry path | Required correctness prerequisite when dry mixing is selected. Master lacks that multiply sequence; no standalone master patch exists. Preserve linked/dynamic spacing and native owner proof. |
 | R34 complete C++ DSP direct gameplay replacement | REJECTED; VALIDATED bounded behavior oracle | Native106.56/144.15/151.16% standalone audio budget and9 checksum matches. Keep primary reference and source/license; it cannot become a gameplay default. |
@@ -167,8 +168,8 @@ Diagnostic tools are identified separately from production runtime changes.
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
 4. PR35 is ready for review. Integrate it separately before the audio-only
-   PR36 review and checks. PR33 needs a native release-reference/cadence
-   test. PR32 exact-head CI and two
+   PR33 and PR36 review and exact-head checks. Native audio passes the
+   stated short scopes for both. PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. R44 needs the
    renderer dependencies, story residual and Mode 7 predecessor comparison.

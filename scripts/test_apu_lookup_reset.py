@@ -20,7 +20,9 @@ def check(memory, symbols):
     assert cpu.blob(start-32, 32) == bytes([0xa5])*32, 'leading owner overwritten'
     assert cpu.blob(end+4, 28) == bytes([0xa5])*28, 'trailing owner overwritten'
     assert cpu.read(end) == 0xa01c0000, 'JIT pointer was not reset'
-    assert all(cpu.regs[i] == before[i] for i in range(32) if i not in (1, 8, 9))
+    assert all(cpu.regs[i] == before[i] for i in range(32) if i not in (1, 8, 9, 31))
+    # Restarted compilation installs its own link before calling the emitter.
+    assert cpu.regs[31] & 0xffffffff == symbols['reset_buffer']+8
     assert (cpu.hi, cpu.lo) == product and cpu.cp == cp and not cpu.cp_writes
     coverage = set()
     for address, width, value in cpu.memory_writes:
@@ -33,12 +35,64 @@ def check(memory, symbols):
     return cpu.steps
 
 
+def check_clock_change(memory, symbols):
+    """Run cached NOP blocks, the real menu close, then dispatch again."""
+    pcs = (0x0200, 0x8200, 0xfe00)
+    start = symbols['jit_lookup']
+    pointer = symbols['jit_pointer']
+    clock = symbols['apu_clock']
+
+    def dispatch(cpu, pc, clock_value):
+        cpu.write(symbols['apu_count'], pc, 2)
+        cpu.pattern()
+        cpu.regs[19], cpu.regs[7] = 4096, 0
+        cpu.execute(symbols['apu_execute'], stop=symbols['cpu_execute'], max_steps=15000)
+        cycles = 2*(cpu.read(symbols['apu_count'], 2)-pc)
+        assert cycles > 0
+        assert 4096-cpu.regs[19] == cycles*clock_value, 'cached debit uses the wrong clock'
+
+    def close(cpu, selected):
+        cpu.write(symbols['underclk_set'], 4 if selected == 42 else 0, 1)
+        cpu.pattern()
+        cpu.memory_writes.clear()
+        cpu.execute(symbols['menu_close'], stop=symbols['menu_return'])
+        assert cpu.read(clock, 1) == selected
+
+    for old, new in ((42,21),(21,42)):
+        cpu = CPU(memory.copy())
+        cpu.write(clock, old, 1)
+        for pc in pcs:
+            dispatch(cpu, pc, old)
+        compiled = cpu.read(pointer)
+        assert compiled > 0xa01c0000
+        entries = [cpu.read(start+4*pc) for pc in pcs]
+        assert all(0x801c0000 <= value < 0x80200000 for value in entries)
+        close(cpu, old)
+        assert not cpu.memory_writes and cpu.read(pointer) == compiled
+        assert [cpu.read(start+4*pc) for pc in pcs] == entries
+        dispatch(cpu, pcs[0], old)
+        assert cpu.read(pointer) == compiled, 'unchanged menu close evicted cached code'
+        tags = cpu.blob(symbols['jit_tags'], 4096)
+        close(cpu, new)
+        assert cpu.blob(start, 0x40000) == bytes(0x40000), 'old-clock lookup survived menu close'
+        assert cpu.read(pointer) == 0xa01c0000
+        assert cpu.blob(symbols['jit_tags'], 4096) == tags
+        for pc in pcs:
+            dispatch(cpu, pc, new)
+        assert all(cpu.read(start+4*pc) for pc in pcs)
+        compiled = cpu.read(pointer)
+        dispatch(cpu, pcs[1], new)
+        assert cpu.read(pointer) == compiled
+    return len(pcs)*2
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('elf')
     args = parser.parse_args()
     memory, symbols = load_elf(args.elf)
     steps = check(memory, symbols)
+    clock_rebuilds = check_clock_change(memory, symbols)
     # Real emitted-code faults: omit a store, omit the delay-slot store, or
     # stop one batch early. All must fail independently of the positive run.
     begin, end = symbols['reset_loop'], symbols['compile_block']
@@ -60,7 +114,19 @@ def main():
         except AssertionError:
             continue
         raise AssertionError('reset fault accepted')
-    print(f'APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults=3 instructions={steps}; no N64 timing claim')
+    cpu = CPU(memory.copy())
+    call = [pc for pc in range(symbols['menu_close'],symbols['menu_close']+64,4)
+            if cpu.read(pc) >> 26 == 3 and
+            (((pc+4)&0xf0000000) | ((cpu.read(pc)&0x3ffffff)<<2)) == symbols['apu_invalidate_jit']]
+    assert len(call) == 1
+    cpu.write(call[0], 0)
+    try:
+        check_clock_change(cpu.memory, symbols)
+    except AssertionError as error:
+        assert str(error) == 'old-clock lookup survived menu close'
+    else:
+        raise AssertionError('missing clock invalidation fault accepted')
+    print(f'APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults=4 instructions={steps} clock_rebuilds={clock_rebuilds}; no N64 timing claim')
 
 
 if __name__ == '__main__':

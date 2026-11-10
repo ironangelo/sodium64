@@ -22,6 +22,7 @@
 .globl jit_tags
 .globl jit_lookup
 .globl jit_pointer
+.globl apu_invalidate_jit
 
 .globl jit_read8
 .globl jit_charge_cycles
@@ -317,7 +318,13 @@ skip_pc:
 
 .align 5
 reset_buffer:
-    // Clear all block lookup pointers
+    jal apu_invalidate_jit
+    nop
+    j compile_block
+    nop
+
+apu_invalidate_jit:
+    // Clear all block lookup pointers before reusing the JIT buffer.
     la t0, jit_lookup
     la t1, jit_pointer
 reset_loop:
@@ -334,10 +341,9 @@ reset_loop:
     bne t0, t1, reset_loop
     sd zero, -8(t0)
 
-    // Reset the JIT pointer and restart compilation
     li t0, JIT_BUFFER
     sw t0, jit_pointer
-    j compile_block
+    jr ra
     nop
 
 .align 5

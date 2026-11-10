@@ -46,30 +46,20 @@ Habitual R17 was restored and verified with 131,072-byte readback and recovery
 No physical action is outstanding. Keep R17 available and avoid unattended
 candidate launches that can strand the console after a USB removal.
 
-PR35 9bdd82c6 is the isolated USB bench status compaction. The
-normal production ROM is identical to master. PR36 539ca2ca is the
-R47 BRR history recurrence audio candidate with PR35 as a separate
-prerequisite. R47 now passes its local standalone layout gate without
-PR32. The paired REMOTE image has 16 bytes of static CGRAM margin.
-Normal, HW_PROFILE and REMOTE each pass 57,344 linked decoder cases and
-six emitted faults, plus 2,048 scheduled stereo cases on REMOTE.
-Both PRs are draft. Complete exact-head CI and qualify native matched
-PCM/cadence and safe recovery before promotion.
-[Local audio and ownership evidence](evidence/integration-usb-status-r47-2026-11-09.json).
+PR35 87d16156 is the isolated USB bench prerequisite. Its REMOTE build
+places the three zero-initialized guest RAM owners in aligned BSS. The
+ordinary production ROM stays byte-identical. PR33 e975c7a7 and PR36
+2109eb48 link independently with PR35, and their local pair leaves 504
+bytes below the existing CGRAM owner. The previous PR35/PR36 heads passed
+all four workflows. New exact-head CI is tracked in the evidence.
 
-PR33 is DRAFT at1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be: clean KOFF release
-correction, no observer/flag/extra DSP state. Build/Owners/Ares pass; actual USB
-link FAILS its unchanged CGRAM assertion by4080 bytes. Local normal/PROFILE/HW
-and CI normal/PROFILE release/KON/caller proofs pass. All8 Ares profiles were
-checked, six CPU-JIT>=800 samples; low virtual budgets remain explicit. These
-are software scopes, not native waveform/cadence/DAC acceptance.
-
-A bounded local pair of PR32 plus only PR33's DSP patch admits faithful USB
-with 66,832 bytes margin. That pair lacks exact-head CI and native evidence.
-PR35 alone does not unblock KOFF. It remains 32 bytes past the pre-data
-page threshold, which leaves a 4,080-byte CGRAM owner overlap. Keep PR33
-blocked on an independent layout fix and exact-head/native requalification.
-[Current KOFF evidence](evidence/integration-koff-release-2026-11-08.json).
+The linked KOFF release proof now runs in USB CI. Local combined results
+pass the bridge, KOFF, BRR and scheduled stereo gates. Both audio PRs
+remain draft. First qualify native boot and software return on the new
+bench layout. Then measure aligned PCM and cadence on R47 and the release
+reference on KOFF. The R22 six native endpoints used observers. Full
+KON delay/latching and DAC fidelity remain separate.
+[Combined audio and bench memory evidence](evidence/integration-remote-guest-ram-2026-11-09.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined

@@ -1,0 +1,173 @@
+{
+  "date_local": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "scope": "Local linked proofs, production binary identity, old exact-head CI completion, new exact-head CI snapshot, and a read-only physical menu check.",
+  "layout": {
+    "configuration": "REMOTE only",
+    "sram": "0x80094000",
+    "wram": "0x8009c000",
+    "empty": "0x800bc000",
+    "bss_end": "0x800be008",
+    "first_fixed_CGRAM_owner": "0x800be200",
+    "remaining_bytes": 504,
+    "separate_KOFF_and_R47_images_also_link": true,
+    "SDK_source": "e356bf3f56f7afbf7e5246329562f145965cfdfc",
+    "boot_contract": "Pinned IPL3 zeroes RDRAM before loading initialized segments.",
+    "production_ROM_byte_identical": true,
+    "production_loaded_bytes_identical": 767064
+  },
+  "local_combination": {
+    "bridge_cases": 50,
+    "guest_RAM_and_SRAM_cases": 4,
+    "mailbox_cases": 18,
+    "KOFF_masks": 256,
+    "release_voice_cases": 16384,
+    "DSP_sample_calls": 2064,
+    "KOFF_faults_rejected": [
+      "release_decrement",
+      "release_timer_wrap",
+      "ADSR_release_guard_bypassed"
+    ],
+    "BRR_voice_cases": 57344,
+    "BRR_faults_rejected": [
+      "signed_filter_floor",
+      "invalid_range_mask",
+      "saturation",
+      "signed_15bit_storage",
+      "history_recurrence",
+      "four_store_extent"
+    ],
+    "scheduled_stereo_cases": 2048,
+    "resident_RSP_banks_identical": 2,
+    "current_native_gameplay_acceptance": false
+  },
+  "previous_head_CI": {
+    "PR35": {
+      "head": "9bdd82c6d42c11872d9d7c8ba15a1c59deb26f3f",
+      "all_4_workflows": "PASS",
+      "Ares_run": 42732567674,
+      "verified_Ares_artifact": 13726066943,
+      "original_profiles_valid": 8,
+      "CPU_JIT_with_800_samples": 6
+    },
+    "PR36": {
+      "head": "539ca2ca380d6c8bffeba4ac74e9374ae59e4f9f",
+      "all_4_workflows": "PASS",
+      "Ares_run": 42732880508,
+      "verified_Ares_artifact": 13726351687,
+      "original_profiles_valid": 8,
+      "CPU_JIT_with_800_samples": 6
+    },
+    "KOFF_original_USB": "FAIL, retained in prior checkpoint"
+  },
+  "current_head_CI": {
+    "PR35": {
+      "head": "87d16156d3eb529d7ecb53c34c6ba75feefb0fbc",
+      "runs": [
+        {
+          "id": 42734341728,
+          "name": "Ares Profile Validation",
+          "status": "in_progress",
+          "conclusion": null,
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341728"
+        },
+        {
+          "id": 42734341602,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341602"
+        },
+        {
+          "id": 42734341367,
+          "name": "Build and Validate",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341367"
+        },
+        {
+          "id": 42734341320,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341320"
+        }
+      ]
+    },
+    "PR33": {
+      "head": "e975c7a77cb8be62bc0b422c9479e2160631945a",
+      "runs": [
+        {
+          "id": 42734502829,
+          "name": "Build and Validate",
+          "status": "in_progress",
+          "conclusion": null,
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734502829"
+        },
+        {
+          "id": 42734503099,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734503099"
+        },
+        {
+          "id": 42734503019,
+          "name": "Ares Profile Validation",
+          "status": "in_progress",
+          "conclusion": null,
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734503019"
+        },
+        {
+          "id": 42734502930,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734502930"
+        }
+      ]
+    },
+    "PR36": {
+      "head": "2109eb4800cfdfb73eb19cd328451ceff40e16c8",
+      "runs": [
+        {
+          "id": 42734391046,
+          "name": "Ares Profile Validation",
+          "status": "in_progress",
+          "conclusion": null,
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734391046"
+        },
+        {
+          "id": 42734390769,
+          "name": "Native USB Bench Contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390769"
+        },
+        {
+          "id": 42734390921,
+          "name": "Profiling Memory Owners",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390921"
+        },
+        {
+          "id": 42734390995,
+          "name": "Build and Validate",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390995"
+        }
+      ]
+    }
+  },
+  "physical": {
+    "new_program_installed": false,
+    "game_launched": false,
+    "last_status": "menu",
+    "recovery": 0,
+    "known_R17_installed": true,
+    "native_layout_boot_and_return_pending": true
+  },
+  "CI_observed_at_UTC": "2026-11-10T01:17:37.134378+00:00"
+}

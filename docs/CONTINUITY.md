@@ -1,3 +1,35 @@
+# 2026-11-09 — KOFF and R47 fit together in the isolated USB bench
+
+The KOFF USB layout blocker now clears locally without the compositor.
+PR35 87d16156 puts the guest SRAM, WRAM and empty TLB pages in aligned BSS
+in REMOTE builds. The pinned IPL3 zeroes RDRAM before loading initialized
+sections. The normal ROM and its 767,064 loaded bytes are identical to
+master. The new linked boot and memory checks exercise LoROM and HiROM
+with and without SRAM, including the actual byte read/write exceptions.
+
+PR33 e975c7a7 and PR36 2109eb48 include PR35 as a separate prerequisite.
+Each USB build and the local combined KOFF/R47 build end at 0x800be008,
+504 bytes before the unchanged first CGRAM owner. The combined build
+passes 50 linked bridge cases, 256 KOFF masks, 16,384 release voice cases,
+57,344 BRR cases and 2,048 scheduled stereo cases. Both resident RSP
+banks match the prior bench. The KOFF USB workflow now runs the linked
+release proof on the image that passed the memory gate.
+
+The previous PR35 and PR36 heads passed all four workflows. Both Ares
+matrix archives were digest-verified and all eight original profiles
+checked per head. The new heads have their own CI runs. A read-only
+SummerCart status returned menu and recovery 0. R17 remains installed.
+
+The next physical gate is a short bench boot and software return with
+the new guest RAM layout. Then compare aligned R47 PCM and cadence
+and measure KOFF release against its reference, since the old master
+truncates the note. The combined build is a local proof, pending native
+and merge decisions. The compositor remains blocked by DKC1 throughput.
+Master remains c232af87.
+[Combined audio and bench memory evidence](evidence/integration-remote-guest-ram-2026-11-09.json).
+
+---
+
 # 2026-11-09 — R47 becomes an independent audio integration candidate
 
 PR35 9bdd82c6 compacts the isolated REMOTE status reply and drops an

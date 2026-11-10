@@ -1,3 +1,35 @@
+# 2026-11-09 — R47 becomes an independent audio integration candidate
+
+PR35 9bdd82c6 compacts the isolated REMOTE status reply and drops an
+unread peak counter. The exact wire reply, host parser, linked bridge,
+mailbox and RDP contracts passed locally. Normal ROM output is byte-for-byte
+identical to master. The production image still excludes the USB bench.
+The change reclaims 184 bytes before the 4 KiB alignment imposed by the
+TLB-backed data in memory.S. No owner or linker assertion is relaxed.
+
+PR36 539ca2ca carries PR35 as a separate prerequisite commit so master
+targeted CI can test the pair. The audio commit is just the R47 decoder and
+its linked proof. Normal, HW_PROFILE and REMOTE link locally. REMOTE ends at
+0x800be1f0, 16 bytes below the original CGRAM owner. The exact local decoder
+passes 57,344 cases across eight voices and rejects six emitted faults in
+each build. The existing USB scheduled stereo gate passes 2,048 cases.
+Native matched PCM and cadence remain open.
+
+PR33 KOFF still overruns the same CGRAM gate by 4,080 bytes with PR35
+applied. Its pre-data region crosses the page threshold by 32 bytes.
+The audio components are separate and no combined KOFF/R47 fit is claimed.
+PR32 remains blocked by DKC1 intro throughput and open fidelity checks.
+
+Habitual R17 is still installed with exact previous readback. A final
+read-only session confirmed paired menu, recovery 0 and a clean close.
+No candidate launch or install followed restoration. Continue exact-head
+CI and qualify the isolated bench prerequisite before the first bounded
+R47 native PCM/cadence pair. A USB removal can still disable remote
+return and restoration. Master remains c232af87.
+[Local audio and ownership evidence](evidence/integration-usb-status-r47-2026-11-09.json).
+
+---
+
 # 2026-11-09 — DKC1 image and PCM parity; compositor throughput gate fails
 
 PR32 `3e1c9a99` on real N64 matches the archived current-master

@@ -1,0 +1,138 @@
+{
+  "date_local": "2026-11-09",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "scope": "Local GCC 14.2.0 linked and host tests, plus exact-head GitHub Actions snapshot. No new gameplay launch.",
+  "bench": {
+    "PR": 35,
+    "head": "9bdd82c6d42c11872d9d7c8ba15a1c59deb26f3f",
+    "state": "DRAFT",
+    "production_rom_identical": true,
+    "production_loaded_bytes_identical": 767064,
+    "bench_only": true,
+    "status_wire_fixture_exact": true,
+    "predata_before": "0x8000ffd8",
+    "predata_after": "0x8000ff20",
+    "bytes_reclaimed_before_page_alignment": 184,
+    "parser_cases": 51,
+    "parser_fuzz_packets": 32000,
+    "host_cases": 19,
+    "linked_bridge_cases": 46,
+    "mailbox_cases": 18,
+    "RDP_cases": 35,
+    "RDP_rejected_faults": 5,
+    "CI": [
+      {
+        "name": "Ares Profile Validation",
+        "id": 42732567674,
+        "status": "in_progress",
+        "conclusion": null,
+        "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732567674"
+      },
+      {
+        "name": "Profiling Memory Owners",
+        "id": 42732568042,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732568042"
+      },
+      {
+        "name": "Native USB Bench Contracts",
+        "id": 42732567888,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732567888"
+      },
+      {
+        "name": "Build and Validate",
+        "id": 42732567702,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732567702"
+      }
+    ]
+  },
+  "R47": {
+    "PR": 36,
+    "head": "539ca2ca380d6c8bffeba4ac74e9374ae59e4f9f",
+    "requires_bench_PR": 35,
+    "state": "DRAFT",
+    "candidate_kind": "Production audio",
+    "local_builds": [
+      "normal",
+      "HW_PROFILE",
+      "REMOTE"
+    ],
+    "predata_end": "0x8000ffc0",
+    "static_end": "0x800be1f0",
+    "first_fixed_CGRAM_owner": "0x800be200",
+    "static_margin_bytes": 16,
+    "linked_voice_cases_per_build": 57344,
+    "linked_rejected_faults_per_build": 6,
+    "linked_scheduled_stereo_cases_REMOTE": 2048,
+    "linked_bridge_cases_REMOTE": 46,
+    "release_admission_ELF": {
+      "normal": "ADMITTED",
+      "HW_PROFILE": "REJECTED",
+      "REMOTE": "REJECTED"
+    },
+    "pending": "Exact-head paired native PCM and cadence after the bench and recovery path qualify.",
+    "CI": [
+      {
+        "name": "Ares Profile Validation",
+        "id": 42732880508,
+        "status": "in_progress",
+        "conclusion": null,
+        "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732880508"
+      },
+      {
+        "name": "Profiling Memory Owners",
+        "id": 42732880302,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732880302"
+      },
+      {
+        "name": "Native USB Bench Contracts",
+        "id": 42732880448,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732880448"
+      },
+      {
+        "name": "Build and Validate",
+        "id": 42732880441,
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42732880441"
+      }
+    ]
+  },
+  "KOFF": {
+    "PR": 33,
+    "head": "1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be",
+    "state": "BLOCKED",
+    "PR35_pair_predata_end": "0x80010020",
+    "PR35_pair_static_end": "0x800bf1f0",
+    "first_fixed_CGRAM_owner": "0x800be200",
+    "PR35_pair_static_overlap_bytes": 4080,
+    "excess_bytes_before_4KiB_data_page_jump": 32
+  },
+  "discarded_local_controls": {
+    "C_function_and_data_sections_object_only_bytes_saved": 9,
+    "C_Oz_object_size_reduction": 0,
+    "scope": "Insufficient to replace the status-path extraction."
+  },
+  "hardware": {
+    "restored_R17_readback_bytes": 131072,
+    "idle_menu_dwell_s": 95,
+    "final_read_only_status": {
+      "mode": "menu",
+      "recovery": 0,
+      "USB_port": "COM3",
+      "closed_cleanly": true
+    },
+    "candidate_launch_or_install": false,
+    "limit": "A Windows USB removal takes the existing remote reset and restore paths offline."
+  },
+  "CI_observed_at_UTC": "2026-11-10T01:05:49.954427+00:00"
+}

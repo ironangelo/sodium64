@@ -1,5 +1,10 @@
 # Consolidation and integration audit - 2026-10-15
 
+Latest audio gate, 2026-11-09. PR35 restores pre-data headroom in the isolated
+USB bench. PR36 R47 fits with that prerequisite and passes local linked audio.
+PR33 KOFF still fails the unchanged CGRAM assertion by 4,080 bytes.
+[Audio and ownership evidence](evidence/integration-usb-status-r47-2026-11-09.json).
+
 Latest DKC1 gate, 2026-11-09. PR32 exact aligned native RGB and PCM pass at
 two checkpoints. DKC1 intro polled boundary throughput is lower across three
 approximately matched bands. The separate quiet 20-second interval stopped
@@ -113,12 +118,12 @@ Diagnostic tools are identified separately from production runtime changes.
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
 | R19 pitch cache,84531758 | CANDIDATE | Independent bounded native image/PCM/performance proof. Port both write handlers and cache lifecycle to clean master, run linked byte/address/caller tests and new-SHA CI. It is not an audio-completeness fix. |
 | R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
-| R22 KOFF release,1b123980 | BLOCKED on clean-port memory gate; draft PR33 | Clean master extraction1f34d1e passes normal/PROFILE/HW release, full existing KON/rate-scheduler and APU caller proofs. Exact CI Build/Owners/Ares pass; all8 Ares profiles checked, six CPU-JIT>=800 samples. These are smoke scopes, not native cadence. USB link fails unchanged strict CGRAM owner locally and in42526113144:800bf1f0 exceeds800be200 by4080 bytes after a4KiB alignment jump. Isolated-Oz saves0, rejected. The unchanged PR32 layout plus only this DSP patch passes local USB link/owners/KOFF with66832 bytes margin and12 unchanged RSP images. Qualify/promote that faithful layout, then rebase and rerun exact-head CI and native note-tail/cadence controls; this local pair does not qualify the current standalone USB failure. Historical six native endpoints included observer overhead; no complete KON/latch/DAC claim. |
+| R22 KOFF release,1b123980 | BLOCKED on clean-port memory gate; draft PR33 | Clean master extraction1f34d1e passes normal/PROFILE/HW release, full existing KON/rate-scheduler and APU caller proofs. Exact CI Build/Owners/Ares pass; all8 Ares profiles checked, six CPU-JIT>=800 samples. These are smoke scopes, not native cadence. USB link fails unchanged strict CGRAM owner locally and in42526113144:800bf1f0 exceeds800be200 by4080 bytes after a4KiB alignment jump. Isolated-Oz saves0, rejected. The unchanged PR32 layout plus only this DSP patch passes local USB link/owners/KOFF with66832 bytes margin and12 unchanged RSP images. PR35 leaves the pre-data region 32 bytes past the page threshold, still a 4,080-byte owner overlap. Resolve the independent memory gate and rerun exact-head CI and native note-tail/cadence controls. Historical six native endpoints included observer overhead; no complete KON/latch/DAC claim. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |
 | R32 dry-master HI/LO,0675f15a | VALIDATED within corrected dry path | Required correctness prerequisite when dry mixing is selected. Master lacks that multiply sequence; no standalone master patch exists. Preserve linked/dynamic spacing and native owner proof. |
 | R34 complete C++ DSP direct gameplay replacement | REJECTED; VALIDATED bounded behavior oracle | Native106.56/144.15/151.16% standalone audio budget and9 checksum matches. Keep primary reference and source/license; it cannot become a gameplay default. |
 | R35 timer experiment,677c9d21 | SUPERSEDED priority / CANDIDATE unmeasured code | No physical result. Do not treat fewer DIV instructions as an integration gain. |
-| R47 BRR history recurrence, 849412ee | BLOCKED on standalone USB owner | Prior native title/room results retain their scope. Clean master port passes 57,344 voice cases, six faults and 2,048 scheduled stereo cases. USB fails the unchanged CGRAM owner by 4,080 bytes. Local PR32 plus only the DSP patch passes with 66,832 bytes margin and 12 unchanged loaded RSP banks. Qualify the faithful layout, then adapt linked BRR CI and validate exact-head audio/cadence. |
+| R47 BRR history recurrence, 849412ee | CANDIDATE, draft PR36 with PR35 prerequisite | Exact local normal/HW_PROFILE/REMOTE each pass 57,344 linked voice cases and six emitted faults. The existing scheduled stereo proof passes 2,048 cases. REMOTE has 16 bytes below the unchanged CGRAM owner with PR35 and no renderer dependency. Complete exact-head CI, prerequisite review and paired native PCM/cadence. |
 | R48 non-alias annotation | REJECTED | All18 emitted executable sections identical. No work removed; no runtime patch or native rerun. |
 | R49 signal elision,68667b74 | CANDIDATE oracle optimization; BLOCKED gameplay | One-voice17.29% cost saving; eight voices small0.317% loss within declared guard, echo1.076% saving. Active standalone budget still144/149%. Retain oracle optimization separately from gameplay backend, pending changed-core CI. |
 | R50 counter; R52 full-BRR regroup; R53 sample dispatch; R54 cache placement; R55 Gaussian CPU batch | REJECTED retained cost directions | Their physical cost gates fail; semantic/codegen/cache findings remain. R51 function residency is a diagnostic, not additive execution cost. No broadCI or kernel tuning for rejected implementations. |
@@ -159,11 +164,13 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. PR32 ordinary local startup and autonomous return passed after the depth
-   entry repair. Complete exact-head CI and aligned native acceptance. PR33 and R47 need the qualified
-   PR32 layout for their USB gates. R44 needs the coherent renderer dependencies, story residual
-   and Mode 7 predecessor comparison. R45 needs aligned story and Mode 7 costs.
-   R19 and R47 retain their port and validation gates.
+4. PR35 and PR36 are separately reviewable. Complete exact-head CI and
+   qualify the isolated bench before bounded native R47 PCM/cadence. PR33
+   still needs independent CGRAM admission. PR32 exact-head CI and two
+   aligned DKC1 fidelity checkpoints passed. Its intro throughput and
+   broader native fidelity/cadence block default promotion. R44 needs the
+   renderer dependencies, story residual and Mode 7 predecessor comparison.
+   R45 needs aligned story and Mode 7 costs. R19 retains its port gates.
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
    echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,

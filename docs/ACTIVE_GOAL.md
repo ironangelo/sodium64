@@ -42,13 +42,20 @@ PR32 is blocked for default promotion. R44 and R45 retain separate gates.
 [DKC1 parity and throughput evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
 
 Habitual R17 was restored and verified with 131,072-byte readback and recovery
-0. A subsequent 95-second idle menu USB check passed. No physical action is
-outstanding. Pursue autonomous work with R17 available and avoid unattended
-candidate launches that can strand the console. R47's clean local port passes
-linked arithmetic and stereo checks. Its standalone USB link exceeds the CGRAM
-owner by 4,080 bytes. PR32 plus the R47 DSP change fits locally with 66,832
-bytes margin.
-[Current traced startup and R47 evidence](evidence/integration-traced-native-startup-2026-11-09.json).
+0. A 95-second idle menu USB check and a later read-only status both passed.
+No physical action is outstanding. Keep R17 available and avoid unattended
+candidate launches that can strand the console after a USB removal.
+
+PR35 9bdd82c6 is the isolated USB bench status compaction. The
+normal production ROM is identical to master. PR36 539ca2ca is the
+R47 BRR history recurrence audio candidate with PR35 as a separate
+prerequisite. R47 now passes its local standalone layout gate without
+PR32. The paired REMOTE image has 16 bytes of static CGRAM margin.
+Normal, HW_PROFILE and REMOTE each pass 57,344 linked decoder cases and
+six emitted faults, plus 2,048 scheduled stereo cases on REMOTE.
+Both PRs are draft. Complete exact-head CI and qualify native matched
+PCM/cadence and safe recovery before promotion.
+[Local audio and ownership evidence](evidence/integration-usb-status-r47-2026-11-09.json).
 
 PR33 is DRAFT at1f34d1e3dbfccd6486fc5f5ddd265d2f74d361be: clean KOFF release
 correction, no observer/flag/extra DSP state. Build/Owners/Ares pass; actual USB
@@ -58,11 +65,10 @@ checked, six CPU-JIT>=800 samples; low virtual budgets remain explicit. These
 are software scopes, not native waveform/cadence/DAC acceptance.
 
 A bounded local pair of PR32 plus only PR33's DSP patch admits faithful USB
-without owner/flag/assertion changes:66832-byte margin, owners/KOFF pass and12
-unchanged RSP images. This pair lacks exact-head combination CI and native acceptance. With PR32
-blocked, inspect the independent legacy alignment and memory gate. Any
-prerequisite must preserve physical owners and runtime behavior before PR33
-can rerun exact-head and native gates.
+with 66,832 bytes margin. That pair lacks exact-head CI and native evidence.
+PR35 alone does not unblock KOFF. It remains 32 bytes past the pre-data
+page threshold, which leaves a 4,080-byte CGRAM owner overlap. Keep PR33
+blocked on an independent layout fix and exact-head/native requalification.
 [Current KOFF evidence](evidence/integration-koff-release-2026-11-08.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP

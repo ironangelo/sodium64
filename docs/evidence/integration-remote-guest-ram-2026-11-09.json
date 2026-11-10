@@ -92,7 +92,14 @@
           "conclusion": "success",
           "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734341320"
         }
-      ]
+      ],
+      "USB_artifact": {
+        "id": 13726077828,
+        "archive_digest_verified": true,
+        "static_end": "0x800be008",
+        "remaining_bytes_before_CGRAM": 504,
+        "bridge_cases": 50
+      }
     },
     "PR33": {
       "head": "e975c7a77cb8be62bc0b422c9479e2160631945a",
@@ -125,7 +132,15 @@
           "conclusion": "success",
           "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734502930"
         }
-      ]
+      ],
+      "USB_artifact": {
+        "id": 13725464581,
+        "archive_digest_verified": true,
+        "static_end": "0x800be008",
+        "remaining_bytes_before_CGRAM": 504,
+        "bridge_cases": 50,
+        "KOFF_release_voice_cases": 16384
+      }
     },
     "PR36": {
       "head": "2109eb4800cfdfb73eb19cd328451ceff40e16c8",
@@ -158,7 +173,14 @@
           "conclusion": "success",
           "html_url": "https://github.com/ironangelo/sodium64/actions/runs/42734390995"
         }
-      ]
+      ],
+      "USB_artifact": {
+        "id": 13726735822,
+        "archive_digest_verified": true,
+        "static_end": "0x800be008",
+        "remaining_bytes_before_CGRAM": 504,
+        "bridge_cases": 50
+      }
     }
   },
   "physical": {
@@ -169,5 +191,5 @@
     "known_R17_installed": true,
     "native_layout_boot_and_return_pending": true
   },
-  "CI_observed_at_UTC": "2026-11-10T01:17:37.134378+00:00"
+  "CI_observed_at_UTC": "2026-11-10T01:19:38.307118+00:00"
 }

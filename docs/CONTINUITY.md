@@ -17,8 +17,10 @@ release proof on the image that passed the memory gate.
 
 The previous PR35 and PR36 heads passed all four workflows. Both Ares
 matrix archives were digest-verified and all eight original profiles
-checked per head. The new heads have their own CI runs. A read-only
-SummerCart status returned menu and recovery 0. R17 remains installed.
+checked per head. All three new USB workflows pass, with 504-byte
+CGRAM margins verified from their published maps. PR33 also passed its
+linked USB KOFF proof. A read-only SummerCart status returned menu and
+recovery 0. R17 remains installed.
 
 The next physical gate is a short bench boot and software return with
 the new guest RAM layout. Then compare aligned R47 PCM and cadence

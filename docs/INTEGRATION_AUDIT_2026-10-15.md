@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+Renderer refresh, 2026-11-12. PR32/40/41/42 now target the integrated
+master through their existing review chain. R43, R44 and R45 keep
+their exact review diffs. The enabled linked RDP restart passes for all
+eight resident banks. The fresh PR42 bench ROM matches the prepared
+native binary. The physical gates and R17 restoration remain open.
+[Review heads, CI, restart contract and transport evidence](evidence/integration-renderer-refresh-2026-11-12.json).
+
 Native R44 stack, 2026-11-12. Two approximately matched early DKC1
 polled intervals run below master. COM3 disappears before frame 4330.
 The quiet and aligned capture gates remain open and R45 was not launched.

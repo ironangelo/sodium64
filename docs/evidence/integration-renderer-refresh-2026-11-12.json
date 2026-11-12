@@ -1,0 +1,133 @@
+{
+  "date_local": "2026-11-12",
+  "master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "atomic_branch_update_verified": true,
+  "review_stack": [
+    {
+      "PR": 32,
+      "branch": "integrate/faithful-compositor",
+      "old": "3e1c9a99869063254dbc1c84453fd6cf06f78762",
+      "head": "ae59e6b774168564444352066273a9e4025aa800",
+      "base": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+      "tree": "e79385272286d5a090ed61050ed8f39e97dbd8f6",
+      "changed_files": 42,
+      "review_patch_byte_equal": false
+    },
+    {
+      "PR": 40,
+      "branch": "integrate/faithful-r43-adaptive-spans",
+      "old": "ebcf1c57724b44397552103cc108c397eb78c43c",
+      "head": "a6dd6082b2d55fc8e1565ba54728c4fb1168933e",
+      "base": "ae59e6b774168564444352066273a9e4025aa800",
+      "tree": "53a5c66848732e79305e787c40a8cbd53169b5fb",
+      "changed_files": 11,
+      "review_patch_byte_equal": true
+    },
+    {
+      "PR": 41,
+      "branch": "integrate/faithful-r44-sub-alpha",
+      "old": "9f377fad7692c751864135e774ca8f63d9c1344e",
+      "head": "4859b8c5e3bc16fbed27b728ce37a46681951c2d",
+      "base": "a6dd6082b2d55fc8e1565ba54728c4fb1168933e",
+      "tree": "ec655d17a9585b458df8d66d5940f0bac493e06f",
+      "changed_files": 8,
+      "review_patch_byte_equal": true
+    },
+    {
+      "PR": 42,
+      "branch": "integrate/faithful-r45-backdrop-rows",
+      "old": "dab7e228e07964e5e6cda131e85102349abe7c47",
+      "head": "d3325a97769e81f07c37d8b1a586afc8abf935a2",
+      "base": "4859b8c5e3bc16fbed27b728ce37a46681951c2d",
+      "tree": "7604b96bc4887e8a7e22049e256f00d53132ab33",
+      "changed_files": 8,
+      "review_patch_byte_equal": true
+    }
+  ],
+  "PR32_option_off_REMOTE_ROM_equal_master": true,
+  "PR32_enabled_REMOTE": {
+    "owner_map_passed": true,
+    "bridge_cases": 50,
+    "static_end": "0x800c1008",
+    "first_fixed_owner": "0x800d2000"
+  },
+  "PR32_review_difference": "The changed paths match the prior review. The ROM cache branch and delay-slot source are identical. The changed diff alignment in src/memory.S comes from the integrated PR35 BSS layout.",
+  "R45_exact_head_ROM_matches_prepared_ROM": true,
+  "R45_exact_enabled_REMOTE_bridge": {
+    "cases": 50,
+    "static_end": "0x800c2008",
+    "first_fixed_owner": "0x800d2000"
+  },
+  "faithful_RDP_restart": {
+    "host_barrier_cases": 35,
+    "host_barrier_mutants_rejected": 5,
+    "legacy_linked_guard_mismatch": "The legacy sender instruction signature and prohibition on CURRENT reads do not describe the faithful sender.",
+    "enabled_variants": ["PR32", "R43", "R44", "R45"],
+    "actual_Main_and_Mode7_banks_checked": 8,
+    "emitted_mutants_rejected_per_bank": 4,
+    "scope": "The linked sender submits fresh START and END and waits for pending latches and CURRENT to retire the new list. Hardware rasterization and native capture are outside this proof."
+  },
+  "CI": {
+    "PR32_passed": [
+      43287315472,
+      43287314501,
+      43287314643,
+      43287314974,
+      43287314768
+    ],
+    "PR32_Ares_in_progress": 43287316578,
+    "default_build_passed": {
+      "PR40": 43287304394,
+      "PR41": 43287304419,
+      "PR42": 43287303364
+    }
+  },
+  "PR38_entry_zero_differential": {
+    "head": "b9c5ab7214b359e9d0f8d699223534ccee4ef7e9",
+    "cases_per_elf": 1920,
+    "configurations": [
+      "master REMOTE",
+      "candidate normal",
+      "candidate HW_PROFILE",
+      "candidate REMOTE"
+    ],
+    "brightness": [
+      0,
+      1,
+      7,
+      16
+    ],
+    "fixed_colors": [
+      0,
+      10834,
+      32767
+    ],
+    "palette_colors": [
+      0,
+      33,
+      16912,
+      32767,
+      65535
+    ],
+    "varied": [
+      "same or changed raw color",
+      "active or VBlank",
+      "open or closed frame",
+      "both event queues",
+      "current or stale fill cache"
+    ],
+    "scope": "Executed linked low and high CGRAM bus writes and the full fill routine. Verified Main/Sub colors, section status, raw word, cursor and event count."
+  },
+  "transport": {
+    "event_source": "Microsoft-Windows-Kernel-PnP/Device Management",
+    "event_id": 1010,
+    "surprise_removal_times_local": [
+      "15:43:12",
+      "15:57:50"
+    ],
+    "watch_seconds": 240,
+    "device_reappeared_in_watch": false,
+    "R17_restore_pending": true,
+    "new_hardware_trials": false
+  }
+}

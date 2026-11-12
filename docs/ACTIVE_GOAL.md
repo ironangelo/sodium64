@@ -38,14 +38,16 @@ The published BRR archive was verified byte for byte against the master
 CI artifact and contains the two production payloads only.
 [SMW physical comparison and BRR merge](evidence/integration-br-r47-master-smw-pair-2026-11-11.json).
 
-PR32 is draft at `3e1c9a99869063254dbc1c84453fd6cf06f78762`. The real-N64 startup stall was
+PR32 is draft at `ae59e6b774168564444352066273a9e4025aa800`. The real-N64 startup stall was
 fixed by repairing the shared C4C depth sender entry in two Main RSP words.
-Ordinary startup/return and all six exact-head workflows pass. On N64, DKC1
+The refreshed head passes five workflows, including the enabled renderer.
+Ares is running. The earlier qualified ROM's startup/return passed. On N64, DKC1
 matches exact RGB and PCM at two aligned checkpoints. All three approximately
 matched polled DKC1 intro bands regress in completed guest boundary rate.
 Windows removed the USB function during the quiet interval, before a closing
 sample. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain open.
 PR32 is blocked for default promotion. R44 and R45 retain separate gates.
+[Refreshed review chain and gates](evidence/integration-renderer-refresh-2026-11-12.json).
 [DKC1 parity and throughput evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
 
 PR33 `1c68ff36` passed four exact-head CI workflows. On physical N64 it
@@ -91,17 +93,19 @@ The physical menu check remains pending. The older runtime passed the
 [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
 
-R43 `ebcf1c57` is draft PR40 against PR32. R44 `9f377fad` is draft PR41
+R43 `a6dd6082` is draft PR40 against PR32. R44 `4859b8c5` is draft PR41
 against PR40. The byte-exact off control and the R44 linked Math and
 RDP consumer replays pass. PR32 cadence, R43 and R44 paired native
 comparisons remain open.
 [Drafts, linked consumers and restore evidence](evidence/integration-renderer-pr40-pr41-2026-11-11.json).
 
-R45 `dab7e228` is draft PR42 against PR41. Sub and Modes 2–7 bypass a
+R45 `d3325a97` is draft PR42 against PR41. Sub and Modes 2–7 bypass a
 redundant helper load. The linked row, packet and dispatch proofs pass.
 Local R43, R44 and R45 controls on current master share their audio source
 and ROM header title. The linked replays, owner and delay-slot checks
-pass. R44 reached DKC1 frame 3214 before COM3 disappeared, with two
+pass. A fresh exact PR42 ROM matches the prepared binary. The faithful
+RDP restart check passes on Main and Mode 7 of all four variants.
+R44 reached DKC1 frame 3214 before COM3 disappeared, with two
 early polled bands below the corresponding master rates. The aligned
 captures and quiet interval remain open. R45 has yet to launch. Restore
 R17 after COM3 returns, then run R45 first with idle host warmup.

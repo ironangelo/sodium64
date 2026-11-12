@@ -1,3 +1,38 @@
+# 2026-11-12 — Refresh the compositor review chain on current master
+
+The four draft branches were advanced atomically over `dc0c49d1`.
+The heads are PR32 `ae59e6b7`, R43/PR40 `a6dd6082`, R44/PR41 `4859b8c5`
+and R45/PR42 `d3325a97`. The last three retain byte-identical review
+patches and the same trees as their prepared native ROMs. PR32 retains
+the same 42 changed files and inherits the integrated diagnostic BSS
+layout. With the compositor disabled, its REMOTE ROM matches master
+byte for byte. Its enabled owner and bridge checks pass.
+
+A fresh build of `d3325a97` matches the previously prepared R45 ROM.
+The default build passes on all four heads. PR32 owner, USB, Gate C and
+enabled renderer workflows pass. Its Ares matrix is still running.
+
+The legacy USB RDP guard rejects the faithful sender's different
+instruction sequence. The dedicated linked proof executes the actual
+sender in both resident banks of all four enabled variants. It sees
+fresh START and END before CURRENT and waits through both a pending
+latch with stale matching CURRENT and an incomplete new fetch. All
+eight banks reject four emitted faults apiece.
+[Faithful restart proof](../scripts/check_renderer_rdp_restart.py).
+
+PR38 also passes 1,920 complete entry-zero bus and fill executions per
+ELF on master REMOTE and the three candidate configurations. This
+extends the linked test through actual Main/Sub fill updates. The native
+image, PCM and cadence gate remains open.
+
+Windows records USB surprise removal for the last R19 and R44
+interruptions. The four-minute re-enumeration watch expired with COM3
+absent. R17 is still pending restoration. When the device returns,
+verify R17 first and run the pinned R45 DKC1 test with idle warmup.
+[Review heads, CI, restart contract and transport evidence](evidence/integration-renderer-refresh-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Capture the R44 stack warmup before a USB interruption
 
 The matched R44 stack `8568fb1a` booted DKC1 and reported live progress

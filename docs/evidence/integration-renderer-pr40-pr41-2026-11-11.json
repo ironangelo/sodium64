@@ -1,0 +1,66 @@
+{
+  "date_local": "2026-11-11",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "replay": {
+    "script": "scripts/replay_clean_renderer_ports.py",
+    "retained_fixture_head": "7a83d4982f20f7dd2fd44ab506d66a5a084f6db1",
+    "proofs": [
+      "adaptive_spans",
+      "bg_spans",
+      "sub_alpha",
+      "math_fullrow",
+      "rdp_half"
+    ]
+  },
+  "R43": {
+    "PR": 40,
+    "head": "ebcf1c57724b44397552103cc108c397eb78c43c",
+    "base": "integrate/faithful-compositor",
+    "base_PR": 32,
+    "draft": true,
+    "status": "CANDIDATE",
+    "default_build_run": 43132388110,
+    "native_pair": "PENDING"
+  },
+  "R44": {
+    "PR": 41,
+    "head": "9f377fad7692c751864135e774ca8f63d9c1344e",
+    "base": "integrate/faithful-r43-adaptive-spans",
+    "base_PR": 40,
+    "draft": true,
+    "status": "BLOCKED for production",
+    "default_build_run": 43132388490,
+    "local_math_cases": 12,
+    "local_math_pixels": 70912,
+    "local_mode7_Z_fallback_cases": 3,
+    "local_math_rejected_mutations": [
+      "skip_restore",
+      "short_backup",
+      "oam_overlap",
+      "presence_dma"
+    ],
+    "local_rdp_half_cases": 36,
+    "local_rdp_model_pixels": 257280,
+    "packed_RGB555_kernel_byte_exact": true,
+    "local_RDP_binding_uncached": true,
+    "native_pairs": [
+      "ALttP rain and story",
+      "Mode 7"
+    ],
+    "native_runs_of_clean_port": 0
+  },
+  "R45": {
+    "status": "BLOCKED",
+    "physical_gates": [
+      "comparable clean-predecessor story and Mode 7 cost",
+      "comparable DKC1 intro"
+    ]
+  },
+  "N64": {
+    "COM3_enumerated": true,
+    "menu_recovery": 0,
+    "R17_install_readback_verified_bytes": 131072,
+    "reference_launch_transport_gate": "PENDING",
+    "R19_native_comparison": "PENDING"
+  }
+}

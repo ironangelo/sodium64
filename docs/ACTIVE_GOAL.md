@@ -71,9 +71,9 @@ the original CGRAM owner. The exact-master native reference installed,
 then lost the Windows USB device before launch acknowledgement. On
 November 11 the link returned, the next reference booted, and software
 returned to the menu and verified R17. A second reference load again
-lost the USB device before acknowledgement. The candidate comparison
-and R17 restoration are pending. Restore R17 after enumeration returns
-and qualify the launch transport before resuming the comparison.
+lost the USB device before acknowledgement. COM3 subsequently returned
+and R17 install/readback and menu recovery 0 were verified. Qualify the
+launch transport before resuming the candidate comparison.
 [R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
 PR38 86a1b5b6 is a standalone CGRAM epoch port. Its linked exact-color
@@ -91,11 +91,11 @@ native menu check remains open. The correction fits the local queued
 combination.
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
 
-R43 `ebcf1c57` and R44 `9f377fad` are local stacked source ports on PR32.
-The byte-exact off control and scoped linked tests pass. PR32 cadence,
-R43 native comparison, R44 full linked consumers and native breadth,
-and R45 story/Mode 7 costs remain open.
-[Renderer ports, CI and USB recovery](evidence/integration-r43-r44-and-usb-recovery-2026-11-11.json).
+R43 `ebcf1c57` is draft PR40 against PR32. R44 `9f377fad` is draft PR41
+against PR40. The byte-exact off control and the R44 linked Math and
+RDP consumer replays pass. PR32 cadence, R43 and R44 paired native
+comparisons, and R45 story/Mode 7 costs remain open.
+[Drafts, linked consumers and restore evidence](evidence/integration-renderer-pr40-pr41-2026-11-11.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined

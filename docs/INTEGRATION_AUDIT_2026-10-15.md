@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+Renderer drafts, 2026-11-11. R43 is PR40 against PR32. R44 is PR41
+against PR40. Both are opt-in. Linked Math and RDP consumer replays
+pass on R44. Paired native ALttP, Mode 7 and PR32 DKC1 intro cadence
+remain open. COM3 returned and R17 install/readback and menu recovery 0
+passed. The reference-launch transport gate remains pending.
+[Current renderer and hardware evidence](evidence/integration-renderer-pr40-pr41-2026-11-11.json).
+
 Latest APU gate, 2026-11-09. PR39 corrects the actual stale lookup and
 old cycle debit after changing the APU clock in the menu. Full linked
 reset and both clock directions pass, with exact CI USB admission.
@@ -7,14 +14,14 @@ reset and both clock directions pass, with exact CI USB admission.
 
 Latest renderer extraction, 2026-11-09. PR38 has exact-head Gate C
 replay, linked identical-write tests and USB admission. The local queued
-combination fits and passes its linked software checks. Restore R17
-before additional native launches.
+combination fits and passes its linked software checks. The
+November 11 R17 restoration passed.
 [CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
 
 Latest R19 gate, 2026-11-09. Draft PR37 ports the pitch cache directly
 to master and passes linked arithmetic and exact CI USB admission. The
 native attempt lost the cart on the master reference before launch
-acknowledgement. R17 restoration and R19 native comparison are pending.
+acknowledgement. R19 native comparison remains pending.
 [R19 evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
 Latest audio gate, 2026-11-09. PR35 is ready for review. Both audio
@@ -132,8 +139,8 @@ Diagnostic tools are identified separately from production runtime changes.
 | R40 adaptive spans plus paired diagnostic arenas | CANDIDATE runtime; diagnostic arena prerequisite separate | R43 removes no-Sub hot dispatch. Reuse exact RSP/producer proof; qualify the clean-master dependency chain before R44. |
 | R41 Ares SDL lab dependency fix,794b5530 | CANDIDATE tooling | Lab infrastructure only. Reuse the corrected upstream SDL pin if the unchanged lab build fails; no emulator performance credit. |
 | R42 coverage-tag feasibility | VALIDATED diagnostic primitive / SUPERSEDED production direction | Original1024 rectangles establish a bounded alpha/coverage property. It is not an independent runtime speedup; R44 is the production candidate. |
-| R43 adaptive no-span,4382ae80 | CANDIDATE prerequisite | Rain36.804 vs32.289 corrected control; story residual remains explicit. Port coherent immutable overlay plus guards; broader native/clean-head CI before integration. |
-| R44 Sub-alpha,7a83d498 / CI02392af | BLOCKED for production integration | Material ALttP rain40.540954 vsR43 36.804012; story56.089884 vs corrected56.149815 leaves0.106735% residual. DKC10 images/4PCM pass, no material DKC gain. Build38337117404, repaired CGRAM38337797903/Ares38337800049 pass. Missing clean-master renderer dependencies, a discriminating resolution of the residual and native Mode7 against an appropriate predecessor (R45's on/off race does not prove R44 vsR43). |
+| R43 adaptive no-span,4382ae80 | CANDIDATE prerequisite | Rain36.804 vs32.289 corrected control; story residual remains explicit. PR40 ports the immutable overlay with linked guards onto PR32. Paired native checks and PR32 acceptance precede integration. |
+| R44 Sub-alpha,7a83d498 / CI02392af | BLOCKED for production integration | Material ALttP rain40.540954 vsR43 36.804012; story56.089884 vs corrected56.149815 leaves0.106735% residual. DKC10 images/4PCM pass, no material DKC gain. Build38337117404, repaired CGRAM38337797903/Ares38337800049 pass. PR41 ports R44 onto PR40 and passes linked Math/RDP consumer replay. PR32 acceptance, the story residual and paired native Mode 7 against R43 remain open. |
 | R45 dense row backdrop,313642af / retainedfa77692e | BLOCKED | Same240 absolute DKC endpoints13.753867 to28.702821Hz, exact images/PCM; full CI38354690610/38354693122/38354695628 succeeds. Story1000 absolute endpoints56.162905 to55.910416 (-0.449566%,80.408us); Mode7 -0.135081%. These unresolved costs block promotion. Correct scissor adoption is mandatory. |
 | First R45 missing-scissor implementation,9e1194f | SUPERSEDED (incorrect) | Native27-pixel failure preserved; repaired1fcc940 and scalar/metadata lineage replace it. Never integrate the defective artifact. |
 | R45 run producer,c623d918 | REJECTED cost remedy | Story55.888611 vs dense55.910416; does not recover loss. Preserved on experiment/main-row-runs-r45, dense source restored on R45. No renewed micro-tuning loop. |
@@ -190,9 +197,10 @@ Diagnostic tools are identified separately from production runtime changes.
    PR33 and PR36 review and exact-head checks. Native audio passes the
    stated short scopes for both. PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
-   broader native fidelity/cadence block default promotion. R44 needs the
-   renderer dependencies, story residual and Mode 7 predecessor comparison.
-   R45 needs aligned story and Mode 7 costs. PR37 R19 has exact CI USB admission and needs the restored hardware link for native comparison.
+   broader native fidelity/cadence block default promotion. Review the R43
+   and R44 source drafts separately. R44 still needs its story and Mode 7
+   comparisons against R43. R45 needs aligned story and Mode 7 costs.
+   Qualify the launch transport before resuming PR37 native comparison.
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
    echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,

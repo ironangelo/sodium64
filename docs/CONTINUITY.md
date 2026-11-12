@@ -1,3 +1,32 @@
+# 2026-11-11 — Publish separate R43 and R44 drafts and close linked consumers
+
+R43 `ebcf1c57` is draft PR40 against PR32. R44 `9f377fad` is draft
+PR41 against PR40. The drafts have 11 and 8 changed files respectively.
+Both opt-in paths stay disabled in default builds. Their default CI
+runs are 43132388110 and 43132388490. The local enabled build and
+linked tests below cover a separate scope from default CI.
+
+R44 passes linked Math output and ownership on 12 cases and 70,912
+original numeric pixels against R43 and the scalar oracle, plus three
+Mode 7 Z fallback cases. Four mutations violate the expected DMA or
+owner checks. The RDP half-color replay passes 36 cases and interprets
+257,280 original numeric pixels from the linked command stream. The
+packed RGB555 instructions match R43. The replay uses the historical
+harness pinned at `7a83d498`, with explicit adaptations for aligned
+clean overlay sources and the retired laboratory limit.
+[Replay source](../scripts/replay_clean_renderer_ports.py).
+
+The restored USB link verified all 131,072 bytes of R17 and menu
+recovery 0. COM3 remains enumerated. The earlier launch failures
+remain evidence for the separate transport gate. The next R19 native
+comparison requires a qualified reference launch. The renderer drafts
+require paired N64 fidelity and cadence, including ALttP rain/story
+and Mode 7 for R44, plus the PR32 DKC1 intro gate. R45 stays blocked on
+its story and Mode 7 cost and a comparable DKC1 intro control.
+[Drafts, linked consumers and restore evidence](evidence/integration-renderer-pr40-pr41-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Separate R43 and R44 ports, close two CI gates and recover USB once
 
 R43 `ebcf1c57` and R44 `9f377fad` are separate local commits on PR32

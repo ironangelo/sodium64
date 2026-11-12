@@ -1,5 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
+Audio integration, 2026-11-11. PR35 is merged as `8c74f36e`. The
+published production payload matches the preceding master. PR33 and
+PR36 now target master with the same candidate source trees and fresh
+CI. The local pair passed linked audio and memory checks.
+[Merge, release and local audio pair evidence](evidence/integration-pr35-master-and-audio-pair-2026-11-11.json).
+
 Renderer drafts, 2026-11-11. R43 is PR40 against PR32. R44 is PR41
 against PR40. Both are opt-in. Linked Math and RDP consumer replays
 pass on R44. Paired native ALttP, Mode 7 and PR32 DKC1 intro cadence
@@ -193,8 +199,8 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. PR35 is ready for review. Integrate it separately before the audio-only
-   PR33 and PR36 review and exact-head checks. Native audio passes the
+4. PR35 is integrated. Finish the fresh checks on the separate audio PR33
+   and PR36 drafts against master. Native audio passes the
    stated short scopes for both. PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. Review the R43

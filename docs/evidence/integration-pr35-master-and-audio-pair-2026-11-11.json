@@ -1,0 +1,88 @@
+{
+  "date_local": "2026-11-11",
+  "previous_master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "master": "8c74f36e79392dfb649cb36fb4f510fbb18e1b26",
+  "PR35": {
+    "state": "MERGED",
+    "qualified_head": "87d16156d3eb529d7ecb53c34c6ba75feefb0fbc",
+    "premerge_success_runs": [
+      42734341320,
+      42734341728,
+      42734341602,
+      42734341367
+    ],
+    "previous_native_gate": "synthetic eight-voice boot, PCM export, short progression, software return and R17 readback",
+    "local_normal_ROM_bytes": 98304,
+    "local_allocated_ELF_bytes": 767064,
+    "local_normal_images_identical": true,
+    "postmerge_success_runs": [
+      43135714673,
+      43135714623,
+      43135714663
+    ],
+    "postmerge_Ares_run": 43135714621
+  },
+  "published_release": {
+    "tag": "release",
+    "release_id": 442388496,
+    "asset_id": 737618113,
+    "archive_bytes": 44370,
+    "digest_verified": true,
+    "payload": [
+      "sodium64.z64",
+      "rom-converter.py"
+    ],
+    "payload_byte_identical_to_previous_master_CI": true
+  },
+  "PR33": {
+    "state": "DRAFT",
+    "base": "master",
+    "head": "5dfd45a6045fc7612cd7fe269a160141a0661d54",
+    "review_files": 5,
+    "previous_qualified_tree_identical": true,
+    "new_runs": [
+      43135828700,
+      43135828854,
+      43135828713,
+      43135828716
+    ]
+  },
+  "PR36": {
+    "state": "DRAFT",
+    "base": "master",
+    "head": "c047acefde4a868f14c147ef09ba33d10022e00e",
+    "review_files": 2,
+    "previous_qualified_tree_identical": true,
+    "new_runs": [
+      43135828984,
+      43135828947,
+      43135828978,
+      43135828991
+    ]
+  },
+  "local_pair": {
+    "commit": "655818407f8a71e388cdc3addf79617a9f979d18",
+    "builds": [
+      "normal",
+      "REMOTE"
+    ],
+    "release_admission_pass": true,
+    "KOFF_masks_per_build": 256,
+    "KOFF_release_voices_per_build": 16384,
+    "actual_DSP_samples_per_build": 2064,
+    "BRR_voice_cases_per_build": 57344,
+    "USB_bridge_cases": 50,
+    "USB_CGRAM_margin_bytes": 504,
+    "native_combination_measured": false
+  },
+  "other_CI": {
+    "PR39_Ares": {
+      "run": 43134208259,
+      "result": "success"
+    },
+    "PR42_default_build": {
+      "run": 43135119294,
+      "result": "success"
+    }
+  }
+}

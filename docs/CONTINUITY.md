@@ -1,3 +1,32 @@
+# 2026-11-11 — Integrate the USB bench prerequisite and rebase audio review on master
+
+PR35 is integrated as `8c74f36e`. The exact pre-merge head passed four
+CI workflows and the scoped real-N64 boot, capture and software-return
+gate. Fresh same-toolchain production builds matched byte for byte and
+had 767,064 identical loaded ELF bytes. The published `release` archive
+was downloaded, digest-verified and inspected. Its two payloads,
+`sodium64.z64` and `rom-converter.py`, match the previous master CI
+artifact byte for byte.
+
+PR33 KOFF `5dfd45a6` and PR36 BRR `c047acef` are drafts against master.
+Both merged the new base without changing any candidate file. Their
+review diffs remain five and two files. Fresh head CI started. Native
+results retain their exact earlier artifact and synthetic fixture scope.
+
+The local pair `65581840` builds normal and REMOTE. Each passes 256 KOFF
+masks, 16,384 release-voice cases, 2,064 actual DSP calls and 57,344 BRR
+voice cases. Production package admission and 50 USB bridge cases pass.
+The USB layout retains 504 bytes before CGRAM. The combined physical
+baseline remains open. Close the current audio CI, then progress the two
+audio changes independently and measure the integrated combination on
+the N64 once the USB link is usable.
+
+PR39's current head Ares workflow and PR42's default build completed
+successfully. Their pending native gates retain their prior scope.
+[Merge, release and local audio pair evidence](evidence/integration-pr35-master-and-audio-pair-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Put the R45 port and scalar dispatch repair up for review
 
 Draft PR42 `dab7e228` stacks on PR41. The first commit ports the retained

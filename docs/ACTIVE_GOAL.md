@@ -23,13 +23,13 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint, 2026-11-11. Eleven separate PRs
-24/23/22/25/26/27/28/29/30/31/34 are integrated in master
-`c232af87e046d41a468e3f2f1083fcf30f606385`. PR34 makes host-side USB debug
-session shutdown graceful. The normal loaded image is unchanged. Latest
-contains the same production ROM and converter as before. October's
-commercial quiet controls and independent SMW capture retain their measured
-scope. [PR34 evidence](evidence/integration-bench-eof-2026-11-09.json).
+Current checkpoint, 2026-11-11. Twelve separate PRs
+24/23/22/25/26/27/28/29/30/31/34/35 are integrated in master
+`8c74f36e79392dfb649cb36fb4f510fbb18e1b26`. PR35 qualifies the isolated
+USB bench layout. The published release has the same production ROM and
+converter as before. October's commercial quiet controls and independent
+SMW capture retain their measured scope.
+[PR35 merge, release and audio evidence](evidence/integration-pr35-master-and-audio-pair-2026-11-11.json).
 
 PR32 is draft at `3e1c9a99869063254dbc1c84453fd6cf06f78762`. The real-N64 startup stall was
 fixed by repairing the shared C4C depth sender entry in two Main RSP words.
@@ -41,26 +41,15 @@ sample. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain open.
 PR32 is blocked for default promotion. R44 and R45 retain separate gates.
 [DKC1 parity and throughput evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
 
-PR35 87d16156 is ready for review. All four exact-head CI workflows
-and the real-N64 short boot/software-return gate passed. REMOTE places
-three guest RAM owners in aligned BSS. The ordinary production ROM is
-byte-identical. Review and integrate this prerequisite separately.
-
-PR36 2109eb48 remains draft behind PR35. All four exact-head workflows
-passed. Native PCM is byte-identical at boundary 200 on original eight-voice
-filter-0 and four-filter fixtures. Short filtered windows complete 240
-and 242 guest boundaries in about four seconds. The remaining promotion
-work is retargeting to master after PR35 integrates and rerunning checks.
-The current draft diff is already against PR35. Combined representative
-cadence/fidelity and DAC remain open.
-
-PR33 e975c7a7 passes all four exact-head CI workflows and the scoped
-real-N64 KOFF note-tail gate. Two aligned events each reproduce 252
-nonzero PCM samples predicted by the independent envelope rule and the
-existing mixer. The other channel remains byte-identical. Short cadence
-windows are about four seconds. The local R47/KOFF pair fits with 504
-bytes before CGRAM and passes linked audio. It is not the integrated
-baseline. Both audio PRs are drafts against PR35.
+PR36 `c047acef` and PR33 `5dfd45a6` are drafts against the new master.
+The candidate source trees match the heads already measured on N64.
+The previous BRR captures match aligned PCM for the eight-voice
+filter-0 and four-filter fixtures. KOFF reproduces 252 release samples
+per event on two aligned cuts and preserves the other channel. Both
+have short original-fixture cadence controls. Fresh head CI is active.
+The local KOFF/BRR pair passes linked checks and fits with 504 bytes
+before CGRAM. Combined representative cadence, fidelity and DAC remain
+open.
 
 The earlier KOFF and R47 native trials restored habitual R17 with
 recovery 0. [Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).
@@ -90,8 +79,8 @@ representative combined baseline.
 PR39 `46447580` keeps the APU clock correction from `a4c8a2f2` and
 adds coverage from linked menu input through SPC700 dispatch. Normal,
 HW_PROFILE and USB pass locally. The prior runtime passed the 119-case
-compiled APU cycle suite. The new head's CI and the physical menu
-check are tracked separately. The correction fits the local queued
+compiled APU cycle suite. The current head's four CI workflows passed. The physical menu check
+remains pending. The correction fits the local queued
 combination. [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
 

@@ -11,6 +11,7 @@ REMOTE ?= 0
 FAITHFUL_RENDERER ?= 0
 FAITHFUL_BG_SPANS ?= 0
 FAITHFUL_SUB_ALPHA ?= 0
+FAITHFUL_BACKDROP_ROWS ?= 0
 ifeq ($(FAITHFUL_RENDERER),1)
 N64_RENDERER_FLAGS := -DSODIUM64_FAITHFUL_RENDERER=1
 endif
@@ -25,6 +26,12 @@ ifneq ($(FAITHFUL_BG_SPANS),1)
 $(error FAITHFUL_SUB_ALPHA requires FAITHFUL_BG_SPANS=1)
 endif
 N64_RENDERER_FLAGS += -DSODIUM64_SUB_ALPHA=1
+endif
+ifeq ($(FAITHFUL_BACKDROP_ROWS),1)
+ifneq ($(FAITHFUL_SUB_ALPHA),1)
+$(error FAITHFUL_BACKDROP_ROWS requires FAITHFUL_SUB_ALPHA=1)
+endif
+N64_RENDERER_FLAGS += -DSODIUM64_BACKDROP_ROWS=1
 endif
 ifeq ($(REMOTE),1)
 ifneq ($(PROFILE)$(HW_PROFILE),00)
@@ -49,6 +56,9 @@ SFILES := $(filter-out src/rsp_hcomp% src/rsp_object_cache.S src/rsp_mode7_windo
 endif
 ifneq ($(FAITHFUL_BG_SPANS),1)
 SFILES := $(filter-out src/rsp_decoder_original.S,$(SFILES))
+endif
+ifneq ($(FAITHFUL_BACKDROP_ROWS),1)
+SFILES := $(filter-out src/rsp_hcomp_backdrop.S,$(SFILES))
 endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 HFILES += $(wildcard src/renderer/*.inc) $(wildcard src/renderer/*.h) $(wildcard src/*.inc)

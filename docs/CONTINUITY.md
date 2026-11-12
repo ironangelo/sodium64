@@ -1,3 +1,51 @@
+# 2026-11-12 — Measure the integrated master on three physical N64 workloads
+
+The corrected audio combination in `dc0c49d1` ran DKC1 intro, ALttP boot
+and SMW boot/demo at APU 21 and frameskip 0, with zero controller input.
+DKC1 used the qualified PR43 binary, which matches a fresh master bench
+ROM byte for byte. ALttP and SMW used the freshly built master directly.
+
+| Workload | Reference guest frames/s | Integrated guest frames/s |
+| --- | ---: | ---: |
+| DKC1 intro | 59.856 | 59.833 |
+| ALttP boot | 59.843 | 59.866 |
+| SMW boot/demo | 57.904 | 58.017 |
+
+Each rate comes from a roughly 20-second quiet Count interval. Guest
+endpoints differ slightly. At all six exact capture boundaries, all
+403,200 RGB pixels and all DSP registers match. The only PCM delta is
+115 bytes across 39 consecutive stereo sample pairs at DKC1 frame 4346,
+consistent with the release of voice 7. Software menu return and verified
+R17 restoration passed for all three. The new ALttP launch acknowledgements
+arrived in about 80 seconds, within the corrected host deadline.
+
+SMW still misses the cadence target in this scene. These comparisons cover
+boot/demo digital RGB and PCM, with no DAC or gameplay-wide qualification.
+Use this integrated control for the R19 paired test and the independent
+renderer gates. The compositor still needs ALttP house/rain, Mode 7 and
+a matched quiet DKC1 throughput check before default promotion.
+[Integrated N64 baseline and paired observations](evidence/integration-combined-master-native-2026-11-12.json).
+
+---
+
+# 2026-11-12 — Integrate the native-verified SPC700 accumulator fix
+
+PR43 `adf9f02e` passed all four exact-head workflows and merged as
+`dc0c49d1`. The master tree and fresh REMOTE ROM match the hardware-tested
+repair byte for byte. The published archive was digest-verified. Its
+`sodium64.z64` and `rom-converter.py` match the exact master CI artifact.
+
+The first ALttP reference launch exceeded the 62-second host receipt
+deadline. COM3 stayed present. A later session reached the running
+emulator at guest frame 5147 and acknowledged the menu command. A
+fresh session verified recovery 0 and restored/read back all 131,072
+bytes of R17 without a physical reset. The known successful older load
+took 76 seconds. The local runner now allows 150 seconds for commercial
+loads and keeps the same capture targets and emulation settings.
+[Repair, production release and recovery evidence](evidence/integration-koff-accumulator-dkc1-2026-11-11.json).
+
+---
+
 # 2026-11-11 — DKC1 exposes an SPC700 caller regression after KOFF merge
 
 Physical DKC1 runs of BRR `b3b0a061` and the first KOFF merge `92954e95`

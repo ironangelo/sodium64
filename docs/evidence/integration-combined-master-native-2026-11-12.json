@@ -1,0 +1,203 @@
+{
+  "date_local": "2026-11-12",
+  "physical_device": "N64 with SummerCart64",
+  "master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8,
+    "controller_input": 0
+  },
+  "methodology": "Two aligned guest/renderer captures per case, followed by one roughly 20-second MIPS Count interval with USB idle between endpoint reads. DKC1 used exact PR43 head. A fresh master build is byte-identical to that physical ROM.",
+  "fidelity_scope": "PCM is the digital mix ring. Captures observe RSP-retired RGB and do not sample the display or analog DAC. DKC1 has 39 changed consecutive stereo samples at frame 4346, consistent with the intended voice 7 release. All six RGB images match their paired references.",
+  "timing_scope": "Rates describe completed guest work for these specific boot/demo intervals. Endpoint ranges differ slightly, so no speedup, sustained native cadence or full gameplay qualification is inferred.",
+  "cases": {
+    "DKC1 intro": {
+      "reference": {
+        "tested_head": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+        "launch_receipt_seconds": 13.125,
+        "window_guest_endpoints": [
+          4347,
+          5546
+        ],
+        "count_window": {
+          "duration_s": 20.031528277333333,
+          "guest_delta": 1199,
+          "guest_per_second": 59.85564273479463,
+          "render_delta": 1199,
+          "vi_delta": 1198,
+          "present_delta": 1198
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0
+      },
+      "integrated": {
+        "tested_head": "adf9f02eed71d851fa003e8af772f88d423ab5c3",
+        "launch_receipt_seconds": 14.297,
+        "window_guest_endpoints": [
+          4347,
+          5545
+        ],
+        "count_window": {
+          "duration_s": 20.022355733333335,
+          "guest_delta": 1198,
+          "guest_per_second": 59.83311933698005,
+          "render_delta": 1198,
+          "vi_delta": 1198,
+          "present_delta": 1198
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0
+      },
+      "aligned_captures": [
+        {
+          "guest_and_render_frame": 4330,
+          "RGB_pixels": 67200,
+          "different_RGB_pixels": 0,
+          "PCM_bytes": 8192,
+          "different_PCM_bytes": 0,
+          "different_stereo_sample_pairs": 0,
+          "ring_head_matches": true,
+          "voice_mask_matches": true,
+          "DSP_registers_match": true
+        },
+        {
+          "guest_and_render_frame": 4346,
+          "RGB_pixels": 67200,
+          "different_RGB_pixels": 0,
+          "PCM_bytes": 8192,
+          "different_PCM_bytes": 115,
+          "different_stereo_sample_pairs": 39,
+          "ring_head_matches": true,
+          "voice_mask_matches": false,
+          "DSP_registers_match": true
+        }
+      ]
+    },
+    "ALttP original boot": {
+      "reference": {
+        "tested_head": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+        "launch_receipt_seconds": 79.625,
+        "window_guest_endpoints": [
+          1879,
+          3078
+        ],
+        "count_window": {
+          "duration_s": 20.035841792,
+          "guest_delta": 1199,
+          "guest_per_second": 59.842756418586916,
+          "render_delta": 1199,
+          "vi_delta": 1198,
+          "present_delta": 1198
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0
+      },
+      "integrated": {
+        "tested_head": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+        "launch_receipt_seconds": 79.953,
+        "window_guest_endpoints": [
+          1879,
+          3077
+        ],
+        "count_window": {
+          "duration_s": 20.0113616,
+          "guest_delta": 1198,
+          "guest_per_second": 59.86599132764659,
+          "render_delta": 1198,
+          "vi_delta": 1197,
+          "present_delta": 1197
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0
+      },
+      "aligned_captures": [
+        {
+          "guest_and_render_frame": 1862,
+          "RGB_pixels": 67200,
+          "different_RGB_pixels": 0,
+          "PCM_bytes": 8192,
+          "different_PCM_bytes": 0,
+          "different_stereo_sample_pairs": 0,
+          "ring_head_matches": true,
+          "voice_mask_matches": true,
+          "DSP_registers_match": true
+        },
+        {
+          "guest_and_render_frame": 1878,
+          "RGB_pixels": 67200,
+          "different_RGB_pixels": 0,
+          "PCM_bytes": 8192,
+          "different_PCM_bytes": 0,
+          "different_stereo_sample_pairs": 0,
+          "ring_head_matches": true,
+          "voice_mask_matches": true,
+          "DSP_registers_match": true
+        }
+      ]
+    },
+    "SMW boot/demo": {
+      "reference": {
+        "tested_head": "8c74f36e79392dfb649cb36fb4f510fbb18e1b26",
+        "launch_receipt_seconds": 28.875,
+        "window_guest_endpoints": [
+          3018,
+          4177
+        ],
+        "count_window": {
+          "duration_s": 20.016045461333334,
+          "guest_delta": 1159,
+          "guest_per_second": 57.903545544944784,
+          "render_delta": 1159,
+          "vi_delta": 1197,
+          "present_delta": 1158
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0
+      },
+      "integrated": {
+        "tested_head": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+        "launch_receipt_seconds": 31.172,
+        "window_guest_endpoints": [
+          3017,
+          4178
+        ],
+        "count_window": {
+          "duration_s": 20.011496341333334,
+          "guest_delta": 1161,
+          "guest_per_second": 58.01665103883203,
+          "render_delta": 1161,
+          "vi_delta": 1197,
+          "present_delta": 1160
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0
+      },
+      "aligned_captures": [
+        {
+          "guest_and_render_frame": 3000,
+          "RGB_pixels": 67200,
+          "different_RGB_pixels": 0,
+          "PCM_bytes": 8192,
+          "different_PCM_bytes": 0,
+          "different_stereo_sample_pairs": 0,
+          "ring_head_matches": true,
+          "voice_mask_matches": true,
+          "DSP_registers_match": true
+        },
+        {
+          "guest_and_render_frame": 3016,
+          "RGB_pixels": 67200,
+          "different_RGB_pixels": 0,
+          "PCM_bytes": 8192,
+          "different_PCM_bytes": 0,
+          "different_stereo_sample_pairs": 0,
+          "ring_head_matches": true,
+          "voice_mask_matches": true,
+          "DSP_registers_match": true
+        }
+      ]
+    }
+  }
+}

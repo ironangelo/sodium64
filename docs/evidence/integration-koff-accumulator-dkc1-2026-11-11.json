@@ -54,6 +54,29 @@
       "menu_recovery": 0,
       "R17_restore_readback_bytes": 131072
     },
-    "gate": "DKC1 and original eight-voice physical checks pass. Build, USB and owner CI pass. Ares is pending."
+    "gate": "DKC1 and original eight-voice physical checks pass. All four current-head workflows passed before merge.",
+    "merged_2026_11_12": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+    "merged_tree_and_fresh_bench_ROM_equal_native_test": true,
+    "fresh_master_workflow_ids": [43280145594, 43280145723, 43280145585, 43280145689]
+  },
+  "production_release_2026_11_12": {
+    "tag_resolves_to_repair_merge": true,
+    "release_id": 443353646,
+    "asset_id": 740607284,
+    "archive_bytes": 44596,
+    "archive_digest_verified": true,
+    "normal_build_artifact": 13972461691,
+    "exact_CI_payloads": ["rom-converter.py", "sodium64.z64"]
+  },
+  "ALttP_first_reference_launch": {
+    "head": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+    "host_launch_deadline_seconds": 62,
+    "COM3_remained_present": true,
+    "emulator_later_observed_at_guest_frame": 5147,
+    "software_menu_command_acknowledged": true,
+    "fresh_session_verified_menu_and_R17": true,
+    "R17_restore_readback_bytes": 131072,
+    "physical_reset_required": false,
+    "matched_capture_completed": false
   }
 }

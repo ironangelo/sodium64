@@ -1,5 +1,19 @@
 # Consolidation and integration audit - 2026-10-15
 
+Combined baseline, 2026-11-12. Physical N64 measured the integrated
+audio fixes on DKC1 intro, ALttP boot and SMW boot/demo. Six images and
+DSP register snapshots match. The only PCM delta is consistent with the
+intended DKC1 note release. SMW remains below the cadence target. All
+three runs returned to the menu and restored R17 through USB.
+[Integrated N64 baseline and paired observations](evidence/integration-combined-master-native-2026-11-12.json).
+
+KOFF caller repair, 2026-11-12. PR43 merged as `dc0c49d1` after all four
+exact-head workflows passed. The fresh bench ROM matches the repair
+qualified on physical N64. The new Latest archive matches the two normal
+CI payloads. The ALttP retry follows verified software recovery and R17
+restoration after the first launch crossed the old host deadline.
+[Repair, production release and recovery evidence](evidence/integration-koff-accumulator-dkc1-2026-11-11.json).
+
 KOFF regression, 2026-11-11. Physical DKC1 reproduces a PMON mismatch
 after the first KOFF merge. A linked negative control confirms KOFF
 overwrites the cached SPC700 accumulator. PR43 preserves it and passes
@@ -173,7 +187,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
 | R19 pitch cache, 84531758 | CANDIDATE, independent draft PR37 | Direct master port. Normal, HW_PROFILE and REMOTE linked arithmetic and caller checks pass. All four exact-head CI workflows pass. USB has 16 bytes before CGRAM. Prior native gains belong to the original runtime. Current N64 test was interrupted on the master reference before the R19 launch. Restore R17, then rerun aligned native comparison. |
 | R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
-| R22 KOFF release, 1b123980 | VALIDATED digital tail, BLOCKED repair promotion pending Ares | PR33 merged as `92954e95`. The scoped 252-sample native note-tail gate passed. DKC1 exposed an SPC700 accumulator regression. PR43 fixes it in linked and native tests while preserving both exact tails. Exact-head Ares is pending. |
+| R22 KOFF release, 1b123980 | VALIDATED digital tail and SPC700 caller repair | PR33 merged as `92954e95`. DKC1 exposed an SPC700 accumulator regression. PR43 fixes it in linked and native tests while preserving both exact tails, passed four exact-head workflows and merged as `dc0c49d1`. Sustained cadence, KON delay and analog fidelity remain open. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |
 | R32 dry-master HI/LO,0675f15a | VALIDATED within corrected dry path | Required correctness prerequisite when dry mixing is selected. Master lacks that multiply sequence; no standalone master patch exists. Preserve linked/dynamic spacing and native owner proof. |
 | R34 complete C++ DSP direct gameplay replacement | REJECTED; VALIDATED bounded behavior oracle | Native106.56/144.15/151.16% standalone audio budget and9 checksum matches. Keep primary reference and source/license; it cannot become a gameplay default. |
@@ -202,7 +216,7 @@ Diagnostic tools are identified separately from production runtime changes.
 
 ## Execution queue and stop conditions
 
-1. PR24/23/22/25/26/27/28/29/30/31/34/35/36/33 are merged. Startup selects
+1. PR24/23/22/25/26/27/28/29/30/31/34/35/36/33/43 are merged. Startup selects
    APU 21. PR30 and PR34 are host tooling. PR31 enforces the production
    release admission. PR35 qualifies the separate USB bench layout.
    Older HW_PROFILE controls bind to 8da before the separately qualified
@@ -220,9 +234,10 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. PR33 and PR36 are integrated. Finish PR43 to repair the KOFF caller
-   regression, then measure the corrected combination on physical N64 and
-   verify the production release. PR32 exact-head CI and two
+4. PR33, PR36 and the PR43 caller repair are integrated. The production
+   release matches the exact master artifact. Three paired boot/demo
+   measurements bind the corrected combination to physical N64. Extend
+   that baseline to heavier gameplay. PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. Review the R43
    and R44 source drafts separately. R44 still needs its story and Mode 7

@@ -118,6 +118,7 @@ DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
-The full objective remains ACTIVE and incomplete. Complete resident-DSP
-integral native cost is NOT_MEASURED and follows the qualified faithful combined
-baseline, before more isolated kernels. No1.0/full fidelity/chip/DAC acceptance.
+The full objective remains incomplete. Native integration is blocked
+on SummerCart re-enumeration and verified R17 restoration. Complete
+resident-DSP integral native cost follows the qualified faithful combined
+baseline. Wider compatibility, full fidelity, DAC and chip gates remain open.

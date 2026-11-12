@@ -1,3 +1,22 @@
+# 2026-11-12 — Native integration waits for SummerCart re-enumeration
+
+Windows and the deployer still report the cart absent at 16:34 local.
+The two bounded re-enumeration watches ended without a port. The exact
+CI jobs for PR32, PR37, PR38, PR39 and PR42 are terminal and successful.
+Master remains `dc0c49d1` and the renderer review chain stays in draft.
+
+PR42's next gate is the first physical DKC1 pair. PR41 still needs
+its paired ALttP and Mode 7 checks. PR38 needs paired DKC1 image, PCM
+and cadence, and PR39 needs the physical settings menu clock changes.
+PR37 retains its measured SMW cadence regression. The measured master
+baseline covers three boot/demo workloads and SMW remains below target.
+
+The next external dependency is a responsive SummerCart connection.
+Verify the 131,072-byte R17 restoration first. Then launch exact PR42
+`e12ae12e`, arm DKC1 at frame 4330 and use idle USB warmup.
+
+---
+
 # 2026-11-12 — Exercise the enabled R45 configuration in CI
 
 PR32 `ae59e6b7` completes Ares and passes all six exact-head workflows.

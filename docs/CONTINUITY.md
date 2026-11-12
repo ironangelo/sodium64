@@ -1,3 +1,28 @@
+# 2026-11-12 — Refresh two standalone fixes and pin renderer controls
+
+PR38 `b9c5ab72` and PR39 `81f9f1c9` now target `dc0c49d1` with three
+review files each. The normal and REMOTE binaries pass the linked
+CGRAM or APU checks, and both USB builds have 504 bytes of owner margin.
+PR38 retains all 8,192 loaded bytes in each RSP bank. The linked menu
+check still reproduces the stale lookup on current master. PR39 passes
+four transitions and six SPC700 recompiles per build. All observed
+current-head workflows passed except the two Ares jobs still running.
+
+The local R43, R44 and R45 ROMs now share current master audio and the
+same header title. The respective owner and delay-slot checks pass.
+R44 replays its selector, Math and RDP proofs against R43. R45 replays
+its linked row and scalar-bypass proofs. The runner selects each pinned
+ROM independently. PR37 also passed Ares and remains blocked by SMW
+cadence.
+
+COM3 returned and the existing menu reported recovery 0. R17 was restored
+and verified over all 131,072 bytes. The paired DKC1 image, PCM and
+cadence comparison started with the prepared R44 and R45 controls.
+PR38 retains its own DKC1 gate. PR39 still needs the real settings menu.
+[Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Keep R19 out of master after the SMW cadence loss
 
 PR37 `392b8bd0` merges the current audio master into the separate pitch

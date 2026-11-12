@@ -1,0 +1,44 @@
+{
+  "date_local": "2026-11-12",
+  "master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "PR38": {
+    "head": "b9c5ab7214b359e9d0f8d699223534ccee4ef7e9",
+    "changed_files": 3,
+    "status": "CANDIDATE",
+    "local_configurations": ["normal", "REMOTE"],
+    "linked_CGRAM_cases_per_build": 6146,
+    "emitted_mutants_rejected_per_build": 2,
+    "typed_producer_roundtrip_cases": 4624,
+    "DMA8_consumer_replay_passed": true,
+    "unchanged_loaded_RSP_bytes": {"Main": 8192, "Mode7": 8192},
+    "USB_margin_bytes": 504,
+    "CI_passed": [43283933577, 43283933644, 43283933555, 43283933695],
+    "Ares_in_progress": 43283933780,
+    "native_gate": "Same-scene DKC1 aligned image and PCM with comparable quiet cadence against dc0c49d1."
+  },
+  "PR39": {
+    "head": "81f9f1c9d141b1a1e79588802b731ebe56a0481a",
+    "changed_files": 3,
+    "status": "CANDIDATE",
+    "local_configurations": ["normal", "REMOTE"],
+    "current_master_negative_control": "Old-clock lookup survives the actual linked menu close.",
+    "menu_transitions_per_build": 4,
+    "compiled_rebuilds_per_build": 6,
+    "emitted_mutants_rejected_per_build": 5,
+    "USB_margin_bytes": 504,
+    "CI_passed": [43283931691, 43283932010, 43283932072],
+    "Ares_in_progress": 43283931798,
+    "native_gate": "Run the emulator settings menu on N64 and observe both 21/42 transitions and a same-clock close. The existing USB guest input command changes SNES input and the settings menu reads raw Joybus."
+  },
+  "renderer_controls": {
+    "scope": "Local REMOTE builds sharing master audio source, toolchain, ROM header title and bench protocol. R44 uses R43 as its control. R45 uses R44 as its control.",
+    "R43": {"PR_head": "ebcf1c57724b44397552103cc108c397eb78c43c", "tree": "53a5c66848732e79305e787c40a8cbd53169b5fb", "local_commit": "019da69238f617a97eed390ce1e70000d6751ab6", "RSP_banks_passed": 13},
+    "R44": {"PR_head": "9f377fad7692c751864135e774ca8f63d9c1344e", "tree": "ec655d17a9585b458df8d66d5940f0bac493e06f", "local_commit": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7", "RSP_banks_passed": 13, "linked_selector_cases": 16, "linked_math_cases": 12, "linked_RDP_cases": 36},
+    "R45": {"PR_head": "dab7e228e07964e5e6cda131e85102349abe7c47", "tree": "7604b96bc4887e8a7e22049e256f00d53132ab33", "local_commit": "f2327501fecb6715cd3908aee0412242ed1711fb", "RSP_banks_passed": 14, "linked_row_bounds": 488, "linked_dispatch_cases": 3840, "emitted_mutants_rejected": 9},
+    "memory_owner_checks_passed": true,
+    "local_runner_labels": ["r43-pair", "r44-pair", "r45-pair"],
+    "native_gates": ["DKC1 aligned image/PCM and quiet cadence", "ALttP story and rain", "Mode 7"]
+  },
+  "R19": {"Ares_passed": 43281960562, "promotion_still_blocked_by_SMW_cadence": true},
+  "hardware": {"SC64_initially_absent": true, "COM3_returned": true, "R17_readback_bytes": 131072, "menu_recovery": 0, "renderer_DKC1_pair_started": true}
+}

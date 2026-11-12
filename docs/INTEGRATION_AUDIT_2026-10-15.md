@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+Current-head preparation, 2026-11-12. PR38 and PR39 target `dc0c49d1`
+as separate three-file candidates. Linked, build, USB and owner checks
+pass on both, as does PR38 Gate C. Ares and both native gates remain
+open. Matched R43, R44 and R45 lab ROMs passed linked checks. COM3
+returned and R17 restoration passed before the paired DKC1 run started.
+[Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
+
 R19 cadence gate, 2026-11-12. Physical SMW on draft `392b8bd0` preserves
 aligned RGB and PCM but falls from 58.017 to 55.411 guest frames/s. The
 repeat loses COM3 before the first capture. R17 restoration is pending.
@@ -174,9 +181,9 @@ Diagnostic tools are identified separately from production runtime changes.
 | Complete unrolled APU JIT reset, f4e061c6 subset | VALIDATED and integrated, PR22 | Masterabaec99d. Exact f0618fef Build38768160265, Ares38768160462, CGRAM38795951402 and APU38768159112 pass. Normal/PROFILE/HW_PROFILE coverage/owners plus three mutants pass. All65536 entries are cleared;119 directed APU cases and halt/cache groups pass. Structural instruction reduction is not a measured native FPS gain. |
 | R33 GAIN accumulator owner,5b0cb2f3 subset | VALIDATED and integrated, PR23 | Master c41631e5 contains the legacy mixer repair. Normal/PROFILE handler2048 plus independent scheduled stereo2048 cases pass; old master1792 scheduled failures become0. Six instruction words change; all other loaded bytes/extents are unchanged. Build38764135169, CGRAM38764135122 and Ares38764135187 pass on exact head93e0e0af. Historical native16 handler failures become0; broader waveform qualification remains separate. |
 | Full-rate startup/menu defaults,10662795 subset | VALIDATED and integrated, PR26 | Exact587d1ac9 Build38797939600/Ares38797939482/APU38797939962 pass; merged7c3a7634. Only apu_clock42to21 and menu4to0 change; all other loaded bytes/instructions/extents match. Existing native controls ran at21. |
-| APU clock change and live JIT entries | CANDIDATE, independent draft PR39 | Reproduced both stale first-block debits on master. Shared full clear fixes both transitions before menu resume and retains unchanged-clock cache hits. The runtime head passed the dedicated 119-case APU CI. Current head 46447580 adds linked controller-driven menu coverage and reproduces stale lookup on master. Physical menu behavior remains open. |
+| APU clock change and live JIT entries | CANDIDATE, independent draft PR39 | Head `81f9f1c9` targets `dc0c49d1` and reproduces stale lookup on the linked master menu path. Both clock transitions and both same-clock closes pass in the candidate. Exact-head Ares and physical menu behavior remain open. |
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
-| A13 identical CGRAM write, ca3f6f59 subset | CANDIDATE, independent draft PR38 | Exact raw comparison preserves bus/latch/store and backdrop behavior. Linked normal/HW/USB, exact Gate C and USB pass. Native images, PCM and cadence remain open. |
+| A13 identical CGRAM write, ca3f6f59 subset | CANDIDATE, independent draft PR38 | Head `b9c5ab72` targets `dc0c49d1`. Exact raw comparison preserves bus/latch/store and backdrop behavior. Linked normal/USB, exact Gate C and USB pass, with byte-identical loaded RSP banks. Exact-head Ares and native image, PCM and cadence remain open. |
 | Faithful ROM cache and S-CPU scope | Layout prerequisite; existing probe integrated | The TLB probe is already in master. PR32 adds the 194-slot cursor wrap for its compositor memory. Its S-CPU core file matches master. Keep the capacity change with its owners. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
 | A1..A13 exact compositor/window/epoch work, b4206144 | CANDIDATE for fidelity; BLOCKED for production | PR32 head 3e1c9a99 fixes native RSP startup and passes exact-head CI. Native DKC1 passes two exact aligned RGB/PCM checkpoints. Polled intro boundary rate falls from 48.56/58.48/59.41 to 38.72/44.84/41.33 across approximately matched bands. USB loss interrupted the paired quiet interval. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain. R44/R45 stay separate. |

@@ -61,6 +61,7 @@ def main():
     args = parser.parse_args()
     macros = read_macros(args.defines, args.cc)
     value = lambda name: macros.name(name) & 0x1fffffff
+    _, symbols = load_elf(args.elf)
     owners = {}
     for queue in (1, 2):
         for kind, size in (('BASE', 512), ('SIDEBAND', 1280), ('EVENT', 98304)):
@@ -70,6 +71,9 @@ def main():
         start = value(name); owners[name] = (start, start+2048)
         name = f'HCOMP_ROW_FIXED_QUEUE{queue}'
         start = value(name); owners[name] = (start, start+512)
+        if 'rsp_hcomp_backdrop_text_start' in symbols:
+            name = f'HCOMP_ROW_MAIN_QUEUE{queue}'
+            start = value(name); owners[name] = (start, start+512)
     for name in ('HCOMP_WINNER_ARENA', 'HCOMP_SUB_ARENA', 'HCOMP_PRESENCE_ARENA'):
         start = value(name); owners[name] = (start, start+macros.name('HCOMP_SURFACE_BYTES'))
     owners['consumed_section'] = (0xf0000, 0xf0010)
@@ -98,7 +102,6 @@ def main():
         assert start < end
         assert all(not (a < end and b > start) for _, a, b in sections), 'boot clear reaches linked code'
     low = prove(owners, 0x400000)
-    _, symbols = load_elf(args.elf)
     assert symbols['renderer_cgram_owner_begin'] == value('HCOMP_CGRAM_BASE_QUEUE1')
     assert symbols['__bss_end'] <= 0x80000000+symbols['renderer_cgram_owner_begin']
     if 'profile_magic' in symbols:

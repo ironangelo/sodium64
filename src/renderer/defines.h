@@ -185,6 +185,8 @@
 #define HCOMP_PRESENCE_ORIGIN (HCOMP_PRESENCE_ARENA + 0x80)
 #define HCOMP_ROW_FIXED_QUEUE1 0xA03E7000
 #define HCOMP_ROW_FIXED_QUEUE2 0xA03E7200
+#define HCOMP_ROW_MAIN_QUEUE1 0xA03E7400
+#define HCOMP_ROW_MAIN_QUEUE2 0xA03E7600
 
 #if ROM_CACHE_END != HCOMP_WINNER_ARENA
 #error ROM cache must end before the composition surfaces
@@ -194,6 +196,9 @@
 #endif
 #if HCOMP_ROW_FIXED_QUEUE2 + 512 > HCOMP_CGRAM_EVENT_QUEUE2
 #error Row colors overlap the Q2 event arena
+#endif
+#if HCOMP_ROW_MAIN_QUEUE1 < HCOMP_ROW_FIXED_QUEUE2 + 512 || HCOMP_ROW_MAIN_QUEUE1 + 512 > HCOMP_ROW_MAIN_QUEUE2 || HCOMP_ROW_MAIN_QUEUE2 + 512 > HCOMP_CGRAM_EVENT_QUEUE2
+#error Main backdrop rows must stay disjoint in the pre-Q2 guard
 #endif
 #if HCOMP_CGRAM_EVENT_QUEUE2 + HCOMP_CGRAM_EVENT_BYTES != 0xA0400000
 #error Q2 event arena must fit within base 4 MiB RDRAM

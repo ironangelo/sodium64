@@ -321,6 +321,20 @@ adaptive_decoder_cpu_bind_end:
     sw t0, DMEM(OVERLAY_MAIN_SRC)
     la t0, rsp_hcomp_text_start
     sw t0, DMEM(OVERLAY_HCOMP_SRC)
+#if SODIUM64_BACKDROP_ROWS
+.globl hcomp_backdrop_cpu_bind, hcomp_backdrop_cpu_bind_end
+hcomp_backdrop_cpu_bind:
+    // Each overlay descriptor holds the other bank's aligned source.
+    la t1, rsp_hcomp_backdrop_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_backdrop_text_start
+    la t1, rsp_hcomp_data_start
+    or t1, t1, t2
+    sw t0, 0(t1)
+hcomp_backdrop_cpu_bind_end:
+#endif
     la t0, rsp_hcomp_math_text_start
 hcomp_fixed_window_cpu_bind:
     // The inner fixed-window bank falls back to the original Math image.

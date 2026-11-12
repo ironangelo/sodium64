@@ -9,8 +9,15 @@ HW_PROFILE ?= 0
 HW_PROFILE_WARMUP ?= 2
 REMOTE ?= 0
 FAITHFUL_RENDERER ?= 0
+FAITHFUL_BG_SPANS ?= 0
 ifeq ($(FAITHFUL_RENDERER),1)
 N64_RENDERER_FLAGS := -DSODIUM64_FAITHFUL_RENDERER=1
+endif
+ifeq ($(FAITHFUL_BG_SPANS),1)
+ifneq ($(FAITHFUL_RENDERER),1)
+$(error FAITHFUL_BG_SPANS requires FAITHFUL_RENDERER=1)
+endif
+N64_RENDERER_FLAGS += -DSODIUM64_BG_SPANS=1
 endif
 ifeq ($(REMOTE),1)
 ifneq ($(PROFILE)$(HW_PROFILE),00)
@@ -32,6 +39,9 @@ endif
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
 ifneq ($(FAITHFUL_RENDERER),1)
 SFILES := $(filter-out src/rsp_hcomp% src/rsp_object_cache.S src/rsp_mode7_window.S,$(SFILES))
+endif
+ifneq ($(FAITHFUL_BG_SPANS),1)
+SFILES := $(filter-out src/rsp_decoder_original.S,$(SFILES))
 endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 HFILES += $(wildcard src/renderer/*.inc) $(wildcard src/renderer/*.h) $(wildcard src/*.inc)
@@ -139,7 +149,10 @@ $(BUILD_DIR)/%.o: %.S
 		BINARY="$(basename $@).elf"; \
 		echo "    [RSP] $<"; \
 		RSPLINK=rsp.ld; \
-		case "$$FILENAME" in rsp_hcomp*|rsp_object_cache|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
+		case "$$FILENAME" in \
+			rsp_hcomp*|rsp_object_cache|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; \
+			rsp_decoder_original) RSPLINK=src/rsp_decoder_original.ld;; \
+		esac; \
 		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-T$$RSPLINK -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
 		mv "$@" $$BINARY; \
 		$(N64_OBJCOPY) -O binary -j .text $$BINARY $$TEXTSECTION.bin; \

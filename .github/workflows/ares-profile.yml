@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - master
+      - integrate/faithful-r45-backdrop-rows
   workflow_dispatch:
 
 concurrency:
@@ -27,12 +28,15 @@ jobs:
 
       - name: Compile profiling build
         shell: bash
+        env:
+          R45_STACK: ${{ github.ref_name == 'integrate/faithful-r45-backdrop-rows' && '1' || '0' }}
         run: |
           set -o pipefail
           source scripts/setup_n64_ci.sh
-          # Qualify the extracted compositor itself; default production remains
-          # unchanged until its complete native/fidelity gates pass.
-          make PROFILE=1 FAITHFUL_RENDERER=1 -j$(nproc) 2>&1 | tee profile-build.log
+          # Exercise the full enabled stack for the R45 branch in this lab build.
+          make PROFILE=1 FAITHFUL_RENDERER=1 FAITHFUL_BG_SPANS="$R45_STACK" \
+            FAITHFUL_SUB_ALPHA="$R45_STACK" FAITHFUL_BACKDROP_ROWS="$R45_STACK" \
+            -j$(nproc) 2>&1 | tee profile-build.log
 
       - name: Record profiling build metrics
         run: |

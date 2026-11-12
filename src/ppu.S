@@ -1556,10 +1556,15 @@ cg_high:
     lbu t1, cg_lsb
     sll t2, a1, 8
     or t1, t1, t2
+    lhu t2, cgram(t0)
     sh t1, cgram(t0)
 
+    // An identical raw color leaves the current palette epoch intact.
+    beq t2, t1, cg_epoch_done
+    nop
+
     // VBlank writes fold into the next frame's base snapshot. During the
-    // active frame, append every complete color commit before sectioning.
+    // active frame, append each changed color before sectioning.
     lbu t2, hvbjoy
     andi t2, t2, 0x80
     bnez t2, cg_epoch_done

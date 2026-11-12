@@ -1,3 +1,29 @@
+# 2026-11-11 — Qualify the SMW audio pair and integrate BRR
+
+Physical N64 ran exact `8c74f36e` and the KOFF/BRR pair `65581840`
+with zero input through the SMW boot/demo. The initial reference
+status arrived after the first planned checkpoint. Software returned
+and restored R17. The aligned rerun captured at frames 3000 and 3016.
+All 134,400 RGB pixels and 16,384 PCM bytes match, with equal audio
+ring positions, DSP registers and voice masks. Both runs use APU 21
+and frameskip 0. Both returned to the menu and verified R17 readback.
+
+The reference completes 1,159 guest frames in 20.016045 s and the pair
+completes 1,161 in 20.013037 s. Their intervals start at guest frames
+3018 and 3017 and end at 4177 and 4178. Keep these as roughly matched
+quiet intervals. Both stay below native 60 in this SMW scene.
+
+BRR PR36 is integrated independently as `b3b0a061` after all four
+current-head CI workflows and its existing scoped native PCM gates.
+KOFF PR33 remains draft at `1c68ff36` against that master. Its tree
+matches the combined candidate measured here byte for byte. Fresh CI
+runs on master and PR33. The representative baseline on the final
+integrated combination and the separate renderer comparisons remain
+open. COM3 was still present at the end.
+[SMW physical comparison and BRR merge](evidence/integration-br-r47-master-smw-pair-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Compare the BRR and KOFF combination on physical N64
 
 The user restored the SummerCart menu and COM3 enumerated again. Exact

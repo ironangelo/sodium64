@@ -1,0 +1,107 @@
+{
+  "date_local": "2026-11-11",
+  "case": "SMW boot/demo with zero controller input",
+  "apu_clock": 21,
+  "frameskip": 0,
+  "audio": 4,
+  "precision": 8,
+  "initial_target_720_outcome": "First emulator status was at 1618; no capture, software return and R17 readback passed.",
+  "runs": [
+    {
+      "label": "master-audio",
+      "head": "8c74f36e79392dfb649cb36fb4f510fbb18e1b26",
+      "cadence": {
+        "duration_s": 20.016045461333334,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1159,
+        "guest_per_second": 57.903545544944784,
+        "render_delta": 1159,
+        "render_per_second": 57.903545544944784,
+        "vi_delta": 1197,
+        "vi_per_second": 59.80202244805773,
+        "present_delta": 1158,
+        "present_per_second": 57.853585626441806
+      },
+      "window_guest_endpoints": [
+        3018,
+        4177
+      ],
+      "R17_restore_readback_bytes": 131072,
+      "menu_recovery": 0
+    },
+    {
+      "label": "audio-pair",
+      "head": "655818407f8a71e388cdc3addf79617a9f979d18",
+      "cadence": {
+        "duration_s": 20.013037056,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1161,
+        "guest_per_second": 58.0121845950376,
+        "render_delta": 1161,
+        "render_per_second": 58.0121845950376,
+        "vi_delta": 1197,
+        "vi_per_second": 59.811012024341096,
+        "present_delta": 1160,
+        "present_per_second": 57.96221716644584
+      },
+      "window_guest_endpoints": [
+        3017,
+        4178
+      ],
+      "R17_restore_readback_bytes": 131072,
+      "menu_recovery": 0
+    }
+  ],
+  "aligned_comparisons": [
+    {
+      "guest_and_render_frame": 3000,
+      "compared_RGB_pixels": 67200,
+      "different_RGB_pixels": 0,
+      "compared_PCM_bytes": 8192,
+      "different_PCM_bytes": 0,
+      "ring_head_bytes_matches": true,
+      "enabled_matches": true,
+      "dspregs_matches": true
+    },
+    {
+      "guest_and_render_frame": 3016,
+      "compared_RGB_pixels": 67200,
+      "different_RGB_pixels": 0,
+      "compared_PCM_bytes": 8192,
+      "different_PCM_bytes": 0,
+      "ring_head_bytes_matches": true,
+      "enabled_matches": true,
+      "dspregs_matches": true
+    }
+  ],
+  "scope": "Two exact captures and approximately matched quiet windows. The 20-second start and end guest frames differ slightly. No speedup, sustained 60 Hz or full gameplay claim.",
+  "merged_BRR": {
+    "PR": 36,
+    "head": "c047acefde4a868f14c147ef09ba33d10022e00e",
+    "master": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+    "all_premerge_workflows_success": [
+      43135828984,
+      43135828947,
+      43135828978,
+      43135828991
+    ],
+    "fresh_master_runs": [
+      43137801154,
+      43137801083,
+      43137801159,
+      43137801181
+    ]
+  },
+  "KOFF_draft": {
+    "PR": 33,
+    "head": "1c68ff369217de39c5995453d6aebc3cdd7fba29",
+    "same_source_tree_as_native_pair": true,
+    "review_files": 5,
+    "fresh_runs": [
+      43137863185,
+      43137863101,
+      43137863112,
+      43137863190
+    ]
+  }
+}

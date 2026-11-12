@@ -1,5 +1,11 @@
 # Consolidation and integration audit - 2026-10-15
 
+BRR integration, 2026-11-11. PR36 is merged as `b3b0a061`. The paired
+SMW boot/demo matches two RGB and PCM captures and provides two roughly
+matched quiet windows below 60 guest boundaries/s. Draft PR33 has the
+same source tree as that native pair and fresh CI on the new master.
+[SMW physical comparison and BRR merge](evidence/integration-br-r47-master-smw-pair-2026-11-11.json).
+
 Audio integration, 2026-11-11. PR35 is merged as `8c74f36e`. The
 published production payload matches the preceding master. PR33 and
 PR36 now target master with the same candidate source trees and fresh

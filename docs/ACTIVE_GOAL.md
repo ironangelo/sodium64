@@ -23,13 +23,12 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint, 2026-11-11. Twelve separate PRs
-24/23/22/25/26/27/28/29/30/31/34/35 are integrated in master
-`8c74f36e79392dfb649cb36fb4f510fbb18e1b26`. PR35 qualifies the isolated
-USB bench layout. The published release has the same production ROM and
-converter as before. October's commercial quiet controls and independent
-SMW capture retain their measured scope.
-[PR35 merge, release and audio evidence](evidence/integration-pr35-master-and-audio-pair-2026-11-11.json).
+Current checkpoint, 2026-11-11. Thirteen separate PRs
+24/23/22/25/26/27/28/29/30/31/34/35/36 are integrated in master
+`b3b0a0610e6aec9fb0b634fca3124ac22db34b04`. PR35 qualifies the isolated
+USB bench layout. PR36 integrates the separately qualified BRR recurrence.
+The master release and follow-up CI for PR36 are tracked separately.
+[SMW physical comparison and BRR merge](evidence/integration-br-r47-master-smw-pair-2026-11-11.json).
 
 PR32 is draft at `3e1c9a99869063254dbc1c84453fd6cf06f78762`. The real-N64 startup stall was
 fixed by repairing the shared C4C depth sender entry in two Main RSP words.
@@ -41,18 +40,13 @@ sample. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain open.
 PR32 is blocked for default promotion. R44 and R45 retain separate gates.
 [DKC1 parity and throughput evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
 
-PR36 `c047acef` and PR33 `5dfd45a6` are drafts against the new master.
-The candidate source trees match the heads already measured on N64.
-The previous BRR captures match aligned PCM for the eight-voice
-filter-0 and four-filter fixtures. KOFF reproduces 252 release samples
-per event on two aligned cuts and preserves the other channel. Both
-have short original-fixture cadence controls. Fresh head CI is active.
-The local KOFF/BRR pair passes linked checks and fits with 504 bytes
-before CGRAM. The pair also matches 8,192 PCM bytes against master at
-frame 720 on real N64 in the original four-filter fixture. Both short
-windows cover the same 241 guest boundaries. The representative
-integrated baseline and DAC remain open.
-[Native paired audio evidence](evidence/integration-native-koff-r47-pair-2026-11-11.json).
+PR33 `1c68ff36` is draft against master with BRR integrated. The tree
+matches the combined candidate tested on the original four-filter fixture
+and SMW. KOFF previously reproduced 252 release samples per event on
+two aligned cuts and preserved the other channel. Fresh CI is active.
+The SMW boot/demo captures match and both quiet windows stay below 60.
+The representative integrated baseline and DAC remain open.
+[SMW physical comparison and BRR merge](evidence/integration-br-r47-master-smw-pair-2026-11-11.json).
 
 The earlier KOFF and R47 native trials restored habitual R17 with
 recovery 0. [Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).

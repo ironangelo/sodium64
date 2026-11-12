@@ -1,0 +1,40 @@
+{
+  "date_local": "2026-11-11",
+  "pr": 39,
+  "head": "4644758045babb49dea1f841b114c40a0af14a35",
+  "runtime_source_head": "a4c8a2f23d86a3836d123aa75ee4db2ac42c0805",
+  "head_delta": [
+    "scripts/test_apu_lookup_reset.py"
+  ],
+  "master_control": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "master_result": "old-clock lookup survived menu close",
+  "scope": "Linked architectural CPU model from update_menu through input edge detection, menu navigation, menu close and subsequent APU dispatch.",
+  "host_fixture": {
+    "inputs": "Joybus samples with release edges, five D-pad downs, left/right, Start",
+    "USB_variant_bridge": "stubbed",
+    "physical_controller": false
+  },
+  "passed_locally": [
+    "normal",
+    "HW_PROFILE",
+    "REMOTE"
+  ],
+  "transitions_per_build": 4,
+  "clock_changes": [
+    "42 to 21",
+    "21 to 42"
+  ],
+  "same_clock_closes": 2,
+  "cache_entries_cleared_on_clock_change": 65536,
+  "compiled_rebuilds_per_build": 6,
+  "emitted_faults_rejected_per_build": 5,
+  "new_fault": "omit the emitted right-button store",
+  "CI_at_publication": {
+    "build": 43134208359,
+    "usb_bench": 43134208201,
+    "profile_owners": 43134208406,
+    "ares_profile": 43134208259
+  },
+  "physical_menu_gate": "PENDING",
+  "current_USB_enumeration": "absent at this checkpoint"
+}

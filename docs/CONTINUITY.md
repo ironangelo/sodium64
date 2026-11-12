@@ -1,3 +1,24 @@
+# 2026-11-11 — Exercise the APU clock correction through menu input
+
+PR39 now ends at `46447580`. The new commit changes only the linked
+regression script. It starts at `update_menu`, feeds Joybus button
+samples through the actual edge detector and navigates the settings
+menu. Each build covers unchanged closes at both clocks, changing the
+clock in both directions, and six real SPC700 recompiles. Closing with
+the same selection retains the existing blocks. Clock changes clear
+all 65,536 lookup entries before guest execution. The other settings
+retain their values. The actual master ELF reproduces the stale lookup
+with the same input sequence.
+
+Normal, HW_PROFILE and REMOTE pass locally. Five emitted faults are
+rejected, including removing the setting update on the right-button
+path. The REMOTE fixture stubs the external bridge call. The new head
+has its usual build, USB, profile-owner and Ares workflows running.
+The physical menu check remains pending. The SummerCart is currently
+absent on Windows. [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Isolate audio review diffs and reproduce USB loss with R17
 
 Draft PR33 and PR36 now target PR35's `integrate/usb-status-fit`.

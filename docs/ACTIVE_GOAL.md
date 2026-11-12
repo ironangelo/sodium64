@@ -87,11 +87,12 @@ Review and integrate candidates separately before measuring the
 representative combined baseline.
 [CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
 
-PR39 a4c8a2f2 corrects stale compiled SPC700 cycle debits on a menu
-clock change. Its linked clock transitions, full reset and all five CI
-workflows pass, including the 119-case compiled APU cycle suite. The
-native menu check remains open. The correction fits the local queued
-combination.
+PR39 `46447580` keeps the APU clock correction from `a4c8a2f2` and
+adds coverage from linked menu input through SPC700 dispatch. Normal,
+HW_PROFILE and USB pass locally. The prior runtime passed the 119-case
+compiled APU cycle suite. The new head's CI and the physical menu
+check are tracked separately. The correction fits the local queued
+combination. [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
 
 R43 `ebcf1c57` is draft PR40 against PR32. R44 `9f377fad` is draft PR41

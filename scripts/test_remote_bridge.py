@@ -2,7 +2,7 @@
 """Linked O64 owners/boot guard and disabled-image identity, not native timing."""
 import argparse,json
 from pathlib import Path
-from linked_cpu_regression import CPU,load_elf,sx32
+from linked_cpu_regression import CPU,RETURN,load_elf,sx32
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('elf',type=Path)
@@ -35,6 +35,46 @@ def main():
                     assert all(c.read(at+i*4)==0x55363447 for i in range(8))
                 assert all(c.read(at)==0 for at in (s['remote_guest_frames'],s['remote_render_frames'],s['remote_buttons']))
             else:assert not upper and not c.cache_ops
+            cases+=1
+    # The SDK's IPL3 clears RDRAM before loading initialized segments.
+    # Check that these three owners are in the zero-filled tail and that
+    # the real guest mapper still points to the correct aligned pages.
+    sram,wram,empty=(s[name] for name in ('sram','wram','empty'))
+    assert s['__rom_end']<=sram and sram%0x1000==0
+    assert wram==sram+0x8000 and empty==wram+0x20000
+    assert empty+0x2000<=s['__bss_end']
+    for hirom in (False,True):
+        for save in (False,True):
+            c=cpu();c.pattern()
+            header=0xb0104000+(0xffd4 if hirom else 0x7fd4)
+            c.write(header,10)
+            c.write(header+4,0x05000000 if save else 0)
+            c.write(header+8,0x1234edcb)
+            c.write(header+12,0x12340000)
+            c.execute(s['memory_init'])
+            memory_map=s['memory_map']
+            for guest,offset in ((0,0),(0x800000,0),(0x7e0000,0),(0x7fe000,0x1e000)):
+                entry=c.read(memory_map+(guest>>11))
+                assert entry==((((wram+offset)&0x1fffffff)>>6)|0x1f)
+            guest=0x206000 if hirom else 0x700000
+            entry=c.read(memory_map+(guest>>11))
+            if save:
+                assert entry==0x7fff<<2
+                c.cp[8]=guest+0x1234
+                c.cp[14]=RETURN-4
+                c.regs[5]=0xa6
+                c.memory_writes.clear()
+                c.execute(s['tlbs_exception'])
+                sram_offset=(guest+0x1234)&0x7fff
+                assert c.read(sram+sram_offset,1)==0xa6
+                assert c.memory_writes==[
+                    ((sram+sram_offset)&0x1fffffff,1,0xa6),
+                    (s['sram_dirty']&0x1fffffff,1,1)]
+                c.cp[14]=RETURN-4
+                c.execute(s['tlbl_exception'])
+                assert c.regs[2]==0xa6
+            else:
+                assert entry==(((empty&0x1fffffff)>>6)|0x1b)
             cases+=1
     callbacks=0
     # VI cannot steal PI from an idle/paused C bridge, even after resume has
@@ -114,6 +154,7 @@ def main():
         identity=True
     proof={'passed':True,'cases':cases,'callbacks':callbacks,'all_gpr64_hilo_epc_status_preserved':True,
            'unknown_and_base4MiB_rejected_before_upper_access':True,'upper_lease':[0x440000,0x442000],
+           'guest_RAM_map_and_SRAM_alias_cases':4,
            'no_loaded_upper_section':True,'static_end':hex(s['__bss_end']),
            'VI_defers_dirty_SRAM_during_entire_PI_bridge':True,
            'first_fixed_owner':hex(0x80000000+arena),'disabled_loaded_image_identical':identity,

@@ -198,8 +198,9 @@ class Session:
     def __exit__(self, *_):
         if self.process:
             try:
-                self.process.stdin.write('\n')
-                self.process.stdin.flush()
+                # Deployer ignores blank lines. Closing input requests its EOF
+                # shutdown path without sending another packet to the console.
+                self.process.stdin.close()
                 self.process.wait(timeout=3)
             except (OSError, subprocess.TimeoutExpired):
                 self.process.kill()

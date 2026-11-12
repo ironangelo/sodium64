@@ -30,13 +30,19 @@
 .globl tlbs_exception
 .globl tlbm_exception
 
+#ifdef SODIUM64_REMOTE
+// Keep the guest RAM page-aligned without advancing .data to the next page.
+// The ROM loader clears these zero-initialized pages before entering main.
+.bss
+#else
 .data
-
+#endif
 .align 12 // TLB alignment
-sram: .byte 0:0x8000
-wram: .byte 0:0x20000
-empty: .byte 0:0x2000
+sram: .space 0x8000
+wram: .space 0x20000
+empty: .space 0x2000
 
+.data
 .align 4
 memory_map: .word 0:0x800
 rom_addrs: .word 0:0x100

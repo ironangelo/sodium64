@@ -297,99 +297,94 @@ decode_samples:
     andi s0, s0, 0x8888
     li t1, 9
 brr_range_ready:
-    li s1, 8
-
-next_sample:
-    // Pass the next sample, sign-extended and shifted, to the filter
-    addi s1, s1, -2
-    sll t3, s1, 1
-    srl t0, s0, t3
-    sll t0, t0, 28
-    sra t0, t0, 28
-    sll t0, t0, t1
+brr_group_dispatch:
+    // The same two packed bytes are already sampled. Dispatch once for the
+    // existing four-sample chunk, retaining its exact guest read phase.
     jr t9
+    sll s0, s0, 16
+
+    // s1/t9 retain the two half-scaled history samples; s0 owns the packed
+    // nibbles. These are already decoder scratch. t2, t4/t5, t6/t8, HI/LO,
+    // voice pointer and all scheduler registers keep their existing ABI.
+.macro BRR_GROUP kind
+.if \kind >= 1
+    lh s1, 0(v1)
+.endif
+.if \kind >= 2
+    lh t9, 2(v1)
+.endif
+    // Every voice buffer is aligned8. Descend6/4/2/0 and restore its original
+    // base before the observer; no fourth scratch register is borrowed.
+    addiu v1, v1, 6
+.Lbrr_group_next\@:
+    sra t0, s0, 28
+    sll s0, s0, 4
+    sll t0, t0, t1
     sra t0, t0, 1
-
-filter_1:
-    // Apply the old sample, multiplied by 0.9375
-    addi t7, s1, 2
-    andi t7, t7, 0x6
-    add t3, v1, t7
-    lh t7, (t3)
-    add t0, t0, t7
-    // Arithmetic floor of the negative term differs from subtracting floor.
-    subu t7, zero, t7
+.if \kind == 1
+    addu t0, t0, s1
+    subu t7, zero, s1
     sra t7, t7, 4
-    b filter_end
-    add t0, t0, t7
-
-filter_2:
-    // Apply the old sample, multiplied by 1.90625
-    addi t7, s1, 2
-    andi t7, t7, 0x6
-    add t3, v1, t7
-    lh t7, (t3)
-    sll t3, t7, 1
-    add t0, t0, t3
-    sll t3, t7, 1
-    add t3, t3, t7
+    addu t0, t0, t7
+.elseif \kind == 2
+    sll t3, s1, 1
+    addu t0, t0, t3
+    sll t3, s1, 1
+    addu t3, t3, s1
     subu t3, zero, t3
     sra t3, t3, 5
-    add t0, t0, t3
-
-    // Apply the older sample, multiplied by -0.9375
-    addi t7, s1, 4
-    andi t7, t7, 0x6
-    add t3, v1, t7
-    lh t7, (t3)
-    sub t0, t0, t7
-    sra t3, t7, 4
-    b filter_end
-    add t0, t0, t3
-
-filter_3:
-    // Apply the old sample, multiplied by 1.796875
-    addi t7, s1, 2
-    andi t7, t7, 0x6
-    add t3, v1, t7
-    lh t7, (t3)
-    sll t3, t7, 1
-    add t0, t0, t3
-    sll t3, t7, 3
-    add t3, t3, t7
-    sll t7, t7, 2
-    add t3, t3, t7
+    addu t0, t0, t3
+    subu t0, t0, t9
+    sra t3, t9, 4
+    addu t0, t0, t3
+.elseif \kind == 3
+    sll t3, s1, 1
+    addu t0, t0, t3
+    sll t3, s1, 3
+    addu t3, t3, s1
+    sll t7, s1, 2
+    addu t3, t3, t7
     subu t3, zero, t3
     sra t3, t3, 6
-    add t0, t0, t3
-
-    // Apply the older sample, multiplied by -0.8125
-    addi t7, s1, 4
-    andi t7, t7, 0x6
-    add t3, v1, t7
-    lh t7, (t3)
-    sub t0, t0, t7
-    sll t3, t7, 1
-    add t3, t3, t7
+    addu t0, t0, t3
+    subu t0, t0, t9
+    sll t3, t9, 1
+    addu t3, t3, t9
     sra t3, t3, 4
-    add t0, t0, t3
-
-filter_end:
-    // Reference BRR clamps the intermediate to signed16, doubles with
-    // signed16 wrap, then stores it. This mixer keeps half-scaled samples:
-    // that operation is exactly sign-extension of15 bits after the clamp.
+    addu t0, t0, t3
+.endif
+    // Preserve the exact signed16 clamp, then signed15 half-sample wrap.
     sll t3, t0, 16
     sra t3, t3, 16
-    beq t0, t3, brr_clamped
+    beq t0, t3, .Lbrr_group_clamped\@
     sra t7, t0, 31
     xori t0, t7, 0x7FFF
-brr_clamped:
+.Lbrr_group_clamped\@:
     sll t0, t0, 17
     sra t0, t0, 17
-    // Store the sample and loop until all 4 are done
-    add t3, v1, s1
-    bnez s1, next_sample
-    sh t0, (t3)
+    sh t0, 0(v1)
+.if \kind >= 2
+    move t9, s1
+.endif
+.if \kind >= 1
+    move s1, t0
+.endif
+    andi t3, v1, 6
+    bnez t3, .Lbrr_group_next\@
+    addiu v1, v1, -2
+    b brr_group_done
+    addiu v1, v1, 2
+.endm
+
+filter_end:
+    BRR_GROUP 0
+filter_1:
+    BRR_GROUP 1
+filter_2:
+    BRR_GROUP 2
+filter_3:
+    BRR_GROUP 3
+brr_group_done:
     j mix_sample
 
 end_voice:
@@ -661,6 +656,32 @@ update_vols: // t6: voice
     jr ra
     nop
 
+.globl release_mode
+.align 5
+release_mode: // t6: voice, t8: stride, gp: current DSP timer
+    // Release decreases by8 on every generated sample, independently of rates.
+    lhu t0, envelopes(t8)
+    addiu t0, t0, -8
+    bgtz t0, release_store
+    nop
+    li t0, 1
+    sll t0, t0, t6
+    xori t0, t0, 0xFF
+    and sp, sp, t0
+    sb sp, enabled
+    move t0, zero
+release_store:
+    sh t0, envelopes(t8)
+    // Schedule the following sample, including the0x7800 timer wrap.
+    addiu t0, gp, -1
+    bgez t0, release_timer_ready
+    nop
+    addiu t0, t0, 0x7800
+release_timer_ready:
+    sh t0, next_steps(t8)
+    j update_vols
+    nop
+
 .align 5
 read_dspaddr: // v0: value
     // Read the DSP register address
@@ -723,6 +744,15 @@ write_vol: // t0: address
 
 .align 5
 write_adsr: // t0: address
+    // ADSR writes cannot leave latched release. KON explicitly restarts it.
+    andi t4, t0, 0xF0
+    lw t1, mode_funcs(t4)
+    la t2, release_mode
+    bne t1, t2, adsr_not_releasing
+    nop
+    jr ra
+    nop
+adsr_not_releasing:
     // Switch a voice's envelope to gain if selected
     lbu t1, dsp_regs(t0) // VxADSR1
     andi t4, t0, 0xF0
@@ -797,10 +827,27 @@ kon_end:
 
 .align 5
 write_koff: // a1: value
-    // Set voices to disabled
-    lbu t0, enabled
-    xori t1, a1, 0xFF
-    and t0, t0, t1
-    sb t0, enabled
+    // Latch release without changing the current envelope or enabled mask.
+    la t2, release_mode
+    lhu t3, dsp_timer
+    addiu t3, t3, -1
+    bgez t3, koff_timer_ready
+    nop
+    addiu t3, t3, 0x7800
+koff_timer_ready:
+    // The SPC700 JIT keeps its accumulator in t7 across DSP port writes.
+    andi t0, a1, 0xFF
+    move t6, zero
+koff_next_voice:
+    beqz t0, koff_return
+    andi t1, t0, 1
+    beqz t1, koff_advance_voice
+    srl t0, t0, 1
+    sw t2, mode_funcs(t6)
+    sh t3, next_steps(t6)
+koff_advance_voice:
+    b koff_next_voice
+    addiu t6, t6, 16
+koff_return:
     jr ra
     nop

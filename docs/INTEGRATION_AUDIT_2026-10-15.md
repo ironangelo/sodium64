@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+R45 physical attempt, 2026-11-12. Exact PR42 installed with verified
+readback. Windows lost the cart during the DKC1 load before the launch
+receipt, emulator hello or warmup. After the user power cycle, R17
+readback and menu recovery 0 passed. The next gate is a reliable DKC1
+launch, followed by the planned native fidelity and cadence checks.
+[Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
+
 Enabled R45 CI, 2026-11-12. PR32 passes six exact-head workflows.
 PR42 `e12ae12e` passes its Ares workflow with the full stack enabled.
 The profile artifact contains the linked backdrop bank and the default

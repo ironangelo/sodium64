@@ -1,0 +1,21 @@
+{
+  "date_local": "2026-11-12",
+  "master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "PR42": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+  "physical_device": "N64 with SummerCart64",
+  "workload": "DKC1 original boot with zero controller input",
+  "before_trial": {"menu_recovery": 0, "R17_readback_bytes": 131072},
+  "trial": {
+    "candidate_install_readback_bytes": 114688,
+    "launch_acknowledged": false,
+    "emulator_hello_observed": false,
+    "first_planned_capture": 4330,
+    "idle_warmup_reached": false,
+    "elapsed_seconds_at_failure_from_install_start": 11.922,
+    "deployer_result": "Exited before application receipt",
+    "Windows_event": {"id": 1010, "time_local": "16:39:27", "surprise_removal": true}
+  },
+  "recovery": {"user_confirmed_menu_after_power_cycle": true, "R17_readback_bytes": 131072, "menu_recovery": 0, "COM3_present_after_restore": true},
+  "installed_menu_constraint": "The paired USB launch validates its configured standard SNES emulator path. Selecting an independently staged emulator requires a separate launch path.",
+  "next_native_gate": "Requalify DKC1 launch using the restored R17 as the transport control without another installation. Then repeat exact R45 with idle warmup."
+}

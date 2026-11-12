@@ -1,3 +1,21 @@
+# 2026-11-12 — Restore R17 after the R45 DKC1 launch loses USB
+
+The cart returned after the user power cycle. R17 and menu recovery 0
+were verified before starting PR42 `e12ae12e`. The R45 install passed
+114,688 bytes of readback. During DKC1 loading the PC lost the cart at
+11.922 seconds from install start, before the launch receipt or any
+emulator hello. Windows recorded surprise removal event 1010. The
+planned idle warmup, aligned captures and cadence checks were unreached.
+
+After the next user power cycle, R17 was restored and all 131,072 bytes
+were verified. The menu reports recovery 0 and COM3 is present. The
+paired menu binds its USB SNES launch to the standard emulator file.
+The next bounded transport control is DKC1 on the restored R17 with
+its current installation, before another R45 candidate launch.
+[Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Native integration waits for SummerCart re-enumeration
 
 Windows and the deployer still report the cart absent at 16:34 local.

@@ -111,14 +111,18 @@ match production master byte for byte.
 [Exact enabled artifact and CI evidence](evidence/integration-r45-enabled-ci-2026-11-12.json).
 R44 reached DKC1 frame 3214 before COM3 disappeared, with two
 early polled bands below the corresponding master rates. The aligned
-captures and quiet interval remain open. R45 has yet to launch. Restore
-R17 after COM3 returns, then run R45 first with idle host warmup.
+captures and quiet interval remain open. R45 installed successfully,
+then COM3 disappeared during DKC1 loading before the launch receipt.
+R17 and recovery 0 were verified after power cycling. Requalify the
+DKC1 launch on the restored R17 before repeating R45 with idle warmup.
+[Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
 [Interrupted native run and bounded warmup rates](evidence/integration-r44-dkc1-interrupted-2026-11-12.json).
 DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
-The full objective remains incomplete. Native integration is blocked
-on SummerCart re-enumeration and verified R17 restoration. Complete
-resident-DSP integral native cost follows the qualified faithful combined
-baseline. Wider compatibility, full fidelity, DAC and chip gates remain open.
+The full objective remains incomplete. Native integration depends on
+a reliable SummerCart launch. The habitual R17 installation is restored.
+Complete resident-DSP integral native cost follows the qualified faithful
+combined baseline. Wider compatibility, full fidelity, DAC and chip gates
+remain open.

@@ -1,3 +1,43 @@
+# 2026-11-11 — Separate R43 and R44 ports, close two CI gates and recover USB once
+
+R43 `ebcf1c57` and R44 `9f377fad` are separate local commits on PR32
+`3e1c9a99`, with each option off by default. The clean PR32 faithful
+USB ROM matches byte for byte with both options off. The R43 port
+preserves the clean decoder register contract and moves both OBJ entry
+points past the 184-byte decoder DMA island. The initial port put the
+first OBJ instruction inside that island. The linked proofs now pass
+30 bank transitions, 576 decoder cases and 448 span cases, and reject
+eight unsafe mutations or conditions. R43 is CANDIDATE pending a clean physical comparison.
+
+The R44 port passes 16 linked selector cases, 80 Setup handoffs, 288
+RDP command cases and 48 Main transitions. Three fixed-color bank
+texts match R43. All 13 linked RSP banks pass the delay-slot check.
+Ordinary and USB builds pass the static owner check. The remaining
+R44 gates include full Math/RDP consumer execution on this layout,
+paired native ALttP rain and story, and Mode 7. PR32's DKC1 intro
+cadence still blocks promotion. R45 remains BLOCKED on the measured
+story and Mode 7 costs and a comparable intro control.
+
+PR38 and PR39 complete exact-head CI. Both digest-verified Ares
+archives contain eight original profiles. PR39 also passed the
+119-case compiled APU cycle suite and remains pending the physical
+clock-change gate. PR35 is ready for review. Master is `c232af87`.
+
+After a user power cycle Windows enumerated COM3 and the existing
+USB bridge verified a full 131,072-byte R17 restore. The next master
+reference booted and the host received hello. The 6.375-second hello
+round trip made target frame 200 stale. Software returned to the
+menu and verified R17 again with recovery 0. The retry at frame
+720 lost the Windows USB device before the launch acknowledgement,
+at 39.578 seconds. The last verified installation is the master USB
+reference. The R17 backup is intact and restoration is pending again.
+R19 has yet to boot on this console. After enumeration returns, first
+verify menu and restore R17, then qualify the launch transport before
+resuming the comparison. The integrated baseline remains pending.
+[Renderer port, CI and USB evidence](evidence/integration-r43-r44-and-usb-recovery-2026-11-11.json).
+
+---
+
 # 2026-11-09 — Correct stale SPC700 blocks after menu clock changes
 
 PR39 a4c8a2f2 is a clean correction on master c232af87. The previous

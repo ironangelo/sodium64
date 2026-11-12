@@ -1,0 +1,117 @@
+{
+  "date_local": "2026-11-11",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "PR32_base": "3e1c9a99869063254dbc1c84453fd6cf06f78762",
+  "renderer_ports": {
+    "R43": {
+      "status": "CANDIDATE",
+      "ref": "local/faithful-r43",
+      "commit": "ebcf1c57724b44397552103cc108c397eb78c43c",
+      "flag": "FAITHFUL_BG_SPANS=1",
+      "decoder_island_bytes": 184,
+      "linked_context_cases": 30,
+      "context_faults_rejected": 4,
+      "linked_decoder_cases": 576,
+      "linked_span_cases": 448,
+      "initialization_queues": 2,
+      "decoder_span_faults_rejected": 4,
+      "OBJ_entry_IMEM": "0x1b88",
+      "span_call_IMEM": "0x163c",
+      "port_regression_fixed": "Main and Mode 7 OBJ entries formerly began in the last word of the decoder DMA island in the first port. Keep the original clean decoder delay word and preserve caller v1."
+    },
+    "R44": {
+      "status": "BLOCKED",
+      "ref": "local/faithful-r43-r44-port",
+      "commit": "9f377fad7692c751864135e774ca8f63d9c1344e",
+      "flag": "FAITHFUL_SUB_ALPHA=1",
+      "linked_selectors": 16,
+      "linked_setup_handoffs": 80,
+      "linked_retired_command_cases": 288,
+      "linked_Main_transitions": 48,
+      "unchanged_fixed_color_bank_texts": 3,
+      "RSP_banks_delay_slot_pass": 13,
+      "normal_and_USB_owner_pass": true,
+      "USB_static_margin_bytes": 65624,
+      "pending": [
+        "R44 full Math and RDP consumer execution on the clean layout",
+        "paired physical ALttP rain and story plus Mode 7",
+        "PR32 promotion and representative cadence"
+      ]
+    },
+    "R45": {
+      "status": "BLOCKED",
+      "pending": [
+        "story and Mode 7 costs on a clean predecessor",
+        "paired PR32 intro regression test"
+      ]
+    },
+    "both_disabled_faithful_USB_ROM_byte_identical_to_PR32": true,
+    "native_renderer_port_runs": 0
+  },
+  "CI": {
+    "PR38": {
+      "Ares_run": 42738781317,
+      "artifact": 13728592203,
+      "profiles": 8,
+      "valid_samples": [
+        768,
+        644,
+        811,
+        1227,
+        917,
+        1156,
+        866,
+        1300
+      ],
+      "digest_verified": true,
+      "all_exact_head_workflows": "success"
+    },
+    "PR39": {
+      "Ares_run": 42739832872,
+      "Ares_artifact": 13728334546,
+      "profiles": 8,
+      "valid_samples": [
+        1388,
+        1162,
+        1387,
+        1768,
+        1023,
+        1997,
+        1029,
+        1275
+      ],
+      "APU_run": 42739825131,
+      "APU_artifact": 13728717090,
+      "APU_compiled_cases": 119,
+      "digest_verified": true,
+      "all_exact_head_workflows": "success",
+      "native_menu_gate": "pending"
+    }
+  },
+  "physical": {
+    "COM3_returned_after_user_power_cycle": true,
+    "initial_R17_restore_verified_bytes": 131072,
+    "master_reference_retry": {
+      "install_verified_bytes": 114688,
+      "launch_acknowledged": true,
+      "loader_seconds": 43.079,
+      "hello_retired": 115,
+      "hello_round_trip_seconds": 6.375,
+      "pause_at_200": "stale_frame_id",
+      "software_return_verified": true,
+      "R17_restore_verified_bytes": 131072,
+      "menu_recovery": 0
+    },
+    "master_reference_retry_at_720": {
+      "install_verified_bytes": 114688,
+      "USB_loss_seconds_from_start": 39.578,
+      "launch_acknowledged": false,
+      "PnP_problem": "CM_PROB_PHANTOM",
+      "last_verified_installed_image": "master USB reference",
+      "restore_R17_pending": true,
+      "USB_enumerated_at_end": false
+    },
+    "R19_candidate_launched": false,
+    "paired_PCM_or_cadence": false
+  }
+}

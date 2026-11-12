@@ -23,7 +23,7 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint, 2026-11-09. Eleven separate PRs
+Current checkpoint, 2026-11-11. Eleven separate PRs
 24/23/22/25/26/27/28/29/30/31/34 are integrated in master
 `c232af87e046d41a468e3f2f1083fcf30f606385`. PR34 makes host-side USB debug
 session shutdown graceful. The normal loaded image is unchanged. Latest
@@ -68,9 +68,12 @@ recovery 0. [Native note-tail evidence](evidence/integration-native-koff-tail-20
 PR37 f21f211f is the independent R19 pitch cache port. Its linked normal,
 HW_PROFILE and USB proofs pass. CI USB admission leaves 16 bytes below
 the original CGRAM owner. The exact-master native reference installed,
-then lost the Windows USB device before launch acknowledgement. The
-candidate comparison and R17 restoration are pending. Restore and verify
-R17 on return of the cart before resuming physical measurements.
+then lost the Windows USB device before launch acknowledgement. On
+November 11 the link returned, the next reference booted, and software
+returned to the menu and verified R17. A second reference load again
+lost the USB device before acknowledgement. The candidate comparison
+and R17 restoration are pending. Restore R17 after enumeration returns
+and qualify the launch transport before resuming the comparison.
 [R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
 PR38 86a1b5b6 is a standalone CGRAM epoch port. Its linked exact-color
@@ -82,10 +85,17 @@ representative combined baseline.
 [CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
 
 PR39 a4c8a2f2 corrects stale compiled SPC700 cycle debits on a menu
-clock change. Its linked clock transitions, full reset, CI USB and
-ownership checks pass. Dedicated APU-cycle CI and the native menu check
-remain open. The correction fits the local queued combination.
+clock change. Its linked clock transitions, full reset and all five CI
+workflows pass, including the 119-case compiled APU cycle suite. The
+native menu check remains open. The correction fits the local queued
+combination.
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
+
+R43 `ebcf1c57` and R44 `9f377fad` are local stacked source ports on PR32.
+The byte-exact off control and scoped linked tests pass. PR32 cadence,
+R43 native comparison, R44 full linked consumers and native breadth,
+and R45 story/Mode 7 costs remain open.
+[Renderer ports, CI and USB recovery](evidence/integration-r43-r44-and-usb-recovery-2026-11-11.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined

@@ -65,6 +65,8 @@ def run(cpu,s,case,voice=0):
     clobbers={1,3,8,9,11,15,16,17,25}
     assert all(cpu.regs[i]==initial[i] for i in range(32) if i not in clobbers)
     assert (cpu.hi,cpu.lo)==(hi,lo) and not cpu.cp_writes
+    if 'brr_group_dispatch' in s:
+        assert cpu.regs[3]&0xffffffff==buffer, 'decoder did not restore the voice buffer base'
     out=[signed(cpu.read(buffer+i,2),16) for i in (6,4,2,0)]
     if observed:
         assert cpu.read(record)==(voice<<24)|(((shift<<4)|(filter<<2))<<16)|packed
@@ -88,7 +90,8 @@ def main():
     memory,s=load_elf(args.elf);cpu=CPU(memory)
     if args.legacy_elf:
         legacy,ls=load_elf(args.legacy_elf);previous=CPU(legacy)
-    assert 'brr_range_ready' in s and 'brr_clamped' in s
+    assert 'brr_range_ready' in s and 'brr_group_dispatch' in s
+    assert s['cur_samples']%8==0, 'descending store loop requires aligned voice buffers'
     if args.legacy_elf: assert 'brr_range_ready' not in ls
     data=cases();compiled=0;maximum=0;legacy_mismatch=[0]*4
     for case in data:
@@ -103,24 +106,41 @@ def main():
     if args.legacy_elf: assert legacy_mismatch==[321,1730,1778,1831]
     mutations=[
         ('signed_filter_floor',s['filter_1'],s['filter_2'],
-         lambda w:w==((15<<16)|(15<<11)|35),lambda w:0,
+         lambda w:w==((17<<16)|(15<<11)|35),lambda w:0,
          ([-8]*4,0,1,1,-1)),
-        ('invalid_range_mask',s['decode_samples'],s['next_sample'],
+        ('invalid_range_mask',s['decode_samples'],s['brr_group_dispatch'],
          lambda w:w>>26==12 and w&0xffff==0x8888,lambda w:(w&~0xffff)|0xffff,
          ([1,4,-7,-1],13,0,0,0)),
-        ('saturation',s['filter_end'],s['end_voice'],
+        ('saturation',s['filter_2'],s['filter_3'],
          lambda w:w>>26==14 and w&0xffff==0x7fff,lambda w:(w&~0xffff)|0x7ffe,
          ([7]*4,12,2,16383,-16384)),
-        ('signed_15bit_storage',s['filter_end'],s['end_voice'],
+        ('signed_15bit_storage',s['filter_1'],s['filter_2'],
          lambda w:w>>26==0 and w&63==0 and w>>6&31==17,
          lambda w:(w&~(31<<6))|(16<<6),
-         ([7]*4,12,1,16383,0))]
+         ([7]*4,12,1,16383,0)),
+        ('history_recurrence',s['filter_2'],s['filter_3'],
+         lambda w:w>>26==0 and w&63 in (33,37) and w>>21&31==8 and w>>16&31==0 and w>>11&31==17,
+         lambda w:0,([1,4,-7,-1],8,2,11,-5)),
+        ('four_store_extent',s['filter_2'],s['filter_3'],
+         lambda w:w>>26==12 and w&0xffff==6,lambda w:(w&~0xffff)|4,
+         ([1,4,-7,-1],8,2,11,-5))]
     rejected=[]
     for name,start,end,predicate,transform,case in mutations:
         pc,old=mutate(cpu,start,end,predicate,transform)
-        actual,_=run(cpu,s,case,7)
-        assert actual!=reference(*case),('mutation escaped independent oracle',name)
-        cpu.write(pc,old);rejected.append(name)
+        try:
+            if name=='four_store_extent':
+                try:
+                    run(cpu,s,case,7)
+                except AssertionError as error:
+                    assert error.args and error.args[0][0]=='decoder wrote outside voice state'
+                else:
+                    raise AssertionError('mutation escaped store ownership check')
+            else:
+                actual,_=run(cpu,s,case,7)
+                assert actual!=reference(*case),('mutation escaped independent oracle',name)
+        finally:
+            cpu.write(pc,old)
+        rejected.append(name)
     proof=dict(passed=True,compiled_voice_cases=compiled,synthetic_blocks=len(data),
                legacy_different_blocks_by_filter=legacy_mismatch,
                negative_mutations_rejected=rejected,maximum_decoder_instructions=maximum,

@@ -30,6 +30,7 @@ def main():
         initial=cpu.regs.copy()
         cpu.memory_writes.clear();cpu.cp_writes.clear()
         cpu.execute(s[entry])
+        assert cpu.regs[15]==initial[15], f'{entry} KOFF {mask:#04x} clobbered cached SPC700 A in t7'
         assert all(cpu.regs[i]==initial[i] for i in range(32)
                    if i not in (1,8,9,10,11,14,15,19))
     masks=0

@@ -822,19 +822,19 @@ write_koff: // a1: value
     nop
     addiu t3, t3, 0x7800
 koff_timer_ready:
-    andi t7, a1, 0xFF
-    li t6, -1
+    // The SPC700 JIT keeps its accumulator in t7 across DSP port writes.
+    andi t0, a1, 0xFF
+    move t6, zero
 koff_next_voice:
-    addiu t6, t6, 1
-    srl t0, t7, t6
     beqz t0, koff_return
-    andi t0, t0, 1
-    beqz t0, koff_next_voice
-    sll t1, t6, 4
-    sw t2, mode_funcs(t1)
-    sh t3, next_steps(t1)
+    andi t1, t0, 1
+    beqz t1, koff_advance_voice
+    srl t0, t0, 1
+    sw t2, mode_funcs(t6)
+    sh t3, next_steps(t6)
+koff_advance_voice:
     b koff_next_voice
-    nop
+    addiu t6, t6, 16
 koff_return:
     jr ra
     nop

@@ -1,0 +1,54 @@
+{
+  "date_local": "2026-11-11",
+  "master": "c232af87e046d41a468e3f2f1083fcf30f606385",
+  "audio_review": {
+    "PR35": {
+      "head": "87d16156d3eb529d7ecb53c34c6ba75feefb0fbc",
+      "head_ref": "integrate/usb-status-fit",
+      "ready_for_review": true,
+      "merged": false
+    },
+    "PR33": {
+      "head": "e975c7a77cb8be62bc0b422c9479e2160631945a",
+      "files_before": 9,
+      "files_against_PR35": 5,
+      "draft": true
+    },
+    "PR36": {
+      "head": "2109eb4800cfdfb73eb19cd328451ceff40e16c8",
+      "files_before": 6,
+      "files_against_PR35": 2,
+      "draft": true
+    }
+  },
+  "R17_launch_control": {
+    "synthetic_guest": "original mixed8 with four BRR filters",
+    "last_verified_program": "habitual R17",
+    "installation_changed": false,
+    "menu_status_acknowledged": true,
+    "menu_recovery_before_launch": 0,
+    "launch_request_sent": true,
+    "launch_acknowledged": false,
+    "emulator_hello_received": false,
+    "deployer_io_error": "Access is denied (OS error 5)",
+    "Windows_PnP_event": 1010,
+    "Windows_PnP_event_local": "2026-11-11 22:13:27",
+    "Windows_report": "USB device surprise removed",
+    "COM3_enumerated_at_end": false,
+    "R19_executed": false,
+    "classification": "Transport failure reproduced with the habitual image already installed; no candidate runtime was exercised."
+  },
+  "R45_aligned_story_cost": {
+    "source": "backdrop45-alttp-absolute-pair.json",
+    "paired_endpoints": {
+      "first": 1862,
+      "last": 2861,
+      "count": 1000
+    },
+    "frame_interval_delta_us": 80.408235,
+    "explicit_CPU_RSP_wait_delta_us": -242.221077,
+    "interval_minus_explicit_wait_delta_us": 322.629312,
+    "scope": "Arithmetic on the same aligned intervals; the residual includes all time outside the measured wait.",
+    "production_status": "BLOCKED on story and Mode 7 cost and a comparable clean-predecessor native replay"
+  }
+}

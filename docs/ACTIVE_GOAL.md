@@ -50,9 +50,9 @@ PR36 2109eb48 remains draft behind PR35. All four exact-head workflows
 passed. Native PCM is byte-identical at boundary 200 on original eight-voice
 filter-0 and four-filter fixtures. Short filtered windows complete 240
 and 242 guest boundaries in about four seconds. The remaining promotion
-work is the audio-only branch against the integrated prerequisite and
-its exact-head checks. Combined representative cadence/fidelity and DAC
-remain open.
+work is retargeting to master after PR35 integrates and rerunning checks.
+The current draft diff is already against PR35. Combined representative
+cadence/fidelity and DAC remain open.
 
 PR33 e975c7a7 passes all four exact-head CI workflows and the scoped
 real-N64 KOFF note-tail gate. Two aligned events each reproduce 252
@@ -60,7 +60,7 @@ nonzero PCM samples predicted by the independent envelope rule and the
 existing mixer. The other channel remains byte-identical. Short cadence
 windows are about four seconds. The local R47/KOFF pair fits with 504
 bytes before CGRAM and passes linked audio. It is not the integrated
-baseline. Keep both audio PRs draft until PR35 is integrated separately.
+baseline. Both audio PRs are drafts against PR35.
 
 The earlier KOFF and R47 native trials restored habitual R17 with
 recovery 0. [Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).
@@ -72,8 +72,11 @@ then lost the Windows USB device before launch acknowledgement. On
 November 11 the link returned, the next reference booted, and software
 returned to the menu and verified R17. A second reference load again
 lost the USB device before acknowledgement. COM3 subsequently returned
-and R17 install/readback and menu recovery 0 were verified. Qualify the
-launch transport before resuming the candidate comparison.
+and R17 install/readback and menu recovery 0 were verified. A bounded
+launch using R17 already installed lost COM3 again before the menu
+acknowledgement. Windows recorded surprise removal. R17 remains the last
+verified installation. Qualify the launch transport before resuming the
+candidate comparison.
 [R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
 PR38 86a1b5b6 is a standalone CGRAM epoch port. Its linked exact-color

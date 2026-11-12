@@ -1,3 +1,30 @@
+# 2026-11-11 — Isolate audio review diffs and reproduce USB loss with R17
+
+Draft PR33 and PR36 now target PR35's `integrate/usb-status-fit`.
+Their heads are unchanged. KOFF's review diff shrank from nine files to
+five and BRR's from six to two. The previously qualified head runs still
+apply to the recorded commits. PR35 is ready for review against master.
+After PR35 integrates, move the two audio drafts back to master and run
+the relevant checks again against that base.
+
+COM3 enumerated and the habitual R17 already installed on the SD card
+was left in place. The paired menu replied with recovery 0. On the only
+launch attempt, the deployer reported OS error 5 before the launch
+acknowledgement and Windows recorded PnP 1010, surprise removal of the
+SC64 USB device. COM3 remained absent. This reproduces the launch blocker
+with R17 and without a program install. The R19 comparison remains open.
+Check enumeration and menu first when the link returns. Keep the exact
+R17 backup and use a bounded reference control before installing R19.
+
+R45 remains blocked. Across the same 1,000 aligned story endpoints,
+mean interval time increased 80.408 microseconds while measured CPU
+wait for the RSP fell 242.221 microseconds. The interval outside that
+measured wait grew 322.629 microseconds. This aggregate covers all time
+outside the explicit wait. The rejected run producer remains archived.
+[Audio review, transport and aligned R45 evidence](evidence/integration-audio-review-and-r17-transport-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Publish separate R43 and R44 drafts and close linked consumers
 
 R43 `ebcf1c57` is draft PR40 against PR32. R44 `9f377fad` is draft

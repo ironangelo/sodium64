@@ -1,0 +1,62 @@
+{
+  "date_local": "2026-11-11",
+  "device": "physical N64 with SummerCart64",
+  "fixture": "Original eight-voice periodic KOFF/KON workload. The first voice feeds the left channel and the other seven feed the right channel.",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8
+  },
+  "runs": [
+    {
+      "role": "master_with_BRR",
+      "head": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+      "hard_cuts": 2,
+      "short_interval_guest_frames": 240,
+      "short_interval_seconds": 4.009322816,
+      "verified_install_bytes": 114688,
+      "menu_recovery": 0,
+      "R17_restore_readback_bytes": 131072
+    },
+    {
+      "role": "PR33_with_BRR",
+      "head": "1c68ff369217de39c5995453d6aebc3cdd7fba29",
+      "short_interval_guest_frames": 241,
+      "short_interval_seconds": 4.025357546666666,
+      "verified_install_bytes": 114688,
+      "menu_recovery": 0,
+      "R17_restore_readback_bytes": 131072
+    }
+  ],
+  "comparison": {
+    "aligned_guest_and_render_frames": [720, 722, 724, 726],
+    "distinct_aligned_release_events": 2,
+    "exact_nonzero_release_samples_per_event": 252,
+    "first_and_last_release_sample_values": [1008, 8],
+    "matched_right_channel_bytes": 16384,
+    "right_channel_byte_differences": 0,
+    "ring_positions_and_DSP_snapshots_match": true,
+    "same_candidate_ROM_as_prior_SMW_comparison": true,
+    "USB_present_at_end": true
+  },
+  "scope": "Two release events validate the modeled digital PCM tail against the integrated BRR reference. The short Count intervals contain different amounts of guest work. Sustained cadence, KON timing and analog DAC remain open.",
+  "merged_KOFF": {
+    "PR": 33,
+    "head": "1c68ff369217de39c5995453d6aebc3cdd7fba29",
+    "master": "92954e95355ee0b70ec2ca87d4813565a15fed0e",
+    "all_premerge_workflows_success": [43137863185, 43137863101, 43137863112, 43137863190],
+    "fresh_master_runs": [43139353563, 43139353540, 43139353532, 43139353608],
+    "merged_tree_and_fresh_bench_rom_equal_qualified_candidate": true
+  },
+  "BRR_production_release": {
+    "master": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+    "build_run": 43137801154,
+    "build_artifact": 13908206524,
+    "release_id": 442401599,
+    "asset_id": 737666588,
+    "asset_bytes": 44408,
+    "archive_digest_verified": true,
+    "payloads_equal_CI": ["rom-converter.py", "sodium64.z64"]
+  }
+}

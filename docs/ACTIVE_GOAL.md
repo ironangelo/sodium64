@@ -23,11 +23,13 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint, 2026-11-11. Thirteen separate PRs
-24/23/22/25/26/27/28/29/30/31/34/35/36 are integrated in master
-`b3b0a0610e6aec9fb0b634fca3124ac22db34b04`. PR35 qualifies the isolated
+Current checkpoint, 2026-11-11. Fourteen separate PRs
+24/23/22/25/26/27/28/29/30/31/34/35/36/33 are integrated in master
+`92954e95355ee0b70ec2ca87d4813565a15fed0e`. PR35 qualifies the isolated
 USB bench layout. PR36 integrates the separately qualified BRR recurrence.
-The master release and follow-up CI for PR36 are tracked separately.
+PR33 integrates the independently qualified KOFF release tail.
+The published BRR archive was verified byte for byte against the master
+CI artifact and contains the two production payloads only.
 [SMW physical comparison and BRR merge](evidence/integration-br-r47-master-smw-pair-2026-11-11.json).
 
 PR32 is draft at `3e1c9a99869063254dbc1c84453fd6cf06f78762`. The real-N64 startup stall was
@@ -40,12 +42,14 @@ sample. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain open.
 PR32 is blocked for default promotion. R44 and R45 retain separate gates.
 [DKC1 parity and throughput evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
 
-PR33 `1c68ff36` is draft against master with BRR integrated. The tree
-matches the combined candidate tested on the original four-filter fixture
-and SMW. KOFF previously reproduced 252 release samples per event on
-two aligned cuts and preserved the other channel. Fresh CI is active.
-The SMW boot/demo captures match and both quiet windows stay below 60.
-The representative integrated baseline and DAC remain open.
+PR33 `1c68ff36` passed four exact-head CI workflows. On physical N64 it
+reproduced both 252-sample KOFF release tails and all 16,384 bytes of the
+other channel against the exact BRR master. The reference and candidate
+both verified R17 restoration. A fresh bench ROM of the merge matches
+the tested candidate. Its SMW boot/demo captures match the prior audio
+reference and both quiet windows stay below 60 guest boundaries/s. The
+representative integrated baseline and analog DAC remain open.
+[Native KOFF comparison and BRR release evidence](evidence/integration-native-koff-brr-master-2026-11-11.json).
 [SMW physical comparison and BRR merge](evidence/integration-br-r47-master-smw-pair-2026-11-11.json).
 
 The earlier KOFF and R47 native trials restored habitual R17 with

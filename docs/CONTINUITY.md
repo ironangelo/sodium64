@@ -1,3 +1,28 @@
+# 2026-11-11 — Qualify and integrate KOFF on the BRR master
+
+On physical N64, master `b3b0a061` and PR33 `1c68ff36` ran the
+same original periodic KOFF fixture. The four captures aligned at guest
+and rendered frames 720, 722, 724 and 726. The two immediate left-channel
+cuts on the reference become 252 exact nonzero release samples each on
+PR33. The right channel matches all 16,384 compared bytes. DSP registers
+and audio ring positions match. Both runs used APU 21 and frameskip 0,
+returned to the menu with recovery 0 and verified all 131,072 bytes of
+the habitual R17 installation. COM3 remained present.
+
+The short Count intervals are 240 guest frames in 4.009323 seconds and
+241 in 4.025358 seconds. This qualifies the digital note tail. Sustained
+cadence, KON timing and the analog DAC remain open. Build, USB, owner
+and Ares CI passed on the exact head. PR33 merged as `92954e95`. The
+merged source tree and a fresh bench ROM match the qualified candidate.
+
+The published BRR archive was downloaded and verified against the
+production CI artifact for `b3b0a061`. It contains only the matching
+`sodium64.z64` and `rom-converter.py`. Fresh post-merge CI and release
+verification for `92954e95` follow independently.
+[Native KOFF comparison and BRR release evidence](evidence/integration-native-koff-brr-master-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Qualify the SMW audio pair and integrate BRR
 
 Physical N64 ran exact `8c74f36e` and the KOFF/BRR pair `65581840`

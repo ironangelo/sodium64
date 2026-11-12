@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+KOFF integration, 2026-11-11. Physical N64 reproduced both exact
+252-sample releases and preserved the other channel against the current
+BRR master. R17 restoration passed. All four exact-head workflows passed
+and PR33 merged as `92954e95`. The BRR production archive matches its
+master CI payload.
+[Native KOFF comparison and BRR release evidence](evidence/integration-native-koff-brr-master-2026-11-11.json).
+
 BRR integration, 2026-11-11. PR36 is merged as `b3b0a061`. The paired
 SMW boot/demo matches two RGB and PCM captures and provides two roughly
 matched quiet windows below 60 guest boundaries/s. Draft PR33 has the
@@ -159,12 +166,12 @@ Diagnostic tools are identified separately from production runtime changes.
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
 | R19 pitch cache, 84531758 | CANDIDATE, independent draft PR37 | Direct master port. Normal, HW_PROFILE and REMOTE linked arithmetic and caller checks pass. All four exact-head CI workflows pass. USB has 16 bytes before CGRAM. Prior native gains belong to the original runtime. Current N64 test was interrupted on the master reference before the R19 launch. Restore R17, then rerun aligned native comparison. |
 | R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
-| R22 KOFF release, 1b123980 | CANDIDATE, native note-tail scope passes | PR33 exact CI and USB KOFF gate pass. Real-N64 comparison validates two aligned 252-sample release tails and all 16,384 compared right-channel bytes. R17 restore passes. Integrate PR35 separately and rerun exact-head audio-only checks. Sustained cadence, KON delay and DAC remain open. |
+| R22 KOFF release, 1b123980 | VALIDATED, native note-tail scope | PR33 merged as `92954e95` after all four exact-head workflows passed. It matches two aligned 252-sample release tails and all 16,384 right-channel bytes against the BRR master on N64. R17 restore passes. Sustained cadence, KON delay and DAC remain open. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |
 | R32 dry-master HI/LO,0675f15a | VALIDATED within corrected dry path | Required correctness prerequisite when dry mixing is selected. Master lacks that multiply sequence; no standalone master patch exists. Preserve linked/dynamic spacing and native owner proof. |
 | R34 complete C++ DSP direct gameplay replacement | REJECTED; VALIDATED bounded behavior oracle | Native106.56/144.15/151.16% standalone audio budget and9 checksum matches. Keep primary reference and source/license; it cannot become a gameplay default. |
 | R35 timer experiment,677c9d21 | SUPERSEDED priority / CANDIDATE unmeasured code | No physical result. Do not treat fewer DIV instructions as an integration gain. |
-| R47 BRR history recurrence, 849412ee | CANDIDATE, native PCM scope passes | PR36 exact CI and linked audio pass. Real-N64 PCM/register parity at the same boundary on original filter-0 and four-filter guests. Short progress and clean R17 restore pass. Integrate PR35 separately, then check the audio-only diff and rerun exact-head gates. |
+| R47 BRR history recurrence, 849412ee | VALIDATED, native PCM scope | PR36 merged as `b3b0a061`. Exact CI and linked audio pass. Real-N64 PCM/register parity at the same boundary on original filter-0 and four-filter guests. Short progress and clean R17 restore pass. The released production package matches master CI. |
 | R48 non-alias annotation | REJECTED | All18 emitted executable sections identical. No work removed; no runtime patch or native rerun. |
 | R49 signal elision,68667b74 | CANDIDATE oracle optimization; BLOCKED gameplay | One-voice17.29% cost saving; eight voices small0.317% loss within declared guard, echo1.076% saving. Active standalone budget still144/149%. Retain oracle optimization separately from gameplay backend, pending changed-core CI. |
 | R50 counter; R52 full-BRR regroup; R53 sample dispatch; R54 cache placement; R55 Gaussian CPU batch | REJECTED retained cost directions | Their physical cost gates fail; semantic/codegen/cache findings remain. R51 function residency is a diagnostic, not additive execution cost. No broadCI or kernel tuning for rejected implementations. |
@@ -188,13 +195,14 @@ Diagnostic tools are identified separately from production runtime changes.
 
 ## Execution queue and stop conditions
 
-1. PR24/23/22/25/26/27/28/29/30/31/34 are merged. Startup selects APU 21.
-   PR30 and PR34 are host tooling. PR31 enforces the normal-only release.
+1. PR24/23/22/25/26/27/28/29/30/31/34/35/36/33 are merged. Startup selects
+   APU 21. PR30 and PR34 are host tooling. PR31 enforces the production
+   release admission. PR35 qualifies the separate USB bench layout.
    Older HW_PROFILE controls bind to 8da before the separately qualified
    two-byte full-rate default change.
 2. Four historical original-guest controls retain their scoped measured-ROM
    binding and owner limitations. Four new commercial controls plus an independent
-   no-USB SMW capture bind to the identical current master tree; complete visual/
+   no-USB SMW capture bind to the PR29 master tree. Complete visual/
    audio acceptance remains separate from those completed cadence measurements.
    Exact historical Gothicvania/SRS-v5/Nova2 inputs are unavailable locally and
    their ROM handoff artifacts expired; this does not reopen the old boot-asset
@@ -205,14 +213,13 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. PR35 is integrated. Finish the fresh checks on the separate audio PR33
-   and PR36 drafts against master. Native audio passes the
-   stated short scopes for both. PR32 exact-head CI and two
+4. PR33 and PR36 are integrated. Measure the combined master on physical
+   N64 and verify the post-merge production release. PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. Review the R43
    and R44 source drafts separately. R44 still needs its story and Mode 7
    comparisons against R43. R45 needs aligned story and Mode 7 costs.
-   Qualify the launch transport before resuming PR37 native comparison.
+   Resume the separate PR37 native comparison while COM3 is available.
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
    echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,

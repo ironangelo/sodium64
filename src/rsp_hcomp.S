@@ -134,6 +134,7 @@ hcomp_band_bounds_ready:
     sw t2, HCOMP_BAND_BASES + 8
 hcomp_band_targets_ready:
     sb zero, HCOMP_SCREEN
+#if !SODIUM64_BACKDROP_ROWS
     // Production always composes the complete section. Keep fixed slot offsets.
     move t0, zero
     b hcomp_dispatch_policy
@@ -141,7 +142,6 @@ hcomp_band_targets_ready:
     nop
     nop
     nop
-#if !SODIUM64_BACKDROP_ROWS
     nop
 #endif
 hcomp_dispatch_policy:
@@ -236,12 +236,17 @@ hcomp_backdrop_color:
     sw t1, RDP_FILL + 32
 #if SODIUM64_BACKDROP_ROWS
 hcomp_backdrop_dispatch:
-    // These CGWSEL policies cannot use the CPU's Main-row representation.
-    // Keep their original scalar fill without a helper/descriptor round trip.
+    // The CPU's row representation belongs to Main in indexed Modes 0/1.
+    // Keep the scalar fill in Phase for screens and modes the helper rejects.
     lbu t0, CGWSEL
     andi t0, t0, 0xF3
     bnez t0, hcomp_scalar_fill
     lw a1, OVERLAY_HCOMP_SRC
+    lbu t0, HCOMP_SCREEN
+    beqz t0, hcomp_scalar_fill
+    lbu t0, BG_MODE
+    andi t0, t0, 6 // The low three bits select the mode; bit 0 varies in 0/1.
+    bnez t0, hcomp_scalar_fill
     addi a1, a1, 1000
     li a0, SCRN_DATA
     jal 0xA4001F40

@@ -77,17 +77,17 @@ Earlier launch interruptions remain recorded.
 [R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
 PR38 `b9c5ab72` is a standalone CGRAM epoch port against `dc0c49d1`.
-The linked exact-color cases, Gate C replay, Build, USB and owner checks
-pass. Its loaded RSP banks match master byte for byte. Ares and the
-native paired image, PCM and cadence gate remain pending.
+The linked exact-color cases, Gate C replay and all current-head CI pass.
+Its loaded RSP banks match master byte for byte. The native paired image,
+PCM and cadence gate remains pending.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
 
 PR39 `81f9f1c9` keeps the APU clock correction against `dc0c49d1`. The
-negative control still reproduces stale lookup on master. The normal
-and REMOTE linked menu checks pass, along with Build, USB and owners.
-Ares and the physical menu check remain pending. The older runtime
-passed the 119-case compiled APU cycle suite.
+negative control still reproduces stale lookup on master. Normal,
+HW_PROFILE and REMOTE linked menu checks and all current-head CI pass.
+The physical menu check remains pending. The older runtime passed the
+119-case compiled APU cycle suite.
 [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
 
@@ -101,7 +101,11 @@ R45 `dab7e228` is draft PR42 against PR41. Sub and Modes 2–7 bypass a
 redundant helper load. The linked row, packet and dispatch proofs pass.
 Local R43, R44 and R45 controls on current master share their audio source
 and ROM header title. The linked replays, owner and delay-slot checks
-pass. The paired R44 and R45 DKC1 checks started after R17 restoration.
+pass. R44 reached DKC1 frame 3214 before COM3 disappeared, with two
+early polled bands below the corresponding master rates. The aligned
+captures and quiet interval remain open. R45 has yet to launch. Restore
+R17 after COM3 returns, then run R45 first with idle host warmup.
+[Interrupted native run and bounded warmup rates](evidence/integration-r44-dkc1-interrupted-2026-11-12.json).
 DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).

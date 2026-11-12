@@ -1,0 +1,26 @@
+{
+  "date_local": "2026-11-12",
+  "device": "Physical N64 with SummerCart64",
+  "master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "case": "DKC1 intro from original boot with zero input, APU 21, frameskip 0, audio 4, precision 8",
+  "before_trial": {"R17_readback_bytes": 131072, "menu_recovery": 0},
+  "R44_trial": {
+    "local_head": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+    "launch_receipt_seconds": 14.734,
+    "first_emulator_frame": 33,
+    "last_observed_guest_frame": 3214,
+    "first_planned_capture_frame": 4330,
+    "USB_missing_at_failure": true,
+    "failure_seconds_from_install_start": 91.0,
+    "R17_restore_pending": true,
+    "capture_or_quiet_window_completed": false
+  },
+  "polled_warmup": {
+    "scope": "Early DKC1 guest frame rate under regular USB queries. Guest endpoints differ slightly. The current master reference uses the PR43 native ROM byte-identical to master. The R44 stack includes the faithful compositor and R43, so the measured difference is a stack result.",
+    "master_test_head": "adf9f02eed71d851fa003e8af772f88d423ab5c3",
+    "master_windows": [{"guest_endpoints": [1004, 2018], "guest_frames_per_second": 59.581609}, {"guest_endpoints": [2018, 3000], "guest_frames_per_second": 58.707047}],
+    "R44_stack_windows": [{"guest_endpoints": [1011, 2006], "guest_frames_per_second": 43.771086}, {"guest_endpoints": [2006, 3010], "guest_frames_per_second": 47.354721}]
+  },
+  "R45_launched": false,
+  "next_native_gate": "Restore R17 after the cart enumerates. Launch the prepared R45 ROM against the saved reference first and leave USB idle during early warmup. Run the aligned R44 control and the separate ALttP and Mode 7 comparisons when transport permits."
+}

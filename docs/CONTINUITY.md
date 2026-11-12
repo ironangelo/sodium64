@@ -1,12 +1,34 @@
+# 2026-11-12 — Capture the R44 stack warmup before a USB interruption
+
+The matched R44 stack `8568fb1a` booted DKC1 and reported live progress
+through guest frame 3214 at APU 21 and frameskip 0. COM3 disappeared
+before the planned captures at 4330 and 4346. R45 stayed unlaunched and
+R17 restoration is pending again.
+
+Two approximate warmup bands with USB polling measure 43.771 and
+47.355 guest frames/s for the R44 stack. The corresponding master ROM
+windows measure 59.582 and 58.707. The guest endpoints differ slightly.
+The stack includes the compositor and R43, so R44's isolated cost remains
+unmeasured. The aligned RGB/PCM and quiet cadence gate remains open.
+
+The host runner now has an optional idle warmup after arming its first
+exact capture. Use it for one bounded transport comparison. Restore R17
+first, then try the prepared R45 ROM directly against the saved master
+reference before replaying the R44 control. Preserve the pending ALttP
+and Mode 7 comparisons.
+[Interrupted native run and bounded warmup rates](evidence/integration-r44-dkc1-interrupted-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Refresh two standalone fixes and pin renderer controls
 
 PR38 `b9c5ab72` and PR39 `81f9f1c9` now target `dc0c49d1` with three
-review files each. The normal and REMOTE binaries pass the linked
-CGRAM or APU checks, and both USB builds have 504 bytes of owner margin.
+review files each. The normal, HW_PROFILE and REMOTE binaries pass the
+linked CGRAM or APU checks. Both USB builds have 504 bytes of owner margin.
 PR38 retains all 8,192 loaded bytes in each RSP bank. The linked menu
 check still reproduces the stale lookup on current master. PR39 passes
-four transitions and six SPC700 recompiles per build. All observed
-current-head workflows passed except the two Ares jobs still running.
+four transitions and six SPC700 recompiles per build. All current-head
+workflows passed, including Ares for both and Gate C for PR38.
 
 The local R43, R44 and R45 ROMs now share current master audio and the
 same header title. The respective owner and delay-slot checks pass.

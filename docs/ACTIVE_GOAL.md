@@ -40,8 +40,8 @@ CI artifact and contains the two production payloads only.
 
 PR32 is draft at `ae59e6b774168564444352066273a9e4025aa800`. The real-N64 startup stall was
 fixed by repairing the shared C4C depth sender entry in two Main RSP words.
-The refreshed head passes five workflows, including the enabled renderer.
-Ares is running. The earlier qualified ROM's startup/return passed. On N64, DKC1
+The refreshed head passes all six workflows, including Ares and the
+enabled renderer. The earlier qualified ROM's startup/return passed. On N64, DKC1
 matches exact RGB and PCM at two aligned checkpoints. All three approximately
 matched polled DKC1 intro bands regress in completed guest boundary rate.
 Windows removed the USB function during the quiet interval, before a closing
@@ -99,12 +99,15 @@ RDP consumer replays pass. PR32 cadence, R43 and R44 paired native
 comparisons remain open.
 [Drafts, linked consumers and restore evidence](evidence/integration-renderer-pr40-pr41-2026-11-11.json).
 
-R45 `d3325a97` is draft PR42 against PR41. Sub and Modes 2–7 bypass a
+R45 `e12ae12e` is draft PR42 against PR41. Sub and Modes 2–7 bypass a
 redundant helper load. The linked row, packet and dispatch proofs pass.
 Local R43, R44 and R45 controls on current master share their audio source
 and ROM header title. The linked replays, owner and delay-slot checks
 pass. A fresh exact PR42 ROM matches the prepared binary. The faithful
 RDP restart check passes on Main and Mode 7 of all four variants.
+The workflow-only head now runs Ares with the full R45 stack. The exact
+profile artifact confirms the enabled bank and the normal build passes.
+[Exact enabled artifact and CI evidence](evidence/integration-r45-enabled-ci-2026-11-12.json).
 R44 reached DKC1 frame 3214 before COM3 disappeared, with two
 early polled bands below the corresponding master rates. The aligned
 captures and quiet interval remain open. R45 has yet to launch. Restore

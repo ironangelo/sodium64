@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+Enabled R45 CI, 2026-11-12. PR32 passes six exact-head workflows.
+PR42 `e12ae12e` enables the full stack in its own Ares workflow. The
+profile artifact contains the linked backdrop bank and the default
+build passes. All four local enabled builds link and the profile owner
+checks pass. The physical gates remain open.
+[Exact enabled artifact and CI evidence](evidence/integration-r45-enabled-ci-2026-11-12.json).
+
 Renderer refresh, 2026-11-12. PR32/40/41/42 now target the integrated
 master through their existing review chain. R43, R44 and R45 keep
 their exact review diffs. The enabled linked RDP restart passes for all

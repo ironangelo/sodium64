@@ -1,0 +1,29 @@
+{
+  "date_local": "2026-11-12",
+  "master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "PR32": {
+    "head": "ae59e6b774168564444352066273a9e4025aa800",
+    "six_current_head_CI_success": [43287315472, 43287316578, 43287314501, 43287314643, 43287314974, 43287314768]
+  },
+  "PR42": {
+    "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+    "previous_head": "d3325a97769e81f07c37d8b1a586afc8abf935a2",
+    "workflow_only_change": ".github/workflows/ares-profile.yml",
+    "exact_new_bench_ROM_matches_previous": true,
+    "default_Build_and_Validate_pass": 43289314644,
+    "enabled_Ares": {
+      "run": 43289314772,
+      "artifact": 13976148003,
+      "artifact_digest_verified": true,
+      "linked_backdrop_text_bytes": 1000,
+      "PROFILE_owner_present": true,
+      "matrix_status": "in_progress"
+    },
+    "local_enabled_builds": ["normal", "PROFILE", "HW_PROFILE", "REMOTE"],
+    "linked_profiler_owner_cases": 75,
+    "embedded_sections_checked_per_profiler_variant": 28,
+    "rsp_banks_survive_actual_linked_boot_clear": true,
+    "KOFF_linked_voice_cases_in_enabled_PROFILE": 16384,
+    "native_gate": "Restore R17, then run DKC1 with the pinned bench ROM and idle USB warmup. The physical aligned DKC1, ALttP story and Mode 7 comparisons remain required."
+  }
+}

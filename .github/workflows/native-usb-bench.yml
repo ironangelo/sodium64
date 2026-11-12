@@ -38,6 +38,7 @@ jobs:
           python3 scripts/test_dsp_gain_owner.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_apu_lookup_reset.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_dsp_brr_accuracy.py build_usb_bench/sodium64-usb-bench.elf
+          python3 scripts/test_dsp_koff_release.py build_usb_bench/sodium64-usb-bench.elf --json-output usb-koff-proof.json
       - name: Preserve code and diagnostic receipts
         if: always()
         uses: actions/upload-artifact@v4
@@ -50,6 +51,7 @@ jobs:
             usb-bridge-proof.json
             usb-mailbox-proof.json
             usb-decoder-cursor-proof.json
+            usb-koff-proof.json
             sodium64-usb-bench.z64
             build_usb_bench/sodium64-usb-bench.elf
             build_usb_bench/sodium64-usb-bench.map

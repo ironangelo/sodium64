@@ -15,7 +15,7 @@ extern unsigned char apu_clock,audio_set,precision_set,skipped_set,underclk_set;
 extern unsigned char dsp_buffer[8192],dsp_regs[128],enabled;
 extern uint16_t dsp_pointer;
 #ifdef REMOTE_CONTROL_HOST
-static uint32_t poll_calls,poll_total,poll_max,transport_error,menu_error,count_last,count_wraps;
+static uint32_t poll_calls,poll_total,transport_error,menu_error,count_last,count_wraps;
 static int present;
 static unsigned reply_length;
 #else
@@ -23,7 +23,7 @@ static unsigned reply_length;
 #define BENCH_WORD(n) (((uint32_t *)0x80441c60u)[n])
 #define poll_calls BENCH_WORD(0)
 #define poll_total BENCH_WORD(1)
-#define poll_max BENCH_WORD(2)
+/* Word 2 is reserved. */
 #define transport_error BENCH_WORD(3)
 #define menu_error BENCH_WORD(4)
 #define count_last BENCH_WORD(5)
@@ -316,14 +316,42 @@ static void cancel_pause_target(void) {
 static void status(const char *id) {
     uint32_t now=count();if(now<count_last)count_wraps++;count_last=now;
     prefix(id,1);append(" mode=emu protocol=1 build=master-usb-bench");
-    field(" count32=",now);field(" count_hz=",REMOTE_COUNT_HZ);field(" count_wraps_observed=",count_wraps);
-    field(" guest_frame_id=",remote_guest_frames);field(" render_frame_id=",remote_render_frames);
-    field(" vi=",remote_vi_count);field(" new_presentations=",remote_presentations);field(" paused=",remote_paused);
-    field(" apu_clock=",apu_clock);field(" skipped_set=",skipped_set);field(" audio_set=",audio_set);field(" precision_set=",precision_set);
-    field(" input_buttons=",remote_buttons);field(" input_remaining=",remote_button_frames);
-    field(" pause_pending=",remote_pause_pending);field(" pause_at_render_frame_id=",remote_pause_target);
-    field(" usb_poll_calls=",poll_calls);field(" usb_poll_count_total_mod32=",poll_total);
-    field(" transport_error=",transport_error);field(" menu_error=",menu_error);field(" boot_ram_bytes=",remote_boot_ram_bytes);
+    /* Keep field names and values in wire order without separate calls for each. */
+    #define STATUS_FIELDS(X) \
+        X(" count32=", now) \
+        X(" count_hz=", REMOTE_COUNT_HZ) \
+        X(" count_wraps_observed=", count_wraps) \
+        X(" guest_frame_id=", remote_guest_frames) \
+        X(" render_frame_id=", remote_render_frames) \
+        X(" vi=", remote_vi_count) \
+        X(" new_presentations=", remote_presentations) \
+        X(" paused=", remote_paused) \
+        X(" apu_clock=", apu_clock) \
+        X(" skipped_set=", skipped_set) \
+        X(" audio_set=", audio_set) \
+        X(" precision_set=", precision_set) \
+        X(" input_buttons=", remote_buttons) \
+        X(" input_remaining=", remote_button_frames) \
+        X(" pause_pending=", remote_pause_pending) \
+        X(" pause_at_render_frame_id=", remote_pause_target) \
+        X(" usb_poll_calls=", poll_calls) \
+        X(" usb_poll_count_total_mod32=", poll_total) \
+        X(" transport_error=", transport_error) \
+        X(" menu_error=", menu_error) \
+        X(" boot_ram_bytes=", remote_boot_ram_bytes)
+    #define STATUS_NAME(name, value) name "\0"
+    static const char names[]=STATUS_FIELDS(STATUS_NAME);
+    #undef STATUS_NAME
+    #define STATUS_VALUE(name, value) value,
+    const uint32_t values[]={STATUS_FIELDS(STATUS_VALUE)};
+    #undef STATUS_VALUE
+    #undef STATUS_FIELDS
+    const char *name=names;
+    for(unsigned i=0;i<sizeof(values)/sizeof(values[0]);i++) {
+        field(name,values[i]);
+        while(*name)name++;
+        name++;
+    }
     append(" fps_claim=none");(void)finish();
 }
 void remote_process_request(const unsigned char *request,size_t bytes,uint32_t retired_framebuffer) {
@@ -488,7 +516,7 @@ void remote_control_frame(uint32_t framebuffer) {
 #else
     (void)framebuffer;
 #endif
-    uint32_t delta=count()-start;poll_calls++;poll_total+=delta;if(delta>poll_max)poll_max=delta;
+    uint32_t delta=count()-start;poll_calls++;poll_total+=delta;
 }
 void remote_control_idle(uint32_t framebuffer) {
     uint32_t start=count();
@@ -499,5 +527,5 @@ void remote_control_idle(uint32_t framebuffer) {
 #else
     (void)framebuffer;
 #endif
-    uint32_t delta=count()-start;poll_calls++;poll_total+=delta;if(delta>poll_max)poll_max=delta;
+    uint32_t delta=count()-start;poll_calls++;poll_total+=delta;
 }

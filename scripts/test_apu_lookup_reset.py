@@ -36,11 +36,12 @@ def check(memory, symbols):
 
 
 def check_clock_change(memory, symbols):
-    """Run cached NOP blocks, the real menu close, then dispatch again."""
+    """Run cached NOP blocks, operate the linked settings menu, then dispatch again."""
     pcs = (0x0200, 0x8200, 0xfe00)
     start = symbols['jit_lookup']
     pointer = symbols['jit_pointer']
     clock = symbols['apu_clock']
+    options = ('counter_set', 'layer_set', 'precision_set', 'skipped_set', 'audio_set')
 
     def dispatch(cpu, pc, clock_value):
         cpu.write(symbols['apu_count'], pc, 2)
@@ -52,15 +53,50 @@ def check_clock_change(memory, symbols):
         assert 4096-cpu.regs[19] == cycles*clock_value, 'cached debit uses the wrong clock'
 
     def close(cpu, selected):
-        cpu.write(symbols['underclk_set'], 4 if selected == 42 else 0, 1)
-        cpu.pattern()
+        start_button, down, left, right = 0x10, 4, 2, 1
+        current = cpu.read(clock, 1)
+        old_options = [cpu.read(symbols[name], 1) for name in options]
+        joybus = symbols['joybus_cmd'] & 0x1fffffff
+
+        def update(button_samples):
+            samples = iter(button_samples)
+            input_pc = symbols['get_pressed']
+
+            def sample(c):
+                # Supply the Joybus result, then execute the actual edge detector.
+                buttons = next(samples, None)
+                assert buttons is not None, 'menu requested unexpected input'
+                c.memory[joybus+4] = buttons
+                c.before_instruction[input_pc] = sample
+
+            cpu.pattern()
+            cpu.regs[4] = cpu.read(symbols['framebuffer'])
+            cpu.before_instruction[input_pc] = sample
+            cpu.execute(symbols['update_menu'], stop=symbols['menu_return'])
+            del cpu.before_instruction[input_pc]
+            assert next(samples, None) is None, 'menu returned before consuming the input'
+
+        cpu.memory[joybus+2] = 0  # Controller connected.
+        cpu.memory[symbols['frame_count'] & 0x1fffffff] = 0
+        if 'remote_frame_bridge' in symbols:
+            cpu.hooks[symbols['remote_frame_bridge']] = lambda _cpu: None
+        update([0])  # Release Start from the preceding game frame.
         cpu.memory_writes.clear()
-        cpu.execute(symbols['menu_close'], stop=symbols['menu_return'])
-        assert cpu.read(clock, 1) == selected
+        buttons = [start_button]
+        if selected != current:
+            # Five separate D-pad edges select the sixth option, APU underclock.
+            buttons.extend([0, down] * 5)
+            buttons.extend((0, right if selected == 42 else left))
+        buttons.extend((0, start_button))
+        update(buttons)
+        assert cpu.read(symbols['underclk_set'], 1) == (4 if selected == 42 else 0), 'menu did not select the requested APU clock'
+        assert cpu.read(clock, 1) == selected, 'menu did not apply the requested APU clock'
+        assert [cpu.read(symbols[name], 1) for name in options] == old_options
 
     for old, new in ((42,21),(21,42)):
         cpu = CPU(memory.copy())
         cpu.write(clock, old, 1)
+        cpu.write(symbols['underclk_set'], 4 if old == 42 else 0, 1)
         for pc in pcs:
             dispatch(cpu, pc, old)
         compiled = cpu.read(pointer)
@@ -68,7 +104,10 @@ def check_clock_change(memory, symbols):
         entries = [cpu.read(start+4*pc) for pc in pcs]
         assert all(0x801c0000 <= value < 0x80200000 for value in entries)
         close(cpu, old)
-        assert not cpu.memory_writes and cpu.read(pointer) == compiled
+        lookup, limit = start & 0x1fffffff, pointer & 0x1fffffff
+        assert not any(lookup <= address <= limit or address == (clock & 0x1fffffff)
+                       for address, _, _ in cpu.memory_writes), 'unchanged menu close wrote APU cache state'
+        assert cpu.read(pointer) == compiled
         assert [cpu.read(start+4*pc) for pc in pcs] == entries
         dispatch(cpu, pcs[0], old)
         assert cpu.read(pointer) == compiled, 'unchanged menu close evicted cached code'
@@ -126,7 +165,18 @@ def main():
         assert str(error) == 'old-clock lookup survived menu close'
     else:
         raise AssertionError('missing clock invalidation fault accepted')
-    print(f'APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults=4 instructions={steps} clock_rebuilds={clock_rebuilds}; no N64 timing claim')
+    cpu = CPU(memory.copy())
+    setting_store = symbols['menu_close']-4
+    assert cpu.read(setting_store) == 0xa1090000, 'expected the right-button setting store'
+    cpu.write(setting_store, 0)
+    try:
+        check_clock_change(cpu.memory, symbols)
+    except AssertionError as error:
+        assert str(error) == 'menu did not select the requested APU clock'
+    else:
+        raise AssertionError('missing menu setting update fault accepted')
+    print(f'APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults=5 instructions={steps} '
+          f'clock_rebuilds={clock_rebuilds} menu_transitions=4; no N64 timing claim')
 
 
 if __name__ == '__main__':

@@ -11,13 +11,28 @@
     "workflow_only_change": ".github/workflows/ares-profile.yml",
     "exact_new_bench_ROM_matches_previous": true,
     "default_Build_and_Validate_pass": 43289314644,
+    "default_artifact": {
+      "id": 13976567337,
+      "digest_verified": true,
+      "byte_identical_to_master_production_CI": ["sodium64.z64", "rom-converter.py"]
+    },
     "enabled_Ares": {
       "run": 43289314772,
       "artifact": 13976148003,
       "artifact_digest_verified": true,
       "linked_backdrop_text_bytes": 1000,
       "PROFILE_owner_present": true,
-      "matrix_status": "in_progress"
+      "matrix_status": "success",
+      "matrix_artifact": 13976643034,
+      "matrix_artifact_digest_verified": true,
+      "last_complete_virtual_VI_windows": {
+        "scope": "Synthetic Ares CPU JIT matrix. Runs finish at different absolute windows. These are emulator diagnostics for whole variants.",
+        "order": ["master", "PR32_enabled_compositor", "PR42_enabled_R45_stack"],
+        "reference_artifacts": [13973041563, 13975088422],
+        "PPU_registers_guest_frames_per_60_VI": [57, 49, 60],
+        "DMA_VRAM_guest_frames_per_60_VI": [17, 17, 17],
+        "balanced_gameplay_guest_frames_per_60_VI": [60, 59, 60]
+      }
     },
     "local_enabled_builds": ["normal", "PROFILE", "HW_PROFILE", "REMOTE"],
     "linked_profiler_owner_cases": 75,
@@ -25,5 +40,6 @@
     "rsp_banks_survive_actual_linked_boot_clear": true,
     "KOFF_linked_voice_cases_in_enabled_PROFILE": 16384,
     "native_gate": "Restore R17, then run DKC1 with the pinned bench ROM and idle USB warmup. The physical aligned DKC1, ALttP story and Mode 7 comparisons remain required."
-  }
+  },
+  "hardware": {"watch_seconds": 240, "COM3_returned_during_watch": false, "R17_restore_pending": true, "native_R45_launched": false}
 }

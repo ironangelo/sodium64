@@ -3,15 +3,21 @@
 PR32 `ae59e6b7` completes Ares and passes all six exact-head workflows.
 PR42 `e12ae12e` adds one workflow change that exercises the full R45
 stack on its own branch. The native bench ROM rebuilt byte for byte
-against the previous runtime. The normal default workflow passes. The
-downloaded Ares profile artifact matches the exact head and contains
-the 1,000-byte enabled backdrop bank. The workload matrix is running.
+against the previous runtime. The normal CI ROM and converter match
+the production master artifact byte for byte. The downloaded Ares
+profile artifact matches the exact head and contains the 1,000-byte
+enabled backdrop bank. The Ares matrix passes. Its last complete
+virtual VI windows for PPU registers, DMA VRAM and balanced gameplay
+are 60/60, 17/60 and 60/60. The enabled PR32 control records 49/60,
+17/60 and 59/60. Master records 57/60, 17/60 and 60/60. The samples
+are from whole variants at different absolute windows.
 
 All four local enabled builds link. The PROFILE and HW_PROFILE
 owner proof passes 75 linked cases and preserves all embedded RSP
 banks through the actual linked boot clear. The enabled PROFILE
 also passes 16,384 linked KOFF voice cases. The native DKC1, ALttP
-story and Mode 7 gates remain open.
+story and Mode 7 gates remain open. The bounded watch ended with COM3
+absent. R17 restoration and the R45 launch remain pending.
 [Exact enabled artifact and CI evidence](evidence/integration-r45-enabled-ci-2026-11-12.json).
 
 ---

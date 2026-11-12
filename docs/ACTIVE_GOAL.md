@@ -105,8 +105,9 @@ Local R43, R44 and R45 controls on current master share their audio source
 and ROM header title. The linked replays, owner and delay-slot checks
 pass. A fresh exact PR42 ROM matches the prepared binary. The faithful
 RDP restart check passes on Main and Mode 7 of all four variants.
-The workflow-only head now runs Ares with the full R45 stack. The exact
-profile artifact confirms the enabled bank and the normal build passes.
+The workflow-only head passes Ares with the full R45 stack. The exact
+profile artifact confirms the enabled bank and the default CI payloads
+match production master byte for byte.
 [Exact enabled artifact and CI evidence](evidence/integration-r45-enabled-ci-2026-11-12.json).
 R44 reached DKC1 frame 3214 before COM3 disappeared, with two
 early polled bands below the corresponding master rates. The aligned

@@ -27,7 +27,11 @@ Current checkpoint, 2026-11-11. Fourteen separate PRs
 24/23/22/25/26/27/28/29/30/31/34/35/36/33 are integrated in master
 `92954e95355ee0b70ec2ca87d4813565a15fed0e`. PR35 qualifies the isolated
 USB bench layout. PR36 integrates the separately qualified BRR recurrence.
-PR33 integrates the independently qualified KOFF release tail.
+PR33 integrates the KOFF release tail. DKC1 exposes its cached SPC700
+accumulator regression. PR43 `adf9f02e` corrects it and passes the
+linked normal and REMOTE proofs, the paired DKC1 register check and both
+exact native release tails. Exact-head Ares is pending.
+[DKC1 comparison and accumulator regression](evidence/integration-koff-accumulator-dkc1-2026-11-11.json).
 The published BRR archive was verified byte for byte against the master
 CI artifact and contains the two production payloads only.
 [SMW physical comparison and BRR merge](evidence/integration-br-r47-master-smw-pair-2026-11-11.json).

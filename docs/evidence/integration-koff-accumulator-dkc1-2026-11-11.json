@@ -1,0 +1,59 @@
+{
+  "date_local": "2026-11-11",
+  "device": "physical N64 with SummerCart64",
+  "case": "DKC1 intro with zero controller input",
+  "settings": {"apu_clock": 21, "frameskip": 0, "audio": 4, "precision": 8},
+  "first_attempt": {
+    "head": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+    "outcome": "Host deadline expired at rendered frame 4233 before target 4330. USB remained present. The software returned to the menu and verified R17.",
+    "retry_change": "The host runner allows a slower commercial intro and polls less often. Emulation settings and checkpoint targets stay identical."
+  },
+  "BRR_reference": {
+    "head": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+    "count_interval_guest_endpoints": [4347, 5546],
+    "count_interval_seconds": 20.031528277333333,
+    "guest_frames_per_second": 59.85564273479463,
+    "R17_restore_readback_bytes": 131072
+  },
+  "first_KOFF_merge": {
+    "head": "92954e95355ee0b70ec2ca87d4813565a15fed0e",
+    "count_interval_guest_endpoints": [4347, 5545],
+    "count_interval_seconds": 20.014472490666666,
+    "guest_frames_per_second": 59.85668623335751,
+    "same_PCM_ring_and_DSP_observations_in_second_run": true,
+    "R17_restore_readback_bytes_each_run": 131072
+  },
+  "observations": [
+    {"guest_and_render_frame": 4330, "RGB_pixels": 67200, "RGB_differences": 0, "PCM_bytes": 8192, "PCM_differences": 0, "PMON_reference": 0, "PMON_merged": 255},
+    {"guest_and_render_frame": 4346, "RGB_pixels": 67200, "RGB_differences": 0, "PCM_bytes": 8192, "PCM_differences": 115, "different_stereo_sample_pairs": 39, "PMON_reference": 0, "PMON_merged": 255, "KOFF_mask_in_both": 128, "enabled_reference": 60, "enabled_merged": 188}
+  ],
+  "confirmed_caller_violation": "MIPS t7 holds the cached SPC700 accumulator. The first KOFF merge replaced it with the KOFF mask, including for mask 0. The tightened linked regression rejects the merged binary and passes the normal and REMOTE binaries of the repair across all 256 masks and ten actual APU port cases.",
+  "PR43": {
+    "head": "adf9f02eed71d851fa003e8af772f88d423ab5c3",
+    "current_head_workflow_ids": [43140262910, 43140262847, 43140262974, 43140262894],
+    "DKC1_physical": {
+      "aligned_guest_and_render_frames": [4330, 4346],
+      "RGB_pixel_differences_against_BRR": 0,
+      "total_RGB_pixels": 134400,
+      "PMON_and_all_DSP_registers_match_BRR_at_both_frames": true,
+      "PCM_matches_first_KOFF_merge_byte_for_byte": true,
+      "remaining_PCM_change_against_BRR": "39 consecutive stereo sample pairs immediately before the ring head at 4346, consistent with voice 7 remaining enabled after KOFF. The stereo deltas fit the voice's volume ratio within 1.273 PCM units.",
+      "count_interval_guest_frames": 1198,
+      "count_interval_seconds": 20.022355733333335,
+      "guest_frames_per_second": 59.83311933698005,
+      "menu_recovery": 0,
+      "R17_restore_readback_bytes": 131072
+    },
+    "eight_voice_KOFF_physical": {
+      "reference_head": "b3b0a0610e6aec9fb0b634fca3124ac22db34b04",
+      "aligned_guest_and_render_frames": [720, 722, 724, 726],
+      "aligned_distinct_release_events": 2,
+      "exact_nonzero_release_samples_per_event": 252,
+      "unaffected_channel_identical_PCM_bytes": 16384,
+      "DSP_registers_and_ring_heads_match": true,
+      "menu_recovery": 0,
+      "R17_restore_readback_bytes": 131072
+    },
+    "gate": "DKC1 and original eight-voice physical checks pass. Build, USB and owner CI pass. Ares is pending."
+  }
+}

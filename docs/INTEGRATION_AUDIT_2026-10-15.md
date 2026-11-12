@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+KOFF regression, 2026-11-11. Physical DKC1 reproduces a PMON mismatch
+after the first KOFF merge. A linked negative control confirms KOFF
+overwrites the cached SPC700 accumulator. PR43 preserves it and passes
+the linked register contract, native DKC1 and native eight-voice release
+checks. Its exact-head Ares workflow is pending.
+[DKC1 comparison and accumulator regression](evidence/integration-koff-accumulator-dkc1-2026-11-11.json).
+
 KOFF integration, 2026-11-11. Physical N64 reproduced both exact
 252-sample releases and preserved the other channel against the current
 BRR master. R17 restoration passed. All four exact-head workflows passed
@@ -166,7 +173,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
 | R19 pitch cache, 84531758 | CANDIDATE, independent draft PR37 | Direct master port. Normal, HW_PROFILE and REMOTE linked arithmetic and caller checks pass. All four exact-head CI workflows pass. USB has 16 bytes before CGRAM. Prior native gains belong to the original runtime. Current N64 test was interrupted on the master reference before the R19 launch. Restore R17, then rerun aligned native comparison. |
 | R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
-| R22 KOFF release, 1b123980 | VALIDATED, native note-tail scope | PR33 merged as `92954e95` after all four exact-head workflows passed. It matches two aligned 252-sample release tails and all 16,384 right-channel bytes against the BRR master on N64. R17 restore passes. Sustained cadence, KON delay and DAC remain open. |
+| R22 KOFF release, 1b123980 | VALIDATED digital tail, BLOCKED repair promotion pending Ares | PR33 merged as `92954e95`. The scoped 252-sample native note-tail gate passed. DKC1 exposed an SPC700 accumulator regression. PR43 fixes it in linked and native tests while preserving both exact tails. Exact-head Ares is pending. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |
 | R32 dry-master HI/LO,0675f15a | VALIDATED within corrected dry path | Required correctness prerequisite when dry mixing is selected. Master lacks that multiply sequence; no standalone master patch exists. Preserve linked/dynamic spacing and native owner proof. |
 | R34 complete C++ DSP direct gameplay replacement | REJECTED; VALIDATED bounded behavior oracle | Native106.56/144.15/151.16% standalone audio budget and9 checksum matches. Keep primary reference and source/license; it cannot become a gameplay default. |
@@ -213,8 +220,9 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. PR33 and PR36 are integrated. Measure the combined master on physical
-   N64 and verify the post-merge production release. PR32 exact-head CI and two
+4. PR33 and PR36 are integrated. Finish PR43 to repair the KOFF caller
+   regression, then measure the corrected combination on physical N64 and
+   verify the production release. PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. Review the R43
    and R44 source drafts separately. R44 still needs its story and Mode 7

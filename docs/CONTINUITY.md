@@ -1,3 +1,32 @@
+# 2026-11-11 — DKC1 exposes an SPC700 caller regression after KOFF merge
+
+Physical DKC1 runs of BRR `b3b0a061` and the first KOFF merge `92954e95`
+aligned at frames 4330 and 4346. The 134,400 RGB pixels all match. The
+quiet intervals are 1199 guest frames in 20.031528 seconds and 1198 in
+20.014472 seconds. PCM at 4330 matches. At 4346, 39 consecutive stereo
+sample pairs differ while voice 7 is in release. PMON differs at both
+checkpoints and the full difference repeats on a second KOFF run. The
+first BRR launch reached frame 4233 before the original host deadline.
+The extended host deadline then captured both targets. Each run verified
+menu recovery 0 and R17 readback over USB.
+
+The linked production code confirms a caller violation. The new KOFF
+handler uses `t7` for the voice mask, overwriting the SPC700 JIT's cached
+accumulator. The tightened linked test fails on `92954e95` at mask 0
+and passes the normal and REMOTE ELFs of PR43 `adf9f02e`. That PR walks
+the mask using scratch registers. On N64, PR43 restores all DSP registers
+to exact parity with BRR at both DKC1 checkpoints, with exact image parity
+and the same PCM as the first KOFF merge. The remaining PCM difference
+from BRR is confined to 39 consecutive stereo samples just before the
+ring head at 4346, consistent with the release of voice 7. The repaired
+build completes 1198 guest frames in 20.022356 seconds and restores R17.
+The repaired eight-voice fixture again matches both 252-sample tails and
+all 16,384 unaffected-channel bytes. Build, USB and owner CI pass on the
+exact repair head. Ares is the remaining promotion gate.
+[DKC1 comparison and accumulator regression](evidence/integration-koff-accumulator-dkc1-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Qualify and integrate KOFF on the BRR master
 
 On physical N64, master `b3b0a061` and PR33 `1c68ff36` ran the

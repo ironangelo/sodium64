@@ -57,7 +57,7 @@
     "gate": "DKC1 and original eight-voice physical checks pass. All four current-head workflows passed before merge.",
     "merged_2026_11_12": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
     "merged_tree_and_fresh_bench_ROM_equal_native_test": true,
-    "fresh_master_workflow_ids": [43280145594, 43280145723, 43280145585, 43280145689]
+    "fresh_master_workflows_all_success": [43280145594, 43280145723, 43280145585, 43280145689]
   },
   "production_release_2026_11_12": {
     "tag_resolves_to_repair_merge": true,

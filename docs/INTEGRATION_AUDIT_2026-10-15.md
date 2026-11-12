@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+R19 cadence gate, 2026-11-12. Physical SMW on draft `392b8bd0` preserves
+aligned RGB and PCM but falls from 58.017 to 55.411 guest frames/s. The
+repeat loses COM3 before the first capture. R17 restoration is pending.
+The existing R45 stack builds against the integrated master and passes
+its linked replay and owner checks. Its paired native gates remain open.
+[R19 physical comparison and R45 build evidence](evidence/integration-r19-native-r45-preflight-2026-11-12.json).
+
 Combined baseline, 2026-11-12. Physical N64 measured the integrated
 audio fixes on DKC1 intro, ALttP boot and SMW boot/demo. Six images and
 DSP register snapshots match. The only PCM delta is consistent with the
@@ -185,7 +192,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | First R45 missing-scissor implementation,9e1194f | SUPERSEDED (incorrect) | Native27-pixel failure preserved; repaired1fcc940 and scalar/metadata lineage replace it. Never integrate the defective artifact. |
 | R45 run producer,c623d918 | REJECTED cost remedy | Story55.888611 vs dense55.910416; does not recover loss. Preserved on experiment/main-row-runs-r45, dense source restored on R45. No renewed micro-tuning loop. |
 | R46 constant APU RAM read | REJECTED material performance direction | Both fixed native routes below the declared2% threshold; preserve code/proof, no broader port campaign. |
-| R19 pitch cache, 84531758 | CANDIDATE, independent draft PR37 | Direct master port. Normal, HW_PROFILE and REMOTE linked arithmetic and caller checks pass. All four exact-head CI workflows pass. USB has 16 bytes before CGRAM. Prior native gains belong to the original runtime. Current N64 test was interrupted on the master reference before the R19 launch. Restore R17, then rerun aligned native comparison. |
+| R19 pitch cache, 84531758 | BLOCKED for promotion, draft PR37 | Current head `392b8bd0` passes linked checks. USB has 504 bytes before CGRAM. Physical SMW preserves aligned RGB and PCM but slows from 58.017 to 55.411 guest frames/s. The repeat lost COM3 before capture. Prior native gains retain their original runtime scope. |
 | R20 BRR arithmetic,bbe46447 | VALIDATED and integrated, PR25 | Master8da020c3. Exact19a1fbeb Build38768166170, Ares38768166071 and CGRAM38795957122 pass;57344 linked voice cases, four instruction mutants and owner guards pass. Old master disagrees on5660/7168 blocks. Combined original mixed8 retains60/60x5 natively; complete waveform/DAC/corpus qualification stays open. |
 | R22 KOFF release, 1b123980 | VALIDATED digital tail and SPC700 caller repair | PR33 merged as `92954e95`. DKC1 exposed an SPC700 accumulator regression. PR43 fixes it in linked and native tests while preserving both exact tails, passed four exact-head workflows and merged as `dc0c49d1`. Sustained cadence, KON delay and analog fidelity remain open. |
 | R23 dry mixer,4f3cadb2; cache/basec77634ae/36883ee5 | BLOCKED as default integration | Arithmetic correction is useful, but complete dry scheduler/layout/cost must include R32+R33 and retain known timing/echo/Gaussian limitations. Port as a separate coherent component, not a flagged diagnostic package. |
@@ -242,7 +249,9 @@ Diagnostic tools are identified separately from production runtime changes.
    broader native fidelity/cadence block default promotion. Review the R43
    and R44 source drafts separately. R44 still needs its story and Mode 7
    comparisons against R43. R45 needs aligned story and Mode 7 costs.
-   Resume the separate PR37 native comparison while COM3 is available.
+   Restore R17 when COM3 returns. Keep PR37 out of master until the SMW
+   cadence loss is resolved. The prepared R45 build can use the DKC1
+   quiet reference from the integrated baseline for its next comparison.
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
    echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,

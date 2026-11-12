@@ -1,3 +1,26 @@
+# 2026-11-12 — Keep R19 out of master after the SMW cadence loss
+
+PR37 `392b8bd0` merges the current audio master into the separate pitch
+cache candidate. The merge keeps both USB test steps. Linked pitch,
+KOFF and BRR pass in normal and REMOTE. The USB owner margin is 504 bytes.
+
+Physical SMW aligns at frames 3000 and 3016. All 134,400 pixels and
+16,384 PCM bytes match `dc0c49d1`, along with DSP registers, voice masks
+and ring heads. Both quiet windows start at frame 3017. The reference
+completes 1,161 guest frames in 20.011496 seconds. R19 completes 1,109 in
+20.014002 seconds. Hold PR37 in draft for this cadence gate. The first
+pass restores R17. In the repeat, COM3 disappears before frame 3000.
+There is no second result and R17 restoration for that run is pending.
+
+The existing R45 stack builds with all four renderer options against
+`dc0c49d1` in local validation commit `f2327501`. All 14 RSP delay-slot
+checks, the owner checks and the linked dense-row replay pass. The
+native gates remain DKC1 image/PCM/cadence, ALttP story and Mode 7.
+On COM3 recovery, restore R17 before starting the renderer comparison.
+[R19 physical comparison and R45 build evidence](evidence/integration-r19-native-r45-preflight-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Measure the integrated master on three physical N64 workloads
 
 The corrected audio combination in `dc0c49d1` ran DKC1 intro, ALttP boot

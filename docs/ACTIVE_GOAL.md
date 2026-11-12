@@ -66,18 +66,13 @@ baseline, sustained native cadence and analog DAC remain open.
 The earlier KOFF and R47 native trials restored habitual R17 with
 recovery 0. [Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).
 
-PR37 f21f211f is the independent R19 pitch cache port. Its linked normal,
-HW_PROFILE and USB proofs pass. CI USB admission leaves 16 bytes below
-the original CGRAM owner. The exact-master native reference installed,
-then lost the Windows USB device before launch acknowledgement. On
-November 11 the link returned, the next reference booted, and software
-returned to the menu and verified R17. A second reference load again
-lost the USB device before acknowledgement. COM3 subsequently returned
-and R17 install/readback and menu recovery 0 were verified. A bounded
-launch using R17 already installed lost COM3 again before the menu
-acknowledgement. Windows recorded surprise removal. Two subsequent
-synthetic launches completed over COM3 and restored R17. R17 remains the
-last verified installation. The R19 candidate comparison remains open.
+PR37 `392b8bd0` is the independent R19 pitch cache port against `dc0c49d1`.
+Linked normal and REMOTE pitch, KOFF and BRR pass. The physical SMW
+comparison preserves aligned RGB, PCM and DSP state, but drops from
+58.017 to 55.411 guest frames/s in matched-start quiet windows. That
+blocks promotion. The repeat lost COM3 before capture and still needs
+R17 restoration. Earlier launch interruptions remain recorded.
+[R19 physical comparison and R45 build evidence](evidence/integration-r19-native-r45-preflight-2026-11-12.json).
 [R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
 PR38 86a1b5b6 is a standalone CGRAM epoch port. Its linked exact-color
@@ -104,7 +99,9 @@ comparisons remain open.
 
 R45 `dab7e228` is draft PR42 against PR41. Sub and Modes 2–7 bypass a
 redundant helper load. The linked row, packet and dispatch proofs pass.
-Paired DKC1, ALttP story and Mode 7 checks block promotion.
+The enabled stack on current master passes the linked row replay, owner
+check and all 14 RSP bank delay-slot checks. Paired DKC1, ALttP story
+and Mode 7 checks block promotion.
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP

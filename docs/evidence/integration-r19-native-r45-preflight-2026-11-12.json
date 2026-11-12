@@ -1,0 +1,118 @@
+{
+  "date_local": "2026-11-12",
+  "master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "R19": {
+    "PR": 37,
+    "head": "392b8bd06a00431e206ea067338e5774cc1dcb87",
+    "status": "BLOCKED for promotion by SMW cadence",
+    "local_proofs": {
+      "normal_and_REMOTE_pass": true,
+      "pitch_writes": 131072,
+      "pitch_loads": 524288,
+      "reference_elf_cases": 65536,
+      "linked_KOFF_and_BRR_pass": true,
+      "USB_static_end": "0x800be008",
+      "first_fixed_owner": "0x800be200",
+      "margin_bytes": 504
+    },
+    "first_completed_physical_trial": {
+      "reference": {
+        "tested_head": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+        "launch_receipt_seconds": 31.172,
+        "window_guest_endpoints": [
+          3017,
+          4178
+        ],
+        "count_window": {
+          "duration_s": 20.011496341333334,
+          "guest_delta": 1161,
+          "guest_per_second": 58.01665103883203,
+          "render_delta": 1161,
+          "vi_delta": 1197,
+          "present_delta": 1160
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0
+      },
+      "candidate": {
+        "tested_head": "392b8bd06a00431e206ea067338e5774cc1dcb87",
+        "launch_receipt_seconds": 31.5,
+        "window_guest_endpoints": [
+          3017,
+          4126
+        ],
+        "count_window": {
+          "duration_s": 20.014001685333334,
+          "guest_delta": 1109,
+          "guest_per_second": 55.41120748544244,
+          "render_delta": 1109,
+          "vi_delta": 1198,
+          "present_delta": 1109
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0
+      },
+      "aligned_captures": [
+        {
+          "guest_and_render_frame": 3000,
+          "RGB_pixels": 67200,
+          "different_RGB_pixels": 0,
+          "PCM_bytes": 8192,
+          "different_PCM_bytes": 0,
+          "different_stereo_sample_pairs": 0,
+          "ring_head_matches": true,
+          "voice_mask_matches": true,
+          "DSP_registers_match": true
+        },
+        {
+          "guest_and_render_frame": 3016,
+          "RGB_pixels": 67200,
+          "different_RGB_pixels": 0,
+          "PCM_bytes": 8192,
+          "different_PCM_bytes": 0,
+          "different_stereo_sample_pairs": 0,
+          "ring_head_matches": true,
+          "voice_mask_matches": true,
+          "DSP_registers_match": true
+        }
+      ]
+    },
+    "repeat": {
+      "launch_acknowledged": true,
+      "initial_emu_frame": 102,
+      "USB_removed_before_first_aligned_capture": true,
+      "observed_port_missing_from_Windows_and_deployer": true,
+      "restore_pending_at_failure": true
+    },
+    "gate": "Replicate a comparable SMW cadence window and resolve the observed loss before promotion. The interruption provides no second performance result.",
+    "CI": {
+      "build_pass": 43281960990,
+      "usb_pass": 43281960815,
+      "owners_pass": 43281960767,
+      "ares": 43281960562
+    }
+  },
+  "R45": {
+    "PR": 42,
+    "head": "dab7e228e07964e5e6cda131e85102349abe7c47",
+    "local_validation_commit": "f2327501fecb6715cd3908aee0412242ed1711fb",
+    "reproducible_tree": "7604b96bc4887e8a7e22049e256f00d53132ab33",
+    "remote_options": [
+      "REMOTE=1",
+      "FAITHFUL_RENDERER=1",
+      "FAITHFUL_BG_SPANS=1",
+      "FAITHFUL_SUB_ALPHA=1",
+      "FAITHFUL_BACKDROP_ROWS=1"
+    ],
+    "build_and_owner_checks_pass": true,
+    "RSP_banks_passed": 14,
+    "linked_replay": {
+      "row_bounds": 488,
+      "epoch_barriers": 160,
+      "packet_cases": 40,
+      "dispatch_cases": 3840,
+      "negative_mutations_rejected": 9
+    },
+    "gate": "Run paired DKC1 image/PCM and cadence, followed by ALttP story and Mode 7 against the corresponding control."
+  }
+}

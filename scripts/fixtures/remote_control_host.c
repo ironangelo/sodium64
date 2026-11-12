@@ -29,8 +29,15 @@ static void bad(const char *s){request(s);CHECK(strstr(response," ERR "));}
 int main(void){
     remote_boot_ram_bytes=8388608;remote_control_init();
     CHECK(apu_clock==21&&underclk_set==0&&audio_set==4&&precision_set==8&&skipped_set==0);
-    ok("s64 1234abcd hello");CHECK(strstr(response,"build=master-usb-bench"));
-    CHECK(strstr(response,"fps_claim=none")&&!strstr(response,"state-save"));
+    ok("s64 1234abcd hello");
+    CHECK(strcmp(response,
+        "S64 1234abcd OK mode=emu protocol=1 build=master-usb-bench"
+        " count32=194 count_hz=46875000 count_wraps_observed=0"
+        " guest_frame_id=0 render_frame_id=0 vi=0 new_presentations=0 paused=0"
+        " apu_clock=21 skipped_set=0 audio_set=4 precision_set=8"
+        " input_buttons=0 input_remaining=0 pause_pending=0 pause_at_render_frame_id=0"
+        " usb_poll_calls=0 usb_poll_count_total_mod32=0 transport_error=0 menu_error=0"
+        " boot_ram_bytes=8388608 fps_claim=none\n")==0);
     bad("s64 1234abcd capture");bad("s64 1234abcd frame");bad("s64 1234abcd audio");
     bad("s64 1234abcd buttons 0001 4");bad("s64 1234abcd buttons 0010 0");
     bad("s64 1234abcd buttons 0010 36001");bad("s64 1234abcd buttons gg10 4");

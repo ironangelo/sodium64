@@ -1,0 +1,66 @@
+{
+  "date_local": "2026-11-11",
+  "PR": 42,
+  "head": "dab7e228e07964e5e6cda131e85102349abe7c47",
+  "draft": true,
+  "base_PR": 41,
+  "base_head": "9f377fad7692c751864135e774ca8f63d9c1344e",
+  "retained_R45_head": "fa77692e9f8d5c04d38da19ed3d866db7108f4c7",
+  "source_port": "5adcde690ca46587a1dd7c6740f9a4d6219f44f6",
+  "default_option": false,
+  "default_CI": 43135119294,
+  "disabled_ROM_matches_R44": true,
+  "enabled_builds": [
+    "normal",
+    "USB"
+  ],
+  "enabled_banks_delay_slot_pass": 14,
+  "USB_static_end": "0x800c23a8",
+  "CGRAM_owner_start": "0x800d2000",
+  "USB_margin_bytes": 64600,
+  "dispatch": {
+    "excluded_modes": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "excluded_screen": "Sub",
+    "helper_descriptor_read_bytes_avoided": 8,
+    "helper_IMEM_load_bytes_avoided": 1000,
+    "scope": "Per qualifying scalar dispatch that previously entered the helper; native timing has not been measured."
+  },
+  "linked_proof": {
+    "row_bounds": 488,
+    "epoch_barriers": 160,
+    "cpu_source_bindings": 2,
+    "rsp_cases": 40,
+    "colored_rows": 2528,
+    "pixels": 647168,
+    "linked_dispatch_cases": 3840,
+    "negative_mutations_rejected": [
+      "short_restore",
+      "pending_latch",
+      "wrong_queue",
+      "main_alpha",
+      "skip_scissor_restore",
+      "screen_mask_reload",
+      "wrong_blank_return",
+      "missing_sub_bypass",
+      "missing_mode_bypass"
+    ],
+    "passed": true,
+    "native_fidelity_or_performance": false
+  },
+  "inherited_R43_context_cases_passed": 30,
+  "inherited_R44_selector_setup_command_handoffs_passed": true,
+  "status": "BLOCKED for promotion",
+  "native_gates": [
+    "DKC1 aligned image/PCM and cadence on the clean head",
+    "ALttP same-work story cadence and fidelity",
+    "Mode 7 same-work cadence and fidelity"
+  ],
+  "hardware_state": "SummerCart USB did not enumerate during this turn"
+}

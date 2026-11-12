@@ -98,8 +98,13 @@ combination. [Menu input evidence](evidence/integration-apu-menu-input-2026-11-1
 R43 `ebcf1c57` is draft PR40 against PR32. R44 `9f377fad` is draft PR41
 against PR40. The byte-exact off control and the R44 linked Math and
 RDP consumer replays pass. PR32 cadence, R43 and R44 paired native
-comparisons, and R45 story/Mode 7 costs remain open.
+comparisons remain open.
 [Drafts, linked consumers and restore evidence](evidence/integration-renderer-pr40-pr41-2026-11-11.json).
+
+R45 `dab7e228` is draft PR42 against PR41. Sub and Modes 2–7 bypass a
+redundant helper load. The linked row, packet and dispatch proofs pass.
+Paired DKC1, ALttP story and Mode 7 checks block promotion.
+[Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
 The full objective remains ACTIVE and incomplete. Complete resident-DSP
 integral native cost is NOT_MEASURED and follows the qualified faithful combined

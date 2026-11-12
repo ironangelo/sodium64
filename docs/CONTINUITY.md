@@ -1,3 +1,27 @@
+# 2026-11-11 — Put the R45 port and scalar dispatch repair up for review
+
+Draft PR42 `dab7e228` stacks on PR41. The first commit ports the retained
+R45 dense rows with the native scissor repair. The second keeps Sub and
+Modes 2–7 in the scalar Phase path. The helper already rejects those
+inputs. Each qualifying dispatch now avoids its eight-byte descriptor
+read and 1,000-byte helper load. The build option stays off by default.
+With R45 off, the faithful USB ROM matches PR41 byte for byte.
+
+Enabled normal and USB owner checks pass, as do delay slots in all 14
+RSP banks. The pinned linked replay passes 488 row bounds, 160 epoch
+barriers, 40 packet cases, 3,840 dispatch cases and nine fault mutations.
+The R43 context and R44 selector, Setup and command replays still pass.
+[Replay source](../scripts/replay_clean_r45.py).
+
+PR42 remains blocked for promotion until the clean-head paired DKC1
+image/PCM and cadence, ALttP story and Mode 7 comparisons pass. The
+historical DKC1 gain and measured regressions retain their original
+build scopes. The repair targets a specific transfer cost and its
+native effect remains to be measured. SummerCart USB is still absent.
+[Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Exercise the APU clock correction through menu input
 
 PR39 now ends at `46447580`. The new commit changes only the linked

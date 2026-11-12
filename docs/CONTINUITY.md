@@ -1,3 +1,26 @@
+# 2026-11-12 — Complete the first physical DKC1 comparison for R45
+
+The existing R17 installation launches DKC1 in 15.453 seconds and
+returns to the menu by software with recovery 0. The exact PR42 trial
+`e12ae12e` then launches in 15.812 seconds, uses 55 seconds of idle USB
+warmup and completes the planned captures. R17 is restored and all
+131,072 bytes are verified again.
+
+At frames 4330 and 4346, the R45 stack and current master match all
+134,400 RGB pixels and 16,384 PCM bytes. Ring position, active voice
+mask and DSP registers match at both frames. APU 21 and frameskip 0
+are verified. The quiet interval covers the same guest frames 4347
+through 5545. Master takes 20.022356 seconds and R45 takes 20.008968.
+
+Earlier DKC1 throughput remains below master. In the approximately
+matched 3000-to-4000 USB-polled band, master completes 59.579 guest
+frames/s and the R45 stack completes 43.374. This is the whole enabled
+stack. The R44 control is required to isolate R45's contribution. ALttP
+story and Mode 7 still gate promotion.
+[R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Restore R17 after the R45 DKC1 launch loses USB
 
 The cart returned after the user power cycle. R17 and menu recovery 0

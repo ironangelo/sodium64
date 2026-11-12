@@ -109,20 +109,22 @@ The workflow-only head passes Ares with the full R45 stack. The exact
 profile artifact confirms the enabled bank and the default CI payloads
 match production master byte for byte.
 [Exact enabled artifact and CI evidence](evidence/integration-r45-enabled-ci-2026-11-12.json).
-R44 reached DKC1 frame 3214 before COM3 disappeared, with two
-early polled bands below the corresponding master rates. The aligned
-captures and quiet interval remain open. R45 installed successfully,
-then COM3 disappeared during DKC1 loading before the launch receipt.
-R17 and recovery 0 were verified after power cycling. Requalify the
-DKC1 launch on the restored R17 before repeating R45 with idle warmup.
+R44 reached DKC1 frame 3214 before COM3 disappeared. The R17 transport
+control passed and the exact R45 repeat with idle warmup completed.
+At frames 4330 and 4346, images and PCM match master. Both complete
+1,198 guest frames from 4347 to 5545 in about 20 seconds. Earlier
+polled throughput of the R45 stack is below master. R17 is restored.
+Use the R44 control to isolate the DKC1 cost. ALttP story and Mode 7
+remain open.
+[R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
 [Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
 [Interrupted native run and bounded warmup rates](evidence/integration-r44-dkc1-interrupted-2026-11-12.json).
 DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
-The full objective remains incomplete. Native integration depends on
-a reliable SummerCart launch. The habitual R17 installation is restored.
+The full objective remains incomplete. The latest paired native run
+returned by software and verified the habitual R17 installation.
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.

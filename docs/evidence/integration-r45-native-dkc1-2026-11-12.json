@@ -1,0 +1,135 @@
+{
+  "date_local": "2026-11-12",
+  "physical_device": "N64 with SummerCart64",
+  "master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "master_reference_provenance": "The reference REMOTE ROM built from adf9f02e is byte-identical to the verified fresh master ROM.",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8,
+    "controller_input": 0
+  },
+  "R17_transport_control": {
+    "installation_changed": false,
+    "launch_ack_seconds": 15.453,
+    "first_rendered_frame": 4,
+    "menu_recovery": 0,
+    "USB_present_at_end": true
+  },
+  "PR42": {
+    "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+    "launch_ack_seconds": 15.812,
+    "idle_warmup_seconds": 55
+  },
+  "DKC1_aligned": {
+    "runs": [
+      {
+        "head": "adf9f02eed71d851fa003e8af772f88d423ab5c3",
+        "phase": "PASS",
+        "restored_bytes": 131072,
+        "final_menu": {
+          "mode": "menu",
+          "recovery": "0",
+          "build": "paired-A14-usb-loop-fatfs16"
+        },
+        "USB_present_at_end": true,
+        "cadence_endpoints": [
+          4347,
+          5545
+        ],
+        "rate": {
+          "duration_s": 20.022355733333335,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.83311933698005,
+          "render_delta": 1198,
+          "render_per_second": 59.83311933698005,
+          "vi_delta": 1198,
+          "vi_per_second": 59.83311933698005,
+          "present_delta": 1198,
+          "present_per_second": 59.83311933698005
+        }
+      },
+      {
+        "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+        "phase": "PASS",
+        "restored_bytes": 131072,
+        "final_menu": {
+          "mode": "menu",
+          "recovery": "0",
+          "build": "paired-A14-usb-loop-fatfs16"
+        },
+        "USB_present_at_end": true,
+        "cadence_endpoints": [
+          4347,
+          5545
+        ],
+        "rate": {
+          "duration_s": 20.008968384,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.87315172920012,
+          "render_delta": 1198,
+          "render_per_second": 59.87315172920012,
+          "vi_delta": 1197,
+          "vi_per_second": 59.82317414011063,
+          "present_delta": 1197,
+          "present_per_second": 59.82317414011063
+        }
+      }
+    ],
+    "captures": [
+      {
+        "frame": 4330,
+        "total_RGB": 67200,
+        "RGB_differences": 0,
+        "RGB_difference_bounds": null,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "PCM_stereo_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      },
+      {
+        "frame": 4346,
+        "total_RGB": 67200,
+        "RGB_differences": 0,
+        "RGB_difference_bounds": null,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "PCM_stereo_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      }
+    ]
+  },
+  "polled_intro": {
+    "runs": [
+      {
+        "head": "adf9f02eed71d851fa003e8af772f88d423ab5c3",
+        "first_polled_frame": 35,
+        "guest_endpoints": [
+          3000,
+          4021
+        ],
+        "duration_s": 17.136847381333332,
+        "guest_frames_per_second": 59.5792199860603
+      },
+      {
+        "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+        "first_polled_frame": 2362,
+        "guest_endpoints": [
+          3000,
+          4013
+        ],
+        "duration_s": 23.354878144,
+        "guest_frames_per_second": 43.374236155466534
+      }
+    ],
+    "scope": "First status at or after guest frames 3000 and 4000. Endpoints differ slightly. This is the whole R45 stack against master under USB polling."
+  },
+  "disposition": "Two aligned fidelity captures and the matched quiet interval pass on the physical run. Earlier DKC1 throughput remains below master under polling. An R44 paired control, ALttP story and Mode 7 are still needed before promotion."
+}

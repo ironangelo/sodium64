@@ -1,5 +1,12 @@
 # Consolidation and integration audit - 2026-10-15
 
+R45 physical DKC1, 2026-11-12. Exact PR42 matches master in the two
+aligned RGB and PCM captures and the 4347-to-5545 quiet cadence window.
+The earlier polled DKC1 band remains slower for the whole stack. The
+R44 control, ALttP story and Mode 7 still gate promotion. R17 readback
+and menu recovery pass.
+[R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
+
 R45 physical attempt, 2026-11-12. Exact PR42 installed with verified
 readback. Windows lost the cart during the DKC1 load before the launch
 receipt, emulator hello or warmup. After the user power cycle, R17

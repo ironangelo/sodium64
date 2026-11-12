@@ -1,0 +1,98 @@
+{
+  "date_local": "2026-11-11",
+  "device": "physical N64",
+  "fixture": "original eight-voice workload with two voices per BRR filter",
+  "apu_clock": 21,
+  "frameskip": 0,
+  "audio": 4,
+  "precision": 8,
+  "matched_capture_frame": 720,
+  "PCM_bytes_each": 8192,
+  "PCM_byte_differences": 0,
+  "same_ring_head": true,
+  "same_DSP_registers": true,
+  "same_enabled_voice_mask": true,
+  "runs": [
+    {
+      "role": "master-audio",
+      "head": "8c74f36e79392dfb649cb36fb4f510fbb18e1b26",
+      "install_readback_verified_bytes": 114688,
+      "capture_guest_frame": 720,
+      "capture_render_frame": 720,
+      "short_window_guest_endpoints": [
+        721,
+        962
+      ],
+      "short_window_render_endpoints": [
+        721,
+        962
+      ],
+      "short_window": {
+        "duration_s": 4.024506581333333,
+        "presentation_is_software_observation": true,
+        "guest_delta": 241,
+        "guest_per_second": 59.88311737836837,
+        "render_delta": 241,
+        "render_per_second": 59.88311737836837,
+        "vi_delta": 241,
+        "vi_per_second": 59.88311737836837,
+        "present_delta": 241,
+        "present_per_second": 59.88311737836837
+      },
+      "return_menu_recovery": 0,
+      "R17_restore_readback_verified_bytes": 131072,
+      "USB_present_at_end": true
+    },
+    {
+      "role": "audio-pair",
+      "head": "655818407f8a71e388cdc3addf79617a9f979d18",
+      "install_readback_verified_bytes": 114688,
+      "capture_guest_frame": 720,
+      "capture_render_frame": 720,
+      "short_window_guest_endpoints": [
+        721,
+        962
+      ],
+      "short_window_render_endpoints": [
+        721,
+        962
+      ],
+      "short_window": {
+        "duration_s": 4.016361664,
+        "presentation_is_software_observation": true,
+        "guest_delta": 241,
+        "guest_per_second": 60.00455640241865,
+        "render_delta": 241,
+        "render_per_second": 60.00455640241865,
+        "vi_delta": 240,
+        "vi_per_second": 59.75557484058289,
+        "present_delta": 240,
+        "present_per_second": 59.75557484058289
+      },
+      "return_menu_recovery": 0,
+      "R17_restore_readback_verified_bytes": 131072,
+      "USB_present_at_end": true
+    }
+  ],
+  "scope": "Scoped pre-integration native PCM parity and a single same-work short cadence interval. The combined candidate is still separate from master.",
+  "CI_at_checkpoint": {
+    "PR33_Ares": {
+      "run": 43135828716,
+      "state": "success"
+    },
+    "PR36_Ares": {
+      "run": 43135828991,
+      "state": "in_progress"
+    },
+    "master_Ares": {
+      "run": 43135714621,
+      "state": "in_progress"
+    }
+  },
+  "remaining": [
+    "Independent audio promotion",
+    "Representative native measurements on the integrated baseline",
+    "R19 native comparison",
+    "physical ALttP and Mode 7 renderer gates"
+  ]
+}

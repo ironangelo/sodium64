@@ -48,8 +48,11 @@ filter-0 and four-filter fixtures. KOFF reproduces 252 release samples
 per event on two aligned cuts and preserves the other channel. Both
 have short original-fixture cadence controls. Fresh head CI is active.
 The local KOFF/BRR pair passes linked checks and fits with 504 bytes
-before CGRAM. Combined representative cadence, fidelity and DAC remain
-open.
+before CGRAM. The pair also matches 8,192 PCM bytes against master at
+frame 720 on real N64 in the original four-filter fixture. Both short
+windows cover the same 241 guest boundaries. The representative
+integrated baseline and DAC remain open.
+[Native paired audio evidence](evidence/integration-native-koff-r47-pair-2026-11-11.json).
 
 The earlier KOFF and R47 native trials restored habitual R17 with
 recovery 0. [Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).
@@ -63,9 +66,9 @@ returned to the menu and verified R17. A second reference load again
 lost the USB device before acknowledgement. COM3 subsequently returned
 and R17 install/readback and menu recovery 0 were verified. A bounded
 launch using R17 already installed lost COM3 again before the menu
-acknowledgement. Windows recorded surprise removal. R17 remains the last
-verified installation. Qualify the launch transport before resuming the
-candidate comparison.
+acknowledgement. Windows recorded surprise removal. Two subsequent
+synthetic launches completed over COM3 and restored R17. R17 remains the
+last verified installation. The R19 candidate comparison remains open.
 [R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
 PR38 86a1b5b6 is a standalone CGRAM epoch port. Its linked exact-color

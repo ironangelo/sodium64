@@ -1,3 +1,25 @@
+# 2026-11-11 — Compare the BRR and KOFF combination on physical N64
+
+The user restored the SummerCart menu and COM3 enumerated again. Exact
+`master` `8c74f36e` and the local KOFF/BRR pair `65581840` each installed
+and verified, booted the same original eight-voice four-filter workload,
+and captured at guest/render frame 720. All 8,192 PCM bytes, the ring
+position, DSP registers and the enabled voice mask match. Both runs used
+APU 21, frameskip 0, audio 4 and precision 8.
+
+Both short Count windows cover the same 241 completed guest frames,
+from 721 to 962. The reference takes 4.024507 seconds and the pair
+4.016362 seconds. Both runs return by software to the menu with recovery
+0 and restore/read back all 131,072 bytes of R17. COM3 remains visible.
+
+This is paired physical evidence for the combined candidate on this
+fixture. PR33 and PR36 remain drafts. The representative integrated
+baseline, sustained cadence and physical renderer comparisons remain
+pending. PR33 Ares passed. PR36 and master Ares are still running.
+[Native paired audio evidence](evidence/integration-native-koff-r47-pair-2026-11-11.json).
+
+---
+
 # 2026-11-11 — Integrate the USB bench prerequisite and rebase audio review on master
 
 PR35 is integrated as `8c74f36e`. The exact pre-merge head passed four

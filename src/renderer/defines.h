@@ -272,6 +272,9 @@
 #define RSP_CONTEXT_SWITCH_ENTRY 0x15B0
 #define RSP_CONTEXT_PHASE_RETURN 0x142C
 #define RSP_BG_SPAN_CALL_PC 0x163C
+#define HCOMP_SUB_ALPHA_MODES (LAYER_CHART + 2 * 16 + 12)
+#define HCOMP_SUB_ALPHA_DESC (LAYER_CHART + 3 * 16 + 12)
+#define RSP_SUB_ALPHA_MODE_SEND 0x1200
 
 // Fixed depth sender entry shared by the Main and Mode 7 resident banks.
 #define HCOMP_DEPTH_SEND_IMEM 0xC4C

@@ -150,6 +150,9 @@ hcomp_batch:
     move a1, s1
     jal 0xA4001F40
     move a2, t9
+#if SODIUM64_SUB_ALPHA
+    bnez s8, hcomp_optional_sub_done
+#endif
     move a0, t4
     move a1, s3
     jal 0xA4001F40
@@ -184,6 +187,9 @@ hcomp_vector_narrow:
 hcomp_uniform_math_mask:
     vor $v05, $v21, $v31, 0
 hcomp_math_mask_ready:
+#if SODIUM64_SUB_ALPHA
+    jal hcomp_alpha_inputs
+#endif
     vand $v00, $v00, $v04, 0
     // Zero eligibility while retiring any incoming vector carry bits.
     vge $v07, $v31, $v31, 0
@@ -250,10 +256,16 @@ hcomp_vector_output:
     addi s1, s1, 48
     addi s2, s2, 48
     addi s3, s3, 48
+#if !SODIUM64_SUB_ALPHA
     addi s4, s4, 2
+#endif
     addi s7, s7, -1
     bnez s7, hcomp_row
+#if SODIUM64_SUB_ALPHA
+    addi s4, s4, 2
+#else
     nop
+#endif
 hcomp_section_done:
     // shared_decode expects its upper-plane accumulator empty on entry.
     vand $v20, $v31, $v31, 0
@@ -275,6 +287,18 @@ hcomp_screen_switch:
     lw a1, OVERLAY_HCOMP_SRC
     j 0xA4001F7C
     li t9, 0x1760
+#if SODIUM64_SUB_ALPHA
+.org (0x76C - 0x3A8)
+hcomp_alpha_inputs:
+    beqz s8, hcomp_alpha_inputs_return
+    nop
+    vand $v03, $v01, $v15, 8
+    vmudn $v03, $v03, $v16, 10
+    vaddc $v03, $v03, $v16, 9
+hcomp_alpha_inputs_return:
+    jr ra
+    nop
+#endif
 .org (0x788 - 0x3A8)
 draw_mode7_entry:
     j 0xA4001F78

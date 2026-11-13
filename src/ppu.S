@@ -1,3 +1,18 @@
+#ifdef SODIUM64_REMOTE_WAIT_TIMING
+#include "defines.h"
+#include "remote_wait_timing.h"
+
+// t2 holds the start Count across the existing wait, whose body uses t0.
+.macro remote_wait_record counter
+    mfc0 t1, $9
+    la t0, \counter
+    subu t1, t1, t2
+    lw t2, (t0)
+    addu t1, t1, t2
+    sw t1, (t0)
+.endm
+#endif
+
 #ifdef SODIUM64_FAITHFUL_RENDERER
 #include "renderer/ppu.inc"
 #else
@@ -677,12 +692,20 @@ vram_loop:
     bne t0, t1, vram_loop
     addi t0, t0, 0x20
 
+#ifdef SODIUM64_REMOTE_WAIT_TIMING
+remote_rsp_wait_begin:
+    mfc0 t2, $9
+#endif
 rsp_wait:
     // Wait until the RSP is finished rendering
     lw t0, 0xA4040010 // SP_STATUS
     andi t0, t0, 0x1 // Halt
     beqz t0, rsp_wait
     xori t6, t5, 0x4
+#ifdef SODIUM64_REMOTE_WAIT_TIMING
+    remote_wait_record REMOTE_RSP_WAIT_COUNT
+remote_rsp_wait_end:
+#endif
 
     // Update the software-rendered UI
     lw a0, DMEM(FRAMEBUFFER)(t6)
@@ -741,10 +764,19 @@ set_buffer:
     sw t0, DMEM(VRAM_ADDRS + 4)
     lw t0, 0xA404001C
 
+#ifdef SODIUM64_REMOTE_WAIT_TIMING
+remote_frame_wait_begin:
+    mfc0 t2, $9
+#endif
 frame_wait:
     // Wait for a framebuffer to be available
     lbu t0, frame_count
     beq t0, 2, frame_wait
+#ifdef SODIUM64_REMOTE_WAIT_TIMING
+    nop
+    remote_wait_record REMOTE_FRAME_WAIT_COUNT
+remote_frame_wait_end:
+#endif
 
     // Unhalt the RSP so it can render the next frame
     li t0, 0x1 // Clear halt

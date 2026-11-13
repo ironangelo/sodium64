@@ -4,6 +4,9 @@
  * SC64 register/PI/USB and IPL3 return operations retain the qualified bridge.
  */
 #include "remote_control.h"
+#ifdef SODIUM64_REMOTE_WAIT_TIMING
+#include "remote_wait_timing.h"
+#endif
 #ifdef REMOTE_CONTROL_HOST
 volatile uint32_t remote_guest_frames,remote_render_frames,remote_vi_count,remote_presentations;
 volatile uint32_t remote_buttons,remote_button_frames,remote_paused;
@@ -316,6 +319,10 @@ static void cancel_pause_target(void) {
 static void status(const char *id) {
     uint32_t now=count();if(now<count_last)count_wraps++;count_last=now;
     prefix(id,1);append(" mode=emu protocol=1 build=master-usb-bench");
+#ifdef SODIUM64_REMOTE_WAIT_TIMING
+    field(" rsp_wait_count_mod32=", *(volatile uint32_t *)REMOTE_RSP_WAIT_COUNT);
+    field(" framebuffer_wait_count_mod32=", *(volatile uint32_t *)REMOTE_FRAME_WAIT_COUNT);
+#endif
     /* Keep field names and values in wire order without separate calls for each. */
     #define STATUS_FIELDS(X) \
         X(" count32=", now) \

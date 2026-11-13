@@ -8,6 +8,13 @@ PROFILE ?= 0
 HW_PROFILE ?= 0
 HW_PROFILE_WARMUP ?= 2
 REMOTE ?= 0
+REMOTE_WAIT_TIMING ?= 0
+ifeq ($(REMOTE_WAIT_TIMING),1)
+ifneq ($(REMOTE),1)
+$(error REMOTE_WAIT_TIMING requires REMOTE=1)
+endif
+N64_WAIT_TIMING_FLAG := -DSODIUM64_REMOTE_WAIT_TIMING=1
+endif
 FAITHFUL_RENDERER ?= 0
 ifeq ($(FAITHFUL_RENDERER),1)
 N64_RENDERER_FLAGS := -DSODIUM64_FAITHFUL_RENDERER=1
@@ -73,7 +80,7 @@ N64_ELFCOMPRESS = $(N64_BINDIR)/n64elfcompress
 N64_AUDIOCONV = $(N64_BINDIR)/audioconv64
 N64_MKSPRITE = $(N64_BINDIR)/mksprite
 
-N64_ASFLAGS = $(N64_RENDERER_FLAGS) -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
+N64_ASFLAGS = $(N64_WAIT_TIMING_FLAG) $(N64_RENDERER_FLAGS) -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
 N64_RSPASFLAGS = $(N64_RENDERER_FLAGS) -march=mips1 -mabi=32 -Wa,--fatal-warnings
 N64_LDFLAGS = -L$(N64_LIBDIR) -Tn64.ld --gc-sections
 ifeq ($(REMOTE),1)
@@ -164,9 +171,9 @@ $(BUILD_DIR)/%.o: %.S
 		$(CC) -c $(ASFLAGS) -o $@ $<; \
 	fi
 
-$(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h Makefile
+$(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h src/remote_wait_timing.h Makefile
 	@mkdir -p $(dir $@)
-	$(N64_CC) -c -Os -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
+	$(N64_CC) $(N64_WAIT_TIMING_FLAG) -c -Os -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

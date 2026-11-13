@@ -1,3 +1,55 @@
+# 2026-11-13 — Open the standalone SPC700 address-wrap correction
+
+PR45 `85d1e3c5` extracts the address corrections from R63
+`b2f29324` against `c90ef5c9`. Wrap the compiler fetch cursor,
+relative targets and the second indirect-jump pointer byte. A wrapped
+source block stops at the instruction boundary and records the two
+guest pages it depends on. The current master bench fails 666 of 770
+linked tests. The candidate passes all 770 at both APU clock selections
+in normal, PROFILE, HW_PROFILE and REMOTE. Three linked fault controls
+per build reject removal of the masks. Normal release admission,
+linked KOFF checks, REMOTE memory owners and both RSP bank comparisons
+pass.
+
+Exact-head Build, Ares, memory owners, USB contracts and APU cycle/span
+CI passed. The APU proof covers 119 directed cases and two halt scheduler
+groups. The verified normal CI artifact passes release isolation. PR45
+remains draft until a matched native smoke. The private runner has the
+pinned candidate ROM and reaches its hardware-presence guard. Keep the
+address fix independent of PR39 and the remaining R63 bus timing,
+fetch-coherence and resident-DSP work.
+[SPC700 wrap evidence](evidence/integration-spc-address-wrap-2026-11-13.json).
+
+---
+
+# 2026-11-13 — Keep the verified normal release in the play slot
+
+The normal `c90ef5c9` program staged locally for play is byte-identical
+to Latest. Seed the private bench slot with the completed native
+renderer control. Keep R17 available for rollback. Bench runs use the
+private slot and no longer need to reinstall the play program.
+
+Windows recorded PnP 1010 for the USB parent during the interrupted
+launch. The same failure stage was recorded with R17. USB selective
+suspend is already disabled. With the console reported off, the cart
+did not reappear during the 180-second host wait. No changes reached
+the SD. The root cause remains open. The Windows per-port power-cycle
+API requires administrative execution. The current host session lacks
+that access and has no independent console power control.
+
+The local installer now waits for the cart even if the serial port
+number changes, verifies CIC power-off before direct SD access, and
+can recover an interrupted file rename using the saved receipt.
+Simulated transport changes and rename recovery passed. Physical
+checks pending are a verified SD migration, boot of the normal browser
+path, reference bench launch and software return, and recovery from
+loss of the USB device. An independent console power switch and
+USB VBUS switch would allow the last check with the cart's two
+possible power sources removed.
+[Private menu and transport evidence](evidence/private-native-menu-split-2026-11-13.json).
+
+---
+
 # 2026-11-13 — Build separate play and bench slots for the private menu
 
 The current paired menu points both the browser and USB launcher at

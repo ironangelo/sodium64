@@ -118,6 +118,12 @@ gain remain unmeasured.
 [Linked 65C816 branch evidence](evidence/integration-cpu-relative-branches-2026-11-12.json).
 [Combined master N64 evidence](evidence/integration-current-master-native-2026-11-13.json).
 
+PR45 `85d1e3c5` is an independent draft SPC700 address correctness
+repair against `c90ef5c9`. All 770 linked cases pass in the four
+build configurations. The linked master negative control fails 666.
+Exact-head CI passes. The matched physical smoke remains pending.
+[SPC700 wrap evidence](evidence/integration-spc-address-wrap-2026-11-13.json).
+
 PR39 `cddf5be3` keeps the APU clock correction against `c90ef5c9`.
 The current-master negative control reproduces stale lookup. Normal, HW_PROFILE
 and REMOTE pass the refreshed linked menu transitions and cache checks.

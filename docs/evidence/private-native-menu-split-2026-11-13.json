@@ -15,7 +15,8 @@
     "artifact": 14054305904,
     "bytes": 98304,
     "sha256": "db51f9e145932f80b3217b69750a1b405f741ec161448afd9c36155eae1dce20",
-    "mode": "Normal production ROM with normal manual-menu SRAM behavior."
+    "mode": "Normal production ROM with normal manual-menu SRAM behavior.",
+    "verified_byte_identical_to_latest": true
   },
   "bench_behavior": "Fixed separate emulator slot. Reuses the loader and 0x104000 guest offset. Reads up to the existing 8192-byte guest SRAM seed under read-only FAT access, uses the established blank pattern for missing saves, clears the private tail, and disables automatic writeback. Avoids creating 16 unused diagnostic files during these USB frame/audio runs.",
   "gates": {
@@ -25,7 +26,9 @@
     "simulated_SD_staged_readback_idempotency_and_rename_rollback": "PASS",
     "N64_menu_and_normal_gameplay": "PENDING",
     "R45_Mode7": "PENDING",
-    "PR32_faithful_wait_attribution": "PENDING"
+    "PR32_faithful_wait_attribution": "PENDING",
+    "simulated_port_change_ambiguous_device_and_CIC_guard": "PASS",
+    "simulated_interrupted_rename_recovery_and_retry": "PASS"
   },
   "transport": {
     "user_reported_console_off": true,
@@ -34,6 +37,12 @@
     "deployer_lists_devices": false,
     "installed_trial_after_PR32_interruption": true,
     "card_changes_in_this_checkpoint": false,
-    "reset_contract": "In the local SC64 2.20.2 source, the host reset command resets cartridge configuration/CIC parameters over the same USB transport. The controller samples the N64 RESET line as input. No independent PC-accessible power/reset endpoint has been identified."
-  }
+    "reset_contract": "In the local SC64 2.20.2 source, the host reset command resets cartridge configuration/CIC parameters over the same USB transport. The controller samples the N64 RESET line as input. No independent PC-accessible power/reset endpoint has been identified.",
+    "last_trial_loss": "Kernel-PnP 1010 surprise removal of the USB parent during the menu launch before acknowledgement. Reproduced earlier with R17. Trigger not determined.",
+    "windows_usb_selective_suspend_enabled": false,
+    "bounded_host_wait_seconds": 180,
+    "bounded_host_wait_result": "No enumeration. No card operation admitted.",
+    "host_port_cycle": "Microsoft USB hub per-port IOCTL requires administrative execution. No validated port power toggle or console power actuator available from this session."
+  },
+  "bench_seed": "Previously completed native renderer timing control, before trying a renderer candidate."
 }

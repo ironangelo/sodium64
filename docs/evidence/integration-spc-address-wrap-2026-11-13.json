@@ -1,0 +1,81 @@
+{
+  "date_local": "2026-11-13",
+  "PR": 45,
+  "base": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+  "head": "85d1e3c532a3ad615ac75f1370e6653d6b1b0ba7",
+  "historical_source": "b2f293242a62227e27209ee0dfa37513fbe9cb4f",
+  "classification": "CANDIDATE standalone SPC700 address correctness repair",
+  "runtime_scope": [
+    "Compiler opcode/operand cursor and wrapped source tags",
+    "Relative branch targets including BRA, BBC/BBS, CBNE and DBNZ",
+    "Indirect JMP pointer second-byte address"
+  ],
+  "baseline_linked": {
+    "build": "REMOTE",
+    "cases": 770,
+    "passed": 104,
+    "mismatches": 666
+  },
+  "candidate_linked": {
+    "builds": [
+      "normal",
+      "PROFILE",
+      "HW_PROFILE",
+      "REMOTE"
+    ],
+    "cases_per_build": 770,
+    "mismatches_per_build": 0,
+    "mutations_rejected_per_build": 3,
+    "tested_clocks": [
+      21,
+      42
+    ],
+    "cached_replay_and_wrapped_source_tag_invalidation": true
+  },
+  "release_admission": "PASS",
+  "normal_KOFF_release_voices": 16384,
+  "REMOTE_owners": {
+    "cases": 50,
+    "first_fixed_owner": "0x800be200",
+    "linked_end": "0x800be008"
+  },
+  "matched_REMOTE_RSP": {
+    "banks": 2,
+    "loaded_bytes_per_bank": 8192,
+    "changed_loaded_bytes": 0
+  },
+  "lab_ROM": {
+    "bytes": 114688,
+    "sha256": "b3cd120917fc34cfa5d972621786c6f91b04e61e45aac3f9500bd6f66798210c"
+  },
+  "CI": {
+    "Build": {
+      "run": 43517593992,
+      "result": "PASS",
+      "release_artifact": 14081835874
+    },
+    "Ares": {
+      "run": 43517593865,
+      "result": "PASS",
+      "matrix_artifact": 14081178248
+    },
+    "owners": {
+      "run": 43517593822,
+      "result": "PASS"
+    },
+    "USB": {
+      "run": 43517593843,
+      "result": "PASS",
+      "artifact": 14081591393
+    },
+    "APU_cycle_span": {
+      "run": 43517621763,
+      "result": "PASS",
+      "artifact": 14081337915,
+      "directed_cases": 119,
+      "halt_scheduler_groups": 2
+    }
+  },
+  "native": "PENDING. Retain the candidate in draft and run a matched real-N64 boot/fidelity/cadence check after the menu and USB are available.",
+  "limit": "Scope excludes the experimental bus-timestamp, opcode-guard and live DSP changes. No native speed gain claimed."
+}

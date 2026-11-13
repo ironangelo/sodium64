@@ -103,8 +103,15 @@ retaining their addresses, allocation and both resident RSP banks.
 All four exact-head PR checks pass. Run 43454365988 matches all 12 aligned
 60-VI windows on two fresh boots of each version. PR44 is integrated
 as `c90ef5c9`. The per-branch saving is measured in instructions.
-Native cadence and fidelity of this combined master remain open.
+DKC1 late intro, ALttP boot and SMW boot/demo match their earlier
+integrated references in all six paired RGB/PCM/DSP captures. Quiet
+guest rates are 59.85, 59.84 and 58.05/s at APU 21 and frameskip 0.
+All three runs verify R17 restoration after a software return.
+SMW still falls below native cadence over the measured interval.
+Longer gameplay, analog output and an isolated PR44 performance
+gain remain unmeasured.
 [Linked 65C816 branch evidence](evidence/integration-cpu-relative-branches-2026-11-12.json).
+[Combined master N64 evidence](evidence/integration-current-master-native-2026-11-13.json).
 
 PR39 `3bf54854` keeps the APU clock correction against `b012b6b6`.
 The negative control reproduces stale lookup on that master. Normal,
@@ -137,7 +144,8 @@ At frames 4330 and 4346, images and PCM match master. Both complete
 1,198 guest frames from 4347 to 5545 in about 20 seconds. Earlier
 polled throughput of the R45 stack is below master. R17 is restored.
 The subsequent R44 retry reached hello but Windows lost COM3 during
-idle warmup before any aligned capture. R17 is now pending restoration.
+idle warmup before any aligned capture. R17 was verified after COM3
+returned, before the new master trials.
 The recorded bridge time is at most 1.48 percent of the comparable
 early band. A fixed-start quiet intro comparison is prepared for
 master, R44 and R45. The later R44 aligned fidelity check, ALttP story
@@ -156,9 +164,8 @@ DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
-The full objective remains incomplete. The last completed native run
-returned by software and verified the habitual R17 installation. The
-following R44 attempt left its trial installation pending restoration.
+The full objective remains incomplete. The latest master trials
+returned by software and verified the habitual R17 installation.
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.

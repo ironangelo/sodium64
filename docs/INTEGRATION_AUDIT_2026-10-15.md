@@ -297,14 +297,19 @@ Diagnostic tools are identified separately from production runtime changes.
    release matches its exact normal CI artifact. Three paired boot/demo
    measurements bind that combination to physical N64. The standalone
    PR38 CGRAM repair preserves the measured DKC1 intro and is integrated.
-   Extend the latest combined baseline to heavier gameplay. PR32 exact-head CI and two
+   Current master `c90ef5c9` matches all six paired native RGB/PCM/DSP
+   captures across DKC1 late intro, ALttP boot and SMW boot/demo. Quiet
+   guest rates are 59.85, 59.84 and 58.05/s. All three return by software
+   and verify R17. Extend the baseline to heavier gameplay.
+   [Combined master N64 evidence](evidence/integration-current-master-native-2026-11-13.json).
+   PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. Review the R43
    and R44 source drafts separately. R44 still needs its story and Mode 7
    comparisons against R43. R45 needs aligned story and Mode 7 costs.
-   Restore R17 when COM3 returns. Keep PR37 out of master until the SMW
-   cadence loss is resolved. Run the fixed-start quiet DKC1 intro
-   comparison from frame 3001. Retained early-band samples on R44 and R45
+   Keep PR37 out of master until the SMW cadence loss is resolved.
+   Run the fixed-start quiet DKC1 intro comparison from frame 3001.
+   Retained early-band samples on R44 and R45
    remain slower after accounting for the measured USB poll time. Use
    PR40 and PR32 controls if the early deficit reproduces.
    [Retained DKC1 counters and next paired gate](evidence/integration-renderer-dkc1-poll-accounting-2026-11-12.json).

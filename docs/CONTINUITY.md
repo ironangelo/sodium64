@@ -1,3 +1,26 @@
+# 2026-11-13 — Measure the integrated master on three N64 workloads
+
+Master `c90ef5c9` completed paired real-N64 trials at APU 21, audio 4,
+precision 8 and frameskip 0. Six aligned images and PCM windows match
+the prior integrated references exactly, with matching ring heads,
+voice masks and DSP registers. In roughly 20 seconds per case, DKC1
+late intro completed 1,198 guest frames (59.85/s), ALttP boot 1,198
+(59.84/s), and SMW boot/demo 1,162 (58.05/s). DKC1 and ALttP match both
+guest endpoints. SMW matches the start and completes one more frame.
+These counts are specific to the measured scenes. The software VI and
+presentation counters are retained separately. The trials establish no
+isolated speedup from PR44 or 60-Hz sustained gameplay. The house, rain,
+Mode 7, heavier gameplay and analog audio remain open.
+
+The paired SummerCart menu returned by software and verified the
+131,072-byte R17 backup after each trial. Compare the early DKC1 intro
+from frame 3001 on `dc0c49d1` and its direct PR32 child `ae59e6b7`.
+This tests whether the compositor base already carries the deficit
+seen on R44 and R45.
+[Combined master N64 evidence](evidence/integration-current-master-native-2026-11-13.json).
+
+---
+
 # 2026-11-13 — Integrate the 65C816 branch extraction after the aligned check
 
 PR44 merged as `c90ef5c9`. Ares rebuilt `b012b6b6` and `027a1233`
@@ -17,13 +40,8 @@ establishes safety within its scope. A structural optimization needs
 a credible material cost reduction before it earns another production
 integration. PR21 remains an inventory of separable changes.
 
-COM3 remains absent. Restore R17 before a native launch. DKC1 on
-`b012b6b6` remains the previous physical result. The current master
-still needs combined ALttP, SMW and DKC1 measurements. The pinned local
-master bench ROM and private matched-frame comparison are ready. The
-new CI bench ROM matches the PR44 CI bench ROM byte for byte. The
-comparison verifies RGB, PCM, DSP state, settings and R17 restoration,
-and reports whether both quiet guest intervals have the same endpoints.
+All four post-merge workflows pass. After COM3 returned from the
+interrupted R44 trial, R17 was read back and the menu confirmed recovery 0.
 The private Mode 7 runner now replays the archived F-Zero inputs on the
 same precision-20 R44/R45 pair. It captures at frame 4500 and checks a
 16-second quiet interval from 4501. Host simulation passes on both

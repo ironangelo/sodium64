@@ -1,0 +1,228 @@
+{
+  "date_local": "2026-11-13",
+  "physical_device": "N64 with SummerCart64",
+  "source": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+  "bench_build": {
+    "kind": "private local REMOTE build",
+    "bytes": 114688,
+    "ROM_sha256": "518478b48900bc2f0bdb85cb4ffb974d3a1ecc0f1a6732f2d1cb6ea2e8ddf631"
+  },
+  "settings": {
+    "APU_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8,
+    "controller_input": 0
+  },
+  "scope": {
+    "fidelity": "Two aligned guest/RSP-retired images and digital mix-ring snapshots per title compared against the corresponding prior integrated run. Covers these boot/demo frames, DSP registers, enabled voices and ring head. Display pixels, analog output, house/rain, and broader gameplay are outside these captures.",
+    "timing": "MIPS Count from two status reads with the host idle for about 20 seconds between them. VI and presentation are software observations. Compare per-title guest ranges, with a one-frame endpoint difference on SMW. The combined comparison does not quantify PR44's isolated performance benefit.",
+    "recovery": "The interrupted R44 trial required an operator power cycle. Its R17 backup was read back before launching the current master. Each of the following three current-master trials returned by software, verified the same R17 backup and closed the deployer with exit 0."
+  },
+  "cases": {
+    "DKC1 later intro": {
+      "captures": [
+        {
+          "guest_frame": 4330,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 4346,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "b9c5ab7214b359e9d0f8d699223534ccee4ef7e9",
+          "guest_endpoints": [
+            4347,
+            5545
+          ],
+          "duration_s": 20.023029632,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.831105582813734,
+          "render_delta": 1198,
+          "render_per_second": 59.831105582813734,
+          "vi_delta": 1198,
+          "vi_per_second": 59.831105582813734,
+          "present_delta": 1198,
+          "present_per_second": 59.831105582813734
+        },
+        {
+          "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+          "guest_endpoints": [
+            4347,
+            5545
+          ],
+          "duration_s": 20.015830784,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.85262430164238,
+          "render_delta": 1198,
+          "render_per_second": 59.85262430164238,
+          "vi_delta": 1197,
+          "vi_per_second": 59.802663847300444,
+          "present_delta": 1197,
+          "present_per_second": 59.802663847300444
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": true,
+      "recovery": {
+        "returned_by_software": true,
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0,
+        "deployer_exit": 0
+      }
+    },
+    "SMW boot/demo": {
+      "captures": [
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3016,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+          "guest_endpoints": [
+            3017,
+            4178
+          ],
+          "duration_s": 20.011496341333334,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1161,
+          "guest_per_second": 58.01665103883203,
+          "render_delta": 1161,
+          "render_per_second": 58.01665103883203,
+          "vi_delta": 1197,
+          "vi_per_second": 59.81561696251675,
+          "present_delta": 1160,
+          "present_per_second": 57.96667976317412
+        },
+        {
+          "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+          "guest_endpoints": [
+            3017,
+            4179
+          ],
+          "duration_s": 20.01731232,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1162,
+          "guest_per_second": 58.049751206559584,
+          "render_delta": 1162,
+          "render_per_second": 58.049751206559584,
+          "vi_delta": 1197,
+          "vi_per_second": 59.79823768868488,
+          "present_delta": 1161,
+          "present_per_second": 57.999794449927435
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false,
+      "recovery": {
+        "returned_by_software": true,
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0,
+        "deployer_exit": 0
+      }
+    },
+    "ALttP boot": {
+      "captures": [
+        {
+          "guest_frame": 1862,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 1878,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+          "guest_endpoints": [
+            1879,
+            3077
+          ],
+          "duration_s": 20.0113616,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.86599132764659,
+          "render_delta": 1198,
+          "render_per_second": 59.86599132764659,
+          "vi_delta": 1197,
+          "vi_per_second": 59.81601971552001,
+          "present_delta": 1197,
+          "present_per_second": 59.81601971552001
+        },
+        {
+          "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+          "guest_endpoints": [
+            1879,
+            3077
+          ],
+          "duration_s": 20.01848765866667,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.84468059860386,
+          "render_delta": 1198,
+          "render_per_second": 59.84468059860386,
+          "vi_delta": 1197,
+          "vi_per_second": 59.7947267750658,
+          "present_delta": 1197,
+          "present_per_second": 59.7947267750658
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": true,
+      "recovery": {
+        "returned_by_software": true,
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0,
+        "deployer_exit": 0
+      }
+    }
+  }
+}

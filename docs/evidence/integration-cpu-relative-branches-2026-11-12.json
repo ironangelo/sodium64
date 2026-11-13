@@ -60,7 +60,7 @@
     "USB": 43344571776,
     "ares": 43344571779
   },
-  "native_scope": "Prior A12 component provenance. No isolated physical timing or combined baseline on this change has been measured.",
+  "native_scope": "Prior A12 provenance and three paired combined-master scenes on real N64. PR44 has no isolated physical performance result.",
   "disposition": "Integrated. Linked behavior and aligned Ares non-regression passed. The measured change is one N64 instruction per affected taken branch. Native performance benefit is unmeasured.",
   "source_is_in_PR21_history": true,
   "all_nine_instruction_sequences_match_PR21": true,
@@ -239,7 +239,17 @@
   "merged": {
     "master": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
     "tree": "5798b318e0cbf36e6e1d125786f7ab5ebbb9d28d",
-    "matches_PR_head": true
+    "matches_PR_head": true,
+    "postmerge_CI": {
+      "build": 43455964649,
+      "owners": 43455964725,
+      "USB": 43455965184,
+      "ares": 43455964676,
+      "all_success": true,
+      "Ares_matrix_artifact": 14054876631,
+      "balanced_recompiler_last_virtual_window": 60,
+      "scope": "Laboratory smoke. The interpreter idle sentinel means the snapshot did not observe a complete window."
+    }
   },
   "Latest": {
     "release": 444417093,
@@ -283,7 +293,13 @@
     },
     "quiet_seconds": 20,
     "comparator_preflight": "Reproduced the prior DKC1 two-capture parity and quiet endpoints; loaded and verified both archived SMW and ALttP receipts.",
-    "R17_restoration_pending": true,
-    "new_physical_result": null
+    "R17_restoration_pending": false,
+    "new_physical_result": "integration-current-master-native-2026-11-13.json",
+    "post_R44_recovery": {
+      "R17_readback_bytes": 131072,
+      "paired_menu_recovery_before": 0,
+      "paired_menu_recovery_after": 0,
+      "launch_requested": false
+    }
   }
 }

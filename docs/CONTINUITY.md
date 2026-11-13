@@ -1,3 +1,28 @@
+# 2026-11-13 — Capture the R44 Mode 7 reference and retain the R45 transport failure
+
+The F-Zero Mode 7 route completes on R44 at APU 21, frameskip 0 and
+precision 20. It captures frame 4500 after seven matched inputs. All
+57,344 active pixels match the archived R44 frame. The 591 differing
+pixels lie in the top eight rows outside that active crop. From frame
+4501, the host-idle guest rate is 8.35/s. The paired menu returns by
+software and verifies R17.
+
+The R45 repeat verifies installation, then loses COM3 during loading
+before either a launch acknowledgement or emulator hello. Windows
+reports the port as absent and the transport returned error 5. This
+leaves the R45 Mode 7 result and R17 restoration pending. Restore R17
+when the device returns. Preserve the current master and successful
+DKC1 comparisons.
+[Stage and Mode 7 evidence](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
+
+The current-master host DSP reference regenerated all four byte-identical
+fixtures. It passed 65,544 state/RAM/PCM checks across 65,536 clocks and
+rejected the malformed, semantic and core mutations. Native integral
+cost remains unmeasured. The live SPC bridge and complete resident
+RSP backend remain the dependencies for that measurement.
+
+---
+
 # 2026-11-13 — Reproduce R45's DKC1 first-stage benefit on the review ports
 
 The precision-20 R44/R45 pair replayed six matched inputs on real N64.

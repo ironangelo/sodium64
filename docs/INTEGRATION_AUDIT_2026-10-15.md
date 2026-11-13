@@ -314,7 +314,10 @@ Diagnostic tools are identified separately from production runtime changes.
    guest frames/s with exact RGB/PCM against PR32. Resolve the measured
    cadence gate before promotion. The separate matched precision-20
    first-stage comparison reproduces the R45 gain with exact RGB/PCM.
-   [First-stage physical evidence](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
+   The matched F-Zero R44 reference completed with archived active-area
+   fidelity. R45 lost USB before launch acknowledgement. Restore R17
+   before continuing that paired gate.
+   [First-stage and Mode 7 physical evidence](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
    [Early DKC1 hardware comparison](evidence/integration-pr32-native-dkc1-early-2026-11-13.json).
    [Retained DKC1 counters and next paired gate](evidence/integration-renderer-dkc1-poll-accounting-2026-11-12.json).
 5. After combined representative evidence, resume whole resident DSP via an

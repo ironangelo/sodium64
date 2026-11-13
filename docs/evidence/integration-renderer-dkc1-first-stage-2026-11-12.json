@@ -110,7 +110,49 @@
     "expected_quiet_start": 4501,
     "quiet_seconds": 16,
     "host_runner": "Both candidates pass simulated end-to-end input receipts, capture, cadence scope and R17 restore.",
-    "physical_result": "PENDING"
+    "physical_result": {
+      "R44": {
+        "source": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+        "capture_frame": 4500,
+        "matched_input_receipt_count": 7,
+        "count_window": {
+          "duration_s": 16.043792576,
+          "presentation_is_software_observation": true,
+          "guest_delta": 134,
+          "guest_per_second": 8.352139892437362,
+          "render_delta": 134,
+          "render_per_second": 8.352139892437362,
+          "vi_delta": 960,
+          "vi_per_second": 59.83622609507364,
+          "present_delta": 134,
+          "present_per_second": 8.352139892437362
+        },
+        "guest_endpoints": [
+          4501,
+          4635
+        ],
+        "historical_reference_image": {
+          "total_different_RGB_pixels": 591,
+          "different_active_area_RGB_pixels": 0,
+          "all_differences_in_first_eight_rows": true
+        },
+        "R17_readback_bytes": 131072,
+        "menu_recovery": 0,
+        "deployer_exit": 0
+      },
+      "R45_attempt": {
+        "source": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+        "verified_install": true,
+        "launch_receipt": false,
+        "emulator_hello": false,
+        "elapsed_s": 89.032,
+        "windows_error": 5,
+        "USB_present_at_end": false,
+        "R17_restoration_pending_at_end": true,
+        "renderer_result": "UNMEASURED"
+      },
+      "disposition": "R44 completed and restored. The paired R45 result is pending because USB vanished during load. Transport failure before launch acknowledgement provides no evidence of a renderer regression."
+    }
   },
   "physical_replay_2026_11_13": {
     "comparison": {

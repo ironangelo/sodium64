@@ -161,7 +161,10 @@ The DKC1 first-stage benefit reproduces on real N64 using six matched
 inputs and precision 20. R44 and R45 reach 13.74 and 28.23 guest frames/s
 from guest frame 4331. Both image/PCM comparisons match exactly and both
 verify R17 restoration. The distinct zero-input intro regression stands.
-The paired Mode 7 F-Zero route remains pending.
+F-Zero Mode 7 on R44 reaches 8.35 guest frames/s and matches the
+archived R44 active image. R17 restoration passes on that run.
+The R45 launch then loses USB before acknowledgement. R45 comparison
+and R17 restoration remain pending.
 [DKC1 first-stage replay provenance](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
 [R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
 [Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
@@ -170,8 +173,9 @@ DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
-The full objective remains incomplete. The latest master trials
-returned by software and verified the habitual R17 installation.
+The full objective remains incomplete. The master and completed
+renderer trials verified R17 by software. The latest interrupted
+F-Zero R45 launch leaves restoration pending until COM3 returns.
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.

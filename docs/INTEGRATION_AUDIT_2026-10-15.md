@@ -1,5 +1,15 @@
 # Consolidation and integration audit - 2026-10-15
 
+CGRAM integration, 2026-11-12. PR38 merged as `b012b6b6` after
+five exact-head workflows and a real-N64 DKC1 comparison against
+`dc0c49d1`. RGB, PCM and DSP state match in two aligned captures.
+Both builds completed the same 1,198 guest frames in 20.02 seconds.
+The tested source tree matches the merge. Six post-merge workflows and
+the byte-exact production Latest ZIP pass. R17 restoration passed on this
+run. The subsequent R44 retry lost COM3 during host-idle warmup, before
+aligned image, PCM or quiet cadence. R17 restoration is pending after R44.
+[CGRAM native evidence and merge](evidence/integration-cgram-native-dkc1-2026-11-12.json).
+
 R45 physical DKC1, 2026-11-12. Exact PR42 matches master in the two
 aligned RGB and PCM captures and the 4347-to-5545 quiet cadence window.
 The earlier polled DKC1 band remains slower for the whole stack. The
@@ -217,7 +227,7 @@ Diagnostic tools are identified separately from production runtime changes.
 | Full-rate startup/menu defaults,10662795 subset | VALIDATED and integrated, PR26 | Exact587d1ac9 Build38797939600/Ares38797939482/APU38797939962 pass; merged7c3a7634. Only apu_clock42to21 and menu4to0 change; all other loaded bytes/instructions/extents match. Existing native controls ran at21. |
 | APU clock change and live JIT entries | CANDIDATE, independent draft PR39 | Head `81f9f1c9` targets `dc0c49d1` and reproduces stale lookup on the linked master menu path. Both clock transitions and both same-clock closes pass in the candidate. Exact-head CI passes. Physical menu behavior remains open. |
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
-| A13 identical CGRAM write, ca3f6f59 subset | CANDIDATE, independent draft PR38 | Head `b9c5ab72` targets `dc0c49d1`. Exact raw comparison preserves bus/latch/store and backdrop behavior. Linked and exact-head CI checks pass, with byte-identical loaded RSP banks. Native image, PCM and cadence remain open. |
+| A13 identical CGRAM write, ca3f6f59 subset | VALIDATED and integrated, PR38 | Master `b012b6b6` matches the tested head `b9c5ab72`. Exact comparison preserves bus/latch/store and backdrop behavior. Linked and five exact-head CI checks pass. Native DKC1 RGB, PCM, DSP state and quiet cadence match the prior master over the measured window. |
 | Faithful ROM cache and S-CPU scope | Layout prerequisite; existing probe integrated | The TLB probe is already in master. PR32 adds the 194-slot cursor wrap for its compositor memory. Its S-CPU core file matches master. Keep the capacity change with its owners. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
 | A1..A13 exact compositor/window/epoch work, b4206144 | CANDIDATE for fidelity; BLOCKED for production | PR32 head 3e1c9a99 fixes native RSP startup and passes exact-head CI. Native DKC1 passes two exact aligned RGB/PCM checkpoints. Polled intro boundary rate falls from 48.56/58.48/59.41 to 38.72/44.84/41.33 across approximately matched bands. USB loss interrupted the paired quiet interval. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain. R44/R45 stay separate. |
@@ -264,7 +274,7 @@ Diagnostic tools are identified separately from production runtime changes.
 
 ## Execution queue and stop conditions
 
-1. PR24/23/22/25/26/27/28/29/30/31/34/35/36/33/43 are merged. Startup selects
+1. PR24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38 are merged. Startup selects
    APU 21. PR30 and PR34 are host tooling. PR31 enforces the production
    release admission. PR35 qualifies the separate USB bench layout.
    Older HW_PROFILE controls bind to 8da before the separately qualified
@@ -282,17 +292,18 @@ Diagnostic tools are identified separately from production runtime changes.
    Scene continuation remains a distinct scoped component; no generic
    cross-build save-state claim. Current paired-menu source already reserves
    diagnostic saves separately and disables automatic mutable-file writeback.
-4. PR33, PR36 and the PR43 caller repair are integrated. The production
-   release matches the exact master artifact. Three paired boot/demo
-   measurements bind the corrected combination to physical N64. Extend
-   that baseline to heavier gameplay. PR32 exact-head CI and two
+4. PR33, PR36 and the PR43 caller repair are integrated. The PR43 production
+   release matches its exact normal CI artifact. Three paired boot/demo
+   measurements bind that combination to physical N64. The standalone
+   PR38 CGRAM repair preserves the measured DKC1 intro and is integrated.
+   Extend the latest combined baseline to heavier gameplay. PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. Review the R43
    and R44 source drafts separately. R44 still needs its story and Mode 7
    comparisons against R43. R45 needs aligned story and Mode 7 costs.
    Restore R17 when COM3 returns. Keep PR37 out of master until the SMW
-   cadence loss is resolved. The prepared R45 build can use the DKC1
-   quiet reference from the integrated baseline for its next comparison.
+   cadence loss is resolved. Compare R44 with R45 at the captured DKC1
+   endpoints on their common pre-CGRAM base.
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
    echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,

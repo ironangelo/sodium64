@@ -23,9 +23,9 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint, 2026-11-12. Fifteen separate PRs
-24/23/22/25/26/27/28/29/30/31/34/35/36/33/43 are integrated in master
-`dc0c49d143964b65e763fc083b3ae2bb4d161ff8`. PR35 qualifies the isolated
+Current checkpoint, 2026-11-12. Sixteen separate PRs
+24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38 are integrated in master
+`b012b6b665ede6a9c537bf0e491dfdb8867835e1`. PR35 qualifies the isolated
 USB bench layout. PR36 integrates the separately qualified BRR recurrence.
 PR33 integrates the KOFF release tail. DKC1 exposes its cached SPC700
 accumulator regression. PR43 `adf9f02e` corrects it and passed the
@@ -56,7 +56,8 @@ other channel against the exact BRR master. The reference and candidate
 both verified R17 restoration. A fresh bench ROM of the merge matches
 the tested candidate. Its SMW boot/demo captures match the prior audio
 reference and both quiet windows stay below 60 guest boundaries/s.
-The combined master has a paired three-workload N64 baseline. Quiet
+The prior integrated master `dc0c49d1` has a paired three-workload
+N64 baseline. Quiet
 20-second guest rates are 59.833 for DKC1 intro, 59.866 for ALttP boot
 and 58.017 for SMW boot/demo. All six images and DSP snapshots match.
 The DKC1 release remains the single scoped PCM delta. A wider gameplay
@@ -78,10 +79,15 @@ Earlier launch interruptions remain recorded.
 [R19 physical comparison and R45 build evidence](evidence/integration-r19-native-r45-preflight-2026-11-12.json).
 [R19 port and interrupted reference evidence](evidence/integration-r19-pitch-port-2026-11-09.json).
 
-PR38 `b9c5ab72` is a standalone CGRAM epoch port against `dc0c49d1`.
-The linked exact-color cases, Gate C replay and all current-head CI pass.
-Its loaded RSP banks match master byte for byte. The native paired image,
-PCM and cadence gate remains pending.
+PR38 `b9c5ab72` is VALIDATED and integrated as `b012b6b6`. Linked
+exact-color cases, Gate C replay and five exact-head workflows passed.
+Its loaded RSP banks match the prior master byte for byte. On N64,
+aligned DKC1 RGB, PCM and DSP state match, with both completing 1,198
+guest frames over the same quiet interval in about 20.02 seconds.
+The merged tree matches the tested head. Six post-merge workflows and
+the byte-exact production Latest package pass. R17 restoration passed
+on this run. ALttP and SMW timings still bind to the previous master.
+[CGRAM native evidence and merge](evidence/integration-cgram-native-dkc1-2026-11-12.json).
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
 
@@ -101,7 +107,7 @@ comparisons remain open.
 
 R45 `e12ae12e` is draft PR42 against PR41. Sub and Modes 2–7 bypass a
 redundant helper load. The linked row, packet and dispatch proofs pass.
-Local R43, R44 and R45 controls on current master share their audio source
+Local R43, R44 and R45 controls on `dc0c49d1` share their audio source
 and ROM header title. The linked replays, owner and delay-slot checks
 pass. A fresh exact PR42 ROM matches the prepared binary. The faithful
 RDP restart check passes on Main and Mode 7 of all four variants.
@@ -114,8 +120,10 @@ control passed and the exact R45 repeat with idle warmup completed.
 At frames 4330 and 4346, images and PCM match master. Both complete
 1,198 guest frames from 4347 to 5545 in about 20 seconds. Earlier
 polled throughput of the R45 stack is below master. R17 is restored.
-Use the R44 control to isolate the DKC1 cost. ALttP story and Mode 7
-remain open.
+The subsequent R44 retry reached hello but Windows lost COM3 during
+idle warmup before any aligned capture. R17 is now pending restoration.
+A completed R44 control is needed to isolate the DKC1 cost. ALttP story
+and Mode 7 remain open.
 [R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
 [Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
 [Interrupted native run and bounded warmup rates](evidence/integration-r44-dkc1-interrupted-2026-11-12.json).
@@ -123,8 +131,9 @@ DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
-The full objective remains incomplete. The latest paired native run
-returned by software and verified the habitual R17 installation.
+The full objective remains incomplete. The last completed native run
+returned by software and verified the habitual R17 installation. The
+following R44 attempt left its trial installation pending restoration.
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.

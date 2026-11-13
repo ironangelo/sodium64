@@ -1,3 +1,39 @@
+# 2026-11-12 — Integrate the standalone CGRAM epoch repair
+
+PR38 `b9c5ab72` skips redundant epochs when the raw CGRAM word is
+identical and preserves the bus, store, address progression and
+entry-zero backdrop updates. Five exact-head workflows passed.
+The three-file PR merged as `b012b6b6`. Its merged source tree
+matches the hardware-tested head. Six post-merge workflows passed.
+The public Latest ZIP contains the normal ROM and converter only, both
+byte-identical to the digest-verified CI artifact. The production ELF
+has no lab symbols or allocated diagnostic leases.
+
+On physical N64, DKC1 frames 4330 and 4346 matched the previous
+integrated master at all 134,400 RGB pixels and 16,384 PCM bytes.
+DSP registers, enabled voices and ring positions matched. With
+APU 21 and frameskip 0, both completed 1,198 guest and render frames
+over the same USB-idle 4347-to-5545 interval. The two times were
+20.022356 and 20.023030 seconds. Both VI and software presentation
+counters advanced by 1,198. The candidate returned to SummerCart
+by software and verified all 131,072 bytes of the restored R17.
+
+This extends the combined native baseline to the new master for
+the measured DKC1 intro. The existing ALttP boot and SMW demo rates
+still refer to `dc0c49d1`.
+
+The following R44 control started DKC1 and reached emulator hello.
+Windows lost COM3 about 30 seconds into the host-idle warmup, before
+either aligned capture or the quiet timing interval. Windows reports
+the port absent with problem 45. A device rescan from this session
+was denied. R17 was verified after CGRAM and is pending restoration
+after R44. Restore R17 before further native launches. The direct
+R44/R45 comparison still needs the same DKC1 endpoints on their
+shared base.
+[CGRAM native evidence and merge](evidence/integration-cgram-native-dkc1-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Complete the first physical DKC1 comparison for R45
 
 The existing R17 installation launches DKC1 in 15.453 seconds and

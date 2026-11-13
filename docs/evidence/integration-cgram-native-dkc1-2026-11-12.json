@@ -1,0 +1,159 @@
+{
+  "date_local": "2026-11-12",
+  "physical_device": "N64 with SummerCart64",
+  "workload": "DKC1 original intro, zero controller input",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8,
+    "controller_input": 0
+  },
+  "prior_master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+  "master_reference_provenance": "The reference REMOTE ROM built from adf9f02e is byte-identical to the verified fresh prior master ROM.",
+  "PR38": {
+    "head": "b9c5ab7214b359e9d0f8d699223534ccee4ef7e9",
+    "files": 3,
+    "scope": "Skip redundant CGRAM epochs for identical raw color words while preserving bus, address, store and backdrop behavior.",
+    "merge": "b012b6b665ede6a9c537bf0e491dfdb8867835e1",
+    "merged_tree": "82d3579f5bd9edcf7da099ccd764305c1766c15c",
+    "merged_tree_matches_tested_head": true,
+    "exact_head_CI": {
+      "build": 43283933577,
+      "cgram_replay": 43283933644,
+      "native_usb": 43283933555,
+      "profiling_owners": 43283933695,
+      "ares": 43283933780
+    },
+    "exact_head_CI_conclusion": "success",
+    "launch_ack_seconds": 16.64,
+    "idle_warmup_seconds": 55
+  },
+  "DKC1_aligned": {
+    "runs": [
+      {
+        "head": "adf9f02eed71d851fa003e8af772f88d423ab5c3",
+        "phase": "PASS",
+        "restored_bytes": 131072,
+        "final_menu": {
+          "mode": "menu",
+          "recovery": "0",
+          "build": "paired-A14-usb-loop-fatfs16"
+        },
+        "USB_present_at_end": true,
+        "cadence_endpoints": [
+          4347,
+          5545
+        ],
+        "rate": {
+          "duration_s": 20.022355733333335,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.83311933698005,
+          "render_delta": 1198,
+          "render_per_second": 59.83311933698005,
+          "vi_delta": 1198,
+          "vi_per_second": 59.83311933698005,
+          "present_delta": 1198,
+          "present_per_second": 59.83311933698005
+        }
+      },
+      {
+        "head": "b9c5ab7214b359e9d0f8d699223534ccee4ef7e9",
+        "phase": "PASS",
+        "restored_bytes": 131072,
+        "final_menu": {
+          "mode": "menu",
+          "recovery": "0",
+          "build": "paired-A14-usb-loop-fatfs16"
+        },
+        "USB_present_at_end": true,
+        "cadence_endpoints": [
+          4347,
+          5545
+        ],
+        "rate": {
+          "duration_s": 20.023029632,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.831105582813734,
+          "render_delta": 1198,
+          "render_per_second": 59.831105582813734,
+          "vi_delta": 1198,
+          "vi_per_second": 59.831105582813734,
+          "present_delta": 1198,
+          "present_per_second": 59.831105582813734
+        }
+      }
+    ],
+    "captures": [
+      {
+        "frame": 4330,
+        "total_RGB": 67200,
+        "RGB_differences": 0,
+        "RGB_difference_bounds": null,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "PCM_stereo_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      },
+      {
+        "frame": 4346,
+        "total_RGB": 67200,
+        "RGB_differences": 0,
+        "RGB_difference_bounds": null,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "PCM_stereo_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      }
+    ]
+  },
+  "disposition": "Scoped linked, CI and physical regression gates passed. Both versions complete 1198 guest frames, render frames, VI observations and software-reported new presentations over the same quiet interval. PR38 is merged. ALttP and SMW baseline figures in the prior checkpoint belong to the prior master.",
+  "master_CI": {
+    "build": 43295133324,
+    "window_color": 43295133066,
+    "cgram_replay": 43295132943,
+    "native_usb": 43295133175,
+    "profiling_owners": 43295133006,
+    "ares": 43295133001,
+    "conclusion": "success"
+  },
+  "public_latest": {
+    "release_id": 443440527,
+    "asset_id": 740875748,
+    "normal_artifact_id": 13979510845,
+    "asset_bytes": 44619,
+    "release_tag": "b012b6b665ede6a9c537bf0e491dfdb8867835e1",
+    "payloads": [
+      "rom-converter.py",
+      "sodium64.z64"
+    ],
+    "payloads_match_normal_artifact": true,
+    "release_package_check": "PASS",
+    "allocated_diagnostic_leases": 0,
+    "laboratory_symbols": 0
+  },
+  "subsequent_R44_control": {
+    "PR41_head": "4859b8c5e3bc16fbed27b728ce37a46681951c2d",
+    "source_head": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+    "source_tree_matches_PR_head": true,
+    "launch_ack_elapsed_s": 18.187,
+    "first_hello_elapsed_s": 20.234,
+    "first_hello_frame": 33,
+    "quiet_warmup_start_elapsed_s": 20.297,
+    "PnP_device_absent_elapsed_s": 50.047,
+    "USB_present_at_end": false,
+    "aligned_captures": 0,
+    "quiet_cadence_collected": false,
+    "menu_return_attempted": false,
+    "R17_restore_pending": true,
+    "host_PnP_problem": 45,
+    "host_device_rescan_exit": 5,
+    "scope": "The endpoint was lost during the host-idle warmup. No closing sample or observation of the console display was available."
+  }
+}

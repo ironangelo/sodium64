@@ -1,0 +1,58 @@
+{
+  "date_local": "2026-11-12",
+  "source": "f5b314474a1d9634f32d904eee6bb893db868055",
+  "base": "b012b6b665ede6a9c537bf0e491dfdb8867835e1",
+  "pr": 44,
+  "head": "027a1233fbfa9dbdddecb1709a6695dddb5d8c75",
+  "changed_files": 3,
+  "runtime_scope": [
+    "BRA",
+    "BRL",
+    "BPL",
+    "BMI",
+    "BVC",
+    "BVS",
+    "BCC",
+    "BCS",
+    "BNE"
+  ],
+  "behavior": "Retain opcode dispatch, operand reads, conditions, cycle debits and high bits of the post-operand PC. Apply the relative result to the low 16 bits. Preserve BEQ idle detection.",
+  "linked_proof": {
+    "configurations": [
+      "normal",
+      "PROFILE",
+      "REMOTE"
+    ],
+    "branch_cases_per_build": 209232,
+    "BEQ_idle_cases_per_build": 2,
+    "emitted_faults_rejected_per_build": 1,
+    "differential_reference_builds": [
+      "normal",
+      "REMOTE"
+    ],
+    "changed_taken_paths_one_host_instruction_shorter_per_differential": 98640
+  },
+  "linked_layout": {
+    "normal": {
+      "changed_bytes": 162,
+      "linked_symbol_addresses": 1246,
+      "allocated_addresses": 767480,
+      "loaded_RSP_banks_identical": true
+    },
+    "remote": {
+      "changed_bytes": 162,
+      "linked_symbol_addresses": 1316,
+      "allocated_addresses": 775516,
+      "loaded_RSP_banks_identical": true
+    }
+  },
+  "normal_release_isolation": "PASS",
+  "PR_CI": {
+    "build": 43344571795,
+    "owners": 43344571784,
+    "USB": 43344571776,
+    "ares": 43344571779
+  },
+  "native_scope": "Prior A12 component provenance. No isolated physical timing or combined baseline on this change has been measured.",
+  "disposition": "CANDIDATE. Exact-head PR checks are running. Same linked addresses and unrelated loaded bytes in the matched local normal and USB builds."
+}

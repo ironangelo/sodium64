@@ -1,3 +1,23 @@
+# 2026-11-12 — Extract nine 65C816 branch tails into PR44
+
+PR44 `027a1233` extracts the nine A12 relative-branch tails from
+`f5b31447` onto `b012b6b6`. The taken paths each execute one fewer host
+instruction. BRA keeps one padding word to preserve the linked cache-line
+layout. Exactly 162 loaded bytes change within the nine handlers in
+both matched builds. All symbol and allocation addresses and both
+resident RSP banks match. BEQ's idle path is intact.
+
+The actual linked opcode dispatch passes 209,232 directed branch cases,
+two BEQ idle cases and a negative delay-slot test in each of normal,
+PROFILE and REMOTE. Normal and REMOTE match master on guest destinations,
+operand reads and cycle debits. The production admission check passes.
+Exact-head PR checks are running. This is a candidate for integration
+with no isolated native cadence claim. COM3 remains absent and R17
+restoration is still pending.
+[Linked 65C816 branch evidence](evidence/integration-cpu-relative-branches-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Separate the DKC1 intro gate from R45's measured first-stage benefit
 
 The October R44/R45 pair reached the first stage with six matched input

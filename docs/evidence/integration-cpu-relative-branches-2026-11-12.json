@@ -248,5 +248,42 @@
     "build_artifact": 14054305904,
     "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
     "exact_production_payloads": true
+  },
+  "master_native_baseline_preflight": {
+    "source": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+    "local_ROM_sha256": "518478b48900bc2f0bdb85cb4ffb974d3a1ecc0f1a6732f2d1cb6ea2e8ddf631",
+    "local_ROM_bytes": 114688,
+    "master_CI_bench_artifact": 14052798773,
+    "master_and_PR44_CI_bench_ROM_identical": true,
+    "linked_diff_against_matched_CGRAM_base": {
+      "changed_bytes_in_nine_handlers": 162,
+      "allocated_addresses_match": 775516,
+      "symbol_addresses_match": 1316
+    },
+    "cases": {
+      "SMW": [
+        3000,
+        3016
+      ],
+      "ALttP": [
+        1862,
+        1878
+      ],
+      "DKC1": [
+        4330,
+        4346
+      ]
+    },
+    "settings": {
+      "APU_clock": 21,
+      "frameskip": 0,
+      "audio": 4,
+      "precision": 8,
+      "controller_input": 0
+    },
+    "quiet_seconds": 20,
+    "comparator_preflight": "Reproduced the prior DKC1 two-capture parity and quiet endpoints; loaded and verified both archived SMW and ALttP receipts.",
+    "R17_restoration_pending": true,
+    "new_physical_result": null
   }
 }

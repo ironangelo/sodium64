@@ -19,7 +19,11 @@ integration. PR21 remains an inventory of separable changes.
 
 COM3 remains absent. Restore R17 before a native launch. DKC1 on
 `b012b6b6` remains the previous physical result. The current master
-still needs combined ALttP, SMW and DKC1 measurements.
+still needs combined ALttP, SMW and DKC1 measurements. The pinned local
+master bench ROM and private matched-frame comparison are ready. The
+new CI bench ROM matches the PR44 CI bench ROM byte for byte. The
+comparison verifies RGB, PCM, DSP state, settings and R17 restoration,
+and reports whether both quiet guest intervals have the same endpoints.
 [PR44 validation and release](evidence/integration-cpu-relative-branches-2026-11-12.json).
 
 ---

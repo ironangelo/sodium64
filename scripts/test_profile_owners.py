@@ -19,7 +19,9 @@ def main():
         return c
     for path in a.elf:
         memory,s=load_elf(path);hw='hw_profile_header' in s
-        assert s['__bss_end']<=0x800be200 and max(memory)<0xbe200
+        arena=s.get('renderer_cgram_owner_begin',0xbe200)
+        assert arena in (0xbe200,0xd2000), 'unqualified CGRAM owner'
+        assert s['__bss_end']<=0x80000000+arena and max(memory)<arena
         assert not any(0x400000<=at<0x800000 for at in memory)
         for size in (0,4194304,8388607,8388609,0xffffffff,8388608):
             c=boot(memory,s,size)
@@ -36,11 +38,15 @@ def main():
         # Run the real base-arena clear, then verify every embedded RSP bank is
         # intact. The old linked HW build is an actual failing counterexample.
         c=boot(memory,s,8388608,complete=True)
-        for bank in ('rsp_main','rsp_mode7'):
-            for section in ('text','data'):
-                symbol=bank+'_'+section+'_start'
-                assert c.blob(s[symbol],4096)==bytes(normal[(ns[symbol]+i)&0x1fffffff] for i in range(4096))
-                cases+=1
+        bank_sections=sorted(name for name in s if name.startswith('rsp_') and
+                             name.endswith(('_text_start','_data_start')))
+        assert bank_sections, 'no embedded renderer sections checked'
+        for symbol in bank_sections:
+            end=symbol[:-6]+'_end'
+            size=s[end]-s[symbol]
+            assert 0<size<=4096 and ns[end]-ns[symbol]==size
+            assert c.blob(s[symbol],size)==bytes(normal[(ns[symbol]+i)&0x1fffffff] for i in range(size))
+            cases+=1
         c.pattern();c.cp[9]=100;c.cp[12]=0x403;c.write(0xa8000000,0x53363448)
         c.execute(s['profile_init'])
         assert c.read(s['profile_sample_count'])==0
@@ -71,7 +77,9 @@ def main():
                 broken.execute(s['hw_profile_finalize'],stop=s['hw_profile_guard_failed'])
                 assert broken.read(s['hw_profile_hdr_complete'])==0 and broken.read(0xa8000000)==0
                 cases+=1
-        variants.append({'hw':hw,'static_end':hex(s['__bss_end']),'upper_lease':[0x448000,0x44d000]})
+        variants.append({'hw':hw,'static_end':hex(s['__bss_end']),
+                         'first_CGRAM_owner':hex(arena),'embedded_sections_checked':len(bank_sections),
+                         'upper_lease':[0x448000,0x44d000]})
     legacy=None
     if a.legacy_hw_elf:
         old,os=load_elf(a.legacy_hw_elf);c=fresh(old)

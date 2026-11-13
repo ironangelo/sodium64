@@ -8,6 +8,10 @@ PROFILE ?= 0
 HW_PROFILE ?= 0
 HW_PROFILE_WARMUP ?= 2
 REMOTE ?= 0
+FAITHFUL_RENDERER ?= 0
+ifeq ($(FAITHFUL_RENDERER),1)
+N64_RENDERER_FLAGS := -DSODIUM64_FAITHFUL_RENDERER=1
+endif
 ifeq ($(REMOTE),1)
 ifneq ($(PROFILE)$(HW_PROFILE),00)
 $(error REMOTE is a separate retired-frame bench, not a PROFILE/HW_PROFILE build)
@@ -26,7 +30,11 @@ PROFILE := 1
 endif
 
 SFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
+ifneq ($(FAITHFUL_RENDERER),1)
+SFILES := $(filter-out src/rsp_hcomp% src/rsp_object_cache.S src/rsp_mode7_window.S,$(SFILES))
+endif
 HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
+HFILES += $(wildcard src/renderer/*.inc) $(wildcard src/renderer/*.h) $(wildcard src/*.inc)
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
 ifeq ($(REMOTE),1)
 OFILES += $(BUILD_DIR)/src/remote_control_c.o
@@ -65,19 +73,26 @@ N64_ELFCOMPRESS = $(N64_BINDIR)/n64elfcompress
 N64_AUDIOCONV = $(N64_BINDIR)/audioconv64
 N64_MKSPRITE = $(N64_BINDIR)/mksprite
 
-N64_ASFLAGS = -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
-N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
+N64_ASFLAGS = $(N64_RENDERER_FLAGS) -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
+N64_RSPASFLAGS = $(N64_RENDERER_FLAGS) -march=mips1 -mabi=32 -Wa,--fatal-warnings
 N64_LDFLAGS = -L$(N64_LIBDIR) -Tn64.ld --gc-sections
 ifeq ($(REMOTE),1)
 N64_ASFLAGS += -DSODIUM64_REMOTE=1
+ifneq ($(FAITHFUL_RENDERER),1)
 N64_LDFLAGS += -Tsrc/usb_bench_memory.ld
+endif
+endif
+ifeq ($(FAITHFUL_RENDERER),1)
+N64_LDFLAGS += -Tsrc/renderer_memory.ld
 endif
 N64_TOOLFLAGS = --title $(N64_ROM_TITLE)
 N64_ED64ROMCONFIGFLAGS = --savetype $(N64_ROM_SAVETYPE) --regionfree
 
 ifeq ($(PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_PROFILE=1
+ifneq ($(FAITHFUL_RENDERER),1)
 N64_LDFLAGS += -Tsrc/profile_memory.ld
+endif
 endif
 ifeq ($(HW_PROFILE),1)
 N64_ASFLAGS += -DSODIUM64_HW_PROFILE=1 -DHW_PROFILE_WARMUP_SECONDS=$(HW_PROFILE_WARMUP)
@@ -123,7 +138,9 @@ $(BUILD_DIR)/%.o: %.S
 		DATASECTION="$(basename $@).data"; \
 		BINARY="$(basename $@).elf"; \
 		echo "    [RSP] $<"; \
-		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-Trsp.ld -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
+		RSPLINK=rsp.ld; \
+		case "$$FILENAME" in rsp_hcomp*|rsp_object_cache|rsp_mode7_window) RSPLINK=src/rsp_hcomp.ld;; esac; \
+		$(N64_CC) $(RSPASFLAGS) -L$(N64_LIBDIR) -nostartfiles -Wl,-T$$RSPLINK -Wl,--gc-sections  -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map -o $@ $<; \
 		mv "$@" $$BINARY; \
 		$(N64_OBJCOPY) -O binary -j .text $$BINARY $$TEXTSECTION.bin; \
 		$(N64_OBJCOPY) -O binary -j .data $$BINARY $$DATASECTION.bin; \
@@ -154,7 +171,7 @@ $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h M
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)
 	@echo "    [LD] $@"
-	$(CXX) -o $@ $(filter-out $(N64_LIBDIR)/n64.ld,$^) -lc $(patsubst %,-Wl$(COMMA)%,$(LDFLAGS)) -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map
+	$(CXX) -o $@ $(filter-out %.ld,$^) -lc $(patsubst %,-Wl$(COMMA)%,$(LDFLAGS)) -Wl,-Map=$(BUILD_DIR)/$(notdir $(basename $@)).map
 	$(N64_SIZE) -G $@
 
 .SILENT:
@@ -162,6 +179,9 @@ $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h M
 all: $(PROJ_NAME).z64
 
 $(BUILD_DIR)/$(PROJ_NAME).elf: $(OFILES)
+ifeq ($(FAITHFUL_RENDERER),1)
+$(BUILD_DIR)/$(PROJ_NAME).elf: src/renderer_memory.ld
+endif
 
 $(OFILES): $(HFILES)
 
@@ -169,3 +189,5 @@ clean:
 	rm -rf $(BUILD_DIR) $(PROJ_NAME).z64
 
 .PHONY: all clean
+
+$(filter $(BUILD_DIR)/src/rsp_hcomp% $(BUILD_DIR)/src/rsp_object_cache.o $(BUILD_DIR)/src/rsp_mode7_window.o,$(OFILES)): src/rsp_hcomp.ld

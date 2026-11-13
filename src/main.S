@@ -19,6 +19,10 @@
 
 #include "defines.h"
 
+// Bind linker and emitted-owner proofs to the same CPU/RSP layout selection.
+.globl renderer_cgram_owner_begin
+.equ renderer_cgram_owner_begin, HCOMP_CGRAM_BASE_QUEUE1 & 0x1FFFFFFF
+
 .globl framebuffer
 .globl fps_native
 .globl fps_emulate
@@ -159,6 +163,16 @@ clear_vram:
     bne t0, t1, clear_vram
     addi t0, t0, 8
 
+#ifdef SODIUM64_FAITHFUL_RENDERER
+    // Initialize only the explicitly owned composition surfaces and row queues.
+    li t0, HCOMP_WINNER_ARENA
+    li t1, HCOMP_CGRAM_EVENT_QUEUE2 - 8
+clear_hcomp_surfaces:
+    sd zero, (t0)
+    bne t0, t1, clear_hcomp_surfaces
+    addi t0, t0, 8
+#endif
+
     // Initialize the VI to display a 16-bit 256x224 framebuffer
     lui t0, 0xA440 // VI register upper address
     li t1, 0x00000202 // 16-bit pixel format, no anti-aliasing
@@ -247,6 +261,61 @@ pi_wait1:
     jal rsp_upload
     li a0, 0x0000 // DMEM address
 
+#ifdef SODIUM64_FAITHFUL_RENDERER
+.globl faithful_overlay_bind_begin, faithful_overlay_bind_end
+faithful_overlay_bind_begin:
+    // Main stays at E90. Mode7 window entry owns E8C; its affine draw bank
+    // uses audited EA4. The H-COMP bridge keeps E94 and all resident entries.
+.globl tmem_atlas_cpu_bind, tmem_atlas_cpu_bind_end
+tmem_atlas_cpu_bind:
+    la t0, rsp_object_cache_text_start
+    sw t0, DMEM(OVERLAY_OBJECT_CACHE_SRC)
+tmem_atlas_cpu_bind_end:
+    la t0, rsp_mode7_window_text_start
+    sw t0, DMEM(OVERLAY_MODE7_SRC)
+    la t0, rsp_mode7_text_start
+    addi t0, t0, 0x3A8
+    sw t0, DMEM(OVERLAY_MODE7_DRAW_SRC)
+    la t0, rsp_main_text_start
+    addi t0, t0, 0x3A8
+    sw t0, DMEM(OVERLAY_MAIN_SRC)
+    la t0, rsp_hcomp_text_start
+    sw t0, DMEM(OVERLAY_HCOMP_SRC)
+    la t0, rsp_hcomp_math_text_start
+hcomp_fixed_window_cpu_bind:
+    // The inner fixed-window bank falls back to the original Math image.
+    la t1, rsp_hcomp_fixed_window_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_fixed_window_text_start
+hcomp_fixed_window_cpu_bind_end:
+hcomp_rdp_fixed_cpu_bind:
+    la t1, rsp_hcomp_rdp_fixed_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_rdp_fixed_text_start
+hcomp_rdp_fixed_cpu_bind_end:
+hcomp_rdp_cpu_bind:
+    // The outer bank keeps the current Math fallback in owned RDRAM.
+    // No free DMEM word is borrowed; descriptor publication is uncached.
+    la t1, rsp_hcomp_rdp_data_start
+    lui t2, 0x2000
+    or t1, t1, t2
+    sw t0, 0(t1)
+    la t0, rsp_hcomp_rdp_text_start
+    sw t0, DMEM(OVERLAY_HCOMP_MATH_SRC)
+hcomp_rdp_cpu_bind_end:
+    la t0, rsp_hcomp_setup_text_start
+    sw t0, DMEM(OVERLAY_HCOMP_SETUP_SRC)
+    la t0, rsp_hcomp_fast_text_start
+    sw t0, DMEM(OVERLAY_HCOMP_FAST_SRC)
+    la t0, rsp_hcomp_tlut_text_start
+    sw t0, DMEM(OVERLAY_HCOMP_TLUT_SRC)
+faithful_overlay_bind_end:
+
+#else
     // Publish the fixed renderer-slot sources for demand-driven RSP overlays.
     // Referencing both embedded blobs also keeps them resident in the final ROM.
     la t0, rsp_main_text_start
@@ -256,6 +325,7 @@ pi_wait1:
     addi t0, t0, 0x3A8
     sw t0, DMEM(OVERLAY_MODE7_SRC)
 
+#endif
     // Publish the raw historical-palette workspaces used by the DMA8 CGRAM
     // replay consumer. sp remains 0/4, matching queue ownership.
     li t0, HCOMP_RAW_PALETTE_QUEUE1

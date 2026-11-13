@@ -1,0 +1,391 @@
+{
+  "status": "CANDIDATE",
+  "source_master": "9915df5e833e31747a106eeff3b7aeb0c1876b0c",
+  "frozen_renderer_source": "238170abf956da705806f979f9cc256fbc565ac0",
+  "R44_R45_included": false,
+  "complete_rsp_reference": {
+    "passed": true,
+    "source": "238170abf956da705806f979f9cc256fbc565ac0",
+    "reference_patches": "Decoder JR return NOPs; seven laboratory limit sites folded to ordinary zero-limit behavior with fixed instruction counts.",
+    "scope": "Complete linked RSP text/data/extents and PPU object sections/relocations; execution, RDP rasterization and native timing are separate gates.",
+    "physical_acceptance": false,
+    "banks": {
+      "rsp_main": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 8192,
+        "text_bytes": 4096,
+        "text_sha256": "272dbadd452f54d77a7e1dd8b4c92cdbd1a73343d80d2ee31a6154b6a79ff2a2"
+      },
+      "rsp_mode7": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 8192,
+        "text_bytes": 4096,
+        "text_sha256": "ea68d1f02033a0384db34a06033b0c1634c1672ccb74a2de63b3de911eb355be"
+      },
+      "rsp_hcomp": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "89b43251136d7cca6d7ea965222700976b60339dc283169b1b76058b92b17b1c"
+      },
+      "rsp_hcomp_math": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "3f7847f16a234669813b365ca96bfb03911aaee4b0b7deec806a460c4fefa87c"
+      },
+      "rsp_hcomp_fast": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "8a0f33b81cac5e8d9a3cee63324f66e222855fe4e04f8c4d56ed042ef8b9c259"
+      },
+      "rsp_hcomp_setup": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "81871b070b3b450d55a79c91a3f56465f257b45b6e90006ba2e35ed765657421"
+      },
+      "rsp_hcomp_tlut": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "c801c81d292de8c1949fc33d14c2db7276db00276d0334071584827e1b76bda3"
+      },
+      "rsp_hcomp_rdp": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1232,
+        "text_bytes": 1000,
+        "text_sha256": "01e2368a6ce58984af45a9b50cb0d17d51b98d7a472f6089b972f5215c242a24"
+      },
+      "rsp_hcomp_fixed_window": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1008,
+        "text_bytes": 1000,
+        "text_sha256": "fa5e51b14f91638ffebc47e84036552a174da1a4ba4e4c4bbc4fce6b93836035"
+      },
+      "rsp_hcomp_rdp_fixed": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1168,
+        "text_bytes": 1000,
+        "text_sha256": "4a86ceea692b10e00d6496e6fe133666155d72e548f24a17174942fbf61bb3f3"
+      },
+      "rsp_mode7_window": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "b0c4a7e8e801c3366bca7a6230c2a0c6d6c67ce19f6b5e6a3c54e7c700596888"
+      },
+      "rsp_object_cache": {
+        "all_allocated_bytes_and_addresses_identical": true,
+        "allocated_bytes": 1001,
+        "text_bytes": 1000,
+        "text_sha256": "ddf9bfb90b05ce0d6c2a13c19f10d251330c11494b4d40f5c317a19e56ef8e08"
+      }
+    },
+    "laboratory_limit_elision": {
+      "rsp_main": {
+        "scalar_cases": 16,
+        "poison_values": 4,
+        "changed_instruction_words": 2,
+        "ordinary_register_state_identical": true,
+        "production_limit_reads": 0
+      },
+      "rsp_hcomp": {
+        "scalar_cases": 16,
+        "poison_values": 4,
+        "changed_instruction_words": 6,
+        "ordinary_register_state_identical": true,
+        "production_limit_reads": 0
+      },
+      "rsp_hcomp_fast": {
+        "scalar_cases": 16,
+        "poison_values": 4,
+        "changed_instruction_words": 2,
+        "ordinary_register_state_identical": true,
+        "production_limit_reads": 0
+      },
+      "rsp_hcomp_tlut": {
+        "scalar_cases": 16,
+        "poison_values": 4,
+        "changed_instruction_words": 2,
+        "ordinary_register_state_identical": true,
+        "production_limit_reads": 0
+      },
+      "rsp_hcomp_rdp": {
+        "scalar_cases": 16,
+        "poison_values": 4,
+        "changed_instruction_words": 2,
+        "ordinary_register_state_identical": true,
+        "production_limit_reads": 0
+      },
+      "rsp_hcomp_fixed_window": {
+        "scalar_cases": 16,
+        "poison_values": 4,
+        "changed_instruction_words": 2,
+        "ordinary_register_state_identical": true,
+        "production_limit_reads": 0
+      },
+      "rsp_hcomp_rdp_fixed": {
+        "scalar_cases": 16,
+        "poison_values": 4,
+        "changed_instruction_words": 2,
+        "ordinary_register_state_identical": true,
+        "production_limit_reads": 0
+      }
+    },
+    "PPU_producer": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7168,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 688,
+      "USB_callsite_selected": false
+    }
+  },
+  "local_compiled_variants": [
+    "normal",
+    "PROFILE",
+    "HW_PROFILE warmup25",
+    "USB"
+  ],
+  "CPU_publication": {
+    "cases": 16,
+    "writes_per_case": 12,
+    "faults_rejected_per_variant": [
+      "missing_Mode7_source",
+      "missing_fallback_descriptor",
+      "wrong_fallback_source",
+      "cached_fallback_descriptor"
+    ],
+    "scope": "CPU source/uncached descriptor publication and register ownership only; no RSP DMA, rasterization or timing model."
+  },
+  "ROM_cursor": {
+    "cases": 3104,
+    "faults_rejected_per_variant": [
+      "late_wrap",
+      "early_wrap",
+      "missing_wrap",
+      "writable_ROM_entry"
+    ],
+    "scope": "Actual 194-slot cursor and readonly EntryLo0 construction; no PI, TLB replacement, title or native performance claim."
+  },
+  "physical_acceptance": false,
+  "enabled_CI": "New runtime limit removal and functional contracts require a new exact-head run; previous f91244b5 all six workflows passed.",
+  "pending": [
+    "new exact-head enabled and retained CI after the 18-word laboratory-limit fold",
+    "real-N64 RDP/pager/cache and aligned house/rain/SMW/DKC/Mode7 image/APU/PCM controls",
+    "combined full-rate cadence, verified return/restoration, then default promotion without a legacy user mode"
+  ],
+  "production_default": "unchanged; temporary build-only flag defaults to zero",
+  "initial_CI_failures": [
+    {
+      "run": 39153876148,
+      "gate": "enabled compilation",
+      "cause": "missing pinned SDK rdpq_macros.h"
+    },
+    {
+      "run": 39153876157,
+      "gate": "Ares enabled compilation",
+      "cause": "same missing header; Ares execution did not run"
+    },
+    {
+      "run": 39153876155,
+      "gate": "legacy source consumer",
+      "cause": "temporary wrapper endif counted as an instruction"
+    }
+  ],
+  "pinned_SDK_header": {
+    "source": "DragonMinded/libdragon@e356bf3f56f7afbf7e5246329562f145965cfdfc/include/rdpq_macros.h",
+    "sha256": "6c1ee24daa618cdca631dbc57bcb32f982a6c2c30bfa42f5d03ba81355c57cc5",
+    "all_12_RSP_allocated_images_match_with_pinned_header": true
+  },
+  "legacy_source_check": "Exact temporary wrapper is selected explicitly; enabled renderer is a separate gate, never inferred from legacy PASS.",
+  "PPU_reference_by_configuration": {
+    "normal": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7168,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 688,
+      "USB_callsite_selected": false
+    },
+    "profile": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7168,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 688,
+      "USB_callsite_selected": false
+    },
+    "hw": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7168,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 688,
+      "USB_callsite_selected": false
+    },
+    "usb": {
+      "all_allocated_sections_and_relocations_identical": true,
+      "sections": {
+        ".text": 7232,
+        ".data": 67924,
+        ".bss": 0,
+        ".MIPS.abiflags": 24
+      },
+      "normalized_relocations": 700,
+      "USB_callsite_selected": true
+    }
+  },
+  "repaired_CI_head_e4d078d8": {
+    "enabled_port_contracts": 39154212558,
+    "legacy_CGRAM": 39154212457,
+    "normal_build": 39154212515,
+    "owners": 39154212529,
+    "USB": 39154212438,
+    "status": "All listed PASS; Ares39154212460 still running. New PPU reference extension needs new-head CI."
+  },
+  "validation_rechecked": "2026-11-08",
+  "ROM_replacement": {
+    "passed": true,
+    "TLBP_model_cases": 10,
+    "variants": [
+      {
+        "elf": "build_faithful\\sodium64-faithful.elf",
+        "refills": 646,
+        "cold": 194,
+        "victim_present": 226,
+        "victim_absent": 226,
+        "PI_bytes": 5292032,
+        "faults_rejected": [
+          "missing_victim_probe",
+          "missing_old_map_restore",
+          "missing_index_restore",
+          "missing_PI_wait",
+          "short_PI_refill"
+        ]
+      },
+      {
+        "elf": "build_faithful_profile\\sodium64-faithful-profile.elf",
+        "refills": 646,
+        "cold": 194,
+        "victim_present": 226,
+        "victim_absent": 226,
+        "PI_bytes": 5292032,
+        "faults_rejected": [
+          "missing_victim_probe",
+          "missing_old_map_restore",
+          "missing_index_restore",
+          "missing_PI_wait",
+          "short_PI_refill"
+        ]
+      },
+      {
+        "elf": "build_faithful_hw\\sodium64-faithful-hw.elf",
+        "refills": 646,
+        "cold": 194,
+        "victim_present": 226,
+        "victim_absent": 226,
+        "PI_bytes": 5292032,
+        "faults_rejected": [
+          "missing_victim_probe",
+          "missing_old_map_restore",
+          "missing_index_restore",
+          "missing_PI_wait",
+          "short_PI_refill"
+        ]
+      },
+      {
+        "elf": "build_faithful_usb\\sodium64-faithful-usb.elf",
+        "refills": 646,
+        "cold": 194,
+        "victim_present": 226,
+        "victim_absent": 226,
+        "PI_bytes": 5292032,
+        "faults_rejected": [
+          "missing_victim_probe",
+          "missing_old_map_restore",
+          "missing_index_restore",
+          "missing_PI_wait",
+          "short_PI_refill"
+        ]
+      }
+    ],
+    "physical_acceptance": false,
+    "scope": "Complete emitted refill/eviction with functional PI/TLB, delayed completion, alias/owner checks; no cache, bus timing or hazard model."
+  },
+  "execution_replay": {
+    "fixture_source": "238170abf956da705806f979f9cc256fbc565ac0",
+    "fixture_input_adaptations": [
+      "Aligned Phase pointer: actual production descriptors carry no historical observer bank tag."
+    ],
+    "windows": {
+      "passed": true,
+      "compiled_cases": 1792,
+      "negative_mutations_rejected": 2,
+      "both_rsp_banks": true,
+      "pixel_truth_width": 256,
+      "preserved_registers_and_memory": true,
+      "physical_acceptance": false
+    },
+    "OBJ_rows": {
+      "passed": true,
+      "objects": 28672,
+      "drawn_rows": 19328,
+      "culled_rows": 88192,
+      "commercial_data": false,
+      "native_timing": false
+    },
+    "Math": {
+      "fixture_passed": true,
+      "candidate_passed": true,
+      "baseline_only": false,
+      "scope": "linked_math_bank_with_seeded_setup_and_delayed_dma",
+      "cases": 12,
+      "pixels": 70912,
+      "hardware_mocked": true,
+      "native_timing_authority": false,
+      "rdp_rasterization_authority": false,
+      "private_data": false,
+      "backup_address": "0xd2400",
+      "negative_guards": [
+        "skip_restore",
+        "short_backup",
+        "oam_overlap"
+      ]
+    },
+    "scope": "Linked window/OBJ and seeded full-row Math with delayed RSP DMA; no RDP rasterizer, CPU cache, native timing or title model.",
+    "ordinary_numeric_Math_cases_before_after_limit_fold_identical": 12
+  },
+  "loaded_delta_from_precleanup": {
+    "passed": true,
+    "allocated_bytes": 778424,
+    "changed_instruction_words": 18,
+    "changed_bytes": 55,
+    "all_other_loaded_bytes_and_addresses_identical": true,
+    "scope": "Only seven RSP laboratory-limit sites change; every CPU/APU/DSP/PPU byte and all embedded RSP data stay identical."
+  },
+  "fixture_failures_preserved": [
+    {
+      "fixture": "original full-row replay",
+      "cause": "Historical observer ID3 made the synthetic Phase pointer unaligned in production. Actual CPU publications are untagged. Only that input was adapted; VM alignment and owner assertions were retained."
+    },
+    {
+      "fixture": "release NOBITS negative control",
+      "cause": "Local compiler emits no nonempty BSS. The mutant now explicitly converts an allocated section to NOBITS; admission checks were not weakened."
+    }
+  ]
+}

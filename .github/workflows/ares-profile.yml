@@ -30,7 +30,9 @@ jobs:
         run: |
           set -o pipefail
           source scripts/setup_n64_ci.sh
-          make PROFILE=1 -j$(nproc) 2>&1 | tee profile-build.log
+          # Qualify the extracted compositor itself; default production remains
+          # unchanged until its complete native/fidelity gates pass.
+          make PROFILE=1 FAITHFUL_RENDERER=1 -j$(nproc) 2>&1 | tee profile-build.log
 
       - name: Record profiling build metrics
         run: |

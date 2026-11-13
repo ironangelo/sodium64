@@ -183,3 +183,10 @@ completed legacy control for the faithful comparison.
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.
+
+The isolated local menu build separates the normal master play
+installation and the private USB bench. The build, synthetic loader,
+SRAM seeding and host slot checks pass. Windows must enumerate the
+SummerCart before restoration or deployment can proceed. A missing
+USB device still requires independent recovery.
+[Private menu and transport evidence](evidence/private-native-menu-split-2026-11-13.json).

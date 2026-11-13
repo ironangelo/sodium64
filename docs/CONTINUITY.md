@@ -1,3 +1,29 @@
+# 2026-11-13 — Build separate play and bench slots for the private menu
+
+The current paired menu points both the browser and USB launcher at
+one emulator file. A failed test can leave the everyday installation
+pointing at the trial. The local private menu build now uses separate
+play and bench files. The play candidate is the exact normal
+`c90ef5c9` CI ROM. R17 remains a rollback file. The runner admits the
+bench slot only after the menu advertises it. It returns to the menu
+without rewriting the play file. The private launch reads the guest
+SRAM seed, clears the temporary tail and avoids the unused capture pool.
+The menu build and 56 menu, eight SRAM seed, and mock host tests pass.
+
+Windows still reports the FTDI converter and COM3 absent with the
+console reported off. No migration or restoration has been written
+since the last failed PR32 load. Once the cartridge enumerates,
+verify power-off through CIC, restore the legacy file, then stage
+and read back the play ROM, bench ROM, private menu and browser INI.
+Native qualification requires the new menu to boot, a verified bench
+launch and software return, and the normal browser game path.
+A full USB disappearance still needs an independent recovery path.
+The cart reset command uses the absent USB link and does not power
+cycle the N64. Keep the renderer and APU promotion gates intact.
+[Private menu and transport evidence](evidence/private-native-menu-split-2026-11-13.json).
+
+---
+
 # 2026-11-13 — Retain the physical wait control and interrupted PR32 load
 
 The instrumented legacy control completes the early DKC1 case on N64.

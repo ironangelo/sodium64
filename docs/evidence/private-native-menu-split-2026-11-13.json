@@ -1,0 +1,39 @@
+{
+  "date_local": "2026-11-13",
+  "scope": "Local paired SummerCart menu and PC runner. Outside Sodium64 master and Latest.",
+  "prior_menu_build": "paired-A14-usb-loop-fatfs16",
+  "candidate_menu": {
+    "build": "paired-A14-private-bench-v2",
+    "bytes": 1753088,
+    "sha256": "998dbd1ddad1ec7e168014055c498efce2d21dd2e68be19291e5f50dacd4b722",
+    "pinned_libdragon": true,
+    "DFS_byte_identical": true,
+    "local_source_patch_sha256": "517871d6dfaa7dcda783c8d71876d06717da486f3fe6cf35e203141399cd8edf"
+  },
+  "production_play_candidate": {
+    "master": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+    "artifact": 14054305904,
+    "bytes": 98304,
+    "sha256": "db51f9e145932f80b3217b69750a1b405f741ec161448afd9c36155eae1dce20",
+    "mode": "Normal production ROM with normal manual-menu SRAM behavior."
+  },
+  "bench_behavior": "Fixed separate emulator slot. Reuses the loader and 0x104000 guest offset. Reads up to the existing 8192-byte guest SRAM seed under read-only FAT access, uses the established blank pattern for missing saves, clears the private tail, and disables automatic writeback. Avoids creating 16 unused diagnostic files during these USB frame/audio runs.",
+  "gates": {
+    "synthetic_menu_and_loader_checks": 56,
+    "exact_body_sram_seed_checks": 8,
+    "simulated_runner_slot_and_mismatched_menu_guard": "PASS",
+    "simulated_SD_staged_readback_idempotency_and_rename_rollback": "PASS",
+    "N64_menu_and_normal_gameplay": "PENDING",
+    "R45_Mode7": "PENDING",
+    "PR32_faithful_wait_attribution": "PENDING"
+  },
+  "transport": {
+    "user_reported_console_off": true,
+    "windows_device_present": false,
+    "device_problem": 45,
+    "deployer_lists_devices": false,
+    "installed_trial_after_PR32_interruption": true,
+    "card_changes_in_this_checkpoint": false,
+    "reset_contract": "In the local SC64 2.20.2 source, the host reset command resets cartridge configuration/CIC parameters over the same USB transport. The controller samples the N64 RESET line as input. No independent PC-accessible power/reset endpoint has been identified."
+  }
+}

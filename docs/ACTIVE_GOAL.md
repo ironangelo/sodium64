@@ -9,8 +9,12 @@ the newest CONTINUITY checkpoint. Finish small clean PRs and their gates; do not
 merge PR21 wholesale or move unresolved regressions into defaults. A useful
 cycle ends with an integration/evidence checkpoint, not another experiment plan.
 
-Implement and validate autonomously. Use bounded hardware only to resolve a
-named gate; preserve every fidelity, timing, ownership and recovery contract.
+Implement and validate autonomously. Use bounded hardware to resolve a
+named gate and preserve every fidelity, timing, ownership and recovery contract.
+Each production extraction needs a concrete fidelity or stability fix or a
+credible material cost reduction. Favor measured savings on representative
+native workloads. Diagnostics and build changes earn integration by removing a
+named blocker while preserving the production package.
 Measure the combined integrated baseline on representative native workloads;
 never add percentages from independent branches. Then resume complete resident
 DSP with a representative integral architectural cost proof before more kernels.
@@ -23,9 +27,9 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint, 2026-11-12. Sixteen separate PRs
-24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38 are integrated in master
-`b012b6b665ede6a9c537bf0e491dfdb8867835e1`. PR35 qualifies the isolated
+Current checkpoint, 2026-11-13. Seventeen separate PRs
+24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38/44 are integrated in master
+`c90ef5c983edb6e775d34676443f1e29ec48a9e2`. PR35 qualifies the isolated
 USB bench layout. PR36 integrates the separately qualified BRR recurrence.
 PR33 integrates the KOFF release tail. DKC1 exposes its cached SPC700
 accumulator regression. PR43 `adf9f02e` corrects it and passed the
@@ -96,9 +100,10 @@ PR44 `027a1233` extracts nine 65C816 relative-branch tails from A12.
 The normal, PROFILE and REMOTE linked checks pass. Matched normal
 and REMOTE builds change 162 loaded bytes in the nine handlers while
 retaining their addresses, allocation and both resident RSP banks.
-All four exact-head PR checks pass. The Ares balanced workload reads
-59/60 twice on PR44 versus 60/60 on the reference. Promotion waits
-for the consecutive, aligned virtual VI comparison in run 43454365988.
+All four exact-head PR checks pass. Run 43454365988 matches all 12 aligned
+60-VI windows on two fresh boots of each version. PR44 is integrated
+as `c90ef5c9`. The per-branch saving is measured in instructions.
+Native cadence and fidelity of this combined master remain open.
 [Linked 65C816 branch evidence](evidence/integration-cpu-relative-branches-2026-11-12.json).
 
 PR39 `3bf54854` keeps the APU clock correction against `b012b6b6`.

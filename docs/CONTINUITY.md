@@ -1,3 +1,29 @@
+# 2026-11-13 — Integrate the 65C816 branch extraction after the aligned check
+
+PR44 merged as `c90ef5c9`. Ares rebuilt `b012b6b6` and `027a1233`
+with identical synthetic guest input. Both fresh boots of each build
+match all 12 aligned windows at 60/60 after five warmup windows.
+The older unaligned 59/60 snapshots are retained. Four pre-merge
+workflows, the scoped linked semantics and unchanged-address checks
+passed. The merged tree matches the tested head. The published ZIP
+contains the two production payloads and matches the normal artifact.
+
+The observed PR44 improvement is one host instruction per affected
+taken branch. Its native cadence benefit is unmeasured. Keep the
+integrated change under the next representative baseline. Prioritize
+proven fidelity and stability repairs, measured native savings and
+named validation or release blockers. A green equivalence check
+establishes safety within its scope. A structural optimization needs
+a credible material cost reduction before it earns another production
+integration. PR21 remains an inventory of separable changes.
+
+COM3 remains absent. Restore R17 before a native launch. DKC1 on
+`b012b6b6` remains the previous physical result. The current master
+still needs combined ALttP, SMW and DKC1 measurements.
+[PR44 validation and release](evidence/integration-cpu-relative-branches-2026-11-12.json).
+
+---
+
 # 2026-11-13 — Repeat the CPU branch candidate at aligned virtual VI boundaries
 
 Both Ares repeats finished successfully. In balanced gameplay the current

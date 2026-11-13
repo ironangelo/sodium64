@@ -61,7 +61,7 @@
     "ares": 43344571779
   },
   "native_scope": "Prior A12 component provenance. No isolated physical timing or combined baseline on this change has been measured.",
-  "disposition": "BLOCKED for promotion pending a same-window Ares comparison. All four PR CI workflows pass. Two candidate snapshots record 59 in balanced gameplay and three byte-identical base-control snapshots record 60; the last-window snapshots have no shared VI ordinal.",
+  "disposition": "Integrated. Linked behavior and aligned Ares non-regression passed. The measured change is one N64 instruction per affected taken branch. Native performance benefit is unmeasured.",
   "source_is_in_PR21_history": true,
   "all_nine_instruction_sequences_match_PR21": true,
   "CI_artifact_linked_layout": {
@@ -109,7 +109,144 @@
       "warmup_60_VI_windows": 5,
       "measured_60_VI_windows_per_boot": 12,
       "fresh_boots_per_variant": 2,
-      "status": "in_progress"
+      "status": "completed success",
+      "artifact": 14053038766,
+      "archive_digest_verified": true,
+      "runs": {
+        "master": {
+          "settings": {
+            "apu_clock": 21,
+            "audio_set": 4,
+            "skipped_set": 0,
+            "precision_set": 8
+          },
+          "warmup_windows": [
+            61,
+            60,
+            60,
+            60,
+            60
+          ],
+          "measured_windows": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "total": 720
+        },
+        "candidate": {
+          "settings": {
+            "apu_clock": 21,
+            "audio_set": 4,
+            "skipped_set": 0,
+            "precision_set": 8
+          },
+          "warmup_windows": [
+            61,
+            60,
+            60,
+            60,
+            60
+          ],
+          "measured_windows": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "total": 720
+        },
+        "candidate-repeat": {
+          "settings": {
+            "apu_clock": 21,
+            "audio_set": 4,
+            "skipped_set": 0,
+            "precision_set": 8
+          },
+          "warmup_windows": [
+            61,
+            60,
+            60,
+            60,
+            60
+          ],
+          "measured_windows": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "total": 720
+        },
+        "master-repeat": {
+          "settings": {
+            "apu_clock": 21,
+            "audio_set": 4,
+            "skipped_set": 0,
+            "precision_set": 8
+          },
+          "warmup_windows": [
+            61,
+            60,
+            60,
+            60,
+            60
+          ],
+          "measured_windows": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "total": 720
+        }
+      }
     }
+  },
+  "merged": {
+    "master": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+    "tree": "5798b318e0cbf36e6e1d125786f7ab5ebbb9d28d",
+    "matches_PR_head": true
+  },
+  "Latest": {
+    "release": 444417093,
+    "asset": 744209150,
+    "bytes": 44624,
+    "build_artifact": 14054305904,
+    "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+    "exact_production_payloads": true
   }
 }

@@ -32,6 +32,7 @@ jobs:
           python3 scripts/check_rsp_branch_delay_slots.py build_hw/src/rsp_main.elf build_hw/src/rsp_mode7.elf
           python3 scripts/test_rsp_decode_cursor.py build_hw/src/rsp_main.elf build_hw/src/rsp_mode7.elf --json-output hw-decoder-cursor-proof.json
           python3 scripts/test_apu_lookup_reset.py build_hw/sodium64-hw.elf
+          python3 scripts/test_spc_direct_page_word.py build_hw/sodium64-hw.elf
           python3 scripts/test_dsp_gain_owner.py build_hw/sodium64-hw.elf
           python3 scripts/test_dsp_brr_accuracy.py build_hw/sodium64-hw.elf
       - uses: actions/upload-artifact@v4

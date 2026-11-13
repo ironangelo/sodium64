@@ -691,10 +691,11 @@ apu_addw: // ADDW YA,op
 
     // Emit code to load a 16-bit value from memory
     EMIT_OP OR(S0, ZERO, V0)
+    EMIT_DP_NEXT
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP OR(A0, ZERO, A0)
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(A1, S0, T0)
 
@@ -746,10 +747,11 @@ apu_subw: // SUBW YA,op
 
     // Emit code to load a 16-bit value from memory
     EMIT_OP OR(S0, ZERO, V0)
+    EMIT_DP_NEXT
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP OR(A0, ZERO, A0)
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(A1, S0, T0)
 
@@ -799,10 +801,11 @@ apu_cmpw: // CMPW YA,op
 
     // Emit code to load a 16-bit value from memory
     EMIT_OP OR(S0, ZERO, V0)
+    EMIT_DP_NEXT
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP OR(A0, ZERO, A0)
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(A1, S0, T0)
 
@@ -828,62 +831,42 @@ apu_cmpw: // CMPW YA,op
 
 .align 5
 apu_decw: // DECW op
-    // Emit code to load a 16-bit value from memory
-    EMIT_OP OR(S0, ZERO, V0)
-    la t0, apu_read8
-    jal emit_jal
-    nop
-    EMIT_OP ADDI(A0, A0, 1)
-    EMIT_OP SLL(T0, V0, 8)
-    EMIT_OP OR(A1, S0, T0)
-
-    // Emit code to decrement the value and store it back in memory
-    EMIT_OP ADDI(A1, A1, -1)
-    la t0, apu_write8
-    jal emit_jal
-    nop
-    EMIT_OP ADDI(A0, A0, -1)
-    EMIT_OP ANDI(S0, A1, 0xFF)
-    EMIT_OP SRL(A1, A1, 8)
-    la t0, apu_write8
-    jal emit_jal
-    nop
-    EMIT_OP ADDI(A0, A0, 1)
-
-    // Emit code to set flags for the 16-bit result
-    EMIT_OP SLT(T0, ZERO, S0)
-    EMIT_OP OR(T0, T0, A1)
-    la ra, finish_opcode
-    j queue_nz
-    li t1, T0
+    b apu_modify_word
+    li t6, -1
 
 .align 5
 apu_incw: // INCW op
-    // Emit code to load a 16-bit value from memory
-    EMIT_OP OR(S0, ZERO, V0)
+    li t6, 1
+
+apu_modify_word:
+    // Write the adjusted low byte before reading the high byte. Keep the
+    // carry or borrow in S0 across the two bus calls and the page wrap.
+    li t0, ADDI(S0, V0, 0)
+    andi t6, t6, 0xFFFF
+    jal emit_op
+    or t0, t0, t6
+    la t0, apu_write8
+    jal emit_jal
+    nop
+    EMIT_OP ANDI(A1, S0, 0xFF)
+    EMIT_DP_NEXT
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP ADDI(A0, A0, 1)
-    EMIT_OP SLL(T0, V0, 8)
-    EMIT_OP OR(A1, S0, T0)
-
-    // Emit code to increment the value and store it back in memory
-    EMIT_OP ADDI(A1, A1, 1)
+    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_OP SLL(V0, V0, 8)
+    EMIT_OP ADD(S0, S0, V0)
+    EMIT_OP ANDI(S0, S0, 0xFFFF)
     la t0, apu_write8
     jal emit_jal
     nop
-    EMIT_OP ADDI(A0, A0, -1)
-    EMIT_OP ANDI(S0, A1, 0xFF)
-    EMIT_OP SRL(A1, A1, 8)
-    la t0, apu_write8
-    jal emit_jal
-    nop
-    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP SRL(A1, S0, 8)
 
-    // Emit code to set flags for the 16-bit result
-    EMIT_OP SLT(T0, ZERO, S0)
-    EMIT_OP OR(T0, T0, A1)
+    // Reduce the final 16-bit value to the sign and nonzero flag inputs.
+    EMIT_OP ANDI(T1, S0, 0xFF)
+    EMIT_OP SLT(T1, ZERO, T1)
+    EMIT_OP SRL(T0, S0, 8)
+    EMIT_OP OR(T0, T0, T1)
     la ra, finish_opcode
     j queue_nz
     li t1, T0

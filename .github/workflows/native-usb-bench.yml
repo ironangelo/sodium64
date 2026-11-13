@@ -37,6 +37,7 @@ jobs:
           python3 scripts/test_rsp_decode_cursor.py build_usb_bench/src/rsp_main.elf build_usb_bench/src/rsp_mode7.elf --json-output usb-decoder-cursor-proof.json
           python3 scripts/test_dsp_gain_owner.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_apu_lookup_reset.py build_usb_bench/sodium64-usb-bench.elf
+          python3 scripts/test_spc_direct_page_word.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_dsp_brr_accuracy.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_dsp_koff_release.py build_usb_bench/sodium64-usb-bench.elf --json-output usb-koff-proof.json
       - name: Preserve code and diagnostic receipts

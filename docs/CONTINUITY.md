@@ -24,6 +24,10 @@ master bench ROM and private matched-frame comparison are ready. The
 new CI bench ROM matches the PR44 CI bench ROM byte for byte. The
 comparison verifies RGB, PCM, DSP state, settings and R17 restoration,
 and reports whether both quiet guest intervals have the same endpoints.
+The private Mode 7 runner now replays the archived F-Zero inputs on the
+same precision-20 R44/R45 pair. It captures at frame 4500 and checks a
+16-second quiet interval from 4501. Host simulation passes on both
+variants. The physical comparison remains pending.
 [PR44 validation and release](evidence/integration-cpu-relative-branches-2026-11-12.json).
 
 ---

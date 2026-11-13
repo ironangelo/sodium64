@@ -85,5 +85,31 @@
     "end_to_end_mocked_runner": "PASS including pinned inputs, settings, image and PCM receipts, Count cadence and R17 restoration.",
     "physical_result": "PENDING"
   },
-  "disposition": "R44 and R45 remain draft. The early zero-input DKC1 intro remains a separate regression gate. The historical first-stage route now has matched-precision replay inputs and immutable ROMs for the ports. COM3 remains absent and R17 restoration comes first."
+  "disposition": "R44 and R45 remain draft. The early zero-input DKC1 intro remains a separate regression gate. The historical first-stage route now has matched-precision replay inputs and immutable ROMs for the ports. COM3 remains absent and R17 restoration comes first.",
+  "adjacent_mode7_gate": {
+    "workload": "F-Zero Mode 7",
+    "archived_source": "313642af247ff15ffdf34031c185bb1234825173",
+    "archived_R44_and_R45_same_route_and_verified_restore": true,
+    "input_ack_frames": [
+      1800,
+      2100,
+      2400,
+      2700,
+      3000,
+      3300,
+      3900
+    ],
+    "settings": {
+      "apu_clock": 21,
+      "frameskip": 0,
+      "audio": 4,
+      "precision": 20
+    },
+    "new_candidate_ROMs": "Same PR41 and PR42 precision-20 lab ROMs described above",
+    "paused_RGB_and_PCM_frame": 4500,
+    "expected_quiet_start": 4501,
+    "quiet_seconds": 16,
+    "host_runner": "Both candidates pass simulated end-to-end input receipts, capture, cadence scope and R17 restore.",
+    "physical_result": "PENDING"
+  }
 }

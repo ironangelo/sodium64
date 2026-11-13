@@ -1,10 +1,28 @@
+# 2026-11-12 — Refresh the APU clock PR on the integrated CGRAM master
+
+PR39 `3bf54854` carries the same three-file patch over `b012b6b6`.
+The linked menu-only negative control still shows old-clock entries
+surviving a clock change on master. Normal, HW_PROFILE and REMOTE
+pass the directed APU menu and CGRAM proofs. REMOTE passes linked
+BRR and KOFF. The candidate stays draft until the real controller
+transitions 21 to 42 and back to 21 can be checked.
+
+COM3 remains absent after R44. Restore R17 and read it back before
+another native launch. The byte-identical local master ROM is prepared
+for the ALttP and SMW baseline repeats at their saved guest checkpoints.
+[APU clock PR proof and pending gate](evidence/integration-apu-clock-current-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Integrate the standalone CGRAM epoch repair
 
 PR38 `b9c5ab72` skips redundant epochs when the raw CGRAM word is
 identical and preserves the bus, store, address progression and
 entry-zero backdrop updates. Five exact-head workflows passed.
 The three-file PR merged as `b012b6b6`. Its merged source tree
-matches the hardware-tested head. Six post-merge workflows passed.
+matches the hardware-tested head. A fresh local REMOTE ROM of the
+merge also matches all 114,688 bytes of the physically tested ROM and
+the installation receipt. Six post-merge workflows passed.
 The public Latest ZIP contains the normal ROM and converter only, both
 byte-identical to the digest-verified CI artifact. The production ELF
 has no lab symbols or allocated diagnostic leases.

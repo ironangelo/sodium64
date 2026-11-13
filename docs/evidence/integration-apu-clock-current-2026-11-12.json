@@ -1,0 +1,36 @@
+{
+  "date_local": "2026-11-12",
+  "PR": 39,
+  "master": "b012b6b665ede6a9c537bf0e491dfdb8867835e1",
+  "head": "3bf54854a85a18dd3afa94655e6acf9d98d60330",
+  "review_patch_unchanged": true,
+  "files": 3,
+  "master_control": "old-clock lookup survived menu close",
+  "linked_APU_and_CGRAM": {
+    "configurations": [
+      "normal",
+      "HW_PROFILE",
+      "REMOTE"
+    ],
+    "result": "PASS",
+    "lookup_entries": 65536,
+    "menu_transitions_per_build": 4,
+    "compiled_rebuilds_per_build": 6,
+    "APU_faults_rejected_per_build": 5,
+    "CGRAM_cases_per_build": 6146,
+    "CGRAM_faults_rejected_per_build": 2
+  },
+  "linked_REMOTE_audio": {
+    "KOFF_release_voice_cases": 16384,
+    "BRR_compiled_voice_cases": 57344,
+    "result": "PASS"
+  },
+  "exact_head_CI": {
+    "build": 43338571821,
+    "native_usb": 43338571858,
+    "profiling_owners": 43338572103,
+    "ares": 43338571825
+  },
+  "physical_menu_gate": "PENDING. Exercise the real controller path for APU 21 to 42 and back to 21.",
+  "console": "USB COM3 still absent after R44. R17 restore and readback first."
+}

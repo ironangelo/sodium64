@@ -84,18 +84,20 @@ exact-color cases, Gate C replay and five exact-head workflows passed.
 Its loaded RSP banks match the prior master byte for byte. On N64,
 aligned DKC1 RGB, PCM and DSP state match, with both completing 1,198
 guest frames over the same quiet interval in about 20.02 seconds.
-The merged tree matches the tested head. Six post-merge workflows and
-the byte-exact production Latest package pass. R17 restoration passed
+The merged tree and a fresh local REMOTE ROM match the tested head and
+physical installation receipt. Six post-merge workflows and the byte-exact
+production Latest package pass. R17 restoration passed
 on this run. ALttP and SMW timings still bind to the previous master.
 [CGRAM native evidence and merge](evidence/integration-cgram-native-dkc1-2026-11-12.json).
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [CGRAM and combined source evidence](evidence/integration-cgram-identical-2026-11-09.json).
 
-PR39 `81f9f1c9` keeps the APU clock correction against `dc0c49d1`. The
-negative control still reproduces stale lookup on master. Normal,
-HW_PROFILE and REMOTE linked menu checks and all current-head CI pass.
-The physical menu check remains pending. The older runtime passed the
-119-case compiled APU cycle suite.
+PR39 `3bf54854` keeps the APU clock correction against `b012b6b6`.
+The negative control reproduces stale lookup on that master. Normal,
+HW_PROFILE and REMOTE pass the linked APU and CGRAM checks. The
+physical menu transitions 21 to 42 and back to 21 remain pending.
+The older runtime passed the 119-case compiled APU cycle suite.
+[Refreshed APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).
 [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
 

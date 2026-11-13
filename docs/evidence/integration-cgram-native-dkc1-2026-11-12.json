@@ -27,7 +27,15 @@
     },
     "exact_head_CI_conclusion": "success",
     "launch_ack_seconds": 16.64,
-    "idle_warmup_seconds": 55
+    "idle_warmup_seconds": 55,
+    "fresh_merged_lab_ROM": {
+      "matches_physical_input": true,
+      "bytes": 114688,
+      "ROM_sha256": "9d712c0d02b006f8af55e9893c1d6ab4a7df23840aa8f90fd179e56d4c896fb1",
+      "matches_physical_install_receipt_crc32": true,
+      "build": "REMOTE=1 with the paired local build configuration",
+      "CI_bench_provenance": "The pre-merge and merged CI bench ROMs match each other and use a different build configuration from the paired local ROM."
+    }
   },
   "DKC1_aligned": {
     "runs": [

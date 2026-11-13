@@ -95,9 +95,8 @@ on this run. ALttP and SMW timings still bind to the previous master.
 PR39 `3bf54854` keeps the APU clock correction against `b012b6b6`.
 The negative control reproduces stale lookup on that master. Normal,
 HW_PROFILE and REMOTE pass the linked APU and CGRAM checks. All four
-exact-head PR workflows pass. The
-physical menu transitions 21 to 42 and back to 21 remain pending.
-The older runtime passed the 119-case compiled APU cycle suite.
+exact-head PR workflows and the directed 119-case APU cycle suite pass.
+The physical menu transitions 21 to 42 and back to 21 remain pending.
 [Refreshed APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).
 [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).

@@ -23,7 +23,16 @@ quiet cadence match remains valid for its measured window.
 
 The private native runner now parks at frames 2984 and 3000 and
 checks the admission of a 12-second quiet interval inside the slow
-intro. It preserves existing settings, capture and restore checks.
+intro. It preserves existing settings, capture and restore checks. A fresh PR32
+control with the same lab ROM title passes the bridge, mailbox and RDP
+restart checks. Its linked memory and symbols match the earlier enabled
+build. Use it alongside the shared prior master to isolate the base
+compositor if the early deficit reproduces.
+
+PR39 passed all four exact-head PR workflows. The additional SPC700
+cycle/span run passed 119 directed cases and two halt scheduler groups
+at APU 21. The hardware controller transition stays open.
+
 COM3 is still absent. A restore-only runner passed host checks for
 menu recovery, software return and rejecting mismatched status; its
 actual R17 restore remains pending. Restore and read back R17 first.

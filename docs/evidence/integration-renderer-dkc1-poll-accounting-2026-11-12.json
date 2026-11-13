@@ -153,8 +153,23 @@
     "quiet_seconds": 12,
     "expected_start_guest_frame": 3001,
     "max_end_guest_frame": 4000,
-    "runner_preflight": "PASS with hardware access stubbed",
-    "physical_result": "PENDING"
+    "runner_preflight": "PASS with hardware access stubbed. Mocked end-to-end flow accepts 3001, rejects 3002 for paired admission, and restores R17 in both cases.",
+    "physical_result": "PENDING",
+    "base_compositor_control": {
+      "head": "ae59e6b774168564444352066273a9e4025aa800",
+      "rom_bytes": 114688,
+      "ROM_sha256": "6fc12de0154f5bf43bac41bf5772afa832e38c0dbc5decd98ed15aed1d8ebcd6",
+      "matches_existing_enabled_PR32_linked_memory_and_symbols": true,
+      "linked_memory_bytes": 786844,
+      "linked_symbols": 1410,
+      "bridge_cases": 50,
+      "mailbox_cases": 18,
+      "restart_banks": [
+        "Main",
+        "Mode 7"
+      ],
+      "faults_rejected_per_bank": 4
+    }
   },
   "historical_PR32_scope": {
     "head": "3e1c9a99869063254dbc1c84453fd6cf06f78762",

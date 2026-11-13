@@ -519,8 +519,57 @@
       "normal_ROM_byte_identical": true,
       "normal_release_admission": "PASS",
       "disabled_USB_ROM_byte_identical_to_measured_legacy_control": true,
-      "mocked_two_captures_quiet_window_and_R17_restore": "PASS"
+      "mocked_two_captures_quiet_window_and_R17_restore": "PASS",
+      "legacy_RDP_barrier_cases": 35,
+      "faithful_RDP_restart_negative_controls_per_bank": 4
     },
     "measurement": "Same early-intro start at 3001, full-rate APU and frameskip 0. Compare the measured wait deltas to the total wall-time-per-guest-frame difference and verify the two original RGB/PCM checkpoints per variant. No native wait attribution yet."
+  },
+  "wait_attribution_native_attempt": {
+    "reference": {
+      "count_window": {
+        "duration_s": 12.028035690666666,
+        "presentation_is_software_observation": true,
+        "guest_delta": 713,
+        "guest_per_second": 59.278174619423766,
+        "render_delta": 713,
+        "render_per_second": 59.278174619423766,
+        "vi_delta": 719,
+        "vi_per_second": 59.777009188451174,
+        "present_delta": 712,
+        "present_per_second": 59.19503552458587
+      },
+      "guest_endpoints": [
+        3001,
+        3714
+      ],
+      "waits": {
+        "scope_ticks": 563814173,
+        "wait_ticks": {
+          "rsp_wait_count_mod32": 73717,
+          "framebuffer_wait_count_mod32": 144288528
+        },
+        "ms_per_guest_frame": {
+          "rsp_wait_count_mod32": 0.0022056512388966805,
+          "framebuffer_wait_count_mod32": 4.3171883085554
+        }
+      },
+      "matches_uninstrumented_rgb_pcm_at_both_checkpoints": true,
+      "uninstrumented_guest_per_second": 59.56182113122196,
+      "R17_readback_bytes": 131072,
+      "menu_recovery": 0,
+      "deployer_exit": 0
+    },
+    "faithful": {
+      "verified_install": true,
+      "elapsed_s_until_failed_receipt": 11.891,
+      "windows_error": 5,
+      "USB_present_at_end": false,
+      "launch_receipt": false,
+      "emulator_hello": false,
+      "native_counters": "UNMEASURED",
+      "R17_restoration_pending_at_end": true
+    },
+    "disposition": "Retain the physical legacy control. Resume with the faithful build once the console is reachable and R17 is restored. A loader transport failure before a launch receipt provides no compositor or timing result."
   }
 }

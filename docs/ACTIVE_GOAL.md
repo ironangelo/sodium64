@@ -174,11 +174,12 @@ DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
-The full objective remains incomplete. R17 restoration after the
-interrupted F-Zero launch is verified. Lab `95296f9c` qualifies a
+The full objective remains incomplete. Lab `95296f9c` qualifies a
 matched Count comparison of CPU waits for RSP halt and framebuffer
-availability. Execute it when the paired menu responds. Normal
-release identity and the matched RSP banks are verified.
+availability. The legacy DKC1 control passed both fidelity captures
+and R17 readback. Windows lost COM3 before the faithful launch
+acknowledgement. Restore R17 after this interruption. Preserve the
+completed legacy control for the faithful comparison.
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.

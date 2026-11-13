@@ -1,3 +1,21 @@
+# 2026-11-13 — Retain the physical wait control and interrupted PR32 load
+
+The instrumented legacy control completes the early DKC1 case on N64.
+Both captures match the original control in RGB and PCM. From frame
+3001 it completes 713 guest frames at 59.28/s, versus 59.56/s in
+the original run. It observes 0.002 ms/frame of CPU RSP-halt wait
+and 4.317 ms/frame of framebuffer wait. Software return and the
+131,072-byte R17 readback pass.
+
+The faithful trial verifies installation, then Windows loses COM3
+during loading, before a launch acknowledgement or emulator hello.
+There is no paired wait attribution yet. The final failed attempt
+left its bench file installed. Restore R17 when the USB link returns.
+The earlier F-Zero restoration passed separately.
+[Wait comparison and recovery receipts](evidence/integration-pr32-native-dkc1-early-2026-11-13.json).
+
+---
+
 # 2026-11-13 — Restore R17 and qualify the compositor wait comparison
 
 COM3 re-enumerated after the interrupted R45 F-Zero trial. Two menu

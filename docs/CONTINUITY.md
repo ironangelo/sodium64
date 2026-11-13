@@ -1,3 +1,29 @@
+# 2026-11-13 — Restore R17 and qualify the compositor wait comparison
+
+COM3 re-enumerated after the interrupted R45 F-Zero trial. Two menu
+status requests timed out. The cart reported CIC Power off, so the
+SD recovery path staged and verified the habitual R17 image, preserved
+the prior test file and verified all 131,072 bytes at the production
+path. CIC still reported Power off at the end. R45 Mode 7 is pending.
+[Recovery and Mode 7 evidence](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
+
+Lab commit `95296f9c` builds the PR32 legacy and faithful USB pair
+with separate CPU Count totals for RSP-halt and framebuffer waits.
+Both pass linked timing, wrap, mutation and memory-owner checks.
+The RSP banks match their previously measured counterparts byte for
+byte. The ordinary ROM and normal release admission pass. The
+instrumentation lives on the lab branch and the review heads are intact.
+
+When the menu responds, compare the two instrumented DKC1 runs from
+frame 3001 and check their captures against their corresponding
+uninstrumented references. The measured compositor deficit is about
+6.6 ms per completed guest frame in the same-start window. The two
+counters can identify CPU stall contributions. They do not identify
+individual RSP or RDP costs.
+[Early DKC1 comparison and diagnostic qualification](evidence/integration-pr32-native-dkc1-early-2026-11-13.json).
+
+---
+
 # 2026-11-13 — Capture the R44 Mode 7 reference and retain the R45 transport failure
 
 The F-Zero Mode 7 route completes on R44 at APU 21, frameskip 0 and

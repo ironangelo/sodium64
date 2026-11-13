@@ -151,7 +151,16 @@
         "R17_restoration_pending_at_end": true,
         "renderer_result": "UNMEASURED"
       },
-      "disposition": "R44 completed and restored. The paired R45 result is pending because USB vanished during load. Transport failure before launch acknowledgement provides no evidence of a renderer regression."
+      "disposition": "R44 completed. R45 USB disappeared during load. R17 was subsequently restored by the cartridge SD path while the CIC reported power off. The paired R45 Mode 7 result is pending.",
+      "post_attempt_recovery": {
+        "Windows_COM3_reenumerated": true,
+        "paired_menu_status_requests_timed_out": 2,
+        "console_off_verified_by_CIC_before_and_after": true,
+        "exact_original_R17_readback": true,
+        "R17_bytes": 131072,
+        "prior_trial_emulator_preserved": true,
+        "game_launched": false
+      }
     }
   },
   "physical_replay_2026_11_13": {

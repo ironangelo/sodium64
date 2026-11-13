@@ -164,7 +164,8 @@ verify R17 restoration. The distinct zero-input intro regression stands.
 F-Zero Mode 7 on R44 reaches 8.35 guest frames/s and matches the
 archived R44 active image. R17 restoration passes on that run.
 The R45 launch then loses USB before acknowledgement. R45 comparison
-and R17 restoration remain pending.
+remains pending. Subsequent cartridge SD readback verified R17 while
+CIC reported Power off.
 [DKC1 first-stage replay provenance](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
 [R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
 [Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
@@ -173,9 +174,11 @@ DKC1, ALttP story and Mode 7 still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 
-The full objective remains incomplete. The master and completed
-renderer trials verified R17 by software. The latest interrupted
-F-Zero R45 launch leaves restoration pending until COM3 returns.
+The full objective remains incomplete. R17 restoration after the
+interrupted F-Zero launch is verified. Lab `95296f9c` qualifies a
+matched Count comparison of CPU waits for RSP halt and framebuffer
+availability. Execute it when the paired menu responds. Normal
+release identity and the matched RSP banks are verified.
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.

@@ -496,5 +496,31 @@
     "menu_recovery": 0,
     "deployer_exit": 0
   },
-  "stack_interpretation": "Each quiet trial starts at 3001. Faster variants cover more guest work in roughly 12 seconds. R43, R44 and R45 keep both corrected PR32 RGB images and the audio. The largest measured recovery is 1.95 guest frames/s over PR32, and the best renderer still trails the matched parent by 14.80 guest frames/s. An exact internal cost attribution and the separately routed first-stage benefit are outside this result."
+  "stack_interpretation": "Each quiet trial starts at 3001. Faster variants cover more guest work in roughly 12 seconds. R43, R44 and R45 keep both corrected PR32 RGB images and the audio. The largest measured recovery is 1.95 guest frames/s over PR32, and the best renderer still trails the matched parent by 14.80 guest frames/s. An exact internal cost attribution and the separately routed first-stage benefit are outside this result.",
+  "wait_attribution_preflight": {
+    "lab_source": "95296f9c41df64dbf35ec43fade80fa8a1a9c57d",
+    "lab_branch": "lab/pr32-wait-timing",
+    "builds": {
+      "legacy": {
+        "ROM_sha256": "1ffe9068a3626b2d435032f62f42172f85bbf95cbb0c40ad70996e0b53b5d7fa",
+        "same_RSP_banks": 2
+      },
+      "faithful": {
+        "ROM_sha256": "5b8c5f85202e23e3598170f1a4263afa8385f44d62353bb0fa6d1de86fc99711",
+        "same_RSP_banks": 12
+      }
+    },
+    "scope": "Separate accumulated MIPS Count ticks spent in the original CPU RSP-halt and framebuffer wait loops. Fixed-size counters in the existing guarded bench lease. No new RCP access or commands. Native values quantify CPU stalls, not exclusive RSP or RDP work.",
+    "gates": {
+      "linked_wait_cases_per_build": 8,
+      "count_and_accumulator_wrap_pass": true,
+      "missing_linked_store_rejected_per_build": true,
+      "linked_bridge_cases_per_build": 50,
+      "normal_ROM_byte_identical": true,
+      "normal_release_admission": "PASS",
+      "disabled_USB_ROM_byte_identical_to_measured_legacy_control": true,
+      "mocked_two_captures_quiet_window_and_R17_restore": "PASS"
+    },
+    "measurement": "Same early-intro start at 3001, full-rate APU and frameskip 0. Compare the measured wait deltas to the total wall-time-per-guest-frame difference and verify the two original RGB/PCM checkpoints per variant. No native wait attribution yet."
+  }
 }

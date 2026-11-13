@@ -44,5 +44,17 @@
     "bounded_host_wait_result": "No enumeration. No card operation admitted.",
     "host_port_cycle": "Microsoft USB hub per-port IOCTL requires administrative execution. No validated port power toggle or console power actuator available from this session."
   },
-  "bench_seed": "Previously completed native renderer timing control, before trying a renderer candidate."
+  "bench_seed": "Previously completed native renderer timing control, before trying a renderer candidate.",
+  "rear_USB_recovery": {
+    "user_moved_cable_to_rear_SuperSpeed_port": true,
+    "converter_and_COM3_enumerated": true,
+    "legacy_menu_replied_recovery_0": true,
+    "legacy_R17_verified_from_menu_bytes": 131072,
+    "host_SD_read_probe_while_menu_running": "SD card is locked by the N64 side",
+    "user_switched_console_off": true,
+    "CIC_off_confirmed": true,
+    "deployment": "Menu, normal master, reference bench and browser INI installed with exact full SD readback. Existing menu and INI retained as rollback files.",
+    "cold_boot": "PENDING",
+    "USB_root_cause": "Unknown. Rear port returned enumeration on this observation."
+  }
 }

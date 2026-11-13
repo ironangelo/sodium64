@@ -1,3 +1,29 @@
+# 2026-11-13 — Install separate play and bench files and open the word repair
+
+The rear SuperSpeed USB port brought back the converter, COM3 and the
+paired menu. R17 was restored with an exact 131,072-byte menu readback.
+Direct host SD access while the menu held the card returned the N64
+lock error. After the console was switched off and CIC confirmed it,
+the installer wrote and read back the exact normal `c90ef5c9`, the
+reference bench, the private menu and the browser configuration. The
+old menu and configuration were retained for rollback. Cold boot and
+software return remain to be verified. Recovery after complete USB
+disappearance and its cause remain open.
+[Private menu and transport evidence](evidence/private-native-menu-split-2026-11-13.json).
+
+Draft PR46 `126521d7` ports the seven direct-page word opcodes from
+R63 `6b82434e` to current master. The linked master fails 556 of 940
+directed cases. Normal, PROFILE, HW_PROFILE and REMOTE pass all 940,
+including read-to-clear I/O, DSP latch ordering, and 16-bit carry and
+borrow. Each build rejects two faults injected into emitted code.
+Release admission, KOFF, REMOTE memory owners, and byte-identical
+loaded RSP banks pass. Exact-head CI and a paired physical smoke
+remain required. The separately qualified PR45 address fix remains
+independent.
+[Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
+
+---
+
 # 2026-11-13 — Open the standalone SPC700 address-wrap correction
 
 PR45 `85d1e3c5` extracts the address corrections from R63

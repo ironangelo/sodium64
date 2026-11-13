@@ -124,6 +124,13 @@ build configurations. The linked master negative control fails 666.
 Exact-head CI passes. The matched physical smoke remains pending.
 [SPC700 wrap evidence](evidence/integration-spc-address-wrap-2026-11-13.json).
 
+PR46 `126521d7` independently fixes the seven SPC700 direct-page
+word operations. The linked master fails 556 of 940 directed cases.
+Normal, PROFILE, HW_PROFILE and REMOTE pass all 940. Each build
+rejects two emitted faults. Exact-head CI and matched physical smoke
+gate promotion.
+[Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
+
 PR39 `cddf5be3` keeps the APU clock correction against `c90ef5c9`.
 The current-master negative control reproduces stale lookup. Normal, HW_PROFILE
 and REMOTE pass the refreshed linked menu transitions and cache checks.
@@ -184,15 +191,15 @@ The full objective remains incomplete. Lab `95296f9c` qualifies a
 matched Count comparison of CPU waits for RSP halt and framebuffer
 availability. The legacy DKC1 control passed both fidelity captures
 and R17 readback. Windows lost COM3 before the faithful launch
-acknowledgement. Restore R17 after this interruption. Preserve the
-completed legacy control for the faithful comparison.
+acknowledgement. R17 was restored and verified after the rear USB
+port brought back enumeration. Preserve the completed legacy control.
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.
 
-The isolated local menu build separates the normal master play
-installation and the private USB bench. The build, synthetic loader,
-SRAM seeding and host slot checks pass. Windows must enumerate the
-SummerCart before restoration or deployment can proceed. A missing
-USB device still requires independent recovery.
+The private menu, normal master and separate reference bench are
+installed and byte-verified after the rear USB port restored
+enumeration. Physical cold boot and software return are pending.
+Recovery after complete USB disappearance still lacks a verified
+independent path.
 [Private menu and transport evidence](evidence/private-native-menu-split-2026-11-13.json).

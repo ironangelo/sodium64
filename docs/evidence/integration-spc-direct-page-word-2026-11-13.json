@@ -1,0 +1,64 @@
+{
+  "date_local": "2026-11-13",
+  "PR": 46,
+  "base": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+  "head": "126521d7de66b31a76e4bd0bc8354a769c42b7a5",
+  "historical_source": "6b82434e78fcd7c052c9eba3188c867a2d91fa9a",
+  "classification": "CANDIDATE standalone SPC700 direct-page word correctness",
+  "runtime_scope": [
+    "P-selected page wraps the second byte for all seven direct-page word opcodes",
+    "MOVW store performs the read before the low and high writes",
+    "INCW and DECW write the low byte before reading the high byte with 16-bit carry and borrow",
+    "Same total guest-cycle debit at both supported clock selections"
+  ],
+  "baseline_linked": {
+    "cases": 940,
+    "passed": 384,
+    "mismatches": 556
+  },
+  "candidate_linked": {
+    "builds": [
+      "normal",
+      "PROFILE",
+      "HW_PROFILE",
+      "REMOTE"
+    ],
+    "cases_per_build": 940,
+    "mismatches": 0,
+    "emitted_faults_rejected_per_build": 2,
+    "clock_selections": [
+      21,
+      42
+    ],
+    "cold_and_cached": true,
+    "scoped_IO": [
+      "timer 2 read clears output on a wrapped access",
+      "DSP address/data order changes the selected register"
+    ]
+  },
+  "release_admission": "PASS",
+  "normal_KOFF_release_voices": 16384,
+  "REMOTE_owners": {
+    "cases": 50,
+    "linked_end": "0x800be008",
+    "first_fixed_owner": "0x800be200"
+  },
+  "REMOTE_RSP": {
+    "banks": 2,
+    "loaded_bytes_each": 8192,
+    "changed_loaded_bytes": 0
+  },
+  "lab_ROM": {
+    "bytes": 114688,
+    "sha256": "b8a542b6ce1b0c4f7ce9619d4ee5855146e0ddc3910f91635443811828f30ffd"
+  },
+  "CI_runs": {
+    "Build": 43520972206,
+    "Ares": 43520972665,
+    "owners": 43520972334,
+    "USB": 43520972435,
+    "APU_cycle_span": 43521008843
+  },
+  "native": "PENDING. Run a matched real-N64 boot, aligned RGB and PCM and short quiet cadence check.",
+  "scope_limit": "Directed word-operation behavior and observed data-bus order. Other runtime bus phasing and opcode guards are outside this candidate."
+}

@@ -83,9 +83,9 @@
     "expected_first_guest_frame": 4331,
     "scope": "Same-start quiet progress and paired image/PCM, with closing frames depending on actual cadence. Keep the historical 240-interval comparison as a separate measurement.",
     "end_to_end_mocked_runner": "PASS including pinned inputs, settings, image and PCM receipts, Count cadence and R17 restoration.",
-    "physical_result": "PENDING"
+    "physical_result": "COMPLETED. Scoped first-stage improvement reproduces on the reviewed trees."
   },
-  "disposition": "R44 and R45 remain draft. The early zero-input DKC1 intro remains a separate regression gate. The historical first-stage route now has matched-precision replay inputs and immutable ROMs for the ports. COM3 remains absent and R17 restoration comes first.",
+  "disposition": "The early DKC1 intro independently blocks promotion. The port of R45 reproduces its scoped first-stage benefit and both trials returned by software and verified R17. Retain separate ALttP and Mode 7 checks.",
   "adjacent_mode7_gate": {
     "workload": "F-Zero Mode 7",
     "archived_source": "313642af247ff15ffdf34031c185bb1234825173",
@@ -111,5 +111,81 @@
     "quiet_seconds": 16,
     "host_runner": "Both candidates pass simulated end-to-end input receipts, capture, cadence scope and R17 restore.",
     "physical_result": "PENDING"
+  },
+  "physical_replay_2026_11_13": {
+    "comparison": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "20"
+      },
+      "captures": [
+        {
+          "guest_frame": 4320,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 4330,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+          "guest_endpoints": [
+            4331,
+            4442
+          ],
+          "duration_s": 8.079303488,
+          "presentation_is_software_observation": true,
+          "guest_delta": 111,
+          "guest_per_second": 13.738808074837848,
+          "render_delta": 111,
+          "render_per_second": 13.738808074837848,
+          "vi_delta": 483,
+          "vi_per_second": 59.78238108240253,
+          "present_delta": 111,
+          "present_per_second": 13.738808074837848
+        },
+        {
+          "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+          "guest_endpoints": [
+            4331,
+            4558
+          ],
+          "duration_s": 8.042510912,
+          "presentation_is_software_observation": true,
+          "guest_delta": 227,
+          "guest_per_second": 28.225016103030686,
+          "render_delta": 227,
+          "render_per_second": 28.225016103030686,
+          "vi_delta": 481,
+          "vi_per_second": 59.8071927117082,
+          "present_delta": 227,
+          "present_per_second": 28.225016103030686
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false
+    },
+    "matched_input_receipt_count": 6,
+    "settings_verified_at_captures_and_endpoints": true,
+    "R17_readback_bytes_per_run": 131072,
+    "menu_recovery_per_run": 0,
+    "deployer_exit_per_run": 0,
+    "scope": "First stage on real N64. Host idle between two Count observations. Same starting guest frame and precision, differing end guest frames. The R45 gain applies to this route. The earlier intro regression and the other renderer gates remain."
   }
 }

@@ -72,7 +72,12 @@
     "APU_cycle_span_run": {
       "id": 43460610209,
       "conclusion": "success",
-      "artifact": 14056302825
+      "artifact": 14056302825,
+      "archive_digest_verified": true,
+      "apu_clock": 21,
+      "directed_cases": 119,
+      "halt_scheduler_groups": 2,
+      "middle_region_probe_applicable": false
     },
     "current_master_negative_control": "old-clock lookup survived menu close",
     "CI_conclusion": "All four exact-head PR workflows succeeded."

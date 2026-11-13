@@ -1,3 +1,17 @@
+# 2026-11-13 — Reproduce R45's DKC1 first-stage benefit on the review ports
+
+The precision-20 R44/R45 pair replayed six matched inputs on real N64.
+Both aligned images and PCM windows are exact between the variants.
+The host-idle Count windows start at guest frame 4331. R44 completes
+111 guest frames in 8.079 s (13.74/s). R45 completes 227 in 8.043 s
+(28.23/s). This reproduces the historical gain in this stage with
+the review ports. Both return by software and verify R17 readback.
+The early DKC1 deficit still blocks the renderer stack. Retain the
+stage benefit and measure the already prepared Mode 7 comparison.
+[First-stage physical evidence](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
+
+---
+
 # 2026-11-13 — Reproduce the DKC1 deficit on the base compositor
 
 The same-start early DKC1 comparison on real N64 reproduces the
@@ -18,8 +32,7 @@ corrected images and PCM, and run at 43.22, 44.76 and 44.41 guest
 frames/s respectively. R44 recovers the most in this window and
 remains 14.80 frames/s behind the parent. The four-frame R44 to R45
 difference in one window needs repetition for marginal attribution.
-Each trial restored R17. The separate R44/R45 first-stage replay
-checks the historical R45 gain with precision 20 and matched inputs.
+Each trial restored R17. The separate first-stage result is above.
 [Early DKC1 hardware comparison](evidence/integration-pr32-native-dkc1-early-2026-11-13.json).
 
 PR39 was refreshed to `cddf5be3` against `c90ef5c9` with the same

@@ -157,11 +157,11 @@ earlier polled band. The quiet early-intro comparison completed for
 master, PR32, R43, R44 and R45. The later R44 aligned fidelity check,
 ALttP story and Mode 7 remain open.
 [Retained DKC1 counters and next paired gate](evidence/integration-renderer-dkc1-poll-accounting-2026-11-12.json).
-The historical DKC1 first-stage benefit used six recorded inputs and
-precision 20. The matched first-stage replay is prepared separately
-from the recent zero-input boot. The same pair now has a Mode 7
-F-Zero route pinned at frame 4500 with an aligned quiet interval.
-Both native results remain pending.
+The DKC1 first-stage benefit reproduces on real N64 using six matched
+inputs and precision 20. R44 and R45 reach 13.74 and 28.23 guest frames/s
+from guest frame 4331. Both image/PCM comparisons match exactly and both
+verify R17 restoration. The distinct zero-input intro regression stands.
+The paired Mode 7 F-Zero route remains pending.
 [DKC1 first-stage replay provenance](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
 [R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
 [Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).

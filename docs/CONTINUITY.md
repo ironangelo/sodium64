@@ -11,8 +11,9 @@ The actual linked opcode dispatch passes 209,232 directed branch cases,
 two BEQ idle cases and a negative delay-slot test in each of normal,
 PROFILE and REMOTE. Normal and REMOTE match master on guest destinations,
 operand reads and cycle debits. The production admission check passes.
-Exact-head PR checks are running. This is a candidate for integration
-with no isolated native cadence claim. COM3 remains absent and R17
+All four exact-head PR checks pass. One unaligned Ares balanced-gameplay
+window reads 59 instead of 60. The same workflow is running on the exact
+master and PR heads as a paired repeat. COM3 remains absent and R17
 restoration is still pending.
 [Linked 65C816 branch evidence](evidence/integration-cpu-relative-branches-2026-11-12.json).
 

@@ -96,7 +96,8 @@ PR44 `027a1233` extracts nine 65C816 relative-branch tails from A12.
 The normal, PROFILE and REMOTE linked checks pass. Matched normal
 and REMOTE builds change 162 loaded bytes in the nine handlers while
 retaining their addresses, allocation and both resident RSP banks.
-Exact-head PR checks are running. No native cadence claim.
+All four exact-head PR checks pass. The Ares balanced-workload
+virtual-window difference is under paired repeat.
 [Linked 65C816 branch evidence](evidence/integration-cpu-relative-branches-2026-11-12.json).
 
 PR39 `3bf54854` keeps the APU clock correction against `b012b6b6`.

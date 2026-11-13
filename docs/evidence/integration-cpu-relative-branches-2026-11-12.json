@@ -61,7 +61,7 @@
     "ares": 43344571779
   },
   "native_scope": "Prior A12 component provenance. No isolated physical timing or combined baseline on this change has been measured.",
-  "disposition": "CANDIDATE. Exact-head PR checks are running. Same linked addresses and unrelated loaded bytes in the matched local normal and USB builds.",
+  "disposition": "CANDIDATE. Exact-head PR checks passed. Rerun candidate and reference before judging the isolated one-frame virtual-window difference in balanced gameplay.",
   "source_is_in_PR21_history": true,
   "all_nine_instruction_sequences_match_PR21": true,
   "CI_artifact_linked_layout": {
@@ -82,5 +82,17 @@
     },
     "digest_verified": true,
     "loaded_RSP_banks_identical": true
+  },
+  "PR_CI_conclusion": "all four exact-head PR workflows succeeded",
+  "Ares_balanced_virtual_window": {
+    "original_master": 60,
+    "byte_identical_PR38_profile_ROM": 60,
+    "candidate": 59,
+    "windows_aligned": false,
+    "repeat_runs": {
+      "master": 43346049209,
+      "candidate": 43346048485
+    },
+    "repeat_status": "in_progress"
   }
 }

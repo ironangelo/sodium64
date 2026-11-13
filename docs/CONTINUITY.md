@@ -1,3 +1,23 @@
+# 2026-11-13 — Repeat the CPU branch candidate at aligned virtual VI boundaries
+
+Both Ares repeats finished successfully. In balanced gameplay the current
+master again reads 60/60 and PR44 again reads 59/60. Profile ROMs and linked
+memory match their first-run counterparts byte for byte, separately for
+each variant. The current matrix uses host wall time and a sample-count
+floor, then reads the last virtual 60-VI window. It does not bind that
+window to a VI ordinal. The repeat justifies a targeted measurement and
+holds PR44 in draft.
+
+Run 43454365988 uses the original synthetic workload and a debugger
+breakpoint at the linked VI counter update. It builds the same two source
+heads and records 12 consecutive 60-VI windows per boot after five
+warmup windows, with two fresh boots each. The lab workflow lives on a
+separate branch. COM3 is still absent and physical R17 restoration is
+pending.
+[PR44 evidence and comparison](evidence/integration-cpu-relative-branches-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Extract nine 65C816 branch tails into PR44
 
 PR44 `027a1233` extracts the nine A12 relative-branch tails from

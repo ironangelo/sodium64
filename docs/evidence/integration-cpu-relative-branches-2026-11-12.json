@@ -61,7 +61,7 @@
     "ares": 43344571779
   },
   "native_scope": "Prior A12 component provenance. No isolated physical timing or combined baseline on this change has been measured.",
-  "disposition": "CANDIDATE. Exact-head PR checks passed. Rerun candidate and reference before judging the isolated one-frame virtual-window difference in balanced gameplay.",
+  "disposition": "BLOCKED for promotion pending a same-window Ares comparison. All four PR CI workflows pass. Two candidate snapshots record 59 in balanced gameplay and three byte-identical base-control snapshots record 60; the last-window snapshots have no shared VI ordinal.",
   "source_is_in_PR21_history": true,
   "all_nine_instruction_sequences_match_PR21": true,
   "CI_artifact_linked_layout": {
@@ -93,6 +93,23 @@
       "master": 43346049209,
       "candidate": 43346048485
     },
-    "repeat_status": "in_progress"
+    "repeat_status": "completed success on both exact heads",
+    "repeat_frames": {
+      "master": 60,
+      "candidate": 59
+    },
+    "repeat_artifacts": {
+      "master": 14002172267,
+      "candidate": 14002376516
+    },
+    "prior_and_repeat_profile_ROMs_identical_within_each_variant": true,
+    "aligned_CI": {
+      "run": 43454365988,
+      "diagnostic_head": "132e7e946f07a45a389004c72e57bd63e8a68b60",
+      "warmup_60_VI_windows": 5,
+      "measured_60_VI_windows_per_boot": 12,
+      "fresh_boots_per_variant": 2,
+      "status": "in_progress"
+    }
   }
 }

@@ -57,3 +57,11 @@
     jal emit_op
     ori t0, t0, (\opcode) & 0xFFFF
 .endm
+
+.macro EMIT_DP_NEXT
+    // Advance the low byte while retaining the SPC700 direct-page selection.
+    EMIT_OP ANDI(T0, A0, 0x100)
+    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP ANDI(A0, A0, 0xFF)
+    EMIT_OP OR(A0, A0, T0)
+.endm

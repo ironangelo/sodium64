@@ -46,11 +46,16 @@ PR32 is draft at `ae59e6b774168564444352066273a9e4025aa800`. The real-N64 startu
 fixed by repairing the shared C4C depth sender entry in two Main RSP words.
 The refreshed head passes all six workflows, including Ares and the
 enabled renderer. The earlier qualified ROM's startup/return passed. On N64, DKC1
-matches exact RGB and PCM at two aligned checkpoints. All three approximately
-matched polled DKC1 intro bands regress in completed guest boundary rate.
-Windows removed the USB function during the quiet interval, before a closing
-sample. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain open.
-PR32 is blocked for default promotion. R44 and R45 retain separate gates.
+matches exact RGB and PCM at two aligned later-intro checkpoints. The
+early quiet comparison against its direct parent reproduces the
+deficit, 59.56 to 42.82 guest frames/s from frame 3001. PCM and DSP
+state match at two early-intro checkpoints. The corrected active images
+match the independent Snes9x software reference pixel for pixel.
+R43, R44 and R45 preserve both corrected images and PCM in this scene
+at 43.22, 44.76 and 44.41 guest frames/s. ALttP house/rain, SMW and Mode 7
+remain open. PR32 is blocked for default promotion. R44 and R45 retain
+their individual gates.
+[Early DKC1 hardware comparison](evidence/integration-pr32-native-dkc1-early-2026-11-13.json).
 [Refreshed review chain and gates](evidence/integration-renderer-refresh-2026-11-12.json).
 [DKC1 parity and throughput evidence](evidence/integration-faithful-dkc1-2026-11-09.json).
 
@@ -113,11 +118,12 @@ gain remain unmeasured.
 [Linked 65C816 branch evidence](evidence/integration-cpu-relative-branches-2026-11-12.json).
 [Combined master N64 evidence](evidence/integration-current-master-native-2026-11-13.json).
 
-PR39 `3bf54854` keeps the APU clock correction against `b012b6b6`.
-The negative control reproduces stale lookup on that master. Normal,
-HW_PROFILE and REMOTE pass the linked APU and CGRAM checks. All four
-exact-head PR workflows and the directed 119-case APU cycle suite pass.
-The physical menu transitions 21 to 42 and back to 21 remain pending.
+PR39 `cddf5be3` keeps the APU clock correction against `c90ef5c9`.
+The current-master negative control reproduces stale lookup. Normal, HW_PROFILE
+and REMOTE pass the refreshed linked menu transitions and cache checks.
+All four exact-head PR workflows and the directed APU cycle workflow pass.
+The physical menu transitions 21 to 42 and back to 21 remain pending
+through the controller path.
 [Refreshed APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).
 [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
@@ -147,9 +153,9 @@ The subsequent R44 retry reached hello but Windows lost COM3 during
 idle warmup before any aligned capture. R17 was verified after COM3
 returned, before the new master trials.
 The recorded bridge time is at most 1.48 percent of the comparable
-early band. A fixed-start quiet intro comparison is prepared for
-master, R44 and R45. The later R44 aligned fidelity check, ALttP story
-and Mode 7 remain open.
+earlier polled band. The quiet early-intro comparison completed for
+master, PR32, R43, R44 and R45. The later R44 aligned fidelity check,
+ALttP story and Mode 7 remain open.
 [Retained DKC1 counters and next paired gate](evidence/integration-renderer-dkc1-poll-accounting-2026-11-12.json).
 The historical DKC1 first-stage benefit used six recorded inputs and
 precision 20. The matched first-stage replay is prepared separately

@@ -1,3 +1,37 @@
+# 2026-11-13 — Reproduce the DKC1 deficit on the base compositor
+
+The same-start early DKC1 comparison on real N64 reproduces the
+throughput loss in PR32 `ae59e6b7` against its parent `dc0c49d1`.
+From guest frame 3001, the host stayed idle for about 12 seconds.
+The parent completed 716 guest frames at 59.56/s and the compositor
+completed 515 at 42.82/s. Each recorded 719 VI observations. The
+loss is 28.1 percent in this scene. Two aligned captures preserve
+PCM and DSP state. A local Snes9x 1.63 reference matches all 57,344
+RGB5 pixels per active image on PR32. The parent differs in 8,695
+and 8,691 pixels. Both runs returned by software, verified R17 and
+closed the USB deployer cleanly.
+
+Keep PR32 blocked at this cadence gate. R43, R44 and R45 depend on
+the compositor. Preserve their historical fidelity and timing gains
+within the measured scene scope. R43, R44 and R45 preserve both
+corrected images and PCM, and run at 43.22, 44.76 and 44.41 guest
+frames/s respectively. R44 recovers the most in this window and
+remains 14.80 frames/s behind the parent. The four-frame R44 to R45
+difference in one window needs repetition for marginal attribution.
+Each trial restored R17. The separate R44/R45 first-stage replay
+checks the historical R45 gain with precision 20 and matched inputs.
+[Early DKC1 hardware comparison](evidence/integration-pr32-native-dkc1-early-2026-11-13.json).
+
+PR39 was refreshed to `cddf5be3` against `c90ef5c9` with the same
+three-file review patch. Normal, HW_PROFILE and REMOTE linked menu
+and cache checks pass, and current master reproduces stale lookup.
+All four exact-head PR workflows and the APU cycle proof pass. The
+refresh retains the physical APU clock transition gate. The current test bridge injects SNES gameplay
+buttons and the settings menu reads physical Joybus edges.
+[APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).
+
+---
+
 # 2026-11-13 — Measure the integrated master on three N64 workloads
 
 Master `c90ef5c9` completed paired real-N64 trials at APU 21, audio 4,

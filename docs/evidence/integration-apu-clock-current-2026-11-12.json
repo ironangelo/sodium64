@@ -46,5 +46,35 @@
     "static_runtime_total_debit_span_semantics": "PASS",
     "cached_reuse_covered_tag_recompile_and_32_cycle_budget": "PASS",
     "middle_region_probe": "Inapplicable because the current compiled long block remains in one tag region."
+  },
+  "current_master_refresh": {
+    "master": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+    "head": "cddf5be3f80db491003e7809cd408b4060d12d31",
+    "stable_review_patch_id_matches": true,
+    "linked_APU_menu_and_cache": {
+      "normal": "PASS",
+      "HW_PROFILE": "PASS",
+      "REMOTE": "PASS"
+    },
+    "normal_linked_CPU_branches": {
+      "result": "PASS",
+      "branch_cases": 209232,
+      "BEQ_idle_cases": 2,
+      "emitted_faults_rejected": 1
+    },
+    "CI": {
+      "build": 43460325671,
+      "native_usb": 43460325535,
+      "profiling_owners": 43460325458,
+      "ares": 43460325667
+    },
+    "physical_menu_gate": "PENDING",
+    "APU_cycle_span_run": {
+      "id": 43460610209,
+      "conclusion": "success",
+      "artifact": 14056302825
+    },
+    "current_master_negative_control": "old-clock lookup survived menu close",
+    "CI_conclusion": "All four exact-head PR workflows succeeded."
   }
 }

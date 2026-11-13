@@ -226,12 +226,12 @@ Diagnostic tools are identified separately from production runtime changes.
 | R33 GAIN accumulator owner,5b0cb2f3 subset | VALIDATED and integrated, PR23 | Master c41631e5 contains the legacy mixer repair. Normal/PROFILE handler2048 plus independent scheduled stereo2048 cases pass; old master1792 scheduled failures become0. Six instruction words change; all other loaded bytes/extents are unchanged. Build38764135169, CGRAM38764135122 and Ares38764135187 pass on exact head93e0e0af. Historical native16 handler failures become0; broader waveform qualification remains separate. |
 | Full-rate startup/menu defaults,10662795 subset | VALIDATED and integrated, PR26 | Exact587d1ac9 Build38797939600/Ares38797939482/APU38797939962 pass; merged7c3a7634. Only apu_clock42to21 and menu4to0 change; all other loaded bytes/instructions/extents match. Existing native controls ran at21. |
 | A12 65C816 relative-branch tails, f5b31447 subset | VALIDATED scoped linked behavior and integrated, PR44 | `c90ef5c9` matches `027a1233`. All linked addresses are preserved and exact-head CI passes. Run 43454365988 matches 12 aligned virtual VI windows on two fresh boots per version. One host instruction saved per affected taken branch. Native performance benefit remains unmeasured. |
-| APU clock change and live JIT entries | CANDIDATE, independent draft PR39 | Head `3bf54854` targets `b012b6b6` and reproduces stale lookup on the linked master menu path. Both clock transitions and both same-clock closes pass in the candidate across normal, HW_PROFILE and REMOTE. The real controller transitions remain open. |
+| APU clock change and live JIT entries | CANDIDATE, independent draft PR39 | Head `cddf5be3` refreshes against `c90ef5c9` with the same three-file patch. The linked master menu path reproduces stale lookup. Both clock transitions and both same-clock closes pass in normal, HW_PROFILE and REMOTE. The real controller transitions remain open. |
 | Live-group JIT invalidation,ca3f6f59 | CANDIDATE | Separate from PR22: prove publication of every nonzero lookup owner, cold/stale/reset/cache replay on clean master; do not smuggle it into the full-clear extraction. |
 | A13 identical CGRAM write, ca3f6f59 subset | VALIDATED and integrated, PR38 | Master `b012b6b6` matches the tested head `b9c5ab72`. Exact comparison preserves bus/latch/store and backdrop behavior. Linked and five exact-head CI checks pass. Native DKC1 RGB, PCM, DSP state and quiet cadence match the prior master over the measured window. |
 | Faithful ROM cache and S-CPU scope | Layout prerequisite; existing probe integrated | The TLB probe is already in master. PR32 adds the 194-slot cursor wrap for its compositor memory. Its S-CPU core file matches master. Keep the capacity change with its owners. |
 | OBJ culled-row continuation30da21c8/990ad7c5 | BLOCKED as standalone master patch | Master lacks the added row-cull predicates/labels. Carry both predicates and continuation as one bounded renderer component with compiled progression and fixed-slot gates; do not copy only the tail fix. |
-| A1..A13 exact compositor/window/epoch work, b4206144 | CANDIDATE for fidelity; BLOCKED for production | PR32 head 3e1c9a99 fixes native RSP startup and passes exact-head CI. Native DKC1 passes two exact aligned RGB/PCM checkpoints. Polled intro boundary rate falls from 48.56/58.48/59.41 to 38.72/44.84/41.33 across approximately matched bands. USB loss interrupted the paired quiet interval. ALttP house/rain, SMW, Mode 7 and paired quiet timing remain. R44/R45 stay separate. |
+| A1..A13 exact compositor/window/epoch work, b4206144 | CANDIDATE for fidelity; BLOCKED for production | PR32 `ae59e6b7` fixes native RSP startup and passes exact-head CI. DKC1 later intro passes two aligned RGB/PCM checkpoints. Same-start early intro reproduces 59.56 to 42.82 guest frames/s versus its direct parent. Early PCM and DSP state match. Both active images on PR32 match the independent Snes9x reference, which differs from the parent in 8,695 and 8,691 pixels. ALttP house/rain, SMW and Mode 7 remain open. R44/R45 stay separate. |
 | A14 packed math/direct Sub-presence,018630ff | SUPERSEDED for immediate integration | Retain exact arithmetic/native negative history. R44 changes the same presence representation; select one consistent renderer stack, not additive percentages. |
 | TMEM atlas/coordinate and R36 resident cache | REJECTED as standalone gain | Global atlas rain loss and R36 +0.395% fail material gates. Retain any prerequisite code only if a selected later component proves it necessary and passes its own gates. |
 | R38 decoder relocation/span-only | REJECTED / superseded by R40/R43 | Native story regression is diagnosed; do not reintroduce relocated decoder on the no-Sub path. |
@@ -308,10 +308,13 @@ Diagnostic tools are identified separately from production runtime changes.
    and R44 source drafts separately. R44 still needs its story and Mode 7
    comparisons against R43. R45 needs aligned story and Mode 7 costs.
    Keep PR37 out of master until the SMW cadence loss is resolved.
-   Run the fixed-start quiet DKC1 intro comparison from frame 3001.
-   Retained early-band samples on R44 and R45
-   remain slower after accounting for the measured USB poll time. Use
-   PR40 and PR32 controls if the early deficit reproduces.
+   The fixed-start DKC1 intro comparison reproduces the early deficit
+   on PR32 alone. Independent Snes9x matches both corrected active images.
+   The same early interval on R43/R44/R45 reaches 43.22/44.76/44.41
+   guest frames/s with exact RGB/PCM against PR32. Resolve the measured
+   cadence gate before promotion. Check the R45 first-stage gain on its
+   separate matched precision-20 route.
+   [Early DKC1 hardware comparison](evidence/integration-pr32-native-dkc1-early-2026-11-13.json).
    [Retained DKC1 counters and next paired gate](evidence/integration-renderer-dkc1-poll-accounting-2026-11-12.json).
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/

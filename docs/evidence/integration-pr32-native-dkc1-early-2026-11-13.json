@@ -1,0 +1,500 @@
+{
+  "date_local": "2026-11-13",
+  "physical_device": "N64 with SummerCart64",
+  "PR": 32,
+  "parent_is_exact_reference": true,
+  "reference_bench_bytes": 114688,
+  "renderer_bench_bytes": 114688,
+  "renderer_ROM_sha256": "6fc12de0154f5bf43bac41bf5772afa832e38c0dbc5decd98ed15aed1d8ebcd6",
+  "comparison": {
+    "settings": {
+      "apu_clock": "21",
+      "skipped_set": "0",
+      "audio_set": "4",
+      "precision_set": "8"
+    },
+    "captures": [
+      {
+        "guest_frame": 2984,
+        "RGB_pixels": 67200,
+        "RGB_differences": 8695,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      },
+      {
+        "guest_frame": 3000,
+        "RGB_pixels": 67200,
+        "RGB_differences": 8691,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      }
+    ],
+    "quiet_intervals": [
+      {
+        "head": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+        "guest_endpoints": [
+          3001,
+          3717
+        ],
+        "duration_s": 12.021123370666666,
+        "presentation_is_software_observation": true,
+        "guest_delta": 716,
+        "guest_per_second": 59.56182113122196,
+        "render_delta": 716,
+        "render_per_second": 59.56182113122196,
+        "vi_delta": 719,
+        "vi_per_second": 59.81138183428574,
+        "present_delta": 716,
+        "present_per_second": 59.56182113122196
+      },
+      {
+        "head": "ae59e6b774168564444352066273a9e4025aa800",
+        "guest_endpoints": [
+          3001,
+          3516
+        ],
+        "duration_s": 12.028065152,
+        "presentation_is_software_observation": true,
+        "guest_delta": 515,
+        "guest_per_second": 42.816528967201926,
+        "render_delta": 515,
+        "render_per_second": 42.816528967201926,
+        "vi_delta": 719,
+        "vi_per_second": 59.77686277168579,
+        "present_delta": 515,
+        "present_per_second": 42.816528967201926
+      }
+    ],
+    "quiet_starts_match": true,
+    "quiet_endpoints_match": false
+  },
+  "settings_scope": "Same zero-input boot route. Host sent no requests between quiet endpoints. Both windows began at guest frame 3001, stayed within the declared early-intro band and had 719 observed VI ticks each. The ending guest frame differs because this is a fixed-duration comparison.",
+  "candidate_vs_reference_guest_rate_percent": -28.114137287924944,
+  "fidelity_scope": "PCM and observed DSP state match at both captures. The independent Snes9x software reference supports the corrected PR32 active images at those two boundaries.",
+  "recovery": {
+    "reference_returned_by_software": true,
+    "renderer_returned_by_software": true,
+    "R17_readback_bytes_per_run": 131072,
+    "menu_recovery_per_run": 0,
+    "deployer_exit_per_run": 0
+  },
+  "disposition": "BLOCKED. The native early DKC1 deficit reproduces on the exact base compositor before R43, R44 and R45. Earlier and later windows retain their separate scopes. This pair establishes the deficit of the enabled compositor stack, with no attribution to a specific internal path or to the marginal effects of dependent PRs.",
+  "independent_software_reference": {
+    "reference": "Snes9x 1.63",
+    "active_rgb5_pixels_per_frame": 57344,
+    "registration": {
+      "crop_xy": [
+        12,
+        8
+      ],
+      "delta": 3,
+      "frames": [
+        {
+          "native_guest_frame": 2984,
+          "snes9x_frame": 2987,
+          "anchor_pixels": 1591,
+          "anchor_errors": 0,
+          "master_mismatches": 8695,
+          "compositor_mismatches": 0,
+          "changed_pixels": 8695,
+          "master_only_matches": 0,
+          "compositor_only_matches": 8695,
+          "neither_matches": 0
+        },
+        {
+          "native_guest_frame": 3000,
+          "snes9x_frame": 3003,
+          "anchor_pixels": 1619,
+          "anchor_errors": 0,
+          "master_mismatches": 8691,
+          "compositor_mismatches": 0,
+          "changed_pixels": 8691,
+          "master_only_matches": 0,
+          "compositor_only_matches": 8691,
+          "neither_matches": 0
+        }
+      ]
+    },
+    "method": "Search a shared crop and bounded frame offset using only common nonblack native pixels across both frames. The unique best shared registration has zero anchor errors. Compare all remaining pixels after fixing the registration.",
+    "scope": "Same local ROM path, zero controller input, two active-area RGB5 images. This is a software reference, not physical SNES video or whole-title acceptance.",
+    "changed_pixels_were_black_on_parent": [
+      8695,
+      8691
+    ]
+  },
+  "R45_stack": {
+    "PR": 42,
+    "comparison_with_PR32": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8"
+      },
+      "captures": [
+        {
+          "guest_frame": 2984,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "ae59e6b774168564444352066273a9e4025aa800",
+          "guest_endpoints": [
+            3001,
+            3516
+          ],
+          "duration_s": 12.028065152,
+          "presentation_is_software_observation": true,
+          "guest_delta": 515,
+          "guest_per_second": 42.816528967201926,
+          "render_delta": 515,
+          "render_per_second": 42.816528967201926,
+          "vi_delta": 719,
+          "vi_per_second": 59.77686277168579,
+          "present_delta": 515,
+          "present_per_second": 42.816528967201926
+        },
+        {
+          "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+          "guest_endpoints": [
+            3001,
+            3535
+          ],
+          "duration_s": 12.025643136,
+          "presentation_is_software_observation": true,
+          "guest_delta": 534,
+          "guest_per_second": 44.40510947821294,
+          "render_delta": 534,
+          "render_per_second": 44.40510947821294,
+          "vi_delta": 719,
+          "vi_per_second": 59.78890208770619,
+          "present_delta": 534,
+          "present_per_second": 44.40510947821294
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false
+    },
+    "scope": "Complete dependent stack on the same base. Two exact captures against PR32 inherit its scoped Snes9x RGB5 agreement. The timing delta belongs to the stack and is not the isolated R45 effect.",
+    "R17_readback_bytes": 131072,
+    "menu_recovery": 0,
+    "deployer_exit": 0,
+    "comparison_with_R44": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8"
+      },
+      "captures": [
+        {
+          "guest_frame": 2984,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+          "guest_endpoints": [
+            3001,
+            3539
+          ],
+          "duration_s": 12.018993216,
+          "presentation_is_software_observation": true,
+          "guest_delta": 538,
+          "guest_per_second": 44.76248470494186,
+          "render_delta": 538,
+          "render_per_second": 44.76248470494186,
+          "vi_delta": 719,
+          "vi_per_second": 59.82198234731078,
+          "present_delta": 538,
+          "present_per_second": 44.76248470494186
+        },
+        {
+          "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+          "guest_endpoints": [
+            3001,
+            3535
+          ],
+          "duration_s": 12.025643136,
+          "presentation_is_software_observation": true,
+          "guest_delta": 534,
+          "guest_per_second": 44.40510947821294,
+          "render_delta": 534,
+          "render_per_second": 44.40510947821294,
+          "vi_delta": 719,
+          "vi_per_second": 59.78890208770619,
+          "present_delta": 534,
+          "present_per_second": 44.40510947821294
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false
+    },
+    "interpretation": "The full R45 stack preserves exact fidelity in these captures and remains far below the master rate. A single same-start quiet window with four fewer completed guest frames than R44 cannot quantify a repeatable marginal regression.",
+    "ROM_sha256": "c5b8da42fd472a5a09e110949e8dfd72d0f10fc28f0bbba8dbd7e72a36886800"
+  },
+  "R44_stack": {
+    "PR": 41,
+    "source_relationship": "The local test commit has the same Git tree as the reviewed PR41 head.",
+    "comparison_with_PR32": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8"
+      },
+      "captures": [
+        {
+          "guest_frame": 2984,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "ae59e6b774168564444352066273a9e4025aa800",
+          "guest_endpoints": [
+            3001,
+            3516
+          ],
+          "duration_s": 12.028065152,
+          "presentation_is_software_observation": true,
+          "guest_delta": 515,
+          "guest_per_second": 42.816528967201926,
+          "render_delta": 515,
+          "render_per_second": 42.816528967201926,
+          "vi_delta": 719,
+          "vi_per_second": 59.77686277168579,
+          "present_delta": 515,
+          "present_per_second": 42.816528967201926
+        },
+        {
+          "head": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+          "guest_endpoints": [
+            3001,
+            3539
+          ],
+          "duration_s": 12.018993216,
+          "presentation_is_software_observation": true,
+          "guest_delta": 538,
+          "guest_per_second": 44.76248470494186,
+          "render_delta": 538,
+          "render_per_second": 44.76248470494186,
+          "vi_delta": 719,
+          "vi_per_second": 59.82198234731078,
+          "present_delta": 538,
+          "present_per_second": 44.76248470494186
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false
+    },
+    "R17_readback_bytes": 131072,
+    "menu_recovery": 0,
+    "deployer_exit": 0,
+    "reviewed_head": "4859b8c5e3bc16fbed27b728ce37a46681951c2d",
+    "tested_git_tree": "ec655d17a9585b458df8d66d5940f0bac493e06f",
+    "ROM_sha256": "e6124410fe54ecacff4072c49a8ecc547da9985dc9ff508d0da21aa1bf41866d",
+    "comparison_with_R43": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8"
+      },
+      "captures": [
+        {
+          "guest_frame": 2984,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "019da69238f617a97eed390ce1e70000d6751ab6",
+          "guest_endpoints": [
+            3001,
+            3521
+          ],
+          "duration_s": 12.031919573333333,
+          "presentation_is_software_observation": true,
+          "guest_delta": 520,
+          "guest_per_second": 43.21837399515951,
+          "render_delta": 520,
+          "render_per_second": 43.21837399515951,
+          "vi_delta": 720,
+          "vi_per_second": 59.84082553175932,
+          "present_delta": 520,
+          "present_per_second": 43.21837399515951
+        },
+        {
+          "head": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+          "guest_endpoints": [
+            3001,
+            3539
+          ],
+          "duration_s": 12.018993216,
+          "presentation_is_software_observation": true,
+          "guest_delta": 538,
+          "guest_per_second": 44.76248470494186,
+          "render_delta": 538,
+          "render_per_second": 44.76248470494186,
+          "vi_delta": 719,
+          "vi_per_second": 59.82198234731078,
+          "present_delta": 538,
+          "present_per_second": 44.76248470494186
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false
+    }
+  },
+  "R43_stack": {
+    "PR": 40,
+    "reviewed_head": "a6dd6082",
+    "tested_git_tree": "53a5c66848732e79305e787c40a8cbd53169b5fb",
+    "ROM_sha256": "171d9119c9f316ebced6ca0938427b80a874e12a9e1ab8dd1b2ff59626836f09",
+    "comparison_with_PR32": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8"
+      },
+      "captures": [
+        {
+          "guest_frame": 2984,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "ae59e6b774168564444352066273a9e4025aa800",
+          "guest_endpoints": [
+            3001,
+            3516
+          ],
+          "duration_s": 12.028065152,
+          "presentation_is_software_observation": true,
+          "guest_delta": 515,
+          "guest_per_second": 42.816528967201926,
+          "render_delta": 515,
+          "render_per_second": 42.816528967201926,
+          "vi_delta": 719,
+          "vi_per_second": 59.77686277168579,
+          "present_delta": 515,
+          "present_per_second": 42.816528967201926
+        },
+        {
+          "head": "019da69238f617a97eed390ce1e70000d6751ab6",
+          "guest_endpoints": [
+            3001,
+            3521
+          ],
+          "duration_s": 12.031919573333333,
+          "presentation_is_software_observation": true,
+          "guest_delta": 520,
+          "guest_per_second": 43.21837399515951,
+          "render_delta": 520,
+          "render_per_second": 43.21837399515951,
+          "vi_delta": 720,
+          "vi_per_second": 59.84082553175932,
+          "present_delta": 520,
+          "present_per_second": 43.21837399515951
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false
+    },
+    "R17_readback_bytes": 131072,
+    "menu_recovery": 0,
+    "deployer_exit": 0
+  },
+  "stack_interpretation": "Each quiet trial starts at 3001. Faster variants cover more guest work in roughly 12 seconds. R43, R44 and R45 keep both corrected PR32 RGB images and the audio. The largest measured recovery is 1.95 guest frames/s over PR32, and the best renderer still trails the matched parent by 14.80 guest frames/s. An exact internal cost attribution and the separately routed first-stage benefit are outside this result."
+}

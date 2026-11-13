@@ -1,0 +1,169 @@
+{
+  "date_local": "2026-11-12",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "audio": 4,
+    "precision": 8,
+    "controller_input": 0
+  },
+  "source_heads": {
+    "prior_master": "dc0c49d143964b65e763fc083b3ae2bb4d161ff8",
+    "master_cgram": "b012b6b665ede6a9c537bf0e491dfdb8867835e1",
+    "r44_pr41": "4859b8c5e3bc16fbed27b728ce37a46681951c2d",
+    "r44_same_tree_lab": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+    "r45_pr42": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e"
+  },
+  "status_cadence_scope": "First status at or beyond each listed nominal guest checkpoint. Start and end frames can differ among runs. Use 3000-to-3200 for four-way context and 3000-to-4000 for the three available full bands. These are retrospective comparisons of different physical sessions, with host status polling.",
+  "counter_scope": "Count32 and usb_poll_count_total_mod32 are subtracted modulo 2^32 at 46,875,000 Hz. Measured USB polling time brackets receive/command processing in the retired and idle bridge. These running intervals have one measured poll call per retired frame. Subtraction is an arithmetic bound on measured polling time and does not attribute CPU/RSP cost or predict REMOTE=0.",
+  "common_polled_band_3000_to_3200": {
+    "prior_master": {
+      "guest_endpoints": [
+        3000,
+        3200
+      ],
+      "frame_delta": 200,
+      "seconds": 3.346537173333333,
+      "guest_per_second": 59.76326860902283,
+      "measured_poll_seconds": 0.04893608533333333,
+      "poll_fraction": 0.014622902062250313,
+      "outside_measured_poll_ms_per_guest_frame": 16.48800544,
+      "vi_observations": 200,
+      "software_presentations": 200
+    },
+    "master_cgram": {
+      "guest_endpoints": [
+        3014,
+        3215
+      ],
+      "frame_delta": 201,
+      "seconds": 3.360928832,
+      "guest_per_second": 59.80489621983165,
+      "measured_poll_seconds": 0.049601514666666666,
+      "poll_fraction": 0.014758275805902773,
+      "outside_measured_poll_ms_per_guest_frame": 16.47426526036484,
+      "vi_observations": 201,
+      "software_presentations": 201
+    },
+    "r44": {
+      "guest_endpoints": [
+        3010,
+        3214
+      ],
+      "frame_delta": 204,
+      "seconds": 4.555729557333334,
+      "guest_per_second": 44.778777456537625,
+      "measured_poll_seconds": 0.05548834133333334,
+      "poll_fraction": 0.012179902392145742,
+      "outside_measured_poll_ms_per_guest_frame": 22.060005960784316,
+      "vi_observations": 273,
+      "software_presentations": 204
+    },
+    "r45": {
+      "guest_endpoints": [
+        3000,
+        3201
+      ],
+      "frame_delta": 201,
+      "seconds": 4.523340992,
+      "guest_per_second": 44.43618121107594,
+      "measured_poll_seconds": 0.056744128,
+      "poll_fraction": 0.012544738081952677,
+      "outside_measured_poll_ms_per_guest_frame": 22.221874945273633,
+      "vi_observations": 271,
+      "software_presentations": 201
+    }
+  },
+  "extended_polled_band_3000_to_4000": {
+    "prior_master": {
+      "guest_endpoints": [
+        3000,
+        4021
+      ],
+      "frame_delta": 1021,
+      "seconds": 17.136847381333332,
+      "guest_per_second": 59.579219986060295,
+      "measured_poll_seconds": 0.25189640533333335,
+      "poll_fraction": 0.014699110036290382,
+      "outside_measured_poll_ms_per_guest_frame": 16.537660113614105,
+      "vi_observations": 1025,
+      "software_presentations": 1021
+    },
+    "master_cgram": {
+      "guest_endpoints": [
+        3014,
+        4017
+      ],
+      "frame_delta": 1003,
+      "seconds": 16.817187242666666,
+      "guest_per_second": 59.64136484460979,
+      "measured_poll_seconds": 0.24747242666666666,
+      "poll_fraction": 0.014715446946966708,
+      "outside_measured_poll_ms_per_guest_frame": 16.520154352941177,
+      "vi_observations": 1006,
+      "software_presentations": 1003
+    },
+    "r45": {
+      "guest_endpoints": [
+        3000,
+        4013
+      ],
+      "frame_delta": 1013,
+      "seconds": 23.354878144,
+      "guest_per_second": 43.374236155466534,
+      "measured_poll_seconds": 0.2875206613333333,
+      "poll_fraction": 0.012310946756414528,
+      "outside_measured_poll_ms_per_guest_frame": 22.771330190194142,
+      "vi_observations": 1397,
+      "software_presentations": 1013
+    }
+  },
+  "early_host_idle_warmup": {
+    "scope": "One pause-at request between hello and next status. No repeated host status polling during the 55-second sleep. These samples finish at different guest endpoints and cover overall boot progress.",
+    "runs": {
+      "b9c5ab7214b359e9d0f8d699223534ccee4ef7e9": {
+        "guest_endpoints": [
+          33,
+          2992
+        ],
+        "guest_delta": 2959,
+        "elapsed_seconds": 55.075211114666665,
+        "guest_frames_per_second": 53.72653032304058,
+        "measured_poll_seconds": 0.45759746133333334
+      },
+      "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e": {
+        "guest_endpoints": [
+          31,
+          2362
+        ],
+        "guest_delta": 2331,
+        "elapsed_seconds": 55.095617984,
+        "guest_frames_per_second": 42.30826489099246,
+        "measured_poll_seconds": 0.37178980266666667
+      }
+    }
+  },
+  "disposition": "Retain earlier DKC1 throughput as a renderer promotion blocker. The later exact R45 parity/cadence window stands. Compare fixed-start 12-second intervals in the earlier intro on master, R44 and R45 before broader physical checks. If the deficit reproduces, use PR40/R43 and PR32 as dependency controls only as needed.",
+  "next_native_case": {
+    "private_runner_option": "--commercial dkc1 --dkc-intro --quiet-warmup",
+    "capture_guest_frames": [
+      2984,
+      3000
+    ],
+    "quiet_seconds": 12,
+    "expected_start_guest_frame": 3001,
+    "max_end_guest_frame": 4000,
+    "runner_preflight": "PASS with hardware access stubbed",
+    "physical_result": "PENDING"
+  },
+  "historical_PR32_scope": {
+    "head": "3e1c9a99869063254dbc1c84453fd6cf06f78762",
+    "matched_settings": true,
+    "guest_endpoints": [
+      3028,
+      3210
+    ],
+    "guest_frames_per_second": 44.260153193540546,
+    "scope": "Older source base and 0.8-second status polling. The early slowdown already appears on the base faithful compositor. This does not measure the marginal effect of any overlay."
+  }
+}

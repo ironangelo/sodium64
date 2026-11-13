@@ -32,5 +32,7 @@
     "ares": 43338571825
   },
   "physical_menu_gate": "PENDING. Exercise the real controller path for APU 21 to 42 and back to 21.",
-  "console": "USB COM3 still absent after R44. R17 restore and readback first."
+  "console": "USB COM3 still absent after R44. R17 restore and readback first.",
+  "exact_head_CI_result": "success",
+  "exact_head_APU_cycle_span_run": 43340706313
 }

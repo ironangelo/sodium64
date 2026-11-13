@@ -302,8 +302,11 @@ Diagnostic tools are identified separately from production runtime changes.
    and R44 source drafts separately. R44 still needs its story and Mode 7
    comparisons against R43. R45 needs aligned story and Mode 7 costs.
    Restore R17 when COM3 returns. Keep PR37 out of master until the SMW
-   cadence loss is resolved. Compare R44 with R45 at the captured DKC1
-   endpoints on their common pre-CGRAM base.
+   cadence loss is resolved. Run the fixed-start quiet DKC1 intro
+   comparison from frame 3001. Retained early-band samples on R44 and R45
+   remain slower after accounting for the measured USB poll time. Use
+   PR40 and PR32 controls if the early deficit reproduces.
+   [Retained DKC1 counters and next paired gate](evidence/integration-renderer-dkc1-poll-accounting-2026-11-12.json).
 5. After combined representative evidence, resume whole resident DSP via an
    integral cost proof including all8 voices, BRR/Gaussian/envelopes/noise/PMON/
    echo/FIR/clock/latch work, RAM/register barriers, preparation/cache/DMA/sync,

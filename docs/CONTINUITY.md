@@ -1,3 +1,36 @@
+# 2026-11-12 — Bound the DKC1 intro deficit with the retained native counters
+
+The earlier DKC1 status samples still separate master from the enabled
+renderer before the later parity captures. In the approximate 3000-to-3200
+guest band, the prior master and CGRAM master run at 59.76 and 59.80
+guest frames/s. The R44 and R45 stacks run at 44.78 and 44.44.
+The timed USB receive/command scope accounts for at most 1.48 percent
+of those intervals. Subtracting it leaves about 16.5 ms per completed
+guest frame on the two master variants, 22.1 on R44 and 22.2 on R45.
+The enabled stacks still need a paired comparison at the same start
+frame. The counters do not locate the renderer cost or establish
+unbridged cadence.
+The older standalone PR32 build also recorded 44.26 guest frames/s
+at frames 3028 to 3210 with a different base and polling interval.
+The same class of deficit is present before R44 and R45.
+
+The completed CGRAM and R45 trials also used the same 55-second
+host-idle warmup. R45 completed 2,331 guest frames in that part of
+boot and CGRAM completed 2,959. The endpoints differ, so these figures
+confirm less boot progress without repeated status requests and do
+not attribute scene-specific rates. The late R45 DKC1 image, PCM and
+quiet cadence match remains valid for its measured window.
+
+The private native runner now parks at frames 2984 and 3000 and
+checks the admission of a 12-second quiet interval inside the slow
+intro. It preserves existing settings, capture and restore checks.
+COM3 is still absent. A restore-only runner passed host checks for
+menu recovery, software return and rejecting mismatched status; its
+actual R17 restore remains pending. Restore and read back R17 first.
+[Retained DKC1 counters and next paired gate](evidence/integration-renderer-dkc1-poll-accounting-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Refresh the APU clock PR on the integrated CGRAM master
 
 PR39 `3bf54854` carries the same three-file patch over `b012b6b6`.

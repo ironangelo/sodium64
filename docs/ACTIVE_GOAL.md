@@ -94,7 +94,8 @@ on this run. ALttP and SMW timings still bind to the previous master.
 
 PR39 `3bf54854` keeps the APU clock correction against `b012b6b6`.
 The negative control reproduces stale lookup on that master. Normal,
-HW_PROFILE and REMOTE pass the linked APU and CGRAM checks. The
+HW_PROFILE and REMOTE pass the linked APU and CGRAM checks. All four
+exact-head PR workflows pass. The
 physical menu transitions 21 to 42 and back to 21 remain pending.
 The older runtime passed the 119-case compiled APU cycle suite.
 [Refreshed APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).
@@ -124,8 +125,11 @@ At frames 4330 and 4346, images and PCM match master. Both complete
 polled throughput of the R45 stack is below master. R17 is restored.
 The subsequent R44 retry reached hello but Windows lost COM3 during
 idle warmup before any aligned capture. R17 is now pending restoration.
-A completed R44 control is needed to isolate the DKC1 cost. ALttP story
+The recorded bridge time is at most 1.48 percent of the comparable
+early band. A fixed-start quiet intro comparison is prepared for
+master, R44 and R45. The later R44 aligned fidelity check, ALttP story
 and Mode 7 remain open.
+[Retained DKC1 counters and next paired gate](evidence/integration-renderer-dkc1-poll-accounting-2026-11-12.json).
 [R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
 [Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
 [Interrupted native run and bounded warmup rates](evidence/integration-r44-dkc1-interrupted-2026-11-12.json).

@@ -1,3 +1,25 @@
+# 2026-11-12 — Separate the DKC1 intro gate from R45's measured first-stage benefit
+
+The October R44/R45 pair reached the first stage with six matched input
+receipts before frame 4320, at precision 20. Its gain from 13.75 to
+28.70 guest boundaries/s belongs to the aligned 4330-to-4569 stage
+interval. The November R45 run uses zero inputs and precision 8. Its
+later exact RGB, PCM and quiet cadence match against master stands
+for that boot route. The two runs reach different guest states.
+
+The local runner now verifies both archived route receipts and can
+replay the first stage against PR41 and PR42. The matched precision-20
+ROMs change one immediate per build, with identical linked symbols,
+addresses and every other byte. The replay parks at 4320 and 4330 for
+image and PCM, then measures eight quiet seconds starting at 4331.
+Mocked flow passes for both renderer ROMs, and the intro route still
+passes its host preflight. Windows still reports COM3 absent. Restore
+R17 and read it back before a native run. The early quiet DKC1 intro
+remains a separate promotion gate.
+[DKC1 first-stage replay provenance](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
+
+---
+
 # 2026-11-12 — Bound the DKC1 intro deficit with the retained native counters
 
 The earlier DKC1 status samples still separate master from the enabled

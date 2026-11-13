@@ -1,0 +1,89 @@
+{
+  "date_local": "2026-11-12",
+  "historical_pair": {
+    "source": "313642af247ff15ffdf34031c185bb1234825173",
+    "scene": "DKC1 first stage reached with six recorded controller inputs",
+    "capture_anchor": 4320,
+    "timed_endpoints_inclusive": [
+      4330,
+      4569
+    ],
+    "guest_boundaries_per_second_R44": 13.753867141203528,
+    "guest_boundaries_per_second_R45": 28.702821,
+    "settings": {
+      "apu_clock": 21,
+      "frameskip": 0,
+      "audio": 4,
+      "precision": 20
+    },
+    "launch_and_input_receipts_match": true,
+    "comparison_scope": "Historical pinned renderer controls. This is the route and precision of the measured R45 benefit."
+  },
+  "recent_November_comparison": {
+    "R45_head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+    "settings": {
+      "apu_clock": 21,
+      "frameskip": 0,
+      "audio": 4,
+      "precision": 8
+    },
+    "controller_input": 0,
+    "aligned_image_PCM_frames": [
+      4330,
+      4346
+    ],
+    "quiet_guest_endpoints": [
+      4347,
+      5545
+    ],
+    "comparison_scope": "A different guest state. Retain its observed image, PCM and cadence parity with the master build."
+  },
+  "prepared_replay": {
+    "local_runner_option": "--commercial dkc1 --dkc-stage --quiet-warmup",
+    "candidate_heads": {
+      "r44-pair": {
+        "PR": 41,
+        "review_head": "4859b8c5e3bc16fbed27b728ce37a46681951c2d",
+        "lab_head": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7"
+      },
+      "r45-pair": {
+        "PR": 42,
+        "review_head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e"
+      }
+    },
+    "local_precision_20_ROM_checks": {
+      "r44-pair": {
+        "rom_sha256": "1fe93770209edece1c10fd270894a441e21fd335b61e1d9e52cad0dad88da51e",
+        "rom_bytes": 114688,
+        "linked_bytes": 791260,
+        "only_instruction_immediate": {
+          "address": "0x8000fc08",
+          "old": 8,
+          "new": 20
+        }
+      },
+      "r45-pair": {
+        "rom_sha256": "83e011b9db399a970d1a4585a98c9d39ef8f77f773c8fce11e95160fa89c71b9",
+        "rom_bytes": 114688,
+        "linked_bytes": 792732,
+        "only_instruction_immediate": {
+          "address": "0x8000fdc8",
+          "old": 8,
+          "new": 20
+        }
+      }
+    },
+    "loaded_symbol_and_address_sets_match_ordinary_bench": true,
+    "input_count": 6,
+    "capture_guest_frames": [
+      4320,
+      4330
+    ],
+    "quiet_seconds": 8,
+    "expected_first_guest_frame": 4331,
+    "scope": "Same-start quiet progress and paired image/PCM, with closing frames depending on actual cadence. Keep the historical 240-interval comparison as a separate measurement.",
+    "end_to_end_mocked_runner": "PASS including pinned inputs, settings, image and PCM receipts, Count cadence and R17 restoration.",
+    "physical_result": "PENDING"
+  },
+  "disposition": "R44 and R45 remain draft. The early zero-input DKC1 intro remains a separate regression gate. The historical first-stage route now has matched-precision replay inputs and immutable ROMs for the ports. COM3 remains absent and R17 restoration comes first."
+}

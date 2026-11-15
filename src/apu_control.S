@@ -71,6 +71,7 @@ apu_bpl: // BPL dest
     or t0, t0, a0 // delay slot: fallthrough PC on both paths
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -98,6 +99,7 @@ apu_bmi: // BMI dest
     or t0, t0, a0 // delay slot: fallthrough PC on both paths
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -124,6 +126,7 @@ apu_bvc: // BVC dest
     or t0, t0, a0 // delay slot: fallthrough PC on both paths
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -150,6 +153,7 @@ apu_bvs: // BVS dest
     or t0, t0, a0 // delay slot: fallthrough PC on both paths
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -176,6 +180,7 @@ apu_bcc: // BCC dest
     or t0, t0, a0 // delay slot: fallthrough PC on both paths
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -202,6 +207,7 @@ apu_bcs: // BCS dest
     or t0, t0, a0 // delay slot: fallthrough PC on both paths
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -229,6 +235,7 @@ apu_bne: // BNE dest
     or t0, t0, a0 // delay slot: fallthrough PC on both paths
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -256,6 +263,7 @@ apu_beq: // BEQ dest
     or t0, t0, a0 // delay slot: fallthrough PC on both paths
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -289,6 +297,7 @@ apu_bbc1: // BBC op.b,dest
     or t0, t0, a0
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -322,6 +331,7 @@ apu_bbs1: // BBS op.b,dest
     or t0, t0, a0
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -352,6 +362,7 @@ apu_cbne: // CBNE op,dest
     or t0, t0, a0
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -383,6 +394,7 @@ apu_dbnzy: // DBNZ Y,dest
     or t0, t0, a0
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -408,6 +420,7 @@ apu_dbnzm: // DBNZ op,dest
     or t0, t0, a0
     jal jit_emit_runtime_cycles
     li t0, 2
+    andi v0, v0, 0xFFFF
     li t0, ORI(S0, ZERO, 0)
     la ra, finish_block
     j emit_op
@@ -425,6 +438,7 @@ apu_bra: // BRA dest
     sll t2, v0, 24
     sra t2, t2, 24
     add t2, t2, a0
+    andi t2, t2, 0xFFFF
 
     // Emit code to branch unconditionally
     li t0, ORI(S0, ZERO, 0)
@@ -443,10 +457,11 @@ apu_jmp: // JMP op
 apu_jmpm: // JMP [op]
     // Emit code to jump to an address from memory
     EMIT_OP OR(S0, ZERO, V0)
+    EMIT_OP ADDI(A0, A0, 1)
     la t0, apu_read8
     jal emit_jal
     ori s1, s1, FLAG_PC // Update the JIT register state
-    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_OP ANDI(A0, A0, 0xFFFF)
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(S0, S0, T0)
     j finish_block

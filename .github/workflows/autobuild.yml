@@ -39,7 +39,7 @@ jobs:
         run: |
           set -euo pipefail
           checked=0
-          for proof in scripts/test_cpu_relative_branches.py scripts/test_apu_lookup_reset.py scripts/test_dsp_gain_owner.py scripts/test_dsp_brr_accuracy.py; do
+          for proof in scripts/test_cpu_relative_branches.py scripts/test_apu_lookup_reset.py scripts/test_spc_address_wrap.py scripts/test_dsp_gain_owner.py scripts/test_dsp_brr_accuracy.py; do
             if [ -f "$proof" ]; then
               python3 "$proof" build/sodium64.elf
               checked=$((checked+1))
@@ -102,7 +102,7 @@ jobs:
         run: |
           set -euo pipefail
           checked=0
-          for proof in scripts/test_apu_lookup_reset.py scripts/test_dsp_gain_owner.py scripts/test_dsp_brr_accuracy.py; do
+          for proof in scripts/test_apu_lookup_reset.py scripts/test_spc_address_wrap.py scripts/test_dsp_gain_owner.py scripts/test_dsp_brr_accuracy.py; do
             if [ -f "$proof" ]; then
               python3 "$proof" build/sodium64.elf
               checked=$((checked+1))

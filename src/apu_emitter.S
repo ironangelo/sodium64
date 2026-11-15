@@ -131,8 +131,9 @@ jit_read8: // a0: address - v0: value
     sub s2, s2, v0
     add t0, a0, t1
     lbu v0, apu_ram(t0)
+    addiu a0, a0, 1
     jr ra
-    addi a0, a0, 1
+    andi a0, a0, 0xFFFF
 
 .align 5
 jit_charge_cycles: // t0: additional guest cycles missing from fetch/data accounting
@@ -215,6 +216,10 @@ next_opcode:
 
 .align 5
 finish_opcode:
+    // Wrapped source bytes belong to the first and last guest pages.
+    // End this block before it can grow beyond the two tagged pages.
+    bltu a0, s0, finish_block
+    nop
     // Retain the 16-byte source-span bound. Also stop once the completed block
     // exceeds 20 worst-case SPC cycles: the pinned reference's most expensive
     // finite instruction is DIV at 12 cycles, so the next instruction can bring

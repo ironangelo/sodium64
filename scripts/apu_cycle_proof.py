@@ -1030,7 +1030,8 @@ def main() -> int:
              reference_cycles=10, expected_end_region=8, y_value=0x06,
              memory_writes=((0x0020, b"\xFF\x00"),),
              expected_memories=((0x0020, 0x00), (0x0021, 0x01))),
-        dict(name="movw_dp_ya_word_control", code=bytes.fromhex("da202ffc"), expected_debit=-147,
+        # The destination read now debits one cycle through apu_read8.
+        dict(name="movw_dp_ya_word_control", code=bytes.fromhex("da202ffc"), expected_debit=-126,
              reference_cycles=9, expected_end_region=8, y_value=0x12, a_value=0x34,
              memory_writes=((0x0020, b"\x00\x00"),),
              expected_memories=((0x0020, 0x34), (0x0021, 0x12))),

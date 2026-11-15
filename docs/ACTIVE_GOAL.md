@@ -118,17 +118,23 @@ gain remain unmeasured.
 [Linked 65C816 branch evidence](evidence/integration-cpu-relative-branches-2026-11-12.json).
 [Combined master N64 evidence](evidence/integration-current-master-native-2026-11-13.json).
 
-PR45 `85d1e3c5` is an independent draft SPC700 address correctness
-repair against `c90ef5c9`. All 770 linked cases pass in the four
-build configurations. The linked master negative control fails 666.
-Exact-head CI passes. The matched physical smoke remains pending.
+PR45 `85d1e3c5` fixes SPC700 address wrapping. All 770 linked cases
+and five exact-head CI runs pass. Both paired DKC1 captures match
+RGB, PCM and DSP state on N64. The tested candidate completes
+1,197 guest frames over 1,197 VI ticks in 20.007 s. The reference
+completes 1,198 over 1,197 in 20.016 s. Master `fe61d371` is
+byte-identical to the tested REMOTE build. This is the current
+integration head. The existing three-title baseline binds to
+its parent `c90ef5c9`.
 [SPC700 wrap evidence](evidence/integration-spc-address-wrap-2026-11-13.json).
 
-PR46 `126521d7` independently fixes the seven SPC700 direct-page
-word operations. The linked master fails 556 of 940 directed cases.
-Normal, PROFILE, HW_PROFILE and REMOTE pass all 940. Each build
-rejects two emitted faults. Exact-head CI and matched physical smoke
-gate promotion.
+PR46 `77bd5e55` independently fixes seven SPC700 direct-page word
+operations. The linked original master fails 556 of 940 cases. All
+four configurations pass 940 on the original fix. The standalone
+fix also passes matched DKC1 RGB, PCM, DSP and cadence. Its refreshed
+parent is `fe61d371`. The refreshed binary includes both SPC700
+corrections, which pass combined linked checks. Refreshed native
+and exact-head CI checks gate promotion.
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
 
 PR39 `cddf5be3` keeps the APU clock correction against `c90ef5c9`.
@@ -199,7 +205,8 @@ remain open.
 
 The private menu, normal master and separate reference bench are
 installed and byte-verified after the rear USB port restored
-enumeration. Physical cold boot and software return are pending.
+enumeration. Physical cold boot, separate reference launch and
+software return pass. Normal browser gameplay remains unverified.
 Recovery after complete USB disappearance still lacks a verified
 independent path.
 [Private menu and transport evidence](evidence/private-native-menu-split-2026-11-13.json).

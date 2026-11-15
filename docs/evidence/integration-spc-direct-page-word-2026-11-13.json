@@ -2,7 +2,7 @@
   "date_local": "2026-11-13",
   "PR": 46,
   "base": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
-  "head": "126521d7de66b31a76e4bd0bc8354a769c42b7a5",
+  "head": "77bd5e55695dafa5ceea0be297bf9ce196c2899f",
   "historical_source": "6b82434e78fcd7c052c9eba3188c867a2d91fa9a",
   "classification": "CANDIDATE standalone SPC700 direct-page word correctness",
   "runtime_scope": [
@@ -60,5 +60,114 @@
     "APU_cycle_span": 43521008843
   },
   "native": "PENDING. Run a matched real-N64 boot, aligned RGB and PCM and short quiet cadence check.",
-  "scope_limit": "Directed word-operation behavior and observed data-bus order. Other runtime bus phasing and opcode guards are outside this candidate."
+  "scope_limit": "Directed word-operation behavior and observed data-bus order. Other runtime bus phasing and opcode guards are outside this candidate.",
+  "runtime_head": "126521d7de66b31a76e4bd0bc8354a769c42b7a5",
+  "CI_initial_dynamic_case": {
+    "run": 43521008843,
+    "artifact": 14082284865,
+    "case": "movw_dp_ya_word_control",
+    "static_expected": -147,
+    "static_observed": -126,
+    "total_expected": -189,
+    "total_observed": -189,
+    "semantics_match": true,
+    "disposition": "Destination read now debits through apu_read8. Follow-up only updates the static expectation, keeping the independent nine-cycle check."
+  },
+  "CI_runs_final_head": {
+    "Build": 43776626146,
+    "Ares": 43776626252,
+    "owners": 43776626141,
+    "USB": 43776626215,
+    "APU_cycle_span": 43776622050
+  },
+  "combined_local": {
+    "source": "175698956b373064806c51a8704af974703978f6",
+    "scope": "PR45 plus PR46 runtime. Two CI file conflicts resolved locally by keeping both proofs. No combined performance claim.",
+    "normal_and_REMOTE_address_cases": 770,
+    "normal_and_REMOTE_direct_page_word_cases": 940,
+    "normal_release_admission": "PASS",
+    "normal_full_lookup_reset_entries": 65536,
+    "REMOTE_bridge_owner": "PASS"
+  },
+  "current_base": "fe61d371beef8085f195fc38b890b8e16a842da1",
+  "isolated_native": {
+    "settings": {
+      "apu_clock": "21",
+      "skipped_set": "0",
+      "audio_set": "4",
+      "precision_set": "8"
+    },
+    "captures": [
+      {
+        "guest_frame": 4330,
+        "RGB_pixels": 67200,
+        "RGB_differences": 0,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      },
+      {
+        "guest_frame": 4346,
+        "RGB_pixels": 67200,
+        "RGB_differences": 0,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      }
+    ],
+    "quiet_intervals": [
+      {
+        "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+        "guest_endpoints": [
+          4347,
+          5545
+        ],
+        "duration_s": 20.015820586666667,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1198,
+        "guest_per_second": 59.852654794379774,
+        "render_delta": 1198,
+        "render_per_second": 59.852654794379774,
+        "vi_delta": 1197,
+        "vi_per_second": 59.8026943145848,
+        "present_delta": 1197,
+        "present_per_second": 59.8026943145848
+      },
+      {
+        "head": "0db7613ff368fe04d07f5267d1bfdd3926bcc8d1",
+        "guest_endpoints": [
+          4347,
+          5546
+        ],
+        "duration_s": 20.032478442666665,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1199,
+        "guest_per_second": 59.85280370731763,
+        "render_delta": 1199,
+        "render_per_second": 59.85280370731763,
+        "vi_delta": 1198,
+        "vi_per_second": 59.802884771781926,
+        "present_delta": 1198,
+        "present_per_second": 59.802884771781926
+      }
+    ],
+    "quiet_starts_match": true,
+    "quiet_endpoints_match": false,
+    "scope": "Paired DKC1 late-intro on hardware against c90ef5c9, both return by software with recovery 0. No play file writes."
+  },
+  "refreshed_remote_rom": {
+    "sha256": "f5633176b92afedb940593ea4878f8f678251ebc5e6f077b94b9d821de4b33e1",
+    "fresh_build_matches_combined_local": true
+  },
+  "CI_runs_refreshed": {
+    "Build": 43777113056,
+    "Ares": 43777113034,
+    "owners": 43777113053,
+    "USB": 43777113025,
+    "APU_cycle_span": 43777109162
+  }
 }

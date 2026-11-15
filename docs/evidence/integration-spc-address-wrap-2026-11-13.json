@@ -4,7 +4,7 @@
   "base": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
   "head": "85d1e3c532a3ad615ac75f1370e6653d6b1b0ba7",
   "historical_source": "b2f293242a62227e27209ee0dfa37513fbe9cb4f",
-  "classification": "CANDIDATE standalone SPC700 address correctness repair",
+  "classification": "VALIDATED scoped JIT correctness and native smoke; integrated",
   "runtime_scope": [
     "Compiler opcode/operand cursor and wrapped source tags",
     "Relative branch targets including BRA, BBC/BBS, CBNE and DBNZ",
@@ -76,6 +76,88 @@
       "halt_scheduler_groups": 2
     }
   },
-  "native": "PENDING. Retain the candidate in draft and run a matched real-N64 boot/fidelity/cadence check after the menu and USB are available.",
-  "limit": "Scope excludes the experimental bus-timestamp, opcode-guard and live DSP changes. No native speed gain claimed."
+  "native": {
+    "settings": {
+      "apu_clock": "21",
+      "skipped_set": "0",
+      "audio_set": "4",
+      "precision_set": "8"
+    },
+    "captures": [
+      {
+        "guest_frame": 4330,
+        "RGB_pixels": 67200,
+        "RGB_differences": 0,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      },
+      {
+        "guest_frame": 4346,
+        "RGB_pixels": 67200,
+        "RGB_differences": 0,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      }
+    ],
+    "quiet_intervals": [
+      {
+        "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+        "guest_endpoints": [
+          4347,
+          5545
+        ],
+        "duration_s": 20.015820586666667,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1198,
+        "guest_per_second": 59.852654794379774,
+        "render_delta": 1198,
+        "render_per_second": 59.852654794379774,
+        "vi_delta": 1197,
+        "vi_per_second": 59.8026943145848,
+        "present_delta": 1197,
+        "present_per_second": 59.8026943145848
+      },
+      {
+        "head": "85d1e3c532a3ad615ac75f1370e6653d6b1b0ba7",
+        "guest_endpoints": [
+          4347,
+          5544
+        ],
+        "duration_s": 20.0071376,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1197,
+        "guest_per_second": 59.82864835197615,
+        "render_delta": 1197,
+        "render_per_second": 59.82864835197615,
+        "vi_delta": 1197,
+        "vi_per_second": 59.82864835197615,
+        "present_delta": 1197,
+        "present_per_second": 59.82864835197615
+      }
+    ],
+    "quiet_starts_match": true,
+    "quiet_endpoints_match": false,
+    "menu_return": "Both passed software return with recovery 0 and the normal installation preserved.",
+    "date_local": "2026-11-15",
+    "scope": "DKC1 late-intro smoke on real N64. Matching two digital captures and starting guest frame. No sustained presentation or speedup claim."
+  },
+  "limit": "Scope excludes the experimental bus-timestamp, opcode-guard and live DSP changes. No native speed gain claimed.",
+  "merge": {
+    "head": "fe61d371beef8085f195fc38b890b8e16a842da1",
+    "exact_PR_tree": true,
+    "fresh_REMOTE_ROM_matches_tested_binary": true,
+    "post_merge_runs": [
+      43777028784,
+      43777028669,
+      43777028816,
+      43777028876,
+      43777028675
+    ]
+  }
 }

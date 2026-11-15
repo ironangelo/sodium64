@@ -1,3 +1,37 @@
+# 2026-11-15 — Integrate SPC700 address wrapping and verify private software return
+
+PR45 `85d1e3c5` is integrated as `fe61d371`. Both real-N64 DKC1
+runs match the two aligned RGB, PCM and DSP captures at guest frames
+4330/4346. At APU 21 and frameskip 0, both quiet intervals start at
+4347 and count 1,197 VI ticks. The prior master completes 1,198 guest
+frames in 20.016 s and the candidate 1,197 in 20.007 s. Both return
+to the menu in software. The merge tree and freshly built REMOTE
+ROM match the tested candidate. The five post-merge CI runs are
+recorded separately. These are scoped correctness and cadence gates.
+[SPC700 wrap evidence](evidence/integration-spc-address-wrap-2026-11-13.json).
+
+The installed private menu cold-boots, advertises the bench slot and
+returns from its staged reference with recovery 0. The reference
+advances 121 guest frames in the short smoke without rewriting either
+emulator file. The commercial control then loads from the separate
+bench with its previous aligned outputs and cadence. The normal play
+ROM and INI retain their verified installation. Browser gameplay and
+recovery from full USB removal are still unverified.
+[Private menu and transport evidence](evidence/private-native-menu-split-2026-11-13.json).
+
+The standalone PR46 runtime also passes the native late-intro DKC1
+comparison. The first APU cycle run showed exactly nine cycles total
+on MOVW as expected and a smaller static debit because the newly
+emitted destination read debits one cycle through the bus helper.
+The follow-up updates that static expectation. PR46 is refreshed as
+`77bd5e55` on integrated PR45. The combined normal and REMOTE ELFs
+pass both linked suites. The refreshed physical pair and exact-head
+APU/Ares CI determine promotion. The preceding three-title baseline
+still binds to `c90ef5c9`; retain its exact scope.
+[Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
+
+---
+
 # 2026-11-13 — Install separate play and bench files and open the word repair
 
 The rear SuperSpeed USB port brought back the converter, COM3 and the

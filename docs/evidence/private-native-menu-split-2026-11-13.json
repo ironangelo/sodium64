@@ -24,11 +24,12 @@
     "exact_body_sram_seed_checks": 8,
     "simulated_runner_slot_and_mismatched_menu_guard": "PASS",
     "simulated_SD_staged_readback_idempotency_and_rename_rollback": "PASS",
-    "N64_menu_and_normal_gameplay": "PENDING",
+    "N64_menu_and_normal_gameplay": "Normal ROM SD readback PASS. Manual browser selection and play check PENDING.",
     "R45_Mode7": "PENDING",
     "PR32_faithful_wait_attribution": "PENDING",
     "simulated_port_change_ambiguous_device_and_CIC_guard": "PASS",
-    "simulated_interrupted_rename_recovery_and_retry": "PASS"
+    "simulated_interrupted_rename_recovery_and_retry": "PASS",
+    "N64_menu_boot_and_reference_return": "PASS"
   },
   "transport": {
     "user_reported_console_off": true,
@@ -54,7 +55,11 @@
     "user_switched_console_off": true,
     "CIC_off_confirmed": true,
     "deployment": "Menu, normal master, reference bench and browser INI installed with exact full SD readback. Existing menu and INI retained as rollback files.",
-    "cold_boot": "PENDING",
-    "USB_root_cause": "Unknown. Rear port returned enumeration on this observation."
+    "cold_boot": "PASS 2026-11-15. The installed private menu identified the separate slot and recovery 0 before and after a bench launch.",
+    "USB_root_cause": "Unknown. Rear port returned enumeration on this observation.",
+    "staged_reference_guest_progress_frames": 121,
+    "software_return": "PASS. No play file or bench file write for the staged-reference smoke.",
+    "master_DKC1_reference_launch_ack_seconds": 1.0,
+    "master_DKC1_comparison": "Two aligned RGB, PCM and DSP captures and both guest cadence endpoints match the prior c90ef5c9 reference. Private runner changed only the bench file."
   }
 }

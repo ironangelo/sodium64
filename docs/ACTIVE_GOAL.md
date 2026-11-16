@@ -148,9 +148,10 @@ bus-helper or code-layout cost before promoting it.
 PR39 `43602e2e` refreshes the three-file APU clock fix against
 `fe61d371`. The linked normal build of that master reproduces stale
 lookup at menu close. Both refreshed normal and REMOTE variants pass
-the linked menu/cache cases and all 770 address-wrap cases. Exact-head CI
-and physical menu transitions 21 to 42 and back to 21 through the
-controller path gate promotion.
+the linked menu/cache cases and all 770 address-wrap cases. All four
+exact-head PR workflows, the branch build and the directed cycle proof
+pass. The remaining promotion gate is the physical menu transition
+21 to 42 and back to 21 through the controller path.
 [Refreshed APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).
 [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
@@ -221,10 +222,17 @@ counter does not identify which RSP/RDP/DMA subpath causes it.
 The measured integrated master is the comparator for complete resident
 DSP cost. The legacy DSP path now has a sampled native budget for three
 native scenes. The complete scalar R61 controller reproduces all four
-PR30 fixture results and quantifies its logical flush demand. The next
-gate is the end-to-end resident cost with the live timestamped SPC
-producer, exact RAM/echo publication and shared-SP graphics contention.
+PR30 fixture results and quantifies its logical flush demand. The
+256-clock projection proof preserves the complete fixture results,
+including exact producer reads, and reduces the nominal demand to
+74–162 flushes per 512 stereo samples. The stress trace still needs
+1,107. Native ALttP observes uninterrupted renderer ownership of at
+least 12.230 ms. A batch capped at 256 SPC clocks cannot assume a
+renderer halt at each deadline. The next gate is the end-to-end
+resident cost with the live timestamped SPC producer, exact RAM/echo
+publication and measured shared-SP handoffs.
 [Native budget and complete-controller replay](evidence/integration-dsp-budget-2026-11-15.json).
+[Complete-controller and renderer ownership evidence](evidence/integration-dsp-batched-window-2026-11-15.json).
 Wider compatibility, full fidelity, DAC and chip gates remain open.
 
 The private menu, normal master and separate reference bench are

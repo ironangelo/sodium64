@@ -1,3 +1,39 @@
+# 2026-11-15 — Bound complete-DSP batching and refresh the PR39 admission gate
+
+The local complete-controller proof `a07b6fa6` batches up to 256 SPC
+clocks and preserves the 64-entry FIFO. DSP register reads and relevant
+RAM/fetch observations catch up. ESA, EDL and FLG writes catch up before
+changing the echo projection. The full DSP core is unchanged. All four
+PR30 traces preserve producer reads, final DSP state, RAM and PCM.
+The three nominal traces move from 529/577/641 to 74/98/162 nonempty
+logical flushes per 512 stereo samples. The FIFO stress moves from
+1,618 to 1,107, with all windows at 21 clocks or fewer. These are
+logical catch-ups and preserve the same total DSP clocks and bus events.
+
+In the paired native ALttP boot scene, 12,832 of 19,909 sampled audio
+entries observe the renderer still active at least 1 ms after its
+latest launch. The longest observed lower bound rises to 12.230 ms
+during the quiet window. This rules out assuming a renderer halt every
+256 guest SPC clocks at real-time cadence. Both aligned RGB/PCM/DSP
+captures match `fe61d371`, and the probe returns by software with the
+play installation preserved. The first probe run is invalid because
+two counters overlapped USB protocol state. The corrected counters are
+disjoint and pass the interval consistency check.
+
+The next end-to-end candidate must support the exact live SPC timeline,
+echo publication and SPC JIT invalidation, and the full resident backend
+at measured renderer handoffs. The ownership sample is a lower bound
+on elapsed tenure. Transport, DSP execution and residual wait still
+need direct measurement together.
+
+The four PR39 workflows, the separate build and the directed cycle
+proof all pass on exact head `43602e2e`. The remaining gate is the
+physical settings-menu transition 21 → 42 → 21 through the controller
+path. PR39 remains in draft.
+[Complete-controller and renderer ownership evidence](evidence/integration-dsp-batched-window-2026-11-15.json).
+
+---
+
 # 2026-11-15 — Measure the native audio path and refresh PR39 on master
 
 On integrated master `fe61d371`, the sampled legacy DSP path costs an

@@ -265,8 +265,12 @@ plus 10.787 us average RDP drain. Per-sample bank exchange exceeds
 the frame budget at these transfer costs. Eight-sample service
 cuts 21,272 calls to 2,659 with exact common samples on the
 original workload. It leaves the critical register catches in
-place. Mid-frame yield, actual full RSP compute, and general
-live fetch and echo gates remain open.
+place. The private original guest now qualifies section-boundary
+RSP pause/resume, verified memory restore and a staged marker in
+the middle of a frame. It offers only two checkpoints per frame
+in this workload. Full accelerated compute, bounded scheduling
+for critical reads and general live fetch/echo remain open.
+[Native in-frame RSP handoff](evidence/integration-dsp-rsp-in-frame-yield-2026-11-16.json).
 [Native transport and PCM service](evidence/integration-dsp-rsp-handoff-2026-11-16.json).
 [Active whole-core native cost](evidence/integration-dsp-active-native-cost-2026-11-16.json).
 [Native clock and echo-page proof](evidence/integration-dsp-live-spc-echo-2026-11-16.json).

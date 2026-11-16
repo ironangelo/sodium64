@@ -1,3 +1,39 @@
+# 2026-11-16 — Execute an RSP task inside a live renderer frame
+
+The original live eight-voice control now pauses at each section
+checkpoint and resumes at the previous branch target. The last two
+instruction words are the only changes in both linked RSP banks.
+All three native variants resume 80 checkpoints across guest frames
+48–88. Each has 40 checkpoints after a section has already drawn.
+The SPC-side bridge services all 80 on this workload.
+
+The exchange variants verify 20 DMEM and 20 full-bank restores in
+that interval. The task variant also runs 20 staged RSP markers
+before restoring the renderer. Each marker modifies staged DMEM
+and stops at its own PC. It leaves the renderer's GPR and vector
+registers intact. Marker launch-to-completion averages 1.830 us
+and peaks at 2.496 us. The full-bank exchange including the marker
+averages 78.130 us. The RDP drain averages 7.611 us across modes.
+All three native runs reproduce frame 88 RGB and the eight-sample
+reference PCM ring, return by software and preserve the play slot.
+
+Of the 40 observed between-section intervals, 23 confirm the RSP
+still runs at least 0.250 ms after the first resume. The largest
+confirmed lower bound is 0.544 ms. The longest observed time to
+the next software acknowledgment is 1.244 ms and includes polling
+latency. The same workload retains 2,658 critical register catches,
+665 within three SPC clocks of the previous catch. This qualifies
+preservation at a section boundary. It does not supply a separate
+handoff for each critical observation.
+
+Proof head `cee93cd3`. Production ROM and ELF remain identical to
+`7a6e3d75`. The marker is only a transport validation. Full DSP
+calculation still runs on the CPU. The next accelerated gate requires
+actual shared RSP work, bounded scheduling and an exact PCM comparison.
+[Native handoff, section timing and digital evidence](evidence/integration-dsp-rsp-in-frame-yield-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Bound RSP bank transport and batch PCM delivery
 
 The original live eight-voice DSP workload now measures renderer

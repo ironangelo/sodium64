@@ -39,6 +39,30 @@ void initialize() {
     initialized = true;
 }
 
+#ifdef SODIUM64_DSP_RSP_SWAP
+void required(bool reg, uint32_t epoch) {
+    uint32_t gap = epoch - stats->last_required_epoch;
+    if ((stats->required_reg || stats->required_echo) && gap && gap <= 3 * guest_cycle)
+        ++stats->required_le3;
+    stats->last_required_epoch = epoch;
+    if (reg) ++stats->required_reg;
+    else ++stats->required_echo;
+}
+#endif
+
+unsigned read_dsp_bus(bool reg, unsigned address, uint32_t epoch) {
+#ifdef SODIUM64_DSP_RSP_SWAP
+    uint32_t before = stats->core_runs;
+#else
+    (void)epoch;
+#endif
+    unsigned value = reg ? state->window.read_reg(address) : state->window.read_ram(address);
+#ifdef SODIUM64_DSP_RSP_SWAP
+    if (before != stats->core_runs) required(reg, epoch);
+#endif
+    return value;
+}
+
 void queue_pcm() {
     ++stats->sample_calls;
     if (!(reinterpret_cast<volatile uint32_t*>(0xa4040010)[0] & 1u)) ++stats->renderer_busy;
@@ -87,7 +111,7 @@ extern "C" unsigned live_dsp_access(unsigned op, unsigned address, unsigned valu
         break;
     case LIVE_DSP_RAM_READ:
     case LIVE_DSP_FETCH:
-        return state->window.read_ram(address);
+        return read_dsp_bus(false, address, epoch);
     case LIVE_DSP_REG_WRITE:
         if (dsp_addr < 128) {
             state->window.write_reg(dsp_addr, value);
@@ -96,7 +120,7 @@ extern "C" unsigned live_dsp_access(unsigned op, unsigned address, unsigned valu
         break;
     case LIVE_DSP_REG_READ:
         ++stats->outputs;
-        return state->window.read_reg(dsp_addr & 0x7f);
+        return read_dsp_bus(true, dsp_addr & 0x7f, epoch);
     case LIVE_DSP_PCM:
         queue_pcm();
         break;

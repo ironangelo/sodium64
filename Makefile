@@ -11,6 +11,12 @@ REMOTE ?= 0
 DSP_LIVE_GUEST ?= 0
 DSP_LIVE_PREFIX ?= 0
 DSP_LIVE_CORE ?= 0
+DSP_RSP_SWAP ?= 0
+ifeq ($(DSP_RSP_SWAP),1)
+ifneq ($(DSP_LIVE_CORE),1)
+$(error The bank exchange proof requires the complete live DSP workload)
+endif
+endif
 ifeq ($(DSP_LIVE_CORE),1)
 ifneq ($(REMOTE)$(DSP_LIVE_GUEST)$(DSP_LIVE_PREFIX),111)
 $(error The complete live proof requires the private guest and fixed prefix)
@@ -40,6 +46,11 @@ ifeq ($(REMOTE),1)
 OFILES += $(BUILD_DIR)/src/remote_control_c.o
 ifeq ($(DSP_LIVE_CORE),1)
 OFILES += $(BUILD_DIR)/src/live_dsp.o $(BUILD_DIR)/src/full_dsp_window.o $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o
+ifeq ($(DSP_RSP_SWAP),1)
+OFILES += $(BUILD_DIR)/src/live_rsp_swap.o
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_RSP_SWAP=1
+N64_DSP_PROBE_CFLAGS += -DSODIUM64_DSP_RSP_SWAP=1
+endif
 endif
 endif
 
@@ -173,9 +184,13 @@ $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h M
 	@mkdir -p $(dir $@)
 	$(N64_CC) -c -Os -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_REMOTE_CFLAGS) -o $@ $<
 
+$(BUILD_DIR)/src/live_rsp_swap.o: src/live_rsp_swap.c src/live_rsp_swap.h Makefile
+	@mkdir -p $(dir $@)
+	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
+
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -DSODIUM64_DSP_FULL_WINDOW=1 -DSODIUM64_DSP_LIVE_CORE=1 -Wno-implicit-fallthrough -o $@ $<
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -DSODIUM64_DSP_FULL_WINDOW=1 -DSODIUM64_DSP_LIVE_CORE=1 -Wno-implicit-fallthrough $(N64_DSP_PROBE_CFLAGS) -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

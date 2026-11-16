@@ -29,6 +29,9 @@ struct live_dsp_stats {
     uint32_t ticks, calls, pcm, outputs, writes, echo_words, echo_opcode_changes;
     uint32_t sample_calls, renderer_busy, clock_errors, output_errors, cycles;
     uint32_t core_ticks, core_runs;
+#ifdef SODIUM64_DSP_RSP_SWAP
+    uint32_t required_reg, required_echo, required_le3, last_required_epoch;
+#endif
 };
 #endif
 #endif

@@ -5,6 +5,9 @@
  */
 #include "remote_control.h"
 #include "dsp_rsp_deadlines.h"
+#ifdef SODIUM64_DSP_RSP_SWAP
+#include "live_rsp_swap.h"
+#endif
 #ifdef SODIUM64_DSP_LIVE_CORE
 #include "live_dsp.h"
 #endif
@@ -387,6 +390,11 @@ static void status(const char *id) {
         field(" full_cycles=",stats->cycles);
         field(" full_core_ticks=",stats->core_ticks);
         field(" full_core_runs=",stats->core_runs);
+#ifdef SODIUM64_DSP_RSP_SWAP
+        field(" critical_reg=",stats->required_reg);
+        field(" critical_echo=",stats->required_echo);
+        field(" critical_le3=",stats->required_le3);
+#endif
 #endif
 #endif
     }
@@ -457,6 +465,20 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         prefix(id,1);field(" echo_opcode=",apu_ram[0x47ff]);
         field(" echo_page_tag=",jit_tags[0x47fe>>6]);
         field(" carry_seen=",apu_outputs[2]);(void)finish();return;
+    }
+#endif
+#ifdef SODIUM64_DSP_RSP_SWAP
+    if(eq(verb,"rsp-swap")) {
+        if(nt!=3||!remote_paused||!remote_render_frames) {error(id,"retired_boundary_required");return;}
+        const volatile struct rsp_swap_report *swap=(const volatile struct rsp_swap_report *)LIVE_RSP_SWAP_REPORT;
+        prefix(id,1);
+        field(" dmem_count=",swap->dmem.count);field(" dmem_ticks=",swap->dmem.ticks);
+        field(" dmem_min_ticks=",swap->dmem.min_ticks);field(" dmem_max_ticks=",swap->dmem.max_ticks);
+        field(" both_count=",swap->both.count);field(" both_ticks=",swap->both.ticks);
+        field(" both_min_ticks=",swap->both.min_ticks);field(" both_max_ticks=",swap->both.max_ticks);
+        field(" rejected_busy=",swap->busy);field(" rejected_owner=",swap->unrecognized);
+        field(" bad_pc=",swap->bad_pc);field(" bad_status=",swap->bad_status);
+        field(" failure=",swap->failure);(void)finish();return;
     }
 #endif
     if(eq(verb,"pause-at")||eq(verb,"step")) {
@@ -569,6 +591,10 @@ void remote_control_frame(uint32_t framebuffer) {
     if(!owner_guards_valid()){transport_failure(9);remote_paused=1;return;}
 #endif
     remote_render_frames++;
+#ifdef SODIUM64_DSP_RSP_SWAP
+    live_rsp_swap(remote_render_frames);
+    if(((const volatile struct rsp_swap_report *)LIVE_RSP_SWAP_REPORT)->failure)remote_paused=1;
+#endif
     if(remote_pause_pending&&remote_render_frames==remote_pause_target){remote_pause_pending=0;remote_paused=1;}
     if(!present||transport_error)return;
     uint32_t start=count();

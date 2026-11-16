@@ -1,0 +1,288 @@
+{
+  "scope": "Physical N64 at APU 21, frameskip 0, fixed guest frames 3016 to 4216. Native opcode counters are a diagnostic-only ROM and its elapsed time is excluded from cadence admission.",
+  "opmix": {
+    "operation_counts": {
+      "add": 41443,
+      "sub": 23145,
+      "cmp": 0,
+      "inc": 395,
+      "dec": 0,
+      "load": 6169,
+      "store_below_f0": 151990,
+      "store_at_or_above_f0": 0
+    },
+    "captures": [
+      {
+        "frame": 3016,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      },
+      {
+        "frame": 4216,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "software_return": true,
+    "head": "5f2a68facf0848894cd681063618d967adb4bd2b",
+    "ROM_sha256": "dee5bc78cbc4d9de1043bc1a9bef8065747ef3e88c6b77192b7260996f03680d"
+  },
+  "linked_opmix_checks": {
+    "linked_compiler_and_emitted_counter_checks": 168,
+    "no_non_scratch_clobbers": true,
+    "reject_unknown_and_4MiB": true
+  },
+  "linked_plain_RAM_instruction_comparison": {
+    "movw_load": {
+      "master": 92,
+      "word_repair": 92,
+      "delta": 0
+    },
+    "movw_store": {
+      "master": 88,
+      "word_repair": 105,
+      "delta": 17
+    },
+    "addw": {
+      "master": 118,
+      "word_repair": 118,
+      "delta": 0
+    },
+    "subw": {
+      "master": 120,
+      "word_repair": 120,
+      "delta": 0
+    },
+    "cmpw": {
+      "master": 104,
+      "word_repair": 104,
+      "delta": 0
+    },
+    "incw": {
+      "master": 136,
+      "word_repair": 136,
+      "delta": 0
+    },
+    "decw": {
+      "master": 136,
+      "word_repair": 136,
+      "delta": 0
+    }
+  },
+  "linked_optimized_MOVW_block": {
+    "same_allocated_locations": true,
+    "cache_hit_movw_ord_ram_block_instructions": [
+      105,
+      96
+    ],
+    "debit_equals_9_guest_cycles_in_both": true
+  },
+  "semantic_checks": {
+    "word_instruction_cases_each_normal_and_REMOTE": 1002,
+    "short_destination_helper_all_allowed_addresses_at_both_clocks_each_normal_and_REMOTE": 960,
+    "omitted_RAM_load_mutant_each_build_rejected": true,
+    "SPC_address_wrap_cases_each_build": 770,
+    "APU_clock_lookup_regression_pass": true,
+    "production_release_guard": "PASS"
+  },
+  "production_head": "f4e50c84176c98ed10dba027b3f6c15390b02897",
+  "ordinary_bench_ROM_sha256": "f322e94159180069a678c5dad85688448dcf574dbc3e4e7af8bc5d8b4fa7a8fd",
+  "date_local": "2026-11-16",
+  "retained_PR46": "1cbf8e8e4129ebce6e6f773a7cc350b4187e6634",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "fixed_work_rejected_short_RAM_path": [
+    {
+      "order": [
+        "master",
+        "fast"
+      ],
+      "master": {
+        "ticks": 964166468,
+        "count_hz": 46875000,
+        "sec": 20.568884650666668,
+        "guest_frames": 1200,
+        "guest_per_second": 58.34054788970321
+      },
+      "word": {
+        "ticks": 966484162,
+        "count_hz": 46875000,
+        "sec": 20.618328789333333,
+        "guest_frames": 1200,
+        "guest_per_second": 58.20064333346003
+      },
+      "captures": [
+        {
+          "frame": 3016,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 4216,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "elapsed_difference_ms": 49.44413866666508,
+      "software_returns_verified": true,
+      "play_slot_touched": false
+    },
+    {
+      "order": [
+        "fast",
+        "master"
+      ],
+      "master": {
+        "ticks": 964462290,
+        "count_hz": 46875000,
+        "sec": 20.57519552,
+        "guest_frames": 1200,
+        "guest_per_second": 58.32265354822738
+      },
+      "word": {
+        "ticks": 966850179,
+        "count_hz": 46875000,
+        "sec": 20.626137152,
+        "guest_frames": 1200,
+        "guest_per_second": 58.17861052493015
+      },
+      "captures": [
+        {
+          "frame": 3016,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 4216,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "elapsed_difference_ms": 50.94163199999713,
+      "software_returns_verified": true,
+      "play_slot_touched": false
+    }
+  ],
+  "rejected_timed_variant": "6c7705006f9be181f44618695f1413638504a4a5",
+  "classification": "Short destination RAM read REJECTED on native cadence. PR46 remains BLOCKED on native cadence.",
+  "lineage": {
+    "origin_commit": "6b82434e78fcd7c052c9eba3188c867a2d91fa9a",
+    "origin_ref": "experiment/spc-bus-clock-r63",
+    "PR21_current_head": "de30c75782843ef7c113177fa272f9cdd0310d5a",
+    "PR21_still_uses_legacy_word_emission": true
+  },
+  "six_operation_candidate": {
+    "head": "304976dc256562970a0d984a4f83250700f72e70",
+    "timed_head": "ac60045556c1c24dc24c4dc82443bb63f4b55816",
+    "timed_rom_sha256": "e9061668cc9d29b668ad09831758fdec3353ad6198ea35c8c0ee3abeea6f9467",
+    "untimed_remote_rom_sha256": "fbcbf6380372f889c1585a1a2dbee7d648f808a1d61c69afe3279fd8043d8189",
+    "operations": [
+      "MOVW YA,dp",
+      "ADDW",
+      "SUBW",
+      "CMPW",
+      "INCW",
+      "DECW"
+    ],
+    "linked_cases_per_configuration": 854,
+    "master_failures": 438,
+    "candidate_failures_normal": 0,
+    "candidate_failures_remote": 0,
+    "link_binding": {
+      "existing_symbol_addresses_unchanged": true,
+      "unchanged_allocated_addresses": true,
+      "changed_loaded_bytes": 383,
+      "all_changed_bytes_in_read_RMW_emitters": true,
+      "MOVW_store_dispatch_and_emitter_identical": true
+    },
+    "production_isolation": {
+      "linked_symbols": 1249,
+      "allocated_bytes": 767640,
+      "laboratory_symbols": [],
+      "allocated_diagnostic_leases": [],
+      "sha256": {
+        "sodium64.z64": "ef753a732fc5c7f68a1603a30c0891948ba6d84d25717545aad76aefdc615941",
+        "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+      },
+      "elf_sha256": "1d7ab11b6986501d992caa1ad4eb2d0d72cb98cf6bd1812cc6915f6e8ccda9ed",
+      "status": "PASS"
+    },
+    "comparison": "Two new candidate launches on the same N64 with the same timer adapter and interval as the earlier archived master controls. No fresh alternating master runs were made for this subset.",
+    "fixed_work_pairs_against_earlier_master": [
+      {
+        "earlier_reference": "AB-master",
+        "master": {
+          "ticks": 964166468,
+          "count_hz": 46875000,
+          "sec": 20.568884650666668,
+          "guest_frames": 1200,
+          "guest_per_second": 58.34054788970321
+        },
+        "word": {
+          "ticks": 964653402,
+          "count_hz": 46875000,
+          "sec": 20.579272576,
+          "guest_frames": 1200,
+          "guest_per_second": 58.31109897438583
+        },
+        "captures": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": 10.387925333333214,
+        "software_returns_verified": true,
+        "play_slot_touched": false
+      },
+      {
+        "earlier_reference": "BA-master",
+        "master": {
+          "ticks": 964462290,
+          "count_hz": 46875000,
+          "sec": 20.57519552,
+          "guest_frames": 1200,
+          "guest_per_second": 58.32265354822738
+        },
+        "word": {
+          "ticks": 964254205,
+          "count_hz": 46875000,
+          "sec": 20.57075637333333,
+          "guest_frames": 1200,
+          "guest_per_second": 58.335239512904174
+        },
+        "captures": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": -4.439146666669558,
+        "software_returns_verified": true,
+        "play_slot_touched": false
+      }
+    ],
+    "classification": "BLOCKED for promotion, with inconclusive native cadence on the bounded check. Preserve the correctness proof; leave the candidate local."
+  }
+}

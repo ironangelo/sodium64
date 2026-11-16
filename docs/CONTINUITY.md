@@ -1,3 +1,43 @@
+# 2026-11-16 — Reject the shorter MOVW store path and hold the six-op split
+
+The original word-order and wrap proof comes from R63 `6b82434e`.
+PR21 at `de30c757` still has the legacy word emitter. The separate
+R63 opcode guards were rejected on cost in the earlier native work.
+
+The private N64 probe observes 151,990 MOVW stores with destination
+operands below F0 in SMW guest frames 3016–4216. No stores use an
+operand at or above F0 in this window. In the linked normal-RAM
+cached-block test, only the MOVW store adds R4300 instructions among
+the seven word cases. The new short RAM read executes all required
+accesses and reduces that case from 105 to 96 instructions. Its two
+native fixed-work pairs take 49.444 and 50.942 ms longer than master.
+All four aligned RGB/PCM/DSP comparisons and software returns pass.
+The short RAM path is rejected. Full PR46 stays blocked at
+`1cbf8e8e`.
+[Native opcode mix and rejected path](evidence/integration-spc-movw-residual-2026-11-16.json).
+
+The separate six-operation candidate `304976dc` preserves the
+existing MOVW store emitter and dispatch. It fixes MOVW load, ADDW,
+SUBW, CMPW, INCW and DECW. The current master fails 438 of its 854
+linked cases. The candidate passes all 854 in normal and REMOTE,
+with only 383 loaded bytes changing in the read and read-modify-write
+emitters. Two native SMW launches compare against the earlier timed
+master controls over the same 1,200 guest frames. The elapsed changes
+are +10.388 and -4.439 ms. All four aligned RGB/PCM/DSP observations
+match. Both boots return by software with the play installation
+preserved. The mixed cadence result leaves the six-op split blocked
+for promotion. Keep the local proof and stop follow-up tuning of this
+family for this cycle. Master and Latest remain at 7a6e3d75.
+
+The audit lists no further independently approved runtime extraction
+awaiting promotion. The active next gate uses the integrated baseline
+for the complete resident DSP cost. Connect the proven full controller
+to timestamped live SPC bus activity and include exact echo publication,
+JIT visibility and shared-SP renderer handoffs in the cost comparison.
+[Native split and retained proof](evidence/integration-spc-movw-residual-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Refresh the direct-page word PR and isolate its remaining cost
 
 PR46 advances to draft head `1cbf8e8e` on master `7a6e3d75`. The

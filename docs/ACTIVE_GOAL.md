@@ -143,9 +143,14 @@ adjacent timer outputs. The refreshed linked layout retains all
 1,291 original symbol/address pairs. On real N64, both launch
 orders compare the same 1,200 SMW guest frames and retain all
 four paired RGB/PCM/DSP observations. The candidate takes 7.543
-and 7.031 ms longer. The cadence gate remains open. Measure the
-changed executed bus and generated-code paths to attribute that
-cost before another optimization.
+and 7.031 ms longer. The short destination-RAM read is rejected
+after adding 49.444 and 50.942 ms in the same native comparison.
+The separate six-op candidate passes 854 linked cases. Two new N64
+launches preserve aligned RGB/PCM/DSP, but elapsed time against
+the earlier master controls varies from +10.388 to -4.439 ms.
+Promotion stays blocked. Preserve both proofs and move to the next
+qualified component or the complete resident DSP gate.
+[Native attribution and six-operation split](evidence/integration-spc-movw-residual-2026-11-16.json).
 [Layout-preserving fixed-work evidence](evidence/integration-spc-word-layout-2026-11-16.json).
 [Combined native three-title and SMW evidence](evidence/integration-spc-combined-native-2026-11-15.json).
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).

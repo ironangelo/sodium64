@@ -23,8 +23,9 @@ complete controller and compare end to end against this measured path.
 
 Standalone PR39 is refreshed to `43602e2e` on `fe61d371`. The normal
 and REMOTE linked menu/cache cases and 770 address-wrap cases per build
-pass. The patch still touches the same three files. Exact-head CI and
-the native controller path remain the admission gates. Keep PR39 in
+pass. The linked normal master `fe61d371` reproduces the stale lookup
+at menu close. The patch still touches the same three files. Exact-head
+CI and the native controller path remain the admission gates. Keep PR39 in
 draft until the 21 → 42 → 21 clock changes are exercised through that
 path. The earlier native R45 and PR46 cadence blockers still stand.
 [PR39](https://github.com/ironangelo/sodium64/pull/39).

@@ -146,9 +146,9 @@ bus-helper or code-layout cost before promoting it.
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
 
 PR39 `43602e2e` refreshes the three-file APU clock fix against
-`fe61d371`. The earlier master negative control reproduces stale
-lookup. Both refreshed normal and REMOTE variants pass the linked
-menu/cache cases and all 770 address-wrap cases. The exact-head CI
+`fe61d371`. The linked normal build of that master reproduces stale
+lookup at menu close. Both refreshed normal and REMOTE variants pass
+the linked menu/cache cases and all 770 address-wrap cases. Exact-head CI
 and physical menu transitions 21 to 42 and back to 21 through the
 controller path gate promotion.
 [Refreshed APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).

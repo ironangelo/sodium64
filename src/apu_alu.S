@@ -691,11 +691,10 @@ apu_addw: // ADDW YA,op
 
     // Emit code to load a 16-bit value from memory
     EMIT_OP OR(S0, ZERO, V0)
-    EMIT_DP_NEXT
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_DP_NEXT
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(A1, S0, T0)
 
@@ -747,11 +746,10 @@ apu_subw: // SUBW YA,op
 
     // Emit code to load a 16-bit value from memory
     EMIT_OP OR(S0, ZERO, V0)
-    EMIT_DP_NEXT
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_DP_NEXT
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(A1, S0, T0)
 
@@ -801,11 +799,10 @@ apu_cmpw: // CMPW YA,op
 
     // Emit code to load a 16-bit value from memory
     EMIT_OP OR(S0, ZERO, V0)
-    EMIT_DP_NEXT
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_DP_NEXT
     EMIT_OP SLL(T0, V0, 8)
     EMIT_OP OR(A1, S0, T0)
 
@@ -849,11 +846,10 @@ apu_modify_word:
     jal emit_jal
     nop
     EMIT_OP ANDI(A1, S0, 0xFF)
-    EMIT_DP_NEXT
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP OR(A0, ZERO, A0)
+    EMIT_DP_NEXT
     EMIT_OP SLL(V0, V0, 8)
     EMIT_OP ADD(S0, S0, V0)
     EMIT_OP ANDI(S0, S0, 0xFFFF)

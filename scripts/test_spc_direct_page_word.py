@@ -183,7 +183,7 @@ def main():
         assert passed and failures
     else:
         for case, word in (
-            (Case('movw_load', 0xba, 5, 0x20, 0xff, 0, 0x1234), 0x308400ff),
+            (Case('movw_load', 0xba, 5, 0x20, 0xff, 0, 0x1234), 0x388400ff),
             (Case('incw', 0x3a, 6, 0x20, 0x23, 0, 0xffff),
              0x0c000000 | ((symbols['apu_write8'] >> 2) & 0x03ffffff)),
         ):

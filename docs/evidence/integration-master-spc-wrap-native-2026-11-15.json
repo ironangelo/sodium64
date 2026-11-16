@@ -1,0 +1,216 @@
+{
+  "date_local": "2026-11-15",
+  "reference_master": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+  "integrated_master": "fe61d371beef8085f195fc38b890b8e16a842da1",
+  "cases": {
+    "dkc1": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8"
+      },
+      "captures": [
+        {
+          "guest_frame": 4330,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 4346,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+          "guest_endpoints": [
+            4347,
+            5545
+          ],
+          "duration_s": 20.015820586666667,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.852654794379774,
+          "render_delta": 1198,
+          "render_per_second": 59.852654794379774,
+          "vi_delta": 1197,
+          "vi_per_second": 59.8026943145848,
+          "present_delta": 1197,
+          "present_per_second": 59.8026943145848
+        },
+        {
+          "head": "85d1e3c532a3ad615ac75f1370e6653d6b1b0ba7",
+          "guest_endpoints": [
+            4347,
+            5544
+          ],
+          "duration_s": 20.0071376,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1197,
+          "guest_per_second": 59.82864835197615,
+          "render_delta": 1197,
+          "render_per_second": 59.82864835197615,
+          "vi_delta": 1197,
+          "vi_per_second": 59.82864835197615,
+          "present_delta": 1197,
+          "present_per_second": 59.82864835197615
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false
+    },
+    "alttp": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8"
+      },
+      "captures": [
+        {
+          "guest_frame": 1862,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 1878,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+          "guest_endpoints": [
+            1879,
+            3077
+          ],
+          "duration_s": 20.01848765866667,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.84468059860386,
+          "render_delta": 1198,
+          "render_per_second": 59.84468059860386,
+          "vi_delta": 1197,
+          "vi_per_second": 59.7947267750658,
+          "present_delta": 1197,
+          "present_per_second": 59.7947267750658
+        },
+        {
+          "head": "fe61d371beef8085f195fc38b890b8e16a842da1",
+          "guest_endpoints": [
+            1879,
+            3077
+          ],
+          "duration_s": 20.019382464,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1198,
+          "guest_per_second": 59.84200572391842,
+          "render_delta": 1198,
+          "render_per_second": 59.84200572391842,
+          "vi_delta": 1197,
+          "vi_per_second": 59.792054133163894,
+          "present_delta": 1197,
+          "present_per_second": 59.792054133163894
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": true
+    },
+    "smw": {
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8"
+      },
+      "captures": [
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3016,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "quiet_intervals": [
+        {
+          "head": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
+          "guest_endpoints": [
+            3017,
+            4179
+          ],
+          "duration_s": 20.01731232,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1162,
+          "guest_per_second": 58.049751206559584,
+          "render_delta": 1162,
+          "render_per_second": 58.049751206559584,
+          "vi_delta": 1197,
+          "vi_per_second": 59.79823768868488,
+          "present_delta": 1161,
+          "present_per_second": 57.999794449927435
+        },
+        {
+          "head": "fe61d371beef8085f195fc38b890b8e16a842da1",
+          "guest_endpoints": [
+            3017,
+            4182
+          ],
+          "duration_s": 20.026261056,
+          "presentation_is_software_observation": true,
+          "guest_delta": 1165,
+          "guest_per_second": 58.17361497197493,
+          "render_delta": 1165,
+          "render_per_second": 58.17361497197493,
+          "vi_delta": 1198,
+          "vi_per_second": 59.82145127590211,
+          "present_delta": 1164,
+          "present_per_second": 58.12368053852259
+        }
+      ],
+      "quiet_starts_match": true,
+      "quiet_endpoints_match": false
+    }
+  },
+  "dkc1_ROM_is_byte_identical_to_the_integrated_master_build": true,
+  "all_three_menu_returns": true,
+  "play_version_written": false,
+  "scope": "Real N64 guest completions. DKC1 late intro, ALttP boot and SMW boot/demo; matched absolute capture and quiet-start frames. Integrated artifact, not sums of isolated changes.",
+  "remaining": "SMW below native cadence. Longer gameplay, analog output, faithful renderer and enhancement-chip compatibility open."
+}

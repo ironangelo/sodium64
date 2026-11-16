@@ -124,8 +124,11 @@ RGB, PCM and DSP state on N64. The tested candidate completes
 1,197 guest frames over 1,197 VI ticks in 20.007 s. The reference
 completes 1,198 over 1,197 in 20.016 s. Master `fe61d371` is
 byte-identical to the tested REMOTE build. This is the current
-integration head. The existing three-title baseline binds to
-its parent `c90ef5c9`.
+integration head. Its combined three-title native baseline matches
+all six digital RGB/PCM/DSP captures against `c90ef5c9`. Guest rates
+are 59.829/s (DKC1 late intro), 59.842/s (ALttP boot) and 58.174/s
+(SMW boot/demo). SMW is still below native cadence.
+[Combined integrated baseline](evidence/integration-master-spc-wrap-native-2026-11-15.json).
 [SPC700 wrap evidence](evidence/integration-spc-address-wrap-2026-11-13.json).
 
 PR46 `77bd5e55` independently fixes seven SPC700 direct-page word

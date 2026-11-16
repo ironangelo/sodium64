@@ -1,3 +1,18 @@
+# 2026-11-15 — Measure the integrated PR45 master across three titles
+
+Master `fe61d371` with the address-wrap repair completes the three
+paired quiet N64 measurements with APU 21 and frameskip 0.
+All six aligned RGB, PCM and DSP captures match the preceding master.
+Guest rates are 59.829/s in DKC1 late intro, 59.842/s in ALttP boot
+and 58.174/s in SMW boot/demo. The DKC1 capture ROM matches a freshly
+built master ROM byte for byte. The ALttP and SMW receipts use that
+fresh master build. All three return by software and preserve the
+normal play file. Broader gameplay, DAC and native cadence in SMW
+remain open.
+[Integrated master baseline](evidence/integration-master-spc-wrap-native-2026-11-15.json).
+
+---
+
 # 2026-11-15 — Close the scoped R45 F-Zero Mode 7 comparison
 
 The real-N64 R45 bench `e12ae12e` completes the same seven-input

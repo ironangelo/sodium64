@@ -304,6 +304,11 @@ Diagnostic tools are identified separately from production runtime changes.
    guest rates are 59.85, 59.84 and 58.05/s. All three return by software
    and verify R17. Extend the baseline to heavier gameplay.
    [Combined master N64 evidence](evidence/integration-current-master-native-2026-11-13.json).
+   PR45 promotes the SPC700 address repair to `fe61d371`. The integrated
+   DKC1, ALttP and SMW quiet rates are 59.829/59.842/58.174 guest frames/s.
+   Six aligned RGB/PCM/DSP captures match the preceding master, and all
+   three return by software through the separate bench slot.
+   [Integrated PR45 native baseline](evidence/integration-master-spc-wrap-native-2026-11-15.json).
    PR32 exact-head CI and two
    aligned DKC1 fidelity checkpoints passed. Its intro throughput and
    broader native fidelity/cadence block default promotion. Review the R43

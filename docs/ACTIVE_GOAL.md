@@ -27,7 +27,12 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current checkpoint, 2026-11-13. Seventeen separate PRs
+Current master `7a6e3d75` includes PR39. The native menu repair and the
+integrated DKC1, ALttP and SMW baseline bind to the exact test and merge
+images. SMW remains below native cadence in the measured scene.
+[Current integrated native baseline](evidence/integration-apu-clock-master-2026-11-16.json).
+
+Earlier checkpoint, 2026-11-13. Seventeen separate PRs
 24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38/44 are integrated in master
 `c90ef5c983edb6e775d34676443f1e29ec48a9e2`. PR35 qualifies the isolated
 USB bench layout. PR36 integrates the separately qualified BRR recurrence.
@@ -123,9 +128,9 @@ and five exact-head CI runs pass. Both paired DKC1 captures match
 RGB, PCM and DSP state on N64. The tested candidate completes
 1,197 guest frames over 1,197 VI ticks in 20.007 s. The reference
 completes 1,198 over 1,197 in 20.016 s. Master `fe61d371` is
-byte-identical to the tested REMOTE build. This is the current
-integration head. Its combined three-title native baseline matches
-all six digital RGB/PCM/DSP captures against `c90ef5c9`. Guest rates
+byte-identical to the tested REMOTE build. Its combined three-title
+native baseline matches all six digital RGB/PCM/DSP captures against
+`c90ef5c9`. Guest rates
 are 59.829/s (DKC1 late intro), 59.842/s (ALttP boot) and 58.174/s
 (SMW boot/demo). SMW is still below native cadence.
 [Combined integrated baseline](evidence/integration-master-spc-wrap-native-2026-11-15.json).
@@ -145,13 +150,15 @@ bus-helper or code-layout cost before promoting it.
 [Combined native three-title and SMW evidence](evidence/integration-spc-combined-native-2026-11-15.json).
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
 
-PR39 `43602e2e` refreshes the three-file APU clock fix against
-`fe61d371`. The linked normal build of that master reproduces stale
-lookup at menu close. Both refreshed normal and REMOTE variants pass
-the linked menu/cache cases and all 770 address-wrap cases. All four
-exact-head PR workflows, the branch build and the directed cycle proof
-pass. The remaining promotion gate is the physical menu transition
-21 to 42 and back to 21 through the controller path.
+PR39 `43602e2e` is VALIDATED for the scoped correctness gate and
+integrated in `7a6e3d75`. The real N64 settings menu executes both
+clock changes and both unchanged-clock controls, using fixed raw
+button samples at the edge detector. The preceding master leaves a
+matching-tag block eligible after both clock changes. The repair
+empties the entire lookup before guest execution resumes and
+preserves it after both same-clock closes. All four exact-head PR
+workflows, the branch build and the directed cycle proof pass.
+[Physical menu and integrated baseline](evidence/integration-apu-clock-master-2026-11-16.json).
 [Refreshed APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).
 [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).

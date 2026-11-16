@@ -1,3 +1,34 @@
+# 2026-11-16 — Integrate the SPC700 clock-change repair and measure master
+
+PR39 `43602e2e` is integrated in `7a6e3d75`. In a paired physical N64
+test, the real settings-menu edge detector receives fixed N64 button
+samples from the private harness. Before the SPC700 scheduler resumes,
+the preceding master retains 44 cached entries and a matching-tag block
+after each actual 21 → 42 and 42 → 21 change. The repair clears all
+65,536 lookup slots and resets the JIT cursor on both transitions.
+Same-clock closes preserve the saved cache state at both settings.
+The next 42-clock control observes a newly compiled matching-tag
+block. Both builds return to the private menu with the play slot
+preserved.
+
+All six aligned RGB/PCM/DSP captures match at full APU and frameskip 0
+in the ordinary bench build. The new quiet baseline on real N64 is
+59.830 guest frames/s for DKC1 late intro, 59.847/s for ALttP boot and
+58.177/s for SMW boot/demo. SMW completes the same 1,165 guest frames
+over 1,198 VI ticks on both builds. The merged tree and freshly built
+bench ROM match the qualified candidate. Latest points to `7a6e3d75`.
+Both published files match the exact production CI artifact byte for
+byte. The published ROM and converter pass release isolation.
+[Physical menu, integrated baseline and release evidence](evidence/integration-apu-clock-master-2026-11-16.json).
+
+The direct-page word candidate is still blocked by SMW cadence and the
+R44/R45 renderer chain retains the documented DKC1 and ALttP gates.
+For the complete resident DSP, the next discriminator still needs the
+live timestamped SPC producer, exact echo publication and real renderer
+handoffs in the same native run.
+
+---
+
 # 2026-11-15 — Bound complete-DSP batching and refresh the PR39 admission gate
 
 The local complete-controller proof `a07b6fa6` batches up to 256 SPC

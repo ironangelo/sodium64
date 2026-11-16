@@ -1,0 +1,541 @@
+{
+  "date_local": "2026-11-16",
+  "PR": 39,
+  "reference_master": "fe61d371beef8085f195fc38b890b8e16a842da1",
+  "candidate_head": "43602e2ee34ae5b952af7413a179e05c76a3f439",
+  "review_files": 3,
+  "menu_proof_scope": "Physical N64 with scripted N64 button samples at the real edge detector. Full settings menu and native SPC lookup before the scheduler resumes. The electrical controller path is outside the observation and unchanged in PR39.",
+  "native_menu_proof": {
+    "control": {
+      "role": "control",
+      "probe_head": "6054952985d8b8a45c181ce2f7edeca692b25e8c",
+      "ROM_sha256": "f855e69b0a7d1677880fe83e2ed402d01a5fba6456b6be3ac5c9b310d700d1a4",
+      "apu_menu_button_source": "fixed N64 button samples into the linked get_pressed edge detector",
+      "rows": [
+        {
+          "before": {
+            "clock": 21,
+            "setting": 0,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686198192,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "after": {
+            "clock": 21,
+            "setting": 0,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686198192,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "followup_retired_frame": 336
+        },
+        {
+          "before": {
+            "clock": 21,
+            "setting": 0,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686198192,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "after": {
+            "clock": 42,
+            "setting": 4,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686451712,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "followup_retired_frame": 352
+        },
+        {
+          "before": {
+            "clock": 42,
+            "setting": 4,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686451712,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "after": {
+            "clock": 42,
+            "setting": 4,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686451712,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "followup_retired_frame": 368
+        },
+        {
+          "before": {
+            "clock": 42,
+            "setting": 4,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686451712,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "after": {
+            "clock": 21,
+            "setting": 0,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686451712,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "followup_retired_frame": 384
+        }
+      ],
+      "play_slot_touched": false,
+      "software_return": true,
+      "passed": true
+    },
+    "candidate": {
+      "role": "candidate",
+      "probe_head": "22b9541edeb2097751974ef686f785ae64c56520",
+      "ROM_sha256": "0e64455a50bed2ba8a872ecaa75924d5511f8e66921a4fe9faeae29259dbe569",
+      "apu_menu_button_source": "fixed N64 button samples into the linked get_pressed edge detector",
+      "rows": [
+        {
+          "before": {
+            "clock": 21,
+            "setting": 0,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686198192,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "after": {
+            "clock": 21,
+            "setting": 0,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686198192,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "followup_retired_frame": 336
+        },
+        {
+          "before": {
+            "clock": 21,
+            "setting": 0,
+            "pc": 909,
+            "block": 2149326932,
+            "cursor": 2686198192,
+            "entries": 44,
+            "tag_match": 1
+          },
+          "after": {
+            "clock": 42,
+            "setting": 4,
+            "pc": 909,
+            "block": 0,
+            "cursor": 2686189568,
+            "entries": 0,
+            "tag_match": 0
+          },
+          "followup_retired_frame": 352
+        },
+        {
+          "before": {
+            "clock": 42,
+            "setting": 4,
+            "pc": 909,
+            "block": 2149318676,
+            "cursor": 2686189936,
+            "entries": 2,
+            "tag_match": 1
+          },
+          "after": {
+            "clock": 42,
+            "setting": 4,
+            "pc": 909,
+            "block": 2149318676,
+            "cursor": 2686189936,
+            "entries": 2,
+            "tag_match": 1
+          },
+          "followup_retired_frame": 368
+        },
+        {
+          "before": {
+            "clock": 42,
+            "setting": 4,
+            "pc": 909,
+            "block": 2149318676,
+            "cursor": 2686189936,
+            "entries": 2,
+            "tag_match": 1
+          },
+          "after": {
+            "clock": 21,
+            "setting": 0,
+            "pc": 909,
+            "block": 0,
+            "cursor": 2686189568,
+            "entries": 0,
+            "tag_match": 0
+          },
+          "followup_retired_frame": 384
+        }
+      ],
+      "play_slot_touched": false,
+      "software_return": true,
+      "passed": true
+    }
+  },
+  "diagnostic_free_normal_ROM_and_load_segments_match_plain_PR": true,
+  "premerge_CI": [
+    {
+      "id": 43781633277,
+      "name": "Build and Validate",
+      "event": "push",
+      "conclusion": "success"
+    },
+    {
+      "id": 43781633478,
+      "name": "APU Cycle And Span Proof",
+      "event": "workflow_dispatch",
+      "conclusion": "success"
+    },
+    {
+      "id": 43781637424,
+      "name": "Ares Profile Validation",
+      "event": "pull_request",
+      "conclusion": "success"
+    },
+    {
+      "id": 43781637486,
+      "name": "Build and Validate",
+      "event": "pull_request",
+      "conclusion": "success"
+    },
+    {
+      "id": 43781637533,
+      "name": "Native USB Bench Contracts",
+      "event": "pull_request",
+      "conclusion": "success"
+    },
+    {
+      "id": 43781637565,
+      "name": "Profiling Memory Owners",
+      "event": "pull_request",
+      "conclusion": "success"
+    }
+  ],
+  "full_rate_native_ROM_sha256": "10a0541417fd2f0ff5237ea1bdb1109ab450a1ecd3576e9915b884ecee9732bc",
+  "full_rate_native_baseline": {
+    "smw": {
+      "comparison": {
+        "settings": {
+          "apu_clock": "21",
+          "skipped_set": "0",
+          "audio_set": "4",
+          "precision_set": "8"
+        },
+        "captures": [
+          {
+            "guest_frame": 3000,
+            "RGB_pixels": 67200,
+            "RGB_differences": 0,
+            "PCM_bytes": 8192,
+            "PCM_byte_differences": 0,
+            "ring_head_bytes_matches": true,
+            "enabled_matches": true,
+            "dspregs_matches": true
+          },
+          {
+            "guest_frame": 3016,
+            "RGB_pixels": 67200,
+            "RGB_differences": 0,
+            "PCM_bytes": 8192,
+            "PCM_byte_differences": 0,
+            "ring_head_bytes_matches": true,
+            "enabled_matches": true,
+            "dspregs_matches": true
+          }
+        ],
+        "quiet_intervals": [
+          {
+            "head": "fe61d371beef8085f195fc38b890b8e16a842da1",
+            "guest_endpoints": [
+              3017,
+              4182
+            ],
+            "duration_s": 20.026261056,
+            "presentation_is_software_observation": true,
+            "guest_delta": 1165,
+            "guest_per_second": 58.17361497197493,
+            "render_delta": 1165,
+            "render_per_second": 58.17361497197493,
+            "vi_delta": 1198,
+            "vi_per_second": 59.82145127590211,
+            "present_delta": 1164,
+            "present_per_second": 58.12368053852259
+          },
+          {
+            "head": "43602e2ee34ae5b952af7413a179e05c76a3f439",
+            "guest_endpoints": [
+              3017,
+              4182
+            ],
+            "duration_s": 20.025188586666665,
+            "presentation_is_software_observation": true,
+            "guest_delta": 1165,
+            "guest_per_second": 58.176730519066865,
+            "render_delta": 1165,
+            "render_per_second": 58.176730519066865,
+            "vi_delta": 1198,
+            "vi_per_second": 59.82465507454258,
+            "present_delta": 1165,
+            "present_per_second": 58.176730519066865
+          }
+        ],
+        "quiet_starts_match": true,
+        "quiet_endpoints_match": true
+      },
+      "guest_frames_delta_at_matched_VI_rate": 0.0,
+      "software_return": true,
+      "play_slot_touched": false
+    },
+    "alttp": {
+      "comparison": {
+        "settings": {
+          "apu_clock": "21",
+          "skipped_set": "0",
+          "audio_set": "4",
+          "precision_set": "8"
+        },
+        "captures": [
+          {
+            "guest_frame": 1862,
+            "RGB_pixels": 67200,
+            "RGB_differences": 0,
+            "PCM_bytes": 8192,
+            "PCM_byte_differences": 0,
+            "ring_head_bytes_matches": true,
+            "enabled_matches": true,
+            "dspregs_matches": true
+          },
+          {
+            "guest_frame": 1878,
+            "RGB_pixels": 67200,
+            "RGB_differences": 0,
+            "PCM_bytes": 8192,
+            "PCM_byte_differences": 0,
+            "ring_head_bytes_matches": true,
+            "enabled_matches": true,
+            "dspregs_matches": true
+          }
+        ],
+        "quiet_intervals": [
+          {
+            "head": "fe61d371beef8085f195fc38b890b8e16a842da1",
+            "guest_endpoints": [
+              1879,
+              3077
+            ],
+            "duration_s": 20.019382464,
+            "presentation_is_software_observation": true,
+            "guest_delta": 1198,
+            "guest_per_second": 59.84200572391842,
+            "render_delta": 1198,
+            "render_per_second": 59.84200572391842,
+            "vi_delta": 1197,
+            "vi_per_second": 59.792054133163894,
+            "present_delta": 1197,
+            "present_per_second": 59.792054133163894
+          },
+          {
+            "head": "43602e2ee34ae5b952af7413a179e05c76a3f439",
+            "guest_endpoints": [
+              1879,
+              3078
+            ],
+            "duration_s": 20.034486357333332,
+            "presentation_is_software_observation": true,
+            "guest_delta": 1199,
+            "guest_per_second": 59.84680508472949,
+            "render_delta": 1199,
+            "render_per_second": 59.84680508472949,
+            "vi_delta": 1198,
+            "vi_per_second": 59.79689115221512,
+            "present_delta": 1198,
+            "present_per_second": 59.79689115221512
+          }
+        ],
+        "quiet_starts_match": true,
+        "quiet_endpoints_match": false
+      },
+      "guest_frames_delta_at_matched_VI_rate": -0.00083542188804131,
+      "software_return": true,
+      "play_slot_touched": false
+    },
+    "dkc1": {
+      "comparison": {
+        "settings": {
+          "apu_clock": "21",
+          "skipped_set": "0",
+          "audio_set": "4",
+          "precision_set": "8"
+        },
+        "captures": [
+          {
+            "guest_frame": 4330,
+            "RGB_pixels": 67200,
+            "RGB_differences": 0,
+            "PCM_bytes": 8192,
+            "PCM_byte_differences": 0,
+            "ring_head_bytes_matches": true,
+            "enabled_matches": true,
+            "dspregs_matches": true
+          },
+          {
+            "guest_frame": 4346,
+            "RGB_pixels": 67200,
+            "RGB_differences": 0,
+            "PCM_bytes": 8192,
+            "PCM_byte_differences": 0,
+            "ring_head_bytes_matches": true,
+            "enabled_matches": true,
+            "dspregs_matches": true
+          }
+        ],
+        "quiet_intervals": [
+          {
+            "head": "85d1e3c532a3ad615ac75f1370e6653d6b1b0ba7",
+            "guest_endpoints": [
+              4347,
+              5544
+            ],
+            "duration_s": 20.0071376,
+            "presentation_is_software_observation": true,
+            "guest_delta": 1197,
+            "guest_per_second": 59.82864835197615,
+            "render_delta": 1197,
+            "render_per_second": 59.82864835197615,
+            "vi_delta": 1197,
+            "vi_per_second": 59.82864835197615,
+            "present_delta": 1197,
+            "present_per_second": 59.82864835197615
+          },
+          {
+            "head": "43602e2ee34ae5b952af7413a179e05c76a3f439",
+            "guest_endpoints": [
+              4347,
+              5545
+            ],
+            "duration_s": 20.023518336,
+            "presentation_is_software_observation": true,
+            "guest_delta": 1198,
+            "guest_per_second": 59.82964531493613,
+            "render_delta": 1198,
+            "render_per_second": 59.82964531493613,
+            "vi_delta": 1198,
+            "vi_per_second": 59.82964531493613,
+            "present_delta": 1198,
+            "present_per_second": 59.82964531493613
+          }
+        ],
+        "quiet_starts_match": true,
+        "quiet_endpoints_match": false
+      },
+      "guest_frames_delta_at_matched_VI_rate": 0.0,
+      "software_return": true,
+      "play_slot_touched": false
+    }
+  },
+  "local_default_package": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "archive_members": [
+      "sodium64.z64",
+      "rom-converter.py"
+    ],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  },
+  "shared_limits": "Paired digital captures and quiet guest completions. Broader gameplay, analog audio, full-library fidelity and sustained native cadence are still open.",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "merged_tree": "1f4c74b1431487ed6c46eb42adbd902b366cb355",
+  "merged_native_ROM_byte_identical": true,
+  "published_latest": {
+    "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+    "build_workflow": 43897382686,
+    "release_id": 447231207,
+    "release_asset_id": 755379500,
+    "normal_CI_artifact_id": 14240600447,
+    "normal_CI_artifact_digest_verified": true,
+    "archive_payloads_byte_identical_to_CI": true,
+    "archive_sha256": "3f7ff07424a1f4db4eda7908a9bfc9270edd3e6effc879db3fc6b52185d2a5cb",
+    "scope": "Latest release tag points to exact master. Both published members match the CI production artifact. Linked release isolation rechecked.",
+    "package_check": {
+      "linked_symbols": 1239,
+      "allocated_bytes": 767640,
+      "laboratory_symbols": [],
+      "allocated_diagnostic_leases": [],
+      "archive_members": [
+        "sodium64.z64",
+        "rom-converter.py"
+      ],
+      "sha256": {
+        "sodium64.z64": "5bcbfde783a316aaa6bcf24eef0f945194f339e084e394dbeeab9d75aded7e3d",
+        "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+      },
+      "elf_sha256": "5fb0738ad4ae9474097586c4ef09c1796db24a7fdeeb3330f80116bd78cef789",
+      "status": "PASS"
+    },
+    "candidate_and_merged_local_ZIP_payloads_identical": true
+  },
+  "postmerge_CI_at_checkpoint": [
+    {
+      "id": 43897382600,
+      "name": "APU Cycle And Span Proof",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 43897382608,
+      "name": "Profiling Memory Owners",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43897382634,
+      "name": "Ares Profile Validation",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 43897382686,
+      "name": "Build and Validate",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43897382744,
+      "name": "Native USB Bench Contracts",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

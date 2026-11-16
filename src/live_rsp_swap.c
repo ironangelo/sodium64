@@ -44,6 +44,11 @@ static void setup(void) {
 #endif
     for (unsigned i = 0; i < 2 * BANK_BYTES / 4; i++)
         staging[i] = (i < BANK_BYTES / 4) ? 0xa5365cc3u : 0;
+#ifdef SODIUM64_DSP_RSP_YIELD_TASK
+    // Two instructions, no use of live scalar or vector registers.
+    staging[BANK_BYTES / 4] = 0xac000000u; // sw zero, 0(zero)
+    staging[BANK_BYTES / 4 + 1] = 0x0000000du; // break
+#endif
     __asm__ volatile("sync" ::: "memory");
     prepared = 1;
 }
@@ -54,6 +59,33 @@ static void record(struct rsp_swap_totals *total, uint32_t elapsed) {
     total->ticks += elapsed;
     ++total->count;
 }
+
+#ifdef SODIUM64_DSP_RSP_YIELD_TASK
+static int run_marker(uint32_t pc) {
+    struct rsp_yield_report *const metrics = (struct rsp_yield_report *)LIVE_RSP_YIELD_REPORT;
+    if (sp_mem[0] != 0xa5365cc3u || sp_mem[BANK_BYTES / 4] != 0xac000000u ||
+        sp_mem[BANK_BYTES / 4 + 1] != 0x0000000du) return 0;
+
+    uint32_t start = ticks();
+    *sp_pc = 0;
+    sp[SP_STATUS] = 5u;
+    __asm__ volatile("sync" ::: "memory");
+    while ((sp[SP_STATUS] & 0x63) != 3 || *sp_pc != 8u) {
+        if ((uint32_t)(ticks() - start) >= DMA_TIMEOUT) {
+            sp[SP_STATUS] = 2u; // Stop the known two-instruction task.
+            __asm__ volatile("sync" ::: "memory");
+            return 0;
+        }
+    }
+    uint32_t elapsed = ticks() - start;
+    *sp_pc = pc;
+    if (sp_mem[0]) return 0;
+    ++metrics->task_count;
+    metrics->task_ticks += elapsed;
+    if (elapsed > metrics->task_max_ticks) metrics->task_max_ticks = elapsed;
+    return 1;
+}
+#endif
 
 static void exchange(unsigned banks, uint32_t status, uint32_t pc, int (*drain)(uint32_t)) {
     const unsigned words = banks * BANK_BYTES / 4;
@@ -99,6 +131,12 @@ static void exchange(unsigned banks, uint32_t status, uint32_t pc, int (*drain)(
             break;
         }
     }
+#ifdef SODIUM64_DSP_RSP_YIELD_TASK
+    if (banks == 2 && !stats->failure && !run_marker(pc)) {
+        stats->failure = 9;
+        if (!(sp[SP_STATUS] & 1u)) return;
+    }
+#endif
     // Return the renderer's banks even if staging readback failed.
     for (unsigned bank = 0; bank < banks; bank++) {
         if (!bank_dma(BACKUP, bank, 1)) {
@@ -139,16 +177,38 @@ void live_rsp_swap(unsigned frame, int (*drain)(uint32_t)) {
 }
 #else
 void live_rsp_yield(unsigned frame, unsigned from_wait, unsigned borrow, int (*drain)(uint32_t)) {
-    uint32_t status = sp[SP_STATUS];
-    if ((status & 0x63) != 3) return;
-    if (!prepared) setup();
-
-    static uint32_t current_frame, section;
-    struct rsp_yield_report *const metrics = (struct rsp_yield_report *)LIVE_RSP_YIELD_REPORT;
+    static uint32_t current_frame, section, resumed_at, last_running;
+    static unsigned saw_running;
+    uint32_t observed = ticks(), status = sp[SP_STATUS];
     if (current_frame != frame) {
         current_frame = frame;
         section = 0;
+        saw_running = 0;
     }
+
+    if ((status & 0x63) != 3) {
+        if (!(status & 1u) && section) {
+            last_running = observed;
+            saw_running = 1;
+        }
+        return;
+    }
+    if (!prepared) setup();
+
+    struct rsp_yield_report *const metrics = (struct rsp_yield_report *)LIVE_RSP_YIELD_REPORT;
+    if (section) {
+        uint32_t upper = ticks() - resumed_at;
+        ++metrics->section_gaps;
+        if (upper > metrics->section_upper_max) metrics->section_upper_max = upper;
+        if (saw_running) {
+            uint32_t lower = last_running - resumed_at;
+            ++metrics->section_observed_running;
+            if (lower > metrics->section_lower_max) metrics->section_lower_max = lower;
+            if (lower >= 11719) ++metrics->section_lower_ge_250us;
+            if (lower >= 46875) ++metrics->section_lower_ge_1ms;
+        }
+    }
+    saw_running = 0;
 
     uint32_t pc = *sp_pc;
     // The linked proof checks that both banks have exactly one BREAK, at
@@ -173,7 +233,8 @@ void live_rsp_yield(unsigned frame, unsigned from_wait, unsigned borrow, int (*d
     *sp_pc = 0xe8u; // hcomp_cgram_return, checked in both linked banks.
     sp[SP_STATUS] = 5u; // Clear HALT and BROKE, preserve renderer signals.
     __asm__ volatile("sync" ::: "memory");
-    uint32_t elapsed = ticks() - started;
+    resumed_at = ticks();
+    uint32_t elapsed = resumed_at - started;
     metrics->resume_ticks += elapsed;
     if (elapsed > metrics->resume_max_ticks) metrics->resume_max_ticks = elapsed;
 }

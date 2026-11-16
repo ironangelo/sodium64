@@ -497,6 +497,15 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" yield_count=",yield->matched);field(" yield_after_first=",yield->after_first);
         field(" yield_bad_pc=",yield->bad_pc);field(" yield_resume_ticks=",yield->resume_ticks);
         field(" yield_resume_max_ticks=",yield->resume_max_ticks);
+        field(" section_gaps=",yield->section_gaps);
+        field(" section_running=",yield->section_observed_running);
+        field(" section_lower_max=",yield->section_lower_max);
+        field(" section_upper_max=",yield->section_upper_max);
+        field(" section_lower_ge_250us=",yield->section_lower_ge_250us);
+        field(" section_lower_ge_1ms=",yield->section_lower_ge_1ms);
+        field(" task_count=",yield->task_count);
+        field(" task_ticks=",yield->task_ticks);
+        field(" task_max_ticks=",yield->task_max_ticks);
 #endif
         (void)finish();return;
     }

@@ -14,6 +14,13 @@ DSP_LIVE_CORE ?= 0
 DSP_RSP_SWAP ?= 0
 DSP_RSP_YIELD ?= 0
 DSP_RSP_YIELD_SWAP ?= 0
+DSP_RSP_YIELD_TASK ?= 0
+ifeq ($(DSP_RSP_YIELD_TASK),1)
+ifneq ($(DSP_RSP_YIELD)$(DSP_RSP_YIELD_SWAP),11)
+$(error The private RSP marker requires a section handoff with both banks)
+endif
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_RSP_YIELD_TASK=1
+endif
 ifeq ($(DSP_RSP_YIELD),1)
 ifneq ($(DSP_RSP_SWAP),1)
 $(error The section handoff uses the existing private memory exchange)

@@ -9,6 +9,9 @@
 struct rsp_yield_report {
     uint32_t in_spc, in_frame_wait, matched, after_first, bad_pc;
     uint32_t resume_ticks, resume_max_ticks;
+    uint32_t section_gaps, section_observed_running, section_lower_max, section_upper_max;
+    uint32_t section_lower_ge_250us, section_lower_ge_1ms;
+    uint32_t task_count, task_ticks, task_max_ticks;
 };
 
 struct rsp_swap_totals {

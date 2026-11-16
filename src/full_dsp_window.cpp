@@ -23,21 +23,56 @@ void SPC_DSP_Window::init(SPC_DSP& dsp, unsigned char* cpu_ram,
 }
 
 bool SPC_DSP_Window::echo_hazard(unsigned addr) const {
-    if (!pending || core->m.phase == 31) return false;
-    unsigned base = core->m.phase <= 22 ?
-        (core->m.t_esa * 256u + core->m.echo_offset) & 65535u :
-        (unsigned)core->m.t_echo_ptr;
-    // Conservative for both channels, including RAM writes and code fetches.
-    // A window ends before another phase22 can select a different address.
-    return ((addr - base) & 65535u) < 4;
+    return pending && addr >= echo_first && addr < echo_end;
+}
+
+void SPC_DSP_Window::start_echo_projection() {
+    unsigned phase = core->m.phase;
+    echo_first = 65536;
+    echo_end = 0;
+    echo_offset = core->m.echo_offset;
+    echo_length = core->m.echo_length;
+    echo_right_only = phase == 30;
+    echo_clock = phase <= 29 ? 30 - phase : (echo_right_only ? 1 : 31);
+
+    // Phase 22 captures the pointer, 28 gates the left write and 29
+    // advances the offset and gates the right write.
+    unsigned latched_address = (core->m.t_esa * 256u + echo_offset) & 65535u;
+    echo_address = phase <= 22 || phase == 31 ? latched_address : core->m.t_echo_ptr;
+    echo_writes_after_latch = !(core->m.regs[SPC_DSP::r_flg] & 0x20);
+    bool latched_write = !(core->m.t_echo_enabled & 0x20);
+    echo_can_write = echo_right_only ? latched_write :
+        (echo_writes_after_latch || (phase == 29 && latched_write));
+}
+
+void SPC_DSP_Window::project_echo(unsigned clocks) {
+    while (echo_clock <= clocks) {
+        if (echo_can_write) {
+            // Enclose both channel writes. The right channel may still be
+            // one clock away. Extra addresses can cause an early catch-up.
+            if (echo_address < echo_first) echo_first = echo_address;
+            if (echo_address + 4 > echo_end) echo_end = echo_address + 4;
+        }
+        if (!echo_right_only) {
+            if (!echo_offset) echo_length = (core->m.regs[SPC_DSP::r_edl] & 15u) << 11;
+            echo_offset += 4;
+            if (echo_offset >= echo_length) echo_offset = 0;
+        }
+        echo_address = ((core->m.regs[SPC_DSP::r_esa] << 8) + echo_offset) & 65535u;
+        echo_clock += echo_right_only ? 31 : 32;
+        echo_right_only = false;
+        echo_can_write = echo_writes_after_latch;
+    }
 }
 
 void SPC_DSP_Window::advance(unsigned clocks) {
     while (clocks) {
-        unsigned step = 32u - core->m.phase - pending;
+        if (!pending) start_echo_projection();
+        unsigned step = clock_capacity - pending;
         if (step > clocks) step = clocks;
         pending += step; clocks -= step;
-        if ((unsigned)core->m.phase + pending == 32) flush();
+        if (pending == clock_capacity) flush();
+        else project_echo(pending);
     }
 }
 
@@ -93,6 +128,9 @@ int SPC_DSP_Window::read_reg(unsigned addr) {
 
 void SPC_DSP_Window::write_reg(unsigned addr, unsigned data) {
     assert(addr < SPC_DSP::register_count);
+    // These three registers are the inputs to the echo address/write
+    // projection. Keep them constant while any clocks are pending.
+    if (addr == SPC_DSP::r_esa || addr == SPC_DSP::r_edl || addr == SPC_DSP::r_flg) flush();
     queue(addr, data, true);
 }
 

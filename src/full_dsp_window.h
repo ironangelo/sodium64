@@ -9,7 +9,7 @@
 // 64KiB RAM buffers and the core; they must outlive this controller.
 class SPC_DSP_Window {
 public:
-    enum { event_capacity = 64 };
+    enum { event_capacity = 64, clock_capacity = 256 };
     typedef void (*echo_publish_t)(void*, unsigned, unsigned char const*);
 
     SPC_DSP_Window() : core(0), pending(0), count(0) {}
@@ -43,7 +43,12 @@ private:
     unsigned pending, count;
     echo_publish_t publish;
     void* publish_context;
+    unsigned echo_first, echo_end;
+    unsigned echo_clock, echo_address, echo_offset, echo_length;
+    bool echo_can_write, echo_writes_after_latch, echo_right_only;
     bool echo_hazard(unsigned addr) const;
+    void start_echo_projection();
+    void project_echo(unsigned clocks);
     void queue(unsigned addr, unsigned data, bool reg);
     void apply(event_t const&);
     static void publish_echo(void*, unsigned, unsigned char const*);

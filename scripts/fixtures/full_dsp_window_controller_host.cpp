@@ -191,6 +191,44 @@ static void fifo_and_lifecycle(){
         tick(15);ref.reset();window.reset();compare();directed++;
     }
 }
+static void deferred_echo_boundaries() {
+    initialize(0);
+    reg_write(0x6d, 0xff);
+    ram_write(0, 0x42);
+    ref.m.phase = opt.m.phase = 22;
+    ref.m.t_esa = opt.m.t_esa = 0xff;
+    ref.m.echo_offset = opt.m.echo_offset = 0xfc;
+    ref.m.echo_length = opt.m.echo_length = 0x800;
+    tick(40); // Left echo at 0xfffc, then at 0x0000 in the next period.
+    check(window.pending_clocks() == 40, "retain multiple periods before an observation");
+    check(ram0[0] != 0x42, "reference second-period echo overwrites the byte");
+    ram_read(0);
+    check(!window.pending_clocks(), "second-period echo read requires catch-up");
+    flush();
+    directed++;
+
+    initialize(0);
+    reg_write(0x6c, 0x20);
+    ram_write(0xe000, 0x42);
+    ref.m.phase = opt.m.phase = 27;
+    ref.m.t_echo_ptr = opt.m.t_echo_ptr = 0xe000;
+    tick(1);
+    reg_write(0x6c, 0);
+    tick(2); // The newly enabled write must become visible after phase 29.
+    check(ram0[0xe000] != 0x42, "reference echo enable overwrites the byte");
+    ram_read(0xe000);
+    flush();
+    directed++;
+
+    initialize(0);
+    tick(255);
+    check(window.pending_clocks() == 255, "one-byte event clock upper boundary");
+    reg_write(0x2d, 0x83);
+    ram_write(0x6000, 0xa5);
+    tick(1);
+    check(!window.pending_clocks(), "flush before exceeding the journal timestamp");
+    directed++;
+}
 static void random_bus(){
     for(unsigned scenario=0;scenario<32;scenario++){
         initialize((scenario&3)?255:0);
@@ -228,6 +266,6 @@ static void directory_bus_wrap(){
 int main(){
     // First use needs no flush of an unbound controller.
     window.pending=window.count=0;
-    original_hazards();all_phases_regs();echo_admission();fifo_and_lifecycle();random_bus();directory_bus_wrap();
+    original_hazards();all_phases_regs();echo_admission();fifo_and_lifecycle();deferred_echo_boundaries();random_bus();directory_bus_wrap();
     printf("FULL_DSP_WINDOW_CONTROLLER PASS state_checks=%u producer_reads=%u clocks=%u directed=%u FIFO_overflow=%u echo_word_publications=%u directory_bus_cases=%u original_hazards=4\n",checks,reads,clocks,directed,overflow_cases,echo_writes,directory_cases);
 }

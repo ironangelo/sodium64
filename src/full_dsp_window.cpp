@@ -4,6 +4,28 @@
 #include <string.h>
 #include <stdint.h>
 
+#ifdef SODIUM64_DSP_LIVE_CORE
+#include "live_dsp.h"
+static inline uint32_t native_count() {
+    uint32_t result;
+    __asm__ volatile("mfc0 %0,$9" : "=r"(result) :: "memory");
+    return result;
+}
+
+static inline void run_dsp(SPC_DSP& core, unsigned clocks) {
+    uint32_t start = native_count();
+    core.run(clocks);
+    uint32_t elapsed = native_count() - start;
+    live_dsp_stats* stats = reinterpret_cast<live_dsp_stats*>(LIVE_DSP_STATS);
+    stats->core_ticks += elapsed;
+    ++stats->core_runs;
+}
+#else
+static inline void run_dsp(SPC_DSP& core, unsigned clocks) {
+    core.run(clocks);
+}
+#endif
+
 void SPC_DSP_Window::init(SPC_DSP& dsp, unsigned char* cpu_ram,
                          unsigned char* shadow_ram, echo_publish_t callback,
                          void* context) {
@@ -86,11 +108,11 @@ void SPC_DSP_Window::flush() {
     for (unsigned i = 0; i < count; i++) {
         event_t const& event = events[i];
         assert(event.clock >= cursor && event.clock <= pending);
-        if (event.clock > cursor) core->run(event.clock - cursor);
+        if (event.clock > cursor) run_dsp(*core, event.clock - cursor);
         cursor = event.clock;
         apply(event); // same-clock events retain producer order
     }
-    if (pending > cursor) core->run(pending - cursor);
+    if (pending > cursor) run_dsp(*core, pending - cursor);
     pending = count = 0;
 }
 

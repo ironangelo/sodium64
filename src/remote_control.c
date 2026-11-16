@@ -385,6 +385,8 @@ static void status(const char *id) {
         field(" full_clock_errors=",stats->clock_errors);
         field(" full_output_errors=",stats->output_errors);
         field(" full_cycles=",stats->cycles);
+        field(" full_core_ticks=",stats->core_ticks);
+        field(" full_core_runs=",stats->core_runs);
 #endif
 #endif
     }

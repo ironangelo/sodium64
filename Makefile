@@ -175,7 +175,7 @@ $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h M
 
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -DSODIUM64_DSP_FULL_WINDOW=1 -Wno-implicit-fallthrough -o $@ $<
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -DSODIUM64_DSP_FULL_WINDOW=1 -DSODIUM64_DSP_LIVE_CORE=1 -Wno-implicit-fallthrough -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

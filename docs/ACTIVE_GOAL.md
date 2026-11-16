@@ -242,7 +242,14 @@ including exact producer reads, and reduces the nominal demand to
 least 12.230 ms. A batch capped at 256 SPC clocks cannot assume a
 renderer halt at each deadline. The next gate is the end-to-end
 resident cost with the live timestamped SPC producer, exact RAM/echo
-publication and measured shared-SP handoffs.
+publication and measured shared-SP handoffs. On native DKC1, 244 of
+1,200 renderer jobs are still active at least 1 ms after a stable DSP
+register read. The full controller now answers those reads independently
+of dispatch, with exact results on all four reference fixtures. The
+remaining urgent observations are ENVX/OUTX/ENDX and echo-sensitive
+RAM/fetch, with real clock, cache/JIT and shared-SP handoffs in the
+same native run.
+[Live DSP reads and renderer contention](evidence/integration-dsp-live-rsp-deadlines-2026-11-16.json).
 [Native budget and complete-controller replay](evidence/integration-dsp-budget-2026-11-15.json).
 [Complete-controller and renderer ownership evidence](evidence/integration-dsp-batched-window-2026-11-15.json).
 Wider compatibility, full fidelity, DAC and chip gates remain open.

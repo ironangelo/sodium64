@@ -1,3 +1,44 @@
+# 2026-11-16 — Separate stable DSP reads from native renderer handoffs
+
+A private `master` observer times live SPC700 DSP register reads
+while the same graphics job still owns the RSP. DKC1 late intro,
+guest frames 4346–5546, performs 1,637 reads. The first read in
+277 of 1,200 graphics jobs finds the RSP busy, 270 jobs are still
+busy at least 0.250 ms later and 244 at least 1 ms later. The
+DKC1 boot-to-end peak lower bound is 11.004 ms and predates the
+fixed interval. The ALttP and SMW fixed boot/demo intervals have
+no DSP register reads. ALttP has four earlier reads and a boot
+peak of 5.597 ms. SMW has no earlier read. All these accesses
+read registers that remain stable until the producer writes them.
+
+The observer at `b870c0f8` preserves the four linked Main/Mode 7
+RSP sections and the production ROM/ELF byte for byte. All six
+aligned pre-interval RGB/PCM/DSP comparisons match the integrated
+baseline, and all three boots return by software. Linked observer
+tests pass 1,024 register cases and the Count wrap and ownership
+checks. These are observed lower bounds on renderer ownership
+after a read on the legacy path. A resident DSP's end-to-end cost
+and the corresponding change in frame cadence remain unmeasured.
+
+Complete controller `bdf3fa29` answers stable reads using the
+latest queued register write or the committed value. ENVX, OUTX
+and ENDX preserve the original catch-up barrier. This needs no
+additional state. The directed controller proof passes 20,028
+producer reads, 28,647 full-state checks and rejects 16 mutations.
+All four PR30 complete reference fixtures preserve exact results.
+Logical dispatches stay 74/98/162 in the nominal cases and fall
+from 1,107 to 1,106 in FIFO stress. This removes a dependency seen
+on DKC1. Native speed remains unmeasured.
+
+The next end-to-end gate needs a bounded original workload that
+exercises live DSP outputs and echo-sensitive SPC RAM/fetch while
+rendering. Bind both to the absolute SPC clock and echo/JIT
+publication. Measure actual computation, transfer and safe shared-SP
+handoffs on the same run. Master and Latest remain at `7a6e3d75`.
+[Native renderer contention and full controller tests](evidence/integration-dsp-live-rsp-deadlines-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Reject the shorter MOVW store path and hold the six-op split
 
 The original word-order and wrap proof comes from R63 `6b82434e`.

@@ -1,0 +1,302 @@
+{
+  "date_local": "2026-11-16",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "sample_scope": "This diagnostic observes the live SPC700 register-read path on the integrated legacy DSP. DSP register read and later active sample share a renderer launch generation. CPU Count is sampled after proving the first busy observation and before proving the later one. Timing is a lower bound on observed continued ownership, not compute/transfer time or a projected frame-rate change.",
+  "count_hz": 46875000,
+  "observer_head": "b870c0f87f7a6f91110cc4710a5f6d74b836e5d2",
+  "observer_test_head_same_runtime": "7c029d01186331704aead47f7c7fb0611d0f0659",
+  "observer_qualification": {
+    "register_cases": 1024,
+    "read_value_and_live_registers_preserved": true,
+    "threshold_checks": 6,
+    "count32_wrap": true,
+    "halt_keeps_peak": true,
+    "new_job_resets_pending": true,
+    "upper_address_guard": true,
+    "static_end": "0x800be008"
+  },
+  "unchanged_RSP_bank_bytes": {
+    "rsp_main.text": 4096,
+    "rsp_main.data": 4096,
+    "rsp_mode7.text": 4096,
+    "rsp_mode7.data": 4096
+  },
+  "normal_production_image_and_elf_identical": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  },
+  "physical_results": [
+    {
+      "scene": "alttp",
+      "head": "b870c0f87f7a6f91110cc4710a5f6d74b836e5d2",
+      "rom_sha256": "6e1221e30695cef61fadc2c8843a6a7997c518be8d4043d7e6b4000292eb80d0",
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8",
+        "transport_error": "0",
+        "menu_error": "0",
+        "input_buttons": "0",
+        "input_remaining": "0"
+      },
+      "software_return": true,
+      "play_slot_touched": false,
+      "digital_comparisons": [
+        {
+          "frame": 1862,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 1878,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "guest_frame_start": 1878,
+      "guest_frame_end": 3078,
+      "stats": {
+        "rsp_launches": 1200,
+        "register_reads": 0,
+        "volatile_reads": 0,
+        "read_jobs": 0,
+        "read_wait_250us": 0,
+        "read_wait_1ms": 0
+      },
+      "before": {
+        "rsp_launches": 1877,
+        "register_reads": 4,
+        "volatile_reads": 0,
+        "read_jobs": 3,
+        "read_wait_250us": 2,
+        "read_wait_1ms": 2,
+        "read_wait_peak_ticks_since_boot": 262358
+      },
+      "after": {
+        "rsp_launches": 3077,
+        "register_reads": 4,
+        "volatile_reads": 0,
+        "read_jobs": 3,
+        "read_wait_250us": 2,
+        "read_wait_1ms": 2,
+        "read_wait_peak_ticks_since_boot": 262358,
+        "read_wait_peak_ms_since_boot": 5.5969706666666665
+      }
+    },
+    {
+      "scene": "dkc1",
+      "head": "b870c0f87f7a6f91110cc4710a5f6d74b836e5d2",
+      "rom_sha256": "6e1221e30695cef61fadc2c8843a6a7997c518be8d4043d7e6b4000292eb80d0",
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8",
+        "transport_error": "0",
+        "menu_error": "0",
+        "input_buttons": "0",
+        "input_remaining": "0"
+      },
+      "software_return": true,
+      "play_slot_touched": false,
+      "digital_comparisons": [
+        {
+          "frame": 4330,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 4346,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "guest_frame_start": 4346,
+      "guest_frame_end": 5546,
+      "stats": {
+        "rsp_launches": 1200,
+        "register_reads": 1637,
+        "volatile_reads": 0,
+        "read_jobs": 277,
+        "read_wait_250us": 270,
+        "read_wait_1ms": 244
+      },
+      "before": {
+        "rsp_launches": 4345,
+        "register_reads": 3767,
+        "volatile_reads": 0,
+        "read_jobs": 699,
+        "read_wait_250us": 666,
+        "read_wait_1ms": 571,
+        "read_wait_peak_ticks_since_boot": 515795
+      },
+      "after": {
+        "rsp_launches": 5545,
+        "register_reads": 5404,
+        "volatile_reads": 0,
+        "read_jobs": 976,
+        "read_wait_250us": 936,
+        "read_wait_1ms": 815,
+        "read_wait_peak_ticks_since_boot": 515795,
+        "read_wait_peak_ms_since_boot": 11.003626666666667
+      }
+    },
+    {
+      "scene": "smw",
+      "head": "b870c0f87f7a6f91110cc4710a5f6d74b836e5d2",
+      "rom_sha256": "6e1221e30695cef61fadc2c8843a6a7997c518be8d4043d7e6b4000292eb80d0",
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8",
+        "transport_error": "0",
+        "menu_error": "0",
+        "input_buttons": "0",
+        "input_remaining": "0"
+      },
+      "software_return": true,
+      "play_slot_touched": false,
+      "digital_comparisons": [
+        {
+          "frame": 3000,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 3016,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "guest_frame_start": 3016,
+      "guest_frame_end": 4216,
+      "stats": {
+        "rsp_launches": 1200,
+        "register_reads": 0,
+        "volatile_reads": 0,
+        "read_jobs": 0,
+        "read_wait_250us": 0,
+        "read_wait_1ms": 0
+      },
+      "before": {
+        "rsp_launches": 3015,
+        "register_reads": 0,
+        "volatile_reads": 0,
+        "read_jobs": 0,
+        "read_wait_250us": 0,
+        "read_wait_1ms": 0,
+        "read_wait_peak_ticks_since_boot": 0
+      },
+      "after": {
+        "rsp_launches": 4215,
+        "register_reads": 0,
+        "volatile_reads": 0,
+        "read_jobs": 0,
+        "read_wait_250us": 0,
+        "read_wait_1ms": 0,
+        "read_wait_peak_ticks_since_boot": 0,
+        "read_wait_peak_ms_since_boot": 0.0
+      }
+    }
+  ],
+  "digital_reference": {
+    "head": "43602e2ee34ae5b952af7413a179e05c76a3f439",
+    "why_valid": "The freshly rebuilt integrated master REMOTE image is byte-identical to this PR39 candidate.",
+    "capture_scope": "Two aligned frames just before each fixed 1200-frame observer interval."
+  },
+  "complete_scalar_controller": {
+    "base_head": "a07b6fa6e746e4432b6585e56cb7fad0712c7232",
+    "candidate_head": "bdf3fa29621ccd9b3c3f94af344a0d032a63d4e8",
+    "runtime": "The controller reads stable DSP registers from the newest queued producer write, or the committed register when there is no pending write. ENVX, OUTX and ENDX still catch up. Echo, output, reset, import, FIFO ordering and other barriers remain unchanged.",
+    "proof": {
+      "passed": true,
+      "status": "IMPLEMENTED semantic window controller",
+      "counts": {
+        "state_checks": 28647,
+        "producer_reads": 20028,
+        "clocks": 934083,
+        "directed": 5673,
+        "FIFO_overflow": 31,
+        "echo_word_publications": 50906,
+        "directory_bus_cases": 131072,
+        "original_hazards": 4
+      },
+      "original_immediate_core_reference": true,
+      "separate_CPU_DSP_RAM": true,
+      "timestamped_ordered_event_replay": true,
+      "full_normalized_state_RAM_PCM": true,
+      "echo_publish_cache_JIT_callback_semantics": true,
+      "rejected_mutations": [
+        "future_RAM_visible",
+        "late_event_replay",
+        "missing_echo_RAM_barrier",
+        "wrong_post_latch_echo_pointer",
+        "missing_later_echo_projection",
+        "missing_echo_register_barrier",
+        "missing_DSP_register_read_barrier",
+        "stable_DSP_read_returns_stale_value",
+        "stable_DSP_read_includes_RAM_write",
+        "stable_DSP_read_takes_oldest_write",
+        "FIFO_drops_old_events",
+        "missing_echo_publication",
+        "missing_PCM_consumption_barrier",
+        "missing_export_barrier",
+        "missing_soft_reset_barrier",
+        "missing_16bit_directory_bus_wrap"
+      ],
+      "directory_bus_all_DIR_SRCN_start_loop_combinations": 131072,
+      "directory_bus_reference": "https://github.com/ares-emulator/ares/blob/9408cb43d4948fc3ea6e152a307a34348df3fe04/ares/sfc/dsp/voice.cpp",
+      "live_SPC_JIT_timestamps_implemented": false,
+      "native_memory_owner_assigned": false,
+      "resident_RSP_complete_DSP_implemented": false,
+      "native_performance_acceptance": false,
+      "commercial_data": false
+    },
+    "complete_original_corpus": {
+      "scenario-0": {
+        "batched_read_barrier_dispatches": 74,
+        "stable_read_candidate_dispatches": 74,
+        "exact_normalized_state_RAM_PCM": true,
+        "longest_window_guest_clocks": 256
+      },
+      "scenario-1": {
+        "batched_read_barrier_dispatches": 98,
+        "stable_read_candidate_dispatches": 98,
+        "exact_normalized_state_RAM_PCM": true,
+        "longest_window_guest_clocks": 256
+      },
+      "scenario-2": {
+        "batched_read_barrier_dispatches": 162,
+        "stable_read_candidate_dispatches": 162,
+        "exact_normalized_state_RAM_PCM": true,
+        "longest_window_guest_clocks": 256
+      },
+      "scenario-3": {
+        "batched_read_barrier_dispatches": 1107,
+        "stable_read_candidate_dispatches": 1106,
+        "exact_normalized_state_RAM_PCM": true,
+        "longest_window_guest_clocks": 21
+      }
+    },
+    "native_execution": false
+  },
+  "decision": "Do not require unconditional DSP dispatch for stable register reads. Keep this localized change with the complete DSP controller. The commercial windows do not quantify the waits for live ENVX/OUTX/ENDX or echo-sensitive RAM/fetch accesses.",
+  "next_gate": "Use a bounded original workload exercising real output-register reads and echo-sensitive RAM/fetch. Bind access times and JIT visibility to the absolute SPC epoch while the renderer runs. Then include all backend computation, transfers and handoff costs in a native end-to-end budget against integrated master.",
+  "commercial_data": false
+}

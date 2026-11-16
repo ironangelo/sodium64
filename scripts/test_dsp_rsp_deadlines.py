@@ -28,7 +28,7 @@ def main():
     cpu = ObserverCPU(mem)
     cpu.allow_rcp_writes = True
     words = {label: int(address, 16) for label, address
-             in re.findall(r"^#define (DSP_\w+)\s+(0x\w+)$", DSP_STATE.read_text(), re.M)}
+             in re.findall(r"^#define (DSP_(?!GUEST_)\w+)\s+(0x\w+)$", DSP_STATE.read_text(), re.M)}
     assert set(words.values()) == set(range(0x80441CB0, 0x80441CD4, 4))
     assert sym["__bss_end"] <= 0x800BE200
     owned = {a & 0x1FFFFFFF for a in words.values()}

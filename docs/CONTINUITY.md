@@ -1,3 +1,22 @@
+# 2026-11-15 — Block R45 on a repeated fixed-work ALttP story regression
+
+The refreshed R44/R45 ALttP story pair completes the same 1,000
+guest intervals ending at 1862–2861 on real N64. Both comparisons
+preserve all three aligned RGB captures and the paused PCM/DSP at
+1852. Reversing boot order reproduces the cost. R44 completes the
+window at 56.369 and 56.364 guest frames/s. R45 reaches 54.578 and
+54.574 guest frames/s. This is about 0.582 ms of added total time
+per completed frame, or a 3.18 percent rate loss. Both timed lab
+variants use the same bench adapter and keep their RSP banks exact.
+All four launches return to the menu and preserve the play file.
+
+PR42 stays blocked. The separate DKC1 first-stage gain and F-Zero
+equivalence remain valid. Resolve the parent early-DKC1 graphics
+completion cost and the R45 ALttP story loss before promotion.
+[Repeated native story evidence](evidence/integration-r45-alttp-story-native-2026-11-15.json).
+
+---
+
 # 2026-11-15 — Measure the integrated PR45 master across three titles
 
 Master `fe61d371` with the address-wrap repair completes the three

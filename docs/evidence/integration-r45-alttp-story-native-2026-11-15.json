@@ -1,0 +1,102 @@
+{
+  "date_local": "2026-11-15",
+  "classification": "BLOCKED for production promotion",
+  "hardware": "Real N64 through the private benchmark slot. Each launch starts ALttP with zero controller input. Both orderings return by software with recovery 0 and preserve the play file.",
+  "heads": {
+    "R44": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+    "R45": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e"
+  },
+  "benchmark_ROM_SHA256": {
+    "R44": "b4fd7f8ccb8d3ca5d896587b05719d72a8dab9cca29b20c82ca72b1db1cc832c",
+    "R45": "9e41e61f2e4a87df0222d8601e21381c50c0affa18ece96fd9b9f583429af495"
+  },
+  "settings": {
+    "apu_clock": "21",
+    "skipped_set": "0",
+    "audio_set": "4",
+    "precision_set": "20",
+    "transport_error": "0",
+    "menu_error": "0",
+    "input_buttons": "0",
+    "input_remaining": "0"
+  },
+  "lab_adapter": {
+    "identical_patch_sha256": "f744b8ddc659bafb740e561f93b2d5f62193229716bffa62b26fb7b7671108f1",
+    "purpose": "Record console Count after the timed step receipt and at the existing retired target before USB polling. Host stays idle for 22 seconds after arming the step. No renderer or production release change.",
+    "parser_cases": 59,
+    "fuzz_packets": 32000,
+    "linked_owner_cases_per_variant": 50,
+    "byte_identical_loaded_RSP_banks_vs_pinned_precision_20_bench": {
+      "R44": 13,
+      "R45": 14
+    }
+  },
+  "comparisons": [
+    {
+      "order": "R44 then R45",
+      "R44": {
+        "begin": 1861,
+        "end": 2861,
+        "count_hz": 46875000,
+        "ticks": 831577463,
+        "guest_per_second": 56.36877150433308
+      },
+      "R45": {
+        "begin": 1861,
+        "end": 2861,
+        "count_hz": 46875000,
+        "ticks": 858860534,
+        "guest_per_second": 54.57812781510345
+      },
+      "capture_comparison": {
+        "1852": {
+          "RGB_differences": 0,
+          "PCM_byte_differences": 0,
+          "DSP_state_exact": true
+        },
+        "3600": {
+          "RGB_differences": 0
+        },
+        "4800": {
+          "RGB_differences": 0
+        }
+      },
+      "R45_extra_ms_per_completed_guest_frame": 0.582038848,
+      "R45_guest_rate_delta_percent": -3.1766590639499492
+    },
+    {
+      "order": "R45 then R44",
+      "R44": {
+        "begin": 1861,
+        "end": 2861,
+        "count_hz": 46875000,
+        "ticks": 831643492,
+        "guest_per_second": 56.364296060649025
+      },
+      "R45": {
+        "begin": 1861,
+        "end": 2861,
+        "count_hz": 46875000,
+        "ticks": 858924663,
+        "guest_per_second": 54.57405290503342
+      },
+      "capture_comparison": {
+        "1852": {
+          "RGB_differences": 0,
+          "PCM_byte_differences": 0,
+          "DSP_state_exact": true
+        },
+        "3600": {
+          "RGB_differences": 0
+        },
+        "4800": {
+          "RGB_differences": 0
+        }
+      },
+      "R45_extra_ms_per_completed_guest_frame": 0.5819983146666666,
+      "R45_guest_rate_delta_percent": -3.176200681525887
+    }
+  ],
+  "limits": "One story route and scope; timing uses guest completions, not DAC or screen presentation. The whole enabled R45 port differs from the R44 build. The experiment does not identify a specific producer, helper, memory path or wait site.",
+  "next_gate": "Keep PR42 out of master. The 0.582 ms/frame ALttP regression and parent early-DKC1 graphics wait are independent gates. Preserve first-stage DKC1 and scoped F-Zero results. Require a generic fidelity-preserving renderer change with measured savings before another R45 promotion attempt."
+}

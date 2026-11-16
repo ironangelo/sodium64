@@ -4,6 +4,7 @@
  * SC64 register/PI/USB and IPL3 return operations retain the qualified bridge.
  */
 #include "remote_control.h"
+#include "dsp_rsp_deadlines.h"
 #ifdef REMOTE_CONTROL_HOST
 volatile uint32_t remote_guest_frames,remote_render_frames,remote_vi_count,remote_presentations;
 volatile uint32_t remote_buttons,remote_button_frames,remote_paused;
@@ -352,6 +353,17 @@ static void status(const char *id) {
         while(*name)name++;
         name++;
     }
+#ifndef REMOTE_CONTROL_HOST
+    if(remote_boot_ram_bytes==0x800000u) {
+        field(" dsp_rsp_launches=",*(volatile uint32_t*)DSP_RSP_LAUNCHES);
+        field(" dsp_register_reads=",*(volatile uint32_t*)DSP_REG_READS);
+        field(" dsp_volatile_reads=",*(volatile uint32_t*)DSP_VOLATILE_READS);
+        field(" dsp_read_jobs=",*(volatile uint32_t*)DSP_READ_JOBS);
+        field(" dsp_read_wait_peak=",*(volatile uint32_t*)DSP_READ_WAIT_PEAK);
+        field(" dsp_read_wait_250us=",*(volatile uint32_t*)DSP_READ_WAIT_250US);
+        field(" dsp_read_wait_1ms=",*(volatile uint32_t*)DSP_READ_WAIT_1MS);
+    }
+#endif
     append(" fps_claim=none");(void)finish();
 }
 void remote_process_request(const unsigned char *request,size_t bytes,uint32_t retired_framebuffer) {

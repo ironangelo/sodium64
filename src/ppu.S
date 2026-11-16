@@ -18,6 +18,9 @@
 */
 
 #include "defines.h"
+#ifdef SODIUM64_REMOTE
+#include "dsp_rsp_deadlines.h"
+#endif
 
 .globl ppu_event
 .globl section_init
@@ -744,7 +747,19 @@ frame_wait:
     beq t0, 2, frame_wait
 
     // Unhalt the RSP so it can render the next frame
-    li t0, 0x1 // Clear halt
+    li t0, 0x1 // Clear halt, also the frame_wait branch delay slot.
+#ifdef SODIUM64_REMOTE
+    lw t0, remote_boot_ram_bytes
+    lui t1, 0x80
+    bne t0, t1, 1f
+    lui t1, 0x8044
+    lw t0, (DSP_RSP_LAUNCHES & 0xffff)(t1)
+    addiu t0, t0, 1
+    sw t0, (DSP_RSP_LAUNCHES & 0xffff)(t1)
+    sw zero, (DSP_READ_STATE & 0xffff)(t1)
+1:
+    li t0, 0x1
+#endif
     lui t1, 0xA404
     jr t4
     sw t0, 0x0010(t1) // SP_STATUS

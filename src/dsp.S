@@ -19,6 +19,9 @@
 
 #include "defines.h"
 #ifdef SODIUM64_REMOTE
+#include "dsp_rsp_deadlines.h"
+#endif
+#ifdef SODIUM64_REMOTE
 .globl dsp_buffer, dsp_regs, dsp_pointer, enabled
 #endif
 
@@ -111,6 +114,52 @@ dsp_sample:
     lbu t0, audio_set
     beqz t0, apu_execute
     addi a3, a3, -DSP_SAMPLE
+
+#ifdef SODIUM64_REMOTE
+    // Timestamp before proving that the same renderer job is still busy.
+    // No other gameplay path can unhalt it without resetting this state.
+    lw t0, remote_boot_ram_bytes
+    lui t1, 0x80
+    bne t0, t1, dsp_rsp_deadline_done
+    lui t1, 0x8044
+    lw t2, (DSP_READ_STATE & 0xffff)(t1)
+    beqz t2, dsp_rsp_deadline_done
+    lui t0, 0xa404
+    mfc0 t3, $9
+    lw t0, 0x10(t0)
+    andi t0, t0, 1
+    bnez t0, dsp_rsp_deadline_halted
+    lw t0, (DSP_READ_COUNT & 0xffff)(t1)
+    subu t3, t3, t0
+    lw t0, (DSP_READ_WAIT_PEAK & 0xffff)(t1)
+    sltu t0, t0, t3
+    beqz t0, dsp_rsp_deadline_250us
+    nop
+    sw t3, (DSP_READ_WAIT_PEAK & 0xffff)(t1)
+dsp_rsp_deadline_250us:
+    bne t2, 1, dsp_rsp_deadline_1ms
+    sltiu t0, t3, DSP_WAIT_250US
+    bnez t0, dsp_rsp_deadline_done
+    lw t0, (DSP_READ_WAIT_250US & 0xffff)(t1)
+    addiu t0, t0, 1
+    sw t0, (DSP_READ_WAIT_250US & 0xffff)(t1)
+    li t2, 2
+    sw t2, (DSP_READ_STATE & 0xffff)(t1)
+dsp_rsp_deadline_1ms:
+    bne t2, 2, dsp_rsp_deadline_done
+    ori t0, zero, DSP_WAIT_1MS
+    sltu t0, t3, t0
+    bnez t0, dsp_rsp_deadline_done
+    lw t0, (DSP_READ_WAIT_1MS & 0xffff)(t1)
+    addiu t0, t0, 1
+    sw t0, (DSP_READ_WAIT_1MS & 0xffff)(t1)
+    li t2, 3
+    b dsp_rsp_deadline_done
+    sw t2, (DSP_READ_STATE & 0xffff)(t1)
+dsp_rsp_deadline_halted:
+    sw zero, (DSP_READ_STATE & 0xffff)(t1)
+dsp_rsp_deadline_done:
+#endif
 
     // Decrement the global timer once per sample
     lhu t0, dsp_timer
@@ -693,6 +742,47 @@ read_dspdata: // v0: value
     // Read a value from a DSP register
     lbu t0, dsp_addr
     andi t0, t0, 0x7F // Mirror
+#ifdef SODIUM64_REMOTE
+    lw t1, remote_boot_ram_bytes
+    lui t2, 0x80
+    bne t1, t2, dsp_reg_read_unobserved
+    lui t2, 0x8044
+    lw t1, (DSP_REG_READS & 0xffff)(t2)
+    addiu t1, t1, 1
+    sw t1, (DSP_REG_READS & 0xffff)(t2)
+
+    // Identify autonomous DSP outputs (voice ENVX/OUTX and ENDX).
+    beq t0, 0x7C, dsp_reg_read_volatile
+    andi t1, t0, 0x0F
+    addiu t1, t1, -8
+    sltiu t1, t1, 2
+    beqz t1, dsp_reg_read_overlap
+    nop
+dsp_reg_read_volatile:
+    lw t1, (DSP_VOLATILE_READS & 0xffff)(t2)
+    addiu t1, t1, 1
+    sw t1, (DSP_VOLATILE_READS & 0xffff)(t2)
+dsp_reg_read_overlap:
+    lw t1, (DSP_READ_STATE & 0xffff)(t2)
+    bnez t1, dsp_reg_read_unobserved
+    lw t1, (DSP_RSP_LAUNCHES & 0xffff)(t2)
+    beqz t1, dsp_reg_read_unobserved
+    lui t1, 0xa404
+    lw t1, 0x10(t1)
+    andi t1, t1, 1
+    bnez t1, dsp_reg_read_unobserved
+    nop
+
+    // Stamp the first observed read in this job after sampling SP_STATUS.
+    mfc0 t1, $9
+    sw t1, (DSP_READ_COUNT & 0xffff)(t2)
+    lw t1, (DSP_READ_JOBS & 0xffff)(t2)
+    addiu t1, t1, 1
+    sw t1, (DSP_READ_JOBS & 0xffff)(t2)
+    li t1, 1
+    sw t1, (DSP_READ_STATE & 0xffff)(t2)
+dsp_reg_read_unobserved:
+#endif
     lbu v0, dsp_regs(t0)
     jr ra
     nop

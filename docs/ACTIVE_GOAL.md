@@ -248,7 +248,14 @@ register read. The full controller now answers those reads independently
 of dispatch, with exact results on all four reference fixtures. The
 remaining urgent observations are ENVX/OUTX/ENDX and echo-sensitive
 RAM/fetch, with real clock, cache/JIT and shared-SP handoffs in the
-same native run.
+same native run. The original mixed load now measures mandatory
+output reads while the renderer is busy. The stock JIT compresses
+the directed read pair from three cycles to one. The private fixed
+prefix restores the exact three cycles. A separate paused echo
+publication proves the page tag is required for warm code entry.
+The complete live DSP bridge, within-block fetch and end-to-end
+cost remain open.
+[Native clock and echo-page proof](evidence/integration-dsp-live-spc-echo-2026-11-16.json).
 [Live DSP reads and renderer contention](evidence/integration-dsp-live-rsp-deadlines-2026-11-16.json).
 [Native budget and complete-controller replay](evidence/integration-dsp-budget-2026-11-15.json).
 [Complete-controller and renderer ownership evidence](evidence/integration-dsp-batched-window-2026-11-15.json).

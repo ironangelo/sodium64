@@ -1,0 +1,220 @@
+{
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "source_proof": "89a312391bfa8cc70463bc7fe7ee307fafd0176a",
+  "original_generator_base": "d7a071a23d2b4d97e56a751aa6a5076ffb807e8c",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "precision": 8,
+    "audio": 4,
+    "n64_ram_bytes": 8388608
+  },
+  "live_spc_test": {
+    "legacy": {
+      "role": "legacy",
+      "head": "b55c60faf8e6847138741f9319b1386a2ad343a7",
+      "rom_sha256": "aaef34ae70fdf8f4cef9d3a1d8d7f94014e5a4f5a785b697f48bddb5f0dc1e34",
+      "software_return": true,
+      "play_slot_touched": false,
+      "values": [
+        {
+          "rsp_launches": 239,
+          "register_reads": 15899,
+          "volatile_reads": 15828,
+          "read_jobs": 238,
+          "read_wait_250us": 238,
+          "read_wait_1ms": 238,
+          "pair_count": 3957,
+          "pair_exact": 0,
+          "pair_short": 3957,
+          "echo_reads": 7914,
+          "echo_entries": 3957,
+          "peak_ticks_from_boot": 300491
+        },
+        {
+          "rsp_launches": 359,
+          "register_reads": 23875,
+          "volatile_reads": 23804,
+          "read_jobs": 358,
+          "read_wait_250us": 358,
+          "read_wait_1ms": 358,
+          "pair_count": 5951,
+          "pair_exact": 0,
+          "pair_short": 5951,
+          "echo_reads": 11902,
+          "echo_entries": 5951,
+          "peak_ticks_from_boot": 304005
+        }
+      ],
+      "stats": {
+        "rsp_launches": 120,
+        "register_reads": 7976,
+        "volatile_reads": 7976,
+        "read_jobs": 120,
+        "read_wait_250us": 120,
+        "read_wait_1ms": 120,
+        "pair_count": 1994,
+        "pair_exact": 0,
+        "pair_short": 1994,
+        "echo_reads": 3988,
+        "echo_entries": 1994,
+        "pair_other": 0
+      },
+      "fixed_guest_range": [
+        240,
+        360
+      ],
+      "phase": "PASS"
+    },
+    "prefix": {
+      "role": "prefix",
+      "head": "b55c60faf8e6847138741f9319b1386a2ad343a7",
+      "rom_sha256": "5544e6234bf32d9a8754a45ac31693ee6cf033b6cb3bcfc8f1bfb1586df834cf",
+      "software_return": true,
+      "play_slot_touched": false,
+      "values": [
+        {
+          "rsp_launches": 239,
+          "register_reads": 15899,
+          "volatile_reads": 15828,
+          "read_jobs": 238,
+          "read_wait_250us": 238,
+          "read_wait_1ms": 238,
+          "pair_count": 3957,
+          "pair_exact": 3957,
+          "pair_short": 0,
+          "echo_reads": 7914,
+          "echo_entries": 3957,
+          "peak_ticks_from_boot": 300406
+        },
+        {
+          "rsp_launches": 359,
+          "register_reads": 23875,
+          "volatile_reads": 23804,
+          "read_jobs": 358,
+          "read_wait_250us": 358,
+          "read_wait_1ms": 358,
+          "pair_count": 5951,
+          "pair_exact": 5951,
+          "pair_short": 0,
+          "echo_reads": 11902,
+          "echo_entries": 5951,
+          "peak_ticks_from_boot": 302325
+        }
+      ],
+      "stats": {
+        "rsp_launches": 120,
+        "register_reads": 7976,
+        "volatile_reads": 7976,
+        "read_jobs": 120,
+        "read_wait_250us": 120,
+        "read_wait_1ms": 120,
+        "pair_count": 1994,
+        "pair_exact": 1994,
+        "pair_short": 0,
+        "echo_reads": 3988,
+        "echo_entries": 1994,
+        "pair_other": 0
+      },
+      "fixed_guest_range": [
+        240,
+        360
+      ],
+      "phase": "PASS"
+    },
+    "digital_comparisons": [
+      {
+        "frame": 240,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      },
+      {
+        "frame": 360,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ]
+  },
+  "units": {
+    "native_cpu_count_hz": 46875000,
+    "expected_spc_clocks_between_fixture_reads": 3,
+    "legacy_observed_spc_clocks_between_fixture_reads": 1,
+    "prefix_observed_spc_clocks_between_fixture_reads": 3
+  },
+  "linked_pair": {
+    "legacy_register_pair_cases": 16,
+    "prefix_register_pair_cases": 16,
+    "same_total_block_cycles": 11,
+    "clocks": [
+      1,
+      21,
+      42,
+      255
+    ],
+    "cold_warm_and_epoch_wrap": true
+  },
+  "paused_echo_cache_semantics": {
+    "head": "63ff3559eb6ccb41d6c7b55fec73fdd06cf6ee09",
+    "rom_sha256": "f4e9f46bcd7a6b664719b21e5a60d700b0cdb6dc8e0ab339d9c8dee2951faa19",
+    "points": {
+      "warm_jit": {
+        "echo_opcode": 96,
+        "echo_page_tag": 1,
+        "carry_seen": 0
+      },
+      "uncoupled_store": {
+        "echo_opcode": 0,
+        "echo_page_tag": 1,
+        "carry_seen": 0
+      },
+      "uncoupled_after_execution": {
+        "echo_opcode": 0,
+        "echo_page_tag": 1,
+        "carry_seen": 0
+      },
+      "coherent_publication": {
+        "echo_opcode": 0,
+        "echo_page_tag": 2,
+        "carry_seen": 0
+      },
+      "coherent_after_execution": {
+        "echo_opcode": 0,
+        "echo_page_tag": 2,
+        "carry_seen": 1
+      }
+    },
+    "advances": [
+      {
+        "start": 240,
+        "end": 242,
+        "echo_page_entries": 33
+      },
+      {
+        "start": 242,
+        "end": 244,
+        "echo_page_entries": 33
+      }
+    ],
+    "software_return": true,
+    "play_slot_touched": false,
+    "phase": "PASS"
+  },
+  "production_package": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  },
+  "scope": "The renderer overlap is observed on an original mixed workload with mandatory register reads. The prefix proof covers one linked MOV A,dp pair and does not establish full SPC bus-cycle semantics. Echo-page entry counts denote control-flow admission to a JIT block. The echo publication discriminator inserts a known two-byte result at a retired boundary while the guest is paused, then observes a warm block. No active DSP computes that echo result on the N64 in this proof.",
+  "decision": "Use the fixed debit prefix for the directed bridge proof and page-tag update for inter-block echo publication. Keep the private experiment disabled. A backend that simply waits for whole-frame renderer completion sees a concrete contention problem for this workload.",
+  "remaining": "Connect actual full-DSP echo computation, absolute pre-access deadlines, runtime fetch and cache coherence inside a running guest block. Measure complete native cost including synchronization and transport with real rendering.",
+  "commercial_data": false
+}

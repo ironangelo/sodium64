@@ -1,3 +1,41 @@
+# 2026-11-16 — Bind live DSP reads and a warm SPC echo-page block on N64
+
+An original moving-window guest exercises eight voices, four BRR
+filters, DSP register reads and echo-page accesses while the N64
+runs stock rendering. From guest frame 240 to 360, both boots
+execute 7,976 DSP output reads, 3,988 echo-address data reads
+and 1,994 entries at the echo-page SPC address. In both boots
+all 120 renderer jobs remain busy at least 1 ms after a live
+ENVX, OUTX or ENDX read. This observes contention after a real
+demand. It leaves whole-backend cost and presentation cadence open.
+
+The legacy emitter timestamps all 1,994 paired MOV A,dp reads
+one SPC clock apart. Publishing the R63 fixed debit before
+the data bus puts all 1,994 at the expected three SPC clocks.
+All aligned image, PCM and DSP comparisons match. Linked tests
+retain the 11-clock total for the two reads and RET in cold and
+cached code and across epoch wrap. This qualifies the directed
+prefix and leaves the wider producer cycle/fetch contract open.
+
+In a separate native run, a deliberately injected silent echo
+word changes the guest RAM opcode from CLRC to NOP at a retired
+boundary. Without a tag update, 33 further entries still execute
+the cached CLRC. Updating the echo page tag makes the changed opcode eligible
+at the next block entry. After 33 further entries over two
+frames the guest reports the updated carry. This exercises inter-block echo visibility
+with a paused publication, with live computation and within-block
+fetch coherence still pending. All boots returned by software.
+
+The proof is at `89a31239`. The normal ROM and ELF match master
+byte for byte. Master and Latest remain at `7a6e3d75`. Reuse
+the original workload while connecting real pre-access catch-up,
+echo publication and runtime fetch to the complete controller.
+Keep computation, transport and renderer handoff in the same
+native end-to-end cost comparison.
+[Native SPC timing, echo publication and production isolation](evidence/integration-dsp-live-spc-echo-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Separate stable DSP reads from native renderer handoffs
 
 A private `master` observer times live SPC700 DSP register reads

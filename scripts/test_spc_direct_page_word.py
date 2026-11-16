@@ -70,8 +70,10 @@ def check(cpu, symbols, case, clock, mutation=None):
     page = (case.flags & 0x20) << 3
     low, high = page + case.offset, page + ((case.offset + 1) & 0xff)
     alias = page + 0x100
-    timer_output = low == 0xff
     bus, writes, ya, flags = model(case, low, high)
+    timer_values = {address: value for address, value in ((low, case.value & 0xff), (high, case.value >> 8))
+                    if 0xfd <= address <= 0xff}
+    timer_reads = {event[1] for event in bus if event[0] == 'r'}
     cpu.write(s['jit_pointer'], JIT_START)
     cpu.write(lookup, 0)
     cpu.write(s['apu_clock'], clock, 1)
@@ -97,13 +99,14 @@ def check(cpu, symbols, case, clock, mutation=None):
 
     def execute():
         events.clear()
-        original_low = 0xad if timer_output or case.dsp_alias else case.value & 0xff
-        original_high = 0xbe if case.dsp_alias else case.value >> 8
+        original_low = 0xad if low in timer_values or case.dsp_alias else case.value & 0xff
+        original_high = 0xbe if high in timer_values or case.dsp_alias else case.value >> 8
         for address, byte in ((alias, 0x69), (low, original_low), (high, original_high)):
             cpu.write(s['apu_ram'] + address, byte, 1)
-        if timer_output:
-            cpu.write(s['apu_tmouts'] + 2, case.value & 0xff, 1)
-            cpu.write(s['apu_ocycles'] + 8, 0x80000000)
+        for address, value in timer_values.items():
+            timer = address - 0xfd
+            cpu.write(s['apu_tmouts'] + timer, value, 1)
+            cpu.write(s['apu_ocycles'] + timer * 4, 0x80000000)
         if case.dsp_alias:
             cpu.write(s['dsp_addr'], case.value & 0xff, 1)
             cpu.write(s['dsp_regs'] + 0x1e, 0x87, 1)
@@ -126,8 +129,9 @@ def check(cpu, symbols, case, clock, mutation=None):
         assert cpu.read(s['apu_ram'] + alias, 1) == 0x69, 'next-page canary'
         assert cpu.read(s['apu_ram'] + low, 1) == writes.get(low, original_low), 'low RAM byte'
         assert cpu.read(s['apu_ram'] + high, 1) == writes.get(high, original_high), 'high RAM byte'
-        if timer_output:
-            assert cpu.read(s['apu_tmouts'] + 2, 1) == 0, 'timer read side effect'
+        for address, value in timer_values.items():
+            expected = 0 if address in timer_reads else value
+            assert cpu.read(s['apu_tmouts'] + address - 0xfd, 1) == expected, 'timer read side effect'
         if case.dsp_alias:
             assert cpu.read(s['dsp_addr'], 1) == 0x1f, 'DSP address latch'
             assert cpu.read(s['dsp_regs'] + 0x1e, 1) == 0x87, 'old DSP register'
@@ -155,6 +159,10 @@ def scenarios():
     for name, opcode, cycles in WORD_OPS:
         for value in (0x0000, 0x7f01, 0x800e):
             yield Case(name, opcode, cycles, 0, 0xff, 0x1234, value)
+        # MOVW stores read only timer 1 at FE. The other six word operations
+        # read both timer outputs at FE/FF, which clears both counters.
+        for value in (0x0000, 0x000f, 0x0f00, 0x0f0f):
+            yield Case(name, opcode, cycles, 0, 0xfe, 0x1234, value)
     # The low write selects a different DSP register before the high read.
     yield Case('incw', 0x3a, 6, 0, 0xf2, 0x1234, 0x361e, dsp_alias=True)
 

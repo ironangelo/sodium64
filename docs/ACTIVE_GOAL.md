@@ -253,8 +253,15 @@ output reads while the renderer is busy. The stock JIT compresses
 the directed read pair from three cycles to one. The private fixed
 prefix restores the exact three cycles. A separate paused echo
 publication proves the page tag is required for warm code entry.
-The complete live DSP bridge, within-block fetch and end-to-end
-cost remain open.
+The full scalar controller now runs an original mixed workload
+with live audio and real echo publication visible through the
+warm SPC JIT. R4300 cost is 53.168 ms per guest frame, with
+29.659 ms inside the complete core and its echo callbacks in
+the attribution run. Keep the bounded scalar bridge as a native
+reference. Use the same workload to test a complete accelerated
+architecture with bounded shared-SP handoffs. General live
+fetch, echo, timing and transport gates remain open.
+[Active whole-core native cost](evidence/integration-dsp-active-native-cost-2026-11-16.json).
 [Native clock and echo-page proof](evidence/integration-dsp-live-spc-echo-2026-11-16.json).
 [Live DSP reads and renderer contention](evidence/integration-dsp-live-rsp-deadlines-2026-11-16.json).
 [Native budget and complete-controller replay](evidence/integration-dsp-budget-2026-11-15.json).

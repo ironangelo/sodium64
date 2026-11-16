@@ -1,3 +1,43 @@
+# 2026-11-16 — Run the complete DSP with live SPC and measure its CPU cost
+
+The private active build `341b7ff8` sends the original moving-window
+guest's live SPC register traffic and RAM writes to the complete
+DSP controller. It catches up before the two echo data reads and
+before the fixture's sole echo-written opcode entry. The actual
+DSP writes the echo word, updates the JIT tag and produces PCM
+through the usual AI ring. The guest observes the resulting NOP
+and carry directly, without the earlier paused host injection.
+The renderer stays on the same stock path.
+
+In guest frames 48–88, the active path produces 21,272 stereo
+samples, handles 2,658 DSP register reads, and publishes 42,546
+echo words, including 42 at the opcode location. It reports no
+clock or output errors, and samples real renderer activity.
+The entire measured bridge takes 53.168 ms of R4300 time per
+guest frame, 319.930 percent of its 32 kHz audio interval.
+The attribution build `8b05b795` reproduces the work at 54.005
+ms/frame. The nested complete-core calls, including echo
+publication, take 29.659 ms/frame or 178.468 percent of the
+interval before adding the remainder of the bridge.
+
+Both active runs match 67,200 RGB pixels and all 8,192 captured
+PCM bytes at frame 88. The stock-mixer control matches the
+active image at that frame. All three boots returned to the
+menu by software and preserved the play slot. Production ROM
+and ELF match master byte for byte. Master and Latest remain
+at `7a6e3d75`.
+
+The active scalar replacement is rejected on measured cost.
+Keep this bounded live bridge and its output as the reference
+for testing the complete accelerated architecture. This original
+guest uses deliberate silent echo input/feedback and one
+echo-sensitive opcode entry. Broader SPC fetch/bus fidelity,
+non-silent echo, analog output, rendering coexistence with RSP
+DSP compute and whole transport remain separate production gates.
+[Live native work, digital comparison and CPU attribution](evidence/integration-dsp-active-native-cost-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Bind live DSP reads and a warm SPC echo-page block on N64
 
 An original moving-window guest exercises eight voices, four BRR

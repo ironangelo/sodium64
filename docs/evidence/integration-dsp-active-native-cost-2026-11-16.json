@@ -1,0 +1,217 @@
+{
+  "date_local": "2026-11-16",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "controller_source": "bdf3fa29621ccd9b3c3f94af344a0d032a63d4e8",
+  "source_branch": "proof/dsp-active-native",
+  "fixture_scope": "The same original moving-window guest, with eight voices and four original BRR filters, plus live register reads and echo-page RAM/code. EON and EFB are intentionally zero so the sample sent to the executable echo address has a predictable value. This is a complete DSP core on a bounded guest, with SPC fetch catch-up implemented at its sole echo-written opcode and data pre-access at its two echo reads. It is not a general SPC bus bridge or a resident RSP implementation.",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "precision": 8,
+    "audio": 4,
+    "n64_ram_bytes": 8388608
+  },
+  "measurement_definition": "R4300 Count at 46.875 MHz, from bridge entry through the restored register context. Includes DSP execution, echo publication, journal and I/O handling, PCM staging and AI submission covered by the bridge. Does not include the rest of the emulator or final per-call counter bookkeeping. The nested run() counter includes echo callbacks, with renderer still running when eligible. Any interrupt time inside a bracket is included. No aggregate claim of analog audio, presentation cadence or RSP transport cost.",
+  "native_fixed_work": [
+    {
+      "head": "341b7ff80442f74b0ce57965286ac30beab6b2b1",
+      "rom_sha256": "2cd2cbd3c8689abb81fd2af4c2c58af6e3ec1ab1ccc56bd2c3e1fda1ac15d806",
+      "checkpoints": [
+        {
+          "ticks": 119689138,
+          "calls": 92477,
+          "pcm": 25450,
+          "outputs": 3135,
+          "writes": 71,
+          "echo": 49042,
+          "echo_opcode": 35,
+          "sample_calls": 25451,
+          "renderer_busy": 2023,
+          "clock_errors": 0,
+          "output_errors": 0,
+          "cycles": 814435,
+          "frame": 48,
+          "read_pair_exact": 766
+        },
+        {
+          "ticks": 219379781,
+          "calls": 169583,
+          "pcm": 46722,
+          "outputs": 5793,
+          "writes": 71,
+          "echo": 91588,
+          "echo_opcode": 77,
+          "sample_calls": 46723,
+          "renderer_busy": 3797,
+          "clock_errors": 0,
+          "output_errors": 0,
+          "cycles": 1495137,
+          "frame": 88,
+          "read_pair_exact": 1431
+        }
+      ],
+      "software_return": true,
+      "play_slot_touched": false,
+      "start": {
+        "full_ticks": 2583154,
+        "full_calls": 1674,
+        "full_pcm": 456,
+        "full_outputs": 0,
+        "full_writes": 0,
+        "full_echo": 0,
+        "full_echo_opcode": 0,
+        "full_sample_calls": 457,
+        "full_renderer_busy": 0,
+        "full_clock_errors": 0,
+        "full_output_errors": 0,
+        "full_cycles": 14606
+      },
+      "live_echo": {
+        "echo_opcode": 0,
+        "echo_page_tag": 2465,
+        "carry_seen": 1
+      },
+      "PCM_nonzero_bytes": 8051,
+      "measurement": {
+        "ticks": 99690643,
+        "calls": 77106,
+        "pcm": 21272,
+        "outputs": 2658,
+        "writes": 0,
+        "echo": 42546,
+        "echo_opcode": 42,
+        "sample_calls": 21272,
+        "renderer_busy": 1774,
+        "clock_errors": 0,
+        "output_errors": 0,
+        "cycles": 680702
+      },
+      "seconds_CPU_for_back_end": 2.1267337173333334,
+      "CPU_ms_per_guest_frame": 53.168342933333335,
+      "CPU_percent_per_32k_audio_interval": 319.92985593581545,
+      "phase": "PASS"
+    },
+    {
+      "head": "8b05b79540e1dcc9a81c2d06bbf171c09764c41c",
+      "rom_sha256": "5b715846aa51f034a2afab6b03c154c16a5eb5219283ab0973e0c297c77db596",
+      "checkpoints": [
+        {
+          "ticks": 121664228,
+          "calls": 92477,
+          "pcm": 25450,
+          "outputs": 3135,
+          "writes": 71,
+          "echo": 49042,
+          "echo_opcode": 35,
+          "sample_calls": 25451,
+          "renderer_busy": 1889,
+          "clock_errors": 0,
+          "output_errors": 0,
+          "cycles": 814435,
+          "core_ticks": 66739033,
+          "core_runs": 89244,
+          "frame": 48,
+          "read_pair_exact": 766
+        },
+        {
+          "ticks": 222924508,
+          "calls": 169583,
+          "pcm": 46722,
+          "outputs": 5793,
+          "writes": 71,
+          "echo": 91588,
+          "echo_opcode": 77,
+          "sample_calls": 46723,
+          "renderer_busy": 3548,
+          "clock_errors": 0,
+          "output_errors": 0,
+          "cycles": 1495137,
+          "core_ticks": 122349792,
+          "core_runs": 163697,
+          "frame": 88,
+          "read_pair_exact": 1431
+        }
+      ],
+      "software_return": true,
+      "play_slot_touched": false,
+      "start": {
+        "full_ticks": 2752852,
+        "full_calls": 1674,
+        "full_pcm": 456,
+        "full_outputs": 0,
+        "full_writes": 0,
+        "full_echo": 0,
+        "full_echo_opcode": 0,
+        "full_sample_calls": 457,
+        "full_renderer_busy": 0,
+        "full_clock_errors": 0,
+        "full_output_errors": 0,
+        "full_cycles": 14606,
+        "full_core_ticks": 1509745,
+        "full_core_runs": 1671
+      },
+      "live_echo": {
+        "echo_opcode": 0,
+        "echo_page_tag": 2465,
+        "carry_seen": 1
+      },
+      "PCM_nonzero_bytes": 8051,
+      "measurement": {
+        "ticks": 101260280,
+        "calls": 77106,
+        "pcm": 21272,
+        "outputs": 2658,
+        "writes": 0,
+        "echo": 42546,
+        "echo_opcode": 42,
+        "sample_calls": 21272,
+        "renderer_busy": 1659,
+        "clock_errors": 0,
+        "output_errors": 0,
+        "cycles": 680702,
+        "core_ticks": 55610759,
+        "core_runs": 74453
+      },
+      "seconds_CPU_for_back_end": 2.160219306666667,
+      "CPU_ms_per_guest_frame": 54.00548266666667,
+      "CPU_percent_per_32k_audio_interval": 324.96717663281936,
+      "core_ms_per_guest_frame": 29.659071466666667,
+      "core_percent_per_32k_audio_interval": 178.46752292841919,
+      "phase": "PASS"
+    }
+  ],
+  "digital_comparison_of_the_two_active_builds": {
+    "rgb_count_compared": 67200,
+    "rgb_differences": 0,
+    "pcm_count_compared": 8192,
+    "pcm_differences": 0,
+    "frame": 88,
+    "control": "active-backend before nested core counter",
+    "candidate": "same active backend with nested core counter",
+    "matched_echo_observation": true
+  },
+  "stock_renderer_control": {
+    "sha256": "5544e6234bf32d9a8754a45ac31693ee6cf033b6cb3bcfc8f1bfb1586df834cf",
+    "software_return": true,
+    "play_slot_touched": false,
+    "rgb_count_compared": 67200,
+    "rgb_differences": 0,
+    "frame": 88,
+    "phase": "PASS"
+  },
+  "production_identity": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  },
+  "decision": "REJECTED as a real-time replacement wholly on the R4300. VALIDATED as a bounded native whole-core integration and cost discriminator, with real live echo publication visible to the guest and digital output from the full core.",
+  "next_gate": "Use this established workload and PCM reference for a complete shared-RSP or partitioned-backend architecture. Budget bounded handoffs for critical DSP reads and echo before investing in any new isolated calculation. Count state movement, synchronization, transport and the renderer's work together.",
+  "commercial_data": false
+}

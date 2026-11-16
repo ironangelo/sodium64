@@ -259,8 +259,15 @@ warm SPC JIT. R4300 cost is 53.168 ms per guest frame, with
 29.659 ms inside the complete core and its echo callbacks in
 the attribution run. Keep the bounded scalar bridge as a native
 reference. Use the same workload to test a complete accelerated
-architecture with bounded shared-SP handoffs. General live
-fetch, echo, timing and transport gates remain open.
+architecture with bounded shared-SP handoffs. Native retired
+exchange measures 40.359 us for DMEM and 76.771 us for both banks,
+plus 10.787 us average RDP drain. Per-sample bank exchange exceeds
+the frame budget at these transfer costs. Eight-sample service
+cuts 21,272 calls to 2,659 with exact common samples on the
+original workload. It leaves the critical register catches in
+place. Mid-frame yield, actual full RSP compute, and general
+live fetch and echo gates remain open.
+[Native transport and PCM service](evidence/integration-dsp-rsp-handoff-2026-11-16.json).
 [Active whole-core native cost](evidence/integration-dsp-active-native-cost-2026-11-16.json).
 [Native clock and echo-page proof](evidence/integration-dsp-live-spc-echo-2026-11-16.json).
 [Live DSP reads and renderer contention](evidence/integration-dsp-live-rsp-deadlines-2026-11-16.json).

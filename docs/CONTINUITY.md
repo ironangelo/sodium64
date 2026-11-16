@@ -1,3 +1,40 @@
+# 2026-11-16 — Bound RSP bank transport and batch PCM delivery
+
+The original live eight-voice DSP workload now measures renderer
+bank exchange at a natural RSP halt. In the first hardware run
+all 40 evaluated RDP pipelines remain busy, so the probe leaves
+SP memory untouched. With the existing SyncFull drain, 20 DMEM
+exchanges and 20 DMEM-plus-IMEM exchanges verify the renderer
+banks, PC and status before resuming. The copy averages 40.359 us
+and 76.771 us respectively, with an additional 10.787 us mean
+RDP drain. The matched frame 88 image and PCM both pass.
+
+At the fastest observed transfer-only times, doing the same
+exchange for every stereo sample would consume 20.580 ms/frame
+for DMEM and 39.617 ms/frame for both banks. The 60 Hz budget is
+16.667 ms before charging acquisition, RDP sync, register state
+or audio computation. Reject per-sample bank exchange.
+
+The eight-sample PCM service reduces calls from 21,272 to 2,659
+in the same 40 guest frames. It preserves the image and all 2,046
+stereo samples present in both frame-88 rings. Two samples were
+still pending in the final partial group. The two builds reach
+the same number of full AI buffers by that boundary. Both retain
+2,658 nonempty required DSP register observations, of which
+665 follow another within three SPC clocks. This timing does not
+exercise a separate additional echo catch-up. All runs return
+through the private menu and preserve the play slot.
+
+Proof head `989225a1`. Production bytes and current master remain
+`7a6e3d75`. Use the original full-core reference when implementing
+a bounded shared-SP schedule that retains hot state across short
+request bursts. The transport result is at a natural frame
+boundary. Mid-frame renderer yield and actual complete RSP DSP
+execution remain open.
+[Native bank exchange, reply intervals and PCM batching](evidence/integration-dsp-rsp-handoff-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Run the complete DSP with live SPC and measure its CPU cost
 
 The private active build `341b7ff8` sends the original moving-window

@@ -417,6 +417,25 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         if(nt!=3){error(id,"argument_count");return;}status(id);return;
     }
     if(menu_error&&!eq(verb,"menu")) {error(id,"transition_failed_requires_reset");return;}
+#ifdef SODIUM64_DSP_LIVE_GUEST
+    if(eq(verb,"dsp-echo")) {
+        extern unsigned char apu_ram[],apu_outputs[];
+        extern uint32_t jit_tags[];
+        uint32_t operation;
+        if(!remote_paused||nt!=4||!decimal(tokens[3],&operation,2u)||
+           apu_ram[0x4800]!=0x6fu) {error(id,"fixture_required");return;}
+        // A silent phase-30 echo publication, at a retired boundary.
+        // Operation 1 models the stale JIT negative control.
+        if(operation) {
+            apu_ram[0x47fe]=0;
+            apu_ram[0x47ff]=0;
+            if(operation==2)jit_tags[0x47fe>>6]++;
+        }
+        prefix(id,1);field(" echo_opcode=",apu_ram[0x47ff]);
+        field(" echo_page_tag=",jit_tags[0x47fe>>6]);
+        field(" carry_seen=",apu_outputs[2]);(void)finish();return;
+    }
+#endif
     if(eq(verb,"pause-at")||eq(verb,"step")) {
         int step=eq(verb,"step");uint32_t value,target;
         if(nt!=4||!decimal(tokens[3],&value,step?REMOTE_FRAME_CONTROL_MAX:UINT32_MAX)||

@@ -21,6 +21,7 @@
 #include "defines.h"
 #ifdef SODIUM64_DSP_LIVE_GUEST
 #include "dsp_rsp_deadlines.h"
+.globl apu_outputs
 #endif
 
 .globl apu_map

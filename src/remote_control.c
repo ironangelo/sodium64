@@ -478,6 +478,8 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" both_min_ticks=",swap->both.min_ticks);field(" both_max_ticks=",swap->both.max_ticks);
         field(" rejected_busy=",swap->busy);field(" rejected_owner=",swap->unrecognized);
         field(" bad_pc=",swap->bad_pc);field(" bad_status=",swap->bad_status);
+        field(" rdp_sync_count=",swap->rdp_sync.count);field(" rdp_sync_ticks=",swap->rdp_sync.ticks);
+        field(" rdp_sync_min_ticks=",swap->rdp_sync.min_ticks);field(" rdp_sync_max_ticks=",swap->rdp_sync.max_ticks);
         field(" failure=",swap->failure);(void)finish();return;
     }
 #endif
@@ -592,7 +594,7 @@ void remote_control_frame(uint32_t framebuffer) {
 #endif
     remote_render_frames++;
 #ifdef SODIUM64_DSP_RSP_SWAP
-    live_rsp_swap(remote_render_frames);
+    live_rsp_swap(remote_render_frames,remote_rdp_drain);
     if(((const volatile struct rsp_swap_report *)LIVE_RSP_SWAP_REPORT)->failure)remote_paused=1;
 #endif
     if(remote_pause_pending&&remote_render_frames==remote_pause_target){remote_pause_pending=0;remote_paused=1;}

@@ -11,9 +11,10 @@ struct rsp_swap_totals {
 struct rsp_swap_report {
     struct rsp_swap_totals dmem, both;
     uint32_t busy, unrecognized, bad_pc, bad_status, failure;
+    struct rsp_swap_totals rdp_sync;
 };
 
 /* The caller runs at the naturally retired renderer boundary and owns 8 MiB. */
-void live_rsp_swap(unsigned frame);
+void live_rsp_swap(unsigned frame, int (*drain)(uint32_t));
 
 #endif

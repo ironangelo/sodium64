@@ -45,7 +45,14 @@ static void setup(void) {
     prepared = 1;
 }
 
-void live_rsp_swap(unsigned frame) {
+static void record(struct rsp_swap_totals *total, uint32_t elapsed) {
+    if (!total->count || elapsed < total->min_ticks) total->min_ticks = elapsed;
+    if (elapsed > total->max_ticks) total->max_ticks = elapsed;
+    total->ticks += elapsed;
+    ++total->count;
+}
+
+void live_rsp_swap(unsigned frame, int (*drain)(uint32_t)) {
     if (!prepared) setup();
     if (stats->failure) return;
 
@@ -62,9 +69,20 @@ void live_rsp_swap(unsigned frame) {
         stats->bad_status = status;
         return;
     }
-    if (dp[2] != dp[1] || (dp[3] & 0x170u) || sp[SP_DMA_FULL] || sp[SP_DMA_BUSY]) {
+    if (sp[SP_DMA_FULL] || sp[SP_DMA_BUSY]) {
         ++stats->busy;
         return;
+    }
+    if (dp[2] != dp[1] || (dp[3] & 0x770u)) {
+        uint32_t start = ticks();
+        int ready = drain(DMA_TIMEOUT);
+        uint32_t elapsed = ticks() - start;
+        if (ready <= 0 || dp[2] != dp[1] || (dp[3] & 0x770u)) {
+            if (ready < 0) stats->failure = 7;
+            ++stats->busy;
+            return;
+        }
+        record(&stats->rdp_sync, elapsed);
     }
 
     const uint32_t saved_sp_addr = sp[SP_MEM_ADDR], saved_dram_addr = sp[SP_DRAM_ADDR];
@@ -109,13 +127,7 @@ void live_rsp_swap(unsigned frame) {
         }
     }
     if (*sp_pc != pc || sp[SP_STATUS] != status) stats->failure = 6;
-    if (!stats->failure) {
-        struct rsp_swap_totals *total = banks == 1 ? &stats->dmem : &stats->both;
-        if (!total->count || elapsed < total->min_ticks) total->min_ticks = elapsed;
-        if (elapsed > total->max_ticks) total->max_ticks = elapsed;
-        total->ticks += elapsed;
-        ++total->count;
-    }
+    if (!stats->failure) record(banks == 1 ? &stats->dmem : &stats->both, elapsed);
 
 restore_registers:
     sp[SP_MEM_ADDR] = saved_sp_addr;

@@ -189,7 +189,7 @@ apu_movwya: // MOVW YA,op
     la t0, apu_read8
     jal emit_jal
     nop
-    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_DP_NEXT
     EMIT_OP OR(T8, ZERO, V0)
 
     // Emit code to set flags for the 16-bit value
@@ -280,7 +280,7 @@ apu_movway: // MOVW op,YA
     jal emit_jal
     nop
     EMIT_OP OR(A1, ZERO, T7)
-    EMIT_OP ADDI(A0, A0, 1)
+    EMIT_DP_NEXT
     la t0, apu_write8
     jal emit_jal
     nop

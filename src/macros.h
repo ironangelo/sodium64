@@ -57,3 +57,9 @@
     jal emit_op
     ori t0, t0, (\opcode) & 0xFFFF
 .endm
+
+.macro EMIT_DP_NEXT
+    jal emit_dp_next
+    lui t0, XORI(A0, A0, 0) >> 16
+    nop
+.endm

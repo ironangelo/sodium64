@@ -7,6 +7,7 @@
 #define LIVE_DSP_REG_READ  3
 #define LIVE_DSP_PCM       4
 #define LIVE_DSP_FETCH     5
+#define LIVE_DSP_RENDER_YIELD 6
 
 #define LIVE_DSP_SRAM         0x80500000
 #define LIVE_DSP_SHADOW       0x80510000

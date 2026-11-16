@@ -39,6 +39,9 @@ static int bank_dma(unsigned phys, unsigned bank, int to_sp) {
 
 static void setup(void) {
     *stats = (struct rsp_swap_report){0};
+#ifdef SODIUM64_DSP_RSP_YIELD
+    *(struct rsp_yield_report *)LIVE_RSP_YIELD_REPORT = (struct rsp_yield_report){0};
+#endif
     for (unsigned i = 0; i < 2 * BANK_BYTES / 4; i++)
         staging[i] = (i < BANK_BYTES / 4) ? 0xa5365cc3u : 0;
     __asm__ volatile("sync" ::: "memory");
@@ -52,23 +55,8 @@ static void record(struct rsp_swap_totals *total, uint32_t elapsed) {
     ++total->count;
 }
 
-void live_rsp_swap(unsigned frame, int (*drain)(uint32_t)) {
-    if (!prepared) setup();
-    if (stats->failure) return;
-
-    const unsigned banks = 1 + (frame & 1);
+static void exchange(unsigned banks, uint32_t status, uint32_t pc, int (*drain)(uint32_t)) {
     const unsigned words = banks * BANK_BYTES / 4;
-    const uint32_t status = sp[SP_STATUS], pc = *sp_pc;
-
-    // Both shipping overlays have the same natural retirement address.
-    if ((status & 0x63) != 1 || (pc != 0xa90u && pc != 0xa94u) ||
-        sp_mem[(BANK_BYTES + 0xa88u) / 4] != 0x24080002u ||
-        sp_mem[(BANK_BYTES + 0xa8cu) / 4] != 0x40882000u) {
-        ++stats->unrecognized;
-        stats->bad_pc = pc;
-        stats->bad_status = status;
-        return;
-    }
     if (sp[SP_DMA_FULL] || sp[SP_DMA_BUSY]) {
         ++stats->busy;
         return;
@@ -133,3 +121,60 @@ restore_registers:
     sp[SP_MEM_ADDR] = saved_sp_addr;
     sp[SP_DRAM_ADDR] = saved_dram_addr;
 }
+
+#ifndef SODIUM64_DSP_RSP_YIELD
+void live_rsp_swap(unsigned frame, int (*drain)(uint32_t)) {
+    if (!prepared) setup();
+    if (stats->failure) return;
+    uint32_t status = sp[SP_STATUS], pc = *sp_pc;
+    if ((status & 0x63) != 1 || (pc != 0xa90u && pc != 0xa94u) ||
+        sp_mem[(BANK_BYTES + 0xa88u) / 4] != 0x24080002u ||
+        sp_mem[(BANK_BYTES + 0xa8cu) / 4] != 0x40882000u) {
+        ++stats->unrecognized;
+        stats->bad_pc = pc;
+        stats->bad_status = status;
+        return;
+    }
+    exchange(1 + (frame & 1), status, pc, drain);
+}
+#else
+void live_rsp_yield(unsigned frame, unsigned from_wait, unsigned borrow, int (*drain)(uint32_t)) {
+    uint32_t status = sp[SP_STATUS];
+    if ((status & 0x63) != 3) return;
+    if (!prepared) setup();
+
+    static uint32_t current_frame, section;
+    struct rsp_yield_report *const metrics = (struct rsp_yield_report *)LIVE_RSP_YIELD_REPORT;
+    if (current_frame != frame) {
+        current_frame = frame;
+        section = 0;
+    }
+
+    uint32_t pc = *sp_pc;
+    // The linked proof checks that both banks have exactly one BREAK, at
+    // the final instruction word. The following observed PC is recorded.
+    if (sp_mem[(BANK_BYTES + 0xffcu) / 4] != 0x0000000du) {
+        stats->bad_pc = pc;
+        stats->bad_status = status;
+        stats->failure = 8;
+        return;
+    }
+    ++section;
+    if (from_wait) ++metrics->in_frame_wait;
+    else ++metrics->in_spc;
+    ++metrics->matched;
+    if (pc) metrics->bad_pc = pc;
+    if (section > 1) ++metrics->after_first;
+
+    // Borrow once after an already-completed renderer section.
+    if (borrow && section == 2) exchange(1 + (frame & 1), status, pc, drain);
+    if (stats->failure) return;
+    uint32_t started = ticks();
+    *sp_pc = 0xe8u; // hcomp_cgram_return, checked in both linked banks.
+    sp[SP_STATUS] = 5u; // Clear HALT and BROKE, preserve renderer signals.
+    __asm__ volatile("sync" ::: "memory");
+    uint32_t elapsed = ticks() - started;
+    metrics->resume_ticks += elapsed;
+    if (elapsed > metrics->resume_max_ticks) metrics->resume_max_ticks = elapsed;
+}
+#endif

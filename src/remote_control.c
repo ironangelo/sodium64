@@ -80,6 +80,16 @@ static uint32_t count(void) {
 #define RDP_COUNT() count()
 #define RDP_FENCE() __asm__ volatile("sync":::"memory")
 #include "remote_rdp_barrier.h"
+#ifdef SODIUM64_DSP_RSP_YIELD
+void live_rsp_yield_service(unsigned from_wait) {
+#ifdef SODIUM64_DSP_RSP_YIELD_SWAP
+    unsigned borrow=1;
+#else
+    unsigned borrow=0;
+#endif
+    live_rsp_yield(remote_render_frames,from_wait,borrow,remote_rdp_drain);
+}
+#endif
 /* Preserve the existing bridge's out-of-band failure receipt. This writes only
  * the diagnostic reservation's last64 SRAM bytes, before guest execution or
  * after a fatal bridge error. No mailbox traffic enters a measured interval.
@@ -480,7 +490,15 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" bad_pc=",swap->bad_pc);field(" bad_status=",swap->bad_status);
         field(" rdp_sync_count=",swap->rdp_sync.count);field(" rdp_sync_ticks=",swap->rdp_sync.ticks);
         field(" rdp_sync_min_ticks=",swap->rdp_sync.min_ticks);field(" rdp_sync_max_ticks=",swap->rdp_sync.max_ticks);
-        field(" failure=",swap->failure);(void)finish();return;
+        field(" failure=",swap->failure);
+#ifdef SODIUM64_DSP_RSP_YIELD
+        const volatile struct rsp_yield_report *yield=(const volatile struct rsp_yield_report *)LIVE_RSP_YIELD_REPORT;
+        field(" yield_in_spc=",yield->in_spc);field(" yield_in_frame_wait=",yield->in_frame_wait);
+        field(" yield_count=",yield->matched);field(" yield_after_first=",yield->after_first);
+        field(" yield_bad_pc=",yield->bad_pc);field(" yield_resume_ticks=",yield->resume_ticks);
+        field(" yield_resume_max_ticks=",yield->resume_max_ticks);
+#endif
+        (void)finish();return;
     }
 #endif
     if(eq(verb,"pause-at")||eq(verb,"step")) {
@@ -593,7 +611,7 @@ void remote_control_frame(uint32_t framebuffer) {
     if(!owner_guards_valid()){transport_failure(9);remote_paused=1;return;}
 #endif
     remote_render_frames++;
-#ifdef SODIUM64_DSP_RSP_SWAP
+#if defined(SODIUM64_DSP_RSP_SWAP) && !defined(SODIUM64_DSP_RSP_YIELD)
     live_rsp_swap(remote_render_frames,remote_rdp_drain);
     if(((const volatile struct rsp_swap_report *)LIVE_RSP_SWAP_REPORT)->failure)remote_paused=1;
 #endif

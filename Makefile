@@ -12,6 +12,13 @@ DSP_LIVE_GUEST ?= 0
 DSP_LIVE_PREFIX ?= 0
 DSP_LIVE_CORE ?= 0
 DSP_RSP_SWAP ?= 0
+DSP_RSP_YIELD ?= 0
+DSP_RSP_YIELD_SWAP ?= 0
+ifeq ($(DSP_RSP_YIELD),1)
+ifneq ($(DSP_RSP_SWAP),1)
+$(error The section handoff uses the existing private memory exchange)
+endif
+endif
 DSP_PCM_PERIOD ?= 1
 ifneq ($(filter $(DSP_PCM_PERIOD),1 8),$(DSP_PCM_PERIOD))
 $(error Unsupported private PCM period)
@@ -54,6 +61,13 @@ ifeq ($(DSP_RSP_SWAP),1)
 OFILES += $(BUILD_DIR)/src/live_rsp_swap.o
 N64_REMOTE_CFLAGS += -DSODIUM64_DSP_RSP_SWAP=1
 N64_DSP_PROBE_CFLAGS += -DSODIUM64_DSP_RSP_SWAP=1
+ifeq ($(DSP_RSP_YIELD),1)
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_RSP_YIELD=1
+N64_DSP_PROBE_CFLAGS += -DSODIUM64_DSP_RSP_YIELD=1
+ifeq ($(DSP_RSP_YIELD_SWAP),1)
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_RSP_YIELD_SWAP=1
+endif
+endif
 endif
 endif
 endif
@@ -93,6 +107,10 @@ N64_MKSPRITE = $(N64_BINDIR)/mksprite
 
 N64_ASFLAGS = -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
 N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
+ifeq ($(DSP_RSP_YIELD),1)
+N64_ASFLAGS += -DSODIUM64_DSP_RSP_YIELD=1
+N64_RSPASFLAGS += -DSODIUM64_DSP_RSP_YIELD=1
+endif
 N64_LDFLAGS = -L$(N64_LIBDIR) -Tn64.ld --gc-sections
 ifeq ($(REMOTE),1)
 N64_ASFLAGS += -DSODIUM64_REMOTE=1
@@ -191,7 +209,7 @@ $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h M
 
 $(BUILD_DIR)/src/live_rsp_swap.o: src/live_rsp_swap.c src/live_rsp_swap.h Makefile
 	@mkdir -p $(dir $@)
-	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
+	$(N64_CC) -c -O2 -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_REMOTE_CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)

@@ -1633,5 +1633,12 @@ hcomp_cgram_pair_ready:
     nop
 
 hcomp_cgram_marker:
+#ifdef SODIUM64_DSP_RSP_YIELD
+    // Complete the old branch delay operation before releasing SP ownership.
+    // The R4300 restores PC to hcomp_cgram_return before resuming.
+    lbu k1, SPLIT_LINE
+    break
+#else
     b hcomp_cgram_return
     lbu k1, SPLIT_LINE
+#endif

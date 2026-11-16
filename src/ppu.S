@@ -18,6 +18,9 @@
 */
 
 #include "defines.h"
+#ifdef SODIUM64_DSP_RSP_YIELD
+#include "live_dsp.h"
+#endif
 #ifdef SODIUM64_REMOTE
 #include "dsp_rsp_deadlines.h"
 #endif
@@ -688,6 +691,15 @@ vram_loop:
 rsp_wait:
     // Wait until the RSP is finished rendering
     lw t0, 0xA4040010 // SP_STATUS
+#ifdef SODIUM64_DSP_RSP_YIELD
+    andi t1, t0, 3
+    bne t1, 3, rsp_wait_retirement
+    nop
+    CALL_LIVE_DSP LIVE_DSP_RENDER_YIELD
+    b rsp_wait
+    nop
+rsp_wait_retirement:
+#endif
     andi t0, t0, 0x1 // Halt
     beqz t0, rsp_wait
     xori t6, t5, 0x4

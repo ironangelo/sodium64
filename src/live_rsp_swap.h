@@ -4,6 +4,12 @@
 #include <stdint.h>
 
 #define LIVE_RSP_SWAP_REPORT 0x80555000u
+#define LIVE_RSP_YIELD_REPORT 0x80555080u
+
+struct rsp_yield_report {
+    uint32_t in_spc, in_frame_wait, matched, after_first, bad_pc;
+    uint32_t resume_ticks, resume_max_ticks;
+};
 
 struct rsp_swap_totals {
     uint32_t count, ticks, min_ticks, max_ticks;
@@ -16,5 +22,8 @@ struct rsp_swap_report {
 
 /* The caller runs at the naturally retired renderer boundary and owns 8 MiB. */
 void live_rsp_swap(unsigned frame, int (*drain)(uint32_t));
+#ifdef SODIUM64_DSP_RSP_YIELD
+void live_rsp_yield(unsigned frame, unsigned from_wait, unsigned borrow, int (*drain)(uint32_t));
+#endif
 
 #endif

@@ -8,6 +8,9 @@ extern "C" {
     extern unsigned char apu_ram[], dsp_addr;
     extern uint32_t jit_tags[], dsp_buffer[];
     extern uint16_t dsp_pointer;
+#ifdef SODIUM64_DSP_RSP_YIELD
+    void live_rsp_yield_service(unsigned from_wait);
+#endif
 }
 
 namespace {
@@ -99,6 +102,13 @@ void queue_pcm() {
 } // namespace
 
 extern "C" unsigned live_dsp_access(unsigned op, unsigned address, unsigned value, uint32_t epoch) {
+#ifdef SODIUM64_DSP_RSP_YIELD
+    if (op == LIVE_DSP_RENDER_YIELD) {
+        live_rsp_yield_service(1);
+        return 0;
+    }
+    if (op == LIVE_DSP_REG_READ || op == LIVE_DSP_PCM) live_rsp_yield_service(0);
+#endif
     if (!initialized) initialize();
     uint32_t delta = epoch - state->last_epoch;
     if (delta > max_access_gap || delta % guest_cycle) {

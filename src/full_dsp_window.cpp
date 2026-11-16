@@ -122,7 +122,21 @@ void SPC_DSP_Window::write_ram(unsigned addr, unsigned data) {
 
 int SPC_DSP_Window::read_reg(unsigned addr) {
     assert(addr < SPC_DSP::register_count);
-    flush();
+    // Only these registers can change as the DSP runs between producer
+    // writes. Reset, soft reset and state import drain this queue first.
+    unsigned voice_reg = addr & 15;
+    if (addr == SPC_DSP::r_endx || voice_reg == SPC_DSP::v_envx ||
+        voice_reg == SPC_DSP::v_outx) {
+        flush();
+        return core->read(addr);
+    }
+
+    // Return the newest producer write, including an earlier write at the
+    // same clock. A RAM write to the same numeric address is independent.
+    for (unsigned i = count; i != 0; --i) {
+        const event_t& event = events[i - 1];
+        if (event.reg && event.addr == addr) return event.data;
+    }
     return core->read(addr);
 }
 

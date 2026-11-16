@@ -111,7 +111,14 @@ static void initialize(unsigned active=255){
 }
 static void reg_write(unsigned addr,unsigned value){ref.write(addr,value);window.write_reg(addr,value);if(!window.pending_clocks())compare();}
 static void ram_write(unsigned addr,unsigned value){ram0[addr]=(unsigned char)value;window.write_ram(addr,value);if(!window.pending_clocks())compare();}
-static void reg_read(unsigned addr){check(ref.read(addr)==window.read_reg(addr),"producer DSP register read");reads++;compare();}
+static void reg_read(unsigned addr) {
+    unsigned pending = window.pending_clocks();
+    check(ref.read(addr) == window.read_reg(addr), "producer DSP register read");
+    bool live = addr == 0x7c || (addr & 15) == 8 || (addr & 15) == 9;
+    check(window.pending_clocks() == (live ? 0 : pending), "DSP read dispatch rule");
+    ++reads;
+    if (!window.pending_clocks()) compare();
+}
 static void ram_read(unsigned addr){check(ram0[addr]==window.read_ram(addr),"producer RAM read / instruction fetch");reads++;if(!window.pending_clocks())compare();}
 static void save(unsigned char** out,void* state,size_t n){memcpy(*out,state,n);*out+=n;}
 static void load(unsigned char** in,void* state,size_t n){memcpy(state,*in,n);*in+=n;}
@@ -142,6 +149,24 @@ static void all_phases_regs(){
         tick(1+(phase%7));reg_read(addr);tick(37);flush();directed++;
     }
 }
+static void stable_register_reads() {
+    initialize();
+    tick(2);
+    reg_read(0x0c);
+    reg_write(0x0c, 0x58);
+    ram_write(0x0c, 0xf2);
+    reg_read(0x0c);
+    tick(1);
+    reg_write(0x0c, 0x27);
+    reg_write(0x0c, 0xc3);
+    ram_write(0x0c, 0);
+    reg_read(0x0c);
+    check(opt.read(0x0c) != 0xc3, "stable read leaves core work pending");
+    flush();
+    check(opt.read(0x0c) == 0xc3, "stable register publishes after catch-up");
+    ++directed;
+}
+
 static void echo_admission(){
     const unsigned esa[]={0,0x80,0xff},offset[]={0,4,0x7fc,0x7800};
     for(unsigned phase=0;phase<32;phase++)for(unsigned s=0;s<3;s++)
@@ -266,6 +291,6 @@ static void directory_bus_wrap(){
 int main(){
     // First use needs no flush of an unbound controller.
     window.pending=window.count=0;
-    original_hazards();all_phases_regs();echo_admission();fifo_and_lifecycle();deferred_echo_boundaries();random_bus();directory_bus_wrap();
+    original_hazards();stable_register_reads();all_phases_regs();echo_admission();fifo_and_lifecycle();deferred_echo_boundaries();random_bus();directory_bus_wrap();
     printf("FULL_DSP_WINDOW_CONTROLLER PASS state_checks=%u producer_reads=%u clocks=%u directed=%u FIFO_overflow=%u echo_word_publications=%u directory_bus_cases=%u original_hazards=4\n",checks,reads,clocks,directed,overflow_cases,echo_writes,directory_cases);
 }

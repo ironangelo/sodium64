@@ -1,3 +1,35 @@
+# 2026-11-15 — Localize the compositor stall and block the word repair on SMW
+
+The matched diagnostic DKC1 early-intro windows preserve two aligned
+RGB/PCM/DSP captures per variant against their uninstrumented builds.
+The instrumented legacy and faithful variants complete 59.278 and
+43.028 guest frames/s. Count accounting shows +10.623 ms per guest
+frame in CPU wait for RSP halt, -4.317 ms in framebuffer wait, and
++0.066 ms outside those waits and USB. The net deficit is 6.371 ms.
+This bounds the graphics completion path, which can include dependent
+RDP and DMA work. It does not identify a specific overlay. PR32
+remains blocked for default promotion.
+[Matched native wait evidence](evidence/integration-pr32-bounded-wait-native-2026-11-15.json).
+
+PR46 `77bd5e55` passes exact-head CI, including all 119 dynamic cycle
+cases and both halt groups. The combined native build matches all
+six aligned RGB/PCM/DSP captures across DKC1, ALttP and SMW. The
+same-menu SMW comparison, however, yields 1,165 vs 1,160 guest
+frames over the same 1,198 VI ticks. A compact emitted-address
+control keeps the exact captures and also falls short. Keep the
+word fix in draft. The throughput problem remains open even with a
+single generated address operation. One missed status deadline
+recovered through the existing menu command without USB removal.
+[Combined native evidence](evidence/integration-spc-combined-native-2026-11-15.json).
+
+PR45's post-merge workflows all pass. The published Latest archive
+matches the normal master CI artifact byte for byte. The play
+installation on the SD is still the last verified `c90ef5c9`;
+the newer release has only run in the private test configuration.
+[SPC700 wrap evidence](evidence/integration-spc-address-wrap-2026-11-13.json).
+
+---
+
 # 2026-11-15 — Integrate SPC700 address wrapping and verify private software return
 
 PR45 `85d1e3c5` is integrated as `fe61d371`. Both real-N64 DKC1

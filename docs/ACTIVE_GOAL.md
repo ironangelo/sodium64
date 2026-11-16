@@ -132,9 +132,14 @@ PR46 `77bd5e55` independently fixes seven SPC700 direct-page word
 operations. The linked original master fails 556 of 940 cases. All
 four configurations pass 940 on the original fix. The standalone
 fix also passes matched DKC1 RGB, PCM, DSP and cadence. Its refreshed
-parent is `fe61d371`. The refreshed binary includes both SPC700
-corrections, which pass combined linked checks. Refreshed native
-and exact-head CI checks gate promotion.
+parent is `fe61d371`. CI including all 119 dynamic cycle cases
+and both halt groups passes. The combined N64 trial preserves
+all six aligned RGB/PCM/DSP captures. Same-menu SMW repeat falls
+from 1,165 to 1,160 frames in 1,198 VI ticks. The compact emitted
+step control also trails master. PR46 is blocked on that cadence
+cost. Keep the data-bus fidelity proof and investigate the separate
+bus-helper or code-layout cost before promoting it.
+[Combined native three-title and SMW evidence](evidence/integration-spc-combined-native-2026-11-15.json).
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
 
 PR39 `cddf5be3` keeps the APU clock correction against `c90ef5c9`.
@@ -195,10 +200,14 @@ DKC1, ALttP story and Mode 7 still block promotion.
 
 The full objective remains incomplete. Lab `95296f9c` qualifies a
 matched Count comparison of CPU waits for RSP halt and framebuffer
-availability. The legacy DKC1 control passed both fidelity captures
-and R17 readback. Windows lost COM3 before the faithful launch
-acknowledgement. R17 was restored and verified after the rear USB
-port brought back enumeration. Preserve the completed legacy control.
+availability. The legacy DKC1 control and the completed faithful
+measurement both preserve their uninstrumented aligned RGB/PCM/DSP
+captures. From guest frame 3001 the comparable window shifts 10.623
+ms per completed frame into CPU RSP-halt wait and saves 4.317 ms
+of framebuffer wait. Time outside the two wait sites and USB grows
+0.066 ms. The blocker is graphics completion in this scene. The
+counter does not identify which RSP/RDP/DMA subpath causes it.
+[Matched native wait evidence](evidence/integration-pr32-bounded-wait-native-2026-11-15.json).
 Complete resident-DSP integral native cost follows the qualified faithful
 combined baseline. Wider compatibility, full fidelity, DAC and chip gates
 remain open.

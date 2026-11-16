@@ -1,0 +1,136 @@
+{
+  "variants": {
+    "reference": {
+      "fidelity_vs_uninstrumented": [
+        {
+          "guest_frame": 2984,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "old_guest_rate": 59.56182113122196,
+      "instrumented_window": {
+        "head": "95296f9c41df64dbf35ec43fade80fa8a1a9c57d",
+        "guest_endpoints": [
+          3001,
+          3714
+        ],
+        "duration_s": 12.028035690666666,
+        "presentation_is_software_observation": true,
+        "guest_delta": 713,
+        "guest_per_second": 59.278174619423766,
+        "render_delta": 713,
+        "render_per_second": 59.278174619423766,
+        "vi_delta": 719,
+        "vi_per_second": 59.777009188451174,
+        "present_delta": 712,
+        "present_per_second": 59.19503552458587
+      },
+      "ticks": {
+        "elapsed": 563814173,
+        "rsp_wait_count_mod32": 73717,
+        "framebuffer_wait_count_mod32": 144288528,
+        "usb_poll": 5162446
+      },
+      "ms_per_completed_guest_frame": {
+        "elapsed": 16.869615274427304,
+        "rsp_wait": 0.002205651238896681,
+        "framebuffer_wait": 4.317188308555401,
+        "usb_poll": 0.15446308742402995,
+        "outside_measured_waits_and_poll": 12.395758227208978
+      },
+      "recovery": {
+        "R17_readback_bytes": 131072,
+        "play_installation_touched": null,
+        "menu_recovery": 0
+      }
+    },
+    "faithful": {
+      "fidelity_vs_uninstrumented": [
+        {
+          "guest_frame": 2984,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        },
+        {
+          "guest_frame": 3000,
+          "RGB_pixels": 67200,
+          "RGB_differences": 0,
+          "PCM_bytes": 8192,
+          "PCM_byte_differences": 0,
+          "ring_head_bytes_matches": true,
+          "enabled_matches": true,
+          "dspregs_matches": true
+        }
+      ],
+      "old_guest_rate": 42.816528967201926,
+      "instrumented_window": {
+        "head": "95296f9c41df64dbf35ec43fade80fa8a1a9c57d",
+        "guest_endpoints": [
+          3001,
+          3518
+        ],
+        "duration_s": 12.015345472,
+        "presentation_is_software_observation": true,
+        "guest_delta": 517,
+        "guest_per_second": 43.02830919050914,
+        "render_delta": 517,
+        "render_per_second": 43.02830919050914,
+        "vi_delta": 719,
+        "vi_per_second": 59.84014372916068,
+        "present_delta": 517,
+        "present_per_second": 43.02830919050914
+      },
+      "ticks": {
+        "elapsed": 563219319,
+        "rsp_wait_count_mod32": 257488459,
+        "framebuffer_wait_count_mod32": 13228,
+        "usb_poll": 3708559
+      },
+      "ms_per_completed_guest_frame": {
+        "elapsed": 23.240513485493228,
+        "rsp_wait": 10.624926741457124,
+        "framebuffer_wait": 0.0005458362346872985,
+        "usb_poll": 0.15302886911669888,
+        "outside_measured_waits_and_poll": 12.462012038684719
+      },
+      "recovery": {
+        "R17_readback_bytes": null,
+        "play_installation_touched": false,
+        "menu_recovery": 0
+      }
+    }
+  },
+  "faithful_minus_legacy_ms_per_guest_frame": {
+    "elapsed": 6.370898211065924,
+    "rsp_wait": 10.622721090218226,
+    "framebuffer_wait": -4.316642472320713,
+    "usb_poll": -0.0014342183073310644,
+    "outside_measured_waits_and_poll": 0.06625381147574139
+  },
+  "scope": "Same start at 3001, host idle between reads. Different closing guest frames. CPU stalls may contain concurrent RSP/RDP work and interrupts. The residual is arithmetic, not exclusive CPU time.",
+  "date_local": "2026-11-15",
+  "classification": "BLOCKED for compositor default promotion",
+  "conclusion": "Most of the measured deficit is in explicit CPU wait for graphics-task completion. Graphics completion may include dependent RDP, DMA, semaphore and bandwidth effects. The counter cannot separate those costs or attribute them to a particular compositor overlay.",
+  "next_gate": "Find a fidelity-preserving reduction of the graphics completion path in the same early DKC1 scene before default promotion. Keep the separately measured R45 first-stage benefit scoped."
+}

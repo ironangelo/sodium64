@@ -158,6 +158,13 @@
       43777028816,
       43777028876,
       43777028675
+    ],
+    "post_merge_all_passed": true,
+    "normal_release_artifact": 14187085762,
+    "latest_production_zip_verified_against_artifact": true,
+    "latest_entries": [
+      "sodium64.z64",
+      "rom-converter.py"
     ]
   }
 }

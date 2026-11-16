@@ -4,7 +4,7 @@
   "base": "c90ef5c983edb6e775d34676443f1e29ec48a9e2",
   "head": "77bd5e55695dafa5ceea0be297bf9ce196c2899f",
   "historical_source": "6b82434e78fcd7c052c9eba3188c867a2d91fa9a",
-  "classification": "CANDIDATE standalone SPC700 direct-page word correctness",
+  "classification": "BLOCKED on real-N64 SMW cadence after refresh on integrated PR45",
   "runtime_scope": [
     "P-selected page wraps the second byte for all seven direct-page word opcodes",
     "MOVW store performs the read before the low and high writes",
@@ -59,7 +59,77 @@
     "USB": 43520972435,
     "APU_cycle_span": 43521008843
   },
-  "native": "PENDING. Run a matched real-N64 boot, aligned RGB and PCM and short quiet cadence check.",
+  "native": {
+    "settings": {
+      "apu_clock": "21",
+      "skipped_set": "0",
+      "audio_set": "4",
+      "precision_set": "8"
+    },
+    "captures": [
+      {
+        "guest_frame": 4330,
+        "RGB_pixels": 67200,
+        "RGB_differences": 0,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      },
+      {
+        "guest_frame": 4346,
+        "RGB_pixels": 67200,
+        "RGB_differences": 0,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      }
+    ],
+    "quiet_intervals": [
+      {
+        "head": "85d1e3c532a3ad615ac75f1370e6653d6b1b0ba7",
+        "guest_endpoints": [
+          4347,
+          5544
+        ],
+        "duration_s": 20.0071376,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1197,
+        "guest_per_second": 59.82864835197615,
+        "render_delta": 1197,
+        "render_per_second": 59.82864835197615,
+        "vi_delta": 1197,
+        "vi_per_second": 59.82864835197615,
+        "present_delta": 1197,
+        "present_per_second": 59.82864835197615
+      },
+      {
+        "head": "77bd5e55695dafa5ceea0be297bf9ce196c2899f",
+        "guest_endpoints": [
+          4347,
+          5545
+        ],
+        "duration_s": 20.023880853333335,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1198,
+        "guest_per_second": 59.828562144114606,
+        "render_delta": 1198,
+        "render_per_second": 59.828562144114606,
+        "vi_delta": 1198,
+        "vi_per_second": 59.828562144114606,
+        "present_delta": 1198,
+        "present_per_second": 59.828562144114606
+      }
+    ],
+    "quiet_starts_match": true,
+    "quiet_endpoints_match": false,
+    "reference_equivalent_master": "fe61d371beef8085f195fc38b890b8e16a842da1",
+    "reference_exact_ROM_identity_verified": true,
+    "software_return": "PASS on both; separate play installation preserved"
+  },
   "scope_limit": "Directed word-operation behavior and observed data-bus order. Other runtime bus phasing and opcode guards are outside this candidate.",
   "runtime_head": "126521d7de66b31a76e4bd0bc8354a769c42b7a5",
   "CI_initial_dynamic_case": {
@@ -169,5 +239,28 @@
     "owners": 43777113053,
     "USB": 43777113025,
     "APU_cycle_span": 43777109162
+  },
+  "cycle_span_exact_head": {
+    "summary": "PASS",
+    "directed_cases": 119,
+    "halt_scheduler_groups": 2,
+    "artifact": 14186664777,
+    "movw_static_debit": -126,
+    "movw_total_debit": -189,
+    "guest_cycles": 9
+  },
+  "current_native_three_title": {
+    "report": "integration-spc-combined-native-2026-11-15.json",
+    "isolated_smw_repeat_interrupted": "A status receipt reached the transport log after the host deadline. USB remained enumerated, software recovery passed, and a fresh matched-start repeat completed with exact digital fidelity."
+  },
+  "CI_all_refreshed_passed": true,
+  "cost_control": {
+    "head_local": "2f6ac0a0c2d5d4c8d7b242ec1315fcf65a6bcb1e",
+    "ROM_SHA256": "55362635aadb921aa15e34d7e7c292fd7d68e92ee6f1318a21158241b788adef",
+    "method": "At compile time derive the low-byte XOR mask from the operand. Emit one JIT address instruction instead of up to five, with the same data-bus events and guest cycles.",
+    "linked_normal_and_REMOTE_word_cases": 940,
+    "linked_REMOTE_wrap_cases": 770,
+    "normal_release_isolation": "PASS",
+    "native": "SMW cost gate still fails; exact RGB, PCM and DSP captures. Keep this control out of the PR."
   }
 }

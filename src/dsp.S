@@ -117,7 +117,11 @@ dsp_sample:
     // Check if audio is enabled and schedule the next sample
     lbu t0, audio_set
     beqz t0, apu_execute
+#ifdef SODIUM64_DSP_LIVE_CORE
+    addi a3, a3, -(DSP_SAMPLE * SODIUM64_DSP_PCM_PERIOD)
+#else
     addi a3, a3, -DSP_SAMPLE
+#endif
 
 #ifdef SODIUM64_REMOTE
     // Timestamp before proving that the same renderer job is still busy.

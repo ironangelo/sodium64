@@ -12,7 +12,12 @@ extern "C" {
 
 namespace {
 
-enum { guest_cycle = 21, audio_words = 32 };
+enum {
+    guest_cycle = 21,
+    audio_words = 32,
+    // Allow one full PCM period plus the existing bounded SPC block runout.
+    max_access_gap = (SODIUM64_DSP_PCM_PERIOD + 1) * 32 * guest_cycle
+};
 struct live_state {
     SPC_DSP core;
     SPC_DSP_Window window;
@@ -96,7 +101,7 @@ void queue_pcm() {
 extern "C" unsigned live_dsp_access(unsigned op, unsigned address, unsigned value, uint32_t epoch) {
     if (!initialized) initialize();
     uint32_t delta = epoch - state->last_epoch;
-    if (delta > 64u * guest_cycle || delta % guest_cycle) {
+    if (delta > max_access_gap || delta % guest_cycle) {
         ++stats->clock_errors;
         // Keep a bad clock from turning a single access into an unbounded run.
         return 0;

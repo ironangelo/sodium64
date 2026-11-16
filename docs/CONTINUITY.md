@@ -1,3 +1,36 @@
+# 2026-11-15 — Measure the native audio path and refresh PR39 on master
+
+On integrated master `fe61d371`, the sampled legacy DSP path costs an
+estimated 6.718 ms per guest frame in DKC1 late intro, 3.601 ms in ALttP
+boot and 4.601 ms in SMW boot/demo. These samples cover mixing, the PCM
+ring and queued AI submission where applicable and can include IRQs.
+The SP is active at 68.1, 84.3 and 46.4 percent of sampled entries.
+All six aligned RGB/PCM/DSP captures match and all three runs return
+to the menu in software with the play file preserved. The largest
+observed cadence change from the probe is -0.32 percent in SMW.
+The normal local ROM and ELF match the uninstrumented master build
+byte for byte.
+
+The full R61 scalar controller replays the four original PR30 fixtures
+with exact guest-visible reads, final state, RAM and PCM. The nominal
+fixtures require 529–641 nonempty logical flushes per 512 stereo samples.
+The FIFO stress requires 1,618. These counts describe the controller's
+ordering contract. The remaining native discriminator is the cost of a
+whole resident DSP with the live SPC producer, exact reads and echo
+publishing, transport and arbitration while rendering. Start from the
+complete controller and compare end to end against this measured path.
+[Native budget and complete-controller replay](evidence/integration-dsp-budget-2026-11-15.json).
+
+Standalone PR39 is refreshed to `43602e2e` on `fe61d371`. The normal
+and REMOTE linked menu/cache cases and 770 address-wrap cases per build
+pass. The patch still touches the same three files. Exact-head CI and
+the native controller path remain the admission gates. Keep PR39 in
+draft until the 21 → 42 → 21 clock changes are exercised through that
+path. The earlier native R45 and PR46 cadence blockers still stand.
+[PR39](https://github.com/ironangelo/sodium64/pull/39).
+
+---
+
 # 2026-11-15 — Block R45 on a repeated fixed-work ALttP story regression
 
 The refreshed R44/R45 ALttP story pair completes the same 1,000

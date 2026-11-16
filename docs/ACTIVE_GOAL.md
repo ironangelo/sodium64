@@ -145,12 +145,12 @@ bus-helper or code-layout cost before promoting it.
 [Combined native three-title and SMW evidence](evidence/integration-spc-combined-native-2026-11-15.json).
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
 
-PR39 `cddf5be3` keeps the APU clock correction against `c90ef5c9`.
-The current-master negative control reproduces stale lookup. Normal, HW_PROFILE
-and REMOTE pass the refreshed linked menu transitions and cache checks.
-All four exact-head PR workflows and the directed APU cycle workflow pass.
-The physical menu transitions 21 to 42 and back to 21 remain pending
-through the controller path.
+PR39 `43602e2e` refreshes the three-file APU clock fix against
+`fe61d371`. The earlier master negative control reproduces stale
+lookup. Both refreshed normal and REMOTE variants pass the linked
+menu/cache cases and all 770 address-wrap cases. The exact-head CI
+and physical menu transitions 21 to 42 and back to 21 through the
+controller path gate promotion.
 [Refreshed APU clock proof and gate](evidence/integration-apu-clock-current-2026-11-12.json).
 [Menu input evidence](evidence/integration-apu-menu-input-2026-11-11.json).
 [Clock transition evidence](evidence/integration-apu-clock-invalidation-2026-11-09.json).
@@ -218,9 +218,14 @@ of framebuffer wait. Time outside the two wait sites and USB grows
 0.066 ms. The blocker is graphics completion in this scene. The
 counter does not identify which RSP/RDP/DMA subpath causes it.
 [Matched native wait evidence](evidence/integration-pr32-bounded-wait-native-2026-11-15.json).
-Complete resident-DSP integral native cost follows the qualified faithful
-combined baseline. Wider compatibility, full fidelity, DAC and chip gates
-remain open.
+The measured integrated master is the comparator for complete resident
+DSP cost. The legacy DSP path now has a sampled native budget for three
+native scenes. The complete scalar R61 controller reproduces all four
+PR30 fixture results and quantifies its logical flush demand. The next
+gate is the end-to-end resident cost with the live timestamped SPC
+producer, exact RAM/echo publication and shared-SP graphics contention.
+[Native budget and complete-controller replay](evidence/integration-dsp-budget-2026-11-15.json).
+Wider compatibility, full fidelity, DAC and chip gates remain open.
 
 The private menu, normal master and separate reference bench are
 installed and byte-verified after the rear USB port restored

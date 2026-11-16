@@ -8,6 +8,8 @@ PROFILE ?= 0
 HW_PROFILE ?= 0
 HW_PROFILE_WARMUP ?= 2
 REMOTE ?= 0
+DSP_LIVE_GUEST ?= 0
+DSP_LIVE_PREFIX ?= 0
 ifeq ($(REMOTE),1)
 ifneq ($(PROFILE)$(HW_PROFILE),00)
 $(error REMOTE is a separate retired-frame bench, not a PROFILE/HW_PROFILE build)
@@ -70,6 +72,13 @@ N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
 N64_LDFLAGS = -L$(N64_LIBDIR) -Tn64.ld --gc-sections
 ifeq ($(REMOTE),1)
 N64_ASFLAGS += -DSODIUM64_REMOTE=1
+ifeq ($(DSP_LIVE_GUEST),1)
+N64_ASFLAGS += -DSODIUM64_DSP_LIVE_GUEST=1
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_LIVE_GUEST=1
+ifeq ($(DSP_LIVE_PREFIX),1)
+N64_ASFLAGS += -DSODIUM64_DSP_LIVE_PREFIX=1
+endif
+endif
 N64_LDFLAGS += -Tsrc/usb_bench_memory.ld
 endif
 N64_TOOLFLAGS = --title $(N64_ROM_TITLE)
@@ -149,7 +158,7 @@ $(BUILD_DIR)/%.o: %.S
 
 $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h Makefile
 	@mkdir -p $(dir $@)
-	$(N64_CC) -c -Os -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -o $@ $<
+	$(N64_CC) -c -Os -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_REMOTE_CFLAGS) -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

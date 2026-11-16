@@ -202,7 +202,11 @@ write_iomap:
 .align 5
 memory_init:
     // Set potential ROM offsets
+#ifdef SODIUM64_DSP_LIVE_GUEST
+    li t8, 0x100E0000 // Original guest embedded in the private bench ROM.
+#else
     li t8, 0x10104000
+#endif
     li t9, 0x10200000
 
 check_header:

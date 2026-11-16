@@ -19,6 +19,9 @@
 
 #include <limits.h>
 #include "defines.h"
+#ifdef SODIUM64_DSP_LIVE_GUEST
+#include "dsp_rsp_deadlines.h"
+#endif
 
 .globl apu_map
 .globl apu_ram
@@ -103,6 +106,16 @@ apu_execute:
     lhu s0, apu_count
     ble s3, a3, dsp_sample // Check if the DSP should run
     sll t0, s0, 2
+#ifdef SODIUM64_DSP_LIVE_GUEST
+    // Count entries pending a fetch from the final byte of the echo lease.
+    // The legacy runtime fetches this during compilation, not at every entry.
+    bne s0, 0x47ff, 1f
+    lui t1, 0x8044
+    lw t2, (DSP_GUEST_ECHO_ENTRY & 0xffff)(t1)
+    addiu t2, t2, 1
+    sw t2, (DSP_GUEST_ECHO_ENTRY & 0xffff)(t1)
+1:
+#endif
 
     // WAIT/STOP remain latched until reset. Service their read+idle pair at
     // scheduler boundaries instead of decoding another opcode.
@@ -143,6 +156,15 @@ apu_halted:
 
 .align 5
 apu_read8: // a0: address - v0: value
+#ifdef SODIUM64_DSP_LIVE_GUEST
+    andi t0, a0, 0xfffd // This fixture reads $4000 and $4002.
+    bne t0, 0x4000, 1f
+    lui t1, 0x8044
+    lw t2, (DSP_GUEST_ECHO_READ & 0xffff)(t1)
+    addiu t2, t2, 1
+    sw t2, (DSP_GUEST_ECHO_READ & 0xffff)(t1)
+1:
+#endif
     // Read a byte from APU memory
     srl t0, a0, 6
     lbu t1, apu_map(t0)

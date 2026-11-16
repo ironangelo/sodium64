@@ -260,6 +260,14 @@ skip_section:
 next_line:
     // Offset all cycle counts for the next event
     li a0, 341 * 4
+#ifdef SODIUM64_DSP_LIVE_GUEST
+    // Unroll the scheduler's scanline rebase in master-clock units.
+    // This supplies an epoch coordinate. Intra-block debit order is separate.
+    lui t1, 0x8044
+    lw t0, (DSP_GUEST_EPOCH_BIAS & 0xffff)(t1)
+    addu t0, t0, a0
+    sw t0, (DSP_GUEST_EPOCH_BIAS & 0xffff)(t1)
+#endif
     add s5, s5, a0 // CPU
     add s3, s3, a0 // APU
     jal offset_timers

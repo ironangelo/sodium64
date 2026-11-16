@@ -362,6 +362,13 @@ static void status(const char *id) {
         field(" dsp_read_wait_peak=",*(volatile uint32_t*)DSP_READ_WAIT_PEAK);
         field(" dsp_read_wait_250us=",*(volatile uint32_t*)DSP_READ_WAIT_250US);
         field(" dsp_read_wait_1ms=",*(volatile uint32_t*)DSP_READ_WAIT_1MS);
+#ifdef SODIUM64_DSP_LIVE_GUEST
+        field(" dsp_pair_count=",*(volatile uint32_t*)DSP_GUEST_PAIR_COUNT);
+        field(" dsp_pair_exact=",*(volatile uint32_t*)DSP_GUEST_PAIR_EXACT);
+        field(" dsp_pair_short=",*(volatile uint32_t*)DSP_GUEST_PAIR_SHORT);
+        field(" dsp_echo_reads=",*(volatile uint32_t*)DSP_GUEST_ECHO_READ);
+        field(" dsp_echo_entries=",*(volatile uint32_t*)DSP_GUEST_ECHO_ENTRY);
+#endif
     }
 #endif
     append(" fps_claim=none");(void)finish();

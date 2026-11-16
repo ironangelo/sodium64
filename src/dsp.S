@@ -756,12 +756,49 @@ read_dspdata: // v0: value
     andi t1, t0, 0x0F
     addiu t1, t1, -8
     sltiu t1, t1, 2
+#ifdef SODIUM64_DSP_LIVE_GUEST
+    beqz t1, dsp_reg_read_unobserved // Observe only mandatory read barriers.
+#else
     beqz t1, dsp_reg_read_overlap
+#endif
     nop
 dsp_reg_read_volatile:
     lw t1, (DSP_VOLATILE_READS & 0xffff)(t2)
     addiu t1, t1, 1
     sw t1, (DSP_VOLATILE_READS & 0xffff)(t2)
+#ifdef SODIUM64_DSP_LIVE_GUEST
+    bne t0, 8, dsp_reg_read_overlap
+    lw t1, (DSP_GUEST_EPOCH_BIAS & 0xffff)(t2)
+    subu t1, t1, s3 // apu_read8 already debited this data bus cycle.
+    lw v0, (DSP_GUEST_PAIR_OPEN & 0xffff)(t2)
+    beqz v0, dsp_reg_read_pair_open
+    lw v0, (DSP_GUEST_PAIR_TIME & 0xffff)(t2)
+    subu t1, t1, v0
+    sw zero, (DSP_GUEST_PAIR_OPEN & 0xffff)(t2)
+    lw v0, (DSP_GUEST_PAIR_COUNT & 0xffff)(t2)
+    addiu v0, v0, 1
+    sw v0, (DSP_GUEST_PAIR_COUNT & 0xffff)(t2)
+    lbu v0, apu_clock
+    beq t1, v0, dsp_reg_read_pair_short
+    nop
+    addu t1, t1, v0
+    sll v0, v0, 2
+    bne t1, v0, dsp_reg_read_overlap
+    nop
+    lw t1, (DSP_GUEST_PAIR_EXACT & 0xffff)(t2)
+    addiu t1, t1, 1
+    b dsp_reg_read_overlap
+    sw t1, (DSP_GUEST_PAIR_EXACT & 0xffff)(t2)
+dsp_reg_read_pair_short:
+    lw t1, (DSP_GUEST_PAIR_SHORT & 0xffff)(t2)
+    addiu t1, t1, 1
+    b dsp_reg_read_overlap
+    sw t1, (DSP_GUEST_PAIR_SHORT & 0xffff)(t2)
+dsp_reg_read_pair_open:
+    sw t1, (DSP_GUEST_PAIR_TIME & 0xffff)(t2)
+    li t1, 1
+    sw t1, (DSP_GUEST_PAIR_OPEN & 0xffff)(t2)
+#endif
 dsp_reg_read_overlap:
     lw t1, (DSP_READ_STATE & 0xffff)(t2)
     bnez t1, dsp_reg_read_unobserved

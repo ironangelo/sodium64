@@ -59,12 +59,7 @@
 .endm
 
 .macro EMIT_DP_NEXT
-    // v0 still holds the direct operand at compile time. Toggle only the
-    // bits that change when its low byte advances, preserving the P bit.
-    addiu t1, v0, 1
-    andi t1, t1, 0xFF
-    xor t1, t1, v0
+    jal emit_dp_next
     lui t0, XORI(A0, A0, 0) >> 16
-    jal emit_op
-    or t0, t0, t1
+    nop
 .endm

@@ -831,6 +831,18 @@ apu_decw: // DECW op
     b apu_modify_word
     li t6, -1
 
+// Compile one wrap-aware address step. V0 still holds the direct operand.
+// The changed low-byte bits form the XOR immediate, leaving P untouched.
+.globl emit_dp_next
+emit_dp_next:
+    addiu t1, v0, 1
+    andi t1, t1, 0xFF
+    xor t1, t1, v0
+    j emit_op
+    or t0, t0, t1
+
+// Retain the original aligned emitter slots to preserve unrelated hot code.
+.org apu_decw + 0xE0
 .align 5
 apu_incw: // INCW op
     li t6, 1
@@ -867,6 +879,7 @@ apu_modify_word:
     j queue_nz
     li t1, T0
 
+.org apu_incw + 0xE0
 .align 5
 apu_div_runtime:
     // Runtime helper for the S-SMP's non-standard DIV YA,X semantics.

@@ -1,0 +1,211 @@
+{
+  "date_local": "2026-11-16",
+  "PR": 46,
+  "disposition": "BLOCKED on measured realistic native cadence",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "candidate_runtime": "fbdc9d899361e707709637c6aa8bf394c1b3f0a7",
+  "PR_head": "1cbf8e8e4129ebce6e6f773a7cc350b4187e6634",
+  "test_only_head_rebuild_identical": true,
+  "unmodified_bench_rom_sha256": "87c6db550dbb683ada32033dafb6dd3a937bec3ef2427a2be66a90fea64bbe80",
+  "binding": {
+    "exact_unchanged_linked_symbol_address_pairs": 1291,
+    "new_linked_symbols": [
+      "apu_modify_word",
+      "emit_dp_next"
+    ],
+    "same_allocated_addresses": true,
+    "loaded_byte_changes": {
+      "SPC_word_emitters": 394,
+      "MOVW_store_dispatch": 1
+    }
+  },
+  "emitted_address_step": {
+    "passed": true,
+    "compiled_operand_cases": 256,
+    "P_and_offset_cases": 512,
+    "MIPS_instructions_emitted_per_address_step": 1
+  },
+  "semantic_checks": {
+    "word_cases": 996,
+    "pass_each_normal_and_REMOTE": 996,
+    "current_master_failures": 580,
+    "rejected_emitted_faults_per_build": 2,
+    "new_cases": "FE/FF timer output pair. MOVW store reads only the low timer, while the other word operations read both timer outputs.",
+    "address_wrap_each_normal_and_REMOTE": 770,
+    "PR39_menu_and_lookup": "PASS",
+    "REMOTE_bridge_owner_cases": 50,
+    "local_normal_release_isolation": "PASS"
+  },
+  "quiet_smw": {
+    "settings": {
+      "apu_clock": "21",
+      "skipped_set": "0",
+      "audio_set": "4",
+      "precision_set": "8"
+    },
+    "captures": [
+      {
+        "guest_frame": 3000,
+        "RGB_pixels": 67200,
+        "RGB_differences": 0,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      },
+      {
+        "guest_frame": 3016,
+        "RGB_pixels": 67200,
+        "RGB_differences": 0,
+        "PCM_bytes": 8192,
+        "PCM_byte_differences": 0,
+        "ring_head_bytes_matches": true,
+        "enabled_matches": true,
+        "dspregs_matches": true
+      }
+    ],
+    "quiet_intervals": [
+      {
+        "head": "43602e2ee34ae5b952af7413a179e05c76a3f439",
+        "guest_endpoints": [
+          3017,
+          4182
+        ],
+        "duration_s": 20.025188586666665,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1165,
+        "guest_per_second": 58.176730519066865,
+        "render_delta": 1165,
+        "render_per_second": 58.176730519066865,
+        "vi_delta": 1198,
+        "vi_per_second": 59.82465507454258,
+        "present_delta": 1165,
+        "present_per_second": 58.176730519066865
+      },
+      {
+        "head": "fbdc9d899361e707709637c6aa8bf394c1b3f0a7",
+        "guest_endpoints": [
+          3017,
+          4180
+        ],
+        "duration_s": 20.015188181333333,
+        "presentation_is_software_observation": true,
+        "guest_delta": 1163,
+        "guest_per_second": 58.1058738725546,
+        "render_delta": 1163,
+        "render_per_second": 58.1058738725546,
+        "vi_delta": 1197,
+        "vi_per_second": 59.80458385679093,
+        "present_delta": 1162,
+        "present_per_second": 58.0559118141947
+      }
+    ],
+    "quiet_starts_match": true,
+    "quiet_endpoints_match": false
+  },
+  "fixed_SMW": {
+    "begin_frame": 3016,
+    "end_frame": 4216,
+    "settings": {
+      "apu_clock": "21",
+      "skipped_set": "0",
+      "audio_set": "4",
+      "precision_set": "8",
+      "transport_error": "0",
+      "menu_error": "0",
+      "input_buttons": "0",
+      "input_remaining": "0"
+    },
+    "timing_adapter_is_same_source_and_nonword_loaded_image_is_identical": true,
+    "timed_artifacts": {
+      "master": {
+        "head": "17b634f46d22a6cbf977585a77a2d29cac54a300",
+        "ROM_sha256": "c475caf781c95857f89ebfc81d168203258dafaf1e31eaff0f49cb55dc757f19"
+      },
+      "word": {
+        "head": "a1f5876f1d3fe9a2774c62b08b5ae16940b214c5",
+        "ROM_sha256": "c8ad1f562fe43e9eb93fface51dc04e7f40dfc81ab3e045c505c6d993944252a"
+      }
+    },
+    "pairs": [
+      {
+        "order": [
+          "master",
+          "word"
+        ],
+        "master": {
+          "ticks": 964342735,
+          "count_hz": 46875000,
+          "sec": 20.572645013333332,
+          "guest_frames": 1200,
+          "guest_per_second": 58.329884136058745
+        },
+        "word": {
+          "ticks": 964696318,
+          "count_hz": 46875000,
+          "sec": 20.580188117333332,
+          "guest_frames": 1200,
+          "guest_per_second": 58.30850491542977
+        },
+        "captures": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": 7.543103999999801,
+        "software_returns_verified": true,
+        "play_slot_touched": false,
+        "relative_added_time_percent": 0.03666569852884827
+      },
+      {
+        "order": [
+          "word",
+          "master"
+        ],
+        "master": {
+          "ticks": 964281759,
+          "count_hz": 46875000,
+          "sec": 20.571344192,
+          "guest_frames": 1200,
+          "guest_per_second": 58.333572604685145
+        },
+        "word": {
+          "ticks": 964611334,
+          "count_hz": 46875000,
+          "sec": 20.578375125333334,
+          "guest_frames": 1200,
+          "guest_per_second": 58.313641999980895
+        },
+        "captures": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": 7.030933333332712,
+        "software_returns_verified": true,
+        "play_slot_touched": false,
+        "relative_added_time_percent": 0.03417828833989223
+      }
+    ]
+  },
+  "cause_limit": "Keeping all unrelated linked addresses and allocated bytes fixed does not remove the residual slowdown. The full-frame difference does not identify the specific changed bus or emitted JIT path."
+}

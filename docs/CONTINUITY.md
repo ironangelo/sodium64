@@ -1,3 +1,30 @@
+# 2026-11-16 — Refresh the direct-page word PR and isolate its remaining cost
+
+PR46 advances to draft head `1cbf8e8e` on master `7a6e3d75`. The
+layout-preserving runtime retains 1,291 original linked symbol/address
+pairs. Only 394 loaded emitter bytes and one byte of the MOVW store
+dispatch pointer change. A freshly built ROM from the test-only
+final head matches the measured `fbdc9d89` image byte for byte.
+Normal and REMOTE pass 996 word cases, including adjacent timer
+output reads and MOVW's unchanged second counter. The current
+master fails 580 directed cases. The candidate also passes all
+770 address-wrap cases and the linked PR39 clock-change controls.
+
+SMW's first quiet window preserves both aligned captures. It
+completes 1,163 guest frames over 1,197 VI ticks against
+1,165 over 1,198. The decisive retest completes the same 1,200
+guest frames between 3016 and 4216. Reversing launch order reproduces
+7.543 ms and 7.031 ms of added time over that interval, or about
+0.035 percent. All four paired RGB/PCM/DSP observations match.
+All boots return by software with the play installation preserved.
+The remaining isolated cost is reproducible with the linked layout
+held fixed. PR46 remains blocked on native cadence. Count the changed
+word operations in the same guest interval and time their bus paths
+before selecting a further optimization.
+[Native fixed-work and linked evidence](evidence/integration-spc-word-layout-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Integrate the SPC700 clock-change repair and measure master
 
 PR39 `43602e2e` is integrated in `7a6e3d75`. In a paired physical N64
@@ -19,6 +46,8 @@ over 1,198 VI ticks on both builds. The merged tree and freshly built
 bench ROM match the qualified candidate. Latest points to `7a6e3d75`.
 Both published files match the exact production CI artifact byte for
 byte. The published ROM and converter pass release isolation.
+All five post-merge workflows subsequently passed, including the
+executed Ares workload matrix and dynamic SPC700 cycle/span proof.
 [Physical menu, integrated baseline and release evidence](evidence/integration-apu-clock-master-2026-11-16.json).
 
 The direct-page word candidate is still blocked by SMW cadence and the

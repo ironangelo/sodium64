@@ -510,8 +510,8 @@
     {
       "id": 43897382600,
       "name": "APU Cycle And Span Proof",
-      "status": "in_progress",
-      "conclusion": null
+      "status": "completed",
+      "conclusion": "success"
     },
     {
       "id": 43897382608,
@@ -522,8 +522,8 @@
     {
       "id": 43897382634,
       "name": "Ares Profile Validation",
-      "status": "in_progress",
-      "conclusion": null
+      "status": "completed",
+      "conclusion": "success"
     },
     {
       "id": 43897382686,

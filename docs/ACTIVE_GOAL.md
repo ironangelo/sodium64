@@ -136,17 +136,17 @@ are 59.829/s (DKC1 late intro), 59.842/s (ALttP boot) and 58.174/s
 [Combined integrated baseline](evidence/integration-master-spc-wrap-native-2026-11-15.json).
 [SPC700 wrap evidence](evidence/integration-spc-address-wrap-2026-11-13.json).
 
-PR46 `77bd5e55` independently fixes seven SPC700 direct-page word
-operations. The linked original master fails 556 of 940 cases. All
-four configurations pass 940 on the original fix. The standalone
-fix also passes matched DKC1 RGB, PCM, DSP and cadence. Its refreshed
-parent is `fe61d371`. CI including all 119 dynamic cycle cases
-and both halt groups passes. The combined N64 trial preserves
-all six aligned RGB/PCM/DSP captures. Same-menu SMW repeat falls
-from 1,165 to 1,160 frames in 1,198 VI ticks. The compact emitted
-step control also trails master. PR46 is blocked on that cadence
-cost. Keep the data-bus fidelity proof and investigate the separate
-bus-helper or code-layout cost before promoting it.
+PR46 `1cbf8e8e` independently fixes seven SPC700 direct-page word
+operations. The linked current master fails 580 of 996 cases.
+The refreshed normal and REMOTE repair passes all 996, including
+adjacent timer outputs. The refreshed linked layout retains all
+1,291 original symbol/address pairs. On real N64, both launch
+orders compare the same 1,200 SMW guest frames and retain all
+four paired RGB/PCM/DSP observations. The candidate takes 7.543
+and 7.031 ms longer. The cadence gate remains open. Measure the
+changed executed bus and generated-code paths to attribute that
+cost before another optimization.
+[Layout-preserving fixed-work evidence](evidence/integration-spc-word-layout-2026-11-16.json).
 [Combined native three-title and SMW evidence](evidence/integration-spc-combined-native-2026-11-15.json).
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
 

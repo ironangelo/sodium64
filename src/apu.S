@@ -19,6 +19,9 @@
 
 #include <limits.h>
 #include "defines.h"
+#ifdef SODIUM64_DSP_LIVE_CORE
+#include "live_dsp.h"
+#endif
 #ifdef SODIUM64_DSP_LIVE_GUEST
 #include "dsp_rsp_deadlines.h"
 .globl apu_outputs
@@ -115,6 +118,13 @@ apu_execute:
     lw t2, (DSP_GUEST_ECHO_ENTRY & 0xffff)(t1)
     addiu t2, t2, 1
     sw t2, (DSP_GUEST_ECHO_ENTRY & 0xffff)(t1)
+#ifdef SODIUM64_DSP_LIVE_CORE
+    // Refresh the only dynamically echo-written opcode in this fixture.
+    // Its RET and every other generated-code fetch are outside the echo area.
+    move a0, s0
+    CALL_LIVE_DSP LIVE_DSP_FETCH
+    sll t0, s0, 2
+#endif
 1:
 #endif
 
@@ -164,6 +174,10 @@ apu_read8: // a0: address - v0: value
     lw t2, (DSP_GUEST_ECHO_READ & 0xffff)(t1)
     addiu t2, t2, 1
     sw t2, (DSP_GUEST_ECHO_READ & 0xffff)(t1)
+#ifdef SODIUM64_DSP_LIVE_CORE
+    // Only these two producer reads touch the fixture's enabled echo span.
+    CALL_LIVE_DSP LIVE_DSP_RAM_READ
+#endif
 1:
 #endif
     // Read a byte from APU memory
@@ -191,7 +205,11 @@ io_read8:
 .align 5
 apu_write8: // a0: address, a1: value
     // Write a byte to APU memory
+#ifdef SODIUM64_DSP_LIVE_CORE
+    CALL_LIVE_DSP LIVE_DSP_RAM_WRITE
+#else
     sb a1, apu_ram(a0)
+#endif
 
     // Increment the memory block's tag to indicate change
     srl t0, a0, 6

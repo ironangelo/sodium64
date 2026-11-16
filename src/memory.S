@@ -18,6 +18,9 @@
 */
 
 #include "defines.h"
+#ifdef SODIUM64_DSP_LIVE_CORE
+#include "live_dsp.h"
+#endif
 
 .globl sram
 .globl sram_dirty
@@ -38,7 +41,11 @@
 .data
 #endif
 .align 12 // TLB alignment
+#ifdef SODIUM64_DSP_LIVE_CORE
+.equ sram, LIVE_DSP_SRAM
+#else
 sram: .space 0x8000
+#endif
 wram: .space 0x20000
 empty: .space 0x2000
 

@@ -5,6 +5,9 @@
  */
 #include "remote_control.h"
 #include "dsp_rsp_deadlines.h"
+#ifdef SODIUM64_DSP_LIVE_CORE
+#include "live_dsp.h"
+#endif
 #ifdef REMOTE_CONTROL_HOST
 volatile uint32_t remote_guest_frames,remote_render_frames,remote_vi_count,remote_presentations;
 volatile uint32_t remote_buttons,remote_button_frames,remote_paused;
@@ -368,6 +371,21 @@ static void status(const char *id) {
         field(" dsp_pair_short=",*(volatile uint32_t*)DSP_GUEST_PAIR_SHORT);
         field(" dsp_echo_reads=",*(volatile uint32_t*)DSP_GUEST_ECHO_READ);
         field(" dsp_echo_entries=",*(volatile uint32_t*)DSP_GUEST_ECHO_ENTRY);
+#ifdef SODIUM64_DSP_LIVE_CORE
+        const volatile struct live_dsp_stats *stats=(const volatile struct live_dsp_stats *)LIVE_DSP_STATS;
+        field(" full_ticks=",stats->ticks);
+        field(" full_calls=",stats->calls);
+        field(" full_pcm=",stats->pcm);
+        field(" full_outputs=",stats->outputs);
+        field(" full_writes=",stats->writes);
+        field(" full_echo=",stats->echo_words);
+        field(" full_echo_opcode=",stats->echo_opcode_changes);
+        field(" full_sample_calls=",stats->sample_calls);
+        field(" full_renderer_busy=",stats->renderer_busy);
+        field(" full_clock_errors=",stats->clock_errors);
+        field(" full_output_errors=",stats->output_errors);
+        field(" full_cycles=",stats->cycles);
+#endif
 #endif
     }
 #endif
@@ -424,6 +442,9 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         uint32_t operation;
         if(!remote_paused||nt!=4||!decimal(tokens[3],&operation,2u)||
            apu_ram[0x4800]!=0x6fu) {error(id,"fixture_required");return;}
+#ifdef SODIUM64_DSP_LIVE_CORE
+        if(operation) {error(id,"active_echo");return;}
+#endif
         // A silent phase-30 echo publication, at a retired boundary.
         // Operation 1 models the stale JIT negative control.
         if(operation) {

@@ -10,6 +10,12 @@ HW_PROFILE_WARMUP ?= 2
 REMOTE ?= 0
 DSP_LIVE_GUEST ?= 0
 DSP_LIVE_PREFIX ?= 0
+DSP_LIVE_CORE ?= 0
+ifeq ($(DSP_LIVE_CORE),1)
+ifneq ($(REMOTE)$(DSP_LIVE_GUEST)$(DSP_LIVE_PREFIX),111)
+$(error The complete live proof requires the private guest and fixed prefix)
+endif
+endif
 ifeq ($(REMOTE),1)
 ifneq ($(PROFILE)$(HW_PROFILE),00)
 $(error REMOTE is a separate retired-frame bench, not a PROFILE/HW_PROFILE build)
@@ -32,6 +38,9 @@ HFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
 OFILES := $(patsubst %.S,$(BUILD_DIR)/%.o,$(SFILES))
 ifeq ($(REMOTE),1)
 OFILES += $(BUILD_DIR)/src/remote_control_c.o
+ifeq ($(DSP_LIVE_CORE),1)
+OFILES += $(BUILD_DIR)/src/live_dsp.o $(BUILD_DIR)/src/full_dsp_window.o $(BUILD_DIR)/third_party/snes_spc/SPC_DSP.o
+endif
 endif
 
 N64_ROM_TITLE = "$(PROJ_NAME)"
@@ -77,6 +86,10 @@ N64_ASFLAGS += -DSODIUM64_DSP_LIVE_GUEST=1
 N64_REMOTE_CFLAGS += -DSODIUM64_DSP_LIVE_GUEST=1
 ifeq ($(DSP_LIVE_PREFIX),1)
 N64_ASFLAGS += -DSODIUM64_DSP_LIVE_PREFIX=1
+ifeq ($(DSP_LIVE_CORE),1)
+N64_ASFLAGS += -DSODIUM64_DSP_LIVE_CORE=1
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_LIVE_CORE=1
+endif
 endif
 endif
 N64_LDFLAGS += -Tsrc/usb_bench_memory.ld
@@ -159,6 +172,10 @@ $(BUILD_DIR)/%.o: %.S
 $(BUILD_DIR)/src/remote_control_c.o: src/remote_control.c src/remote_control.h Makefile
 	@mkdir -p $(dir $@)
 	$(N64_CC) -c -Os -std=c11 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror $(N64_REMOTE_CFLAGS) -o $@ $<
+
+$(BUILD_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(N64_CXX) -c -O2 -std=c++98 -march=vr4300 -mtune=vr4300 -mabi=o64 -mno-abicalls -fno-pic -G0 -fno-stack-protector -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -DNDEBUG -DBLARGG_BIG_ENDIAN=1 -DSODIUM64_DSP_FULL_WINDOW=1 -Wno-implicit-fallthrough -o $@ $<
 
 %.elf: $(N64_LIBDIR)/n64.ld
 	@mkdir -p $(dir $@)

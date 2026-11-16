@@ -18,6 +18,10 @@
 */
 
 #include "defines.h"
+#ifdef SODIUM64_DSP_LIVE_CORE
+#include "live_dsp.h"
+.globl dsp_addr
+#endif
 #ifdef SODIUM64_REMOTE
 #include "dsp_rsp_deadlines.h"
 #endif
@@ -161,6 +165,11 @@ dsp_rsp_deadline_halted:
 dsp_rsp_deadline_done:
 #endif
 
+#ifdef SODIUM64_DSP_LIVE_CORE
+    CALL_LIVE_DSP LIVE_DSP_PCM
+    j apu_execute
+    nop
+#endif
     // Decrement the global timer once per sample
     lhu t0, dsp_timer
     bnez t0, not_zero
@@ -820,7 +829,12 @@ dsp_reg_read_overlap:
     sw t1, (DSP_READ_STATE & 0xffff)(t2)
 dsp_reg_read_unobserved:
 #endif
+#ifdef SODIUM64_DSP_LIVE_CORE
+    CALL_LIVE_DSP LIVE_DSP_REG_READ
+    lw v0, LIVE_DSP_WRAPPER + 4
+#else
     lbu v0, dsp_regs(t0)
+#endif
     jr ra
     nop
 
@@ -833,6 +847,11 @@ write_dspaddr: // a1: value
 
 .align 5
 write_dspdata: // a1: value
+#ifdef SODIUM64_DSP_LIVE_CORE
+    CALL_LIVE_DSP LIVE_DSP_REG_WRITE
+    jr ra
+    nop
+#endif
     // Write a value to a DSP register if within bounds
     lbu t0, dsp_addr
     andi t1, t0, 0x80

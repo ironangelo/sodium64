@@ -302,9 +302,10 @@ menu_close:
     beq t1, t2, menu_return
     nop
 
-    // Update the clock and invalidate the JIT buffer if changed
+    // Compiled cycle debits depend on the clock. Clear the lookup before
+    // the scheduler can reuse an old-clock block.
     sb t2, apu_clock
-    li t0, ROM_BUFFER
-    sw t0, jit_pointer
+    jal apu_invalidate_jit
+    nop
     b menu_return
     nop

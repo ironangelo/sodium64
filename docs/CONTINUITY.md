@@ -1,3 +1,18 @@
+# 2026-11-15 — Close the scoped R45 F-Zero Mode 7 comparison
+
+The real-N64 R45 bench `e12ae12e` completes the same seven-input
+F-Zero route as R44 `8568fb1a`. At frame 4500 all 67,200 RGB pixels,
+8,192 PCM bytes and the DSP state match. Both quiet windows start at
+4501, finish at 4635 and count 960 VI ticks. Both are about 8.35
+guest frames/s at full APU and frameskip 0. R45 returns to the
+menu by software with the play version preserved. This closes the
+bounded Mode 7 comparison. The early DKC1 compositor deficit and
+ALttP story still block R45 promotion. The separate DKC1 first-stage
+speedup retains its measured scope.
+[Native R45 Mode 7 evidence](evidence/integration-r45-mode7-native-2026-11-15.json).
+
+---
+
 # 2026-11-15 — Localize the compositor stall and block the word repair on SMW
 
 The matched diagnostic DKC1 early-intro windows preserve two aligned

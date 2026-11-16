@@ -185,16 +185,17 @@ The DKC1 first-stage benefit reproduces on real N64 using six matched
 inputs and precision 20. R44 and R45 reach 13.74 and 28.23 guest frames/s
 from guest frame 4331. Both image/PCM comparisons match exactly and both
 verify R17 restoration. The distinct zero-input intro regression stands.
-F-Zero Mode 7 on R44 reaches 8.35 guest frames/s and matches the
-archived R44 active image. R17 restoration passes on that run.
-The R45 launch then loses USB before acknowledgement. R45 comparison
-remains pending. Subsequent cartridge SD readback verified R17 while
-CIC reported Power off.
+The F-Zero Mode 7 R44/R45 pair now completes. Both run 134 guest
+frames from 4501 to 4635 over 960 VI ticks. The single aligned RGB,
+PCM and DSP capture matches exactly. R45 returns by software and
+preserves the separate play slot. The bounded Mode 7 comparison
+passes. The scene still runs at about 8.35 guest frames/s.
+[Native R45 Mode 7 comparison](evidence/integration-r45-mode7-native-2026-11-15.json).
 [DKC1 first-stage replay provenance](evidence/integration-renderer-dkc1-first-stage-2026-11-12.json).
 [R17 transport and physical R45 evidence](evidence/integration-r45-native-dkc1-2026-11-12.json).
 [Native launch and R17 restoration evidence](evidence/integration-r45-launch-transport-2026-11-12.json).
 [Interrupted native run and bounded warmup rates](evidence/integration-r44-dkc1-interrupted-2026-11-12.json).
-DKC1, ALttP story and Mode 7 still block promotion.
+The early DKC1 compositor deficit and ALttP story still block promotion.
 [Updated PR heads, controls and gates](evidence/integration-standalone-and-renderer-controls-2026-11-12.json).
 [Port, draft and gate evidence](evidence/integration-r45-pr42-2026-11-11.json).
 

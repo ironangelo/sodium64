@@ -1,0 +1,62 @@
+{
+  "settings": {
+    "apu_clock": "21",
+    "skipped_set": "0",
+    "audio_set": "4",
+    "precision_set": "20"
+  },
+  "captures": [
+    {
+      "guest_frame": 4500,
+      "RGB_pixels": 67200,
+      "RGB_differences": 0,
+      "PCM_bytes": 8192,
+      "PCM_byte_differences": 0,
+      "ring_head_bytes_matches": true,
+      "enabled_matches": true,
+      "dspregs_matches": true
+    }
+  ],
+  "quiet_intervals": [
+    {
+      "head": "8568fb1a7bd47ea3ad8df92419f0b36b6e000df7",
+      "guest_endpoints": [
+        4501,
+        4635
+      ],
+      "duration_s": 16.043792576,
+      "presentation_is_software_observation": true,
+      "guest_delta": 134,
+      "guest_per_second": 8.352139892437362,
+      "render_delta": 134,
+      "render_per_second": 8.352139892437362,
+      "vi_delta": 960,
+      "vi_per_second": 59.83622609507364,
+      "present_delta": 134,
+      "present_per_second": 8.352139892437362
+    },
+    {
+      "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+      "guest_endpoints": [
+        4501,
+        4635
+      ],
+      "duration_s": 16.049652117333334,
+      "presentation_is_software_observation": true,
+      "guest_delta": 134,
+      "guest_per_second": 8.34909062329659,
+      "render_delta": 134,
+      "render_per_second": 8.34909062329659,
+      "vi_delta": 960,
+      "vi_per_second": 59.81438058481139,
+      "present_delta": 134,
+      "present_per_second": 8.34909062329659
+    }
+  ],
+  "quiet_starts_match": true,
+  "quiet_endpoints_match": true,
+  "date_local": "2026-11-15",
+  "reset_and_restoration": "R44 returned using the old menu and R17 readback. R45 returned using the separate bench without writing the play slot.",
+  "scope": "One native F-Zero Mode 7 route, seven aligned controller inputs, precision 20, 16-second quiet window with the same complete-frame endpoints.",
+  "disposition": "This bounded F-Zero pair shows 134 guest frames in 960 VI ticks on both builds and exact aligned digital output. Native cadence, R45 ALttP story cost, and the parent compositor default gate remain open."
+}

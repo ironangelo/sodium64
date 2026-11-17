@@ -34,6 +34,14 @@
 dsp_buffer: .word 0:0x800
 dsp_regs: .byte 0:0x80
 
+// Append the zeroed cache after the original data contributions. Existing
+// DSP/PPU/APU tables keep their addresses. One host halfword has reversed
+// byte lanes relative to the guest pitch-register pair.
+.pushsection .data.pitch_cache, "aw"
+.align 4
+dsp_pitches: .word 0:0x20
+.popsection
+
 .align 4
 noise_sample: .hword 0x4000
 noise_step: .hword 0x8000
@@ -60,31 +68,31 @@ gain_jumps: .word linear_dec, expon_dec, linear_inc, bent_inc
 
 .align 4
 write_iomap:
-    .word write_vol, write_vol, write_reg, write_reg // 0x00-0x03
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x00-0x03
     .word write_reg, write_adsr, write_reg, write_reg // 0x04-0x07
     .word write_reg:(0x0F - 0x07) // 0x08-0x0F
-    .word write_vol, write_vol, write_reg, write_reg // 0x10-0x13
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x10-0x13
     .word write_reg, write_adsr, write_reg, write_reg // 0x14-0x17
     .word write_reg:(0x1F - 0x17) // 0x18-0x1F
-    .word write_vol, write_vol, write_reg, write_reg // 0x20-0x23
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x20-0x23
     .word write_reg, write_adsr, write_reg, write_reg // 0x24-0x27
     .word write_reg:(0x2F - 0x27) // 0x28-0x2F
-    .word write_vol, write_vol, write_reg, write_reg // 0x30-0x33
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x30-0x33
     .word write_reg, write_adsr, write_reg, write_reg // 0x34-0x37
     .word write_reg:(0x3F - 0x37) // 0x38-0x3F
-    .word write_vol, write_vol, write_reg, write_reg // 0x40-0x43
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x40-0x43
     .word write_reg, write_adsr, write_reg, write_reg // 0x44-0x47
     .word write_reg:(0x4B - 0x47) // 0x48-0x4B
     .word write_kon, write_reg, write_reg, write_reg // 0x4C-0x4F
-    .word write_vol, write_vol, write_reg, write_reg // 0x50-0x53
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x50-0x53
     .word write_reg, write_adsr, write_reg, write_reg // 0x54-0x57
     .word write_reg:(0x5B - 0x57) // 0x58-0x5B
     .word write_koff, write_reg, write_reg, write_reg // 0x5C-0x5F
-    .word write_vol, write_vol, write_reg, write_reg // 0x60-0x63
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x60-0x63
     .word write_reg, write_adsr, write_reg, write_reg // 0x64-0x67
     .word write_reg:(0x6B - 0x67) // 0x68-0x6B
     .word time_noise, write_reg, write_reg, write_reg // 0x6C-0x6F
-    .word write_vol, write_vol, write_reg, write_reg // 0x70-0x73
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x70-0x73
     .word write_reg, write_adsr, write_reg, write_reg // 0x74-0x77
     .word write_reg:(0x7F - 0x77) // 0x78-0x7F
 
@@ -152,15 +160,18 @@ next_voice:
     nop
 
 get_pitch:
-    // Get the pitch scaler for the current voice
-    lhu t0, dsp_regs + 0x2(t8) // VxPITCH(L/H)
-    sll t1, t0, 8
-    srl t0, t0, 8
-    or t0, t0, t1
+    // The write handler already maps each guest byte to the host lane.
+    lhu t0, dsp_pitches(t8)
     andi t0, t0, 0x3FFF
+    b get_pitch_counter
+    lui t9, %hi(counters)
+    nop // Preserve the following linked instructions and entry addresses.
 
-    // Increase the voice's position counter by the scaler
-    lhu t9, counters(t8)
+    // Keep the old counter-load extent, using its first word in the branch.
+    lui t9, %hi(counters)
+get_pitch_counter:
+    addu t9, t9, t8
+    lhu t9, %lo(counters)(t9)
     addu t2, t9, t0
     sh t2, counters(t8)
 
@@ -704,6 +715,16 @@ write_dspaddr: // a1: value
     jr ra
     nop
 
+.set push
+.set noat
+write_pitch_high: // t0: high pitch register index, a1: the byte already stored
+    // This occupies only the old padding following read_dspdata.
+    lui $1, %hi(dsp_pitches - 3)
+    addu $1, $1, t0
+    jr ra
+    sb a1, %lo(dsp_pitches - 3)($1)
+.set pop
+
 .align 5
 write_dspdata: // a1: value
     // Write a value to a DSP register if within bounds
@@ -728,6 +749,17 @@ write_vol: // t0: address
     // Update a voice's cached volumes when changed
     j update_vols
     srl t6, t0, 4
+
+.set push
+.set noat
+write_pitch: // t0: low pitch register index, a1: the byte already stored
+    // The existing dispatch selects the byte lane. Complete the byte store
+    // in the return delay slot while preserving the old alignment padding.
+    lui $1, %hi(dsp_pitches - 1)
+    addu $1, $1, t0
+    jr ra
+    sb a1, %lo(dsp_pitches - 1)($1)
+.set pop
 
 .align 5
 write_adsr: // t0: address

@@ -12,6 +12,17 @@ DSP_LIVE_GUEST ?= 0
 DSP_LIVE_PREFIX ?= 0
 DSP_LIVE_CORE ?= 0
 DSP_LIVE_INPUT_QUEUE ?= 0
+DSP_EFFECTS_MODE ?= 0
+ifneq ($(DSP_EFFECTS_MODE),0)
+ifneq ($(filter $(DSP_EFFECTS_MODE),1 2),$(DSP_EFFECTS_MODE))
+$(error Unsupported private DSP effects mode)
+endif
+ifneq ($(DSP_LIVE_CORE)$(DSP_LIVE_INPUT_QUEUE)$(DSP_RSP_SWAP),111)
+$(error DSP effects replay requires the complete live DSP and its input queue)
+endif
+N64_DSP_PROBE_CFLAGS += -DSODIUM64_DSP_EFFECTS_MODE=$(DSP_EFFECTS_MODE)
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_EFFECTS_MODE=$(DSP_EFFECTS_MODE)
+endif
 DSP_RSP_SWAP ?= 0
 DSP_RSP_YIELD ?= 0
 DSP_RSP_YIELD_SWAP ?= 0

@@ -410,6 +410,10 @@ static void status(const char *id) {
 #ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
         field(" full_queued_ram=",stats->queued_ram_writes);
 #endif
+#if SODIUM64_DSP_EFFECTS_MODE
+        field(" effects_error=",stats->effects_error);
+        field(" effects_rows=",stats->effects_rows);
+#endif
 #ifdef SODIUM64_DSP_RSP_SWAP
         field(" critical_reg=",stats->required_reg);
         field(" critical_echo=",stats->required_echo);
@@ -582,6 +586,24 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         prefix(id,1);append(" released=1");(void)finish();return;
     }
 
+#if SODIUM64_DSP_EFFECTS_MODE == 1 && !defined(REMOTE_CONTROL_HOST)
+    if(eq(verb,"dsp-effects")) {
+        extern unsigned live_dsp_effects_size(void);
+        uint32_t offset;
+        if(nt!=4||!decimal(tokens[3],&offset,LIVE_DSP_EFFECTS_BYTES)||
+           (offset&0x1ffffu)||!remote_paused||remote_boot_ram_bytes!=0x800000u) {
+            error(id,"invalid_effects_request");return;
+        }
+        unsigned size=live_dsp_effects_size();
+        if(offset>=size){error(id,"effects_offset");return;}
+        unsigned chunk=size-offset;if(chunk>0x20000u)chunk=0x20000u;
+        if(!send_packet(2,(const void *)(uintptr_t)(LIVE_DSP_EFFECTS_BASE+offset),chunk)) {
+            error(id,"usb_export_failed");return;
+        }
+        prefix(id,1);append(" exported=dsp_effects");field(" offset=",offset);
+        field(" total_bytes=",size);field(" bytes=",chunk);(void)finish();return;
+    }
+#endif
     if(nt!=3){error(id,"argument_count");return;}
     if(eq(verb,"resume")) {
         cancel_pause_target();remote_paused=0;prefix(id,1);append(" paused=0");

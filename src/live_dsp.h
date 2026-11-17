@@ -18,6 +18,13 @@
 #define LIVE_DSP_EPOCH_OFFSET 1364
 #define LIVE_DSP_GUEST_CYCLE  21
 
+#define LIVE_DSP_EFFECTS_BASE 0xA0600000u
+#define LIVE_DSP_EFFECTS_BYTES 0x00100000u
+#define LIVE_DSP_EFFECTS_ROM 0x10020000u
+#define LIVE_DSP_EFFECTS_FIRST 0x000C0000u
+#define LIVE_DSP_EFFECTS_TAIL 0x100F0000u
+#define LIVE_DSP_EFFECTS_PACKED_MAX 0x000D2000u
+
 #ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
 #define LIVE_DSP_INPUT_CAPACITY 32
 #define LIVE_DSP_INPUT_EVENT_SHIFT 3
@@ -46,6 +53,9 @@ struct live_dsp_stats {
 #endif
 #ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
     uint32_t queued_ram_writes;
+#endif
+#if SODIUM64_DSP_EFFECTS_MODE
+    uint32_t effects_error, effects_rows;
 #endif
 };
 #endif

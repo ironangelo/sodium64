@@ -296,6 +296,13 @@ The integrated event dispatcher is rejected for a 3.23–3.31% native
 slowdown with exact output. Keep segmented DSP execution and the
 separately measured input queue for the next complete backend check.
 [Native event-dispatch comparison](evidence/integration-dsp-window-events-2026-11-16.json).
+Record/replay of actual DSP bus effects reaches 16.576 ms/frame on
+the same native guest with exact RGB and PCM and no DSP arithmetic.
+It spends 5.439 ms/frame waiting for a framebuffer on average, with
+a 0.512 us minimum. The renderer owns SP at 1,128 of 1,993 synchronous
+register reads. The complete backend now has a measured workload
+budget and an explicit deadline test during renderer ownership.
+[DSP headroom and deadline evidence](evidence/integration-dsp-effects-headroom-2026-11-16.json).
 [Native register-publication deadlines](evidence/integration-dsp-output-publication-2026-11-16.json).
 [Native resident-state handoff](evidence/integration-dsp-rsp-resident-state-2026-11-16.json).
 [Native in-frame RSP handoff](evidence/integration-dsp-rsp-in-frame-yield-2026-11-16.json).

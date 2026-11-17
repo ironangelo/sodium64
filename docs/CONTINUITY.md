@@ -1,3 +1,35 @@
+# 2026-11-16 — Measure native DSP headroom with recorded bus effects
+
+The private diagnostic records the original eight-voice workload's DSP
+port replies, ordered echo RAM writes and stereo samples on N64. Replay
+checks each bridge operation and timestamp against that stream. It runs
+the same SPC producer and renderer, publishes echo and code tags, writes
+the PCM ring and submits the same AI buffers. The DSP computation is
+replaced by the recorded replies only for this benchmark.
+
+Native frames 48–88 take 35.163 ms/frame with the live scalar DSP and
+16.576 ms/frame with replay. Both match frame 88 RGB and captured PCM.
+Replay consumes 16,023 bridge records from boot, with matching final
+clock, DSP reads, 91,587 echo words and 46,720 stereo samples. All rounds
+return to the menu in software and preserve the play slot.
+
+The replay waits for a framebuffer for 5.439 ms/frame on average over
+the 40-frame interval. The shortest wait is 24 Count ticks (0.512 us).
+The elapsed time outside that wait averages 11.137 ms/frame. The
+renderer is active during 1,128 of the 1,993 synchronous DSP register
+reads in replay. An accelerated backend must fit the average budget
+and serve those reads before their deadlines even when the framebuffer
+wait offers almost no time. Do not assume a uniform slot after rendering.
+
+Keep `5c0f5436` as the actual arithmetic reference. The measured replay
+build removes DSP arithmetic and pays its own replay overhead. Use it
+to set the end-to-end budget for the complete backend and measure the
+urgent reads against the renderer. Production ROM and ELF match
+`7a6e3d75`. The raw capture and loaded replay image stay local.
+[Native DSP headroom and deadline evidence](evidence/integration-dsp-effects-headroom-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Reject replaying memory events inside the DSP phase dispatcher
 
 The event-aware scalar dispatcher applies the ordered RAM and register

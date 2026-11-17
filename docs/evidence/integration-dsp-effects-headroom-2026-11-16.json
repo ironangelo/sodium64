@@ -1,0 +1,177 @@
+{
+  "date_local": "2026-11-16",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "source_head": "1d779066a30db1b5df335b11c30ce5a067bc441b",
+  "capture": {
+    "head": "4a1c2824b13d30eab131f8d569f48b2eaac604c6",
+    "bytes": 809604,
+    "rows": 16023,
+    "echo_words": 91587,
+    "pcm_stereo": 46720
+  },
+  "scope": "Physical N64, original eight-voice moving-window guest, ordinary renderer, APU clock 21, frameskip 0.",
+  "method": "The scalar reference records each bridge operation and epoch, raw producer queue count, port reply, echo RAM words and stereo PCM. Replay validates the bridge stream and echo-sensitive RAM/fetch values, advances the same SPC clock, applies echo/CPU RAM and coherent tags, emits the same PCM ring and submits AI through the common routine. It does not run DSP arithmetic. Trace loading occurs at boot before the quiet timed interval. Raw capture and loaded replay image stay local.",
+  "measured_guest_frames": [
+    48,
+    88
+  ],
+  "count_hz": 46875000,
+  "native_pairs": [
+    {
+      "order": [
+        "off",
+        "replay"
+      ],
+      "framebuffer_wait_instrumented": false,
+      "cases": {
+        "off": {
+          "head": "4a1c2824b13d30eab131f8d569f48b2eaac604c6",
+          "count_ticks": 68012358,
+          "ms_per_guest_frame": 36.273258,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 56508,
+            "full_ticks": 52736833,
+            "full_core_ticks": 39583320,
+            "critical_reg": 1993
+          },
+          "end": {
+            "full_pcm": 46720,
+            "full_cycles": 1495137,
+            "full_echo": 91587,
+            "full_outputs": 5793
+          },
+          "exact_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true,
+          "play_slot_touched": false
+        },
+        "replay": {
+          "head": "4a1c2824b13d30eab131f8d569f48b2eaac604c6",
+          "count_ticks": 30688965,
+          "ms_per_guest_frame": 16.367448,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 0,
+            "full_ticks": 7797670,
+            "full_core_ticks": 0,
+            "critical_reg": 1993
+          },
+          "end": {
+            "full_pcm": 46720,
+            "full_cycles": 1495137,
+            "full_echo": 91587,
+            "full_outputs": 5793,
+            "effects_rows": 16023
+          },
+          "exact_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true,
+          "play_slot_touched": false
+        }
+      }
+    },
+    {
+      "order": [
+        "replay",
+        "off"
+      ],
+      "framebuffer_wait_instrumented": true,
+      "cases": {
+        "replay": {
+          "head": "1d779066a30db1b5df335b11c30ce5a067bc441b",
+          "count_ticks": 31079871,
+          "ms_per_guest_frame": 16.575931,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 0,
+            "full_ticks": 7519552,
+            "full_core_ticks": 0,
+            "critical_reg": 1993,
+            "critical_reg_busy": 1128
+          },
+          "end": {
+            "full_pcm": 46720,
+            "full_cycles": 1495137,
+            "full_echo": 91587,
+            "full_outputs": 5793,
+            "effects_rows": 16023
+          },
+          "exact_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true,
+          "play_slot_touched": false,
+          "framebuffer_wait": {
+            "ticks": 10197552,
+            "count": 40,
+            "min": 24,
+            "avg_ms_per_guest_frame": 5.438694,
+            "shortest_us": 0.512,
+            "ms_per_frame_outside_wait": 11.137237
+          }
+        },
+        "off": {
+          "head": "1d779066a30db1b5df335b11c30ce5a067bc441b",
+          "count_ticks": 65930738,
+          "ms_per_guest_frame": 35.16306,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 56508,
+            "full_ticks": 51341598,
+            "full_core_ticks": 39610100,
+            "critical_reg": 1993,
+            "critical_reg_busy": 281
+          },
+          "end": {
+            "full_pcm": 46720,
+            "full_cycles": 1495137,
+            "full_echo": 91587,
+            "full_outputs": 5793
+          },
+          "exact_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true,
+          "play_slot_touched": false,
+          "framebuffer_wait": {
+            "ticks": 1046,
+            "count": 40,
+            "min": 24,
+            "avg_ms_per_guest_frame": 0.000558,
+            "shortest_us": 0.512,
+            "ms_per_frame_outside_wait": 35.162502
+          }
+        }
+      }
+    }
+  ],
+  "framebuffer_wait_definition": "Count around the framebuffer-availability loop before the next renderer launch, reset on clock-step. The first attempt accidentally omitted the assembly flag; its invalid zero-count wait receipt was excluded. The final linked object and both native runs cover all 40 waits.",
+  "interpretation": "The replay measures end-to-end cost with its own playback and validation overhead. Average buffer wait is an observed budget, not an available uninterrupted slot on every frame. The timed replay estimates contention with actual renderer ownership at synchronous register observations.",
+  "production_identity": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  }
+}

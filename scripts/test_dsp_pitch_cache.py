@@ -178,10 +178,18 @@ def main():
              if cpu.read(pc)>>26 == 12 and cpu.read(pc)&0xffff == 0x3fff]
     assert len(masks) == 1
     reject(masks[0], 0, load_check, 'load mask')
-    swaps = [pc for pc in range(symbols['write_pitch'], symbols['write_adsr'], 4)
-             if cpu.read(pc)>>26 == 14 and cpu.read(pc)&0xffff == 1]
-    assert len(swaps) == 1
-    reject(swaps[0], 0, lambda: write(7,1,0xff,0xfe,0x8f,0xfffe), 'byte lane')
+    for label, byte, displacement, low, high in (
+        ('write_pitch', 0, -1, 0, 0x8f),
+        ('write_pitch_high', 1, 1, 0xfe, 0x8f),
+    ):
+        stores = [pc for pc in range(symbols[label], symbols[label]+16, 4)
+                  if cpu.read(pc)>>26 == 40]
+        assert len(stores) == 1, 'expected one cached byte store'
+        word = cpu.read(stores[0])
+        other_lane = (word & 0xffff0000) | ((word + displacement) & 0xffff)
+        expected = 0x8fff if byte == 0 else 0xfffe
+        reject(stores[0], other_lane,
+               lambda: write(7, byte, 0xff, low, high, expected), label + ' byte lane')
     raw_stores = [pc for pc in range(symbols['write_dspdata'], symbols['write_reg'], 4)
                   if cpu.read(pc)>>26 == 40]
     assert len(raw_stores) == 1
@@ -204,7 +212,7 @@ def main():
 
     report={'passed':True,'compiled_write_cases':131072,'compiled_load_cases':524288,
             'reference_cases':reference_cases,'apu_port_cases':32,'invalid_write_cases':128,
-            'ordinary_write_cases':32,'mixed_cold_writes':128,'cold_load_cases':8,'mirrored_read_cases':8,'emitted_faults_rejected':3,
+            'ordinary_write_cases':32,'mixed_cold_writes':128,'cold_load_cases':8,'mirrored_read_cases':8,'emitted_faults_rejected':4,
             'pitch_load_instructions':load_instructions,'maximum_pitch_write_instructions':maximum}
     if args.json_output:
         args.json_output.write_text(json.dumps(report,indent=2)+'\n')

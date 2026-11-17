@@ -1,3 +1,40 @@
+# 2026-11-17 — Narrow the renderer wait and refresh the complete DSP control
+
+The bounded N64 DKC1 comparison (frames 3001–3481, APU 21,
+frameskip 0) repeats the PR32 cost. The faithful control adds
+6.553 ms per completed guest frame to elapsed time and 10.677 ms to
+the CPU wait for SP HALT. The private MMIO build changes cadence by
+less than 0.64 percent versus its own control for each renderer and
+matches both aligned RGB, PCM and DSP captures. The frame-capture
+SyncFull command overwrote two original diagnostic counters. The
+relocated build and its rerun supersede that first sample set.
+
+In the corrected faithful run 83,508 of 122,791 samples had neither
+SP DMA nor the observed DP status flags set (68.01 percent).
+These are occupancy observations during the CPU wait. They leave
+open which renderer operations cause it. Count the explicit
+`hcomp_fence_wait` polls and read after HALT, with fixed entry
+offsets and checked scratch liveness. The DKC1 intro regression
+and the R45 ALttP story regression still block promotion.
+
+The complete private DSP benchmark now runs over integrated master
+`bcc8e463`. Its normal ROM and ELF match master byte for byte.
+On the original eight-voice load over frames 48–88, the live scalar
+path takes 36.992 ms per guest frame. Recorded-effects replay takes
+16.578 ms. Both consume the same live SPC work and match frame 88
+RGB, PCM and observed DSP state. Replay publishes the same echo and
+PCM through the regular outputs without DSP arithmetic. It observes
+1,337 of 1,993 synchronous register catches while the renderer is
+active. The shortest framebuffer wait is 24 Count ticks (0.512 us).
+A complete accelerated backend still has to demonstrate correct
+and timely replies during shared-SP ownership, warm-JIT echo
+visibility and continuous PCM in the same timed run. All four
+admitted renderer launches and both DSP launches return by USB
+without touching the play slot.
+[Bounded renderer and DSP cost evidence](evidence/integration-renderer-wait-dsp-baseline-2026-11-17.json).
+
+---
+
 # 2026-11-17 — Integrate selective SPC700 JIT invalidation on master
 
 [PR #47](https://github.com/ironangelo/sodium64/pull/47) merged as

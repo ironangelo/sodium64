@@ -254,6 +254,15 @@ of framebuffer wait. Time outside the two wait sites and USB grows
 0.066 ms. The blocker is graphics completion in this scene. The
 counter does not identify which RSP/RDP/DMA subpath causes it.
 [Matched native wait evidence](evidence/integration-pr32-bounded-wait-native-2026-11-15.json).
+The exact 480-frame repeat adds 6.553 ms per frame for PR32.
+In 68.01 percent of corrected faithful observer samples, both
+SP DMA and observed DP status flags are clear. Count the existing
+`hcomp_fence_wait` loop at HALT to test that specific fence. The
+refreshed complete DSP scalar and recorded-effects controls on
+`bcc8e463` measure 36.992 and 16.578 ms per frame. During replay,
+1,337 of 1,993 synchronous register catches occur while the renderer
+is active.
+[Fixed-work native renderer and DSP cost](evidence/integration-renderer-wait-dsp-baseline-2026-11-17.json).
 The measured integrated master is the comparator for complete resident
 DSP cost. The legacy DSP path now has a sampled native budget for three
 native scenes. The complete scalar R61 controller reproduces all four

@@ -1,0 +1,212 @@
+{
+  "date_local": "2026-11-17",
+  "integrated_master": "bcc8e4631f075a6681563b56d2e3dee52670bb1b",
+  "renderer": {
+    "status": "Bounded diagnostic. PR32 and its R44/R45 dependents stay BLOCKED.",
+    "source_head": "a20864c50071ecdb003da7f89581fabb26713c39",
+    "source_base": "95296f9c41df64dbf35ec43fade80fa8a1a9c57d",
+    "scope": "DKC1 zero-input intro frames 3001\u20133481, physical N64, frameskip 0, APU 21, precision 8.",
+    "linked_wait_cases": 32,
+    "RSP_payloads_match_each_own_control": true,
+    "sample_period_count_ticks": 2048,
+    "faithful_additional_ms_per_guest_frame": {
+      "elapsed": 6.552517288888889,
+      "wait_for_SP_HALT": 10.677008533333334
+    },
+    "cases": {
+      "legacy": {
+        "native_control": {
+          "ticks": 376149782,
+          "count_hz": 46875000,
+          "frames": [
+            3001,
+            3481
+          ],
+          "wait_ticks": {
+            "rsp_wait_count_mod32": 66868,
+            "framebuffer_wait_count_mod32": 125261653
+          }
+        },
+        "observer": {
+          "ticks": 376119518,
+          "count_hz": 46875000,
+          "frames": [
+            3001,
+            3481
+          ],
+          "wait_ticks": {
+            "rsp_wait_count_mod32": 163160,
+            "framebuffer_wait_count_mod32": 129179951
+          }
+        },
+        "samples": {
+          "idle": 0,
+          "sp_dma": 0,
+          "rdp": 40,
+          "both": 0,
+          "transition": 8
+        },
+        "captures": [
+          {
+            "frame": 3001,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 3481,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "relative_timing_change": -8.045731101868903e-05,
+        "menu_return": true,
+        "sample_percentages": {
+          "idle": 0.0,
+          "sp_dma": 0.0,
+          "rdp": 83.33333333333333,
+          "both": 0.0,
+          "transition": 16.666666666666668
+        }
+      },
+      "faithful": {
+        "native_control": {
+          "ticks": 523581421,
+          "count_hz": 46875000,
+          "frames": [
+            3001,
+            3481
+          ],
+          "wait_ticks": {
+            "rsp_wait_count_mod32": 240299560,
+            "framebuffer_wait_count_mod32": 12216
+          }
+        },
+        "observer": {
+          "ticks": 520250281,
+          "count_hz": 46875000,
+          "frames": [
+            3001,
+            3481
+          ],
+          "wait_ticks": {
+            "rsp_wait_count_mod32": 253271273,
+            "framebuffer_wait_count_mod32": 12196
+          }
+        },
+        "samples": {
+          "idle": 83508,
+          "sp_dma": 7578,
+          "rdp": 19991,
+          "both": 161,
+          "transition": 11553
+        },
+        "captures": [
+          {
+            "frame": 3001,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 3481,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "relative_timing_change": -0.006362219640333677,
+        "menu_return": true,
+        "sample_percentages": {
+          "idle": 68.00824164637473,
+          "sp_dma": 6.171462077839581,
+          "rdp": 16.2805091578373,
+          "both": 0.13111710141622757,
+          "transition": 9.408670016532156
+        }
+      }
+    },
+    "method_limit": "The CPU reads SP_STATUS and DPC_STATUS bookends during SP HALT wait. Samples describe observed status bits. They don't establish cause, duration by class or RSP program position.",
+    "first_probe_rejected": "The frame-capture SyncFull staging store at physical 0x441ca0 shared the first two counters. Both moved to the independently checked range at 0x441cd0 and the native observer cases were rerun. Raw USB poll totals from paused endpoint queries include bench idle and were excluded.",
+    "next_gate": "Count the existing hcomp_fence_wait loop polls at its three SyncFull call sites, with fixed entry points and liveness verified, and read at HALT. Keep the DKC1 intro and ALttP story promotion gates."
+  },
+  "complete_dsp_cost": {
+    "status": "Native scalar and recorded-effects controls refreshed. Accelerated full resident backend remains open.",
+    "source_head": "90c1bd2e24207fcf046dff43cd7dbb4d0520780c",
+    "scope": "Original moving-window eight-voice guest, frames 48\u201388, physical N64, frameskip 0 and APU 21.",
+    "normal_ROM_and_ELF_match_master_byte_for_byte": true,
+    "cases": {
+      "off": {
+        "count_ticks": 69359893,
+        "ms_per_guest_frame": 36.991942933333334,
+        "frame_wait": {
+          "ticks": 1021,
+          "count": 40,
+          "min": 24
+        },
+        "interval": {
+          "full_calls": 7309,
+          "full_queued_ram": 51191,
+          "full_pcm": 21272,
+          "full_cycles": 680793,
+          "full_outputs": 2658,
+          "full_echo": 42549,
+          "full_core_runs": 56508,
+          "critical_reg": 1993,
+          "critical_reg_busy": 282,
+          "full_ticks": 54461856,
+          "full_core_ticks": 40730339
+        },
+        "ending_totals": {
+          "full_pcm": 46720,
+          "full_cycles": 1495137,
+          "full_echo": 91587,
+          "full_outputs": 5793
+        },
+        "software_return": true
+      },
+      "replay": {
+        "count_ticks": 31083203,
+        "ms_per_guest_frame": 16.577708266666665,
+        "frame_wait": {
+          "ticks": 12840753,
+          "count": 40,
+          "min": 24
+        },
+        "interval": {
+          "full_calls": 7309,
+          "full_queued_ram": 51191,
+          "full_pcm": 21272,
+          "full_cycles": 680793,
+          "full_outputs": 2658,
+          "full_echo": 42549,
+          "full_core_runs": 0,
+          "critical_reg": 1993,
+          "critical_reg_busy": 1337,
+          "full_ticks": 5534182,
+          "full_core_ticks": 0,
+          "effects_error": 0
+        },
+        "ending_totals": {
+          "full_pcm": 46720,
+          "full_cycles": 1495137,
+          "full_echo": 91587,
+          "full_outputs": 5793,
+          "effects_rows": 16023
+        },
+        "software_return": true
+      }
+    },
+    "boundary_comparison": [
+      {
+        "frame": 88,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "method_limit": "Replay validates the live SPC bridge request stream and publishes coherent echo and PCM, using prerecorded DSP effects. It executes zero DSP core arithmetic. Replay frame wait is read from the reset interval counters at the end, not differenced against the earlier warmup.",
+    "remaining_gate": "Demonstrate one measured complete accelerated implementation with exact DSP outputs, live timestamped SPC, echo visible to the warm JIT, continuous PCM/AI and bounded shared-SP handoffs. It must meet synchronous deadlines while the renderer owns SP."
+  }
+}

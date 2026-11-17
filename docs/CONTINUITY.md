@@ -1,6 +1,6 @@
-# 2026-11-16 — Open the selective SPC700 lookup invalidation PR
+# 2026-11-16 — Qualify the selective SPC700 lookup invalidation PR for review
 
-Draft PR #47 isolates the lookup-group part of `ca3f6f59` on
+PR #47 isolates the lookup-group part of `ca3f6f59` on
 `7a6e3d75`. It marks a group before publishing its pointer and
 uses the existing shared invalidation entry for both overflow
 paths and the APU clock menu. The linked proof passes in normal,
@@ -15,13 +15,16 @@ pair with no USB polling during timing repeats 24.804 to 23.518 s.
 Each pair performs the same 1,200 guest frames and matches RGB,
 PCM and observed DSP state at both boundaries. A separate SMW boot/demo
 pair at frames 240–840 takes 10.432 to 10.430 s and matches both
-captures. All eight launches return to the private menu in software
-and preserve the play slot. The timings cover whole intervals.
+captures. ALttP story frames 1861–2861 take 16.714528 to 16.714343 s,
+also with exact digital captures. All ten launches return to the
+private menu in software and preserve the play slot. The timings
+cover whole intervals.
 
-PR #47 head `cd055b02` remains a draft. Build and Validate, Profiling
-Memory Owners and Native USB Bench Contracts pass. Ares Profile
-Validation and review are pending. Wider gameplay
-and the native cost of densely occupied lookup groups remain open.
+PR #47 head `cd055b02` is ready for review. Build and Validate,
+Profiling Memory Owners, Native USB Bench Contracts and Ares Profile
+Validation pass on the exact head. Review precedes integration.
+After integration, reproduce the combined baseline from `master`.
+Wider gameplay and native cost with densely occupied groups remain open.
 [PR #47](https://github.com/ironangelo/sodium64/pull/47).
 [Linked and native evidence](evidence/integration-apu-selective-jit-2026-11-16.json).
 

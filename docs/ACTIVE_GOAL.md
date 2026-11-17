@@ -153,14 +153,15 @@ qualified component or the complete resident DSP gate.
 [Native attribution and six-operation split](evidence/integration-spc-movw-residual-2026-11-16.json).
 [Layout-preserving fixed-work evidence](evidence/integration-spc-word-layout-2026-11-16.json).
 
-Draft PR47 `cd055b02` isolates selective SPC700 JIT invalidation.
+PR47 `cd055b02` isolates selective SPC700 JIT invalidation.
 Four linked variants pass publication, overflow/replay and clock-menu
 checks. Both launch orders save about 1.27 s over the same 1,200 DKC1
 startup frames with exact RGB/PCM/DSP captures. A third pair without
-USB polling during timing repeats the gain. The separate SMW
-smoke pair also matches both captures and takes almost the same time.
-Exact-head Ares CI and review gate promotion. Keep the dense reset tradeoff
-visible when expanding native coverage.
+USB polling during timing repeats the gain. The separate SMW and ALttP
+smoke pairs match both captures and take almost the same time.
+All four exact-head workflows pass. PR47 is ready for review. Verify
+the combined native baseline from `master` once integrated. Keep the
+dense reset tradeoff visible when expanding native coverage.
 [Native JIT validation](evidence/integration-apu-selective-jit-2026-11-16.json).
 [Combined native three-title and SMW evidence](evidence/integration-spc-combined-native-2026-11-15.json).
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).

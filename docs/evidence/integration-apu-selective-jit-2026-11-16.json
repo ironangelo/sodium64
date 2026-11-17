@@ -224,6 +224,51 @@
         "title": "SMW",
         "play_slot_touched": false,
         "host_quiet_seconds": 11
+      },
+      {
+        "order": [
+          "master",
+          "selective"
+        ],
+        "captures": [
+          {
+            "frame": 1861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "delta_ms": -0.1853866666685633,
+        "timings": {
+          "master": {
+            "ticks": 783493508,
+            "hz": 46875000,
+            "seconds": 16.714528170666668,
+            "frames": [
+              1861,
+              2861
+            ]
+          },
+          "selective": {
+            "ticks": 783484818,
+            "hz": 46875000,
+            "seconds": 16.714342784,
+            "frames": [
+              1861,
+              2861
+            ]
+          }
+        },
+        "software_return": true,
+        "title": "ALttP story",
+        "play_slot_touched": false,
+        "host_quiet_seconds": 20
       }
     ]
   },
@@ -239,14 +284,8 @@
     "elf_sha256": "d3f97fa636650dd3e011262fb9fa1a565c54302b2feba494b5c01beb4ed28145",
     "status": "PASS"
   },
-  "disposition": "CANDIDATE. Repeatable scoped native DKC1 gain, including a full interval without USB polling, and SMW smoke match. Draft PR, exact-head Ares CI and review gate promotion. Dense native behavior and wider compatibility have not been qualified.",
+  "disposition": "CANDIDATE, ready for review. Repeatable scoped native DKC1 gain, including a full interval without USB polling. SMW boot/demo and ALttP story smoke pairs match. All four exact-head workflows pass. Dense native behavior and wider compatibility remain open.",
   "exact_head_ci_checkpoint": [
-    {
-      "name": "Ares Profile Validation",
-      "status": "in_progress",
-      "conclusion": null,
-      "id": 43991454536
-    },
     {
       "name": "Profiling Memory Owners",
       "status": "completed",
@@ -264,6 +303,12 @@
       "status": "completed",
       "conclusion": "success",
       "id": 43991454565
+    },
+    {
+      "name": "Ares Profile Validation",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 43991454536
     }
   ]
 }

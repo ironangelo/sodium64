@@ -116,6 +116,9 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_dirr, apu_movx,  apu_dryr, apu_movx,  apu_dr2, apu_movm,  apu_drxr, apu_movy // 0xF8-0xFB
     .word apu_incy, 0,  apu_movya, 0,  apu_dbnzy, 0,  apu_stop, 0 // 0xFC-0xFF
 
+// Each flag covers 128 lookup entries. A clear flag guarantees an all-zero group.
+jit_lookup_live_groups: .byte 0:512
+
 .text
 .set noreorder
 
@@ -303,12 +306,17 @@ skip_pc:
     or t0, t0, s2
 
     // Update the JIT pointer and use its old value for block lookup
+jit_publish_lookup:
     lw t0, jit_pointer
     sw a1, jit_pointer
     sll t1, s0, 2
     lui t2, 0x2000
     sub t2, t0, t2 // Cached
+    srl t3, s0, 7
+    li t4, 1
+    sb t4, jit_lookup_live_groups(t3)
     sw t2, jit_lookup(t1)
+jit_lookup_published:
 
     // Set the end memory block and tag in the JIT header
     srl t1, a0, 6
@@ -329,12 +337,17 @@ reset_buffer:
     nop
 
 apu_invalidate_jit:
-    // Clear all block lookup pointers before reusing the JIT buffer.
+    // Clear every group that has published a pointer, including stale entries.
     la t0, jit_lookup
-    la t1, jit_pointer
+    la t1, jit_lookup_live_groups
+    la t2, jit_lookup_live_groups + 512
+reset_group:
+    lbu t3, 0(t1)
+    beqz t3, reset_empty_group
+    addiu t1, t1, 1
+    sb zero, -1(t1)
+    addiu t4, t0, 512
 reset_loop:
-    // Both endpoints are eight-byte aligned. Clear the same 256 KiB, including
-    // stale lookup entries, without a branch for each four-byte pointer.
     sd zero, 0(t0)
     sd zero, 8(t0)
     sd zero, 16(t0)
@@ -343,8 +356,15 @@ reset_loop:
     sd zero, 40(t0)
     sd zero, 48(t0)
     addi t0, t0, 64
-    bne t0, t1, reset_loop
+    bne t0, t4, reset_loop
     sd zero, -8(t0)
+    b reset_next_group
+    nop
+reset_empty_group:
+    addiu t0, t0, 512
+reset_next_group:
+    bne t1, t2, reset_group
+    nop
 
     li t0, JIT_BUFFER
     sw t0, jit_pointer

@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
-"""Execute the linked reset and require complete invalidation with exact bounds."""
+"""Verify linked lookup publication, invalidation and replay with exact bounds."""
 import argparse
-from linked_cpu_regression import CPU, load_elf
+from linked_cpu_regression import CPU, load_elf, sx32
+
+PHYSICAL = 0x1fffffff
+LOOKUP_SIZE = 0x40000
+GROUP_SIZE = 512
+GROUP_COUNT = LOOKUP_SIZE // GROUP_SIZE
+JIT_BUFFER = 0xa01c0000
+ROM_BUFFER = JIT_BUFFER + LOOKUP_SIZE
 
 
 def check(memory, symbols):
     cpu = CPU(memory.copy())
     start, end = symbols['jit_lookup'], symbols['jit_pointer']
+    flags = symbols.get('jit_lookup_live_groups')
     assert start % 8 == end % 8 == 0 and end-start == 0x40000
-    lo, hi = start & 0x1fffffff, end & 0x1fffffff
+    lo, hi = start & PHYSICAL, end & PHYSICAL
     # Every pointer, including stale or never-replayed entries, starts nonzero.
     # Both sentinels include adjacent live metadata, not just unused padding.
     cpu.memory.update((lo-32+i, 0xa5) for i in range(hi-lo+64))
+    if flags is not None:
+        assert cpu.blob(flags, GROUP_COUNT) == bytes(GROUP_COUNT), 'nonzero cold live groups'
+        owner = flags & PHYSICAL
+        cpu.memory.update((owner+i, 1) for i in range(GROUP_COUNT))
     cpu.pattern()
     before = cpu.regs.copy()
     cp, product = cpu.cp.copy(), (cpu.hi, cpu.lo)
@@ -20,19 +32,127 @@ def check(memory, symbols):
     assert cpu.blob(start-32, 32) == bytes([0xa5])*32, 'leading owner overwritten'
     assert cpu.blob(end+4, 28) == bytes([0xa5])*28, 'trailing owner overwritten'
     assert cpu.read(end) == 0xa01c0000, 'JIT pointer was not reset'
-    assert all(cpu.regs[i] == before[i] for i in range(32) if i not in (1, 8, 9, 31))
+    clobbers = (1, 8, 9, 31) if flags is None else (1, 8, 9, 10, 11, 12, 31)
+    assert all(cpu.regs[i] == before[i] for i in range(32) if i not in clobbers)
     # Restarted compilation installs its own link before calling the emitter.
     assert cpu.regs[31] & 0xffffffff == symbols['reset_buffer']+8
     assert (cpu.hi, cpu.lo) == product and cpu.cp == cp and not cpu.cp_writes
     coverage = set()
+    cleared_groups = []
     for address, width, value in cpu.memory_writes:
         assert value == 0 or address == hi, 'nonzero lookup publication during reset'
+        if flags is not None and owner <= address < owner+GROUP_COUNT:
+            assert width == 1 and value == 0, 'invalid live-group clear'
+            cleared_groups.append(address-owner)
+            continue
         assert lo <= address and address+width <= hi+4, 'write escaped lookup/pointer owner'
         if address < hi:
             assert not coverage.intersection(range(address, address+width)), 'duplicate clear'
             coverage.update(range(address, address+width))
     assert len(coverage) == 0x40000, 'incomplete lookup invalidation'
+    if flags is not None:
+        assert sorted(cleared_groups) == list(range(GROUP_COUNT))
+        assert cpu.blob(flags, GROUP_COUNT) == bytes(GROUP_COUNT)
     return cpu.steps
+
+
+def check_publication(memory, symbols):
+    cpu = CPU(memory.copy())
+    lookup = symbols['jit_lookup'] & PHYSICAL
+    flags = symbols['jit_lookup_live_groups'] & PHYSICAL
+    for group in range(GROUP_COUNT):
+        for offset in (0, 1, 127):
+            pc = group*128 + offset
+            cpu.pattern()
+            cpu.regs[16], cpu.regs[5] = pc, sx32(JIT_BUFFER + 0x100)
+            cpu.write(symbols['jit_pointer'], JIT_BUFFER)
+            cpu.memory_writes.clear()
+            cpu.execute(symbols['jit_publish_lookup'], stop=symbols['jit_lookup_published'])
+            mark = (flags+group, 1, 1)
+            publish = (lookup+4*pc, 4, JIT_BUFFER - 0x20000000)
+            assert cpu.memory_writes[-2:] == [mark, publish], 'lookup published without its owner'
+    return GROUP_COUNT*3
+
+
+def check_overflow_replay(memory, symbols):
+    """Compile and run SPC code, stale a block, overflow, then reuse rebuilt code."""
+    lookup = symbols['jit_lookup']
+    pointer = symbols['jit_pointer']
+    tags = symbols['jit_tags']
+    flags = symbols.get('jit_lookup_live_groups')
+    pcs, fresh = (0x027c, 0x0280, 0xff80), 0x8200
+
+    def dispatch(cpu, pc, expected):
+        cpu.write(symbols['apu_count'], pc, 2)
+        cpu.pattern()
+        cpu.regs[19], cpu.regs[7] = 4096, 0
+        cpu.execute(symbols['apu_execute'], stop=symbols['cpu_execute'])
+        assert cpu.read(symbols['apu_count'], 2) == pc+4
+        assert cpu.read(symbols['apu_accum'], 1) == expected
+        assert 4096-cpu.regs[19] == 6*21
+        header = cpu.read(lookup+pc*4)
+        assert 0x801c0000 <= header < 0x80200000
+        return header, cpu.read(pointer)
+
+    def check_cleared(cpu, groups):
+        assert cpu.blob(lookup, LOOKUP_SIZE) == bytes(LOOKUP_SIZE), 'lookup survived reset'
+        assert cpu.read(pointer) == JIT_BUFFER
+        if flags is None:
+            return
+        assert cpu.blob(flags, GROUP_COUNT) == bytes(GROUP_COUNT), 'live groups survived reset'
+        lo, hi = lookup & PHYSICAL, pointer & PHYSICAL
+        writes = [(address-lo, width, value) for address, width, value in cpu.memory_writes
+                  if lo <= address < hi]
+        expected = [(offset, 8, 0) for group in groups
+                    for offset in range(group*GROUP_SIZE, (group+1)*GROUP_SIZE, 8)]
+        assert writes == expected, 'reset wrote outside its live groups'
+
+    for cursor, from_emitter in ((ROM_BUFFER, False), (ROM_BUFFER-32-12, True)):
+        cpu = CPU(memory.copy())
+        assert cpu.blob(lookup, LOOKUP_SIZE) == bytes(LOOKUP_SIZE), 'cold lookup not zero'
+        cpu.pattern()
+        cpu.execute(symbols['apu_invalidate_jit'])
+        check_cleared(cpu, ())
+        cpu.write(symbols['apu_clock'], 21, 1)
+        cpu.write(symbols['apu_map']+0x3ff, 0, 1)
+        for pc in (*pcs, fresh):
+            cpu.write(symbols['apu_ram']+pc, 0xe8312f00)  # MOV A,#$31; BRA +0
+        for pc in pcs:
+            compiled = dispatch(cpu, pc, 0x31)
+            assert dispatch(cpu, pc, 0x31) == compiled, 'warm block was not reused'
+
+        stale = cpu.read(lookup+pcs[0]*4)
+        tag_offset = pcs[0]//64*4
+        cpu.pattern()
+        cpu.regs[4], cpu.regs[5], cpu.regs[19] = pcs[0]+1, 0x42, 4096
+        cpu.execute(symbols['apu_write8'])
+        assert cpu.read(lookup+pcs[0]*4) == stale
+        assert cpu.read(tags+tag_offset) != cpu.read(stale+4), 'block did not become stale'
+        tag_bytes = cpu.blob(tags, 4096)
+
+        reached = []
+        attempted_emit = []
+
+        def after_reset(machine):
+            check_cleared(machine, sorted({pc//128 for pc in pcs}))
+            assert machine.blob(tags, 4096) == tag_bytes
+            reached.append(True)
+
+        def before_reset(machine):
+            assert bool(attempted_emit) == from_emitter, 'wrong overflow path'
+            machine.memory_writes.clear()
+            machine.before_instruction[symbols['compile_block']] = after_reset
+
+        cpu.write(pointer, cursor)
+        cpu.before_instruction[symbols['emit_op']] = lambda _: attempted_emit.append(True)
+        cpu.before_instruction[symbols['reset_buffer']] = before_reset
+        compiled = dispatch(cpu, fresh, 0x31)
+        assert reached == [True], 'did not reach common reset and restart'
+        assert dispatch(cpu, fresh, 0x31) == compiled
+        assert all(cpu.read(lookup+pc*4) == 0 for pc in pcs)
+        rebuilt = dispatch(cpu, pcs[0], 0x42)
+        assert dispatch(cpu, pcs[0], 0x42) == rebuilt
+    return 2
 
 
 def check_clock_change(memory, symbols):
@@ -40,6 +160,7 @@ def check_clock_change(memory, symbols):
     pcs = (0x0200, 0x8200, 0xfe00)
     start = symbols['jit_lookup']
     pointer = symbols['jit_pointer']
+    flags = symbols.get('jit_lookup_live_groups')
     clock = symbols['apu_clock']
     options = ('counter_set', 'layer_set', 'precision_set', 'skipped_set', 'audio_set')
 
@@ -103,12 +224,16 @@ def check_clock_change(memory, symbols):
         assert compiled > 0xa01c0000
         entries = [cpu.read(start+4*pc) for pc in pcs]
         assert all(0x801c0000 <= value < 0x80200000 for value in entries)
+        if flags is not None:
+            groups = cpu.blob(flags, GROUP_COUNT)
         close(cpu, old)
         lookup, limit = start & 0x1fffffff, pointer & 0x1fffffff
         assert not any(lookup <= address <= limit or address == (clock & 0x1fffffff)
                        for address, _, _ in cpu.memory_writes), 'unchanged menu close wrote APU cache state'
         assert cpu.read(pointer) == compiled
         assert [cpu.read(start+4*pc) for pc in pcs] == entries
+        if flags is not None:
+            assert cpu.blob(flags, GROUP_COUNT) == groups
         dispatch(cpu, pcs[0], old)
         assert cpu.read(pointer) == compiled, 'unchanged menu close evicted cached code'
         tags = cpu.blob(symbols['jit_tags'], 4096)
@@ -116,6 +241,8 @@ def check_clock_change(memory, symbols):
         assert cpu.blob(start, 0x40000) == bytes(0x40000), 'old-clock lookup survived menu close'
         assert cpu.read(pointer) == 0xa01c0000
         assert cpu.blob(symbols['jit_tags'], 4096) == tags
+        if flags is not None:
+            assert cpu.blob(flags, GROUP_COUNT) == bytes(GROUP_COUNT)
         for pc in pcs:
             dispatch(cpu, pc, new)
         assert all(cpu.read(start+4*pc) for pc in pcs)
@@ -131,6 +258,8 @@ def main():
     args = parser.parse_args()
     memory, symbols = load_elf(args.elf)
     steps = check(memory, symbols)
+    publications = check_publication(memory, symbols) if 'jit_lookup_live_groups' in symbols else 0
+    overflow_replays = check_overflow_replay(memory, symbols)
     clock_rebuilds = check_clock_change(memory, symbols)
     # Real emitted-code faults: omit a store, omit the delay-slot store, or
     # stop one batch early. All must fail independently of the positive run.
@@ -175,7 +304,22 @@ def main():
         assert str(error) == 'menu did not select the requested APU clock'
     else:
         raise AssertionError('missing menu setting update fault accepted')
-    print(f'APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults=5 instructions={steps} '
+    faults = 5
+    if publications:
+        cpu = CPU(memory.copy())
+        stores = [pc for pc in range(symbols['jit_publish_lookup'], symbols['jit_lookup_published'], 4)
+                  if cpu.read(pc) >> 26 == 40]
+        assert len(stores) == 1, 'expected one live-group byte store'
+        cpu.write(stores[0], 0)
+        try:
+            check_publication(cpu.memory, symbols)
+        except AssertionError as error:
+            assert str(error) == 'lookup published without its owner'
+        else:
+            raise AssertionError('missing live-group store fault accepted')
+        faults += 1
+    print(f'APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults={faults} instructions={steps} '
+          f'publications={publications} overflow_replays={overflow_replays} '
           f'clock_rebuilds={clock_rebuilds} menu_transitions=4; no N64 timing claim')
 
 

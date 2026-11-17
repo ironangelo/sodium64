@@ -49,6 +49,10 @@ private:
     unsigned echo_first, echo_end;
     unsigned echo_clock, echo_address, echo_offset, echo_length;
     bool echo_can_write, echo_writes_after_latch, echo_right_only;
+#ifdef SODIUM64_DSP_STICKY_ENDX
+    bool endx_clear_pending;
+    bool endx_is_saturated() const;
+#endif
     bool echo_hazard(unsigned addr) const;
     void start_echo_projection();
     void project_echo(unsigned clocks);

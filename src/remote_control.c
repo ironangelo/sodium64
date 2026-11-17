@@ -410,6 +410,9 @@ static void status(const char *id) {
 #ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
         field(" full_queued_ram=",stats->queued_ram_writes);
 #endif
+#ifdef SODIUM64_DSP_STICKY_ENDX
+        field(" sticky_endx_reads=",stats->sticky_endx_reads);
+#endif
 #ifdef SODIUM64_DSP_RSP_SWAP
         field(" critical_reg=",stats->required_reg);
         field(" critical_echo=",stats->required_echo);

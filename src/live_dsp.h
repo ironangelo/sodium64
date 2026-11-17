@@ -47,6 +47,9 @@ struct live_dsp_stats {
 #ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
     uint32_t queued_ram_writes;
 #endif
+#ifdef SODIUM64_DSP_STICKY_ENDX
+    uint32_t sticky_endx_reads;
+#endif
 };
 #endif
 #endif

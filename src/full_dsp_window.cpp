@@ -38,6 +38,9 @@ void SPC_DSP_Window::init(SPC_DSP& dsp, unsigned char* cpu_ram,
     }
     core = &dsp; cpu = cpu_ram; shadow = shadow_ram;
     pending = count = 0; publish = callback; publish_context = context;
+#ifdef SODIUM64_DSP_STICKY_ENDX
+    endx_clear_pending = false;
+#endif
     memcpy(shadow, cpu, 65536);
     core->init(shadow);
     core->echo_publish = publish_echo;
@@ -133,6 +136,9 @@ void SPC_DSP_Window::flush() {
     }
     if (pending > cursor) run_dsp(*core, pending - cursor);
     pending = count = 0;
+#ifdef SODIUM64_DSP_STICKY_ENDX
+    endx_clear_pending = false;
+#endif
 }
 
 void SPC_DSP_Window::queue(unsigned addr, unsigned data, bool reg) {
@@ -175,9 +181,30 @@ static bool output_may_publish(unsigned addr, unsigned phase, unsigned clocks) {
     return clocks > ((next - phase) & 31);
 }
 
+#ifdef SODIUM64_DSP_STICKY_ENDX
+bool SPC_DSP_Window::endx_is_saturated() const {
+    // V5 only sets ENDX bits unless a voice is starting. V7 can still
+    // publish the older latched byte. Prove both bytes are saturated.
+    if (endx_clear_pending || core->m.kon || core->m.new_kon ||
+        core->read(SPC_DSP::r_endx) != 0xff || core->m.endx_buf != 0xff)
+        return false;
+    for (unsigned i = 0; i < SPC_DSP::voice_count; ++i)
+        if (core->m.voices[i].kon_delay >= 5) return false;
+    return true;
+}
+#endif
+
 int SPC_DSP_Window::read_reg(unsigned addr) {
     assert(addr < SPC_DSP::register_count);
     if (pending && output_may_publish(addr, core->m.phase, pending)) {
+#ifdef SODIUM64_DSP_STICKY_ENDX
+        if (addr == SPC_DSP::r_endx && endx_is_saturated()) {
+#ifdef SODIUM64_DSP_LIVE_CORE
+            ++reinterpret_cast<live_dsp_stats*>(LIVE_DSP_STATS)->sticky_endx_reads;
+#endif
+            return 0xff;
+        }
+#endif
 #ifdef SODIUM64_DSP_RSP_SWAP
         // Count ownership after the live bridge has serviced any pending yield.
         if (!(reinterpret_cast<volatile uint32_t*>(0xa4040010u)[0] & 1u))
@@ -203,6 +230,10 @@ void SPC_DSP_Window::write_reg(unsigned addr, unsigned data) {
     // projection. Keep them constant while any clocks are pending.
     if (addr == SPC_DSP::r_esa || addr == SPC_DSP::r_edl || addr == SPC_DSP::r_flg) flush();
     queue(addr, data, true);
+#ifdef SODIUM64_DSP_STICKY_ENDX
+    if (pending && (addr == SPC_DSP::r_endx || (addr == SPC_DSP::r_kon && data)))
+        endx_clear_pending = true;
+#endif
 }
 
 void SPC_DSP_Window::publish_echo(void* context, unsigned addr,

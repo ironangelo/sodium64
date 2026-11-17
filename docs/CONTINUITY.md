@@ -1,3 +1,34 @@
+# 2026-11-16 — Serve DSP reads until the next register publication
+
+The private live controller `ffeda5c5` can answer ENVX, OUTX and
+ENDX from the most recent visible value when the queued clocks
+cannot publish a new one. Same-clock writes stay ordered, including
+the clear-on-write rule for ENDX. The directed test passes 44,608
+cases across all 32 phases and the four complete corpus replays
+preserve outputs, final state and RAM.
+
+On real N64, the same eight-voice workload needs 1,993 synchronous
+register catches across frames 48–88, down from 2,658. None of those
+needed another catch within three SPC clocks, down from 665. The
+renderer is running after the yield check on 247 of the remaining
+1,993 catches. This leaves a deadline a two-checkpoint schedule
+cannot guarantee. Frame 88 RGB and captured PCM match exactly. The
+native image publishes one fewer echo word by that boundary with
+the same SPC clocks and PCM count. Confirm native echo visibility
+at a drained DSP boundary as part of the full backend gate. The
+run returns by software and preserves the play slot.
+
+The complete CPU bridge still costs 34.355 ms per guest frame in
+this run. The linked R4300 run loop and three called voice functions
+alone use 5,660 bytes, beyond the entire 4 KiB RSP instruction bank
+before accounting for renderer ownership. Advance the complete
+accelerated backend with an explicit compact code layout and a
+deadline path for renderer-owned SP intervals, using the same
+workload and scalar reference. Production bytes match `7a6e3d75`.
+[Publication-window proof and native deadline counts](evidence/integration-dsp-output-publication-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Keep RSP state resident across renderer sections
 
 The private proof `d99d78dd` retains 64 bytes in four unused vector

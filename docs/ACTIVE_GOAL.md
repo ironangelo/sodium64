@@ -271,8 +271,12 @@ the middle of a frame. It offers only two checkpoints per frame
 in this workload. A private native proof retains 64 bytes across 40
 renderer handoffs without bank exchange or RDP drain, with exact RGB
 and captured PCM and 18.761 us mean service cost. The DSP still runs
-on the CPU. Full accelerated compute, bounded scheduling for critical
-reads and general live fetch/echo remain open.
+on the CPU. Publication-aware output reads avoid 665 synchronous
+catches in that same 40-frame workload. The renderer is still running
+on 247 of the 1,993 remaining catches. Full accelerated compute needs
+a compact code layout with a bounded deadline path during SP ownership
+and exact native echo/fetch publication.
+[Native register-publication deadlines](evidence/integration-dsp-output-publication-2026-11-16.json).
 [Native resident-state handoff](evidence/integration-dsp-rsp-resident-state-2026-11-16.json).
 [Native in-frame RSP handoff](evidence/integration-dsp-rsp-in-frame-yield-2026-11-16.json).
 [Native transport and PCM service](evidence/integration-dsp-rsp-handoff-2026-11-16.json).

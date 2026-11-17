@@ -1,0 +1,71 @@
+{
+  "date_local": "2026-11-16",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "reference_head": "d99d78dd60f4a8a8385925793f34a6f47556314f",
+  "proof_head": "ffeda5c55696a4b9c8ca2330a8eb1b711198e964",
+  "proof_rom_sha256": "1193f742ad437aa31d55760483f48a2532913b7aadd8e3d8766db86946267eb5",
+  "scope": "Original eight-voice moving-window guest on physical N64 with the regular renderer. Same 40 frames and APU clock 21 with frameskip 0. Complete DSP execution remains on the R4300.",
+  "method": "The controller catches up for ENVX, OUTX or ENDX only if a publishing phase can run in the pending window. Otherwise report the latest visible CPU write (clear for ENDX) or DSP value. Preserve all chronological work for the next flush.",
+  "host": {
+    "directed_reads": 44608,
+    "coverage": "32 phase starts, 17 output registers, 41 window lengths, with and without interleaved register and RAM writes at the same numeric address.",
+    "complete_corpus_state_ram_pcm_exact": 4
+  },
+  "native": {
+    "frames": [
+      48,
+      88
+    ],
+    "reference_interval": {
+      "full_cycles": 680702,
+      "full_pcm": 21272,
+      "full_outputs": 2658,
+      "full_echo": 42550,
+      "critical_reg": 2658,
+      "critical_le3": 665,
+      "yield_count": 80
+    },
+    "publication_interval": {
+      "full_cycles": 680702,
+      "full_pcm": 21272,
+      "full_outputs": 2658,
+      "full_echo": 42549,
+      "critical_reg": 1993,
+      "critical_le3": 0,
+      "yield_count": 80
+    },
+    "register_catches_while_rsp_running_after_yield_check": 247,
+    "frame_88_rgb_differing_pixels": 0,
+    "frame_88_pcm_differing_bytes": 0,
+    "echo_limit": "The frame 88 pause does not force DSP catch-up. One fewer echo word has been published at that boundary. Native echo equivalence at a drained DSP boundary remains open.",
+    "software_return": true,
+    "play_slot_touched": false,
+    "bridge_ticks": 64415699,
+    "nested_core_ticks": 40970959,
+    "r4300_count_mhz": 46.875,
+    "bridge_ms_per_guest_frame": 34.355039,
+    "nested_core_ms_per_guest_frame": 21.851178
+  },
+  "linked_r4300_bytes": {
+    "SPC_DSP::run": 3532,
+    "SPC_DSP::voice_V3c": 1244,
+    "SPC_DSP::voice_V4": 632,
+    "SPC_DSP::voice_V8_V5_V2": 252
+  },
+  "production_identity": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  },
+  "open": [
+    "Complete compact accelerated implementation with an explicit layout and an exact deadline path while the renderer owns SP.",
+    "Native full-width echo, RAM and fetch equivalence including a drained boundary; general workload coverage and native Mode 7."
+  ]
+}

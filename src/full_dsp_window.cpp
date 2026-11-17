@@ -142,13 +142,28 @@ void SPC_DSP_Window::write_ram(unsigned addr, unsigned data) {
     queue(addr, data, false);
 }
 
+static bool output_may_publish(unsigned addr, unsigned phase, unsigned clocks) {
+    // GEN_DSP_TIMING publishes V7/V8/V9 for voice n at 2/3/4 + 3*n.
+    // phase is the next unexecuted clock. V7 publishes global ENDX.
+    if (addr == SPC_DSP::r_endx) {
+        unsigned next = phase <= 23 ? 2 + 3 * (phase / 3) : 32 + 2;
+        return clocks > next - phase;
+    }
+    unsigned voice_reg = addr & 15;
+    if (voice_reg != SPC_DSP::v_envx && voice_reg != SPC_DSP::v_outx)
+        return false;
+    unsigned next = 3 * (addr >> 4) + (voice_reg == SPC_DSP::v_envx ? 4 : 3);
+    return clocks > ((next - phase) & 31);
+}
+
 int SPC_DSP_Window::read_reg(unsigned addr) {
     assert(addr < SPC_DSP::register_count);
-    // Only these registers can change as the DSP runs between producer
-    // writes. Reset, soft reset and state import drain this queue first.
-    unsigned voice_reg = addr & 15;
-    if (addr == SPC_DSP::r_endx || voice_reg == SPC_DSP::v_envx ||
-        voice_reg == SPC_DSP::v_outx) {
+    if (pending && output_may_publish(addr, core->m.phase, pending)) {
+#ifdef SODIUM64_DSP_RSP_SWAP
+        // Count ownership after the live bridge has serviced any pending yield.
+        if (!(reinterpret_cast<volatile uint32_t*>(0xa4040010u)[0] & 1u))
+            ++reinterpret_cast<live_dsp_stats*>(LIVE_DSP_STATS)->required_reg_busy;
+#endif
         flush();
         return core->read(addr);
     }
@@ -157,7 +172,8 @@ int SPC_DSP_Window::read_reg(unsigned addr) {
     // same clock. A RAM write to the same numeric address is independent.
     for (unsigned i = count; i != 0; --i) {
         const event_t& event = events[i - 1];
-        if (event.reg && event.addr == addr) return event.data;
+        if (event.reg && event.addr == addr)
+            return addr == SPC_DSP::r_endx ? 0 : event.data;
     }
     return core->read(addr);
 }

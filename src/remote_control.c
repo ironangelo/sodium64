@@ -404,6 +404,7 @@ static void status(const char *id) {
         field(" critical_reg=",stats->required_reg);
         field(" critical_echo=",stats->required_echo);
         field(" critical_le3=",stats->required_le3);
+        field(" critical_reg_busy=",stats->required_reg_busy);
 #endif
 #endif
 #endif

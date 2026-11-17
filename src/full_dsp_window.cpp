@@ -57,7 +57,8 @@ unsigned SPC_DSP_Window::echo_write_floor() const {
     unsigned latched_base = core->m.t_esa << 8;
     unsigned ptr = core->m.t_echo_ptr;
     unsigned length = (core->m.regs[SPC_DSP::r_edl] & 15u) << 11;
-    if (length < core->m.echo_length) length = core->m.echo_length;
+    unsigned latched_length = core->m.echo_length;
+    if (length < latched_length) length = latched_length;
     if (length < core->m.echo_offset + 4u) length = core->m.echo_offset + 4u;
     if (base + length > 65536 || latched_base + length > 65536 || (ptr & 3u))
         return 0;

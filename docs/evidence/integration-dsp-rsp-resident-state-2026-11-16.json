@@ -1,0 +1,73 @@
+{
+  "date_local": "2026-11-16",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "proof_head": "d99d78dd60f4a8a8385925793f34a6f47556314f",
+  "proof_rom_sha256": "a63b6da968278faf95809929ace2ea638ebf972ff99a236897813c4d27f49573",
+  "digital_reference_head": "989225a1eb0ee38e1161997fde6ff94430f0c01f",
+  "scope": "Original eight-voice moving-window guest on physical N64. Regular renderer. Full live DSP remains on the CPU. APU clock 21 and frameskip 0.",
+  "layout": {
+    "linked_overlays_checked": [
+      "rsp_main",
+      "rsp_mode7"
+    ],
+    "reserved_vectors": [
+      9,
+      16,
+      17,
+      19
+    ],
+    "resident_bytes": 64,
+    "imem_prefix_bytes": 40,
+    "imem_installs_from_cold_boot": 1,
+    "scratch_mailbox_bytes": 64,
+    "method": "Borrow the once-used IMEM prefix after startup. Check idle SP DMA and nonoverlap of active RDP XBUS before writing. Poison the transient DMEM mailbox before each store, compare all stored words, restore the renderer scratch and resume drawing."
+  },
+  "native_window": {
+    "start_frame": 48,
+    "end_frame": 88,
+    "yield_count": 80,
+    "yield_after_first": 40,
+    "resident_matches": 40,
+    "resident_busy": 40,
+    "resident_skips": 0,
+    "resident_ticks": 35176,
+    "dmem_count": 0,
+    "both_count": 0,
+    "rdp_sync_count": 0,
+    "full_pcm": 21272,
+    "full_cycles": 680702,
+    "full_outputs": 2658,
+    "full_echo": 42550,
+    "critical_reg": 2658,
+    "critical_le3": 665
+  },
+  "service_timing": {
+    "count_clock_mhz": 46.875,
+    "includes": "Scratch preservation, write or poison, RSP launch and break, CPU verification and scratch restore.",
+    "window_mean_us": 18.760533,
+    "boot_to_end_max_ticks": 1170,
+    "boot_to_end_max_us": 24.96
+  },
+  "digital_comparison_frame": 88,
+  "rgb_differences": 0,
+  "pcm_differences": 0,
+  "software_return": true,
+  "play_slot_touched": false,
+  "production_identity": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  },
+  "open": [
+    "Complete accelerated DSP computation and its end-to-end cost including SPC and echo/fetch.",
+    "Exact service of urgent outputs when renderer ownership extends across the observation.",
+    "Native Mode 7 with the resident state and safe prefix reload across overlay changes."
+  ]
+}

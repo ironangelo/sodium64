@@ -268,8 +268,12 @@ original workload. It leaves the critical register catches in
 place. The private original guest now qualifies section-boundary
 RSP pause/resume, verified memory restore and a staged marker in
 the middle of a frame. It offers only two checkpoints per frame
-in this workload. Full accelerated compute, bounded scheduling
-for critical reads and general live fetch/echo remain open.
+in this workload. A private native proof retains 64 bytes across 40
+renderer handoffs without bank exchange or RDP drain, with exact RGB
+and captured PCM and 18.761 us mean service cost. The DSP still runs
+on the CPU. Full accelerated compute, bounded scheduling for critical
+reads and general live fetch/echo remain open.
+[Native resident-state handoff](evidence/integration-dsp-rsp-resident-state-2026-11-16.json).
 [Native in-frame RSP handoff](evidence/integration-dsp-rsp-in-frame-yield-2026-11-16.json).
 [Native transport and PCM service](evidence/integration-dsp-rsp-handoff-2026-11-16.json).
 [Active whole-core native cost](evidence/integration-dsp-active-native-cost-2026-11-16.json).

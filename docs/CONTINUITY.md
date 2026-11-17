@@ -1,3 +1,29 @@
+# 2026-11-16 — Keep RSP state resident across renderer sections
+
+The private proof `d99d78dd` retains 64 bytes in four unused vector
+registers. It installs 40 bytes of IMEM once after renderer startup.
+Each service checks DMA and the active RDP XBUS range, uses and restores
+64 bytes of renderer scratch, then resumes drawing. The linked regular
+and Mode 7 overlays keep clear of those vectors and the reused IMEM range
+after startup. A fresh overlay start still needs its original prefix.
+
+The original eight-voice moving-window guest on N64 verifies all 40
+services across frames 48–88 while the RDP remains busy. Service averages
+18.761 us and the boot-to-frame-88 maximum is 24.960 us. Frame 88 RGB
+and captured PCM match the scalar reference exactly. The run returns
+to the menu in software and preserves the play slot. The production
+ROM and ELF match `7a6e3d75` byte for byte.
+
+This qualifies the resident storage and handoff on the regular renderer.
+The current two checkpoints per frame cannot directly serve the 2,658
+critical reads seen across those 40 frames. The complete DSP still runs
+on the CPU. The next implementation gate is a bounded full-DSP schedule
+that answers those reads and reproduces PCM and live echo publication,
+with an explicit space budget for both renderer overlays.
+[Native resident-state evidence](evidence/integration-dsp-rsp-resident-state-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Execute an RSP task inside a live renderer frame
 
 The original live eight-voice control now pauses at each section

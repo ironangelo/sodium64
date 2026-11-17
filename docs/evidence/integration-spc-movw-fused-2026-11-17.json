@@ -1,0 +1,136 @@
+{
+  "date_local": "2026-11-17",
+  "disposition": "REJECTED on native cadence. PR46 remains at its earlier draft head.",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "pr46_head": "1cbf8e8e4129ebce6e6f773a7cc350b4187e6634",
+  "archive_source_head": "a87448651846a2821fb349763e4b73fa944b071b",
+  "bench_definition": "Original fixed 1200-guest-frame SMW window with two aligned capture boundaries, identical private clock adapter, no host polling during the measured interval, regular precision 8, APU 21, frameskip 0, no controller input.",
+  "linked": {
+    "master_cases_failed": 590,
+    "word_cases_each_normal_and_remote": 1006,
+    "direct_helper_cases_each": 960,
+    "rejected_helper_mutations_each": 5,
+    "rejected_emitted_mutations_each": 2,
+    "address_wrap_cases_each": 770,
+    "master_symbol_addresses_moved": 0,
+    "ordinary_cached_movw_mips_instructions": {
+      "master": 88,
+      "short_read": 96,
+      "fused": 86
+    },
+    "test_block_spc_cycles_each": 9,
+    "layout_preserving_review_rebuild_bytes_exact": true
+  },
+  "native_pairs": [
+    {
+      "order": [
+        "master",
+        "fused"
+      ],
+      "extra_elapsed_ms": 85.16499199999927,
+      "modes": {
+        "master": {
+          "head": "17b634f46d22a6cbf977585a77a2d29cac54a300",
+          "ROM_sha256": "c475caf781c95857f89ebfc81d168203258dafaf1e31eaff0f49cb55dc757f19",
+          "timing": {
+            "ticks": 964309758,
+            "count_hz": 46875000,
+            "sec": 20.571941504,
+            "guest_frames": 1200,
+            "guest_per_second": 58.33187887330287
+          },
+          "software_return": true,
+          "play_slot_touched": false
+        },
+        "fused": {
+          "head": "aa5c8dcbf155f2023f301f5c18df188096bc7f30",
+          "ROM_sha256": "5eb787d5dd09b050c74abfdd96570ad2afbd72b2eb04942638ac258fe5f8378c",
+          "timing": {
+            "ticks": 968301867,
+            "count_hz": 46875000,
+            "sec": 20.657106496,
+            "guest_frames": 1200,
+            "guest_per_second": 58.091388560753444
+          },
+          "software_return": true,
+          "play_slot_touched": false
+        }
+      },
+      "digital_comparison": [
+        {
+          "frame": 3016,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 4216,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ]
+    },
+    {
+      "order": [
+        "fused",
+        "master"
+      ],
+      "extra_elapsed_ms": 83.76157866666745,
+      "modes": {
+        "fused": {
+          "head": "aa5c8dcbf155f2023f301f5c18df188096bc7f30",
+          "ROM_sha256": "5eb787d5dd09b050c74abfdd96570ad2afbd72b2eb04942638ac258fe5f8378c",
+          "timing": {
+            "ticks": 968302446,
+            "count_hz": 46875000,
+            "sec": 20.657118848,
+            "guest_frames": 1200,
+            "guest_per_second": 58.09135382479453
+          },
+          "software_return": true,
+          "play_slot_touched": false
+        },
+        "master": {
+          "head": "17b634f46d22a6cbf977585a77a2d29cac54a300",
+          "ROM_sha256": "c475caf781c95857f89ebfc81d168203258dafaf1e31eaff0f49cb55dc757f19",
+          "timing": {
+            "ticks": 964376122,
+            "count_hz": 46875000,
+            "sec": 20.573357269333332,
+            "guest_frames": 1200,
+            "guest_per_second": 58.32786473740585
+          },
+          "software_return": true,
+          "play_slot_touched": false
+        }
+      },
+      "digital_comparison": [
+        {
+          "frame": 3016,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 4216,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ]
+    }
+  ],
+  "normal_release_guard": {
+    "linked_symbols": 1254,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "2bba72b334f05c25114047ad6e19c3c989ee630d7310fec9e274da7d37cee1a2",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "d5f24555e9bec07b1c470bdfe057a21ef5bb4ad575e562925419f7a4b04321a5",
+    "status": "PASS"
+  }
+}

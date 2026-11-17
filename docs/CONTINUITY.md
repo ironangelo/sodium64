@@ -1,3 +1,32 @@
+# 2026-11-17 — Reject the fused MOVW RAM path on native cost
+
+The PR46-derived build preserves the MOVW destination read, writes the
+low byte and publishes its JIT tag in one RAM helper. Both real bus
+operations keep their own cycle debit. Possible low-byte I/O and the
+high-byte store retain the standard helpers. The original linked
+symbol addresses remain fixed. A cached ordinary MOVW block executes
+86 interpreted MIPS instructions versus 88 on master and 96 with the
+previous short-read helper. All three debit nine SPC cycles in the
+test block.
+
+Normal and REMOTE each pass 1,006 linked word cases, 960 ordered
+RAM/read/write/tag cases, five helper mutations, two emitted-code
+mutations and 770 address-wrap cases. Master still fails 590 of the
+1,006 word cases. The clean PR46-based branch `a8744865` rebuilds the
+verified candidate exactly. The common physical clock adapter adds
+the only bench-source difference.
+
+On real N64, the same 1,200 SMW demo frames take 85.165 and 83.762 ms
+longer in opposite launch orders. Both aligned RGB/PCM captures and
+observed DSP state match. All four launches return by software and
+preserve the play slot. Reject this helper and keep PR46 draft at
+`1cbf8e8e`. Fewer linked instructions did not move its cadence gate.
+PR47 remains the integration-ready runtime candidate, with all four
+exact-head workflows green and review pending.
+[Fused MOVW native and linked results](evidence/integration-spc-movw-fused-2026-11-17.json).
+
+---
+
 # 2026-11-17 — Verify saturated ENDX replies on N64
 
 The private controller can return `ENDX=0xff` without running pending

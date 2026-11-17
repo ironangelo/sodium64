@@ -152,6 +152,12 @@ Promotion stays blocked. Preserve both proofs and move to the next
 qualified component or the complete resident DSP gate.
 [Native attribution and six-operation split](evidence/integration-spc-movw-residual-2026-11-16.json).
 [Layout-preserving fixed-work evidence](evidence/integration-spc-word-layout-2026-11-16.json).
+The fused ordinary-RAM MOVW helper preserves the real destination read
+and both cycle debits. It passes 1,006 linked word cases and 960 helper
+cases, with 86 interpreted instructions versus the master's 88 for the
+cached test block. The opposite-order native SMW pairs add 85.165 and
+83.762 ms with exact captures. Reject this helper and retain the PR46
+cadence blocker. [Fused helper evidence](evidence/integration-spc-movw-fused-2026-11-17.json).
 
 PR47 `cd055b02` isolates selective SPC700 JIT invalidation.
 Four linked variants pass publication, overflow/replay and clock-menu

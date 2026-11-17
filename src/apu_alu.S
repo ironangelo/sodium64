@@ -841,6 +841,58 @@ emit_dp_next:
     j emit_op
     or t0, t0, t1
 
+.globl apu_movw_store_address
+apu_movw_store_address:
+    jal jit_read8
+    nop
+    jal load_flags
+    nop
+    EMIT_OP SLL(A0, S1, 3)
+    EMIT_OP ANDI(A0, A0, 0x100)
+    // For ordinary RAM the low-byte writer handles the destination read.
+    // A possible I/O destination must still go through the original read.
+    sltiu t1, v0, 0xf0
+    bnez t1, emit_movw_destination_address
+    nop
+    la t0, apu_read8
+    jal emit_jal
+    nop
+emit_movw_destination_address:
+    li t0, ORI(A0, A0, 0)
+    or t0, t0, v0
+    j emit_op
+    move ra, gp
+
+.globl emit_movw_low_write
+emit_movw_low_write:
+    la t0, apu_write8
+    sltiu t1, v0, 0xf0
+    beqz t1, emit_jal
+    nop
+    la t0, apu_movw_write_ram
+    j emit_movw_double_bus
+    nop
+
+.globl apu_movw_write_ram
+apu_movw_write_ram: // a0: ordinary RAM address, a1: low YA byte
+    la t2, apu_ram
+    addu t2, t2, a0
+    lbu v0, 0(t2)
+    lbu t0, apu_clock
+    sub s3, s3, t0
+    sb a1, 0(t2)
+
+    // Publish the write to the same JIT page tag as apu_write8.
+    srl t1, a0, 6
+    sll t1, t1, 2
+    la t2, jit_tags
+    addu t1, t1, t2
+    lw t2, 0(t1)
+    addiu t2, t2, 1
+    sw t2, 0(t1)
+    jr ra
+    sub s3, s3, t0
+
 // Retain the original aligned emitter slots to preserve unrelated hot code.
 .org apu_decw + 0xE0
 .align 5
@@ -878,6 +930,14 @@ apu_modify_word:
     la ra, finish_opcode
     j queue_nz
     li t1, T0
+
+emit_movw_double_bus:
+    // The normal bus emitter accounts for the write. Add its paired read.
+    lui t2, %hi(jit_block_cycles)
+    lw t1, %lo(jit_block_cycles)(t2)
+    addiu t1, t1, 1
+    j emit_jal_guest_bus
+    sw t1, %lo(jit_block_cycles)(t2)
 
 .org apu_incw + 0xE0
 .align 5

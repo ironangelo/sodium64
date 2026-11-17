@@ -80,25 +80,36 @@ def check(cpu, symbols, case, clock, mutation=None):
     for index, byte in enumerate((case.opcode, case.offset, 0x2f, 0xfc)):
         cpu.write(s['apu_ram'] + PC + index, byte, 1)
     events = []
+    fused_writes = []
 
-    def observe(kind):
-        address = s['apu_read8' if kind == 'r' else 'apu_write8']
+    def observe(kind, helper):
+        address = s[helper]
 
         def hook(machine):
             target = machine.regs[4] & 0xffff
             event = (kind, target)
-            if kind == 'w':
+            if kind in ('w', 'rw'):
                 event += (machine.regs[5] & 0xff,)
-            events.append(event)
+            if kind == 'rw':
+                # The direct-helper test verifies the physical accesses and
+                # their cycle order. Here verify their place in the JIT block.
+                events.extend((('r', target), ('w', *event[1:])))
+                fused_writes.append(target)
+            else:
+                events.append(event)
             machine.before_instruction[address] = hook
 
         return hook
 
-    for kind, helper in [('r', 'apu_read8'), ('w', 'apu_write8')]:
-        cpu.before_instruction[s[helper]] = observe(kind)
+    helpers = [('r', 'apu_read8'), ('w', 'apu_write8')]
+    if 'apu_movw_write_ram' in s:
+        helpers.append(('rw', 'apu_movw_write_ram'))
+    for kind, helper in helpers:
+        cpu.before_instruction[s[helper]] = observe(kind, helper)
 
     def execute():
         events.clear()
+        fused_writes.clear()
         original_low = 0xad if low in timer_values or case.dsp_alias else case.value & 0xff
         original_high = 0xbe if high in timer_values or case.dsp_alias else case.value >> 8
         for address, byte in ((alias, 0x69), (low, original_low), (high, original_high)):
@@ -122,6 +133,9 @@ def check(cpu, symbols, case, clock, mutation=None):
         assert cpu.read(s['apu_count'], 2) == PC, 'guest PC'
         assert START_DEBT - cpu.regs[19] == (case.cycles + 4) * clock, 'cycle debit'
         assert events == bus, ('bus', events, bus)
+        if 'apu_movw_write_ram' in s:
+            expected_fused = [low] if case.name == 'movw_store' and case.offset < 0xf0 else []
+            assert fused_writes == expected_fused, 'MOVW fused RAM/I/O dispatch'
         assert cpu.read(s['apu_accum'], 1) == ya & 0xff, 'accumulator'
         assert cpu.read(s['apu_reg_y'], 1) == ya >> 8, 'Y'
         assert cpu.read(s['apu_flags'], 1) == flags, 'flags'
@@ -165,6 +179,89 @@ def scenarios():
             yield Case(name, opcode, cycles, 0, 0xfe, 0x1234, value)
     # The low write selects a different DSP register before the high read.
     yield Case('incw', 0x3a, 6, 0, 0xf2, 0x1234, 0x361e, dsp_alias=True)
+    # EF is normal RAM even when the high write goes to F0. F2 itself
+    # must use the I/O read helper, and the high write goes to the DSP.
+    for flags in (0, 0x20):
+        yield Case('movw_store', 0xda, 5, flags, 0xef, 0x351f, 0x361e)
+        yield Case('movw_store', 0xda, 5, flags, 0xf0, 0x001f, 0x361e)
+    yield Case('movw_store', 0xda, 5, 0, 0xf2, 0x351f, 0x361e, dsp_alias=True)
+
+
+def check_movw_fused_ram(memory, symbols):
+    helper = symbols['apu_movw_write_ram']
+    ram = symbols['apu_ram'] & 0x1fffffff
+    tags = symbols['jit_tags'] & 0x1fffffff
+
+    class BusCPU(CPU):
+        tracing = False
+
+        def read(self, address, size=4):
+            result = super().read(address, size)
+            if self.tracing:
+                address &= 0x1fffffff
+                if ram <= address < ram + 0x10000:
+                    self.bus.append(('r', address, size, result, self.regs[19], self.pc))
+                elif size == 4 and (helper & 0x1fffffff) <= address < (helper & 0x1fffffff) + 128:
+                    self.pc = address
+                    self.instructions.append((address, result))
+            return result
+
+        def write(self, address, value, size=4):
+            if self.tracing:
+                address &= 0x1fffffff
+                value &= (1 << (size * 8)) - 1
+                self.bus.append(('w', address, size, value, self.regs[19], self.pc))
+            super().write(address, value, size)
+
+    def run(cpu, address, clock):
+        destination = ram + address
+        tag = tags + (address >> 6) * 4
+        old = (address ^ (address >> 8) ^ 0xa3) & 0xff
+        new = old ^ 0xff
+        initial_tag = 0xffffffff if address & 1 else 0x549a27bc
+        cpu.write(destination, old, 1)
+        cpu.write(tag, initial_tag)
+        cpu.write(symbols['apu_clock'], clock, 1)
+        cpu.pattern()
+        cpu.regs[4], cpu.regs[5], cpu.regs[19] = address, new, START_DEBT
+        before = cpu.regs.copy()
+        cpu.bus, cpu.instructions, cpu.pc = [], [], None
+        cpu.tracing = True
+        try:
+            cpu.execute(helper)
+        finally:
+            cpu.tracing = False
+        assert [event[:4] for event in cpu.bus] == [
+            ('r', destination, 1, old), ('w', destination, 1, new),
+            ('w', tag, 4, (initial_tag + 1) & 0xffffffff),
+        ], 'fused MOVW RAM read, write and tag order'
+        assert [event[4] for event in cpu.bus] == [
+            START_DEBT, START_DEBT - clock, START_DEBT - clock,
+        ], 'fused MOVW clock at access'
+        assert cpu.regs[2] == old, 'fused MOVW destination read result'
+        assert cpu.regs[19] == START_DEBT - 2 * clock, 'fused MOVW final clock'
+        assert all(cpu.regs[i] == before[i] for i in range(32) if i not in (1, 2, 8, 9, 10, 19))
+
+    cpu = BusCPU(memory.copy())
+    for page in (0, 0x100):
+        for offset in range(0xf0):
+            for clock in (21, 42):
+                run(cpu, page + offset, clock)
+
+    run(cpu, 0x23, 21)
+    debt_instructions = [pc for pc, word in cpu.instructions
+                         if (word & 0xffe0ffff) in (0x02609822, 0x02609823)]
+    assert len(debt_instructions) == 2, 'expected two distinct runtime debits'
+    for pc in (cpu.bus[0][-1], cpu.bus[1][-1], cpu.bus[2][-1], *debt_instructions):
+        mutant = BusCPU(memory.copy())
+        mutant.write(pc, 0)
+        try:
+            run(mutant, 0x23, 21)
+        except AssertionError as error:
+            assert str(error).startswith('fused MOVW '), error
+        else:
+            raise AssertionError(f'fused MOVW fault at {pc:#x} escaped')
+    print('SPC_MOVW_FUSED_RAM PASS 960 read/write/tag cases; five bus/debit faults rejected')
 
 
 def main():
@@ -202,6 +299,8 @@ def main():
             else:
                 raise AssertionError(f'{case.name} mutation escaped')
         print('SPC_DIRECT_PAGE_WORD rejected emitted faults=2')
+        if 'apu_movw_write_ram' in symbols:
+            check_movw_fused_ram(memory, symbols)
     print(f'SPC_DIRECT_PAGE_WORD linked cases={passed + failures} pass={passed} mismatches={failures}')
 
 

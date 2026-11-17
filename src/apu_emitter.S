@@ -20,6 +20,7 @@
 #include "macros.h"
 
 .globl jit_tags
+.globl jit_block_cycles
 .globl jit_lookup
 .globl jit_pointer
 .globl apu_invalidate_jit
@@ -40,6 +41,7 @@
 .globl emit_op
 .globl emit_j
 .globl emit_jal
+.globl emit_jal_guest_bus
 
 .data
 
@@ -105,7 +107,7 @@ jit_opcodes: // Lookup table for addressing and operation functions
     .word apu_absw, apu_ymov,  apu_imm, apu_movx,  apu_ppx, 0,  apu_mul, 0 // 0xCC-0xCF
     .word apu_bne, 0,  apu_tcall1, 0,  apu_dirr, apu_clr1,  apu_dirr, apu_bbc1 // 0xD0-0xD3
     .word apu_drxa, apu_amov,  apu_abxa, apu_amov,  apu_abya, apu_amov,  apu_idya, apu_amov // 0xD4-0xD7
-    .word apu_dira, apu_xmov,  apu_drya, apu_xmov,  apu_dirr, apu_movway,  apu_drxa, apu_ymov // 0xD8-0xDB
+    .word apu_dira, apu_xmov,  apu_drya, apu_xmov,  apu_movw_store_address, apu_movway,  apu_drxa, apu_ymov // 0xD8-0xDB
     .word apu_decy, 0,  apu_movay, 0,  apu_drxr, apu_cbne,  apu_daa, 0 // 0xDC-0xDF
     .word apu_clrv, 0,  apu_tcall1, 0,  apu_dirr, apu_set1,  apu_dirr, apu_bbs1 // 0xE0-0xE3
     .word apu_dirr, apu_mova,  apu_absr, apu_mova,  apu_brxr, apu_mova,  apu_idxr, apu_mova // 0xE4-0xE7

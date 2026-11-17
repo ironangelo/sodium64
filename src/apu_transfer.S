@@ -276,8 +276,9 @@ apu_movway: // MOVW op,YA
     nop
 
     // Emit code to move a 16-bit value to memory from register YA
-    la t0, apu_write8
-    jal emit_jal
+    jal emit_movw_low_write
+    nop
+    nop
     nop
     EMIT_OP OR(A1, ZERO, T7)
     EMIT_DP_NEXT

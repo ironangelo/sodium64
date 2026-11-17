@@ -1,0 +1,269 @@
+{
+  "date_local": "2026-11-16",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "source_head": "cd055b02efa114b10c9a6be285578f57f5b0474c",
+  "pull_request": 47,
+  "origin_component": "ca3f6f59a66bf9d7c15bfac7e4577fa0c6e06e65",
+  "runtime_scope": "Mark one byte per published 128-entry group of the existing SPC700 JIT lookup. Clear marked groups through apu_invalidate_jit for both overflow entries and the real APU clock menu. Clear the existing cursor as before.",
+  "linked": {
+    "variants": [
+      "normal",
+      "PROFILE",
+      "HW_PROFILE",
+      "REMOTE"
+    ],
+    "lookup_entries": 65536,
+    "publication_cases": 1536,
+    "overflow_replays": 2,
+    "menu_transitions": 4,
+    "clock_rebuilds": 6,
+    "deliberate_faults": 6,
+    "dense_reset_interpreter_instructions": {
+      "master": 40974,
+      "selective": 45584
+    },
+    "address_wrap_cases_each_normal_and_remote": 770
+  },
+  "native": {
+    "device": "Physical N64 and SummerCart64",
+    "bench_builds": {
+      "master": {
+        "head": "17b634f46d22a6cbf977585a77a2d29cac54a300",
+        "rom_sha256": "c475caf781c95857f89ebfc81d168203258dafaf1e31eaff0f49cb55dc757f19"
+      },
+      "selective": {
+        "head": "c9349fb4ee6f54a1530f6bfbe94220e844efcbc5",
+        "rom_sha256": "f560e12e59f99afdcd8cf242951ed5f98ea363dd6a4108e2335c8545f156c186"
+      }
+    },
+    "settings": {
+      "apu_clock": 21,
+      "frameskip": 0,
+      "precision": 8,
+      "audio": 4,
+      "input": 0
+    },
+    "method": "Both ROMs use the same private frame-clock adapter. Fix start and end guest/RSP-retired frames. Compute unsigned Count difference over that window. No host requests before the quiet wait expires. Compare RGB, PCM ring and observed DSP metadata at both endpoints.",
+    "pairs": [
+      {
+        "order": [
+          "master",
+          "selective"
+        ],
+        "captures": [
+          {
+            "frame": 120,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 1320,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "delta_ms": -1277.6331946666667,
+        "timings": {
+          "master": {
+            "ticks": 1162368371,
+            "hz": 46875000,
+            "seconds": 24.797191914666666,
+            "frames": [
+              120,
+              1320
+            ]
+          },
+          "selective": {
+            "ticks": 1102479315,
+            "hz": 46875000,
+            "seconds": 23.51955872,
+            "frames": [
+              120,
+              1320
+            ]
+          }
+        },
+        "software_return": true,
+        "title": "DKC1",
+        "play_slot_touched": false,
+        "host_quiet_seconds": 21
+      },
+      {
+        "order": [
+          "selective",
+          "master"
+        ],
+        "captures": [
+          {
+            "frame": 120,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 1320,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "delta_ms": -1270.5425493333316,
+        "timings": {
+          "selective": {
+            "ticks": 1102426816,
+            "hz": 46875000,
+            "seconds": 23.518438741333334,
+            "frames": [
+              120,
+              1320
+            ]
+          },
+          "master": {
+            "ticks": 1161983498,
+            "hz": 46875000,
+            "seconds": 24.788981290666666,
+            "frames": [
+              120,
+              1320
+            ]
+          }
+        },
+        "software_return": true,
+        "title": "DKC1",
+        "play_slot_touched": false,
+        "host_quiet_seconds": 21
+      },
+      {
+        "order": [
+          "selective",
+          "master"
+        ],
+        "captures": [
+          {
+            "frame": 120,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 1320,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "delta_ms": -1285.5295573333337,
+        "timings": {
+          "selective": {
+            "ticks": 1102425732,
+            "hz": 46875000,
+            "seconds": 23.518415616,
+            "frames": [
+              120,
+              1320
+            ]
+          },
+          "master": {
+            "ticks": 1162684930,
+            "hz": 46875000,
+            "seconds": 24.803945173333332,
+            "frames": [
+              120,
+              1320
+            ]
+          }
+        },
+        "software_return": true,
+        "title": "DKC1",
+        "play_slot_touched": false,
+        "host_quiet_seconds": 28
+      },
+      {
+        "order": [
+          "master",
+          "selective"
+        ],
+        "captures": [
+          {
+            "frame": 240,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 840,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "delta_ms": -2.1553066666673004,
+        "timings": {
+          "master": {
+            "ticks": 489001941,
+            "hz": 46875000,
+            "seconds": 10.432041408,
+            "frames": [
+              240,
+              840
+            ]
+          },
+          "selective": {
+            "ticks": 488900911,
+            "hz": 46875000,
+            "seconds": 10.429886101333333,
+            "frames": [
+              240,
+              840
+            ]
+          }
+        },
+        "software_return": true,
+        "title": "SMW",
+        "play_slot_touched": false,
+        "host_quiet_seconds": 11
+      }
+    ]
+  },
+  "production": {
+    "linked_symbols": 1253,
+    "allocated_bytes": 767704,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "b078d08a9aea66701b8a83597d2b6795eccaf26a1bba3a5c369ab11299952303",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "d3f97fa636650dd3e011262fb9fa1a565c54302b2feba494b5c01beb4ed28145",
+    "status": "PASS"
+  },
+  "disposition": "CANDIDATE. Repeatable scoped native DKC1 gain, including a full interval without USB polling, and SMW smoke match. Draft PR, exact-head Ares CI and review gate promotion. Dense native behavior and wider compatibility have not been qualified.",
+  "exact_head_ci_checkpoint": [
+    {
+      "name": "Ares Profile Validation",
+      "status": "in_progress",
+      "conclusion": null,
+      "id": 43991454536
+    },
+    {
+      "name": "Profiling Memory Owners",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 43991454539
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 43991454625
+    },
+    {
+      "name": "Build and Validate",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 43991454565
+    }
+  ]
+}

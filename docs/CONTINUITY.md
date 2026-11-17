@@ -1,3 +1,32 @@
+# 2026-11-16 — Open the selective SPC700 lookup invalidation PR
+
+Draft PR #47 isolates the lookup-group part of `ca3f6f59` on
+`7a6e3d75`. It marks a group before publishing its pointer and
+uses the existing shared invalidation entry for both overflow
+paths and the APU clock menu. The linked proof passes in normal,
+PROFILE, HW_PROFILE and USB builds, including actual stale-block
+recompilation, 1,536 publications, two overflow routes, four menu
+transitions and six deliberate faults. Dense invalidation takes
+45,584 linked interpreter instructions versus 40,974 on master.
+
+Real N64 runs of DKC1 startup frames 120–1320 take 24.797 to
+23.520 s and 24.789 to 23.518 s in opposite launch orders. A third
+pair with no USB polling during timing repeats 24.804 to 23.518 s.
+Each pair performs the same 1,200 guest frames and matches RGB,
+PCM and observed DSP state at both boundaries. A separate SMW boot/demo
+pair at frames 240–840 takes 10.432 to 10.430 s and matches both
+captures. All eight launches return to the private menu in software
+and preserve the play slot. The timings cover whole intervals.
+
+PR #47 head `cd055b02` remains a draft. Build and Validate, Profiling
+Memory Owners and Native USB Bench Contracts pass. Ares Profile
+Validation and review are pending. Wider gameplay
+and the native cost of densely occupied lookup groups remain open.
+[PR #47](https://github.com/ironangelo/sodium64/pull/47).
+[Linked and native evidence](evidence/integration-apu-selective-jit-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Serve DSP reads until the next register publication
 
 The private live controller `ffeda5c5` can answer ENVX, OUTX and

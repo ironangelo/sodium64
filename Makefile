@@ -15,6 +15,13 @@ DSP_RSP_SWAP ?= 0
 DSP_RSP_YIELD ?= 0
 DSP_RSP_YIELD_SWAP ?= 0
 DSP_RSP_YIELD_TASK ?= 0
+DSP_RSP_RESIDENT_TEST ?= 0
+ifeq ($(DSP_RSP_RESIDENT_TEST),1)
+ifneq ($(DSP_RSP_YIELD)$(DSP_RSP_YIELD_SWAP)$(DSP_RSP_YIELD_TASK),100)
+$(error The resident state proof is separate from the full bank exchange)
+endif
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_RSP_RESIDENT_TEST=1
+endif
 ifeq ($(DSP_RSP_YIELD_TASK),1)
 ifneq ($(DSP_RSP_YIELD)$(DSP_RSP_YIELD_SWAP),11)
 $(error The private RSP marker requires a section handoff with both banks)

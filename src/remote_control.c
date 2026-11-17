@@ -506,6 +506,15 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
         field(" task_count=",yield->task_count);
         field(" task_ticks=",yield->task_ticks);
         field(" task_max_ticks=",yield->task_max_ticks);
+#ifdef SODIUM64_DSP_RSP_RESIDENT_TEST
+        field(" resident_matches=",yield->resident_matches);
+        field(" resident_busy=",yield->resident_busy);
+        field(" resident_skips=",yield->resident_skips);
+        field(" resident_ticks=",yield->resident_ticks);
+        field(" resident_max_ticks=",yield->resident_max_ticks);
+        field(" resident_bad_lane=",yield->resident_bad_lane);
+        field(" resident_imem_installs=",yield->resident_imem_installs);
+#endif
 #endif
         (void)finish();return;
     }

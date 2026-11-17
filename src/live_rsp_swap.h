@@ -12,6 +12,10 @@ struct rsp_yield_report {
     uint32_t section_gaps, section_observed_running, section_lower_max, section_upper_max;
     uint32_t section_lower_ge_250us, section_lower_ge_1ms;
     uint32_t task_count, task_ticks, task_max_ticks;
+#ifdef SODIUM64_DSP_RSP_RESIDENT_TEST
+    uint32_t resident_matches, resident_busy, resident_skips, resident_ticks;
+    uint32_t resident_max_ticks, resident_bad_lane, resident_imem_installs;
+#endif
 };
 
 struct rsp_swap_totals {

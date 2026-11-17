@@ -176,6 +176,85 @@ void live_rsp_swap(unsigned frame, int (*drain)(uint32_t)) {
     exchange(1 + (frame & 1), status, pc, drain);
 }
 #else
+#ifdef SODIUM64_DSP_RSP_RESIDENT_TEST
+enum { RESIDENT_VECTORS = 4, RESIDENT_WORDS = 16, READ_PC = 20 };
+static const unsigned owner[RESIDENT_VECTORS] = {9, 16, 17, 19};
+
+static uint32_t lane_word(unsigned word) {
+    return 0x81c47a30u ^ (word * 0x18372591u);
+}
+
+static int finish_resident(unsigned entry) {
+    uint32_t started = ticks();
+    unsigned stopped = entry + 4 * (RESIDENT_VECTORS + 1);
+    *sp_pc = entry;
+    sp[SP_STATUS] = 5;
+    __asm__ volatile("sync" ::: "memory");
+    while ((sp[SP_STATUS] & 0x63) != 3 || *sp_pc != stopped) {
+        if ((uint32_t)(ticks()-started) >= DMA_TIMEOUT) {
+            sp[SP_STATUS] = 2; // Halt the known fixed-size load/store program.
+            __asm__ volatile("sync" ::: "memory");
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void probe_resident(struct rsp_yield_report *metrics) {
+    const unsigned status = dp[3];
+    // TEXTURE is transient renderer scratch. At a section boundary the RSP
+    // owns no DMA there. An outstanding XBUS list must be beyond these 64B.
+    if (sp[SP_DMA_BUSY] || sp[SP_DMA_FULL] ||
+        ((status & 1) && ((status & 0x740u) || dp[2] != dp[1]) &&
+         ((dp[2] & 0xfffu) < 64 || (dp[1] & 0xfffu) < 64 ||
+          (dp[2] & 0xfffu) > (dp[1] & 0xfffu)))) {
+        ++metrics->resident_skips;
+        return;
+    }
+
+    uint32_t started = ticks();
+    unsigned first = !metrics->resident_imem_installs;
+    volatile uint32_t *imem = sp_mem + BANK_BYTES / 4;
+    if (first) {
+        // The initialization entry at [0,40) is dormant after the first
+        // renderer section. Both mode overlay DMAs start at 0x3a8.
+        for (unsigned i=0;i<RESIDENT_VECTORS;i++) {
+            imem[i] = 0xc8002000u | (owner[i] << 16) | i; // LQV
+            imem[READ_PC/4 + i] = 0xe8002000u | (owner[i] << 16) | i; // SQV
+        }
+        imem[RESIDENT_VECTORS] = 0x0000000du;
+        imem[READ_PC/4 + RESIDENT_VECTORS] = 0x0000000du;
+        ++metrics->resident_imem_installs;
+    }
+
+    uint32_t saved[RESIDENT_WORDS];
+    for (unsigned i=0;i<RESIDENT_WORDS;i++) {
+        saved[i] = sp_mem[i];
+        // Complement every word first, so a missed store cannot pass.
+        sp_mem[i] = first ? lane_word(i) : ~lane_word(i);
+    }
+    __asm__ volatile("sync" ::: "memory");
+    if (!finish_resident(first ? 0 : READ_PC)) stats->failure = 10;
+    if (!(sp[SP_STATUS] & 1)) return;
+    for (unsigned i=0;i<RESIDENT_WORDS;i++) {
+        if (!first && sp_mem[i] != lane_word(i) && !stats->failure) {
+            metrics->resident_bad_lane = i + 1;
+            stats->failure = 11;
+        }
+        sp_mem[i] = saved[i];
+    }
+    __asm__ volatile("sync" ::: "memory");
+
+    if (!first && !stats->failure) {
+        uint32_t elapsed = ticks() - started;
+        metrics->resident_ticks += elapsed;
+        if (elapsed > metrics->resident_max_ticks) metrics->resident_max_ticks = elapsed;
+        ++metrics->resident_matches;
+        if (status & 0x770u) ++metrics->resident_busy;
+    }
+}
+#endif
+
 void live_rsp_yield(unsigned frame, unsigned from_wait, unsigned borrow, int (*drain)(uint32_t)) {
     static uint32_t current_frame, section, resumed_at, last_running;
     static unsigned saw_running;
@@ -228,6 +307,9 @@ void live_rsp_yield(unsigned frame, unsigned from_wait, unsigned borrow, int (*d
 
     // Borrow once after an already-completed renderer section.
     if (borrow && section == 2) exchange(1 + (frame & 1), status, pc, drain);
+#ifdef SODIUM64_DSP_RSP_RESIDENT_TEST
+    if (section == 2) probe_resident(metrics);
+#endif
     if (stats->failure) return;
     uint32_t started = ticks();
     *sp_pc = 0xe8u; // hcomp_cgram_return, checked in both linked banks.

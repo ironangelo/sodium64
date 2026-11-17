@@ -1,4 +1,4 @@
-# 2026-11-17 — Qualify saturated ENDX replies locally
+# 2026-11-17 — Verify saturated ENDX replies on N64
 
 The private controller can return `ENDX=0xff` without running pending
 DSP clocks when both the register and its publication latch are already
@@ -12,13 +12,19 @@ separate producer and internal KON latches. Removing the saturation,
 queued-write or KON guards fails the directed test. Production ROM and
 ELF match `7a6e3d75`.
 
-The earlier native trace has 664 ENDX replies of `0xff` among the
-1,993 reads that forced a catch-up. This identifies the opportunity.
-The new off/on images are built. The CIC preflight found the N64 off
-and the run stopped before installing either image. On the next
-available session, compare exact image/PCM and actual catch-ups on
-the original load before carrying the rule into the full DSP backend.
-[ENDX proof and pending native gate](evidence/integration-dsp-sticky-endx-2026-11-17.json).
+The original native workload confirms 664 avoided catch-ups over
+frames 48–88, from 1,993 to 1,329, in both launch orders. Synchronous
+reads while the renderer owns SP fall from 282 to 188. Both modes
+match the frame 88 RGB and PCM reference and the interval's clocks,
+PCM sample count and echo publication count. All four launches
+return by software and preserve the play slot.
+
+Elapsed time rises from 36.258 to 36.412 ms/frame and from 36.261 to
+36.405 ms/frame. Keep the rule as a verified deadline reduction and
+reject it as a standalone scalar speed change. The next accelerated
+backend must demonstrate a net timing benefit while serving the
+remaining output reads exactly. Continue from `5c0f5436` for scalar cost.
+[ENDX native A/B and exact local proof](evidence/integration-dsp-sticky-endx-2026-11-17.json).
 
 ---
 

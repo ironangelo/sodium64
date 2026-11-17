@@ -27,13 +27,106 @@
   "new_bench": {
     "off_ROM": "ba14d32b3043bd2be472893976e067edaa0902336f867d43b2e51324fdeda96b",
     "on_ROM": "4297f3fa372faa0305e5a0b6ed52a6001c87e353bd26b2bb91d929928144c505",
-    "status": "PENDING_NATIVE",
-    "preflight": "CIC reported N64 off through COM3. Stopped before installing either build.",
-    "required_evidence": [
-      "Actual avoided catch-ups",
-      "Exact aligned RGB and captured PCM",
-      "Fixed-work elapsed time",
-      "Software return"
+    "status": "VALIDATED_DEADLINES_REJECTED_STANDALONE_COST",
+    "initial_preflight": "CIC reported N64 off through COM3. Stopped before installing either build.",
+    "scope": "Original eight-voice live workload, physical N64, 40 guest/RSP-retired frames, APU clock 21, frameskip 0.",
+    "method": "Both launch orders. Whole-workload R4300 Count bracket without USB polling during timing. Frame 88 RGB and captured PCM compare independently to the exact live scalar reference. Both runs return through the private software menu.",
+    "count_hz": 46875000,
+    "native_pairs": [
+      {
+        "order": [
+          "off",
+          "on"
+        ],
+        "scalar_elapsed_regression_percent": 0.424576,
+        "cases": {
+          "off": {
+            "count_ticks": 67984539,
+            "elapsed_ms_per_guest_frame": 36.258421,
+            "counters": {
+              "full_cycles": 680793,
+              "full_pcm": 21272,
+              "full_echo": 42549,
+              "full_outputs": 2658,
+              "full_calls": 7309,
+              "full_queued_ram": 51191,
+              "critical_reg": 1993,
+              "critical_reg_busy": 282,
+              "full_core_runs": 56508,
+              "sticky_endx_reads": 0
+            },
+            "exact_frame_88_RGB_and_captured_PCM": true,
+            "software_return": true,
+            "play_slot_touched": false
+          },
+          "on": {
+            "count_ticks": 68273185,
+            "elapsed_ms_per_guest_frame": 36.412365,
+            "counters": {
+              "full_cycles": 680793,
+              "full_pcm": 21272,
+              "full_echo": 42549,
+              "full_outputs": 2658,
+              "full_calls": 7309,
+              "full_queued_ram": 51191,
+              "critical_reg": 1329,
+              "critical_reg_busy": 188,
+              "full_core_runs": 55844,
+              "sticky_endx_reads": 664
+            },
+            "exact_frame_88_RGB_and_captured_PCM": true,
+            "software_return": true,
+            "play_slot_touched": false
+          }
+        }
+      },
+      {
+        "order": [
+          "on",
+          "off"
+        ],
+        "scalar_elapsed_regression_percent": 0.397127,
+        "cases": {
+          "on": {
+            "count_ticks": 68260096,
+            "elapsed_ms_per_guest_frame": 36.405385,
+            "counters": {
+              "full_cycles": 680793,
+              "full_pcm": 21272,
+              "full_echo": 42549,
+              "full_outputs": 2658,
+              "full_calls": 7309,
+              "full_queued_ram": 51191,
+              "critical_reg": 1329,
+              "critical_reg_busy": 188,
+              "full_core_runs": 55844,
+              "sticky_endx_reads": 664
+            },
+            "exact_frame_88_RGB_and_captured_PCM": true,
+            "software_return": true,
+            "play_slot_touched": false
+          },
+          "off": {
+            "count_ticks": 67990089,
+            "elapsed_ms_per_guest_frame": 36.261381,
+            "counters": {
+              "full_cycles": 680793,
+              "full_pcm": 21272,
+              "full_echo": 42549,
+              "full_outputs": 2658,
+              "full_calls": 7309,
+              "full_queued_ram": 51191,
+              "critical_reg": 1993,
+              "critical_reg_busy": 282,
+              "full_core_runs": 56508,
+              "sticky_endx_reads": 0
+            },
+            "exact_frame_88_RGB_and_captured_PCM": true,
+            "software_return": true,
+            "play_slot_touched": false
+          }
+        }
+      }
     ]
   },
   "production_identity": {
@@ -47,5 +140,6 @@
     },
     "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
     "status": "PASS"
-  }
+  },
+  "decision": "Keep the verified reduction in synchronous DSP observations for the accelerated backend. The tested scalar variant takes more time in both orders. Retain the scalar reference without the fast path."
 }

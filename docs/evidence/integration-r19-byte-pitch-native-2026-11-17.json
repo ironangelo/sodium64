@@ -1,0 +1,522 @@
+{
+  "date_local": "2026-11-17",
+  "PR": 48,
+  "status": "CANDIDATE; final three-title native comparison passes, Ares workflow pending",
+  "base_master": "bcc8e4631f075a6681563b56d2e3dee52670bb1b",
+  "head": "1812be314b569109eaaa9ee884aee8337ff9dab8",
+  "runtime_commit": "b7d3d08e7542b6ce2f551c60f4b474c59b3b8527",
+  "timed_checkout": "f60edc5df2a443217c698c855e82394a6fa1a5ee",
+  "scope": "Retained R19 pitch cache, updated per byte and preserving existing linked runtime owners. Normal adds 128 initialized bytes.",
+  "first_byte_cache_revision": {
+    "runtime_commit": "06e84518521cbdd78084f9814e35349e932d54fe",
+    "status": "SUPERSEDED by direct low/high store handlers",
+    "pairs": {
+      "smw_forward": {
+        "order": [
+          "master",
+          "bytepitch"
+        ],
+        "timings": {
+          "master": {
+            "ticks": 970831981,
+            "hz": 46875000,
+            "seconds": 20.711082261333335,
+            "frames": [
+              3016,
+              4216
+            ]
+          },
+          "bytepitch": {
+            "ticks": 969102314,
+            "hz": 46875000,
+            "seconds": 20.674182698666666,
+            "frames": [
+              3016,
+              4216
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": -36.89956266666883,
+        "software_returns": true,
+        "elapsed_change_percent": -0.17816337263821813
+      },
+      "smw_reverse": {
+        "order": [
+          "bytepitch",
+          "master"
+        ],
+        "timings": {
+          "bytepitch": {
+            "ticks": 969260108,
+            "hz": 46875000,
+            "seconds": 20.677548970666667,
+            "frames": [
+              3016,
+              4216
+            ]
+          },
+          "master": {
+            "ticks": 971165049,
+            "hz": 46875000,
+            "seconds": 20.718187712,
+            "frames": [
+              3016,
+              4216
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": -40.63874133333201,
+        "software_returns": true,
+        "elapsed_change_percent": -0.19615007788444938
+      },
+      "dkc1_forward": {
+        "timings": {
+          "master": {
+            "ticks": 1102475252,
+            "hz": 46875000,
+            "seconds": 23.519472042666667,
+            "frames": [
+              120,
+              1320
+            ]
+          },
+          "bytepitch": {
+            "ticks": 1102829616,
+            "hz": 46875000,
+            "seconds": 23.527031808,
+            "frames": [
+              120,
+              1320
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 120,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 1320,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": 7.559765333333246,
+        "software_returns": true,
+        "elapsed_change_percent": 0.03214258092025801
+      },
+      "dkc1_reverse": {
+        "timings": {
+          "bytepitch": {
+            "ticks": 1102834943,
+            "hz": 46875000,
+            "seconds": 23.527145450666666,
+            "frames": [
+              120,
+              1320
+            ]
+          },
+          "master": {
+            "ticks": 1102492486,
+            "hz": 46875000,
+            "seconds": 23.519839701333332,
+            "frames": [
+              120,
+              1320
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 120,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 1320,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": 7.305749333333722,
+        "software_returns": true,
+        "elapsed_change_percent": 0.031062071111476186
+      },
+      "alttp": {
+        "timings": {
+          "master": {
+            "ticks": 783080855,
+            "hz": 46875000,
+            "seconds": 16.705724906666667,
+            "frames": [
+              1861,
+              2861
+            ]
+          },
+          "bytepitch": {
+            "ticks": 783061379,
+            "hz": 46875000,
+            "seconds": 16.705309418666666,
+            "frames": [
+              1861,
+              2861
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 1861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": -0.4154880000015737,
+        "software_returns": true,
+        "elapsed_change_percent": -0.002487099496262246
+      }
+    },
+    "gate": "SMW saved 36.90/40.64ms but DKC1 repeated +7.56/+7.31ms. This revision was not admitted for integration."
+  },
+  "direct_byte_handlers": {
+    "common_pitch_and_counter_instructions": {
+      "master": 10,
+      "candidate": 8
+    },
+    "max_pitch_write_instructions": {
+      "prior_R19": 26,
+      "first_revision": 19,
+      "direct_revision": 17
+    },
+    "normal_linked_proof": {
+      "passed": true,
+      "compiled_write_cases": 131072,
+      "compiled_load_cases": 524288,
+      "reference_cases": 65536,
+      "apu_port_cases": 32,
+      "invalid_write_cases": 128,
+      "ordinary_write_cases": 32,
+      "mixed_cold_writes": 128,
+      "cold_load_cases": 8,
+      "mirrored_read_cases": 8,
+      "emitted_faults_rejected": 4,
+      "pitch_load_instructions": 6,
+      "maximum_pitch_write_instructions": 17
+    },
+    "timed_linked_proof": {
+      "passed": true,
+      "compiled_write_cases": 131072,
+      "compiled_load_cases": 524288,
+      "reference_cases": 0,
+      "apu_port_cases": 32,
+      "invalid_write_cases": 128,
+      "ordinary_write_cases": 32,
+      "mixed_cold_writes": 128,
+      "cold_load_cases": 8,
+      "mirrored_read_cases": 8,
+      "emitted_faults_rejected": 4,
+      "pitch_load_instructions": 6,
+      "maximum_pitch_write_instructions": 17
+    },
+    "native_pairs": {
+      "dkc1": {
+        "timings": {
+          "bytepitch": {
+            "ticks": 1102455141,
+            "hz": 46875000,
+            "seconds": 23.519043008,
+            "frames": [
+              120,
+              1320
+            ]
+          },
+          "master": {
+            "ticks": 1102857580,
+            "hz": 46875000,
+            "seconds": 23.527628373333332,
+            "frames": [
+              120,
+              1320
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 120,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 1320,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": -8.585365333331652,
+        "software_returns": true,
+        "elapsed_change_percent": -0.03649056843767484
+      },
+      "smw_forward": {
+        "timings": {
+          "master": {
+            "ticks": 971163456,
+            "hz": 46875000,
+            "seconds": 20.718153728,
+            "frames": [
+              3016,
+              4216
+            ]
+          },
+          "bytepitch": {
+            "ticks": 969360520,
+            "hz": 46875000,
+            "seconds": 20.679691093333332,
+            "frames": [
+              3016,
+              4216
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": -38.46263466666855,
+        "software_returns": true,
+        "elapsed_change_percent": -0.18564701841499165
+      },
+      "smw_reverse": {
+        "timings": {
+          "bytepitch": {
+            "ticks": 969401693,
+            "hz": 46875000,
+            "seconds": 20.680569450666667,
+            "frames": [
+              3016,
+              4216
+            ]
+          },
+          "master": {
+            "ticks": 970825470,
+            "hz": 46875000,
+            "seconds": 20.71094336,
+            "frames": [
+              3016,
+              4216
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": -30.373909333334836,
+        "software_returns": true,
+        "elapsed_change_percent": -0.14665632948422935
+      },
+      "alttp": {
+        "timings": {
+          "master": {
+            "ticks": 783463199,
+            "hz": 46875000,
+            "seconds": 16.713881578666665,
+            "frames": [
+              1861,
+              2861
+            ]
+          },
+          "bytepitch": {
+            "ticks": 783404320,
+            "hz": 46875000,
+            "seconds": 16.712625493333334,
+            "frames": [
+              1861,
+              2861
+            ]
+          }
+        },
+        "captures": [
+          {
+            "frame": 1861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "elapsed_difference_ms": -1.2560853333312139,
+        "software_returns": true,
+        "elapsed_change_percent": -0.007515222166809554
+      }
+    },
+    "all_existing_runtime_owners_and_addresses_preserved": true,
+    "loaded_differences": "Only get_pitch, previously unused handler alignment padding, 16 DSP write dispatch pointers and 128 appended initialized zero bytes.",
+    "normal_release_isolation": {
+      "linked_symbols": 1257,
+      "allocated_bytes": 767832,
+      "laboratory_symbols": [],
+      "allocated_diagnostic_leases": [],
+      "sha256": {
+        "sodium64.z64": "3dcf02193c25cc1a5841cb99b65747ff22fc09936ec1653aaf23c04dc4dc3d9a",
+        "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+      },
+      "elf_sha256": "701e55dafad0da08c7a72492aa1de27e8580d77ad8511747953c2305cbb93825",
+      "status": "PASS"
+    },
+    "native_scope": "N64 fixed guest/render windows, APU clock 21, frameskip 0, precision 8. SMW paired in both launch orders. Two aligned RGB/PCM/DSP observations per title and pair."
+  },
+  "local_shared_contracts": {
+    "first_revision_normal": [
+      "KOFF release and scheduled callbacks",
+      "GAIN handler and scheduled stereo",
+      "57344 BRR voice cases"
+    ],
+    "direct_revision_note": "Other execution bytes retain their linked addresses and values. Final low/high byte proof covers all raw pairs, GPRs, entry points and actual APU port writes.",
+    "first_revision_profile_owners": {
+      "passed": true,
+      "linked_cases": 27,
+      "normal_loaded_image_identical": false,
+      "unknown_and_4MiB_rejected_before_upper_or_VI": true,
+      "all_rsp_banks_survive_actual_boot_clear": true,
+      "both_guards_fail_closed": true,
+      "variants": [
+        {
+          "hw": false,
+          "static_end": "0x800bc260",
+          "upper_lease": [
+            4489216,
+            4509696
+          ]
+        },
+        {
+          "hw": true,
+          "static_end": "0x800bd260",
+          "upper_lease": [
+            4489216,
+            4509696
+          ]
+        }
+      ],
+      "legacy_actual_linked_counterexample": null,
+      "physical_acceptance": false
+    },
+    "all_native_runs_return_in_software": true
+  },
+  "renderer_retirement_candidate": {
+    "status": "BLOCKED before hardware",
+    "hypothesis": "Track pending RDP texture-source ranges and retain the full fence for overlapping writes.",
+    "required_coverage": [
+      "BG legacy loads",
+      "OBJ loads",
+      "complete atlas LoadBlock extent",
+      "Mode 7 sources",
+      "palette and TLUT sources"
+    ],
+    "gate": "A complete source-ownership design and an economical fit in the resident IMEM layout are missing. The sender currently permits t0 scratch only.",
+    "available_resident_spans_bytes": [
+      12,
+      28,
+      76,
+      8
+    ],
+    "disposition": "No renderer runtime change or hardware trial follows from this hypothesis."
+  },
+  "remaining_scope": "Longer gameplay, analog output and broad native compatibility remain open.",
+  "CI": [
+    {
+      "name": "Profiling Memory Owners",
+      "run_id": 44166756066,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "run_id": 44166756047,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Build and Validate",
+      "run_id": 44166755991,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Ares Profile Validation",
+      "run_id": 44166755933,
+      "status": "in_progress",
+      "conclusion": null
+    }
+  ],
+  "final_menu": {
+    "mode": "menu",
+    "recovery": 0,
+    "verified_after_all_native_runs": true
+  }
+}

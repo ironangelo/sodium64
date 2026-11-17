@@ -1,3 +1,40 @@
+# 2026-11-17 — Prepare the byte-update pitch cache for integration
+
+PR48 `1812be31` revises R19 on integrated master `bcc8e463`.
+The two dispatch targets update just the written pitch byte and
+finish the store in the return delay slot. The handlers occupy
+existing padding. The original runtime addresses remain fixed and
+the initialized data grows by 128 bytes. The common pitch/counter
+path executes eight linked instructions versus ten on master.
+Maximum pitch-write cost is 17 instructions versus R19's 26.
+
+On real N64, the same 1,200 SMW frames take 38.463 and 30.374 ms
+less in opposite launch orders, a scoped 0.15–0.19 percent saving.
+The DKC1 startup pair is 8.585 ms shorter over 23.528 seconds.
+ALttP story is 1.256 ms shorter over 16.714 seconds. Each pair
+preserves both aligned RGB, PCM and DSP observations at APU 21
+and frameskip 0. All launches return by USB and the final menu
+query confirms recovery 0.
+
+The first byte-cache revision saved SMW time but repeated a
+7.560/7.306 ms DKC1 increase. The direct two-target handler
+supersedes it and closes that measured blocker. Both final
+linked variants pass 131,072 writes, 524,288 loads and four
+mutations. Normal additionally matches all 65,536 consumed
+pitch values with the integrated master. Build and Validate,
+Native USB and Profiling Owners pass on the exact PR48 head.
+The Ares matrix is still running. Complete that workflow
+before deciding integration and superseding draft PR37.
+
+The range-aware renderer retirement idea remains BLOCKED before
+hardware. It needs full coverage of BG, OBJ, atlas, Mode 7 and
+palette/TLUT sources, plus an economical resident code layout
+that preserves the sender's live registers. The existing shared
+renderer and full resident DSP gates remain open.
+[Pitch repair, negative revision and native evidence](evidence/integration-r19-byte-pitch-native-2026-11-17.json).
+
+---
+
 # 2026-11-17 — Complete the retired compositor fence discriminator
 
 The private RSP counter records 209,381 polls and 1,440 calls to

@@ -68,31 +68,31 @@ gain_jumps: .word linear_dec, expon_dec, linear_inc, bent_inc
 
 .align 4
 write_iomap:
-    .word write_vol, write_vol, write_pitch, write_pitch // 0x00-0x03
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x00-0x03
     .word write_reg, write_adsr, write_reg, write_reg // 0x04-0x07
     .word write_reg:(0x0F - 0x07) // 0x08-0x0F
-    .word write_vol, write_vol, write_pitch, write_pitch // 0x10-0x13
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x10-0x13
     .word write_reg, write_adsr, write_reg, write_reg // 0x14-0x17
     .word write_reg:(0x1F - 0x17) // 0x18-0x1F
-    .word write_vol, write_vol, write_pitch, write_pitch // 0x20-0x23
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x20-0x23
     .word write_reg, write_adsr, write_reg, write_reg // 0x24-0x27
     .word write_reg:(0x2F - 0x27) // 0x28-0x2F
-    .word write_vol, write_vol, write_pitch, write_pitch // 0x30-0x33
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x30-0x33
     .word write_reg, write_adsr, write_reg, write_reg // 0x34-0x37
     .word write_reg:(0x3F - 0x37) // 0x38-0x3F
-    .word write_vol, write_vol, write_pitch, write_pitch // 0x40-0x43
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x40-0x43
     .word write_reg, write_adsr, write_reg, write_reg // 0x44-0x47
     .word write_reg:(0x4B - 0x47) // 0x48-0x4B
     .word write_kon, write_reg, write_reg, write_reg // 0x4C-0x4F
-    .word write_vol, write_vol, write_pitch, write_pitch // 0x50-0x53
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x50-0x53
     .word write_reg, write_adsr, write_reg, write_reg // 0x54-0x57
     .word write_reg:(0x5B - 0x57) // 0x58-0x5B
     .word write_koff, write_reg, write_reg, write_reg // 0x5C-0x5F
-    .word write_vol, write_vol, write_pitch, write_pitch // 0x60-0x63
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x60-0x63
     .word write_reg, write_adsr, write_reg, write_reg // 0x64-0x67
     .word write_reg:(0x6B - 0x67) // 0x68-0x6B
     .word time_noise, write_reg, write_reg, write_reg // 0x6C-0x6F
-    .word write_vol, write_vol, write_pitch, write_pitch // 0x70-0x73
+    .word write_vol, write_vol, write_pitch, write_pitch_high // 0x70-0x73
     .word write_reg, write_adsr, write_reg, write_reg // 0x74-0x77
     .word write_reg:(0x7F - 0x77) // 0x78-0x7F
 
@@ -715,6 +715,16 @@ write_dspaddr: // a1: value
     jr ra
     nop
 
+.set push
+.set noat
+write_pitch_high: // t0: high pitch register index, a1: the byte already stored
+    // This occupies only the old padding following read_dspdata.
+    lui $1, %hi(dsp_pitches - 3)
+    addu $1, $1, t0
+    jr ra
+    sb a1, %lo(dsp_pitches - 3)($1)
+.set pop
+
 .align 5
 write_dspdata: // a1: value
     // Write a value to a DSP register if within bounds
@@ -740,13 +750,16 @@ write_vol: // t0: address
     j update_vols
     srl t6, t0, 4
 
-write_pitch: // t0: raw DSP register index, a1: the byte already stored
-    // Guest low/high map to odd/even host bytes. This fits the old alignment
-    // padding after write_vol and leaves every following handler in place.
-    xori t0, t0, 1
-    sb a1, dsp_pitches - 2(t0)
+.set push
+.set noat
+write_pitch: // t0: low pitch register index, a1: the byte already stored
+    // The existing dispatch selects the byte lane. Complete the byte store
+    // in the return delay slot while preserving the old alignment padding.
+    lui $1, %hi(dsp_pitches - 1)
+    addu $1, $1, t0
     jr ra
-    nop
+    sb a1, %lo(dsp_pitches - 1)($1)
+.set pop
 
 .align 5
 write_adsr: // t0: address

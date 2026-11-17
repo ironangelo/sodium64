@@ -18,7 +18,6 @@ ifeq ($(DSP_EFFECTS_WAIT),1)
 ifneq ($(DSP_LIVE_CORE),1)
 $(error Framebuffer wait timing belongs to the private live DSP test)
 endif
-N64_ASFLAGS += -DSODIUM64_DSP_EFFECTS_WAIT=1
 N64_REMOTE_CFLAGS += -DSODIUM64_DSP_EFFECTS_WAIT=1
 endif
 ifneq ($(DSP_EFFECTS_MODE),0)
@@ -140,6 +139,9 @@ N64_AUDIOCONV = $(N64_BINDIR)/audioconv64
 N64_MKSPRITE = $(N64_BINDIR)/mksprite
 
 N64_ASFLAGS = -mtune=vr4300 -march=vr4300 -Wa,--fatal-warnings
+ifeq ($(DSP_EFFECTS_WAIT),1)
+N64_ASFLAGS += -DSODIUM64_DSP_EFFECTS_WAIT=1
+endif
 N64_RSPASFLAGS = -march=mips1 -mabi=32 -Wa,--fatal-warnings
 ifeq ($(DSP_RSP_YIELD),1)
 N64_ASFLAGS += -DSODIUM64_DSP_RSP_YIELD=1

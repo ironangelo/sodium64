@@ -3,6 +3,13 @@
 
 #ifdef SODIUM64_DSP_LIVE_CORE
 #include "dsp_rsp_deadlines.h"
+#ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
+.data
+.align 3
+.globl live_dsp_input
+live_dsp_input:
+    .byte 0:LIVE_DSP_INPUT_BYTES
+#endif
 .text
 .set noreorder
 .globl live_dsp_bridge
@@ -36,7 +43,7 @@ live_dsp_bridge:
     move a1, a0
     move a0, t0
     lw a3, DSP_GUEST_EPOCH_BIAS
-    addiu a3, a3, 1364
+    addiu a3, a3, LIVE_DSP_EPOCH_OFFSET
     subu a3, a3, s3
     // Raw RAM accesses and the fixture's opcode fetch precede their own
     // scheduler debit by one SPC cycle. The DSP port dispatch follows it.
@@ -44,11 +51,11 @@ live_dsp_bridge:
     beqz t2, 1f
     nop
     b 2f
-    addiu a3, a3, 21
+    addiu a3, a3, LIVE_DSP_GUEST_CYCLE
 1:
     bne a0, LIVE_DSP_FETCH, 2f
     nop
-    addiu a3, a3, 21
+    addiu a3, a3, LIVE_DSP_GUEST_CYCLE
 2:
     jal live_dsp_access
     nop

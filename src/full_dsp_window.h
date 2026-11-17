@@ -30,6 +30,9 @@ public:
     bool check_kon();
     unsigned pending_clocks() const { return pending; }
     unsigned pending_events() const { return count; }
+#ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
+    unsigned echo_write_floor() const;
+#endif
 
 private:
     SPC_DSP_Window(SPC_DSP_Window const&);

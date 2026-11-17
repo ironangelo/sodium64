@@ -206,7 +206,35 @@ io_read8:
 apu_write8: // a0: address, a1: value
     // Write a byte to APU memory
 #ifdef SODIUM64_DSP_LIVE_CORE
+#ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
+    // Queue producer writes outside every possible echo write. Port actions
+    // below still execute at their original bus clock through the bridge.
+    la t0, live_dsp_input
+    lw t1, LIVE_DSP_INPUT_EXCLUSIVE_LIMIT(t0)
+    sltu t1, a0, t1
+    beqz t1, live_dsp_write_slow
+    lw t1, LIVE_DSP_INPUT_SIZE(t0)
+    sltiu t2, t1, LIVE_DSP_INPUT_CAPACITY
+    beqz t2, live_dsp_write_slow
+    sll t2, t1, LIVE_DSP_INPUT_EVENT_SHIFT
+    addu t2, t2, t0
+    sh a0, LIVE_DSP_INPUT_EVENTS + 4(t2)
+    sb a1, LIVE_DSP_INPUT_EVENTS + 6(t2)
+    lw t0, DSP_GUEST_EPOCH_BIAS
+    addiu t0, t0, LIVE_DSP_EPOCH_OFFSET + LIVE_DSP_GUEST_CYCLE
+    subu t0, t0, s3
+    sw t0, LIVE_DSP_INPUT_EVENTS(t2)
+    addiu t1, t1, 1
+    sw t1, live_dsp_input + LIVE_DSP_INPUT_SIZE
+    sb a1, apu_ram(a0)
+    b live_dsp_write_tag
+    nop
+live_dsp_write_slow:
+#endif
     CALL_LIVE_DSP LIVE_DSP_RAM_WRITE
+#ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
+live_dsp_write_tag:
+#endif
 #else
     sb a1, apu_ram(a0)
 #endif

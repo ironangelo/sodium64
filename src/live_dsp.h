@@ -15,6 +15,17 @@
 #define LIVE_DSP_STATS        0x80523000
 #define LIVE_DSP_WRAPPER      0x80540000
 #define LIVE_DSP_WRAPPER_END  0x80542000
+#define LIVE_DSP_EPOCH_OFFSET 1364
+#define LIVE_DSP_GUEST_CYCLE  21
+
+#ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
+#define LIVE_DSP_INPUT_CAPACITY 32
+#define LIVE_DSP_INPUT_EVENT_SHIFT 3
+#define LIVE_DSP_INPUT_SIZE 0
+#define LIVE_DSP_INPUT_EXCLUSIVE_LIMIT 4
+#define LIVE_DSP_INPUT_EVENTS 8
+#define LIVE_DSP_INPUT_BYTES (LIVE_DSP_INPUT_EVENTS + (LIVE_DSP_INPUT_CAPACITY << LIVE_DSP_INPUT_EVENT_SHIFT))
+#endif
 
 #ifdef __ASSEMBLER__
 .macro CALL_LIVE_DSP operation
@@ -32,6 +43,9 @@ struct live_dsp_stats {
     uint32_t core_ticks, core_runs;
 #ifdef SODIUM64_DSP_RSP_SWAP
     uint32_t required_reg, required_echo, required_le3, last_required_epoch, required_reg_busy;
+#endif
+#ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
+    uint32_t queued_ram_writes;
 #endif
 };
 #endif

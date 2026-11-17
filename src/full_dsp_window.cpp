@@ -48,6 +48,24 @@ bool SPC_DSP_Window::echo_hazard(unsigned addr) const {
     return pending && addr >= echo_first && addr < echo_end;
 }
 
+#ifdef SODIUM64_DSP_LIVE_INPUT_QUEUE
+unsigned SPC_DSP_Window::echo_write_floor() const {
+    // ESA/EDL writes are applied only after the producer has drained the
+    // queue. Until then include the current and latched bases, the old
+    // address used by phase 29/30, and either possible ring length.
+    unsigned base = core->m.regs[SPC_DSP::r_esa] << 8;
+    unsigned latched_base = core->m.t_esa << 8;
+    unsigned ptr = core->m.t_echo_ptr;
+    unsigned length = (core->m.regs[SPC_DSP::r_edl] & 15u) << 11;
+    if (length < core->m.echo_length) length = core->m.echo_length;
+    if (length < core->m.echo_offset + 4u) length = core->m.echo_offset + 4u;
+    if (base + length > 65536 || latched_base + length > 65536 || (ptr & 3u))
+        return 0;
+    if (latched_base < base) base = latched_base;
+    return ptr < base ? ptr : base;
+}
+#endif
+
 void SPC_DSP_Window::start_echo_projection() {
     unsigned phase = core->m.phase;
     echo_first = 65536;

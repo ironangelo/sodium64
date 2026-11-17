@@ -165,10 +165,16 @@ checks. Both launch orders save about 1.27 s over the same 1,200 DKC1
 startup frames with exact RGB/PCM/DSP captures. A third pair without
 USB polling during timing repeats the gain. The separate SMW and ALttP
 smoke pairs match both captures and take almost the same time.
-All four exact-head workflows pass. PR47 is ready for review. Verify
-the combined native baseline from `master` once integrated. Keep the
-dense reset tradeoff visible when expanding native coverage.
+PR47 is VALIDATED for the measured gate and integrated in `bcc8e463`.
+The public Rolling Release matches the isolated production CI
+artifact. The merged tree's native fixed-window repeat confirms
+5.15 percent shorter DKC1 startup, with SMW and ALttP within 0.05
+percent of the prior master. All paired RGB/PCM/DSP observations
+match at APU 21 and frameskip 0. All three launches return to the
+private menu in software and preserve the play slot. The synthetic
+all-groups reset remains more expensive.
 [Native JIT validation](evidence/integration-apu-selective-jit-2026-11-16.json).
+[Merged baseline and release verification](evidence/integration-apu-selective-jit-master-2026-11-17.json).
 [Combined native three-title and SMW evidence](evidence/integration-spc-combined-native-2026-11-15.json).
 [Direct-page word evidence](evidence/integration-spc-direct-page-word-2026-11-13.json).
 

@@ -1,0 +1,281 @@
+{
+  "status": "VALIDATED and integrated for the measured gate",
+  "repository": "ironangelo/sodium64",
+  "pull_request": 47,
+  "reviewed_head": "cd055b02efa114b10c9a6be285578f57f5b0474c",
+  "previous_master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "integrated_master": "bcc8e4631f075a6681563b56d2e3dee52670bb1b",
+  "merged_tree_matches_reviewed_head": true,
+  "release": {
+    "tag": "release",
+    "release_id": 448680597,
+    "asset": "sodium64.zip",
+    "asset_id": 759207431,
+    "sha256": "87fedd40b04d0b77f163d365b73888ddf8286ab9557142c9c2e1d30add35293f",
+    "build_artifact": 14333965433,
+    "files": {
+      "sodium64.z64": {
+        "sha256": "79244d4346158b2dd839cda4df37206dc11b229631ceb4e0b1ce5733c7978b64",
+        "bytes": 98304
+      },
+      "rom-converter.py": {
+        "sha256": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283",
+        "bytes": 1997
+      }
+    },
+    "linked_release_isolation": "PASS on the exact CI build",
+    "verification": "Release ZIP digest matches GitHub's asset digest. Both members match the exact production Build and Validate artifact byte for byte.",
+    "anonymous_latest_download_verified": true
+  },
+  "native": {
+    "device": "Physical N64 and SummerCart64",
+    "executed_checkout": "d7e3b5d486ca21f9f29fac7464a881478dc753e9",
+    "detached_overlay": "Private fixed-frame Count adapter only, from 17b634f4",
+    "timed_rom_matches_premerge_candidate_byte_for_byte": true,
+    "settings": {
+      "apu_clock": 21,
+      "frameskip": 0,
+      "audio": 4,
+      "precision": 8
+    },
+    "method": "Fixed guest/render frame windows with 46.875 MHz CP0 Count. No USB polling during the measured intervals. Both aligned captures are compared with the prior master and pre-merge candidate.",
+    "workloads": {
+      "dkc1": {
+        "comparison": {
+          "previous_master": [
+            {
+              "frame": 120,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            },
+            {
+              "frame": 1320,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            }
+          ],
+          "premerge_candidate": [
+            {
+              "frame": 120,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            },
+            {
+              "frame": 1320,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            }
+          ]
+        },
+        "integrated": {
+          "ticks": 1102810600,
+          "hz": 46875000,
+          "seconds": 23.526626133333334,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "previous_master": {
+          "ticks": 1162684930,
+          "hz": 46875000,
+          "seconds": 24.803945173333332,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "premerge_candidate": {
+          "ticks": 1102425732,
+          "hz": 46875000,
+          "seconds": 23.518415616,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "software_return": true,
+        "elapsed_change_percent_from_previous_master": -5.1496607941757695
+      },
+      "smw": {
+        "comparison": {
+          "previous_master": [
+            {
+              "frame": 240,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            },
+            {
+              "frame": 840,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            }
+          ],
+          "premerge_candidate": [
+            {
+              "frame": 240,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            },
+            {
+              "frame": 840,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            }
+          ]
+        },
+        "integrated": {
+          "ticks": 489234077,
+          "hz": 46875000,
+          "seconds": 10.436993642666666,
+          "frames": [
+            240,
+            840
+          ]
+        },
+        "previous_master": {
+          "ticks": 489001941,
+          "hz": 46875000,
+          "seconds": 10.432041408,
+          "frames": [
+            240,
+            840
+          ]
+        },
+        "premerge_candidate": {
+          "ticks": 488900911,
+          "hz": 46875000,
+          "seconds": 10.429886101333333,
+          "frames": [
+            240,
+            840
+          ]
+        },
+        "software_return": true,
+        "elapsed_change_percent_from_previous_master": 0.0474713862127496
+      },
+      "alttp": {
+        "comparison": {
+          "previous_master": [
+            {
+              "frame": 1861,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            },
+            {
+              "frame": 2861,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            }
+          ],
+          "premerge_candidate": [
+            {
+              "frame": 1861,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            },
+            {
+              "frame": 2861,
+              "RGB_differences": 0,
+              "PCM_differences": 0,
+              "DSP_state_exact": true
+            }
+          ]
+        },
+        "integrated": {
+          "ticks": 783146991,
+          "hz": 46875000,
+          "seconds": 16.707135808,
+          "frames": [
+            1861,
+            2861
+          ]
+        },
+        "previous_master": {
+          "ticks": 783493508,
+          "hz": 46875000,
+          "seconds": 16.714528170666668,
+          "frames": [
+            1861,
+            2861
+          ]
+        },
+        "premerge_candidate": {
+          "ticks": 783484818,
+          "hz": 46875000,
+          "seconds": 16.714342784,
+          "frames": [
+            1861,
+            2861
+          ]
+        },
+        "software_return": true,
+        "elapsed_change_percent_from_previous_master": -0.04422716926966164
+      }
+    },
+    "regular_play_slot_touched": false
+  },
+  "remaining_scope": [
+    "Synthetic all-groups reset executes 45584 linked-interpreter instructions versus 40974 with the old full wipe. Native cost in obscure high-occupancy workloads is unresolved.",
+    "The three runs cover specific startup, demo and story segments with boundary RGB, PCM and DSP observations. Sustained native cadence, broad compatibility and analog fidelity are open.",
+    "R44/R45 renderer promotion remains blocked by DKC1 intro and the reproducible ALttP story cost. PR46 remains blocked by SMW cadence. The complete resident DSP still needs the full native path with live SPC, exact echo visibility and renderer handoffs."
+  ],
+  "ci": {
+    "pull_request": {
+      "Native USB Bench Contracts": {
+        "run_id": 43991454625,
+        "conclusion": "success"
+      },
+      "Build and Validate": {
+        "run_id": 43991454565,
+        "conclusion": "success"
+      },
+      "Profiling Memory Owners": {
+        "run_id": 43991454539,
+        "conclusion": "success"
+      },
+      "Ares Profile Validation": {
+        "run_id": 43991454536,
+        "conclusion": "success"
+      }
+    },
+    "master": {
+      "APU Cycle And Span Proof": {
+        "run_id": 44094300830,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "Ares Profile Validation": {
+        "run_id": 44094300713,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "Build and Validate": {
+        "run_id": 44094300778,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "Native USB Bench Contracts": {
+        "run_id": 44094300716,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "Profiling Memory Owners": {
+        "run_id": 44094300626,
+        "status": "completed",
+        "conclusion": "success"
+      }
+    }
+  }
+}

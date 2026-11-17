@@ -1,3 +1,37 @@
+# 2026-11-17 — Integrate selective SPC700 JIT invalidation on master
+
+[PR #47](https://github.com/ironangelo/sodium64/pull/47) merged as
+`bcc8e463` with a tree identical to the checked head
+`cd055b02`. The Rolling Release tag points to the merge. Both
+downloaded ZIP members match the exact verified production CI
+artifact. The release isolation job passes and the archive contains
+only `sodium64.z64` and `rom-converter.py`. All five exact-master
+workflows passed, including the Ares matrix and the dynamic SPC700
+cycle/span proof.
+
+A fresh private timing build from the merge matches the pre-merge
+timing ROM byte for byte. With APU 21 and frameskip 0, DKC1 startup
+frames 120–1320 take 23.526626 s versus 24.803945 s on the prior
+master, 5.15 percent shorter. SMW demo frames 240–840 take 10.436994 s
+versus 10.432041 s. ALttP story frames 1861–2861 take 16.707136 s
+versus 16.714528 s. Both aligned RGB, PCM and DSP observations per
+title match the prior master and the pre-merge candidate. All launches
+return to the menu over USB and preserve the play slot.
+
+The all-groups synthetic reset still executes 45,584 instructions
+versus 40,974 with the full wipe. The bounded native runs do not
+establish broad compatibility, analog fidelity or sustained cadence
+across gameplay. PR46 remains blocked by native SMW cadence. R44
+and R45 remain blocked by the DKC1 intro and the repeated ALttP
+story regressions. For the renderer, isolate the DKC1 SP completion
+wait using the retained matched timing build. For the complete
+resident DSP, keep the integrated master as comparator and require
+live timestamped SPC, exact echo visibility and shared renderer
+handoffs in the same physical run.
+[Integrated native and release evidence](evidence/integration-apu-selective-jit-master-2026-11-17.json).
+
+---
+
 # 2026-11-17 — Reject the fused MOVW RAM path on native cost
 
 The PR46-derived build preserves the MOVW destination read, writes the

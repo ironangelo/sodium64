@@ -256,9 +256,12 @@ counter does not identify which RSP/RDP/DMA subpath causes it.
 [Matched native wait evidence](evidence/integration-pr32-bounded-wait-native-2026-11-15.json).
 The exact 480-frame repeat adds 6.553 ms per frame for PR32.
 In 68.01 percent of corrected faithful observer samples, both
-SP DMA and observed DP status flags are clear. Count the existing
-`hcomp_fence_wait` loop at HALT to test that specific fence. The
-refreshed complete DSP scalar and recorded-effects controls on
+SP DMA and observed DP status flags are clear. The retired-word
+counter now measures 209,381 `hcomp_fence_wait` polls and 1,440
+calls over the same 480 frames, with both captures exact and elapsed
+time within 0.50 percent of its control. Command-fetch, source
+retirement and DMA waits remain outside that counter's scope.
+The refreshed complete DSP scalar and recorded-effects controls on
 `bcc8e463` measure 36.992 and 16.578 ms per frame. During replay,
 1,337 of 1,993 synchronous register catches occur while the renderer
 is active.

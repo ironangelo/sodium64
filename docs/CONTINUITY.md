@@ -1,3 +1,30 @@
+# 2026-11-17 — Complete the retired compositor fence discriminator
+
+The private RSP counter records 209,381 polls and 1,440 calls to
+`hcomp_fence_wait` over the same 480 DKC1 intro frames. Its elapsed
+time is 0.496 percent shorter than the unmodified faithful control,
+with both aligned RGB/PCM/DSP observations exact. Eight linked
+execution cases and two CPU collection cases verify the counters,
+registers, overflow and reset. The fixed overlay entries and every
+other RSP bank match the control. The disabled ROM matches byte for
+byte. CPU collection reads two unused DMEM words after HALT only.
+
+This counts the explicit SyncFull completion loop. The resident
+command-fetch, texture-retirement and DMA waits retain their original
+behavior and remain outside this counter's scope. Preserve the
+barriers and require a runtime remedy to close the measured DKC1
+cost while retaining the full compositor's output.
+
+PR32, PR41 and PR42 now describe their current code and concrete native
+gates. Old startup and transport failures remain in historical evidence.
+The PRs remain drafts. PR32 and its R44-dependent chain are blocked by
+the intro cost. R45 also has the repeated ALttP story regression.
+Master remains `bcc8e463` with its measured integrated JIT improvement.
+The final independent USB query verifies the private menu and recovery 0.
+[Native counters, integrated DSP comparator and PR disposition](evidence/integration-renderer-wait-dsp-baseline-2026-11-17.json).
+
+---
+
 # 2026-11-17 — Narrow the renderer wait and refresh the complete DSP control
 
 The bounded N64 DKC1 comparison (frames 3001–3481, APU 21,

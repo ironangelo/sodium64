@@ -129,7 +129,58 @@
     },
     "method_limit": "The CPU reads SP_STATUS and DPC_STATUS bookends during SP HALT wait. Samples describe observed status bits. They don't establish cause, duration by class or RSP program position.",
     "first_probe_rejected": "The frame-capture SyncFull staging store at physical 0x441ca0 shared the first two counters. Both moved to the independently checked range at 0x441cd0 and the native observer cases were rerun. Raw USB poll totals from paused endpoint queries include bench idle and were excluded.",
-    "next_gate": "Count the existing hcomp_fence_wait loop polls at its three SyncFull call sites, with fixed entry points and liveness verified, and read at HALT. Keep the DKC1 intro and ALttP story promotion gates."
+    "next_gate": "The parent compositor remains blocked by DKC1 fixed-work cost. The measured counter isolates hcomp_fence_wait. A runtime remedy needs evidence for the remaining resident command-fetch/source-retirement waits and composition cost, followed by paired DKC1 plus the existing fidelity corpus. R45 independently remains blocked by ALttP story.",
+    "retired_fence": {
+      "source_head": "43622106bb143f01f622326a20c094a0a938abe4",
+      "scope": "All three calls to hcomp_fence_wait, DKC1 guest/render frames 3001\u20133481, APU 21, frameskip 0, precision 8.",
+      "native": {
+        "control_ticks": 523581421,
+        "fence_ticks": 520986660,
+        "relative_time_change": -0.0049557927304682,
+        "counters": {
+          "rsp_wait_count_mod32": 251185194,
+          "framebuffer_wait_count_mod32": 1440,
+          "rsp_fence_polls": 209381,
+          "rsp_fence_calls": 1440
+        },
+        "fidelity": [
+          {
+            "frame": 3001,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 3481,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true
+      },
+      "polls_per_guest_frame": 436.2104166666667,
+      "calls_per_guest_frame": 3.0,
+      "taken_loop_branches": 207941,
+      "DMEM_words": [
+        "0xECC",
+        "0xEFC"
+      ],
+      "HALT_only_collection_and_reset": true,
+      "guarded_CPU_accumulators": [
+        "0x80441D00",
+        "0x80441D04"
+      ],
+      "fence_disabled_ROM_identical_to_control": true,
+      "other_RSP_banks_identical": true,
+      "external_fixed_entries_preserved": true,
+      "linked_cases": {
+        "fence_execution": 8,
+        "HALT_collector": 2,
+        "includes_32bit_overflow": true
+      },
+      "method_limit": "The count includes one terminal poll per call. It measures loop iterations. RDP register-read latency and time spent before the fence are not timed by this counter. The resident command-fetch, source-retirement and DMA waits remain outside its scope."
+    }
   },
   "complete_dsp_cost": {
     "status": "Native scalar and recorded-effects controls refreshed. Accelerated full resident backend remains open.",
@@ -208,5 +259,25 @@
     ],
     "method_limit": "Replay validates the live SPC bridge request stream and publishes coherent echo and PCM, using prerecorded DSP effects. It executes zero DSP core arithmetic. Replay frame wait is read from the reset interval counters at the end, not differenced against the earlier warmup.",
     "remaining_gate": "Demonstrate one measured complete accelerated implementation with exact DSP outputs, live timestamped SPC, echo visible to the warm JIT, continuous PCM/AI and bounded shared-SP handoffs. It must meet synchronous deadlines while the renderer owns SP."
+  },
+  "pull_request_metadata": {
+    "32": {
+      "head": "ae59e6b774168564444352066273a9e4025aa800",
+      "draft": true,
+      "classification": "BLOCKED",
+      "description_updated": "Current compositor scope, repaired startup, bounded native cost and integrated-master comparator"
+    },
+    "41": {
+      "head": "4859b8c5e3bc16fbed27b728ce37a46681951c2d",
+      "draft": true,
+      "classification": "BLOCKED",
+      "description_updated": "Current R44 scope and remaining parent-comparison and compositor gates"
+    },
+    "42": {
+      "head": "e12ae12ecb46c550f391b1d4ac57caa7c7eeb83e",
+      "draft": true,
+      "classification": "BLOCKED",
+      "description_updated": "Qualified DKC1 first-stage and F-Zero comparisons, repeated ALttP story regression and parent compositor gate"
+    }
   }
 }

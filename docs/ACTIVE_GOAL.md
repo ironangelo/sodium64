@@ -303,6 +303,11 @@ a 0.512 us minimum. The renderer owns SP at 1,128 of 1,993 synchronous
 register reads. The complete backend now has a measured workload
 budget and an explicit deadline test during renderer ownership.
 [DSP headroom and deadline evidence](evidence/integration-dsp-effects-headroom-2026-11-16.json).
+The saturated ENDX observation rule passes four reference replays and
+130 local cases with three rejected faults. The earlier native trace
+contains 664 synchronous ENDX replies of `0xff`. Actual native avoided catches,
+cost and capture parity remain pending with the N64 powered off.
+[ENDX proof and native gate](evidence/integration-dsp-sticky-endx-2026-11-17.json).
 [Native register-publication deadlines](evidence/integration-dsp-output-publication-2026-11-16.json).
 [Native resident-state handoff](evidence/integration-dsp-rsp-resident-state-2026-11-16.json).
 [Native in-frame RSP handoff](evidence/integration-dsp-rsp-in-frame-yield-2026-11-16.json).

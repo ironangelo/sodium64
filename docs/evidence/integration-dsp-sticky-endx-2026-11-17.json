@@ -1,0 +1,51 @@
+{
+  "date_local": "2026-11-17",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "source_head": "85b3beb422a70207efa91302033e5e6724d9781e",
+  "runtime_head": "b7c1c5c5e6698baf602a9498fbd250e687845d30",
+  "scope": "Guarded ENDX observations in the laboratory complete scalar DSP window.",
+  "host": {
+    "phases": 32,
+    "directed_cases": 130,
+    "complete_replays": 4,
+    "rejected_faults": [
+      "omit_queued_guard",
+      "omit_kon_latches",
+      "omit_saturation"
+    ]
+  },
+  "previous_native_trace": {
+    "frames": [
+      48,
+      88
+    ],
+    "all_DSP_register_reads": 2658,
+    "synchronous_reads": 1993,
+    "synchronous_ENDX_replies_equal_ff": 664,
+    "meaning": "Potential workload coverage observed in an earlier native capture. The predicate and its effect on native timing have not been measured on the new code."
+  },
+  "new_bench": {
+    "off_ROM": "ba14d32b3043bd2be472893976e067edaa0902336f867d43b2e51324fdeda96b",
+    "on_ROM": "4297f3fa372faa0305e5a0b6ed52a6001c87e353bd26b2bb91d929928144c505",
+    "status": "PENDING_NATIVE",
+    "preflight": "CIC reported N64 off through COM3. Stopped before installing either build.",
+    "required_evidence": [
+      "Actual avoided catch-ups",
+      "Exact aligned RGB and captured PCM",
+      "Fixed-work elapsed time",
+      "Software return"
+    ]
+  },
+  "production_identity": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  }
+}

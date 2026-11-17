@@ -1,3 +1,27 @@
+# 2026-11-17 — Qualify saturated ENDX replies locally
+
+The private controller can return `ENDX=0xff` without running pending
+DSP clocks when both the register and its publication latch are already
+`0xff`. The fast path requires no producer or internal KON, no voice
+about to clear a bit, and no queued write that could start a voice or
+clear ENDX. The DSP still consumes the original work in order.
+
+The implementation passes four complete reference replays and 130
+directed cases across all phases, including queued ENDX/KON writes and
+separate producer and internal KON latches. Removing the saturation,
+queued-write or KON guards fails the directed test. Production ROM and
+ELF match `7a6e3d75`.
+
+The earlier native trace has 664 ENDX replies of `0xff` among the
+1,993 reads that forced a catch-up. This identifies the opportunity.
+The new off/on images are built. The CIC preflight found the N64 off
+and the run stopped before installing either image. On the next
+available session, compare exact image/PCM and actual catch-ups on
+the original load before carrying the rule into the full DSP backend.
+[ENDX proof and pending native gate](evidence/integration-dsp-sticky-endx-2026-11-17.json).
+
+---
+
 # 2026-11-16 — Measure native DSP headroom with recorded bus effects
 
 The private diagnostic records the original eight-voice workload's DSP

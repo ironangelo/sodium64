@@ -34,6 +34,7 @@ jobs:
           python3 scripts/test_apu_lookup_reset.py build_hw/sodium64-hw.elf
           python3 scripts/test_dsp_gain_owner.py build_hw/sodium64-hw.elf
           python3 scripts/test_dsp_brr_accuracy.py build_hw/sodium64-hw.elf
+          python3 scripts/test_dsp_pitch_cache.py build_hw/sodium64-hw.elf
       - uses: actions/upload-artifact@v4
         if: always()
         with:

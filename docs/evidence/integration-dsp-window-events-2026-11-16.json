@@ -1,0 +1,140 @@
+{
+  "date_local": "2026-11-16",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "previous_candidate": "5c0f5436d9067117adf3301a843fbde1faeed637",
+  "tested_runtime_head": "da258bf43478c9ad064cac3d3a1e5eff331e9632",
+  "archived_with_test": "bdc6ecdebebbff8cf820fd5dd58db504a94cbae1",
+  "method": "Replay queued writes from inside the complete SPC_DSP phase dispatcher using a countdown to the next event or final clock. The comparison keeps the live SPC input queue enabled on both builds. Both use a single Count bracket per controller flush and a separate whole-interval Count bracket for 40 guest/RSP-retired frames. No host polling during measurement.",
+  "scope": "Original eight-voice moving-window guest with standard renderer on real N64. APU clock 21 and frameskip 0. CPU scalar DSP in both modes.",
+  "fixed_native_frames": [
+    48,
+    88
+  ],
+  "count_hz": 46875000,
+  "native_pairs": [
+    {
+      "order": [
+        "off",
+        "on"
+      ],
+      "elapsed_regression_percent": 3.307321,
+      "modes": {
+        "off": {
+          "rom_sha256": "bb9f138d7e3a6a91efbb19d8278d265a0f662949c0e38190f8756e25a67ff612",
+          "elapsed_count_ticks": 67424051,
+          "elapsed_ms_per_guest_frame": 35.959494,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 5317,
+            "full_ticks": 52078075,
+            "full_core_ticks": 40883479,
+            "critical_reg": 1993,
+            "critical_reg_busy": 281
+          },
+          "exact_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true
+        },
+        "on": {
+          "rom_sha256": "8fa77a04a449b6b6faca0c46b9c6577d5f0218eef796e62226d8b3c64510eb4c",
+          "elapsed_count_ticks": 69653981,
+          "elapsed_ms_per_guest_frame": 37.14879,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 5317,
+            "full_ticks": 53039709,
+            "full_core_ticks": 41579618,
+            "critical_reg": 1993,
+            "critical_reg_busy": 281
+          },
+          "exact_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true
+        }
+      }
+    },
+    {
+      "order": [
+        "on",
+        "off"
+      ],
+      "elapsed_regression_percent": 3.226857,
+      "modes": {
+        "on": {
+          "rom_sha256": "8fa77a04a449b6b6faca0c46b9c6577d5f0218eef796e62226d8b3c64510eb4c",
+          "elapsed_count_ticks": 69623347,
+          "elapsed_ms_per_guest_frame": 37.132452,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 5317,
+            "full_ticks": 53040804,
+            "full_core_ticks": 41580285,
+            "critical_reg": 1993,
+            "critical_reg_busy": 282
+          },
+          "exact_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true
+        },
+        "off": {
+          "rom_sha256": "bb9f138d7e3a6a91efbb19d8278d265a0f662949c0e38190f8756e25a67ff612",
+          "elapsed_count_ticks": 67446931,
+          "elapsed_ms_per_guest_frame": 35.971697,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 5317,
+            "full_ticks": 52080371,
+            "full_core_ticks": 40885924,
+            "critical_reg": 1993,
+            "critical_reg_busy": 281
+          },
+          "exact_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true
+        }
+      }
+    }
+  ],
+  "linked_dispatch_bytes": {
+    "off": 3532,
+    "on": 5120
+  },
+  "host": {
+    "complete_reference_cases": 4,
+    "directed_cases": 224,
+    "writes": 9080,
+    "events_at_window_end": 192,
+    "explicit_31_to_0": 7,
+    "echo_words_exact_bytes_and_order": 2116,
+    "RAM_PCM_serialized_state_and_replay_exact": true
+  },
+  "production_identity": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  },
+  "decision": "REJECTED for native cost. Keep the exact phase/event tests with the archived implementation. Carry forward the previous live input queue and segmented execution."
+}

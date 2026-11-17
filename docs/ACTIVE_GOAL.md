@@ -292,6 +292,10 @@ cuts the complete workload to 36.255–36.257 ms per guest frame from
 40.024–40.031 ms. Native RGB and captured PCM match. The complete DSP
 is still scalar and 282 synchronous output reads retain the renderer
 ownership conflict over the measured 40 frames.
+The integrated event dispatcher is rejected for a 3.23–3.31% native
+slowdown with exact output. Keep segmented DSP execution and the
+separately measured input queue for the next complete backend check.
+[Native event-dispatch comparison](evidence/integration-dsp-window-events-2026-11-16.json).
 [Native register-publication deadlines](evidence/integration-dsp-output-publication-2026-11-16.json).
 [Native resident-state handoff](evidence/integration-dsp-rsp-resident-state-2026-11-16.json).
 [Native in-frame RSP handoff](evidence/integration-dsp-rsp-in-frame-yield-2026-11-16.json).

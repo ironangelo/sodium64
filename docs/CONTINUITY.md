@@ -1,3 +1,25 @@
+# 2026-11-16 — Reject replaying memory events inside the DSP phase dispatcher
+
+The event-aware scalar dispatcher applies the ordered RAM and register
+writes without returning to the controller at each timestamp. It passes
+the four complete reference traces and 224 directed cases, including
+same-clock writes, the last clock, phase 31→0 and exact echo publication.
+
+Two opposite launch orders on real N64 show a whole-workload slowdown
+from 35.959 to 37.149 and 35.972 to 37.132 ms per guest frame. Both modes
+use the existing SPC input queue and time each complete controller flush
+once. Both preserve the same final clocks, echo publication count, RGB
+and captured PCM. The linked R4300 dispatcher grows from 3,532 to 5,120
+bytes including the event boundary helper.
+
+Reject this implementation for cost. Continue from the separate input
+queue proof `5c0f5436`. The complete-core arithmetic and exact deadlines
+while the renderer owns SP remain the next backend gates. Production
+ROM and ELF stay byte-identical to `7a6e3d75`.
+[Complete DSP dispatcher comparison](evidence/integration-dsp-window-events-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Batch live SPC RAM writes before the complete DSP
 
 The private controller admits timestamped RAM writes to a 32-entry

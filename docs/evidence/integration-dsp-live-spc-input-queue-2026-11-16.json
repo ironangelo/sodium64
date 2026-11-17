@@ -1,0 +1,208 @@
+{
+  "date_local": "2026-11-16",
+  "master": "7a6e3d759436b3c0295930f16a04e9f286ce2ea2",
+  "source_head": "5c0f5436d9067117adf3301a843fbde1faeed637",
+  "source_head_note": "The host test and signedness cleanup follow the tested runtime commit. The linked queued ROM was rebuilt and checked byte-for-byte against the original timed ROM after the cleanup.",
+  "scope": "Original live eight-voice moving-window workload with ordinary renderer, physical N64, APU clock 21 and frameskip 0. The complete scalar DSP still runs on the R4300.",
+  "method": "Same-source queue off/on builds. Count brackets 40 guest/RSP-retired frames with no USB polling during the timed window. The fast path records RAM stores with their native bus timestamp, updates SPC-visible RAM and tags, and drains writes in order before any C++ bridge observation. An overlapping or ambiguous echo region and a full queue take the synchronous bridge.",
+  "clock_hz": 46875000,
+  "native_fixed_work": [
+    {
+      "order": [
+        "off",
+        "on"
+      ],
+      "full_elapsed_savings_percent": 9.41385,
+      "runs": {
+        "off": {
+          "source_head": "f995d10eca40dce5343a2cd3b8f8e64ddf656e7b",
+          "bench_rom_sha256": "5c3a7de5757c4a8adc72912264ef249114941999be62e02b0f4c9265e79f64d3",
+          "count_ticks": 75045796,
+          "wall_ms_per_guest_frame": 40.024425,
+          "interval": {
+            "full_calls": 58493,
+            "full_queued_ram": 0,
+            "full_cycles": 680702,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 56508,
+            "full_ticks": 59199990,
+            "full_core_ticks": 40723379,
+            "critical_reg": 1993,
+            "critical_reg_busy": 246,
+            "yield_count": 80,
+            "resident_matches": 40
+          },
+          "boundaries": [
+            {
+              "frame": 48,
+              "full_cycles": 814435,
+              "full_pcm": 25448,
+              "full_echo": 49038
+            },
+            {
+              "frame": 88,
+              "full_cycles": 1495137,
+              "full_pcm": 46720,
+              "full_echo": 91587
+            }
+          ],
+          "reproduces_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true,
+          "play_slot_touched": false
+        },
+        "on": {
+          "source_head": "f995d10eca40dce5343a2cd3b8f8e64ddf656e7b",
+          "bench_rom_sha256": "1c0e9d0e896549fae14360007075cdf20c6ec4499be866164eaa3c10428ff4d3",
+          "count_ticks": 67981097,
+          "wall_ms_per_guest_frame": 36.256585,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 56508,
+            "full_ticks": 52694923,
+            "full_core_ticks": 39582446,
+            "critical_reg": 1993,
+            "critical_reg_busy": 282,
+            "yield_count": 80,
+            "resident_matches": 40
+          },
+          "boundaries": [
+            {
+              "frame": 48,
+              "full_cycles": 814344,
+              "full_pcm": 25448,
+              "full_echo": 49038
+            },
+            {
+              "frame": 88,
+              "full_cycles": 1495137,
+              "full_pcm": 46720,
+              "full_echo": 91587
+            }
+          ],
+          "reproduces_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true,
+          "play_slot_touched": false
+        }
+      }
+    },
+    {
+      "order": [
+        "on",
+        "off"
+      ],
+      "full_elapsed_savings_percent": 9.43465,
+      "runs": {
+        "on": {
+          "source_head": "f995d10eca40dce5343a2cd3b8f8e64ddf656e7b",
+          "bench_rom_sha256": "1c0e9d0e896549fae14360007075cdf20c6ec4499be866164eaa3c10428ff4d3",
+          "count_ticks": 67977372,
+          "wall_ms_per_guest_frame": 36.254598,
+          "interval": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_cycles": 680793,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 56508,
+            "full_ticks": 52693550,
+            "full_core_ticks": 39582592,
+            "critical_reg": 1993,
+            "critical_reg_busy": 282,
+            "yield_count": 80,
+            "resident_matches": 40
+          },
+          "boundaries": [
+            {
+              "frame": 48,
+              "full_cycles": 814344,
+              "full_pcm": 25448,
+              "full_echo": 49038
+            },
+            {
+              "frame": 88,
+              "full_cycles": 1495137,
+              "full_pcm": 46720,
+              "full_echo": 91587
+            }
+          ],
+          "reproduces_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true,
+          "play_slot_touched": false
+        },
+        "off": {
+          "source_head": "f995d10eca40dce5343a2cd3b8f8e64ddf656e7b",
+          "bench_rom_sha256": "5c3a7de5757c4a8adc72912264ef249114941999be62e02b0f4c9265e79f64d3",
+          "count_ticks": 75058918,
+          "wall_ms_per_guest_frame": 40.031423,
+          "interval": {
+            "full_calls": 58493,
+            "full_queued_ram": 0,
+            "full_cycles": 680702,
+            "full_pcm": 21272,
+            "full_echo": 42549,
+            "full_outputs": 2658,
+            "full_core_runs": 56508,
+            "full_ticks": 59196220,
+            "full_core_ticks": 40719391,
+            "critical_reg": 1993,
+            "critical_reg_busy": 247,
+            "yield_count": 80,
+            "resident_matches": 40
+          },
+          "boundaries": [
+            {
+              "frame": 48,
+              "full_cycles": 814435,
+              "full_pcm": 25448,
+              "full_echo": 49038
+            },
+            {
+              "frame": 88,
+              "full_cycles": 1495137,
+              "full_pcm": 46720,
+              "full_echo": 91587
+            }
+          ],
+          "reproduces_frame_88_RGB_and_captured_PCM": true,
+          "software_return": true,
+          "play_slot_touched": false
+        }
+      }
+    }
+  ],
+  "endpoint_note": "The on mode begins frame 48 with 91 fewer bridge-accounted SPC clocks. It catches up by frame 88. Both modes end with the same full cycle, echo publication and PCM counts. Native echo word contents were not exported.",
+  "host_proof": {
+    "directed_cases": 192,
+    "echo_words": 249327,
+    "echo_words_under_nonzero_bound": 124253,
+    "ring_wrap_cases": 64,
+    "latched_right_channel_cases": 32,
+    "deferred_writes_with_exact_ram_and_shadow": 192,
+    "canonical_controller_replays_full_state_ram_pcm_exact": 4
+  },
+  "production_identity": {
+    "linked_symbols": 1247,
+    "allocated_bytes": 767640,
+    "laboratory_symbols": [],
+    "allocated_diagnostic_leases": [],
+    "sha256": {
+      "sodium64.z64": "51cd078346e496e42e31ae6d7fd4b3d2eff3d532adf117e95fa64ac8de378493",
+      "rom-converter.py": "6a6d111f28f199047d06a93d4bff4bc7a0a179c9c584e131dc2ac101038b0b27"
+    },
+    "elf_sha256": "b153ee0155fc4b31fb06bdf40b246d445c3eafaefdbf49e909831a2926fac7e1",
+    "status": "PASS"
+  },
+  "open": [
+    "Reduce the complete DSP execution cost and preserve exact deadline service when the renderer owns SP.",
+    "General native fetch/echo equivalence and wider workloads including Mode 7.",
+    "The combined workload still needs more than 36 ms per guest frame."
+  ]
+}

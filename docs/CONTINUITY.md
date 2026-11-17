@@ -1,3 +1,33 @@
+# 2026-11-16 — Batch live SPC RAM writes before the complete DSP
+
+The private controller admits timestamped RAM writes to a 32-entry
+queue while every possible echo write lies above the address. The SPC
+RAM view and code tags change immediately. The complete DSP consumes
+the original ordered writes before the next bridge operation. Writes
+that may collide with echo take the synchronous path. The guard covers
+both ESA bases, ring length and the previous phase-29/30 pointer.
+
+Two opposite launch orders on N64 cut total elapsed time from
+40.024 to 36.257 and 40.031 to 36.255 ms per guest frame over the
+same 40 frames of the original eight-voice workload. The candidate
+drains 51,191 queued writes in the interval. Full bridge calls fall
+from 58,493 to 7,309. Frame 88 RGB and captured PCM match the scalar
+reference. The variants reach the same SPC clock, PCM count and echo
+publication count at that boundary. Host tests compare actual RAM
+and shadow bytes and cover all phases, echo address changes, ring
+wrap, old right-channel pointers and reset.
+
+The complete DSP still runs on the CPU. Even with the faster input
+path this workload exceeds the 16.667 ms frame budget. On the new
+path, 282 of 1,993 synchronous output reads find the renderer active.
+Keep the input path with the complete-core reference. The next
+backend must reduce the complete DSP computation and use an exact
+deadline path during those renderer-owned intervals. Production ROM
+and ELF match `7a6e3d75`. PR #47 remains ready for review.
+[Live input queue and whole-workload evidence](evidence/integration-dsp-live-spc-input-queue-2026-11-16.json).
+
+---
+
 # 2026-11-16 — Qualify the selective SPC700 lookup invalidation PR for review
 
 PR #47 isolates the lookup-group part of `ca3f6f59` on

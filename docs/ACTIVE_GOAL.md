@@ -287,6 +287,11 @@ catches in that same 40-frame workload. The renderer is still running
 on 247 of the 1,993 remaining catches. Full accelerated compute needs
 a compact code layout with a bounded deadline path during SP ownership
 and exact native echo/fetch publication.
+[Live SPC RAM input](evidence/integration-dsp-live-spc-input-queue-2026-11-16.json)
+cuts the complete workload to 36.255–36.257 ms per guest frame from
+40.024–40.031 ms. Native RGB and captured PCM match. The complete DSP
+is still scalar and 282 synchronous output reads retain the renderer
+ownership conflict over the measured 40 frames.
 [Native register-publication deadlines](evidence/integration-dsp-output-publication-2026-11-16.json).
 [Native resident-state handoff](evidence/integration-dsp-rsp-resident-state-2026-11-16.json).
 [Native in-frame RSP handoff](evidence/integration-dsp-rsp-in-frame-yield-2026-11-16.json).

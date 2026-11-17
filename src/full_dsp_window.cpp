@@ -12,18 +12,6 @@ static inline uint32_t native_count() {
     return result;
 }
 
-static inline void run_dsp(SPC_DSP& core, unsigned clocks) {
-    uint32_t start = native_count();
-    core.run(clocks);
-    uint32_t elapsed = native_count() - start;
-    live_dsp_stats* stats = reinterpret_cast<live_dsp_stats*>(LIVE_DSP_STATS);
-    stats->core_ticks += elapsed;
-    ++stats->core_runs;
-}
-#else
-static inline void run_dsp(SPC_DSP& core, unsigned clocks) {
-    core.run(clocks);
-}
 #endif
 
 void SPC_DSP_Window::init(SPC_DSP& dsp, unsigned char* cpu_ram,
@@ -123,15 +111,29 @@ void SPC_DSP_Window::apply(event_t const& event) {
 }
 
 void SPC_DSP_Window::flush() {
+    if (!pending) return;
+#ifdef SODIUM64_DSP_LIVE_CORE
+    uint32_t start = native_count();
+#endif
+#ifdef SODIUM64_DSP_WINDOW_EVENTS
+    core->run_window(pending, events, count);
+#else
     unsigned cursor = 0;
     for (unsigned i = 0; i < count; i++) {
         event_t const& event = events[i];
         assert(event.clock >= cursor && event.clock <= pending);
-        if (event.clock > cursor) run_dsp(*core, event.clock - cursor);
+        if (event.clock > cursor) core->run(event.clock - cursor);
         cursor = event.clock;
         apply(event); // same-clock events retain producer order
     }
-    if (pending > cursor) run_dsp(*core, pending - cursor);
+    if (pending > cursor) core->run(pending - cursor);
+#endif
+#ifdef SODIUM64_DSP_LIVE_CORE
+    uint32_t elapsed = native_count() - start;
+    live_dsp_stats* stats = reinterpret_cast<live_dsp_stats*>(LIVE_DSP_STATS);
+    stats->core_ticks += elapsed;
+    ++stats->core_runs;
+#endif
     pending = count = 0;
 }
 

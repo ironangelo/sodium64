@@ -37,10 +37,8 @@ public:
 private:
     SPC_DSP_Window(SPC_DSP_Window const&);
     SPC_DSP_Window& operator=(SPC_DSP_Window const&);
-    struct event_t {
-        unsigned short addr;
-        unsigned char clock, data, reg;
-    } events[event_capacity];
+    typedef SPC_DSP::window_event_t event_t;
+    event_t events[event_capacity];
     SPC_DSP* core;
     unsigned char *cpu, *shadow;
     unsigned pending, count;

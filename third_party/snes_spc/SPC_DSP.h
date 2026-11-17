@@ -122,6 +122,19 @@ public:
 private:
 #ifdef SODIUM64_DSP_FULL_WINDOW
 	friend class SPC_DSP_Window;
+	struct window_event_t {
+		unsigned short addr;
+		unsigned char clock, data, reg;
+	};
+#ifdef SODIUM64_DSP_WINDOW_EVENTS
+	struct window_replay_t {
+		window_event_t const* next;
+		window_event_t const* end;
+		unsigned stop, limit;
+	};
+	int replay_boundary(window_replay_t&);
+	void run_window(int clocks, window_event_t const*, unsigned count);
+#endif
 	// Transport callback is derived ownership, outside serialized logical state.
 	void (*echo_publish)( void*, unsigned, unsigned char const* );
 	void* echo_publish_context;

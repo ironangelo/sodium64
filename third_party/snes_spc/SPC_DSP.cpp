@@ -896,8 +896,44 @@ PHASE(31)  V(V4,0)       V(V1,2)\
 
 #if !SPC_DSP_CUSTOM_RUN
 
+#ifdef SODIUM64_DSP_WINDOW_EVENTS
+#ifdef SODIUM64_DSP_FULL_BRR_BATCH
+#error Window events require immediately visible BRR state
+#endif
+int __attribute__((noinline)) SPC_DSP::replay_boundary(window_replay_t& replay)
+{
+	unsigned stop = replay.stop;
+	while (replay.next != replay.end && replay.next->clock == stop)
+	{
+		window_event_t const& event = *replay.next++;
+		if (event.reg) write(event.addr, event.data);
+		else m.ram[event.addr] = event.data;
+	}
+	replay.stop = replay.next == replay.end ? replay.limit : replay.next->clock;
+	return replay.stop - stop;
+}
+
 void SPC_DSP::run( int clocks_remain )
 {
+	run_window(clocks_remain, 0, 0);
+}
+
+void SPC_DSP::run_window(int clocks_remain, window_event_t const* events, unsigned count)
+{
+	// The window applies zero-clock writes directly. Each remaining event
+	// is applied before executing the next phase, even at the final clock.
+	unsigned limit = clocks_remain;
+	window_replay_t replay = {events, count ? events + count : events,
+	                         count ? events->clock : limit, limit};
+	int countdown = replay.stop;
+	assert(countdown > 0);
+	#define DSP_PHASE_END() \
+		(!--countdown && (replay.next == replay.end || !(countdown = replay_boundary(replay))))
+#else
+void SPC_DSP::run( int clocks_remain )
+{
+	#define DSP_PHASE_END() (!--clocks_remain)
+#endif
 	require( clocks_remain > 0 );
 	
 	int const phase = m.phase;
@@ -906,13 +942,14 @@ void SPC_DSP::run( int clocks_remain )
 	{
 	loop:
 	
-		#define PHASE( n ) if ( n && !--clocks_remain ) break; case n:
+		#define PHASE( n ) if ( n && DSP_PHASE_END() ) break; case n:
 		GEN_DSP_TIMING
 		#undef PHASE
 	
-		if ( --clocks_remain )
+		if ( !DSP_PHASE_END() )
 			goto loop;
 	}
+	#undef DSP_PHASE_END
 #ifdef SODIUM64_DSP_FULL_BRR_BATCH
 	// Every public run boundary exposes all original buffer writes, including
 	// arbitrary single-clock slices. No pending work crosses an external write.

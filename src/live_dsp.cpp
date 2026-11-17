@@ -285,7 +285,12 @@ unsigned replay_effects(unsigned op, unsigned address, unsigned value, uint32_t 
         break;
     }
 #ifdef SODIUM64_DSP_RSP_SWAP
-    if (row[3] & 0x80) required(op == LIVE_DSP_REG_READ, epoch);
+    if (row[3] & 0x80) {
+        bool reg = op == LIVE_DSP_REG_READ;
+        if (reg && !(reinterpret_cast<volatile uint32_t*>(0xa4040010u)[0] & 1u))
+            ++stats->required_reg_busy;
+        required(reg, epoch);
+    }
 #endif
     live_dsp_input.exclusive_limit = row[2] >> 16;
     ++stats->effects_rows;

@@ -13,6 +13,14 @@ DSP_LIVE_PREFIX ?= 0
 DSP_LIVE_CORE ?= 0
 DSP_LIVE_INPUT_QUEUE ?= 0
 DSP_EFFECTS_MODE ?= 0
+DSP_EFFECTS_WAIT ?= 0
+ifeq ($(DSP_EFFECTS_WAIT),1)
+ifneq ($(DSP_LIVE_CORE),1)
+$(error Framebuffer wait timing belongs to the private live DSP test)
+endif
+N64_ASFLAGS += -DSODIUM64_DSP_EFFECTS_WAIT=1
+N64_REMOTE_CFLAGS += -DSODIUM64_DSP_EFFECTS_WAIT=1
+endif
 ifneq ($(DSP_EFFECTS_MODE),0)
 ifneq ($(filter $(DSP_EFFECTS_MODE),1 2),$(DSP_EFFECTS_MODE))
 $(error Unsupported private DSP effects mode)

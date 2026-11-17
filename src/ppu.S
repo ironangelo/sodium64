@@ -18,7 +18,7 @@
 */
 
 #include "defines.h"
-#ifdef SODIUM64_DSP_RSP_YIELD
+#if defined(SODIUM64_DSP_RSP_YIELD) || defined(SODIUM64_DSP_EFFECTS_WAIT)
 #include "live_dsp.h"
 #endif
 #ifdef SODIUM64_REMOTE
@@ -761,6 +761,9 @@ set_buffer:
     sw t0, DMEM(VRAM_ADDRS + 4)
     lw t0, 0xA404001C
 
+#ifdef SODIUM64_DSP_EFFECTS_WAIT
+    mfc0 t2, $9
+#endif
 frame_wait:
     // Wait for a framebuffer to be available
     lbu t0, frame_count
@@ -768,6 +771,23 @@ frame_wait:
 
     // Unhalt the RSP so it can render the next frame
     li t0, 0x1 // Clear halt, also the frame_wait branch delay slot.
+#ifdef SODIUM64_DSP_EFFECTS_WAIT
+    mfc0 t3, $9
+    lui t1, 0x8044
+    subu t3, t3, t2
+    lw t0, LIVE_DSP_WAIT_TICKS(t1)
+    addu t0, t0, t3
+    sw t0, LIVE_DSP_WAIT_TICKS(t1)
+    lw t0, LIVE_DSP_WAIT_COUNT(t1)
+    addiu t0, t0, 1
+    sw t0, LIVE_DSP_WAIT_COUNT(t1)
+    lw t0, LIVE_DSP_WAIT_MIN(t1)
+    sltu t0, t3, t0
+    beqz t0, 1f
+    nop
+    sw t3, LIVE_DSP_WAIT_MIN(t1)
+1:
+#endif
 #ifdef SODIUM64_REMOTE
     lw t0, remote_boot_ram_bytes
     lui t1, 0x80

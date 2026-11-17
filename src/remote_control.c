@@ -24,6 +24,9 @@ extern uint16_t dsp_pointer;
 #ifdef REMOTE_CONTROL_HOST
 static uint32_t poll_calls,poll_total,transport_error,menu_error,count_last,count_wraps;
 static uint32_t step_start,step_end,step_target;
+#ifdef SODIUM64_DSP_EFFECTS_WAIT
+static uint32_t effects_wait_ticks,effects_wait_count,effects_wait_min;
+#endif
 static int present;
 static unsigned reply_length;
 #else
@@ -31,6 +34,11 @@ static unsigned reply_length;
 #define step_start (*(uint32_t *)0x80441c48u)
 #define step_end (*(uint32_t *)0x80441c4cu)
 #define step_target (*(uint32_t *)0x80441c50u)
+#ifdef SODIUM64_DSP_EFFECTS_WAIT
+#define effects_wait_ticks (*(volatile uint32_t *)(0x80440000u+LIVE_DSP_WAIT_TICKS))
+#define effects_wait_count (*(volatile uint32_t *)(0x80440000u+LIVE_DSP_WAIT_COUNT))
+#define effects_wait_min (*(volatile uint32_t *)(0x80440000u+LIVE_DSP_WAIT_MIN))
+#endif
 #define BENCH_WORD(n) (((uint32_t *)0x80441c60u)[n])
 #define poll_calls BENCH_WORD(0)
 #define poll_total BENCH_WORD(1)
@@ -414,6 +422,11 @@ static void status(const char *id) {
         field(" effects_error=",stats->effects_error);
         field(" effects_rows=",stats->effects_rows);
 #endif
+#ifdef SODIUM64_DSP_EFFECTS_WAIT
+        field(" effects_wait_ticks=",effects_wait_ticks);
+        field(" effects_wait_count=",effects_wait_count);
+        field(" effects_wait_min=",effects_wait_min);
+#endif
 #ifdef SODIUM64_DSP_RSP_SWAP
         field(" critical_reg=",stats->required_reg);
         field(" critical_echo=",stats->required_echo);
@@ -563,7 +576,12 @@ void remote_process_request(const unsigned char *request,size_t bytes,uint32_t r
             remote_pause_target=target;remote_pause_pending=1;
             if(step) {
                 step_target=timed?target:0;
-                if(timed){step_end=0;step_start=count();}
+                if(timed){
+#ifdef SODIUM64_DSP_EFFECTS_WAIT
+                    effects_wait_ticks=0;effects_wait_count=0;effects_wait_min=UINT32_MAX;
+#endif
+                    step_end=0;step_start=count();
+                }
                 remote_paused=0;
             }
         }

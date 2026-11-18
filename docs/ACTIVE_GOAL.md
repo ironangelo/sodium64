@@ -37,13 +37,14 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current master `d7e4e61b` adds PR49's DSP-1 vector scheduling
-repair to PR39, PR47 and PR48. The released package matches CI
-and has the two production files. The integrated native DKC1,
-SMW and ALttP observations preserve aligned digital outputs at
-APU 21 and frameskip 0. The measured SMW demo remains below
-native cadence. The separate DSP-1 reciprocal fix is PR50.
-[Current integrated native baseline](evidence/integration-dsp1-vector-master-2026-11-18.json).
+Current master `cd36528a` integrates DSP-1 vector and reciprocal
+scheduling fixes in PR49 and PR50. The verified release has the
+two production files. The integrated N64 Super Mario Kart and SMW
+captures preserve aligned digital outputs at APU 21 and frameskip 0.
+The measured SMW demo remains 0.676 s over the nominal 20 s budget.
+Finish the scoped PR51 after CI. Prioritize changes that move native
+cadence or correct reproducible fidelity and compatibility failures.
+[Current integrated native baseline](evidence/integration-dsp1-inverse-master-2026-11-18.json).
 
 Earlier checkpoint, 2026-11-13. Seventeen separate PRs
 24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38/44 are integrated in master

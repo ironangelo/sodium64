@@ -1,0 +1,212 @@
+{
+  "date_local": "2026-11-18",
+  "postmerge_Ares": [
+    {
+      "name": "profile-build",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 134926260547,
+      "active": []
+    },
+    {
+      "name": "ares-smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 134926454895,
+      "active": []
+    }
+  ],
+  "merge_tree_matches_qualified_head": true,
+  "production_ROM_matches_local_qualified_image": true,
+  "timed_ROM_matches_tested_pr": true,
+  "timed_source": "af94ac4ea007b5d886a9fb9f67063e3f4d3a3079",
+  "release": {
+    "sha": "cd36528af89fef8a3021816b6a475b5ca21f0ed2",
+    "build_run": 44339783590,
+    "release_asset": 763991890,
+    "artifact": 14443037577,
+    "members": {
+      "sodium64.z64": "f7a3f98a5ca0849a4ece14b96da748161d7b7bdece611362844d10c5e17e0726",
+      "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+    },
+    "zip_hash": "79804fac332fa5ec9bdf821ad6ae8a5ac83cb0ca9e825b8aa6d25b48b6c157c5",
+    "isolation": {
+      "linked_symbols": 1249,
+      "allocated_bytes": 767832,
+      "laboratory_symbols": [],
+      "allocated_diagnostic_leases": [],
+      "archive_members": [
+        "sodium64.z64",
+        "rom-converter.py"
+      ],
+      "sha256": {
+        "sodium64.z64": "f7a3f98a5ca0849a4ece14b96da748161d7b7bdece611362844d10c5e17e0726",
+        "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+      },
+      "elf_sha256": "0c3533949ffd5e20ed4394c499066d5662dbcbd4f5c58e71ebe1fd8bd5941b6a",
+      "status": "PASS"
+    },
+    "release_matches_ci_artifact_members": true,
+    "release_linked_inverse_cases_passed": 150
+  },
+  "physical": {
+    "settings": {
+      "apu_clock": 21,
+      "frameskip": 0,
+      "precision": 8
+    },
+    "native": {
+      "kart": {
+        "timing": {
+          "ticks": 601918194,
+          "hz": 46875000,
+          "seconds": 12.840921472,
+          "frames": [
+            2400,
+            2880
+          ]
+        },
+        "reference": {
+          "ticks": 601911971,
+          "hz": 46875000,
+          "seconds": 12.840788714666667,
+          "frames": [
+            2400,
+            2880
+          ]
+        },
+        "fidelity": [
+          {
+            "frame": 2400,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2880,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "completed_guest_frames_per_second": 37.38049493150891,
+        "reference_completed_guest_frames_per_second": 37.380881398020904
+      },
+      "smw": {
+        "timing": {
+          "ticks": 969165137,
+          "hz": 46875000,
+          "seconds": 20.675522922666666,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "reference": {
+          "ticks": 969583978,
+          "hz": 46875000,
+          "seconds": 20.684458197333335,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "fidelity": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "completed_guest_frames_per_second": 58.039644486303885,
+        "reference_completed_guest_frames_per_second": 58.01457251390348
+      }
+    },
+    "final_menu_recovery": 0
+  },
+  "projection": {
+    "number": 51,
+    "head": "e32e2122f9f7c1030102efb76be6041a5bc8128e",
+    "timed_head": "4b3ae89941370bc02fa96636a519044d3ba37186",
+    "linked_cases": 72,
+    "loaded_changed_bytes": 116,
+    "negative_sites": 7,
+    "setup_spacing_in_scope": false,
+    "physical": {
+      "control": {
+        "ticks": 601918194,
+        "hz": 46875000,
+        "seconds": 12.840921472,
+        "frames": [
+          2400,
+          2880
+        ]
+      },
+      "candidate": {
+        "ticks": 601887169,
+        "hz": 46875000,
+        "seconds": 12.840259605333333,
+        "frames": [
+          2400,
+          2880
+        ]
+      },
+      "fidelity": [
+        {
+          "frame": 2400,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 2880,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "software_return": true
+    },
+    "workflow_snapshot": [
+      {
+        "name": "Profiling Memory Owners",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 44340233604
+      },
+      {
+        "name": "Native USB Bench Contracts",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 44340233724
+      },
+      {
+        "name": "Build and Validate",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 44340233639
+      },
+      {
+        "name": "Ares Profile Validation",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "id": 44340233997
+      }
+    ],
+    "ares_job_rerun": {
+      "run": 44340233997,
+      "previous_job": 134928239090,
+      "reason": "Cancelled after two interpreter workloads; no completed matrix conclusion."
+    }
+  },
+  "priority": "Finish the already scoped PR51 if all its gates pass. For subsequent work, prioritize a demonstrable native cadence gain or a reproducible visible/compatibility correction. The measured SMW window needs about 0.563 ms per emulated frame to reach the nominal 60 Hz budget."
+}

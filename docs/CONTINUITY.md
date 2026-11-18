@@ -1,3 +1,34 @@
+# 2026-11-18 — Integrate DSP-1 reciprocal refinement and recheck master
+
+PR50 merged as `cd36528a` after four exact-head workflows and
+the scoped linked and hardware checks passed. The merge tree
+and both local production and timed builds match the qualified
+inputs. Latest is tagged at the merge. Both public ZIP members
+match the CI artifact and pass production isolation. The CI ELF
+passes the 150 linked inverse cases.
+
+The exact integrated timing build runs Super Mario Kart frames
+2400–2880 in 12.840921 s and the SMW demo frames 3016–4216
+in 20.675523 s, at APU 21 and frameskip 0. Both aligned digital
+captures per title match the measured parent, and recovery is 0
+after return by USB. The SMW window is still 0.676 s over the
+nominal 20 s budget for 1,200 frames. Treat the small differences
+as scoped comparisons, with no speedup attributed to DSP-1.
+
+PR51 is a separate correction for seven sites in point projection.
+Normal and REMOTE pass 72 directed cases and reject seven old
+instruction schedules. The exact candidate preserves both native
+Super Mario Kart captures and takes 12.840260 s for the same
+480 frames, versus 12.840921 s on the integrated control. Ares
+was cancelled during the matrix after two interpreter workloads.
+Only that job is rerunning on the unchanged PR head. Finish PR51
+once its gates pass and then prioritize changes that move native
+cadence or correct observed fidelity/compatibility failures.
+[Integrated DSP-1 inverse and scoped projection evidence](evidence/integration-dsp1-inverse-master-2026-11-18.json).
+
+---
+
+
 # 2026-11-18 — Integrate DSP-1 vector spacing and measure master
 
 PR49 merged as `d7e4e61b` after all four exact-head workflows,

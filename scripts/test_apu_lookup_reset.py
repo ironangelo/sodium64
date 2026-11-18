@@ -107,7 +107,7 @@ def check_overflow_replay(memory, symbols):
                     for offset in range(group*GROUP_SIZE, (group+1)*GROUP_SIZE, 8)]
         assert writes == expected, 'reset wrote outside its live groups'
 
-    for cursor, from_emitter in ((ROM_BUFFER, False), (ROM_BUFFER-32-12, True)):
+    for cursor, from_emitter in ((ROM_BUFFER, False), (ROM_BUFFER-64, True)):
         cpu = CPU(memory.copy())
         assert cpu.blob(lookup, LOOKUP_SIZE) == bytes(LOOKUP_SIZE), 'cold lookup not zero'
         cpu.pattern()
@@ -153,6 +153,52 @@ def check_overflow_replay(memory, symbols):
         rebuilt = dispatch(cpu, pcs[0], 0x42)
         assert dispatch(cpu, pcs[0], 0x42) == rebuilt
     return 2
+
+
+
+def check_source_revalidation(memory, symbols, pc=0x0280, can_reuse=True):
+    """Distinguish real source changes from unrelated writes on the tagged page."""
+    cpu = CPU(memory.copy())
+    lookup = symbols['jit_lookup'] + pc * 4
+    pointer = symbols['jit_pointer']
+    tag = symbols['jit_tags'] + (pc // 64) * 4
+    cpu.write(symbols['apu_clock'], 21, 1)
+    cpu.write(symbols['apu_map'] + 0x3ff, 0, 1)
+    cpu.write(symbols['apu_ram'] + pc, 0xe8312f00)  # MOV A,#$31; BRA +0
+
+    def dispatch(expected):
+        cpu.write(symbols['apu_count'], pc, 2)
+        cpu.pattern()
+        cpu.regs[19], cpu.regs[7] = 4096, 0
+        cpu.execute(symbols['apu_execute'], stop=symbols['cpu_execute'])
+        assert cpu.read(symbols['apu_count'], 2) == pc + 4
+        assert cpu.read(symbols['apu_accum'], 1) == expected, 'stale instruction material'
+        assert 4096 - cpu.regs[19] == 6 * 21
+        return cpu.read(lookup), cpu.read(pointer)
+
+    def write_spc(address, value):
+        cpu.pattern()
+        cpu.regs[4], cpu.regs[5], cpu.regs[19] = address, value, 4096
+        cpu.execute(symbols['apu_write8'])
+
+    original = dispatch(0x31)
+    header = original[0]
+    assert (header + 12) % 32 == 0
+    if can_reuse:
+        assert cpu.blob(header - 20, 5) == b'\x04\xe8\x31\x2f\x00'
+    else:
+        assert cpu.read(header - 20, 1) == 0
+    unrelated = pc & ~63 if pc & 63 else pc + 15
+    write_spc(unrelated, 0x72)
+    assert cpu.read(tag) != cpu.read(header + 4)
+    after_unrelated = dispatch(0x31)
+    if can_reuse:
+        assert after_unrelated == original, 'unrelated page write forced recompilation'
+        assert cpu.read(header + 4) == cpu.read(header + 8) == cpu.read(tag)
+    else:
+        assert after_unrelated != original, 'ineligible source skipped recompilation'
+    write_spc(pc + 1, 0x42)
+    assert dispatch(0x42) != after_unrelated, 'changed operand reused old code'
 
 
 def check_clock_change(memory, symbols):
@@ -305,6 +351,23 @@ def main():
     else:
         raise AssertionError('missing menu setting update fault accepted')
     faults = 5
+    revalidation_cases = 0
+    if 'revalidate_jit_source' in symbols:
+        check_source_revalidation(memory, symbols)
+        for pc in (0x027c, 0x027e, 0xffc0):
+            check_source_revalidation(memory, symbols, pc=pc, can_reuse=False)
+        revalidation_cases = 4
+        cpu = CPU(memory.copy())
+        mismatch_branch = symbols['compare_jit_source'] + 8
+        assert cpu.read(mismatch_branch) >> 26 == 5
+        cpu.write(mismatch_branch, 0)
+        try:
+            check_source_revalidation(cpu.memory, symbols)
+        except AssertionError as error:
+            assert str(error) == 'stale instruction material'
+        else:
+            raise AssertionError('source mismatch fault accepted')
+        faults += 1
     if publications:
         cpu = CPU(memory.copy())
         stores = [pc for pc in range(symbols['jit_publish_lookup'], symbols['jit_lookup_published'], 4)
@@ -320,7 +383,7 @@ def main():
         faults += 1
     print(f'APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults={faults} instructions={steps} '
           f'publications={publications} overflow_replays={overflow_replays} '
-          f'clock_rebuilds={clock_rebuilds} menu_transitions=4; no N64 timing claim')
+          f'clock_rebuilds={clock_rebuilds} source_revalidation_cases={revalidation_cases} menu_transitions=4; no N64 timing claim')
 
 
 if __name__ == '__main__':

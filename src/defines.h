@@ -34,6 +34,13 @@
 // Maximum opcode bytes that can be compiled in an APU JIT block
 #define BLOCK_SIZE 16
 
+// Lookup pointers keep addressing the final 12 bytes of the JIT header.
+#define JIT_HEADER_SIZE 32
+#define JIT_TAG_FIELDS_SIZE 12
+#define JIT_SOURCE_LENGTH (JIT_TAG_FIELDS_SIZE - JIT_HEADER_SIZE)
+#define JIT_SOURCE_BYTES (JIT_SOURCE_LENGTH + 1)
+#define JIT_SOURCE_MAX (BLOCK_SIZE + 2)
+
 // The frame section data structure's size in bytes
 #define SECTION_SIZE 0x40
 

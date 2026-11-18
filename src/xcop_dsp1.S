@@ -315,14 +315,14 @@ sin_valid:
     srl t3, t3, 8
     sub t0, zero, t3
     xor t2, t2, t0
-    add t2, t2, t3
 
     // Calculate the result
     li t0, 0x3244 // Pi << 12
-    andi t3, a0, 0xFF
-    mult t0, t3
+    andi a0, a0, 0xFF
+    mult t0, a0
     mflo t0
     sra t0, t0, 12
+    add t2, t2, t3 // Fill the VR4300 gap between MFLO and MULT.
     mult t0, t2
     mflo t0
     sra t0, t0, 15
@@ -368,6 +368,7 @@ cos_valid:
     mult t0, t3
     mflo t0
     sra t0, t0, 12
+    nop
     mult t0, t1
     mflo t0
     sra t0, t0, 15
@@ -628,10 +629,10 @@ dsp1_rotate:
     // Calculate the rotated X-coordinate from the input coordinates
     lh t0, input_buf + 0
     mult t0, t8
-    lh t1, input_buf + 2
     mflo t2
-    mult t1, a0
+    lh t1, input_buf + 2
     sra t2, t2, 15
+    mult t1, a0
     mflo t3
     sra t3, t3, 15
     add t2, t2, t3
@@ -640,8 +641,9 @@ dsp1_rotate:
     // Calculate the rotated Y-coordinate from the input coordinates
     mult t0, a0
     mflo t2
-    mult t1, t8
     sra t2, t2, 15
+    nop
+    mult t1, t8
     mflo t3
     sra t3, t3, 15
     sub t2, t2, t3
@@ -656,11 +658,12 @@ dsp1_radius:
     mult t0, t0
     lh t1, input_buf + 2
     mflo t0
-    mult t1, t1
     lh t2, input_buf + 0
+    mult t1, t1
     mflo t1
-    mult t2, t2
     add t0, t0, t1
+    nop
+    mult t2, t2
     mflo t2
     add t0, t0, t2
     sll t0, t0, 1
@@ -679,15 +682,15 @@ dsp1_range1:
     mult t0, t0
     lh t1, input_buf + 4
     mflo t0
-    mult t1, t1
     lh t2, input_buf + 2
+    mult t1, t1
     mflo t1
-    mult t2, t2
     lh t3, input_buf + 0
+    mult t2, t2
     mflo t2
-    mult t3, t3
     add t0, t0, t1
     add t0, t0, t2
+    mult t3, t3
     mflo t3
     sub t0, t0, t3
     sra t0, t0, 15
@@ -698,15 +701,21 @@ dsp1_range1:
 .align 5
 dsp1_distan:
     // Calculate the 32-bit squared normal of a 3D vector
-    lh t0, input_buf + 4
+    .set push
+    .set noat
+    lui $1, %hi(input_buf)
+    lh t0, %lo(input_buf + 4)($1)
     mult t0, t0
-    lh t1, input_buf + 2
+    lh t1, %lo(input_buf + 2)($1)
     mflo t0
+    lh t2, %lo(input_buf)($1)
+    nop
     mult t1, t1
-    lh t2, input_buf + 0
+    .set pop
     mflo t1
-    mult t2, t2
     add t0, t0, t1
+    nop
+    mult t2, t2
     mflo t2
     add a0, t0, t2
     beqz a0, distan_set
@@ -1021,11 +1030,12 @@ dsp1_scalar:
     lh t7, input_buf + 0
     mflo t0
     lh t1, 6(a1)
-    mult t1, t8
     lh t2, 12(a1)
+    mult t1, t8
     mflo t1
-    mult t2, t7
     add t0, t0, t1
+    nop
+    mult t2, t7
     mflo t2
     add t0, t0, t2
     sra t0, t0, 15

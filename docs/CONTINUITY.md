@@ -1,3 +1,32 @@
+# 2026-11-18 — Qualify DSP-1 vector spacing for integration
+
+PR49 corrects thirteen VR4300 HI/LO spacing sites in DSP-1
+vector math and shared sine/cosine helpers, preserving the DSP-1
+data-port protocol. Normal and REMOTE pass 219 linked vectors
+across eleven command values. The reference reproduces the
+spacing failure in six families, and an injected fault is caught.
+The scoped arithmetic and data-port results match the reference.
+
+The initial revision adds 7.56 and 9.99 ms across the same 480
+Super Mario Kart guest frames, in opposite launch orders. The
+current head `58c6da2d` preserves the projection entries and
+memory owners, with 275 changed loaded bytes in the corrected
+routines. The revised native comparisons differ by +0.191 and
+−0.772 ms across those 480 frames. Both RGB/PCM/DSP captures
+match in each pair and menu recovery returns 0. Normal release
+isolation passes.
+
+Keep PR49 as CANDIDATE pending the exact-head Ares run.
+Build and Validate, Profiling Memory Owners and Native USB
+Bench Contracts have passed. This covers the named DSP-1
+vector paths. Other DSP-1 transform paths and the separate
+complete S-DSP compute budget remain open.
+[PR49](https://github.com/ironangelo/sodium64/pull/49).
+[Linked and physical DSP-1 evidence](evidence/integration-dsp1-vector-hilo-2026-11-18.json).
+
+---
+
+
 # 2026-11-18 — Group unobserved SPC RAM writes in the complete DSP
 
 The grouped path advances only writes to the DSP shadow that

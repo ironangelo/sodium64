@@ -1,0 +1,245 @@
+{
+  "date_local": "2026-11-18",
+  "master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "pr": 49,
+  "pr_head": "58c6da2d446f8698cf6e410986146f18a747911d",
+  "timed_head": "85c9e233d6939cb705836761bff33cb43173b8c9",
+  "initial_runtime": "0fa0534dcffe8919a9125baa05c93128672249ae",
+  "linked": {
+    "vectors_each_build": 219,
+    "command_values": 11,
+    "negative_baseline_families": 6,
+    "injected_faults_rejected": 1,
+    "normal_and_remote": true,
+    "static_adjacent_mflo_mult_sites_corrected": 13,
+    "linked_entries_and_owners_exact": true,
+    "local_label_movement": {
+      "cos_over_bytes": 4
+    },
+    "changed_loaded_bytes": 275,
+    "affected_RSP_payloads": 0,
+    "local_production_release_isolation_passed": true
+  },
+  "primary_contract": "https://n64dev.org/p/U10504EJ7V0UMJ1.pdf",
+  "settings": {
+    "title": "Super Mario Kart",
+    "apu_clock": 21,
+    "frameskip": 0,
+    "precision": 8,
+    "frames": [
+      2400,
+      2880
+    ]
+  },
+  "native": {
+    "initial": [
+      {
+        "source": "initial",
+        "order": "master, then candidate",
+        "delta_ms": 7.559957333333145,
+        "frames": [
+          2400,
+          2880
+        ],
+        "fidelity": [
+          {
+            "frame": 2400,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2880,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "timings": {
+          "master": {
+            "ticks": 601931832,
+            "hz": 46875000,
+            "seconds": 12.841212416,
+            "frames": [
+              2400,
+              2880
+            ]
+          },
+          "dsp1": {
+            "ticks": 602286205,
+            "hz": 46875000,
+            "seconds": 12.848772373333333,
+            "frames": [
+              2400,
+              2880
+            ]
+          }
+        },
+        "software_return": true
+      },
+      {
+        "source": "initial",
+        "order": "candidate, then fresh master",
+        "delta_ms": 9.988650666667098,
+        "frames": [
+          2400,
+          2880
+        ],
+        "fidelity": [
+          {
+            "frame": 2400,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2880,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "timings": {
+          "dsp1": {
+            "ticks": 602380360,
+            "hz": 46875000,
+            "seconds": 12.850781013333334,
+            "frames": [
+              2400,
+              2880
+            ]
+          },
+          "master": {
+            "ticks": 601912142,
+            "hz": 46875000,
+            "seconds": 12.840792362666667,
+            "frames": [
+              2400,
+              2880
+            ]
+          }
+        },
+        "software_return": true
+      }
+    ],
+    "layout": [
+      {
+        "source": "layout",
+        "order": "candidate after earlier controls",
+        "delta_ms": 0.1907199999990894,
+        "frames": [
+          2400,
+          2880
+        ],
+        "fidelity": [
+          {
+            "frame": 2400,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2880,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "timings": {
+          "dsp1": {
+            "ticks": 601921082,
+            "hz": 46875000,
+            "seconds": 12.840983082666666,
+            "frames": [
+              2400,
+              2880
+            ]
+          },
+          "master": {
+            "ticks": 601912142,
+            "hz": 46875000,
+            "seconds": 12.840792362666667,
+            "frames": [
+              2400,
+              2880
+            ]
+          }
+        },
+        "software_return": true
+      },
+      {
+        "source": "layout",
+        "order": "candidate, then fresh master",
+        "delta_ms": -0.7715626666655595,
+        "frames": [
+          2400,
+          2880
+        ],
+        "fidelity": [
+          {
+            "frame": 2400,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2880,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "timings": {
+          "dsp1": {
+            "ticks": 601911971,
+            "hz": 46875000,
+            "seconds": 12.840788714666667,
+            "frames": [
+              2400,
+              2880
+            ]
+          },
+          "master": {
+            "ticks": 601948138,
+            "hz": 46875000,
+            "seconds": 12.841560277333333,
+            "frames": [
+              2400,
+              2880
+            ]
+          }
+        },
+        "software_return": true
+      }
+    ],
+    "final_menu_recovery": 0
+  },
+  "workflow_snapshot": [
+    {
+      "name": "Ares Profile Validation",
+      "status": "in_progress",
+      "conclusion": null,
+      "id": 44334175395
+    },
+    {
+      "name": "Profiling Memory Owners",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 44334174987
+    },
+    {
+      "name": "Build and Validate",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 44334175006
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 44334174934
+    }
+  ],
+  "classification": "Layout-preserving DSP-1 vector math fix is CANDIDATE. Linked, isolation and paired physical gates pass. Ares exact-head CI is still live at this checkpoint.",
+  "remaining": "Other DSP-1 transform and projection paths still contain nearby MFLO/MULT sequences. That scope and the separate full S-DSP budget remain open."
+}

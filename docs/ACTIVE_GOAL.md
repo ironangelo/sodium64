@@ -1,5 +1,15 @@
 # Active operating direction - 2026-10-15
 
+## 2026-11-17 extraction checkpoint
+
+The independently qualified PR21 extractions are integrated. Keep
+PR32/40/41/42 and PR46 parked with their recorded native regressions.
+Close the remaining 1.0 gaps with new work based on production master.
+Use the integrated SMW cadence shortfall and the complete DSP
+architecture costs as measured baselines for proposals.
+[Direction and latest native result](evidence/integration-pr32-paired-row-dma-2026-11-17.json).
+
+
 Consolidation and integration toward master come first. The destination remains
 Sodium641.0 on real N64: native60/50 cadence, frameskip0, full-rate SPC700/APU,
 faithful audio/graphics, broad compatibility, DSP-1, SuperFX and SA-1.

@@ -1,0 +1,49 @@
+{
+  "date_local": "2026-11-17",
+  "integrated_master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "faithful_timed_parent": "f341a36ee966e5be9788e89f473719c616c1c200",
+  "paired_dma_local_source": "39654545c456b339f844fa87f0e2eadacceb7aa3",
+  "settings": {
+    "scene": "DKC1 zero-input intro",
+    "frames": [
+      3001,
+      3481
+    ],
+    "apu_clock": 21,
+    "frameskip": 0,
+    "precision": 8
+  },
+  "linked_replay": {
+    "cases": 12,
+    "compared_pixels": 70912,
+    "ordered_transfer_extents_match": true,
+    "missing_pair_wait_detected": true,
+    "full_height_instructions": {
+      "control": 489951,
+      "candidate": 485631
+    },
+    "limitation": "The replay models a pending descriptor and explicit fences without reproducing exact hardware command timing."
+  },
+  "native": {
+    "count_hz": 46875000,
+    "control_ticks": 527953553,
+    "candidate_ticks": 528074595,
+    "candidate_minus_control_seconds": 0.0025822293333333333,
+    "same_renderer_rgb_pixel_differences": {
+      "3001": 36864,
+      "3481": 36864
+    },
+    "pcm_exact_at_both_boundaries": true,
+    "dsp_state_exact_at_both_boundaries": true,
+    "software_return": true,
+    "final_menu_recovery": 0,
+    "play_slot_touched": false
+  },
+  "classification": {
+    "paired_dma": "REJECTED. Native RGB mismatch with no elapsed-time improvement. Physical cause undetermined.",
+    "PR32_PR40_PR41": "BLOCKED on the measured DKC1 compositor slowdown; parked.",
+    "PR42": "BLOCKED on its inherited DKC1 slowdown and its independent ALttP story regression; parked.",
+    "PR46": "BLOCKED on SMW cadence; parked."
+  },
+  "next_direction": "The remote PR inventory and current master contain no remaining independently qualified extraction. Stop pursuing repairs of parked branches. Start independent work on measured 1.0 gates from production master."
+}

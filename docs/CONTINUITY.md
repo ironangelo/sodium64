@@ -1,3 +1,30 @@
+# 2026-11-17 — Close the current extraction queue and park renderer salvage
+
+The paired row-DMA variant `39654545` matches 70,912 pixels and
+the transfer extents across twelve linked replays. The replay
+catches a deliberately removed wait. On real N64 it changes 36,864
+RGB pixels at each aligned DKC1 capture. PCM and DSP state still
+match. The same 480 frames take 11.265591 s versus 11.263009 s for
+the faithful control. Reject the variant on native fidelity and
+timing. The console returns by USB and confirms recovery 0.
+
+The checked open PRs contain no remaining independently qualified
+extraction from PR21. Archive the evidence for the blocked graphics
+chain and PR46 and park those lines. PR32/40/41 inherit the DKC1
+intro compositor loss. PR42 also repeats a separate ALttP story
+loss. PR46 slows SMW. Preserve the house and rain fidelity target.
+
+Start new work from integrated master `5d3cc86a`, where the
+representative SMW demo still measures 58.014 completed guest
+frames/s at APU 21 and frameskip 0. Use that gap to test new work
+against the production path. Keep native fidelity and cadence as
+joint gates. The complete DSP architecture costs already recorded
+remain the starting evidence for any new full-rate backend.
+[Paired DMA rejection and queue checkpoint](evidence/integration-pr32-paired-row-dma-2026-11-17.json).
+
+---
+
+
 # 2026-11-17 — Locate the DKC1 compositor cost in Setup and Math
 
 For the same 480 DKC1 intro frames on integrated master, 99,225 of

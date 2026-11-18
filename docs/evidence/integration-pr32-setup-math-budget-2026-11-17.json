@@ -1,0 +1,55 @@
+{
+  "master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "timed_parent": "f341a36ee966e5be9788e89f473719c616c1c200",
+  "diagnostic_source": "99b7835324d0797e7097eb3ac5d9e81320931d47",
+  "scope": "Physical N64, DKC1 guest/render frames 3001\u20133481, APU 21, frameskip 0, precision 8.",
+  "linked_classification_cases": 32768,
+  "linked_halt_collector_cases": 2,
+  "disabled_ROM_matches_control": true,
+  "native": {
+    "timed": {
+      "ticks": 523586173,
+      "count_hz": 46875000,
+      "frames": [
+        3001,
+        3481
+      ],
+      "wait_ticks": {
+        "math_budget_samples": 99225,
+        "math_budget_total_samples": 117956,
+        "math_budget_bands": 480,
+        "math_budget_clip_bands": 0
+      }
+    },
+    "control": {
+      "ticks": 527953553,
+      "hz": 46875000,
+      "seconds": 11.263009130666667,
+      "frames": [
+        3001,
+        3481
+      ]
+    },
+    "fidelity": [
+      {
+        "frame": 3001,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      },
+      {
+        "frame": 3481,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "menu_return": true
+  },
+  "fraction_of_SP_wait_samples_in_setup_or_math": 0.841203499610024,
+  "sample_tick_period": 2048,
+  "timing_delta_percent": -0.827228072466446,
+  "interpretation": "SIG2 is set after the Main completion fence and cleared after Setup, Math and overlay return. The statistic locates most observed CPU halt wait in that whole phase. It does not partition arithmetic from DMA or shared-memory contention, or cover execution outside CPU wait.",
+  "classification": "Main-only clipping with no eligible color math is REJECTED as a remedy for this measured DKC1 workload. No visited band admitted the sufficient guard.",
+  "next_gate": "A full-band composition design must reduce the Setup/Math/transfer path. The existing deadline, pixel, framebuffer ownership and RDP retirement gates apply."
+}

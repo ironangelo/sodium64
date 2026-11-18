@@ -1,3 +1,27 @@
+# 2026-11-17 — Locate the DKC1 compositor cost in Setup and Math
+
+For the same 480 DKC1 intro frames on integrated master, 99,225 of
+117,956 CPU wait samples observe the RSP between the completion of
+Main's fence and the return from Setup/Math (84.12 percent). The
+marker covers both execution and transfer waits in this path.
+The observer changes fixed-work elapsed time by 0.83 percent and
+preserves both aligned RGB/PCM/DSP captures. The console returns
+by USB. The disabled diagnostic ROM matches the faithful control.
+
+The measured path executes 480 general bands. Zero admit the
+sufficient guard for Main-only COLOR clipping, defined by clipping
+with every math operation excluded by CGWSEL or CGADSUB/TM.
+The linked classifier passes 32,768 cases. Preserve the result
+as a rejection of that proposed shortcut for this workload.
+Advance the entire band dataflow in Setup/Math, budgeting the
+surface reads, packed math and publication together. Measure the
+combined path against the exact current-master DKC1 control
+before any promotion. R44 inherits this gate and R45 has the
+separate ALttP story regression.
+[Native Setup/Math occupancy and admission evidence](evidence/integration-pr32-setup-math-budget-2026-11-17.json).
+
+---
+
 # 2026-11-17 — Recheck the faithful renderer on integrated master
 
 The paired build on `5d3cc86a` runs DKC1 frames 3001–3481 at APU 21,

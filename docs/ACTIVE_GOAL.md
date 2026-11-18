@@ -272,6 +272,11 @@ as a remedy for this gate. The next runtime attempt must remove
 work from the full draw/composition path at a scale consistent
 with the measured deficit.
 [Current-master DKC1 comparison](evidence/integration-pr32-master48-half-mask-2026-11-17.json).
+The Setup/Math marker is active in 84.12 percent of the CPU's SP
+wait samples in that same intro. Zero of 480 general bands admit
+the clipping-only shortcut. The next runtime candidate needs to
+reduce the full band composition path.
+[Setup/Math measurement](evidence/integration-pr32-setup-math-budget-2026-11-17.json).
 The refreshed complete DSP scalar and recorded-effects controls on
 `bcc8e463` measure 36.992 and 16.578 ms per frame. During replay,
 1,337 of 1,993 synchronous register catches occur while the renderer

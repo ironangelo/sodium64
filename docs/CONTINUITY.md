@@ -1,3 +1,42 @@
+# 2026-11-17 — Integrate R19 byte pitch and measure current master
+
+PR48 merged as `5d3cc86a`. All four PR workflows and all four merge
+workflows passed. The exact normal merge repeats the exhaustive pitch
+proof. The public Rolling Release tag points to the merge and both ZIP
+members match the production CI artifact. Production isolation passes.
+The original draft PR37 is closed as superseded. Its SMW regression
+and the earlier byte-cache revision's DKC1 regression remain recorded.
+
+The final two pre-merge SMW pairs saved 38.463 and 30.374 ms over
+1,200 guest frames in opposite launch orders. The cache adds 128
+initialized bytes and one byte store per guest pitch write. The
+linked pitch/counter path takes eight instructions instead of ten.
+The measured savings are scoped to SMW.
+
+On a fresh timing build from the merged tree, real N64 DKC1 startup
+frames 120–1320 take 23.520934 s, SMW demo frames 3016–4216 take
+20.684806 s and ALttP story frames 1861–2861 take 16.711890 s.
+Both aligned RGB/PCM/DSP observations per title match the prior
+master and pre-merge candidate. All runs use APU 21, frameskip 0
+and precision 8. They return to the private menu by USB. The last
+menu query reports recovery 0. The SMW scene still runs below
+native cadence at 58.014 completed guest frames/s.
+
+The graphics chain remains blocked by the repeated DKC1 intro
+loss in PR32, plus the separate ALttP story loss for R45. The
+local enabled PR32 build against this master passes memory
+ownership and delay slots in all 12 RSP banks. Its DKC1 gate
+remains open. Range-based texture retirement still requires complete
+source coverage and a resident layout. The complete DSP controls
+measure the architectural cost over real SPC/echo/renderer work.
+The accelerated backend has to meet synchronous register deadlines
+during renderer ownership while publishing exact echo and PCM.
+PR46's remaining SMW regression keeps its broader change out of
+master. No independently qualified runtime change remains queued.
+[Integrated pitch, combined native baseline and release evidence](evidence/integration-r19-byte-pitch-native-2026-11-17.json).
+
+---
+
 # 2026-11-17 — Prepare the byte-update pitch cache for integration
 
 PR48 `1812be31` revises R19 on integrated master `bcc8e463`.

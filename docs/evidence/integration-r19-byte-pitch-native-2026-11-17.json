@@ -1,7 +1,7 @@
 {
   "date_local": "2026-11-17",
   "PR": 48,
-  "status": "CANDIDATE; final three-title native comparison passes, Ares workflow pending",
+  "status": "VALIDATED for the measured gate and integrated",
   "base_master": "bcc8e4631f075a6681563b56d2e3dee52670bb1b",
   "head": "1812be314b569109eaaa9ee884aee8337ff9dab8",
   "runtime_commit": "b7d3d08e7542b6ce2f551c60f4b474c59b3b8527",
@@ -510,13 +510,499 @@
     {
       "name": "Ares Profile Validation",
       "run_id": 44166755933,
-      "status": "in_progress",
-      "conclusion": null
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "final_menu": {
     "mode": "menu",
     "recovery": 0,
     "verified_after_all_native_runs": true
+  },
+  "integration": {
+    "master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+    "merged_tree_matches_reviewed_PR_head": true,
+    "timed_checkout": "9d66aa979947d125c4bd92b2805a67ea3726e63a",
+    "timed_ROM_identical_to_premerge_candidate": true,
+    "baseline_method": "CP0 Count over exact guest/render boundary intervals. Measurements are scoped to completed guest work.",
+    "native": {
+      "dkc1": {
+        "timing": {
+          "ticks": 1102543793,
+          "hz": 46875000,
+          "seconds": 23.520934250666667,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "comparison": {
+          "prior_master": {
+            "timing": {
+              "ticks": 1102857580,
+              "hz": 46875000,
+              "seconds": 23.527628373333332,
+              "frames": [
+                120,
+                1320
+              ]
+            },
+            "captures": [
+              {
+                "frame": 120,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              },
+              {
+                "frame": 1320,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              }
+            ]
+          },
+          "premerge_candidate": {
+            "timing": {
+              "ticks": 1102455141,
+              "hz": 46875000,
+              "seconds": 23.519043008,
+              "frames": [
+                120,
+                1320
+              ]
+            },
+            "captures": [
+              {
+                "frame": 120,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              },
+              {
+                "frame": 1320,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              }
+            ]
+          }
+        },
+        "software_return": true,
+        "play_slot_touched": false,
+        "settings": {
+          "apu_clock": "21",
+          "skipped_set": "0",
+          "audio_set": "4",
+          "precision_set": "8",
+          "transport_error": "0",
+          "menu_error": "0",
+          "input_buttons": "0",
+          "input_remaining": "0"
+        },
+        "completed_guest_frames_per_second": 51.018381634478985
+      },
+      "smw": {
+        "timing": {
+          "ticks": 969600288,
+          "hz": 46875000,
+          "seconds": 20.684806144,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "comparison": {
+          "prior_master": {
+            "timing": {
+              "ticks": 971163456,
+              "hz": 46875000,
+              "seconds": 20.718153728,
+              "frames": [
+                3016,
+                4216
+              ]
+            },
+            "captures": [
+              {
+                "frame": 3016,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              },
+              {
+                "frame": 4216,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              }
+            ]
+          },
+          "premerge_candidate": {
+            "timing": {
+              "ticks": 969360520,
+              "hz": 46875000,
+              "seconds": 20.679691093333332,
+              "frames": [
+                3016,
+                4216
+              ]
+            },
+            "captures": [
+              {
+                "frame": 3016,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              },
+              {
+                "frame": 4216,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              }
+            ]
+          }
+        },
+        "software_return": true,
+        "play_slot_touched": false,
+        "settings": {
+          "apu_clock": "21",
+          "skipped_set": "0",
+          "audio_set": "4",
+          "precision_set": "8",
+          "transport_error": "0",
+          "menu_error": "0",
+          "input_buttons": "0",
+          "input_remaining": "0"
+        },
+        "completed_guest_frames_per_second": 58.013596629624764
+      },
+      "alttp": {
+        "timing": {
+          "ticks": 783369857,
+          "hz": 46875000,
+          "seconds": 16.711890282666666,
+          "frames": [
+            1861,
+            2861
+          ]
+        },
+        "comparison": {
+          "prior_master": {
+            "timing": {
+              "ticks": 783463199,
+              "hz": 46875000,
+              "seconds": 16.713881578666665,
+              "frames": [
+                1861,
+                2861
+              ]
+            },
+            "captures": [
+              {
+                "frame": 1861,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              },
+              {
+                "frame": 2861,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              }
+            ]
+          },
+          "premerge_candidate": {
+            "timing": {
+              "ticks": 783404320,
+              "hz": 46875000,
+              "seconds": 16.712625493333334,
+              "frames": [
+                1861,
+                2861
+              ]
+            },
+            "captures": [
+              {
+                "frame": 1861,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              },
+              {
+                "frame": 2861,
+                "RGB_differences": 0,
+                "PCM_differences": 0,
+                "DSP_state_exact": true
+              }
+            ]
+          }
+        },
+        "software_return": true,
+        "play_slot_touched": false,
+        "settings": {
+          "apu_clock": "21",
+          "skipped_set": "0",
+          "audio_set": "4",
+          "precision_set": "8",
+          "transport_error": "0",
+          "menu_error": "0",
+          "input_buttons": "0",
+          "input_remaining": "0"
+        },
+        "completed_guest_frames_per_second": 59.83763554486627
+      }
+    },
+    "linked_normal_pitch_proof": {
+      "passed": true,
+      "compiled_write_cases": 131072,
+      "compiled_load_cases": 524288,
+      "reference_cases": 65536,
+      "apu_port_cases": 32,
+      "invalid_write_cases": 128,
+      "ordinary_write_cases": 32,
+      "mixed_cold_writes": 128,
+      "cold_load_cases": 8,
+      "mirrored_read_cases": 8,
+      "emitted_faults_rejected": 4,
+      "pitch_load_instructions": 6,
+      "maximum_pitch_write_instructions": 17
+    },
+    "CI": [
+      {
+        "name": "Native USB Bench Contracts",
+        "run_id": 44169287784,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Profiling Memory Owners",
+        "run_id": 44169287742,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Build and Validate",
+        "run_id": 44169287768,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Ares Profile Validation",
+        "run_id": 44169287806,
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "release": {
+      "tag": "release",
+      "release_id": 449159157,
+      "asset": "sodium64.zip",
+      "asset_id": 760524595,
+      "sha256": "79a1a2b11b6c4261ba78e0bff073dca56cc42770e430b63e23624f9627ad8eeb",
+      "build_artifact": 14367376257,
+      "members_match_exact_master_production_artifact": true,
+      "anonymous_download_verified": true,
+      "files": {
+        "sodium64.z64": {
+          "sha256": "0416d37223962ecf3c7aa961e3ee4554bcba5d45b11e026dbb15d70fb660a0fb",
+          "bytes": 98304
+        },
+        "rom-converter.py": {
+          "sha256": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283",
+          "bytes": 1997
+        }
+      },
+      "release_isolation": "PASS"
+    },
+    "superseded_PR37": {
+      "state": "closed",
+      "merged": false,
+      "reason": "The measured SMW cadence regression remains with the original implementation."
+    },
+    "renderer_preflight": {
+      "tree": "ffd12f3f50b215257fc6a4181ee71cc14aa8f072",
+      "draft_renderer_head": "ae59e6b774168564444352066273a9e4025aa800",
+      "enabled_normal_build": "PASS",
+      "linked_owners": {
+        "passed": true,
+        "lower_owners_including_ELF": 40,
+        "total_owners_including_diagnostic_lease": 40,
+        "first_CGRAM_owner": 860160,
+        "faults_rejected": [
+          "old_static_clear",
+          "ROM_cache_into_surfaces",
+          "Q2_DMA_overrun"
+        ],
+        "physical_acceptance": false,
+        "scope": "Preprocessed owner plan, real ELF extents and DMA bounds; boot and ISR execution are separate.",
+        "owners": {
+          "HCOMP_CGRAM_BASE_QUEUE1": [
+            860160,
+            860672
+          ],
+          "HCOMP_CGRAM_SIDEBAND_QUEUE1": [
+            861184,
+            862464
+          ],
+          "HCOMP_CGRAM_EVENT_QUEUE1": [
+            863744,
+            962048
+          ],
+          "HCOMP_RAW_PALETTE_QUEUE1": [
+            978944,
+            980992
+          ],
+          "HCOMP_ROW_FIXED_QUEUE1": [
+            4091904,
+            4092416
+          ],
+          "HCOMP_CGRAM_BASE_QUEUE2": [
+            860672,
+            861184
+          ],
+          "HCOMP_CGRAM_SIDEBAND_QUEUE2": [
+            862464,
+            863744
+          ],
+          "HCOMP_CGRAM_EVENT_QUEUE2": [
+            4096000,
+            4194304
+          ],
+          "HCOMP_RAW_PALETTE_QUEUE2": [
+            980992,
+            983040
+          ],
+          "HCOMP_ROW_FIXED_QUEUE2": [
+            4092416,
+            4092928
+          ],
+          "HCOMP_WINNER_ARENA": [
+            3686400,
+            3821568
+          ],
+          "HCOMP_SUB_ARENA": [
+            3821568,
+            3956736
+          ],
+          "HCOMP_PRESENCE_ARENA": [
+            3956736,
+            4091904
+          ],
+          "consumed_section": [
+            983040,
+            983056
+          ],
+          "FRAMEBUFFER1": [
+            992000,
+            1126400
+          ],
+          "FRAMEBUFFER2": [
+            1126400,
+            1260800
+          ],
+          "FRAMEBUFFER3": [
+            1260800,
+            1395200
+          ],
+          "MODE7_TEXTURE": [
+            1395200,
+            1403392
+          ],
+          "VRAM_BUFFER": [
+            1403392,
+            1468928
+          ],
+          "PALETTE_QUEUE1": [
+            1468928,
+            1470976
+          ],
+          "PALETTE_QUEUE2": [
+            1470976,
+            1473024
+          ],
+          "OAM_QUEUE1": [
+            1473024,
+            1481728
+          ],
+          "OAM_QUEUE2": [
+            1481728,
+            1490432
+          ],
+          "DIRTY_QUEUE1": [
+            1490432,
+            1491456
+          ],
+          "DIRTY_QUEUE2": [
+            1491456,
+            1492480
+          ],
+          "SECTION_QUEUE1": [
+            1492480,
+            1512960
+          ],
+          "SECTION_QUEUE2": [
+            1512960,
+            1533440
+          ],
+          "OBJECT_CACHE": [
+            1533440,
+            1535488
+          ],
+          "TILE_STATS_OBJ": [
+            1535488,
+            1536000
+          ],
+          "TILE_STATS_BG": [
+            1536000,
+            1540096
+          ],
+          "TILE_CACHE_OBJ": [
+            1540096,
+            1572864
+          ],
+          "TILE_CACHE_BG": [
+            1572864,
+            1835008
+          ],
+          "JIT_BUFFER": [
+            1835008,
+            2097152
+          ],
+          "ROM_BUFFER": [
+            2097152,
+            3686400
+          ],
+          "ELF:.text": [
+            1024,
+            56336
+          ],
+          "ELF:.eh_frame": [
+            56336,
+            56340
+          ],
+          "ELF:.rodata": [
+            56340,
+            56344
+          ],
+          "ELF:.MIPS.abiflags": [
+            56344,
+            56368
+          ],
+          "ELF:.ctors": [
+            56368,
+            56376
+          ],
+          "ELF:.data": [
+            57344,
+            781152
+          ]
+        }
+      },
+      "delay_slot_banks_passed": 12,
+      "promotion": "BLOCKED on DKC1 cadence"
+    }
   }
 }

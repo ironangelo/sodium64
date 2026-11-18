@@ -27,10 +27,13 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current master `7a6e3d75` includes PR39. The native menu repair and the
-integrated DKC1, ALttP and SMW baseline bind to the exact test and merge
-images. SMW remains below native cadence in the measured scene.
-[Current integrated native baseline](evidence/integration-apu-clock-master-2026-11-16.json).
+Current master `5d3cc86a` integrates PR39's clock repair,
+PR47's selective JIT reset and PR48's revised DSP pitch cache.
+The integrated DKC1, SMW and ALttP baseline preserves the aligned
+digital outputs at APU 21 and frameskip 0. SMW remains below native
+cadence in its measured scene. The published production archive
+matches the exact merge's verified CI artifact.
+[Current integrated native baseline](evidence/integration-r19-byte-pitch-native-2026-11-17.json).
 
 Earlier checkpoint, 2026-11-13. Seventeen separate PRs
 24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38/44 are integrated in master
@@ -83,7 +86,7 @@ baseline, sustained native cadence and analog DAC remain open.
 The earlier KOFF and R47 native trials restored habitual R17 with
 recovery 0. [Native note-tail evidence](evidence/integration-native-koff-tail-2026-11-09.json).
 
-PR37 `392b8bd0` is the independent R19 pitch cache port against `dc0c49d1`.
+The original R19 pitch cache port, PR37 `392b8bd0`, is superseded by integrated PR48.
 Linked normal and REMOTE pitch, KOFF and BRR pass. The physical SMW
 comparison preserves aligned RGB, PCM and DSP state, but drops from
 58.017 to 55.411 guest frames/s in matched-start quiet windows. That

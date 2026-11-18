@@ -208,5 +208,71 @@
       "reason": "Cancelled after two interpreter workloads; no completed matrix conclusion."
     }
   },
-  "priority": "Finish the already scoped PR51 if all its gates pass. For subsequent work, prioritize a demonstrable native cadence gain or a reproducible visible/compatibility correction. The measured SMW window needs about 0.563 ms per emulated frame to reach the nominal 60 Hz budget."
+  "priority": "Finish the already scoped PR51 if all its gates pass. For subsequent work, prioritize a demonstrable native cadence gain or a reproducible visible/compatibility correction. The measured SMW window needs about 0.563 ms per emulated frame to reach the nominal 60 Hz budget.",
+  "merged_pr": {
+    "number": 50,
+    "sha": "cd36528af89fef8a3021816b6a475b5ca21f0ed2",
+    "head": "c4edb9c0ef55aa3b81d73d14c94408be3ad4870c",
+    "previous": "d7e4e61bc9c75037e1b5bb96045706ddbb67357d"
+  },
+  "qualified_premerge_workflows": [
+    {
+      "name": "Profiling Memory Owners",
+      "id": 44337930016,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "c4edb9c0ef55aa3b81d73d14c94408be3ad4870c"
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "id": 44337930045,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "c4edb9c0ef55aa3b81d73d14c94408be3ad4870c"
+    },
+    {
+      "name": "Build and Validate",
+      "id": 44337930140,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "c4edb9c0ef55aa3b81d73d14c94408be3ad4870c"
+    },
+    {
+      "name": "Ares Profile Validation",
+      "id": 44337930083,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "c4edb9c0ef55aa3b81d73d14c94408be3ad4870c"
+    }
+  ],
+  "postmerge_workflows": [
+    {
+      "name": "Build and Validate",
+      "id": 44339783590,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "cd36528af89fef8a3021816b6a475b5ca21f0ed2"
+    },
+    {
+      "name": "Profiling Memory Owners",
+      "id": 44339783427,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "cd36528af89fef8a3021816b6a475b5ca21f0ed2"
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "id": 44339783418,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "cd36528af89fef8a3021816b6a475b5ca21f0ed2"
+    },
+    {
+      "name": "Ares Profile Validation",
+      "id": 44339783414,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "cd36528af89fef8a3021816b6a475b5ca21f0ed2"
+    }
+  ]
 }

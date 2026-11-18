@@ -1,0 +1,189 @@
+{
+  "date_local": "2026-11-18",
+  "merged_pr": {
+    "number": 51,
+    "sha": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+    "head": "e32e2122f9f7c1030102efb76be6041a5bc8128e",
+    "parent": "cd36528af89fef8a3021816b6a475b5ca21f0ed2",
+    "at": "2026-11-18T20:15:49Z"
+  },
+  "scope": {
+    "component": "DSP-1 3D point projection",
+    "fixed_instruction_sites": 7,
+    "linked_directed_cases": 72,
+    "negative_controls": 7,
+    "command_aliases": [
+      "06",
+      "16",
+      "26",
+      "36"
+    ],
+    "setup_02_spacing_in_scope": false
+  },
+  "native": {
+    "title": "Super Mario Kart",
+    "settings": {
+      "apu_clock": 21,
+      "frameskip": 0,
+      "precision": 8
+    },
+    "control": {
+      "ticks": 601918194,
+      "hz": 46875000,
+      "seconds": 12.840921472,
+      "frames": [
+        2400,
+        2880
+      ]
+    },
+    "candidate": {
+      "ticks": 601887169,
+      "hz": 46875000,
+      "seconds": 12.840259605333333,
+      "frames": [
+        2400,
+        2880
+      ]
+    },
+    "fidelity": [
+      {
+        "frame": 2400,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      },
+      {
+        "frame": 2880,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "software_return": true,
+    "merge_tree_matches_qualified_head": true,
+    "merge_local_production_matches_qualified_production": true,
+    "merge_timing_rom_matches_actual_test_receipt": true,
+    "clock_adapter_only_source_overlay": true,
+    "normalized_elapsed_delta_ms": -0.661866666667,
+    "tested_play_slot_touched": false
+  },
+  "premerge_workflows": [
+    {
+      "name": "Profiling Memory Owners",
+      "id": 44340233604,
+      "head_sha": "e32e2122f9f7c1030102efb76be6041a5bc8128e",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "id": 44340233724,
+      "head_sha": "e32e2122f9f7c1030102efb76be6041a5bc8128e",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1
+    },
+    {
+      "name": "Build and Validate",
+      "id": 44340233639,
+      "head_sha": "e32e2122f9f7c1030102efb76be6041a5bc8128e",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1
+    },
+    {
+      "name": "Ares Profile Validation",
+      "id": 44340233997,
+      "head_sha": "e32e2122f9f7c1030102efb76be6041a5bc8128e",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 2
+    }
+  ],
+  "ares_initial_job": {
+    "run": 44340233997,
+    "previous_job": 134928239090,
+    "reason": "Cancelled after two interpreter workloads; no completed matrix conclusion.",
+    "repeated_job": 135094731995,
+    "repeated_conclusion": "success"
+  },
+  "postmerge_workflow_snapshot": [
+    {
+      "name": "Ares Profile Validation",
+      "id": 44389175053,
+      "head_sha": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+      "status": "in_progress",
+      "conclusion": null,
+      "run_attempt": 1
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "id": 44389174971,
+      "head_sha": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1
+    },
+    {
+      "name": "Profiling Memory Owners",
+      "id": 44389175092,
+      "head_sha": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1
+    },
+    {
+      "name": "Build and Validate",
+      "id": 44389175025,
+      "head_sha": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1
+    }
+  ],
+  "release": {
+    "sha": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+    "build_run": 44389175025,
+    "release_asset": 764850816,
+    "artifact": 14467467550,
+    "matches_ci_artifact": true,
+    "members": {
+      "sodium64.z64": "83cc74dfc6df75f6e5c59ff0eb5a6e3dc98764684cd8eca07c14d82c94c1d826",
+      "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+    },
+    "zip_hash": "7de0d3bb70fd6516641fb9d93839b684e02974956f7b4cfe58ac9f9425790d20",
+    "isolation": {
+      "linked_symbols": 1249,
+      "allocated_bytes": 767832,
+      "laboratory_symbols": [],
+      "allocated_diagnostic_leases": [],
+      "archive_members": [
+        "sodium64.z64",
+        "rom-converter.py"
+      ],
+      "sha256": {
+        "sodium64.z64": "83cc74dfc6df75f6e5c59ff0eb5a6e3dc98764684cd8eca07c14d82c94c1d826",
+        "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+      },
+      "elf_sha256": "3b6be75ec9c6040241c275f8a7504ab6eea5a09a17ca003866bdbb39e96916a3",
+      "status": "PASS"
+    },
+    "linked_projection_cases": 72,
+    "required_jobs": {
+      "build": "success",
+      "release-isolation": "success",
+      "update-release": "success"
+    }
+  },
+  "next": {
+    "component": "Dirty-group VRAM cache writeback",
+    "status": "CANDIDATE",
+    "source": "919dc885bba272315d802ddfb52b6b4482a378d0",
+    "timed_source": "194495e5f2348ccae28cd5551aecc85446aa8320",
+    "prior_candidate": "ac534849002a04d342dd566a6f96ae1707680387",
+    "linked_cases_per_build": 52,
+    "gate": "Compare the same 1,200 SMW demo frames at APU 21 and frameskip 0 in both orders. Require matched aligned RGB and PCM/DSP and a repeatable cadence gain. Confirm no cadence or fidelity regression in early DKC1 before any promotion.",
+    "last_measured_smw_deficit_ms_per_frame": 0.562935768889
+  }
+}

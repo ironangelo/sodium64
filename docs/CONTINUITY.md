@@ -1,3 +1,32 @@
+# 2026-11-18 — Integrate DSP-1 point projection and pivot to SMW cadence
+
+PR51 merged as `4d657a71` after all four workflows passed on its exact head.
+Ares completed on the targeted rerun. The change fixes seven VR4300
+HI/LO scheduling sites in DSP-1 point projection. The CI release ELF
+passes 72 linked cases and seven negative controls. Latest points to
+the merge, and the two public ZIP members match the normal CI artifact.
+The package passes production isolation.
+
+On a physical N64, Super Mario Kart frames 2400–2880 took 12.840260 s
+with the fix versus 12.840921 s on its parent, at APU 21 and frameskip 0.
+The two aligned digital observations match in RGB, PCM and DSP state.
+Both trials returned to the menu by USB. The timing ROM rebuilt from
+integrated master is byte-identical to the physically tested candidate.
+The scoped result supports the scheduling fix with no measurable
+cadence change. Setup command 02 retains its earlier spacing outside
+this correction.
+[Projection merge, release and native evidence](evidence/integration-dsp1-projection-master-2026-11-18.json).
+
+The last exact integrated SMW demo missed its nominal 60 Hz budget
+by 0.563 ms per guest frame. An isolated A11 VRAM publication port
+is a CANDIDATE on `4d657a71`. The compiled code passes 52 states
+per build. It skips publications for clean groups after the first
+handoff and preserves the dirty table the renderer receives. The next
+decision is a fixed-work native cadence and digital fidelity pair.
+[Integrated SMW control](evidence/integration-dsp1-inverse-master-2026-11-18.json).
+
+---
+
 # 2026-11-18 — Integrate DSP-1 reciprocal refinement and recheck master
 
 PR50 merged as `cd36528a` after four exact-head workflows and

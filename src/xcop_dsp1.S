@@ -1530,27 +1530,27 @@ low_exp2:
     lh t7, data_rom + 0x62(t7)
     mflo t8
     sra t8, t8, 15
-    mult t6, t7
     sll t5, t5, 1
+    mult t6, t7
     lh t5, data_rom + 0x62(t5)
     mflo t6
+    lh t9, normal_x
     mult t4, t5
     sra t6, t6, 15
     mflo t4
     sra sp, t4, 15
+    lh t7, normal_y
 
     // Calculate the dot product of the point and the normal vector
-    lh t9, normal_x
     mult t9, t8
-    lh t7, normal_y
     mflo t9
     sra t9, t9, 15
-    mult t7, t6
     lh t5, normal_z
+    mult t7, t6
     mflo t7
     sra t7, t7, 15
-    mult t5, sp
     sub t1, zero, t9
+    mult t5, sp
     sub t1, t1, t7
     mflo t5
     sra t5, t5, 15
@@ -1597,12 +1597,12 @@ shift_neg:
     lh t1, vert_y
     mflo t0
     sra t0, t0, 15
-    mult t1, t6
     lh t2, vert_z
+    mult t1, t6
     mflo t1
-    mult t2, sp
     sra t1, t1, 15
     add t0, t0, t1
+    mult t2, sp
     mflo t2
     sra t2, t2, 15
     add t0, t0, t2
@@ -1621,16 +1621,16 @@ shift_neg:
     mult t0, t8
     lh t1, hori_y
     mflo t0
-    mult t1, t6
     sra t0, t0, 15
+    li a1, 0
+    mult t1, t6
     mflo t1
     sra t1, t1, 15
     add t0, t0, t1
     mult t0, t5
     mflo a0
-    sra a0, a0, 15
     jal calc_normal
-    li a1, 0
+    sra a0, a0, 15
     add a1, a1, t7
     jal calc_denorm
     add a1, a1, t9

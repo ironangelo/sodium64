@@ -323,6 +323,7 @@ sin_valid:
     mult t0, t3
     mflo t0
     sra t0, t0, 12
+    nop // Two instructions between MFLO and the next MULT on VR4300.
     mult t0, t2
     mflo t0
     sra t0, t0, 15
@@ -368,6 +369,7 @@ cos_valid:
     mult t0, t3
     mflo t0
     sra t0, t0, 12
+    nop
     mult t0, t1
     mflo t0
     sra t0, t0, 15
@@ -628,10 +630,10 @@ dsp1_rotate:
     // Calculate the rotated X-coordinate from the input coordinates
     lh t0, input_buf + 0
     mult t0, t8
-    lh t1, input_buf + 2
     mflo t2
-    mult t1, a0
+    lh t1, input_buf + 2
     sra t2, t2, 15
+    mult t1, a0
     mflo t3
     sra t3, t3, 15
     add t2, t2, t3
@@ -640,8 +642,9 @@ dsp1_rotate:
     // Calculate the rotated Y-coordinate from the input coordinates
     mult t0, a0
     mflo t2
-    mult t1, t8
     sra t2, t2, 15
+    nop
+    mult t1, t8
     mflo t3
     sra t3, t3, 15
     sub t2, t2, t3
@@ -656,11 +659,12 @@ dsp1_radius:
     mult t0, t0
     lh t1, input_buf + 2
     mflo t0
-    mult t1, t1
     lh t2, input_buf + 0
+    mult t1, t1
     mflo t1
-    mult t2, t2
     add t0, t0, t1
+    nop
+    mult t2, t2
     mflo t2
     add t0, t0, t2
     sll t0, t0, 1
@@ -679,15 +683,15 @@ dsp1_range1:
     mult t0, t0
     lh t1, input_buf + 4
     mflo t0
-    mult t1, t1
     lh t2, input_buf + 2
+    mult t1, t1
     mflo t1
-    mult t2, t2
     lh t3, input_buf + 0
+    mult t2, t2
     mflo t2
-    mult t3, t3
     add t0, t0, t1
     add t0, t0, t2
+    mult t3, t3
     mflo t3
     sub t0, t0, t3
     sra t0, t0, 15
@@ -702,11 +706,12 @@ dsp1_distan:
     mult t0, t0
     lh t1, input_buf + 2
     mflo t0
-    mult t1, t1
     lh t2, input_buf + 0
+    mult t1, t1
     mflo t1
-    mult t2, t2
     add t0, t0, t1
+    nop
+    mult t2, t2
     mflo t2
     add a0, t0, t2
     beqz a0, distan_set
@@ -1021,11 +1026,12 @@ dsp1_scalar:
     lh t7, input_buf + 0
     mflo t0
     lh t1, 6(a1)
-    mult t1, t8
     lh t2, 12(a1)
+    mult t1, t8
     mflo t1
-    mult t2, t7
     add t0, t0, t1
+    nop
+    mult t2, t7
     mflo t2
     add t0, t0, t2
     sra t0, t0, 15

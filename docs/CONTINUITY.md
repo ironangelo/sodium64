@@ -1,3 +1,25 @@
+# 2026-11-17 — Quantify the remaining SMW gap directly on master
+
+On real N64, the instrumented `5d3cc86a` SMW demo runs frames
+3016–4216 in 20.751589 s at APU 21, frameskip 0 and precision 8.
+The timing change from the integrated control is +0.323 percent.
+Both RGB/PCM/DSP captures and both RSP banks match the control.
+The disabled diagnostic build is byte-identical to the control,
+and the enabled build returns by USB with recovery 0.
+
+The CPU spends 0.379 s across 1,200 frames in the explicit RSP
+HALT wait and 1.070 s waiting for framebuffer availability.
+The uninstrumented control is 0.685 s above the nominal 20 s
+budget for these frames. The explicit HALT wait alone falls short
+of that budget. This scope leaves concurrent RSP work and RDRAM
+contention unattributed. Continue on master by separating CPU,
+APU and PPU work in the elapsed-time excess. Use the existing
+profiling facilities before introducing new production code.
+[Integrated SMW native wait budget](evidence/integration-master-smw-wait-budget-2026-11-17.json).
+
+---
+
+
 # 2026-11-17 — Close the current extraction queue and park renderer salvage
 
 The paired row-DMA variant `39654545` matches 70,912 pixels and

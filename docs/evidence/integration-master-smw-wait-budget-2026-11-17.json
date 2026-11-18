@@ -1,0 +1,58 @@
+{
+  "integrated_master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "diagnostic_source": "af6e1c111d9389aaf8da313f2e581f04885d4b80",
+  "method": "Reusable CP0 Count brackets around master’s explicit RSP HALT and framebuffer-availability loops. The two counters cover only these CPU intervals.",
+  "linked": {
+    "wait_cases": 8,
+    "rsp_banks_match_control": true,
+    "disabled_bench_matches_control": true
+  },
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "precision": 8
+  },
+  "control": {
+    "ticks": 969600288,
+    "hz": 46875000,
+    "seconds": 20.684806144,
+    "frames": [
+      3016,
+      4216
+    ]
+  },
+  "probe": {
+    "ticks": 972730736,
+    "hz": 46875000,
+    "seconds": 20.751589034666665,
+    "frames": [
+      3016,
+      4216
+    ],
+    "ticks_in_wait": {
+      "rsp_wait_count_mod32": 17775387,
+      "framebuffer_wait_count_mod32": 50139207
+    }
+  },
+  "fidelity": [
+    {
+      "frame": 3016,
+      "RGB_differences": 0,
+      "PCM_differences": 0,
+      "DSP_state_exact": true
+    },
+    {
+      "frame": 4216,
+      "RGB_differences": 0,
+      "PCM_differences": 0,
+      "DSP_state_exact": true
+    }
+  ],
+  "software_menu_return": true,
+  "elapsed_delta_percent": 0.3228596400747019,
+  "rsp_wait_seconds": 0.379208256,
+  "framebuffer_wait_seconds": 1.069636416,
+  "rsp_wait_mean_ms_per_guest_frame": 0.31600688,
+  "control_gap_seconds_to_nominal_60": 0.6848061439999995,
+  "decision": "The observed explicit HALT wait is smaller than the total elapsed-time gap to nominal NTSC cadence. Prioritize attribution of CPU/APU/PPU work outside the waits on production master. Preserve the existing renderer fidelity gates and distinguish guest boundaries from presentation."
+}

@@ -1,0 +1,75 @@
+{
+  "date_local": "2026-11-18",
+  "master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "runtime_candidate": "1a42299467ebc009b1466d6f2fed7069364525e4",
+  "native_candidate": "1f23788179a7a493141f1389220c0f13dfe6cfff",
+  "scope": {
+    "scene": "SMW demo",
+    "frames": [
+      3016,
+      4216
+    ],
+    "apu_clock": 21,
+    "frameskip": 0,
+    "precision": 8
+  },
+  "proof": {
+    "differential_cases_per_build": 56,
+    "builds": [
+      "Normal",
+      "REMOTE"
+    ],
+    "wrap_cases_each": 770,
+    "wrap_faults_rejected_each": 3,
+    "remote_lookup_reset_pass": true,
+    "loaded_diff_confined_to_apu_execute": true,
+    "hit_instructions_saved": 2
+  },
+  "native": {
+    "reference": "Previously captured physical timed master",
+    "menu_recovery": 0,
+    "delta_ms": 0.325845333332353,
+    "control": {
+      "ticks": 969600288,
+      "hz": 46875000,
+      "seconds": 20.684806144,
+      "frames": [
+        3016,
+        4216
+      ]
+    },
+    "candidate": {
+      "ticks": 969615562,
+      "hz": 46875000,
+      "seconds": 20.685131989333332,
+      "frames": [
+        3016,
+        4216
+      ]
+    },
+    "fidelity": [
+      {
+        "frame": 3016,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      },
+      {
+        "frame": 4216,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "software_menu_return": true
+  },
+  "decision": "REJECTED for this integration cycle because the native control comparison does not show benefit. Leave current scheduler and APU port optimizations separate.",
+  "complete_dsp_cost_ceiling": {
+    "control_evidence": "integration-renderer-wait-dsp-baseline-2026-11-17.json",
+    "additional_unhidden_budget_ms_per_frame": 6.937360000000002,
+    "scalar_core_ms_per_frame": 21.722847466666668,
+    "urgent_reads_while_renderer_active": 1337,
+    "urgent_reads_total": 1993,
+    "limit": "Conditional accounting on a prerecorded-effects control. Requires unchanged work outside measured waits and no additional useful overlap. It does not establish attainable DSP latency or prove a scheduling design."
+  }
+}

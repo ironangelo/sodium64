@@ -1,3 +1,31 @@
+# 2026-11-18 — Resolve the cached SPC700 dispatch candidate
+
+The dispatcher reuses the JIT table base, retaining the separate
+start/end tag decisions, cache-miss delay slot and DSP/WAIT/STOP
+priority. It saves two cached-hit instructions. The normal and
+REMOTE builds each pass 56 differential dispatch cases, 770 wrap
+cases and three wrap negative controls. REMOTE lookup reset passes.
+Loaded differences are confined to `apu_execute`.
+
+On real N64, the candidate completes the same SMW 3016–4216
+window at APU 21 and frameskip 0 in 20.685132 s. The retained
+master control took 20.684806 s. Both RGB/PCM/DSP captures match
+and the private menu return reports recovery 0. The single
+comparison shows no beneficial elapsed effect. Classify this
+candidate as REJECTED for integration and retain the evidence.
+
+For the complete DSP, the existing live-SPC effects replay leaves
+6.94 ms per nominal frame for additional work outside the measured
+framebuffer wait, assuming unchanged remaining work and overlap.
+The complete scalar DSP core costs 21.72 ms per frame. This gives
+a throughput target for any complete backend under those conditions.
+The shared-RSP urgent service constraint still applies because
+1,337 of 1,993 synchronous catches coincide with renderer ownership.
+[Dispatch comparison and complete DSP budget](evidence/integration-master-smw-dispatch-2026-11-18.json).
+
+---
+
+
 # 2026-11-18 — Attribute the integrated SMW CPU budget
 
 The existing EPC sampler runs within a private timed USB step over

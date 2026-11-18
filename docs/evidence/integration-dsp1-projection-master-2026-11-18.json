@@ -184,6 +184,20 @@
     "prior_candidate": "ac534849002a04d342dd566a6f96ae1707680387",
     "linked_cases_per_build": 52,
     "gate": "Compare the same 1,200 SMW demo frames at APU 21 and frameskip 0 in both orders. Require matched aligned RGB and PCM/DSP and a repeatable cadence gain. Confirm no cadence or fidelity regression in early DKC1 before any promotion.",
-    "last_measured_smw_deficit_ms_per_frame": 0.562935768889
+    "last_measured_smw_deficit_ms_per_frame": 0.562935768889,
+    "integration_head": "e19af2e9246ae02a9e4b5a4869dd52d1f8eec011",
+    "local_branch": "integrate/dirty-vram-publication",
+    "writer_to_publication_cases_per_build": 96,
+    "linked_builds_passed": [
+      "normal",
+      "profile",
+      "remote",
+      "remote-fixed-frame"
+    ],
+    "linked_regression_ci_wired": [
+      "normal",
+      "profile"
+    ],
+    "native_availability": "SummerCart reported Power off; physical candidate comparison pending"
   }
 }

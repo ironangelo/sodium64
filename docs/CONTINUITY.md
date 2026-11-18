@@ -19,10 +19,14 @@ this correction.
 
 The last exact integrated SMW demo missed its nominal 60 Hz budget
 by 0.563 ms per guest frame. An isolated A11 VRAM publication port
-is a CANDIDATE on `4d657a71`. The compiled code passes 52 states
-per build. It skips publications for clean groups after the first
-handoff and preserves the dirty table the renderer receives. The next
-decision is a fixed-work native cadence and digital fidelity pair.
+is a CANDIDATE on `4d657a71`. Runtime source is `919dc885`;
+`e19af2e9` adds linked writer coverage and wires the proof into the
+normal and profiling CI builds. Local normal, profile and both remote
+builds pass 52 dirty-map cases and 96 writes through both PPU byte
+handlers with every remap mode. The candidate skips clean groups after
+the first handoff and preserves the renderer's dirty table. The next
+decision is a fixed-work native cadence and digital fidelity pair; the
+SummerCart currently reports the N64 is powered off.
 [Integrated SMW control](evidence/integration-dsp1-inverse-master-2026-11-18.json).
 
 ---

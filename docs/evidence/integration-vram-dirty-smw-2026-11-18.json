@@ -1,0 +1,157 @@
+{
+  "date_local": "2026-11-18",
+  "status": "REJECTED",
+  "title": "Super Mario World",
+  "window": "demo",
+  "apu_clock": 21,
+  "frameskip": 0,
+  "precision": 8,
+  "pr": 52,
+  "head": "e19af2e9246ae02a9e4b5a4869dd52d1f8eec011",
+  "master": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+  "tested_timing_sources": {
+    "master": "a21dcfae6edd4cf8abd00b9f6a990b07f568564d",
+    "vram-dirty": "194495e5f2348ccae28cd5551aecc85446aa8320"
+  },
+  "timing_overlays_match": true,
+  "pairs": [
+    {
+      "order": [
+        "master",
+        "vram-dirty"
+      ],
+      "captures": [
+        {
+          "frame": 3016,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 4216,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "delta_ms": 33.19884799999784,
+      "timings": {
+        "master": {
+          "ticks": 969512774,
+          "hz": 46875000,
+          "seconds": 20.68293917866667,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "vram-dirty": {
+          "ticks": 971068970,
+          "hz": 46875000,
+          "seconds": 20.716138026666666,
+          "frames": [
+            3016,
+            4216
+          ]
+        }
+      },
+      "software_returns_verified": true,
+      "play_slot_touched": false,
+      "guest_fps": {
+        "master": 58.01883328254115,
+        "vram-dirty": 57.925854638316785
+      }
+    },
+    {
+      "order": [
+        "vram-dirty",
+        "master"
+      ],
+      "captures": [
+        {
+          "frame": 3016,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 4216,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "delta_ms": 31.237354666668438,
+      "timings": {
+        "vram-dirty": {
+          "ticks": 971049252,
+          "hz": 46875000,
+          "seconds": 20.715717376,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "master": {
+          "ticks": 969585001,
+          "hz": 46875000,
+          "seconds": 20.684480021333332,
+          "frames": [
+            3016,
+            4216
+          ]
+        }
+      },
+      "software_returns_verified": true,
+      "play_slot_touched": false,
+      "guest_fps": {
+        "vram-dirty": 57.92703087319818,
+        "master": 58.01451130327459
+      }
+    }
+  ],
+  "linked_map_and_writer_cases": 148,
+  "ci_at_decision": [
+    {
+      "name": "Ares Profile Validation",
+      "id": 44391212441,
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "e19af2e9246ae02a9e4b5a4869dd52d1f8eec011",
+      "run_attempt": 1
+    },
+    {
+      "name": "Gate C CGRAM Epoch Replay Regression",
+      "id": 44391212515,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e19af2e9246ae02a9e4b5a4869dd52d1f8eec011",
+      "run_attempt": 1
+    },
+    {
+      "name": "Build and Validate",
+      "id": 44391213037,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e19af2e9246ae02a9e4b5a4869dd52d1f8eec011",
+      "run_attempt": 1
+    },
+    {
+      "name": "Profiling Memory Owners",
+      "id": 44391212711,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e19af2e9246ae02a9e4b5a4869dd52d1f8eec011",
+      "run_attempt": 1
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "id": 44391212508,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e19af2e9246ae02a9e4b5a4869dd52d1f8eec011",
+      "run_attempt": 1
+    }
+  ],
+  "decision": "All native digital captures match. Both launch orders take longer, failing the SMW cadence gate. DKC1 candidate promotion check is unnecessary after this rejection."
+}

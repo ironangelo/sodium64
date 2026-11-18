@@ -1,3 +1,18 @@
+# 2026-11-18 — Reject dirty-group VRAM publication on the SMW cadence gate
+
+PR52 tested the isolated A11 cache writeback change against current
+master `4d657a71` in both launch orders on a physical N64. The same
+1,200 SMW demo frames take 20.682939 and 20.684480 s on master.
+The candidate takes 20.716138 and 20.715717 s, respectively. The
+31–33 ms regression repeats while all four paired framebuffer,
+PCM and DSP observations match at APU 21 and frameskip 0. Every
+launch returns to the private menu by USB and leaves the play
+slot untouched. Reject PR52 for cadence and retain its branch
+and linked tests as evidence. The DKC1 promotion check is moot.
+[Exact PR52 native decision](evidence/integration-vram-dirty-smw-2026-11-18.json).
+
+---
+
 # 2026-11-18 — Integrate DSP-1 point projection and pivot to SMW cadence
 
 PR51 merged as `4d657a71` after all four workflows passed on its exact head.

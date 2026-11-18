@@ -178,7 +178,7 @@
   },
   "next": {
     "component": "Dirty-group VRAM cache writeback",
-    "status": "CANDIDATE",
+    "status": "REJECTED",
     "source": "919dc885bba272315d802ddfb52b6b4482a378d0",
     "timed_source": "194495e5f2348ccae28cd5551aecc85446aa8320",
     "prior_candidate": "ac534849002a04d342dd566a6f96ae1707680387",
@@ -235,6 +235,7 @@
         "status": "in_progress",
         "conclusion": null
       }
-    ]
+    ],
+    "measured_native_result": "integration-vram-dirty-smw-2026-11-18.json"
   }
 }

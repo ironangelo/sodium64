@@ -42,8 +42,11 @@ point projection scheduling fixes in PR49–51. Latest contains the
 two verified production files. Super Mario Kart native verification
 of PR51 preserves aligned digital outputs and comparable cadence.
 The last integrated SMW demo remains 0.676 s over the nominal 20 s
-budget for 1,200 frames. Qualify the isolated VRAM publication
-candidate on the physical SMW demo and preserve digital fidelity.
+budget for 1,200 frames. Both native runs of the PR52 VRAM change preserve the aligned
+captures and regress cadence. Retain the result and drop the port
+from production consideration. Continue from the exact integrated
+baseline and use the existing whole-path DSP cost and fidelity
+evidence to judge a complete accelerated architecture.
 [Current integration and native gate](evidence/integration-dsp1-projection-master-2026-11-18.json).
 
 Earlier checkpoint, 2026-11-13. Seventeen separate PRs

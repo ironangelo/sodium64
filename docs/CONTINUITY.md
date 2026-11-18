@@ -1,3 +1,33 @@
+# 2026-11-18 — Group unobserved SPC RAM writes in the complete DSP
+
+The grouped path advances only writes to the DSP shadow that
+cannot intersect any certified directory, BRR or echo access
+during the pending clocks. A register event, possible address
+wrap or footprint alias retains the original event order.
+The ordinary ROM and ELF still match `5d3cc86a` byte for byte.
+
+Both native launch orders preserve frame 88 RGB, PCM and DSP
+state at APU 21 and frameskip 0. Across the same 40 guest frames,
+core invocations fall from 56,508 to 7,310. Elapsed time drops from
+about 36.99 to 36.08 ms per frame, a repeated saving of 0.904–0.907
+ms per frame (2.45 percent). A separate recording pair produces
+809,604 identical bytes across 16,023 effect records, including
+46,720 stereo PCM samples and 91,587 echo words. Every launch
+returns by USB and the play slot stays intact.
+
+Host checks compare 960 cases per variant against immediate DSP
+execution, including 192 admissions and 768 fallbacks in the
+candidate. Keep the grouped path in the private complete DSP
+candidate. Core time is still 20.07 ms per frame and only one
+invocation remains above the per-bridge-call count in this case.
+The remaining budget needs a change to complete compute and
+shared deadline service. Preserve the recorded effect stream
+as the comparison when changing those paths.
+[Whole-path DSP grouping and fidelity evidence](evidence/integration-live-dsp-shadow-group-2026-11-18.json).
+
+---
+
+
 # 2026-11-18 — Recheck the complete DSP compiler path on current master
 
 The complete live DSP benchmark is synchronized with `5d3cc86a`.

@@ -1,0 +1,201 @@
+{
+  "date_local": "2026-11-18",
+  "master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "measured_source": "b44ad74d0ef055f802bbfc5760e71dc0990ecf75",
+  "test_checkpoint": "d370e3fe3599d4f8f73c0e72a08e6d6ec80c2271",
+  "scope": "Original eight-voice guest, live SPC and active renderer, on physical N64, without bank exchange. Footprint guards admit disjoint shadow RAM writes only. Whole-path timing is measured with the effects recorder disabled.",
+  "settings": {
+    "apu_clock": 21,
+    "frameskip": 0,
+    "precision": 8,
+    "pcm_period_samples": 8
+  },
+  "host": {
+    "direct_oracle_cases_each_variant": 960,
+    "admitted": 192,
+    "fallback": 768,
+    "echo_words_exact": 48616,
+    "nonzero_pcm_words_exact": 32028,
+    "echo_floor_cases": 192,
+    "publication_cases": 44608
+  },
+  "production": {
+    "normal_ROM_and_ELF_match_master": true,
+    "timed_disabled_ROM_matches_prior_control": true,
+    "matching_RSP_payloads": true,
+    "final_menu_recovery": 0
+  },
+  "pairs": [
+    {
+      "marks": [
+        48,
+        88
+      ],
+      "count_hz": 46875000,
+      "fidelity": [
+        {
+          "frame": 88,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "on": {
+        "step_ticks": 67663791,
+        "frame_wait": {
+          "ticks": 1002,
+          "count": 40,
+          "min": 24
+        },
+        "counts": {
+          "full_calls": 7309,
+          "full_queued_ram": 51191,
+          "full_pcm": 21272,
+          "full_cycles": 680793,
+          "full_outputs": 2658,
+          "full_echo": 42549,
+          "critical_reg": 1993,
+          "critical_le3": 0,
+          "critical_reg_busy": 281,
+          "full_ticks": 52307589,
+          "full_core_ticks": 37623880,
+          "full_core_runs": 7310
+        },
+        "software_return": true,
+        "play_slot_touched": false,
+        "whole_path_ms_per_frame": 36.0873552,
+        "core_ms_per_frame": 20.066069333333335
+      },
+      "off": {
+        "step_ticks": 69365280,
+        "frame_wait": {
+          "ticks": 989,
+          "count": 40,
+          "min": 24
+        },
+        "counts": {
+          "full_calls": 7309,
+          "full_queued_ram": 51191,
+          "full_pcm": 21272,
+          "full_cycles": 680793,
+          "full_outputs": 2658,
+          "full_echo": 42549,
+          "critical_reg": 1993,
+          "critical_le3": 0,
+          "critical_reg_busy": 281,
+          "full_ticks": 54461684,
+          "full_core_ticks": 40731143,
+          "full_core_runs": 56508
+        },
+        "software_return": true,
+        "play_slot_touched": false,
+        "whole_path_ms_per_frame": 36.994816,
+        "core_ms_per_frame": 21.723276266666666
+      },
+      "order": [
+        "on",
+        "off"
+      ],
+      "saved_ms_per_frame": 0.9074608000000026,
+      "saved_percent": 2.4529404336002103
+    },
+    {
+      "marks": [
+        48,
+        88
+      ],
+      "count_hz": 46875000,
+      "fidelity": [
+        {
+          "frame": 88,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "off": {
+        "step_ticks": 69352722,
+        "frame_wait": {
+          "ticks": 992,
+          "count": 40,
+          "min": 24
+        },
+        "counts": {
+          "full_calls": 7309,
+          "full_queued_ram": 51191,
+          "full_pcm": 21272,
+          "full_cycles": 680793,
+          "full_outputs": 2658,
+          "full_echo": 42549,
+          "critical_reg": 1993,
+          "critical_le3": 0,
+          "critical_reg_busy": 281,
+          "full_ticks": 54464650,
+          "full_core_ticks": 40732163,
+          "full_core_runs": 56508
+        },
+        "software_return": true,
+        "play_slot_touched": false,
+        "whole_path_ms_per_frame": 36.9881184,
+        "core_ms_per_frame": 21.723820266666667
+      },
+      "on": {
+        "step_ticks": 67656862,
+        "frame_wait": {
+          "ticks": 1022,
+          "count": 40,
+          "min": 24
+        },
+        "counts": {
+          "full_calls": 7309,
+          "full_queued_ram": 51191,
+          "full_pcm": 21272,
+          "full_cycles": 680793,
+          "full_outputs": 2658,
+          "full_echo": 42549,
+          "critical_reg": 1993,
+          "critical_le3": 0,
+          "critical_reg_busy": 281,
+          "full_ticks": 52310643,
+          "full_core_ticks": 37624437,
+          "full_core_runs": 7310
+        },
+        "software_return": true,
+        "play_slot_touched": false,
+        "whole_path_ms_per_frame": 36.083659733333334,
+        "core_ms_per_frame": 20.0663664
+      },
+      "order": [
+        "off",
+        "on"
+      ],
+      "saved_ms_per_frame": 0.9044586666666632,
+      "saved_percent": 2.445268117955053
+    }
+  ],
+  "stream": {
+    "effects_bytes": 809604,
+    "byte_exact": true,
+    "counts": {
+      "rows": 16023,
+      "echo_words": 91587,
+      "pcm_stereo": 46720
+    },
+    "capture_parity": [
+      {
+        "frame": 88,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "software_menu_return": true
+  },
+  "recording_variant_timing": {
+    "off_ticks": 70321630,
+    "on_ticks": 70428164,
+    "interpretation": "Effects recording has a different execution and layout cost. Retain this measurement separately from the two non-recording timing pairs."
+  },
+  "decision": "Retain as a scoped CANDIDATE for the private complete DSP. The original whole-path test shows a repeatable 2.45 percent saving and full recorded digital effects parity. Production merge still requires a complete DSP meeting native cadence and shared scheduling gates.",
+  "remaining": "7310 runs for 7309 bridge calls is close to one core run per controller entry on this guest. The core still takes about 20.07 ms/frame. Further reducing segmentation alone cannot close the native budget."
+}

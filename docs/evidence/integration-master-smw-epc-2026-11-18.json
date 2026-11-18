@@ -1,0 +1,117 @@
+{
+  "date_local": "2026-11-18",
+  "integrated_master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "settings": {
+    "workload": "SMW demo",
+    "apu_clock": 21,
+    "frameskip": 0,
+    "precision": 8
+  },
+  "profile": {
+    "source": "1e8372a3490e0be46717f7c2a59b1682dd0987c4",
+    "interval_count_ticks": 262139,
+    "linked_timer_cases": 4,
+    "owner_guards_valid": true,
+    "rsp_payloads_match_master": true,
+    "disabled_elf_payload_matches_timed_master": true,
+    "duration_change_percent": 0.39668758844262353,
+    "control": {
+      "ticks": 969600288,
+      "hz": 46875000,
+      "seconds": 20.684806144,
+      "frames": [
+        3016,
+        4216
+      ]
+    },
+    "profiled": {
+      "ticks": 973446572,
+      "hz": 46875000,
+      "seconds": 20.766860202666667,
+      "frames": [
+        3016,
+        4216
+      ]
+    },
+    "fidelity": [
+      {
+        "frame": 3016,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      },
+      {
+        "frame": 4216,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "samples": 3709,
+    "subsystems": {
+      "APU JIT generated": 406,
+      "APU/SPC700 static": 686,
+      "DMA/HDMA": 319,
+      "DSP/audio": 824,
+      "PPU/events/frame prep": 397,
+      "RSP wait": 71,
+      "RSP/VRAM semaphore wait": 78,
+      "S-CPU interpreter": 712,
+      "SNES math unit": 7,
+      "frame/VI wait": 169,
+      "input": 3,
+      "runtime/other": 37
+    },
+    "software_menu_return": true,
+    "selected_symbols": {
+      "apu_execute": 330,
+      "cpu_execute": 308,
+      "apu_read8": 100,
+      "io_read8": 15,
+      "offset_timers": 75
+    }
+  },
+  "port_read": {
+    "runtime_source": "af0907780d4e74a1ca83728beeafd79599f7e157",
+    "native_timed_source": "7c01a93b188beb536e7f0e54dc1c16eab2bdd0f7",
+    "linked_differential_cases": 276,
+    "known_port_saved_instructions": 8,
+    "ram_or_fallback_saved_instructions": 0,
+    "classification": "CANDIDATE parked: one archival-control comparison shows a 0.043 percent elapsed saving. It preserves the two aligned digital observations. A material repeatable improvement and regression corpus remain unproven.",
+    "ms_delta": -8.991487999999492,
+    "control": {
+      "ticks": 969600288,
+      "hz": 46875000,
+      "seconds": 20.684806144,
+      "frames": [
+        3016,
+        4216
+      ]
+    },
+    "candidate": {
+      "ticks": 969178812,
+      "hz": 46875000,
+      "seconds": 20.675814656,
+      "frames": [
+        3016,
+        4216
+      ]
+    },
+    "fidelity": [
+      {
+        "frame": 3016,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      },
+      {
+        "frame": 4216,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "software_menu_return": true
+  },
+  "decision": "Prioritize the cached SPC700 block dispatcher on the current production tree. Preserve scheduler boundaries and first/last page invalidation. The sample fractions locate work on the critical CPU window and do not prove the savings of a specific change."
+}

@@ -1,3 +1,32 @@
+# 2026-11-18 — Attribute the integrated SMW CPU budget
+
+The existing EPC sampler runs within a private timed USB step over
+the exact 1,200-frame SMW window at APU 21 and frameskip 0. It
+retains 3,709 samples with valid guards and both RSP banks unchanged.
+The build without sampling matches the timed control's loaded ELF.
+The profiled run takes 20.766860 s, 0.397 percent over the exact
+control. Both RGB/PCM/DSP captures match and USB return succeeds.
+
+DSP takes 824 samples (22.22 percent). SPC700 static and generated
+code account for 1,092 (29.44 percent). `apu_execute` and
+`cpu_execute` account for 330 and 308 samples respectively.
+These are sampled CPU locations. The measured functions can overlap
+asynchronous renderer work and contain multiple paths.
+
+The separate `apu_read8` candidate skips backing RAM loads on nine
+known ports. It saves eight linked instructions there, preserves
+instruction count on RAM and fallback reads, and passes 276 linked
+differential cases. On N64, the one exact-window comparison saves
+8.991 ms over 1,200 frames (0.043 percent). Image, PCM and DSP
+state match and the console returns via USB. Park it as CANDIDATE
+with a material repeatable native saving and wider regression
+coverage still open. Work next on cached block dispatch from
+master while preserving scheduler and two-page JIT validity.
+[Native EPC profile and port-read decision](evidence/integration-master-smw-epc-2026-11-18.json).
+
+---
+
+
 # 2026-11-17 — Quantify the remaining SMW gap directly on master
 
 On real N64, the instrumented `5d3cc86a` SMW demo runs frames

@@ -15,7 +15,7 @@ import zipfile
 from linked_cpu_regression import load_elf
 
 
-PREFIXES = ('remote_', 'profile_', 'hw_profile_')
+PREFIXES = ('remote_', 'profile_', 'hw_profile_', 'native_diag_', 'hcomp_diag_')
 CORE_SYMBOLS = {'main', 'exception_handler', 'rsp_main_text_start',
                 'rsp_mode7_text_start'}
 MEMBERS = ('sodium64.z64', 'rom-converter.py')

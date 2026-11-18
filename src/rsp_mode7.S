@@ -1,3 +1,6 @@
+#ifdef SODIUM64_FAITHFUL_RENDERER
+#include "renderer/rsp_mode7.inc"
+#else
 /*
     Copyright 2021-2025 Hydr8gon
 
@@ -1635,3 +1638,5 @@ hcomp_cgram_pair_ready:
 hcomp_cgram_marker:
     b hcomp_cgram_return
     lbu k1, SPLIT_LINE
+
+#endif

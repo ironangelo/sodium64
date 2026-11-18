@@ -60,6 +60,7 @@ class CPU:
         self.lo = 0xFEDCBA9876543210
         self.cp_writes = []
         self.tlb = [(0,0,0,0) for _ in range(32)]
+        self.tlb_probes = []
         self.memory_writes = []
         self.cache_ops = []
         self.hooks = {}
@@ -206,6 +207,18 @@ class CPU:
                     for index,value in zip((10,2,3,5),self.tlb[self.cp[0]&31]):self.cp[index]=value
                 elif word == 0x42000002: # Indexed TLBWI; no random replacement.
                     self.tlb[self.cp[0]&31]=tuple(self.cp.get(index,0) for index in (10,2,3,5))
+                elif word == 0x42000008: # TLBP, scoped to the runtime's 4KiB pages.
+                    # NEC U10504EJ7V0UM00 p532: VPN2 plus ASID or global.
+                    # https://hack64.net/docs/VR43XX.pdf#page=532
+                    probe = self.cp.get(10, 0)
+                    assert self.cp.get(5, 0) == 0 and all(entry[3] == 0 for entry in self.tlb), 'TLBP model requires 4KiB pages'
+                    matches = [i for i, (hi, lo0, lo1, _) in enumerate(self.tlb)
+                               if hi & 0xffffe000 == probe & 0xffffe000
+                               and (lo0 & lo1 & 1 or hi & 255 == probe & 255)]
+                    assert len(matches) <= 1, 'TLBP multiple matches are architecturally undefined'
+                    index = matches[0] if matches else 0x80000000
+                    self.tlb_probes.append((probe, index))
+                    self.cp[0] = index
                 else: raise AssertionError(('unhandled COP0', hex(pc), hex(word)))
             elif op in (24, 25): r[rt] = (r[rs] + offset) & MASK64
             elif op in (32, 33, 35, 36, 37, 39, 40, 41, 43, 55, 63):

@@ -28,6 +28,7 @@ make -C "$sdk_source" install-mk
 mkdir -p "$N64_INST/mips64-elf/lib" "$N64_INST/mips64-elf/include"
 cp "$sdk_source/n64.ld" "$sdk_source/rsp.ld" "$N64_INST/mips64-elf/lib/"
 cp "$sdk_source/include/rsp.inc" "$N64_INST/mips64-elf/include/"
+cp "$sdk_source/include/rdpq_macros.h" "$N64_INST/mips64-elf/include/"
 make -C "$sdk_source/tools" -j2 n64tool-install n64sym-install n64elfcompress-install ed64romconfig-install
 printf 'N64_INST=%s\n' "$N64_INST" >> "$GITHUB_ENV"
 printf '%s\n' "$N64_INST/bin" >> "$GITHUB_PATH"

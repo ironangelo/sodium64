@@ -43,6 +43,7 @@ jobs:
           python3 scripts/test_dsp_pitch_cache.py build_usb_bench/sodium64-usb-bench.elf --json-output usb-pitch-proof.json
           python3 scripts/test_dsp1_vector_hilo.py build_usb_bench/sodium64-usb-bench.elf
           python3 scripts/test_dsp1_inverse_hilo.py build_usb_bench/sodium64-usb-bench.elf
+          python3 scripts/test_dsp1_projection_hilo.py build_usb_bench/sodium64-usb-bench.elf
       - name: Preserve code and diagnostic receipts
         if: always()
         uses: actions/upload-artifact@v4

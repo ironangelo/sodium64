@@ -315,15 +315,14 @@ sin_valid:
     srl t3, t3, 8
     sub t0, zero, t3
     xor t2, t2, t0
-    add t2, t2, t3
 
     // Calculate the result
     li t0, 0x3244 // Pi << 12
-    andi t3, a0, 0xFF
-    mult t0, t3
+    andi a0, a0, 0xFF
+    mult t0, a0
     mflo t0
     sra t0, t0, 12
-    nop // Two instructions between MFLO and the next MULT on VR4300.
+    add t2, t2, t3 // Fill the VR4300 gap between MFLO and MULT.
     mult t0, t2
     mflo t0
     sra t0, t0, 15
@@ -702,12 +701,17 @@ dsp1_range1:
 .align 5
 dsp1_distan:
     // Calculate the 32-bit squared normal of a 3D vector
-    lh t0, input_buf + 4
+    .set push
+    .set noat
+    lui $1, %hi(input_buf)
+    lh t0, %lo(input_buf + 4)($1)
     mult t0, t0
-    lh t1, input_buf + 2
+    lh t1, %lo(input_buf + 2)($1)
     mflo t0
-    lh t2, input_buf + 0
+    lh t2, %lo(input_buf)($1)
+    nop
     mult t1, t1
+    .set pop
     mflo t1
     add t0, t0, t1
     nop

@@ -6,7 +6,7 @@ hardware checks passed. The merge tree, the local production
 ROM and the private timing ROM reproduce the qualified inputs.
 Latest points to the merge. Its two files match the CI artifact
 byte for byte and pass the production isolation check. The
-published ELF passes the 219 linked vector cases.
+ELF from the exact CI build passes the 219 linked vector cases.
 
 On N64 at APU 21, frameskip 0 and precision 8, the exact master
 timing build preserves both aligned RGB/PCM/DSP observations per

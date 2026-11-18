@@ -37,13 +37,13 @@ Ask only for an actual physical/access/irreversible-scope blocker; continue
 independent useful work while blocked. Never claim a failed/skipped/zero-test
 gate as PASS, or laboratory cadence as presentation FPS/native acceptance.
 
-Current master `5d3cc86a` integrates PR39's clock repair,
-PR47's selective JIT reset and PR48's revised DSP pitch cache.
-The integrated DKC1, SMW and ALttP baseline preserves the aligned
-digital outputs at APU 21 and frameskip 0. SMW remains below native
-cadence in its measured scene. The published production archive
-matches the exact merge's verified CI artifact.
-[Current integrated native baseline](evidence/integration-r19-byte-pitch-native-2026-11-17.json).
+Current master `d7e4e61b` adds PR49's DSP-1 vector scheduling
+repair to PR39, PR47 and PR48. The released package matches CI
+and has the two production files. The integrated native DKC1,
+SMW and ALttP observations preserve aligned digital outputs at
+APU 21 and frameskip 0. The measured SMW demo remains below
+native cadence. The separate DSP-1 reciprocal fix is PR50.
+[Current integrated native baseline](evidence/integration-dsp1-vector-master-2026-11-18.json).
 
 Earlier checkpoint, 2026-11-13. Seventeen separate PRs
 24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38/44 are integrated in master

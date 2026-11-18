@@ -49,6 +49,13 @@ Continue from the measured master and use the existing whole-path
 DSP cost and fidelity evidence for a complete accelerated backend.
 [Current integrated native baseline](evidence/integration-combined-master-pr51-native-2026-11-18.json).
 
+PR53 qualifies SPC700 source-byte revalidation. Both real-N64
+DKC1 launch orders recover about 1.81 ms per emulated frame with
+matching digital captures. The same ROM passes the aligned SMW,
+ALttP and Super Mario Kart checks. Exact-head Ares gates promotion. Continue qualification before the next
+production performance change.
+[PR53 evidence](evidence/integration-spc700-source-revalidation-2026-11-18.json).
+
 Earlier checkpoint, 2026-11-13. Seventeen separate PRs
 24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38/44 are integrated in master
 `c90ef5c983edb6e775d34676443f1e29ec48a9e2`. PR35 qualifies the isolated

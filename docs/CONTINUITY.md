@@ -1,3 +1,32 @@
+# 2026-11-18 — Recover 5.20 guest frames/s in DKC1 on physical N64
+
+In the exact current-master DKC1 frames 120–1320, the passive EPC
+profile keeps 4,096 of 4,234 samples. Of those, 450 fall within the
+SPC700 emitter. Two adjacent 512-sample groups contain 412 emitter
+samples with framebuffer wait much lower than in the surrounding
+windows. The exact diagnostic counters show 135,221 page-tag
+mismatches, 563 empty lookups and 94 pool resets. Counter and EPC
+captures both preserve the aligned digital output and return by USB.
+
+PR53 `1db585c0` compares saved source bytes when a block's
+page tag changes. Matches reuse the original generated code.
+Changes, wrap, page boundaries and IPL use the existing compiler.
+Existing clock-change and pool invalidation still evict old code.
+Linked normal and REMOTE cover byte changes, unaffected writes,
+both overflow paths, clock changes, page/end fallback and 770 wrap cases.
+
+Physical DKC1 at APU 21 and frameskip 0 improves from 23.521004 to
+21.346427 s and from 23.518011 to 21.347338 s in opposite launch
+orders. That is 51.02 to 56.21–56.22 completed guest frames/s,
+saving about 1.81 ms per guest frame. Both aligned RGB, PCM and
+DSP captures match in each pair. All launches returned to the
+private menu. SMW, ALttP and Super Mario Kart preserve aligned
+RGB, PCM and DSP with no slowdown in the measured windows.
+Four workflows pass. Exact-head Ares remains the promotion gate.
+[PR53](https://github.com/ironangelo/sodium64/pull/53) · [Physical and linked evidence](evidence/integration-spc700-source-revalidation-2026-11-18.json).
+
+---
+
 # 2026-11-18 — Measure the exact integrated native baseline after PR51
 
 The local bench from master `4d657a71` measures early DKC1 frames

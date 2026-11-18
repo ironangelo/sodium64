@@ -551,9 +551,9 @@ inverse_guess:
 inverse_refine:
     // Refine the guess with two iterations of Newton's Method
     mult a0, t0
-    sub t2, zero, t0
     mflo t1
     sra t1, t1, 15
+    sub t2, zero, t0
     mult t1, t2
     mflo t1
     sra t1, t1, 15

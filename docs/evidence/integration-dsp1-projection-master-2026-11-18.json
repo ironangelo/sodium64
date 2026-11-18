@@ -186,7 +186,6 @@
     "gate": "Compare the same 1,200 SMW demo frames at APU 21 and frameskip 0 in both orders. Require matched aligned RGB and PCM/DSP and a repeatable cadence gain. Confirm no cadence or fidelity regression in early DKC1 before any promotion.",
     "last_measured_smw_deficit_ms_per_frame": 0.562935768889,
     "integration_head": "e19af2e9246ae02a9e4b5a4869dd52d1f8eec011",
-    "local_branch": "integrate/dirty-vram-publication",
     "writer_to_publication_cases_per_build": 96,
     "linked_builds_passed": [
       "normal",
@@ -198,6 +197,44 @@
       "normal",
       "profile"
     ],
-    "native_availability": "SummerCart reported Power off; physical candidate comparison pending"
+    "native_availability": "SummerCart reported Power off; physical candidate comparison pending",
+    "branch": "integrate/dirty-vram-publication",
+    "draft_pr": {
+      "number": 52,
+      "base": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+      "url": "https://github.com/ironangelo/sodium64/pull/52"
+    },
+    "submitted_workflows": [
+      {
+        "name": "Native USB Bench Contracts",
+        "id": 44391212508,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "Profiling Memory Owners",
+        "id": 44391212711,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "Build and Validate",
+        "id": 44391213037,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "Gate C CGRAM Epoch Replay Regression",
+        "id": 44391212515,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "Ares Profile Validation",
+        "id": 44391212441,
+        "status": "in_progress",
+        "conclusion": null
+      }
+    ]
   }
 }

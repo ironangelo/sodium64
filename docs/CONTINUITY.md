@@ -19,8 +19,9 @@ this correction.
 
 The last exact integrated SMW demo missed its nominal 60 Hz budget
 by 0.563 ms per guest frame. An isolated A11 VRAM publication port
-is a CANDIDATE on `4d657a71`. Runtime source is `919dc885`;
-`e19af2e9` adds linked writer coverage and wires the proof into the
+is a CANDIDATE on `4d657a71` in [draft PR52](https://github.com/ironangelo/sodium64/pull/52).
+Runtime source is `919dc885`. Exact head `e19af2e9` adds linked
+writer coverage and wires the proof into the
 normal and profiling CI builds. Local normal, profile and both remote
 builds pass 52 dirty-map cases and 96 writes through both PPU byte
 handlers with every remap mode. The candidate skips clean groups after

@@ -1,0 +1,152 @@
+{
+  "date_local": "2026-11-18",
+  "integrated_master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "diagnostic_source": "36d6cbcad559619e73d0945817cfa47d60e77b68",
+  "scope": "Whole live scalar DSP with original eight-voice moving-window guest on physical N64, APU 21, frameskip 0, retained 8-sample output period. Identical live configuration within each pair except C++ compiler optimization.",
+  "release_isolation": {
+    "normal_rom_and_elf_identical_to_current_master": true,
+    "rsp_banks_match_within_both_pairs": true,
+    "final_menu_recovery": 0,
+    "play_slot_touched": false
+  },
+  "pairs": {
+    "exchange": {
+      "fixed_frames": [
+        48,
+        88
+      ],
+      "hz": 46875000,
+      "matches": [
+        {
+          "frame": 88,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "runs": {
+        "o2": {
+          "step_ticks": 88748683,
+          "frame_wait": {
+            "ticks": 1066,
+            "count": 40,
+            "min": 24
+          },
+          "counts": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_pcm": 21272,
+            "full_cycles": 680793,
+            "full_outputs": 2658,
+            "full_echo": 42549,
+            "critical_reg": 1993,
+            "critical_le3": 0,
+            "critical_reg_busy": 239,
+            "full_ticks": 70754863,
+            "full_core_ticks": 56730788,
+            "full_core_runs": 56508
+          },
+          "software_return": true,
+          "elapsed_ms_per_guest_frame": 47.332630933333334,
+          "core_ms_per_guest_frame": 30.256420266666666
+        },
+        "o3": {
+          "step_ticks": 76077986,
+          "frame_wait": {
+            "ticks": 1016,
+            "count": 40,
+            "min": 24
+          },
+          "counts": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_pcm": 21272,
+            "full_cycles": 680793,
+            "full_outputs": 2658,
+            "full_echo": 42549,
+            "critical_reg": 1993,
+            "critical_le3": 0,
+            "critical_reg_busy": 249,
+            "full_ticks": 55198071,
+            "full_core_ticks": 42715799,
+            "full_core_runs": 56508
+          },
+          "software_return": true,
+          "elapsed_ms_per_guest_frame": 40.57492586666667,
+          "core_ms_per_guest_frame": 22.781759466666667
+        }
+      },
+      "o3_delta_percent": -14.277053553572172
+    },
+    "no_exchange": {
+      "fixed_frames": [
+        48,
+        88
+      ],
+      "hz": 46875000,
+      "matches": [
+        {
+          "frame": 88,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "runs": {
+        "o3": {
+          "step_ticks": 89422687,
+          "frame_wait": {
+            "ticks": 980,
+            "count": 40,
+            "min": 24
+          },
+          "counts": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_pcm": 21272,
+            "full_cycles": 680793,
+            "full_outputs": 2658,
+            "full_echo": 42549,
+            "critical_reg": 1993,
+            "critical_le3": 0,
+            "critical_reg_busy": 240,
+            "full_ticks": 71050839,
+            "full_core_ticks": 57295580,
+            "full_core_runs": 56508
+          },
+          "software_return": true,
+          "elapsed_ms_per_guest_frame": 47.692099733333336,
+          "core_ms_per_guest_frame": 30.557642666666666
+        },
+        "o2": {
+          "step_ticks": 69361197,
+          "frame_wait": {
+            "ticks": 1053,
+            "count": 40,
+            "min": 24
+          },
+          "counts": {
+            "full_calls": 7309,
+            "full_queued_ram": 51191,
+            "full_pcm": 21272,
+            "full_cycles": 680793,
+            "full_outputs": 2658,
+            "full_echo": 42549,
+            "critical_reg": 1993,
+            "critical_le3": 0,
+            "critical_reg_busy": 281,
+            "full_ticks": 54465416,
+            "full_core_ticks": 40732551,
+            "full_core_runs": 56508
+          },
+          "software_return": true,
+          "elapsed_ms_per_guest_frame": 36.9926384,
+          "core_ms_per_guest_frame": 21.7240272
+        }
+      },
+      "o3_delta_percent": 28.923217688991155
+    }
+  },
+  "decision": "REJECTED for the whole live backend. The relevant no-exchange workload regresses 28.9 percent. The bank-exchange pair explains why testing with another renderer coexistence configuration can misrank the compiler mode. Captures and event totals compare within each pair. These observations cover two digital boundary checks and totals, not the full chronological effect stream.",
+  "next_gate": "Reduce cost of full live DSP without perturbing renderer ownership. Start by proving that classes of producer RAM writes can commute around DSP ARAM observations, while preserving direct register ordering, exact echo visibility and PCM."
+}

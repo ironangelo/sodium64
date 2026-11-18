@@ -1,3 +1,34 @@
+# 2026-11-18 — Recheck the complete DSP compiler path on current master
+
+The complete live DSP benchmark is synchronized with `5d3cc86a`.
+The ordinary ROM and ELF match that master byte for byte. The
+private builds retain the original eight-voice SPC workload,
+the complete DSP core, echo publication and the renderer.
+
+The matched native pair without bank exchange processes frames
+48–88 at APU 21 and frameskip 0. The whole interval takes
+36.993 ms per guest frame at `-O2` and 47.692 ms at `-O3`,
+a 28.9 percent regression. Attributed core time rises from
+21.724 to 30.558 ms per frame. Frame 88 RGB, PCM and visible
+DSP state match, and interval call, write, sample and echo totals
+match. Both RSP banks stay byte-identical within the pair.
+
+The earlier matched pair with DMEM/IMEM exchanges went from
+47.333 to 40.575 ms per frame. That configuration changes
+coexistence with the renderer. Use the no-exchange comparison
+to reject the compiler mode and retain both results. All four
+launches return via USB with the play slot preserved.
+
+The complete path still needs substantially lower computation
+cost. A controller change must prove which queued SPC writes
+can share a run without crossing any DSP observation. Retain
+original clocks and exact RAM/echo publication and check the
+result against the no-exchange whole-path counter.
+[Native whole-DSP compiler comparison](evidence/integration-live-dsp-throughput-2026-11-18.json).
+
+---
+
+
 # 2026-11-18 — Resolve the cached SPC700 dispatch candidate
 
 The dispatcher reuses the JIT table base, retaining the separate

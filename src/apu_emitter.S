@@ -183,10 +183,10 @@ apu_nop:
 compile_block:
     // Round the JIT pointer to nearest cache line, offset by header size
     lw t0, jit_pointer
-    addi t0, t0, 0x1F + 12
+    addiu t0, t0, 0x1F + JIT_HEADER_SIZE
     andi t1, t0, 0x1F
-    sub a1, t0, t1 // Pointer
-    addi t0, a1, -12
+    subu a1, t0, t1 // Pointer
+    addiu t0, a1, -JIT_TAG_FIELDS_SIZE
     sw t0, jit_pointer
 
     // Initialize values for tracking JIT block state
@@ -200,6 +200,7 @@ compile_block:
     li a2, ROM_BUFFER // Bounds
     bgeu a1, a2, reset_buffer
     srl t1, a0, 6
+    cache 0x11, CACHED(JIT_SOURCE_LENGTH)(t0)
     cache 0x11, CACHED(0)(t0)
 
     // Set the start memory block and tag in the JIT header
@@ -305,6 +306,36 @@ skip_pc:
     jal emit_op
     or t0, t0, s2
 
+    // Snapshot the bytes read by jit_read8 while the guest is stopped.
+    // A wrapped span, a page crossing or the IPL page recompiles normally.
+    lw t0, jit_pointer
+    xor t4, s0, a0
+    srl t4, t4, 6
+    bnez t4, jit_publish_lookup
+    sb zero, JIT_SOURCE_LENGTH(t0)
+    srl t4, s0, 6
+    li t5, 0x3FF
+    beq t4, t5, jit_publish_lookup
+    subu t3, a0, s0
+    sltiu t5, t3, JIT_SOURCE_MAX + 1
+    beqz t5, jit_publish_lookup
+    nop
+    beqz t3, jit_publish_lookup
+    nop
+    lbu t4, apu_map(t4)
+    addu t4, s0, t4
+    la t5, apu_ram
+    addu t4, t4, t5
+    addiu t6, t0, JIT_SOURCE_BYTES
+    sb t3, JIT_SOURCE_LENGTH(t0)
+save_jit_source:
+    lbu t5, 0(t4)
+    sb t5, 0(t6)
+    addiu t4, t4, 1
+    addiu t3, t3, -1
+    bnez t3, save_jit_source
+    addiu t6, t6, 1
+
     // Update the JIT pointer and use its old value for block lookup
 jit_publish_lookup:
     lw t0, jit_pointer
@@ -325,7 +356,7 @@ jit_lookup_published:
     lw t1, jit_tags(t1)
 
     // Jump to the finished JIT block's code
-    addi t2, t2, 12
+    addiu t2, t2, JIT_TAG_FIELDS_SIZE
     jr t2
     sw t1, 8(t0)
 

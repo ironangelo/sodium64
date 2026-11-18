@@ -117,16 +117,49 @@ apu_execute:
     lhu t1, 0(t0)
     lw t1, jit_tags(t1)
     lw t2, 4(t0)
-    bne t1, t2, compile_block
+    bne t1, t2, revalidate_jit_source
 
-    // Compile a new JIT block if memory changed at the end
+    // Revalidate the source if memory changed at the end
     lhu t2, 2(t0)
     lw t2, jit_tags(t2)
     lw t1, 8(t0)
-    bne t1, t2, compile_block
+    bne t1, t2, revalidate_jit_source_from_entry
 
     // Jump to a cached JIT block's code
-    addi t0, t0, 12
+    addiu t0, t0, JIT_TAG_FIELDS_SIZE
+    jr t0
+    nop
+
+revalidate_jit_source_from_entry:
+    addiu t0, t0, -JIT_TAG_FIELDS_SIZE
+revalidate_jit_source:
+    // Only same-page blocks with a stored source span reach the compare.
+    lbu t1, JIT_SOURCE_LENGTH(t0)
+    beqz t1, compile_block
+    srl t2, s0, 6
+    lbu t2, apu_map(t2)
+    addu t2, s0, t2
+    la t3, apu_ram
+    addu t2, t2, t3
+    addiu t3, t0, JIT_SOURCE_BYTES
+compare_jit_source:
+    lbu t4, 0(t2)
+    lbu t5, 0(t3)
+    bne t4, t5, compile_block
+    addiu t2, t2, 1
+    addiu t1, t1, -1
+    bnez t1, compare_jit_source
+    addiu t3, t3, 1
+
+    // The exact instruction bytes match. Publish the current page tags
+    // to the same cached header that dispatch reads.
+    lhu t1, 0(t0)
+    lhu t2, 2(t0)
+    lw t1, jit_tags(t1)
+    lw t2, jit_tags(t2)
+    sw t1, 4(t0)
+    sw t2, 8(t0)
+    addiu t0, t0, JIT_TAG_FIELDS_SIZE
     jr t0
     nop
 

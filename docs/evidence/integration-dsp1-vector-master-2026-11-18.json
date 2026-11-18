@@ -1,0 +1,327 @@
+{
+  "date_local": "2026-11-18",
+  "merged_pr": {
+    "number": 49,
+    "sha": "d7e4e61bc9c75037e1b5bb96045706ddbb67357d",
+    "head": "58c6da2d446f8698cf6e410986146f18a747911d",
+    "previous": "5d3cc86a88a79f1028522f147b4f5950e8543785"
+  },
+  "qualified_premerge_workflows": [
+    {
+      "name": "Profiling Memory Owners",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 44334174987
+    },
+    {
+      "name": "Build and Validate",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 44334175006
+    },
+    {
+      "name": "Ares Profile Validation",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 44334175395
+    },
+    {
+      "name": "Native USB Bench Contracts",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 44334174934
+    }
+  ],
+  "postmerge_workflows": [
+    {
+      "id": 44336730789,
+      "name": "Ares Profile Validation",
+      "status": "in_progress",
+      "conclusion": null,
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/44336730789"
+    },
+    {
+      "id": 44336731001,
+      "name": "Profiling Memory Owners",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/44336731001"
+    },
+    {
+      "id": 44336730776,
+      "name": "Native USB Bench Contracts",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/44336730776"
+    },
+    {
+      "id": 44336730780,
+      "name": "Build and Validate",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ironangelo/sodium64/actions/runs/44336730780"
+    }
+  ],
+  "merge_tree_matches_qualified_head": true,
+  "normal_ROM_matches_local_qualified_image": true,
+  "private_timed_ROM_matches_tested_pr": true,
+  "private_timed_source": "1a9628adbf832421b9165b6cdc0e68ae83d5926c",
+  "release": {
+    "sha": "d7e4e61bc9c75037e1b5bb96045706ddbb67357d",
+    "build_run": 44336730780,
+    "release_asset": 763935482,
+    "artifact": 14442316293,
+    "members": {
+      "sodium64.z64": "b1c65f1d6a7c4c53d767ae1d410e1bc1bc4cf14c590d430e781549e7c62cf4d9",
+      "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+    },
+    "zip_hash": "0bed422a3760248c2abe736973e63d9f961e4390b0fbb650a23e67822e9c1ca8",
+    "isolation": {
+      "linked_symbols": 1249,
+      "allocated_bytes": 767832,
+      "laboratory_symbols": [],
+      "allocated_diagnostic_leases": [],
+      "archive_members": [
+        "sodium64.z64",
+        "rom-converter.py"
+      ],
+      "sha256": {
+        "sodium64.z64": "b1c65f1d6a7c4c53d767ae1d410e1bc1bc4cf14c590d430e781549e7c62cf4d9",
+        "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+      },
+      "elf_sha256": "576ba4dd0ce57ee729a7011e836754466144ebd767a98597413baad3a35ee938",
+      "status": "PASS"
+    },
+    "release_matches_ci_artifact_members": true,
+    "release_linked_vector_cases_passed": 219
+  },
+  "physical": {
+    "settings": {
+      "apu_clock": 21,
+      "frameskip": 0,
+      "precision": 8
+    },
+    "native": {
+      "dkc1": {
+        "timing": {
+          "ticks": 1103018434,
+          "hz": 46875000,
+          "seconds": 23.531059925333334,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "reference": {
+          "ticks": 1102543793,
+          "hz": 46875000,
+          "seconds": 23.520934250666667,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "fidelity": [
+          {
+            "frame": 120,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 1320,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "completed_guest_frames_per_second": 50.996427862056926,
+        "archival_elapsed_difference_ms": 10.125674666667805
+      },
+      "smw": {
+        "timing": {
+          "ticks": 969583978,
+          "hz": 46875000,
+          "seconds": 20.684458197333335,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "reference": {
+          "ticks": 969600288,
+          "hz": 46875000,
+          "seconds": 20.684806144,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "fidelity": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "completed_guest_frames_per_second": 58.01457251390348,
+        "archival_elapsed_difference_ms": -0.3479466666647113
+      },
+      "alttp": {
+        "timing": {
+          "ticks": 783094057,
+          "hz": 46875000,
+          "seconds": 16.706006549333335,
+          "frames": [
+            1861,
+            2861
+          ]
+        },
+        "reference": {
+          "ticks": 783369857,
+          "hz": 46875000,
+          "seconds": 16.711890282666666,
+          "frames": [
+            1861,
+            2861
+          ]
+        },
+        "fidelity": [
+          {
+            "frame": 1861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "completed_guest_frames_per_second": 59.85870992250423,
+        "archival_elapsed_difference_ms": -5.8837333333308095
+      }
+    },
+    "dkc1_same_session_repeat": {
+      "timings": {
+        "integrated": {
+          "ticks": 1102884734,
+          "hz": 46875000,
+          "seconds": 23.528207658666666,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "parent": {
+          "ticks": 1102898446,
+          "hz": 46875000,
+          "seconds": 23.52850018133333,
+          "frames": [
+            120,
+            1320
+          ]
+        }
+      },
+      "fidelity": [
+        {
+          "frame": 120,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 1320,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "software_return": true,
+      "elapsed_difference_ms": -0.29252266666546234
+    },
+    "final_menu_recovery": 0
+  },
+  "follow_up": {
+    "number": 50,
+    "source": "c4edb9c0ef55aa3b81d73d14c94408be3ad4870c",
+    "timed_source": "1fe97bc1e9f09d140b374bca08c4911c9b83856e",
+    "status": "CANDIDATE, ready for review; exact-head CI underway",
+    "linked_cases_each": 150,
+    "loaded_changed_bytes": 9,
+    "linked_symbol_addresses_preserved": 1257,
+    "physical": {
+      "control": {
+        "ticks": 601911971,
+        "hz": 46875000,
+        "seconds": 12.840788714666667,
+        "frames": [
+          2400,
+          2880
+        ]
+      },
+      "candidate": {
+        "ticks": 601913150,
+        "hz": 46875000,
+        "seconds": 12.840813866666666,
+        "frames": [
+          2400,
+          2880
+        ]
+      },
+      "fidelity": [
+        {
+          "frame": 2400,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 2880,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "software_return": true
+    },
+    "ci": [
+      {
+        "name": "Ares Profile Validation",
+        "status": "in_progress",
+        "conclusion": null,
+        "id": 44337930083
+      },
+      {
+        "name": "Build and Validate",
+        "status": "in_progress",
+        "conclusion": null,
+        "id": 44337930140
+      },
+      {
+        "name": "Profiling Memory Owners",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 44337930016
+      },
+      {
+        "name": "Native USB Bench Contracts",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 44337930045
+      }
+    ]
+  }
+}

@@ -1,3 +1,37 @@
+# 2026-11-18 — Integrate DSP-1 vector spacing and measure master
+
+PR49 merged as `d7e4e61b` after all four exact-head workflows,
+the linked DSP-1 protocol proof and the paired Super Mario Kart
+hardware checks passed. The merge tree, the local production
+ROM and the private timing ROM reproduce the qualified inputs.
+Latest points to the merge. Its two files match the CI artifact
+byte for byte and pass the production isolation check. The
+published ELF passes the 219 linked vector cases.
+
+On N64 at APU 21, frameskip 0 and precision 8, the exact master
+timing build preserves both aligned RGB/PCM/DSP observations per
+title. DKC1 startup frames 120–1320 take 23.531060 s, the SMW
+demo frames 3016–4216 take 20.684458 s and the ALttP story frames
+1861–2861 take 16.706007 s. A fresh DKC1 launch pair reproduces
+both captures, with integrated master 0.293 ms faster across
+the window. The earlier 10.126 ms difference against the archived
+DKC1 control does not recur. All launches return by USB.
+SMW still completes about 58.02 guest frames per second.
+
+PR50 separately fixes DSP-1 reciprocal refinement. The exact head
+`c4edb9c0` preserves all 1,257 linked symbol addresses and changes
+nine loaded bytes. The two aliases pass 150 linked vectors in
+normal and REMOTE. On N64, 480 Super Mario Kart frames take
+12.840814 s versus 12.840789 s for the byte-identical qualified
+master bench. Images, PCM and DSP state match at both boundaries.
+The PR is ready for review and remains CANDIDATE while its exact
+CI checks run. Other DSP-1 transform spacing and the separate
+complete S-DSP budget remain open.
+[Integrated DSP-1 and combined native evidence](evidence/integration-dsp1-vector-master-2026-11-18.json).
+
+---
+
+
 # 2026-11-18 — Qualify DSP-1 vector spacing for integration
 
 PR49 corrects thirteen VR4300 HI/LO spacing sites in DSP-1

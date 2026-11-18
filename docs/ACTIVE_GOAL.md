@@ -41,13 +41,13 @@ Current master `4d657a71` integrates the DSP-1 vector, reciprocal and
 point projection scheduling fixes in PR49–51. Latest contains the
 two verified production files. Super Mario Kart native verification
 of PR51 preserves aligned digital outputs and comparable cadence.
-The last integrated SMW demo remains 0.676 s over the nominal 20 s
-budget for 1,200 frames. Both native runs of the PR52 VRAM change preserve the aligned
-captures and regress cadence. Retain the result and drop the port
-from production consideration. Continue from the exact integrated
-baseline and use the existing whole-path DSP cost and fidelity
-evidence to judge a complete accelerated architecture.
-[Current integration and native gate](evidence/integration-dsp1-projection-master-2026-11-18.json).
+The exact integrated DKC1, ALttP, SMW and Super Mario Kart windows
+have a four-workload native baseline. Both SMW timing repeats stay
+roughly 0.683 s over the nominal 20 s budget. PR52 is closed on a
+repeated cadence regression with unchanged digital captures.
+Continue from the measured master and use the existing whole-path
+DSP cost and fidelity evidence for a complete accelerated backend.
+[Current integrated native baseline](evidence/integration-combined-master-pr51-native-2026-11-18.json).
 
 Earlier checkpoint, 2026-11-13. Seventeen separate PRs
 24/23/22/25/26/27/28/29/30/31/34/35/36/33/43/38/44 are integrated in master

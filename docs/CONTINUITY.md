@@ -1,3 +1,25 @@
+# 2026-11-18 — Measure the exact integrated native baseline after PR51
+
+The local bench from master `4d657a71` measures early DKC1 frames
+120–1320 in 23.521004 s, ALttP story frames 1861–2861 in 16.713716 s,
+and SMW demo frames 3016–4216 in 20.682939 and 20.684480 s. Its
+byte-identical Super Mario Kart bench measured frames 2400–2880 in
+12.840260 s during PR51 qualification. Two aligned digital samples
+per launch match the measured earlier master controls in RGB, PCM
+and DSP state. All launches run APU 21 and frameskip 0, return to
+the menu by USB and leave the play slot intact. The rates are scoped
+completed guest frames; SMW remains around 58.02 against nominal 60.
+[Four-workload integrated baseline](evidence/integration-combined-master-pr51-native-2026-11-18.json).
+
+PR52 is closed after the repeatable native slowdown. Commit
+only useful runtime changes to master. The complete live DSP
+cost discriminator already records scalar execution with live SPC,
+echo and the active renderer. Keep the exact effect stream for the
+next complete accelerated backend and its bounded register service.
+[Whole-path DSP cost and fidelity](evidence/integration-live-dsp-shadow-group-2026-11-18.json).
+
+---
+
 # 2026-11-18 — Reject dirty-group VRAM publication on the SMW cadence gate
 
 PR52 tested the isolated A11 cache writeback change against current

@@ -1,0 +1,213 @@
+{
+  "date_local": "2026-11-18",
+  "master": "4d657a71cbfe598ec4a6b9bd31911e1b19103db2",
+  "timing_build": "a21dcfae6edd4cf8abd00b9f6a990b07f568564d",
+  "tested_apu_clock": 21,
+  "frameskip": 0,
+  "precision": 8,
+  "workloads": {
+    "dkc1": [
+      {
+        "control": {
+          "ticks": 1103018434,
+          "hz": 46875000,
+          "seconds": 23.531059925333334,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "current": {
+          "ticks": 1102547060,
+          "hz": 46875000,
+          "seconds": 23.521003946666667,
+          "frames": [
+            120,
+            1320
+          ]
+        },
+        "capture_comparisons": [
+          {
+            "frame": 120,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 1320,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "play_slot_touched": false,
+        "completed_guest_frames_per_second": 51.018230459931566,
+        "elapsed_difference_ms": -10.055978666667187
+      }
+    ],
+    "alttp": [
+      {
+        "control": {
+          "ticks": 783094057,
+          "hz": 46875000,
+          "seconds": 16.706006549333335,
+          "frames": [
+            1861,
+            2861
+          ]
+        },
+        "current": {
+          "ticks": 783455446,
+          "hz": 46875000,
+          "seconds": 16.713716181333332,
+          "frames": [
+            1861,
+            2861
+          ]
+        },
+        "capture_comparisons": [
+          {
+            "frame": 1861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2861,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "play_slot_touched": false,
+        "completed_guest_frames_per_second": 59.83109855107192,
+        "elapsed_difference_ms": 7.709631999997413
+      }
+    ],
+    "smw": [
+      {
+        "current": {
+          "ticks": 969512774,
+          "hz": 46875000,
+          "seconds": 20.68293917866667,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "control": {
+          "ticks": 969165137,
+          "hz": 46875000,
+          "seconds": 20.675522922666666,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "capture_comparisons": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "play_slot_touched": false,
+        "completed_guest_frames_per_second": 58.01883328254115,
+        "elapsed_difference_ms": 7.416256000002619
+      },
+      {
+        "current": {
+          "ticks": 969585001,
+          "hz": 46875000,
+          "seconds": 20.684480021333332,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "control": {
+          "ticks": 969165137,
+          "hz": 46875000,
+          "seconds": 20.675522922666666,
+          "frames": [
+            3016,
+            4216
+          ]
+        },
+        "capture_comparisons": [
+          {
+            "frame": 3016,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 4216,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "play_slot_touched": false,
+        "completed_guest_frames_per_second": 58.01451130327459,
+        "elapsed_difference_ms": 8.957098666666496
+      }
+    ],
+    "smk": [
+      {
+        "current": {
+          "ticks": 601887169,
+          "hz": 46875000,
+          "seconds": 12.840259605333333,
+          "frames": [
+            2400,
+            2880
+          ]
+        },
+        "control": {
+          "ticks": 601918194,
+          "hz": 46875000,
+          "seconds": 12.840921472,
+          "frames": [
+            2400,
+            2880
+          ]
+        },
+        "capture_comparisons": [
+          {
+            "frame": 2400,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          },
+          {
+            "frame": 2880,
+            "RGB_differences": 0,
+            "PCM_differences": 0,
+            "DSP_state_exact": true
+          }
+        ],
+        "software_return": true,
+        "play_slot_touched": false,
+        "binary_matches_current_master_bench": true,
+        "completed_guest_frames_per_second": 37.38242175420091,
+        "elapsed_difference_ms": -0.6618666666664552
+      }
+    ]
+  },
+  "scope": "Fixed completed guest frames and aligned digital captures. These rates are scoped to startup, demo, story and the measured Kart interval. They do not measure presentation FPS, whole-title fidelity, or analog output.",
+  "hardware": "Physical N64 with the separate SummerCart bench slot. All runs returned to the private menu by USB with recovery 0.",
+  "pr52_decision": "REJECTED on both SMW cadence pairs",
+  "resident_dsp_reference": "integration-live-dsp-shadow-group-2026-11-18.json"
+}

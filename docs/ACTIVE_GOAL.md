@@ -264,6 +264,14 @@ counter now measures 209,381 `hcomp_fence_wait` polls and 1,440
 calls over the same 480 frames, with both captures exact and elapsed
 time within 0.50 percent of its control. Command-fetch, source
 retirement and DMA waits remain outside that counter's scope.
+The next matched controls on integrated master 5d3cc86a repeat
+the faithful DKC1 deficit at 6.747 ms per frame. Moving the HALF
+mask setup out of the loop preserves linked and physical output
+but only saves 19.399 ms across 480 frames in one pair. Reject it
+as a remedy for this gate. The next runtime attempt must remove
+work from the full draw/composition path at a scale consistent
+with the measured deficit.
+[Current-master DKC1 comparison](evidence/integration-pr32-master48-half-mask-2026-11-17.json).
 The refreshed complete DSP scalar and recorded-effects controls on
 `bcc8e463` measure 36.992 and 16.578 ms per frame. During replay,
 1,337 of 1,993 synchronous register catches occur while the renderer

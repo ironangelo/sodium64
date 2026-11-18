@@ -1,0 +1,255 @@
+{
+  "master": "5d3cc86a88a79f1028522f147b4f5950e8543785",
+  "renderer_PR32_head": "ae59e6b774168564444352066273a9e4025aa800",
+  "matched_timing_overlay_commit": "f341a36ee966e5be9788e89f473719c616c1c200",
+  "half_mask_commit": "d8506102fbf3aa064887df810a92d329513aa208",
+  "scope": "Physical N64 DKC1 animated intro, exact guest/render frames 3001\u20133481, APU 21, frameskip 0, precision 8, quiet timed interval.",
+  "legacy_timed_ROM_matches_current_master_timed_ROM": true,
+  "matched_controls": {
+    "legacy": {
+      "timing": {
+        "ticks": 376135087,
+        "hz": 46875000,
+        "seconds": 8.024215189333333,
+        "frames": [
+          3001,
+          3481
+        ]
+      },
+      "same_renderer_vs_older_base": [
+        {
+          "frame": 3001,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 3481,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "software_return": true,
+      "play_slot_touched": false,
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8",
+        "transport_error": "0",
+        "menu_error": "0",
+        "input_buttons": "0",
+        "input_remaining": "0"
+      }
+    },
+    "faithful": {
+      "timing": {
+        "ticks": 527953553,
+        "hz": 46875000,
+        "seconds": 11.263009130666667,
+        "frames": [
+          3001,
+          3481
+        ]
+      },
+      "same_renderer_vs_older_base": [
+        {
+          "frame": 3001,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 3481,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "software_return": true,
+      "play_slot_touched": false,
+      "settings": {
+        "apu_clock": "21",
+        "skipped_set": "0",
+        "audio_set": "4",
+        "precision_set": "8",
+        "transport_error": "0",
+        "menu_error": "0",
+        "input_buttons": "0",
+        "input_remaining": "0"
+      }
+    }
+  },
+  "cross_renderer_boundary_comparison": [
+    {
+      "frame": 3001,
+      "RGB_differences": 8691,
+      "PCM_differences": 0,
+      "DSP_state_exact": true
+    },
+    {
+      "frame": 3481,
+      "RGB_differences": 8567,
+      "PCM_differences": 0,
+      "DSP_state_exact": true
+    }
+  ],
+  "half_mask_native": {
+    "timings": {
+      "faithful": {
+        "ticks": 527953553,
+        "hz": 46875000,
+        "seconds": 11.263009130666667,
+        "frames": [
+          3001,
+          3481
+        ]
+      },
+      "legacy": {
+        "ticks": 376135087,
+        "hz": 46875000,
+        "seconds": 8.024215189333333,
+        "frames": [
+          3001,
+          3481
+        ]
+      },
+      "candidate": {
+        "ticks": 527044234,
+        "hz": 46875000,
+        "seconds": 11.243610325333334,
+        "frames": [
+          3001,
+          3481
+        ]
+      }
+    },
+    "same_renderer_boundary_parity": [
+      {
+        "frame": 3001,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      },
+      {
+        "frame": 3481,
+        "RGB_differences": 0,
+        "PCM_differences": 0,
+        "DSP_state_exact": true
+      }
+    ],
+    "software_return": true,
+    "play_slot_touched": false
+  },
+  "observations": {
+    "faithful_control_extra_ms_per_frame": 6.7474873777777775,
+    "candidate_extra_ms_per_frame": 6.7070732,
+    "candidate_difference_from_faithful_control_ms": -19.398805333333335
+  },
+  "linked_proof": {
+    "Math_cases": 12,
+    "Math_pixels": 70912,
+    "window_cases": 1792,
+    "OBJ_cases": 28672,
+    "fixed_external_entries_preserved": 4,
+    "other_RSP_banks_match": 11,
+    "preserved_pixel_and_DMA_counts": true,
+    "synthetic_instruction_counts": [
+      {
+        "case": "flat_add",
+        "control_instructions": 2160,
+        "candidate_instructions": 2068,
+        "DMA_calls": 7,
+        "DMA_bytes": 4608
+      },
+      {
+        "case": "flat_half_add",
+        "control_instructions": 6234,
+        "candidate_instructions": 6046,
+        "DMA_calls": 17,
+        "DMA_bytes": 9728
+      },
+      {
+        "case": "flat_sub",
+        "control_instructions": 15632,
+        "candidate_instructions": 14964,
+        "DMA_calls": 37,
+        "DMA_bytes": 19968
+      },
+      {
+        "case": "last_row_half_sub",
+        "control_instructions": 2256,
+        "candidate_instructions": 2196,
+        "DMA_calls": 7,
+        "DMA_bytes": 4608
+      },
+      {
+        "case": "full_height",
+        "control_instructions": 489951,
+        "candidate_instructions": 474595,
+        "DMA_calls": 1202,
+        "DMA_bytes": 616448
+      },
+      {
+        "case": "scanned_0000_0000",
+        "control_instructions": 3328,
+        "candidate_instructions": 3332,
+        "DMA_calls": 17,
+        "DMA_bytes": 9728
+      },
+      {
+        "case": "scanned_0000_ffff",
+        "control_instructions": 6964,
+        "candidate_instructions": 6776,
+        "DMA_calls": 17,
+        "DMA_bytes": 9728
+      },
+      {
+        "case": "scanned_ffff_0000",
+        "control_instructions": 3274,
+        "candidate_instructions": 3278,
+        "DMA_calls": 17,
+        "DMA_bytes": 9728
+      },
+      {
+        "case": "scanned_ffff_ffff",
+        "control_instructions": 7072,
+        "candidate_instructions": 6884,
+        "DMA_calls": 17,
+        "DMA_bytes": 9728
+      },
+      {
+        "case": "row_fixed_unchanged",
+        "control_instructions": 13249,
+        "candidate_instructions": 12805,
+        "DMA_calls": 49,
+        "DMA_bytes": 10808
+      },
+      {
+        "case": "absent_sub_unchanged",
+        "control_instructions": 6204,
+        "candidate_instructions": 6208,
+        "DMA_calls": 18,
+        "DMA_bytes": 4608
+      },
+      {
+        "case": "nonuniform_narrow",
+        "control_instructions": 10189,
+        "candidate_instructions": 9905,
+        "DMA_calls": 120,
+        "DMA_bytes": 7680
+      }
+    ]
+  },
+  "status": "REJECTED as a remedy for the current DKC1 gate. Both captures match; one paired timing measures only 0.040 ms saved per completed frame.",
+  "renderer_followup": {
+    "address_ownership": "A class-only texture tracker would conservatively save at most the first eligible decode per class per fence epoch. It leaves the same-class and atlas hazards and lacks a measurable case to promote.",
+    "remaining_gate": "PR32 needs a meaningful reduction in the measured graphics completion cost while preserving faithful output. R44 inherits the DKC1 gate. R45 still fails the independent ALttP story repeat. No production change follows from this test."
+  },
+  "final_menu": {
+    "mode": "menu",
+    "recovery": 0,
+    "verified_after_native_runs": true
+  }
+}

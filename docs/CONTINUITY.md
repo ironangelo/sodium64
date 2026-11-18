@@ -1,3 +1,36 @@
+# 2026-11-17 — Recheck the faithful renderer on integrated master
+
+The paired build on `5d3cc86a` runs DKC1 frames 3001–3481 at APU 21,
+frameskip 0 and precision 8. The legacy timing ROM is byte-identical
+to the independently built master timing ROM. Legacy takes 8.024215 s
+and faithful PR32 takes 11.263009 s, a cost of 6.747 ms per completed
+guest frame. Each renderer reproduces both of its earlier aligned
+RGB/PCM/DSP captures. PCM and DSP also match across renderers. Their
+RGB retains the existing fidelity difference.
+
+The candidate prepares the HALF enable once per band. All 70,912
+linked Math pixels and the ordered DMA extents match the faithful
+control, with four fixed overlay entries and the other eleven banks
+preserved. In the synthetic full-height case the executed instruction
+count drops from 489,951 to 474,595. On N64 the candidate takes
+11.243610 s with exact RGB/PCM/DSP at both boundaries. The observed
+saving is 19.399 ms across 480 frames. The remaining difference from
+legacy is 6.707 ms per frame. Reject this change as a remedy for the
+DKC1 gate and retain its local source and results. All launches
+return to the private menu by USB.
+
+Class-based texture retirement would still fence subsequent writes
+in an outstanding class and has to cover adjacent atlas sources.
+It offers no path to the measured regression at the current scope.
+Keep the graphics chain pending until a change reduces the cost of
+the actual full composition and rendering workload without changing
+its output. PR48 remains integrated and measured. The resident DSP
+still requires a complete accelerated path under its native shared
+renderer and audio deadlines.
+[Current-master renderer pair and bounded Math result](evidence/integration-pr32-master48-half-mask-2026-11-17.json).
+
+---
+
 # 2026-11-17 — Integrate R19 byte pitch and measure current master
 
 PR48 merged as `5d3cc86a`. All four PR workflows and all four merge

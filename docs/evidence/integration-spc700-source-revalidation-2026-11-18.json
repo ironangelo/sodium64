@@ -427,5 +427,232 @@
       "conclusion": "success"
     }
   ],
-  "integration_gate": "The Ares workflow is the remaining exact-head CI gate at this checkpoint."
+  "integration_gate": "The Ares workflow is the remaining exact-head CI gate at this checkpoint.",
+  "exact_head_build_verification": {
+    "runtime_head": "1db585c0ddb0e18615db970c24abc64f11742f29",
+    "timed_rebuild": "7483fc84",
+    "timed_rom_matches_all_five_physical_receipts": true,
+    "ci_release_elf_tests": {
+      "test_spc_address_wrap.py": "SPC_ADDRESS_WRAP rejected linked faults=3\nSPC_ADDRESS_WRAP linked cases=770 pass=770 mismatches=0",
+      "test_apu_lookup_reset.py": "APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults=7 instructions=45584 publications=1536 overflow_replays=2 clock_rebuilds=6 source_revalidation_cases=4 menu_transitions=4; no N64 timing claim"
+    },
+    "ci_release_isolation": {
+      "linked_symbols": 1253,
+      "allocated_bytes": 768120,
+      "laboratory_symbols": [],
+      "allocated_diagnostic_leases": [],
+      "sha256": {
+        "sodium64.z64": "4bffd50e88d3a8626d8bfa7e3731ce6af6f8240cf2fb21a5e7be9a7cd0b73ba2",
+        "rom-converter.py": "65022063b495887eb2c06b052ccc2b97f993c485f5201f6bdce9731dadfc8283"
+      },
+      "elf_sha256": "52f842df4571a89ea0b2786ba517c4abf009499dfef29e18955ce2b366662e94",
+      "status": "PASS"
+    },
+    "ci_artifact": 14469174899,
+    "ci_workflow": 44395527399
+  },
+  "profile_candidate_follow_up": {
+    "comparison": {
+      "exact_source": "353d2fa76e4f0e485c1da1a08f984ad259d34585",
+      "candidate_control": {
+        "ticks": 1000656449,
+        "hz": 46875000,
+        "seconds": 21.347337578666668,
+        "frames": [
+          120,
+          1320
+        ]
+      },
+      "sampled": {
+        "ticks": 1004961440,
+        "hz": 46875000,
+        "seconds": 21.439177386666668,
+        "frames": [
+          120,
+          1320
+        ]
+      },
+      "capture_comparisons": [
+        {
+          "frame": 120,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        },
+        {
+          "frame": 1320,
+          "RGB_differences": 0,
+          "PCM_differences": 0,
+          "DSP_state_exact": true
+        }
+      ],
+      "return": true,
+      "play_slot_touched": false
+    },
+    "retained_samples": 3829,
+    "emitter_samples": 157,
+    "subsystems": {
+      "runtime/other": 33,
+      "frame/VI wait": 1145,
+      "PPU/events/frame prep": 285,
+      "APU JIT generated": 362,
+      "APU/SPC700 static": 813,
+      "DSP/audio": 570,
+      "S-CPU interpreter": 422,
+      "DMA/HDMA": 170,
+      "input": 7,
+      "RSP/VRAM semaphore wait": 20,
+      "RSP wait": 2
+    },
+    "clock_interval": 262139,
+    "chronology": [
+      {
+        "sample_range": [
+          0,
+          512
+        ],
+        "counts": {
+          "runtime/other": 3,
+          "frame/VI wait": 197,
+          "PPU/events/frame prep": 25,
+          "APU JIT generated": 80,
+          "APU/SPC700 static": 70,
+          "apu_emitter": 1,
+          "DSP/audio": 102,
+          "S-CPU interpreter": 14,
+          "DMA/HDMA": 20,
+          "input": 1
+        }
+      },
+      {
+        "sample_range": [
+          512,
+          1024
+        ],
+        "counts": {
+          "APU JIT generated": 103,
+          "frame/VI wait": 113,
+          "APU/SPC700 static": 70,
+          "DSP/audio": 103,
+          "DMA/HDMA": 24,
+          "S-CPU interpreter": 58,
+          "PPU/events/frame prep": 36,
+          "runtime/other": 3,
+          "RSP/VRAM semaphore wait": 1,
+          "input": 1
+        }
+      },
+      {
+        "sample_range": [
+          1024,
+          1536
+        ],
+        "counts": {
+          "APU/SPC700 static": 262,
+          "DSP/audio": 14,
+          "frame/VI wait": 23,
+          "APU JIT generated": 50,
+          "input": 2,
+          "PPU/events/frame prep": 31,
+          "DMA/HDMA": 12,
+          "runtime/other": 5,
+          "S-CPU interpreter": 113,
+          "apu_emitter": 128
+        }
+      },
+      {
+        "sample_range": [
+          1536,
+          2048
+        ],
+        "counts": {
+          "DMA/HDMA": 25,
+          "APU/SPC700 static": 127,
+          "apu_emitter": 28,
+          "S-CPU interpreter": 58,
+          "PPU/events/frame prep": 41,
+          "APU JIT generated": 21,
+          "runtime/other": 6,
+          "DSP/audio": 48,
+          "frame/VI wait": 178,
+          "RSP/VRAM semaphore wait": 4,
+          "RSP wait": 2,
+          "input": 2
+        }
+      },
+      {
+        "sample_range": [
+          2048,
+          2560
+        ],
+        "counts": {
+          "DSP/audio": 84,
+          "frame/VI wait": 192,
+          "S-CPU interpreter": 49,
+          "DMA/HDMA": 26,
+          "APU/SPC700 static": 90,
+          "APU JIT generated": 30,
+          "PPU/events/frame prep": 33,
+          "RSP/VRAM semaphore wait": 5,
+          "runtime/other": 3
+        }
+      },
+      {
+        "sample_range": [
+          2560,
+          3072
+        ],
+        "counts": {
+          "frame/VI wait": 188,
+          "PPU/events/frame prep": 58,
+          "APU/SPC700 static": 82,
+          "runtime/other": 3,
+          "DSP/audio": 70,
+          "APU JIT generated": 30,
+          "S-CPU interpreter": 52,
+          "DMA/HDMA": 23,
+          "RSP/VRAM semaphore wait": 6
+        }
+      },
+      {
+        "sample_range": [
+          3072,
+          3584
+        ],
+        "counts": {
+          "DMA/HDMA": 27,
+          "APU JIT generated": 34,
+          "frame/VI wait": 175,
+          "S-CPU interpreter": 54,
+          "DSP/audio": 89,
+          "input": 1,
+          "APU/SPC700 static": 77,
+          "PPU/events/frame prep": 45,
+          "runtime/other": 8,
+          "RSP/VRAM semaphore wait": 2
+        }
+      },
+      {
+        "sample_range": [
+          3584,
+          3829
+        ],
+        "counts": {
+          "APU/SPC700 static": 35,
+          "frame/VI wait": 79,
+          "APU JIT generated": 14,
+          "DSP/audio": 60,
+          "S-CPU interpreter": 24,
+          "PPU/events/frame prep": 16,
+          "DMA/HDMA": 13,
+          "runtime/other": 2,
+          "RSP/VRAM semaphore wait": 2
+        }
+      }
+    ],
+    "disabled_rom_matches_candidate": true,
+    "rsp_load_bytes_match_candidate": true,
+    "owner_guards_valid": true,
+    "interpretation": "Emitter attribution is 157/3829 with revalidation versus 450/4096 on the measured original. The cohorts and their wall-time boundaries differ. Sample changes do not price the remaining critical path."
+  }
 }

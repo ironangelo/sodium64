@@ -23,6 +23,18 @@ DSP captures match in each pair. All launches returned to the
 private menu. SMW, ALttP and Super Mario Kart preserve aligned
 RGB, PCM and DSP with no slowdown in the measured windows.
 Four workflows pass. Exact-head Ares remains the promotion gate.
+The exact PR rebuild is byte-identical to all five physical test
+receipts. The normal CI artifact passes the linked APU regressions
+and production isolation.
+
+A follow-up physical profile of the same DKC1 work retains 3,829
+samples, 157 in the emitter versus 450 of 4,096 on the reference.
+Both aligned captures match the candidate control and USB return
+passes. The sampler build takes 21.439177 s versus 21.347338 s
+without sampling. The dormant sampler build and both RSP payloads
+match the qualified candidate. Treat the sample distribution as
+attribution, with the remaining nominal budget gap about 1.12 ms
+per guest frame.
 [PR53](https://github.com/ironangelo/sodium64/pull/53) · [Physical and linked evidence](evidence/integration-spc700-source-revalidation-2026-11-18.json).
 
 ---

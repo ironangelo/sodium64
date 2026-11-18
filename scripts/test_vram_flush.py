@@ -6,6 +6,63 @@ import random
 from linked_cpu_regression import CPU, load_elf
 
 
+class VRAMWriterCPU(CPU):
+    def read(self, address, size=4):
+        # Start with VRAM copying complete. SP semaphore bus timing is covered
+        # separately by the hardware trial.
+        if address & 0x1fffffff == 0x0404001c:
+            assert size == 4
+            return 0
+        return super().read(address, size)
+
+
+def check_writer_handoff(memory, symbols, queue_addresses):
+    vram = symbols['vram']
+    dirty = symbols['vram_table']
+    positions = (0, 0x1f, 0x20, 0xff, 0x100, 0x1ff, 0x200, 0x3ff,
+                 0x400, 0x3fff, 0x4000, 0x7fff)
+    cases = 0
+    for mode in range(4):
+        for lane, handler in enumerate(('write_vmdatah', 'write_vmdatal')):
+            for position in positions:
+                cpu = VRAMWriterCPU(memory.copy())
+                cpu.allow_rcp_writes = True
+                cpu.pattern()
+                cpu.regs[5] = (mode << 2) | (0x80 if lane == 0 else 0)
+                cpu.execute(symbols['write_vmain'])
+                cpu.write(symbols['vmadd'], position, 2)
+                cpu.write(symbols['vram_publish_full'], 0, 1)
+                cpu.regs[5] = 0xa5
+                cpu.memory_writes.clear()
+                cpu.execute(symbols[handler])
+
+                translated = position
+                if mode:
+                    shift = mode + 4
+                    mask = (1 << (shift + 3)) - 1
+                    translated = ((position & ~mask)
+                                  | ((position & (mask >> 3)) << 3)
+                                  | ((position >> shift) & 7))
+                offset = (translated << 1) + lane
+                block = offset // 64
+                group_offset = (offset // 512) * 512
+                assert cpu.memory_writes[:3] == [
+                    (0x0404001c, 4, 0),
+                    ((vram + offset) & 0x1fffffff, 1, 0xa5),
+                    ((dirty + block) & 0x1fffffff, 1, 31),
+                ], (handler, mode, position, cpu.memory_writes)
+                dirty_pattern = bytearray(1024)
+                dirty_pattern[block] = 31
+                cpu.regs[13] = lane * 4
+                cpu.execute(symbols['vram_flush_begin'], stop=symbols['rsp_wait'])
+                assert cpu.cache_ops == [(0x19, vram + address)
+                                         for address in range(group_offset, group_offset + 512, 16)]
+                assert cpu.blob(queue_addresses[lane], 1024) == dirty_pattern
+                assert cpu.blob(dirty, 1024) == bytes(1024)
+                cases += 1
+    return cases
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('elf')
@@ -62,9 +119,11 @@ def main():
                            if i not in (1, 3, 8, 9, 10, 11, 14))
                 instruction_counts.append(cpu.steps - 1)  # execute counts reaching the stop.
 
+    writer_cases = check_writer_handoff(memory, symbols, queue_addresses)
+
     # The former loops ran 128 × 7 dirty-copy and 2048 × 4 cache instructions.
     assert max(instruction_counts) < 128 * 7 + 2048 * 4
-    print(f'VRAM_PUBLICATION PASS {len(instruction_counts)} cases, '
+    print(f'VRAM_PUBLICATION PASS {len(instruction_counts)} map cases and {writer_cases} writer cases, '
           f'{min(instruction_counts)}-{max(instruction_counts)} instructions, '
           '0 clean lines and 4096 boot/full lines')
 

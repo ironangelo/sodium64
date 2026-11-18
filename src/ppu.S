@@ -96,6 +96,7 @@ vram: .hword 0:0x8000
 cgram: .hword 0:0x100
 oam: .byte 0:0x220
 vram_table: .byte 0:0x400
+vram_publish_full: .byte 1 // Publish initialized VRAM before the first RSP DMA.
 
 .align 4
 section_ptr: .word SECTION_QUEUE1
@@ -652,7 +653,11 @@ update_dpal:
     bnez t6, update_dpal
     addi v1, v1, -8
 
-    // Reset and copy the VRAM dirty table to the queue for the next frame
+    // Publish 512-byte groups with any marked 64-byte block. Preserve the
+    // renderer's dirty table exactly, including on the full boot publication.
+vram_flush_begin:
+    lbu t6, vram_publish_full
+    la v1, vram
     la t0, vram_table
     lw t1, dirty_queues(t5)
     li t2, 0x400
@@ -662,17 +667,46 @@ dirty_loop:
     sd zero, (t0)
     addi t0, t0, 8
     sd t3, (t1)
+    or t3, t3, t6
+    beqz t3, vram_group_advance
+    nop
+    cache 0x19, 0x000(v1)
+    cache 0x19, 0x010(v1)
+    cache 0x19, 0x020(v1)
+    cache 0x19, 0x030(v1)
+    cache 0x19, 0x040(v1)
+    cache 0x19, 0x050(v1)
+    cache 0x19, 0x060(v1)
+    cache 0x19, 0x070(v1)
+    cache 0x19, 0x080(v1)
+    cache 0x19, 0x090(v1)
+    cache 0x19, 0x0A0(v1)
+    cache 0x19, 0x0B0(v1)
+    cache 0x19, 0x0C0(v1)
+    cache 0x19, 0x0D0(v1)
+    cache 0x19, 0x0E0(v1)
+    cache 0x19, 0x0F0(v1)
+    cache 0x19, 0x100(v1)
+    cache 0x19, 0x110(v1)
+    cache 0x19, 0x120(v1)
+    cache 0x19, 0x130(v1)
+    cache 0x19, 0x140(v1)
+    cache 0x19, 0x150(v1)
+    cache 0x19, 0x160(v1)
+    cache 0x19, 0x170(v1)
+    cache 0x19, 0x180(v1)
+    cache 0x19, 0x190(v1)
+    cache 0x19, 0x1A0(v1)
+    cache 0x19, 0x1B0(v1)
+    cache 0x19, 0x1C0(v1)
+    cache 0x19, 0x1D0(v1)
+    cache 0x19, 0x1E0(v1)
+    cache 0x19, 0x1F0(v1)
+vram_group_advance:
+    addi v1, v1, 512
     bnez t2, dirty_loop
     addi t1, t1, 8
-
-    // Ensure cached VRAM is written back to memory
-    la t0, vram
-    add t1, t0, 0xFFE0
-vram_loop:
-    cache 0x19, 0x00(t0)
-    cache 0x19, 0x10(t0)
-    bne t0, t1, vram_loop
-    addi t0, t0, 0x20
+    sb zero, vram_publish_full
 
 rsp_wait:
     // Wait until the RSP is finished rendering

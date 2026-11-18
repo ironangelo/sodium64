@@ -156,14 +156,14 @@ def check_overflow_replay(memory, symbols):
 
 
 
-def check_source_revalidation(memory, symbols):
+def check_source_revalidation(memory, symbols, pc=0x0280, can_reuse=True):
     """Distinguish real source changes from unrelated writes on the tagged page."""
     cpu = CPU(memory.copy())
-    pc = 0x0280
     lookup = symbols['jit_lookup'] + pc * 4
     pointer = symbols['jit_pointer']
     tag = symbols['jit_tags'] + (pc // 64) * 4
     cpu.write(symbols['apu_clock'], 21, 1)
+    cpu.write(symbols['apu_map'] + 0x3ff, 0, 1)
     cpu.write(symbols['apu_ram'] + pc, 0xe8312f00)  # MOV A,#$31; BRA +0
 
     def dispatch(expected):
@@ -184,13 +184,21 @@ def check_source_revalidation(memory, symbols):
     original = dispatch(0x31)
     header = original[0]
     assert (header + 12) % 32 == 0
-    assert cpu.blob(header - 20, 5) == b'\x04\xe8\x31\x2f\x00'
-    write_spc(pc + 15, 0x72)
+    if can_reuse:
+        assert cpu.blob(header - 20, 5) == b'\x04\xe8\x31\x2f\x00'
+    else:
+        assert cpu.read(header - 20, 1) == 0
+    unrelated = pc & ~63 if pc & 63 else pc + 15
+    write_spc(unrelated, 0x72)
     assert cpu.read(tag) != cpu.read(header + 4)
-    assert dispatch(0x31) == original, 'unrelated page write forced recompilation'
-    assert cpu.read(header + 4) == cpu.read(header + 8) == cpu.read(tag)
+    after_unrelated = dispatch(0x31)
+    if can_reuse:
+        assert after_unrelated == original, 'unrelated page write forced recompilation'
+        assert cpu.read(header + 4) == cpu.read(header + 8) == cpu.read(tag)
+    else:
+        assert after_unrelated != original, 'ineligible source skipped recompilation'
     write_spc(pc + 1, 0x42)
-    assert dispatch(0x42) != original, 'changed operand reused old code'
+    assert dispatch(0x42) != after_unrelated, 'changed operand reused old code'
 
 
 def check_clock_change(memory, symbols):
@@ -343,8 +351,12 @@ def main():
     else:
         raise AssertionError('missing menu setting update fault accepted')
     faults = 5
+    revalidation_cases = 0
     if 'revalidate_jit_source' in symbols:
         check_source_revalidation(memory, symbols)
+        for pc in (0x027c, 0x027e, 0xffc0):
+            check_source_revalidation(memory, symbols, pc=pc, can_reuse=False)
+        revalidation_cases = 4
         cpu = CPU(memory.copy())
         mismatch_branch = symbols['compare_jit_source'] + 8
         assert cpu.read(mismatch_branch) >> 26 == 5
@@ -371,7 +383,7 @@ def main():
         faults += 1
     print(f'APU_LOOKUP_RESET PASS entries=65536 bytes=262144 faults={faults} instructions={steps} '
           f'publications={publications} overflow_replays={overflow_replays} '
-          f'clock_rebuilds={clock_rebuilds} menu_transitions=4; no N64 timing claim')
+          f'clock_rebuilds={clock_rebuilds} source_revalidation_cases={revalidation_cases} menu_transitions=4; no N64 timing claim')
 
 
 if __name__ == '__main__':
